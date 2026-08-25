@@ -1,8 +1,9 @@
 import { buildKnowledgePack as buildRawKnowledgePack } from './knowledge.js';
 import { sha256 } from './shared.js';
 
+export { RIGHTS_STATUSES, ASSET_STATUSES, SOURCE_ROLES, SOURCE_CHANNELS, deriveSourceGovernance } from './governance.js';
 export { CONTENT_INTELLIGENCE_VERSION, DEFAULT_LIMITS, assertSafeRemoteUrl, inferSourceKind } from './shared.js';
-export { normalizeSource, normalizeSources, normalizeWebsite } from './normalize.js';
+export { normalizeReferenceSource, normalizeSource, normalizeSources, normalizeWebsite } from './normalize.js';
 export { assertKnowledgePack, validateKnowledgePack } from './validation.js';
 
 export function buildKnowledgePack(normalizedSources, options = {}) {

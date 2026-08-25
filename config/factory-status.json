@@ -2,19 +2,16 @@
   "schemaVersion": 1,
   "currentPhase": "3.8",
   "currentStage": "Phase 3.8 — Product proof and correctness hardening",
+  "activeStage": "Phase 3.8E — Genuine business product proof",
   "status": "active",
   "completedPhases": ["0", "1", "2", "3"],
-  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7"],
+  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D"],
   "activeWork": [
-    "changeset-path-scope-hardening",
-    "schema-type-validator-unification",
-    "executed-supabase-rls-tests",
-    "generated-app-accessibility-baseline",
     "genuine-real-business-acceptance",
     "mcp-service-facade"
   ],
   "outstandingProductGates": [
-    "Phase 3.6C — genuine real-business end-to-end acceptance with meaningful-edit measurement"
+    "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits"
   ],
-  "nextStage": "Phase 4A — Service-backed Builder Console vertical slice"
+  "nextStage": "Phase 3.8E — Genuine business product proof"
 }

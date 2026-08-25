@@ -27,8 +27,8 @@ jobs:
       - name: Benchmark independent generated-app installs, checks and builds
         run: npm run benchmark:acceptance
 
-      - name: Build real-business acceptance app from mixed source pack
-        run: npm run acceptance:real-business
+      - name: Build synthetic mixed-source regression app
+        run: npm run acceptance:synthetic-mixed-source
 
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
@@ -36,8 +36,8 @@ jobs:
       - name: Accessibility gate for canonical generated app
         run: npm run test:e2e:accessibility
 
-      - name: Verify generated real-business app in Chromium
-        run: npm run test:e2e:real-business
+      - name: Verify synthetic mixed-source generated app in Chromium
+        run: npm run test:e2e:synthetic-mixed-source
 
   database-security:
     runs-on: ubuntu-latest

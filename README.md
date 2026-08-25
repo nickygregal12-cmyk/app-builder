@@ -10,18 +10,13 @@ The long-term goal is a private builder that can accept an idea, company details
 
 ## Current milestone: Phase 3.8 — Product proof and correctness hardening
 
-Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. The service can own project generation, verification, preview lifecycle and durable task/event/checkpoint state rather than leaving those concerns in browser-only state.
+**Active substage: Phase 3.8E — Genuine business product proof.**
 
-Before broad Phase 4 Console work, the active priority is to close a small set of high-value correctness/product gates:
+Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is also now landed: ChangeSet path-scope correctness, schema-first Manifest validation/types, executed Supabase RLS acceptance and serious/critical generated-app accessibility gates.
 
-- harden ChangeSet path-scope matching and property-test the security boundary;
-- make schemas the source for generated shared types and Ajv runtime validation instead of maintaining overlapping contract definitions by hand;
-- execute real Supabase RLS behavior tests with authenticated users rather than only regex-checking SQL shape;
-- add an early axe accessibility baseline to generated-app acceptance;
-- complete the genuine real-business `<20 meaningful edits` product proof using real source material;
-- expose safe deterministic service operations through an MCP v2 adapter for interoperable clients.
+The active product gate is now deliberately narrower: prove the factory against genuine business material rather than another synthetic fixture. A passing Phase 3.8E evidence pack must use a real public company website plus approved user-supplied company material, record the real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/deploy journey, pass launchability review, retain artifact hashes and finish with fewer than 20 meaningful manual edits.
 
-The next product stage is the service-backed Builder Console vertical slice, followed by direct editing, a Design System Registry/`DesignSystemSpec`, visual design variants, explicit environments, a static/content-oriented second template, CMS/content collections, localization, Figma/design mapping and existing-repository adoption.
+The Acme mixed-source scenario remains valuable deterministic CI regression coverage, but it is explicitly synthetic and cannot satisfy Phase 3.8E. After the genuine-business proof, the remaining Phase 3.8 interoperability item is the bounded MCP service facade before wider Phase 4 expansion.
 
 Current invariants include:
 
@@ -51,7 +46,8 @@ npm run doctor
 npm test
 npm run generate:acceptance
 npm run benchmark:acceptance
-npm run acceptance:real-business
+npm run acceptance:synthetic-mixed-source
+npm run acceptance:genuine-business:validate -- /path/to/genuine-business-evidence.json
 npm run upgrade:plan -- --project /path/to/generated-project
 npm run validate:example
 npm run create-app -- --manifest examples/project-manifest.example.json --out /tmp/app-builder-demo

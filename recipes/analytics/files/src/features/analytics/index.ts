@@ -11,6 +11,9 @@ export function trackEvent(name: string, properties: AnalyticsProperties = {}) {
   return detail;
 }
 
+let initialized = false;
 export function setup(project: { name: string; type: string }) {
+  if (initialized) return;
+  initialized = true;
   trackEvent('app_initialized', { project: project.name, projectType: project.type });
 }

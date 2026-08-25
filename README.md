@@ -43,6 +43,38 @@ Current invariants include:
 
 Machine-readable progress lives in `config/factory-status.json`. See `docs/MASTER_PLAN.md` for the full delivery plan, `docs/ROADMAP.md` for the staged roadmap, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme and `docs/AGENT_RUNTIME.md` for the future Hetzner/OpenCode runtime architecture.
 
+## Run it yourself
+
+```bash
+npm install
+npm run dev
+```
+
+That starts the factory service on `127.0.0.1:4310` and the Builder Console on
+`127.0.0.1:5173`. Node 22.13 or newer is the only prerequisite; no accounts,
+tokens or cloud services are needed to build and preview a site.
+
+In the Console you can today:
+
+- work through the adaptive intake questionnaire and approve a Build Contract;
+- create a durable project from the resulting Manifest;
+- ingest real source material — company URLs to crawl, or logos, photos,
+  documents and spreadsheets uploaded from your machine — declaring what the
+  business has approved for republication;
+- generate the project, verify that it installs, checks and builds on its own,
+  and open a live preview at desktop, tablet and mobile widths;
+- watch durable tasks, the event ledger, cost and build history;
+- add more material later and rebuild — each build gets its own workspace, so
+  the previous one stays intact for comparison.
+
+Generated projects are ordinary repositories. `.app-builder/workspaces/`
+holds them; copy one anywhere, `npm install && npm run dev`, and it runs with no
+dependency on the factory.
+
+Not in the Console yet: editing content or swapping images by clicking them
+(Phase 4B), choosing a design direction (4C/4D), and deploying (4E). Until then
+a finished site is deployed by hand from its own repository.
+
 ## Commands
 
 ```bash

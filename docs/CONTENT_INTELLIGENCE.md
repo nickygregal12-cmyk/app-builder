@@ -123,9 +123,10 @@ Ingestion runs as a durable control-plane task: `sources.ingestion.started` and
 `sources.ingested` (or `sources.ingestion.failed`) reach the event ledger, and a
 checkpoint records what was ingested and what to do next. It is additive —
 earlier material survives a later upload, and identical bytes from the same URI
-are ingested once — and it is refused once the project workspace exists, because
-composition reads the knowledge pack at generation time and there is no
-recompose operation yet.
+are ingested once — and it is refused only while a build is running. Composition
+reads the knowledge pack at generation time, so material ingested after a build
+reaches the product through a rebuild, which materialises the next workspace
+version rather than overwriting the previous one.
 
 Rights are declared, never inferred. An operator can mark supplied material
 `approvedForUse` (or set `rightsStatus`/`assetStatus` explicitly); without that,

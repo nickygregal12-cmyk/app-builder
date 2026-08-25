@@ -122,7 +122,7 @@ function SourcePanel({ knowledge, declaredSources, disabled, busy, onIngest }: {
     </div>}
 
     {disabled
-      ? <p className="builder-empty">Sources are ingested before the project workspace is generated.</p>
+      ? <p className="builder-empty">Sources cannot be added while a build is running.</p>
       : <div className="source-form">
           <input aria-label="Company website or page URL" type="url" value={uri} placeholder="https://the-company.example" onChange={(event) => setUri(event.target.value)} disabled={busy} />
           <input aria-label="What should the factory use this for?" value={purpose} placeholder="What is this material for?" onChange={(event) => setPurpose(event.target.value)} disabled={busy} />
@@ -220,7 +220,12 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   }, [projectId, refresh]);
 
   const latestTask = snapshot?.tasks.at(-1) ?? null;
-  const canGenerate = snapshot?.project.state === 'ready' || snapshot?.project.state === 'failed';
+  // Ingested material only reaches the product through a build, so a knowledge
+  // pack newer than the live composition is a call to rebuild, not a warning.
+  const builtKnowledgeHash = snapshot?.composition?.input?.knowledgePackHash ?? null;
+  const knowledgeIsNewerThanBuild = Boolean(snapshot?.project.workspacePath) && (snapshot?.project.knowledgePackHash ?? null) !== builtKnowledgeHash;
+  const canGenerate = snapshot ? snapshot.project.state !== 'generating' : false;
+  const rebuild = Boolean(snapshot?.project.workspacePath);
   const canVerify = snapshot?.project.state === 'generated';
   const canPreview = snapshot?.project.state === 'verified' && snapshot.preview.state === 'stopped';
   const previewRunning = snapshot?.preview.state === 'running' && Boolean(snapshot.preview.url);
@@ -236,7 +241,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       <div className="builder-project-meta"><span className={`state-pill state-${snapshot.project.state}`}>{snapshot.project.state}</span><strong>{snapshot.project.name}</strong><span>{snapshot.project.type.replaceAll('-', ' ')}</span></div>
       <div className="builder-actions">
         <button type="button" className="secondary compact" onClick={() => refresh()} disabled={Boolean(operation)}>Refresh</button>
-        {canGenerate && <button type="button" className="primary compact" onClick={() => run('generate')} disabled={Boolean(operation)}>{operation === 'generate' ? 'Generating…' : 'Generate project'}</button>}
+        {canGenerate && <button type="button" className={knowledgeIsNewerThanBuild || !rebuild ? 'primary compact' : 'secondary compact'} onClick={() => run('generate')} disabled={Boolean(operation)}>{operation === 'generate' ? (rebuild ? 'Rebuilding…' : 'Generating…') : (rebuild ? 'Rebuild project' : 'Generate project')}</button>}
         {canVerify && <button type="button" className="primary compact" onClick={() => run('verify')} disabled={Boolean(operation)}>{operation === 'verify' ? 'Verifying…' : 'Verify build'}</button>}
         {canPreview && <button type="button" className="primary compact" onClick={() => run('start-preview')} disabled={Boolean(operation)}>{operation === 'start-preview' ? 'Starting…' : 'Start preview'}</button>}
         {previewRunning && <button type="button" className="secondary compact" onClick={() => run('stop-preview')} disabled={Boolean(operation)}>{operation === 'stop-preview' ? 'Stopping…' : 'Stop preview'}</button>}
@@ -244,6 +249,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     </header>
 
     {error && <div className="builder-alert" role="alert"><strong>Factory operation failed</strong><span>{error}</span></div>}
+
+    {knowledgeIsNewerThanBuild && !error && <div className="builder-notice"><strong>Source material has changed since the last build.</strong><span>Rebuild the project so the new knowledge reaches the generated repository. The current build stays on disk.</span></div>}
 
     <section className="builder-layout">
       <aside className="builder-sidebar">
@@ -264,7 +271,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
         <SourcePanel
           knowledge={snapshot.knowledge}
           declaredSources={snapshot.declaredSources}
-          disabled={Boolean(snapshot.project.workspacePath)}
+          disabled={snapshot.project.state === 'generating'}
           busy={operation === 'ingest'}
           onIngest={ingest}
         />
@@ -295,6 +302,15 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
         <section className="builder-panel checkpoint-panel">
           <span className="builder-kicker">Latest checkpoint</span>
           {snapshot.checkpoint ? <><strong>{snapshot.checkpoint.summary}</strong><p>{snapshot.checkpoint.nextAction}</p><small>{new Date(snapshot.checkpoint.createdAt).toLocaleString()}</small></> : <p className="builder-empty">No durable checkpoint yet.</p>}
+        </section>
+
+        <section className="builder-panel">
+          <div className="panel-title-row"><span className="builder-kicker">History</span><span>{snapshot.checkpoints.length}</span></div>
+          {snapshot.checkpoints.length ? <div className="history-list">{snapshot.checkpoints.slice().reverse().map((checkpoint) => <article key={checkpoint.id} className={checkpoint.repoRef === snapshot.project.workspacePath ? 'current' : undefined}>
+            <strong>{checkpoint.summary}</strong>
+            <time>{new Date(checkpoint.createdAt).toLocaleString()}</time>
+            {checkpoint.repoRef === snapshot.project.workspacePath && <span>live build</span>}
+          </article>)}</div> : <p className="builder-empty">Checkpoints appear as durable work completes.</p>}
         </section>
 
         <section className="builder-panel">

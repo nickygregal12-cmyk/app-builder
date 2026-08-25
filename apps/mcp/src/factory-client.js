@@ -74,6 +74,7 @@ export class FactoryServiceClient {
   }
   readMetrics(id) { return this.request('GET', `/projects/${projectId(id)}/metrics`); }
   readCheckpoint(id) { return this.request('GET', `/projects/${projectId(id)}/checkpoint`); }
+  readCheckpoints(id) { return this.request('GET', `/projects/${projectId(id)}/checkpoints`); }
   previewStatus(id) { return this.request('GET', `/projects/${projectId(id)}/preview`); }
   startPreview(id) { return this.request('POST', `/projects/${projectId(id)}/preview/start`); }
   stopPreview(id) { return this.request('POST', `/projects/${projectId(id)}/preview/stop`); }

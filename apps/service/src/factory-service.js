@@ -17,6 +17,17 @@ function safeChild(root, name) {
   return target;
 }
 
+// Each build gets its own directory so a rebuild after new source material
+// never overwrites the repository someone may already be reviewing. The first
+// build keeps the plain slug; later builds are suffixed.
+function nextWorkspace(root, slug, limit = 50) {
+  for (let version = 1; version <= limit; version += 1) {
+    const candidate = safeChild(root, version === 1 ? slug : `${slug}-v${version}`);
+    if (!fs.existsSync(candidate)) return { workspace: candidate, version };
+  }
+  throw new Error(`Refusing to allocate more than ${limit} build workspaces for ${slug}.`);
+}
+
 function summary(project) {
   return {
     id: project.id,
@@ -149,6 +160,7 @@ export class FactoryService {
   listEvents(projectId, options) { this.requireProject(projectId); return this.store.listEvents(projectId, options); }
   metrics(projectId) { this.requireProject(projectId); return this.store.metrics(projectId); }
   latestCheckpoint(projectId) { this.requireProject(projectId); return this.store.latestCheckpoint(projectId); }
+  listCheckpoints(projectId) { this.requireProject(projectId); return this.store.listCheckpoints(projectId); }
 
   getComposition(projectId) {
     const project = this.requireProject(projectId);
@@ -193,7 +205,6 @@ export class FactoryService {
   async ingestSources(projectId, requests) {
     let project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');
-    if (project.workspacePath) throw new Error('Sources must be ingested before the project workspace is generated.');
 
     let task = createTask({
       projectId,
@@ -233,7 +244,7 @@ export class FactoryService {
         filesChanged: [],
         failures: [],
         artifacts: ['knowledge-pack'],
-        nextAction: 'Review source governance, then generate the project.',
+        nextAction: project.workspacePath ? 'Review source governance, then rebuild the project so the new material reaches the generated repository.' : 'Review source governance, then generate the project.',
       });
       this.store.recordCheckpoint(checkpoint);
       task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
@@ -267,12 +278,14 @@ export class FactoryService {
   async generateProject(projectId) {
     let project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');
-    const workspace = safeChild(this.workspacesRoot, project.slug);
-    if (fs.existsSync(workspace)) throw new Error(`Refusing to overwrite existing project workspace: ${workspace}`);
+    const { workspace, version } = nextWorkspace(this.workspacesRoot, project.slug);
+    // A running preview serves the previous build's workspace, so it must not
+    // survive into a rebuild and quietly show stale output.
+    if (version > 1) await this.stopPreview(projectId);
 
     let task = createTask({
       projectId,
-      objective: `Generate standalone project ${project.name}`,
+      objective: version === 1 ? `Generate standalone project ${project.name}` : `Rebuild ${project.name} as build v${version}`,
       acceptanceCriteria: [
         'Manifest is valid and buildable',
         'Composition is materialised with provenance',
@@ -288,7 +301,7 @@ export class FactoryService {
 
     project = this.store.upsertProject({ ...project, state: 'generating', updatedAt: new Date().toISOString() });
     const started = Date.now();
-    await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.started', actor: 'factory-service', payload: { manifestVersion: project.manifest.schemaVersion ?? 1, knowledgePackHash: project.knowledgePack?.packHash ?? null } }));
+    await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.started', actor: 'factory-service', payload: { buildVersion: version, manifestVersion: project.manifest.schemaVersion ?? 1, knowledgePackHash: project.knowledgePack?.packHash ?? null } }));
 
     try {
       const { plan, composition } = generateComposedProject(project.manifest, workspace, { knowledgePack: project.knowledgePack });
@@ -307,7 +320,7 @@ export class FactoryService {
         taskId: task.id,
         type: 'repository.generated',
         actor: 'factory-service',
-        payload: { workspace, templateId: plan.template.id, recipes: plan.recipes.map((recipe) => recipe.id), adapters: plan.adapters.map((adapter) => adapter.id) },
+        payload: { workspace, buildVersion: version, templateId: plan.template.id, recipes: plan.recipes.map((recipe) => recipe.id), adapters: plan.adapters.map((adapter) => adapter.id) },
         usage: { durationMs: Date.now() - started },
       }));
 
@@ -315,7 +328,7 @@ export class FactoryService {
         projectId,
         taskId: task.id,
         repoRef: workspace,
-        summary: `Generated ${project.name} from Manifest v${project.manifest.schemaVersion ?? 1}${project.knowledgePack ? ' and trusted knowledge pack' : ''}.`,
+        summary: `Build v${version}: generated ${project.name} from Manifest v${project.manifest.schemaVersion ?? 1}${project.knowledgePack ? ' and trusted knowledge pack' : ''}.`,
         filesChanged: [],
         failures: [],
         artifacts: ['.app-builder/manifest.json', '.app-builder/composition.json', '.app-builder/recipe-installations.json'],

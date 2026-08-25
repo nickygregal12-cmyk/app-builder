@@ -60,6 +60,7 @@ export type Checkpoint = {
   id: string;
   projectId: string;
   taskId: string;
+  repoRef?: string;
   summary: string;
   nextAction: string;
   artifacts: string[];
@@ -135,6 +136,7 @@ export type DeclaredSource = {
 
 export type CompositionSummary = {
   compositionHash: string;
+  input?: { manifestVersion: number; knowledgePackHash: string | null };
   pages: Array<{ id: string; path: string; title: string; sectionIds: string[] }>;
   sections: Array<{ id: string; type: string; purpose: string }>;
   warnings: string[];
@@ -151,6 +153,7 @@ export type WorkspaceSnapshot = {
   integrations: IntegrationStatus[];
   knowledge: KnowledgeSummary | null;
   declaredSources: DeclaredSource[];
+  checkpoints: Checkpoint[];
 };
 
 const API_ROOT = '/api';
@@ -204,7 +207,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, manifestResult] = await Promise.all([
+  const [projectResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, manifestResult, checkpointsResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
     request<{ events: BuildEvent[] }>(`/projects/${id}/events`),
@@ -215,6 +218,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ integrations: IntegrationStatus[] }>('/integrations'),
     request<{ knowledge: KnowledgeSummary | null }>(`/projects/${id}/sources`),
     request<{ manifest: { inputs?: { sources?: DeclaredSource[] } } }>(`/projects/${id}/manifest`),
+    request<{ checkpoints: Checkpoint[] }>(`/projects/${id}/checkpoints`),
   ]);
   return {
     project: projectResult.project,
@@ -227,5 +231,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     integrations: integrationsResult.integrations,
     knowledge: knowledgeResult.knowledge,
     declaredSources: manifestResult.manifest?.inputs?.sources ?? [],
+    checkpoints: checkpointsResult.checkpoints,
   };
 }

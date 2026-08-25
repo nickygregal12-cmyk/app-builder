@@ -110,7 +110,7 @@ test('ingestion is additive and identical bytes are not ingested twice', async (
   }
 });
 
-test('ingested knowledge reaches deterministic generation as real content', async () => {
+test('ingested knowledge reaches generation, and later material reaches a fresh build', async () => {
   const dirs = roots('app-builder-ingest-generate-');
   const store = new FactoryStore({ stateRoot: dirs.stateRoot });
   const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
@@ -131,9 +131,20 @@ test('ingested knowledge reaches deterministic generation as real content', asyn
     const serialised = JSON.stringify(composition);
     assert.match(serialised, /hello@kelvinjoinery\.example/);
 
-    await assert.rejects(
-      () => service.ingestSources(project.id, parseSourceRequests([{ name: 'late.md', contentBase64: base64('# Late') }])),
-      /before the project workspace is generated/,
+    // Material can still arrive after a build. It reaches the product through a
+    // fresh build rather than by mutating the repository someone may already be
+    // reviewing.
+    await service.ingestSources(project.id, parseSourceRequests([
+      { name: 'accreditations.md', mimeType: 'text/markdown', contentBase64: base64('# Accreditations\n\nEmail: certified@kelvinjoinery.example'), approvedForUse: true },
+    ]));
+    const rebuilt = await service.generateProject(project.id);
+    assert.notEqual(rebuilt.workspace, generated.workspace, 'a rebuild never overwrites the previous build');
+    assert.ok(fs.existsSync(generated.workspace), 'the previous build stays on disk for comparison');
+
+    const checkpoints = service.listCheckpoints(project.id);
+    assert.deepEqual(
+      checkpoints.filter((checkpoint) => checkpoint.summary.startsWith('Build v')).map((checkpoint) => checkpoint.repoRef),
+      [generated.workspace, rebuilt.workspace],
     );
   } finally {
     await service.close();

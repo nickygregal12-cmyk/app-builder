@@ -76,6 +76,7 @@ export function createFactoryHttpServer({ service }) {
       }
       if (request.method === 'GET' && route.action === 'metrics') return send(response, 200, { metrics: service.metrics(route.projectId) });
       if (request.method === 'GET' && route.action === 'checkpoint') return send(response, 200, { checkpoint: service.latestCheckpoint(route.projectId) });
+      if (request.method === 'GET' && route.action === 'checkpoints') return send(response, 200, { checkpoints: service.listCheckpoints(route.projectId) });
       if (request.method === 'GET' && route.action === 'preview') return send(response, 200, { preview: service.previewStatus(route.projectId) });
       if (request.method === 'POST' && route.action === 'preview/start') return send(response, 200, { preview: await service.startPreview(route.projectId) });
       if (request.method === 'POST' && route.action === 'preview/stop') return send(response, 200, { preview: await service.stopPreview(route.projectId) });

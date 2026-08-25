@@ -20,6 +20,7 @@ export const MCP_TOOL_BINDINGS = Object.freeze([
   { name: 'project_events_read', serviceTool: 'project.events.read', mutating: false },
   { name: 'project_metrics_read', serviceTool: 'project.metrics.read', mutating: false },
   { name: 'project_checkpoint_read', serviceTool: 'project.checkpoint.read', mutating: false },
+  { name: 'project_checkpoints_read', serviceTool: 'project.checkpoints.read', mutating: false },
   { name: 'project_preview_status', serviceTool: 'project.preview.read', mutating: false },
   { name: 'project_preview_start', serviceTool: 'project.preview.start', mutating: true },
   { name: 'project_preview_stop', serviceTool: 'project.preview.stop', mutating: true },
@@ -162,6 +163,12 @@ export function createAppBuilderMcpServer({ client = new FactoryServiceClient() 
     inputSchema: projectInput,
     annotations: annotations(false),
   }, invoke(({ projectId }) => client.readCheckpoint(projectId)));
+
+  server.registerTool('project_checkpoints_read', {
+    description: 'Read the full durable checkpoint history for a project, including each build workspace.',
+    inputSchema: projectInput,
+    annotations: annotations(false),
+  }, invoke(({ projectId }) => client.readCheckpoints(projectId)));
 
   server.registerTool('project_preview_status', {
     description: 'Read service-managed local preview status.',

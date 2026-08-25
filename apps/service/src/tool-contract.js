@@ -15,6 +15,7 @@ export const FACTORY_TOOLS = Object.freeze([
   { name: 'project.events.read', method: 'GET', path: '/projects/{projectId}/events', mutating: false, approvalRequired: false },
   { name: 'project.metrics.read', method: 'GET', path: '/projects/{projectId}/metrics', mutating: false, approvalRequired: false },
   { name: 'project.checkpoint.read', method: 'GET', path: '/projects/{projectId}/checkpoint', mutating: false, approvalRequired: false },
+  { name: 'project.checkpoints.read', method: 'GET', path: '/projects/{projectId}/checkpoints', mutating: false, approvalRequired: false },
   { name: 'project.preview.read', method: 'GET', path: '/projects/{projectId}/preview', mutating: false, approvalRequired: false },
   { name: 'project.preview.start', method: 'POST', path: '/projects/{projectId}/preview/start', mutating: true, approvalRequired: false },
   { name: 'project.preview.stop', method: 'POST', path: '/projects/{projectId}/preview/stop', mutating: true, approvalRequired: false },

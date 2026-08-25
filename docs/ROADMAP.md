@@ -1,8 +1,10 @@
 # Roadmap
 
-Current stage: **Phase 3.8 — Product proof and correctness hardening**.
+Current stage: **Phase 3.8 — Product proof and correctness hardening**. The Phase 4A Console vertical slice is delivered.
 
-Implementation has reached the Phase 3.7 service/tool-boundary exit. Before broad Phase 4 work accelerates, the remaining Phase 3.8 correctness/product gates should be closed while the surface area is still small, and the genuine real-business product proof should be completed rather than relying only on synthetic acceptance fixtures.
+The Phase 3.8 correctness gates are closed except the genuine real-business product proof (3.8E), which needs actual company material and a human product review rather than more infrastructure. The Phase 4A slice was built alongside it because that proof has to run through the product — real intake, real source ingestion, real generation — not through a CLI beside it.
+
+Phase 4B and later Console work should not accelerate until 3.8E has actually been run against a real business and its findings fed back.
 
 The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
@@ -256,7 +258,7 @@ Plan:
 
 Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client of `apps/service` rather than expanding browser-only state.
 
-### Phase 4A — First complete usable vertical slice 🚧 In progress
+### Phase 4A — First complete usable vertical slice ✅ Complete
 
 Delivered:
 - create/open project;
@@ -270,16 +272,14 @@ Delivered:
   Console — a public page stays reference-only until someone says otherwise;
 - intake-declared sources that have not been ingested are shown as outstanding;
 - trigger deterministic build;
+- material can still arrive after a build: each build materialises its own
+  workspace version, so a rebuild never overwrites the repository someone is
+  reviewing, and the Console says when the live build no longer reflects the
+  ingested knowledge;
 - visible task/event progress;
-- service-managed live preview;
+- service-managed live preview, stopped automatically before a rebuild;
 - desktop/tablet/mobile preview switching;
-- latest checkpoint visibility.
-
-Remaining:
-- re-ingestion and recompose after a workspace exists — ingestion is currently
-  refused once the project has been generated, because there is no recompose
-  operation to make later knowledge take effect;
-- checkpoint/version history rather than only the latest checkpoint.
+- checkpoint and build-version history, with the live build marked.
 
 ### Phase 4B — Direct manipulation, brand sources and assets
 

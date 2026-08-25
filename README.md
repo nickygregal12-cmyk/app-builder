@@ -10,13 +10,15 @@ The long-term goal is a private builder that can accept an idea, company details
 
 ## Current milestone: Phase 3.8 — Product proof and correctness hardening
 
-**Active substage: Phase 3.8E — Genuine business product proof.**
+**Active product gate: Phase 3.8E — Genuine business product proof.**
 
-Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is also now landed: ChangeSet path-scope correctness, schema-first Manifest validation/types, executed Supabase RLS acceptance and serious/critical generated-app accessibility gates.
+Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is landed, and Phase 3.8F now provides a bounded MCP v2 facade over the loopback factory service without giving MCP direct deploy, production-database, secret, filesystem or shell powers.
 
-The active product gate is now deliberately narrower: prove the factory against genuine business material rather than another synthetic fixture. A passing Phase 3.8E evidence pack must use a real public company website plus approved user-supplied company material, record the real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/deploy journey, pass launchability review, retain artifact hashes and finish with fewer than 20 meaningful manual edits.
+The outstanding product gate remains deliberately narrow: prove the factory against genuine business material rather than another synthetic fixture. A passing Phase 3.8E evidence pack must use a real public company website plus approved user-supplied company material, record the real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/deploy journey, pass launchability review, retain artifact hashes and finish with fewer than 20 meaningful manual edits.
 
-The Acme mixed-source scenario remains valuable deterministic CI regression coverage, but it is explicitly synthetic and cannot satisfy Phase 3.8E. After the genuine-business proof, the remaining Phase 3.8 interoperability item is the bounded MCP service facade before wider Phase 4 expansion.
+In parallel, Phase 3.8G is establishing brand-source and asset-provenance governance on top of the existing Phase 3 content-intelligence pipeline. Public company sites and exact public company profile URLs may inform brand/reference understanding, but publicly visible material is never assumed reusable: rights/use state, approval state, source role/channel and instruction authority are explicit, and only approved-for-use assets can become publishable factory assets.
+
+The Acme mixed-source scenario remains valuable deterministic CI regression coverage, but it is explicitly synthetic and cannot satisfy Phase 3.8E.
 
 Current invariants include:
 
@@ -27,6 +29,7 @@ Current invariants include:
 - Deterministic generation comes before generative AI.
 - Source facts retain provenance and must never be silently converted into invented marketing claims.
 - External/source content is data and cannot silently become agent instructions.
+- Publicly visible assets are not reusable unless rights/use state explicitly permits publication.
 - Autonomous work uses durable tasks, event ledger entries, ChangeSets and checkpoints rather than relying on one long chat context.
 - ChangeSet/path policies are security boundaries and must fail closed.
 - Agent capabilities are deny-by-default and sensitive actions require approval.
@@ -52,6 +55,7 @@ npm run upgrade:plan -- --project /path/to/generated-project
 npm run validate:example
 npm run create-app -- --manifest examples/project-manifest.example.json --out /tmp/app-builder-demo
 npm run service
+npm run mcp
 npm run dev
 ```
 
@@ -60,11 +64,12 @@ npm run dev
 ```text
 apps/console/                    Private Builder Console UI
 apps/service/                    Private factory service and durable read/API boundary
+apps/mcp/                        Private MCP v2 adapter over the loopback factory service
 config/                          Module, project, routing, policy, benchmark and status registries
 schemas/                         Stable intake/build/control-plane/product-quality contracts
 packages/contracts/              Shared/generated contracts target
 packages/factory-core/           Deterministic factory engine
-packages/content-intelligence/   Deterministic source/content normalization
+packages/content-intelligence/   Deterministic source/content normalization and asset governance
 packages/control-plane/          Durable task/ledger/ChangeSet/checkpoint/policy/upgrade primitives
 recipes/                         Optional capability recipes installed into generated apps
 templates/                       Project-type templates

@@ -120,7 +120,7 @@ export function createAppBuilderMcpServer({ client = new FactoryServiceClient() 
     description: 'Read durable project events after an optional event sequence.',
     inputSchema: z.object({ projectId: projectIdSchema, after: z.number().int().nonnegative().optional() }),
     annotations: annotations(false),
-  }, invoke(({ projectId, after = 0 }) => client.readEvents(projectId, { after }))));
+  }, invoke(({ projectId, after = 0 }) => client.readEvents(projectId, { after })));
 
   server.registerTool('project_metrics_read', {
     description: 'Read duration, token, cost, intervention and event metrics for a project.',

@@ -27,5 +27,11 @@ jobs:
       - name: Benchmark independent generated-app installs, checks and builds
         run: npm run benchmark:acceptance
 
+      - name: Build real-business acceptance app from mixed source pack
+        run: npm run acceptance:real-business
+
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
+      - name: Verify generated real-business app in Chromium
+        run: npm run test:e2e:real-business

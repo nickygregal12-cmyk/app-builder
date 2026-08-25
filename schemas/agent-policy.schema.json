@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/agent-policy.schema.json",
+  "title": "App Builder Agent Capability Policy",
+  "type": "object",
+  "required": ["id", "allow", "approvalRequired", "deny"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "allow": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "approvalRequired": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "deny": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": false
+}

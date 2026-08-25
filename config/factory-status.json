@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "currentPhase": "3.5",
+  "currentStage": "Phase 3.5A — Factory Control Plane foundation",
+  "status": "active",
+  "completedPhases": ["0", "1", "2", "3"],
+  "activeWork": [
+    "durable-task-ledger",
+    "changeset-guardrails",
+    "agent-capability-policy",
+    "context-trust-boundary",
+    "checkpoint-resume",
+    "benchmark-foundation"
+  ],
+  "nextStage": "Phase 3.5B — evaluation and upgrade foundations"
+}

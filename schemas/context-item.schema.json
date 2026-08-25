@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/context-item.schema.json",
+  "title": "App Builder Routed Context Item",
+  "type": "object",
+  "required": ["schemaVersion", "id", "kind", "trustLevel", "instructionAuthority", "content"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["factory-authority", "user-instruction", "source-data", "generated-data", "tool-output", "failure", "checkpoint", "skill"]},
+    "trustLevel": {"enum": ["factory-trusted", "user-verified", "user-supplied", "external-trusted", "external-untrusted", "ai-generated"]},
+    "instructionAuthority": {"enum": ["none", "user", "factory"]},
+    "sourceId": {"type": ["string", "null"]},
+    "content": {},
+    "provenance": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"enum": ["source-data", "generated-data", "tool-output"]}}, "required": ["kind"]},
+      "then": {"properties": {"instructionAuthority": {"const": "none"}}}
+    }
+  ],
+  "additionalProperties": false
+}

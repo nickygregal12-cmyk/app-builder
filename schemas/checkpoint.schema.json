@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/checkpoint.schema.json",
+  "title": "App Builder Checkpoint",
+  "type": "object",
+  "required": ["schemaVersion", "id", "projectId", "taskId", "repoRef", "summary", "nextAction", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "taskId": {"type": "string", "minLength": 1},
+    "repoRef": {"type": "string", "minLength": 1},
+    "commitSha": {"type": ["string", "null"]},
+    "changeSetId": {"type": ["string", "null"]},
+    "summary": {"type": "string", "minLength": 1},
+    "filesChanged": {"type": "array", "items": {"type": "string"}},
+    "failures": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {"type": "array", "items": {"type": "string"}},
+    "nextAction": {"type": "string", "minLength": 1},
+    "createdAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

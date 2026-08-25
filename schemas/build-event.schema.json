@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/build-event.schema.json",
+  "title": "App Builder Build Event",
+  "type": "object",
+  "required": ["schemaVersion", "id", "type", "projectId", "actor", "timestamp", "payload"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "type": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "taskId": {"type": ["string", "null"]},
+    "parentEventId": {"type": ["string", "null"]},
+    "correlationId": {"type": ["string", "null"]},
+    "actor": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "minLength": 1},
+    "payload": {"type": "object"},
+    "usage": {
+      "type": "object",
+      "properties": {
+        "model": {"type": ["string", "null"]},
+        "inputTokens": {"type": "integer", "minimum": 0},
+        "outputTokens": {"type": "integer", "minimum": 0},
+        "costGbp": {"type": "number", "minimum": 0},
+        "durationMs": {"type": "integer", "minimum": 0},
+        "cacheHit": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

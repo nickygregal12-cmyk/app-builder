@@ -7,7 +7,7 @@ export const FACTORY_TOOLS = Object.freeze([
   { name: 'project.manifest.read', method: 'GET', path: '/projects/{projectId}/manifest', mutating: false, approvalRequired: false },
   { name: 'project.knowledge.read', method: 'GET', path: '/projects/{projectId}/knowledge-pack', mutating: false, approvalRequired: false },
   { name: 'project.composition.read', method: 'GET', path: '/projects/{projectId}/composition', mutating: false, approvalRequired: false },
-  { name: 'project.source.governance.update', method: 'POST', path: '/projects/{projectId}/sources/{sourceId}/governance', mutating: true, approvalRequired: false },
+  { name: 'project.source.governance.update', method: 'POST', path: '/projects/{projectId}/sources/{sourceId}/governance', mutating: true, approvalRequired: true },
   { name: 'project.generate', method: 'POST', path: '/projects/{projectId}/generate', mutating: true, approvalRequired: false },
   { name: 'project.verify', method: 'POST', path: '/projects/{projectId}/verify', mutating: true, approvalRequired: false },
   { name: 'project.tasks.read', method: 'GET', path: '/projects/{projectId}/tasks', mutating: false, approvalRequired: false },

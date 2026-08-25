@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "analytics",
+  "module": "analytics",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "entry": "src/features/analytics/index.ts",
+  "files": ["src/features/analytics/index.ts"],
+  "requires": [],
+  "requiresAdapters": [],
+  "conflicts": [],
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+}

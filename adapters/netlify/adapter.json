@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "netlify",
+  "kind": "deployment",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "files": ["netlify.toml", "docs/DEPLOYMENT.md"],
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  }
+}

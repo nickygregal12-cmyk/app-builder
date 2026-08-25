@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "observability",
+  "module": "observability",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "entry": "src/features/observability/index.tsx",
+  "files": ["src/features/observability/index.tsx"],
+  "requires": [],
+  "requiresAdapters": [],
+  "conflicts": [],
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+}

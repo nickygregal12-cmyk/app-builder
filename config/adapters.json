@@ -7,6 +7,13 @@
       "kind": "backend",
       "status": "ready",
       "selectWhen": {"backend": "supabase"}
+    },
+    "netlify": {
+      "path": "adapters/netlify",
+      "version": "1.0.0",
+      "kind": "deployment",
+      "status": "ready",
+      "selectWhen": {"deployment": "netlify"}
     }
   }
 }

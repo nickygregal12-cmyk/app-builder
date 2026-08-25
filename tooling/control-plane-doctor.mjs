@@ -45,8 +45,12 @@ function readJson(relative) {
 
 try {
   const status = readJson('config/factory-status.json');
-  if (status.currentPhase !== '3.5' || status.status !== 'active') {
-    console.error('Factory status must identify Phase 3.5 as active while the control plane is being built.');
+  if (status.status !== 'active') {
+    console.error('Factory status must identify an active delivery stage.');
+    failed = true;
+  }
+  if (!(status.completedStages ?? []).includes('3.5A') || !(status.completedStages ?? []).includes('3.5B')) {
+    console.error('Factory status must retain Phase 3.5A/3.5B as completed control-plane foundations.');
     failed = true;
   }
   for (const doc of ['README.md', 'docs/ROADMAP.md']) {
@@ -114,7 +118,7 @@ try {
 
   const pkg = readJson('packages/control-plane/package.json');
   if (pkg.name !== '@app-builder/control-plane' || pkg.dependencies) {
-    console.error('Control-plane package must remain provider-neutral and dependency-free in Phase 3.5.');
+    console.error('Control-plane package must remain provider-neutral and dependency-free at this boundary.');
     failed = true;
   }
   if (pkg.exports?.['./upgrades'] !== './src/upgrades.js') {
@@ -124,7 +128,7 @@ try {
 
   const rootPackage = readJson('package.json');
   if (!String(rootPackage.scripts?.doctor ?? '').includes('control-plane-doctor.mjs')) {
-    console.error('Root doctor must run the Phase 3.5 control-plane doctor.');
+    console.error('Root doctor must retain the control-plane invariant check.');
     failed = true;
   }
   for (const script of ['benchmark:acceptance', 'upgrade:plan']) {
@@ -166,4 +170,4 @@ try {
 }
 
 if (failed) process.exit(1);
-console.log('Phase 3.5 control-plane doctor: durable state, permissions, trust, six-project benchmarks, upgrade inventories/NFR/design contracts and portability are valid.');
+console.log('Control-plane doctor: durable state, permissions, trust, six-project benchmarks, upgrade inventories/NFR/design contracts and portability remain valid.');

@@ -1,7 +1,15 @@
-export const FACTORY_ENGINE_VERSION = 3;
+export const FACTORY_ENGINE_VERSION = 4;
 
 const DEPTH_RANK = { quick: 0, standard: 1, thorough: 2 };
 const AMBIGUOUS_VALUES = new Set(['unknown', 'decide-for-me', 'decide for me', 'both/depends']);
+const SURFACE_DEFAULTS = {
+  'marketing-site': ['Home', 'Services', 'About', 'Contact'],
+  'b2b-saas': ['Sign in', 'Dashboard', 'Workspace', 'Settings'],
+  'consumer-app': ['Onboarding', 'Home', 'Primary experience', 'Profile and settings'],
+  'internal-tool': ['Sign in', 'Dashboard', 'Records', 'Administration'],
+  'content-site': ['Home', 'Content index', 'Content detail', 'About'],
+  'ai-app': ['Workspace', 'Input', 'Results', 'History and settings']
+};
 
 export function slugify(value) {
   return String(value ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'new-project';
@@ -132,11 +140,11 @@ export function buildAmbiguityFollowUpRequest({ questions, answers, maxQuestions
   };
 }
 
-export function createIntakeSession({ projectType, mode = 'standard', questionnaireVersion = '1.2.0', questions, seedAnswers = {}, sourceReferences = [], feedback = [] }) {
+export function createIntakeSession({ projectType, mode = 'standard', questionnaireVersion = '1.3.0', questions, seedAnswers = {}, sourceReferences = [], feedback = [] }) {
   const answers = applyQuestionDefaults(questions, { project_type: projectType, ...seedAnswers });
   const visible = questionsForMode(questions, mode, answers);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     questionnaireVersion,
     projectType,
     mode,
@@ -153,7 +161,7 @@ export function createIntakeSession({ projectType, mode = 'standard', questionna
 
 export function serializeIntakeBundle({ session, buildContract, projectManifest }) {
   return JSON.stringify({
-    bundleVersion: 1,
+    bundleVersion: 2,
     exportedAt: new Date().toISOString(),
     session,
     buildContract,
@@ -178,6 +186,28 @@ export function deriveEnabledModules(projectType, answers, projectTypesConfig) {
   return [...modules].sort();
 }
 
+export function assessRequestedCapabilities(projectType, answers, projectTypesConfig, capabilityDecisions = {}) {
+  const registry = projectTypesConfig.moduleRegistry?.modules ?? {};
+  const requestedModules = deriveEnabledModules(projectType, answers, projectTypesConfig);
+  const capabilities = requestedModules.map((module) => {
+    const registryEntry = registry[module];
+    const availability = registryEntry?.status ?? 'unknown';
+    if (availability === 'ready') return { module, availability, decision: 'include' };
+    const decision = capabilityDecisions[module] === 'exclude' || capabilityDecisions[module] === 'custom-work'
+      ? capabilityDecisions[module]
+      : 'unresolved';
+    return { module, availability, decision };
+  });
+  return {
+    requestedModules,
+    capabilities,
+    readyModules: capabilities.filter((item) => item.availability === 'ready').map((item) => item.module),
+    customWorkModules: capabilities.filter((item) => item.decision === 'custom-work').map((item) => item.module),
+    excludedModules: capabilities.filter((item) => item.decision === 'exclude').map((item) => item.module),
+    unresolvedModules: capabilities.filter((item) => item.decision === 'unresolved').map((item) => item.module)
+  };
+}
+
 function mapBudget(costPriority, aiCostPriority) {
   if (aiCostPriority === 'lowest-cost' || costPriority === 'lowest-sensible-cost') return { mode: 'economy', maxBuildCostGbp: 5 };
   if (aiCostPriority === 'highest-quality' || costPriority === 'performance-first') return { mode: 'quality', maxBuildCostGbp: 25 };
@@ -188,55 +218,134 @@ function defaultInfrastructure(projectType) {
   return { backend: ['marketing-site', 'content-site'].includes(projectType) ? 'none' : 'supabase', deployment: 'netlify' };
 }
 
-export function buildProjectManifest({ projectType, answers, projectTypesConfig, sourceReferences = [] }) {
+function asString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function asList(value) {
+  return Array.isArray(value) ? value.map((item) => String(item).trim()).filter(Boolean) : [];
+}
+
+function asRecord(value) {
+  return typeof value === 'object' && value && !Array.isArray(value) ? { ...value } : {};
+}
+
+export function deriveMajorSurfaces(projectType, answers = {}) {
+  const explicit = asList(answers.major_surfaces ?? answers.major_pages);
+  const defaults = SURFACE_DEFAULTS[projectType] ?? ['Home'];
+  const surfaces = explicit.length ? [...explicit] : [...defaults];
+  if (projectType === 'marketing-site' && asList(answers.locations).length > 0 && !surfaces.includes('Locations')) surfaces.push('Locations');
+  if (answers.moderation === true && !surfaces.includes('Administration')) surfaces.push('Administration');
+  return [...new Set(surfaces)];
+}
+
+function buildRequirementContext(answers, capabilityPlan) {
+  return {
+    audience: {
+      summary: asString(answers.target_users),
+      roles: asList(answers.roles)
+    },
+    journeys: asList(answers.must_have),
+    majorSurfaces: deriveMajorSurfaces(asString(answers.project_type), answers),
+    entities: asList(answers.core_entities),
+    company: {
+      identity: asRecord(answers.company_identity),
+      services: asList(answers.services),
+      locations: asList(answers.locations),
+      contactDetails: asRecord(answers.contact_details),
+      trustSignals: asList(answers.trust),
+      conversionGoals: asList(answers.conversion)
+    },
+    constraints: {
+      hard: asList(answers.hard_constraints),
+      expectedScale: asString(answers.expected_scale),
+      sensitivity: asString(answers.sensitivity),
+      tenantModel: asString(answers.tenant_model),
+      integrations: asList(answers.integrations),
+      existingData: asList(answers.existing_data),
+      uploadTypes: asList(answers.upload_types),
+      customCapabilities: capabilityPlan.customWorkModules,
+      excludedCapabilities: capabilityPlan.excludedModules,
+      unresolvedCapabilities: capabilityPlan.unresolvedModules
+    }
+  };
+}
+
+export function buildProjectManifest({ projectType, answers, projectTypesConfig, sourceReferences = [], capabilityDecisions = {} }) {
   const name = String(answers.project_name ?? answers.company_identity?.name ?? 'New Project').trim();
-  const enabledModules = deriveEnabledModules(projectType, answers, projectTypesConfig);
+  const capabilityPlan = assessRequestedCapabilities(projectType, answers, projectTypesConfig, capabilityDecisions);
   const knownModules = new Set(Object.keys(projectTypesConfig.moduleRegistry?.modules ?? {}));
   const modules = {};
-  for (const moduleName of knownModules) modules[moduleName] = enabledModules.includes(moduleName);
-  for (const moduleName of enabledModules) if (!(moduleName in modules)) modules[moduleName] = true;
+  for (const moduleName of knownModules) modules[moduleName] = capabilityPlan.readyModules.includes(moduleName);
+  for (const moduleName of capabilityPlan.readyModules) if (!(moduleName in modules)) modules[moduleName] = true;
+  const context = buildRequirementContext({ ...answers, project_type: projectType }, capabilityPlan);
   return {
-    schemaVersion: 1,
-    project: { name, slug: slugify(name), type: projectType, primaryGoal: String(answers.primary_goal ?? '').trim() },
+    schemaVersion: 2,
+    project: { name, slug: slugify(name), type: projectType, primaryGoal: asString(answers.primary_goal) },
+    audience: context.audience,
+    journeys: context.journeys,
+    majorSurfaces: context.majorSurfaces,
+    entities: context.entities,
+    company: context.company,
+    constraints: context.constraints,
     modules,
     infrastructure: defaultInfrastructure(projectType),
     aiBudget: mapBudget(answers.cost_priority, answers.ai_cost_priority),
     brand: { designControl: answers.design_control ?? 'sensible-defaults' },
     inputs: {
-      inventory: answers.existing_inputs ?? [],
-      existingWebsite: answers.existing_site || undefined,
+      inventory: asList(answers.existing_inputs),
+      existingWebsite: asString(answers.existing_site) || undefined,
       sources: sourceReferences.map(createSourceReference)
     },
-    outOfScope: Array.isArray(answers.out_of_scope) ? answers.out_of_scope : []
+    outOfScope: asList(answers.out_of_scope)
   };
 }
 
-export function buildBuildContract({ projectType, answers, questions, projectTypesConfig, sourceReferences = [] }) {
+export function buildBuildContract({ projectType, answers, questions, projectTypesConfig, sourceReferences = [], capabilityDecisions = {} }) {
   const visible = questions.filter((question) => isQuestionVisible(question, answers));
   const unresolved = getUnresolvedHighImpactQuestions(visible, answers);
-  const mustHave = Array.isArray(answers.must_have) ? answers.must_have : [];
+  const capabilityPlan = assessRequestedCapabilities(projectType, answers, projectTypesConfig, capabilityDecisions);
+  const mustHave = asList(answers.must_have);
   const followUp = buildAmbiguityFollowUpRequest({ questions: visible, answers });
+  const infrastructure = defaultInfrastructure(projectType);
+  const budget = mapBudget(answers.cost_priority, answers.ai_cost_priority);
+  const context = buildRequirementContext({ ...answers, project_type: projectType }, capabilityPlan);
+  const hasBlockers = unresolved.length > 0 || capabilityPlan.unresolvedModules.length > 0;
   return {
     version: 2,
-    status: unresolved.length === 0 ? 'ready-for-review' : 'draft',
+    status: hasBlockers ? 'draft' : 'ready-for-review',
     project: {
       name: String(answers.project_name ?? answers.company_identity?.name ?? 'New Project').trim(),
       type: projectType,
-      primaryGoal: String(answers.primary_goal ?? '').trim(),
-      targetUsers: String(answers.target_users ?? '').trim()
+      primaryGoal: asString(answers.primary_goal),
+      targetUsers: context.audience.summary
     },
+    audience: context.audience,
+    entities: context.entities,
+    company: context.company,
+    constraints: context.constraints,
     coreJourneys: mustHave,
-    enabledModules: deriveEnabledModules(projectType, answers, projectTypesConfig),
-    explicitlyExcluded: Array.isArray(answers.out_of_scope) ? answers.out_of_scope : [],
+    majorSurfaces: context.majorSurfaces,
+    requestedModules: capabilityPlan.requestedModules,
+    enabledModules: capabilityPlan.readyModules,
+    customWorkModules: capabilityPlan.customWorkModules,
+    excludedModules: capabilityPlan.excludedModules,
+    capabilityPlan: capabilityPlan.capabilities,
+    infrastructure,
+    brandDesignDirection: answers.design_control ?? 'sensible-defaults',
+    designDirection: answers.design_control ?? 'sensible-defaults',
+    sourceInputs: sourceReferences.map(createSourceReference),
+    explicitlyExcluded: asList(answers.out_of_scope),
     acceptanceCriteria: mustHave.map((item) => `V1 supports: ${item}`),
     unresolvedHighImpactQuestions: unresolved,
+    unresolvedCapabilityDecisions: capabilityPlan.unresolvedModules,
     ambiguityFollowUp: followUp,
-    sourceInputs: sourceReferences.map(createSourceReference),
-    designDirection: answers.design_control ?? 'sensible-defaults'
+    estimatedAiCostMode: budget
   };
 }
 
 export function approveBuildContract(contract) {
   if ((contract.unresolvedHighImpactQuestions ?? []).length > 0) throw new Error('Build Contract cannot be approved while high-impact questions remain unresolved.');
+  if ((contract.unresolvedCapabilityDecisions ?? []).length > 0) throw new Error(`Build Contract cannot be approved until unavailable capabilities are resolved: ${contract.unresolvedCapabilityDecisions.join(', ')}.`);
   return { ...contract, status: 'approved', approvedAt: new Date().toISOString() };
 }

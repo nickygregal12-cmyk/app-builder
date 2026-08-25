@@ -1,8 +1,8 @@
 # Roadmap
 
-Current stage: **Phase 3.5B — Evaluation and upgrade foundations**.
+Current stage: **Phase 3.6B — Deterministic composition**.
 
-The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The control-plane additions and reviewed improvement programme live in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
+The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
 Machine-readable progress authority: `config/factory-status.json`.
 
@@ -41,167 +41,249 @@ Machine-readable progress authority: `config/factory-status.json`.
 - recipe dependency/conflict resolution
 - safe managed recipe add/remove reconciliation
 - generated provenance records without runtime lock-in
-- first ready recipes: feature flags and SEO defaults
 
 ### Phase 2B — Backend foundation and core recipes
 
 - Supabase infrastructure adapter with browser-safe environment contract
-- auth recipe
-- profiles recipe
-- organisations/membership/RBAC recipe with explicit RLS contracts
+- auth, profiles and organisations/RBAC recipes
 - generic admin foundation
-- security regression tests for RLS, privileged helpers and trusted admin metadata
+- RLS/security regression tests
 
 ### Phase 2C — Project finishing system
 
 - Netlify deployment adapter, SPA fallback and baseline headers
-- deterministic deployment fail-closed behavior
 - six project-type layout patterns and neutral design-token system
 - project-aware seed/scenario framework
-- generated structured and human-readable handover documentation
-- uploads, analytics, observability and Netlify lead-generation recipes
-- ready-default invariant
-- byte-stable generation checks
-- six-project generation matrix
-- independently installed/checked/built marketing and B2B generated apps in CI
-
-Phase 2 exit gate is complete: a valid manifest can deterministically generate a runnable, tested repository containing only available selected capabilities and no domain-specific baggage.
+- structured/human-readable handover documentation
+- uploads, analytics, observability and lead-generation recipes
+- ready-default invariant and byte-stable generation
 
 ## Phase 3 — Content and Asset Intelligence ✅ Complete
 
-- deterministic text, Markdown, JSON, HTML and CSV extraction
-- real PDF, DOCX and XLSX extraction
-- bounded same-origin existing-site crawl with redirect/size/time/network safety gates
-- content-addressed extraction cache keyed by bytes, MIME and extractor version
+- deterministic extraction for text/Markdown/JSON/HTML/CSV/PDF/DOCX/XLSX
+- bounded same-origin existing-site crawl with network/resource safety gates
+- content-addressed extraction cache
 - provenance/confidence/verification-aware facts
-- structured company profile with source-backed services, people, projects, testimonials, accreditations and service areas
-- generated-copy separation: extracted facts never become invented marketing claims
-- image/logo/screenshot inventory with dimensions, aspect ratio, alpha, dominant colour and low-resolution signals
-- exact and normalized-visual duplicate signals
-- responsive WebP/AVIF generation plus review-required hero/card/square crop candidates
-- observed brand colours/fonts/titles/logo/screenshot candidates
-- deterministic existing-site SEO snapshots and aggregate issue summary
-- local-SEO inputs that use only source-backed locations/contact data
-- lead-generation inputs from real contact methods, services and trust evidence
-- bounded content-addressed AI-context chunks that deduplicate identical text across sources
-- stable semantic knowledge-pack hash independent of warm/cold cache state
-- `npm run ingest` CLI producing normalized sources, trusted knowledge pack, AI-context index, source-cache index and asset variants
-- Phase 3 doctor enforcing exact extractor dependencies and preventing generated-app runtime coupling
-- full mixed business-pack acceptance covering URL crawl, approved company data, PDF, spreadsheet, logo and project image
+- source-backed company profile
+- generated-copy separation from extracted facts
+- image/logo/screenshot inventory, duplicate signals and responsive variants
+- observed brand inputs
+- SEO/local-SEO/lead inputs
+- bounded AI-context chunks and semantic knowledge-pack hash
+- `npm run ingest` CLI
+- Phase 3 doctor and mixed business-pack acceptance
 
-Phase 3 exit gate is complete: messy business/source material can be normalized once into trusted structured inputs without repeatedly parsing or later needing to resend entire source files to AI.
+Phase 3 exit gate is complete: messy source material can be normalized once into trusted structured inputs without repeatedly reparsing or resending whole files to AI.
 
-## Phase 3.5 — Factory Control Plane 🚧 Active
+## Phase 3.5 — Factory Control Plane ✅ Foundation Complete
 
-Purpose: make later AI/runtime autonomy measurable, resumable, reversible and permissioned before agents receive broad tools.
+Purpose: establish the minimum durable safety/evaluation layer needed later without allowing control-plane work to outrun the actual product pipeline.
 
 ### Phase 3.5A — Durable control primitives ✅ Complete
 
-- machine-readable factory status authority
-- durable task contract with explicit time/token/cost/iteration/no-progress budgets
-- structured Build/Event Ledger contract and JSONL persistence primitive
-- ChangeSet declaration and fail-closed file-scope validation
-- checkpoint + fresh-session resume packet contracts
-- source/context trust boundary with `instructionAuthority`
+- durable task contract with time/token/cost/iteration/no-progress budgets
+- Build/Event Ledger JSONL primitive
+- ChangeSet declaration and file-scope validation
+- checkpoints and fresh-session resume packets
+- source trust boundary with `instructionAuthority`
 - deny-by-default agent capability policies and approval-required actions
-- provider-neutral control-plane package with no AI/runtime dependency
-- six-project benchmark registry and deterministic scoring foundation
-- Phase 3.5 doctor and regression tests
-- dedicated future Hetzner/OpenCode runtime architecture documented behind provider-neutral adapters
+- provider-neutral control-plane package
+- future Hetzner/OpenCode runtime documented behind `AgentRuntimeAdapter`
 
-### Phase 3.5B — Evaluation and upgrade foundations 🚧 Active
+### Phase 3.5B — Evaluation and upgrade foundations ✅ Complete
 
-- runnable deterministic golden-build benchmark across all six first-class project types
-- all six canonical projects generated, independently installed, checked and production-built in CI
-- structured benchmark report with gate score, duration, AI cost and intervention count
-- benchmark verifies generated projects remain portable and contain a clean recipe-upgrade inventory
-- future release-quality benchmark profile reserved for browser/security/accessibility/performance/Design Contract gates
-- capability-intersection cases registered for later activation
-- recipe installation inventory contract with managed-file hashes
-- newly generated projects persist installation-time recipe file hashes in `.app-builder/recipe-installations.json`
-- `upgrade:plan` factory command inspects an existing generated project without applying changes
-- fail-closed recipe-upgrade proposal contract and managed-file divergence detection
-- same-major upgrades require explicit declared `compatibleFrom`; major versions, missing files and user-modified managed files require review
-- recipe schema supports optional upgrade compatibility/migration metadata
-- standalone non-functional-requirements contract covering accessibility, performance, security, privacy, compatibility, localisation, operations and compliance
-- initial rich Design Contract covering personality, density, typography, hierarchy, colour, responsive composition, motion, imagery, interaction and reference adopt/avoid intent
-- NFR/Design contracts remain separate from live manifest v1 until deterministic generator/intake adoption is explicitly implemented and migration-tested
+- six canonical project types generated and independently installed/checked/built
+- structured deterministic benchmark report with score/duration/cost/intervention fields
+- recipe installation inventories with managed-file hashes
+- read-only `upgrade:plan`
+- fail-closed upgrade proposal contract
+- explicit recipe upgrade compatibility metadata
+- non-functional-requirements contract
+- rich Design Contract groundwork
+- status/progress drift checks
 
-Remaining within 3.5B:
+### Phase 3.5C — Sandbox and trace adapters ⏸ Deferred until before Phase 5
 
-- add safe three-way upgrade/reconciliation mechanics for user-modified managed files rather than overwriting them
-- activate high-value capability-intersection benchmark manifests when the currently planned recipes they require are ready
-- define and test the reviewed migration path from Project Manifest / Build Contract v1 to v2 using the NFR and Design contracts
+Do not expand autonomous-runtime infrastructure while the factory still lacks end-to-end composition and a service layer. Return to this immediately before broad agent execution.
 
-### Phase 3.5C — Sandbox and trace adapters ⬜ Planned
-
+Deferred scope:
 - provider-neutral `ExecutionEnvironmentAdapter`
-- disposable local sandbox implementation for tests/development
-- CPU/memory/runtime/network/secret policy contracts
-- preview ports/artifacts/checkpoint interface
-- OpenTelemetry-style event/trace mapping for model/tool/test/cost telemetry
-- explicit production deploy/database approval boundary
+- disposable/rootless sandbox implementation
+- CPU/memory/runtime/network/secret policies
+- preview/artifact/checkpoint interface
+- OTel-compatible trace export mapping
+- explicit production deployment/database approval boundary
 
-Phase 3.5 exit gate: a task can be created, checkpointed, resumed in a fresh session, bounded by deterministic guards, prevented from escaping its declared ChangeSet/capabilities, measured against canonical factory benchmarks, and executed behind a sandbox abstraction without depending on a specific agent runtime.
+## Phase 3.6 — Requirements-to-Product Composition 🚧 Active
+
+Purpose: join Phases 1–3 into one actual product pipeline. This is the current highest-value work.
+
+### Phase 3.6A — Manifest and Build Contract v2 ✅ Complete
+
+- Manifest v2 preserves audience/target users
+- preserves journeys / must-have actions
+- preserves entities/data concepts
+- preserves company identity, services, locations, contacts, trust and conversion goals
+- preserves roles, tenancy, integrations, existing-data/upload and hard constraints
+- introduces deterministic major pages/surfaces with explicit override
+- Build Contract v2 contains the full build-shaping structure promised by the product specification
+- requested capabilities separated from installed deterministic recipes
+- approval checks module readiness before generation
+- unavailable requested capabilities must be explicitly excluded or retained as custom work
+- v1 manifests remain readable/valid for existing generated examples
+- Console displays buildability decisions before approval
+
+### Phase 3.6B — Deterministic composition 🚧 Active
+
+Build the missing middle of the factory:
+
+- `PageSpec` contract for route/path/title/purpose/navigation/section order
+- `SectionSpec` contract for section type, content bindings, actions, assets and provenance
+- reusable section library covering at minimum:
+  - hero
+  - service/product grid
+  - proof/trust
+  - projects/case studies
+  - people/team where relevant
+  - locations/service areas
+  - FAQ
+  - contact/lead action
+  - generic CTA
+  - feature/value-proposition sections for application products
+- deterministic information-architecture composer from Manifest v2
+- consume Phase 3 trusted knowledge pack rather than leaving it orphaned
+- bind source-backed facts into sections while retaining source/provenance ids
+- never transform extracted facts into unsupported marketing claims
+- deterministic fallback copy only where explicitly labelled generated/default content
+- real router/navigation generation in the React template
+- generated `PageSpec`/`SectionSpec` records retained for handover and later click-to-edit
+- composition tests across all six first-class project categories
+- capability-intersection composition cases
+
+Exit gate: a valid Manifest v2 plus knowledge pack produces a real navigable multi-page/multi-surface application foundation rather than a generic shell with recipe names.
+
+### Phase 3.6C — Real-business end-to-end acceptance ⬜ Next
+
+Use genuine business material rather than synthetic fixtures:
+
+- one real existing business URL
+- real document/PDF source material
+- real logo/photos/assets
+- complete intake -> manifest -> ingestion -> composition -> generation -> build -> deploy flow
+- record manual edits required before acceptable launch
+- record deterministic/AI cost, elapsed work and interventions
+- first target: fewer than **20 meaningful manual edits** between generated output and a launchable result
+- capture every edit category as evidence for recipes/questionnaire/composer improvements
+
+This is the honest V1 product gate. Progress toward fewer manual edits is a primary factory metric alongside test/benchmark scores.
+
+## Phase 3.7 — Factory Service and Real Ledger Integration ⬜ Planned after composition
+
+Purpose: give the Builder Console and future agents one real backend instead of parallel browser/runtime state.
+
+### Service layer
+
+- add `apps/service`
+- typed HTTP/API contract over `factory-core`, `content-intelligence`, generator and `control-plane`
+- project/workspace lifecycle endpoints
+- intake/manifest/knowledge-pack/composition endpoints
+- spawn/manage preview processes
+- filesystem/project operations behind explicit capability boundaries
+- git/checkpoint/version operations
+- test/build/deploy operations
+- secret/integration status without leaking values to browser clients
+
+### Durable state
+
+- keep JSONL as append-only/writable event evidence
+- project/query/read model into SQLite unless evidence shows another store is needed
+- events from real `create-app`, `ingest`, composition, tests and deployments
+- cost/time/intervention projection per project
+- events-since-checkpoint and task-progress queries
+- Builder Console must render this state rather than invent parallel local state
+
+### Agent/tool bridge
+
+- expose deterministic factory operations through a provider-neutral tool contract
+- evaluate a small MCP server/facade so OpenCode/Claude/Codex can call the real factory instead of reimplementing commands in prompts
+- use interoperable `SKILL.md` format for repo-local specialist skills rather than inventing a proprietary skill format
 
 ## Phase 4 — Full Builder Console ⬜ Planned
 
-- chat/prompt panel backed by durable control-plane tasks rather than ephemeral chat state
-- drag-and-drop source intake backed by Phase 3 normalization and context trust labels
+Begins only after the service layer exists.
+
+- chat/prompt intake over durable project/task state
+- drag-and-drop source ingestion through `apps/service`
 - live desktop/tablet/mobile preview
-- click-to-select and click-to-edit text/assets/components
+- click-to-select and click-to-edit text/assets/components using PageSpec/SectionSpec identity
 - asset manager
-- build plan/progress rendered from the Build/Event Ledger
-- versions/checkpoints/restore backed by control-plane checkpoints
+- build plan/progress from the real Event Ledger
+- versions/checkpoints/restore
 - integrations/secrets status and approval UI
 - test/health view
-- model/tool/cost trace view
+- cost/trace view
 - preview/production deploy controls with approval gates
-- adopt the rich Design Contract into Build Contract/intake and visual-review workflows
-- repo-local specialist Skills registry/workflow groundwork
-- Playwright-based agent browser inspection layered on deterministic E2E tests
+- Design Contract editing/review
+- Playwright-based browser inspection layered on deterministic E2E tests
+
+## Phase 4.5 — Pre-Agent Hardening ⬜ Planned
+
+Resume the deferred 3.5C work immediately before powerful autonomous agents are enabled:
+
+- execution sandbox abstraction and first rootless implementation
+- secret/network/resource restrictions
+- trace/export mapping
+- production action approval boundary
+- property tests for security-sensitive scope/question/module routing
+- dead/orphan integration detection
+
+Tooling to adopt/evaluate here where justified:
+- `fast-check` for scope/question/module property tests
+- `Knip` for orphan/dead integration detection
+- `@axe-core/playwright` for deterministic accessibility gates
+- `git merge-file` for safe three-way recipe upgrades
+- schema-derived TypeScript + Ajv to remove duplicated hand-written contract types
+- CSP baseline in deployment adapters
 
 ## Phase 5 — Low-Credit AI Orchestration + Dedicated Agent Runtime ⬜ Planned
 
-- product bootstrapper
+- product bootstrapper only where deterministic composition cannot resolve novelty
 - deterministic task/context router
 - model router by measured task capability, quality threshold and cost
-- compact project knowledge packets using Phase 3 chunk/cache identities and Phase 3.5 trust labels
-- versioned repo-local specialist Skills with exact triggers/context/tool permissions/acceptance checks
-- specialist implementation/design/backend/security/review roles
-- machine-readable agent outputs and ChangeSets
-- bounded autonomous fix/work loops controlled by Phase 3.5 guards
+- compact knowledge/context packets using Phase 3 identities and trust labels
+- versioned `SKILL.md` specialist skills
+- implementation/design/backend/security/review specialists
+- machine-readable outputs and ChangeSets
+- bounded autonomous work/fix loops
 - provider-neutral `AgentRuntimeAdapter`
 - dedicated App Builder service on Hetzner, separate from project-specific runtimes
-- OpenCode as the initial runtime adapter, not a stable project dependency
-- clean-session/context-loss recovery from checkpoints and attempt summaries
+- OpenCode as initial runtime implementation rather than stable product dependency
+- clean-session/context-loss recovery
 - isolated per-project/per-task workspaces and scoped secrets
-- Playwright browser/visual agent workflows
-- structured model/tool/test usage telemetry
+- browser/visual agent workflows
 
-## Phase 5.5 — AI Evaluation and Red-Team ⬜ Planned
+## Phase 5.5 — AI Evaluation and Red Team ⬜ Planned
 
-- cross-model task-class benchmark scoreboard
-- route to the cheapest model that clears the required quality threshold; escalate on failure
-- prompt/skill/model regression tests in CI for bounded cases
-- larger scheduled benchmark suites
-- prompt-injection / hostile-source-content red-team cases
-- dangerous-tool / permission-bypass tests
+- task-class model benchmark scoreboard
+- cheapest model that clears quality threshold, escalating on failure
+- prompt/skill/model regression tests
+- hostile-source/prompt-injection cases
+- dangerous-tool/permission-bypass tests
 - context-router leakage tests
-- second-opinion agreement/disagreement metrics
-- evaluate an external evaluation tool such as Promptfoo only if it materially improves the existing harness; keep the benchmark contract provider-neutral
+- second-opinion agreement metrics
+- evaluate Promptfoo specifically where it materially improves red-team coverage
 
 ## Phase 6 — Quality and Autonomous Verification ⬜ Planned
 
 - unit/integration/E2E/accessibility/performance/security gates
-- visual review and screenshot regression against the Design Contract
+- screenshot/visual review against Design Contract
 - independent second-opinion review for material changes
 - responsive/data/error/loading/empty/large-data stress scenarios
-- slow/offline/failing-API scenarios where relevant
-- deterministic gates before expensive AI review
-- bounded autonomous corrections through control-plane tasks/ChangeSets
+- slow/offline/failing-API scenarios
+- Lighthouse-style performance budgets
+- Semgrep/Gitleaks-style security/secret gates where they outperform bespoke doctor checks
+- bounded autonomous correction through control-plane tasks
 - deployment smoke tests
-- quality report tied to benchmark and trace data
 
 ## Phase 7 — Launch, Operations and Upgrade Propagation ⬜ Planned
 
@@ -211,20 +293,24 @@ Phase 3.5 exit gate: a task can be created, checkpointed, resumed in a fresh ses
 - production smoke checks and launch readiness report
 - post-launch audit workflow
 - handover/architecture documentation
-- recipe/module version inventory per generated app
-- reviewed upgrade proposal/propagation mechanism using Phase 3.5 upgrade contracts
-- safe migration/managed-file reconciliation
+- reviewed recipe/module upgrade propagation
+- safe three-way managed-file reconciliation
 - reusable pattern promotion workflow
-- automatic handover documentation
 
 ## Phase 8 — Evidence-Driven Factory Improvement ⬜ Planned
 
-- analyse corrections and rework across projects
+- analyse manual edits and rework across projects
 - propose versioned questionnaire improvements
-- identify capabilities worth promoting into reusable recipes
-- measure tokens/cost/time saved per project
-- benchmark one-prompt builds across project categories
-- track user intervention count and rework causes
-- compare model/skill/router versions against accepted benchmark baselines
-- design/recipe/default promotion proposals from evidence
-- no silent self-modification: improvements remain reviewed, versioned and regression-tested
+- identify capabilities worth promoting into reusable recipes/sections
+- measure tokens/cost/time saved
+- benchmark one-prompt builds only after the deterministic pipeline is genuinely useful
+- track user intervention count and causes
+- compare model/skill/router versions against accepted baselines
+- no silent self-modification: every improvement remains reviewed, versioned and regression-tested
+
+## Architectural follow-ups to preserve
+
+- add short ADRs for durable-state choice, control-plane ownership, template strategy, backend defaults and deployment defaults
+- prove the template contract with a genuinely different second template after composition is stable; a static/content-oriented template is a strong candidate
+- evaluate `@mozilla/readability` against real crawled sites before adopting it
+- do not adopt Temporal/LangGraph/large orchestration frameworks unless measured complexity later justifies them

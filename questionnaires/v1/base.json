@@ -1,5 +1,5 @@
 {
-  "version":"1.2.0","id":"base",
+  "version":"1.3.0","id":"base",
   "principles":["ask only relevant questions","prefer structured options/defaults","flag high-impact ambiguity before build","allow explicit decide-for-me answers"],
   "questions":[
     {"id":"project_type","label":"What are you building?","type":"single-select","required":true,"depth":"quick","impact":"blocking","options":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]},
@@ -7,6 +7,7 @@
     {"id":"primary_goal","label":"What is the single most important outcome?","type":"textarea","required":true,"depth":"quick","impact":"blocking"},
     {"id":"target_users","label":"Who is it for?","type":"textarea","required":true,"depth":"quick","impact":"blocking"},
     {"id":"must_have","label":"What must V1 let users do?","type":"list","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"major_surfaces","label":"Which major pages or screens do you already know V1 needs?","type":"list","depth":"standard","impact":"normal","placeholder":"Leave blank to use project-type defaults"},
     {"id":"out_of_scope","label":"What should V1 explicitly not include?","type":"list","depth":"standard","impact":"normal"},
     {"id":"existing_inputs","label":"What source material do you already have?","type":"multi-select","depth":"standard","impact":"normal","options":["existing website","logo/brand","photos","screenshots","PDFs/docs","spreadsheets/CSV","database/API","none"]},
     {"id":"design_control","label":"How much should the factory decide?","type":"single-select","depth":"quick","impact":"normal","default":"sensible-defaults","options":["sensible-defaults","show-design-directions","closely-follow-reference"]},

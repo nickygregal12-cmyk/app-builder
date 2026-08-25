@@ -12,9 +12,11 @@ import {
   mergeQuestionnaires,
   questionsForMode,
   serializeIntakeBundle,
-  type AmbiguityFollowUpRequest,
   type AnswerValue,
   type Answers,
+  type BuildContract,
+  type CapabilityDecision,
+  type CapabilityDecisions,
   type FeedbackEvent,
   type FeedbackType,
   type IntakeMode,
@@ -26,22 +28,8 @@ import { base, projectTypeConfig, projectTypeEntries, questionnaireFor, type Pro
 import './phase1.css';
 
 type Stage = 'start' | 'questions' | 'sources' | 'review' | 'approved';
-type BuildContract = {
-  version: number;
-  status: string;
-  project: { name: string; type: string; primaryGoal: string; targetUsers: string };
-  coreJourneys: string[];
-  enabledModules: string[];
-  explicitlyExcluded: string[];
-  acceptanceCriteria: string[];
-  unresolvedHighImpactQuestions: string[];
-  ambiguityFollowUp: AmbiguityFollowUpRequest;
-  sourceInputs: SourceReference[];
-  designDirection: string;
-  approvedAt?: string;
-};
 type SavedDraft = {
-  version: 1;
+  version: 1 | 2;
   stage: Exclude<Stage, 'start'>;
   projectType: ProjectType;
   mode: IntakeMode;
@@ -50,6 +38,7 @@ type SavedDraft = {
   feedback: FeedbackEvent[];
   questionIndex: number;
   approvedContract: BuildContract | null;
+  capabilityDecisions?: CapabilityDecisions;
 };
 
 const DRAFT_KEY = 'app-builder:intake-draft:v1';
@@ -115,13 +104,29 @@ function QuestionField({ question, value, onChange }: { question: Question; valu
   return <textarea aria-label={question.label} rows={4} value={stringValue} onChange={(event) => onChange(event.target.value)} />;
 }
 
+function CapabilityReview({ contract, onDecision }: { contract: BuildContract; onDecision: (module: string, decision: CapabilityDecision) => void }) {
+  const unavailable = contract.capabilityPlan.filter((item) => item.availability !== 'ready');
+  if (!unavailable.length) return null;
+  return <section className="followup-panel">
+    <div><span className="card-kicker">Capability buildability</span><h3>Resolve requested capabilities that do not have a ready deterministic recipe.</h3><p>The requirement is never discarded. Exclude it from V1 or retain it as explicit custom work for a later implementation stage.</p></div>
+    <div>{unavailable.map((item) => <article key={item.module} className="followup-item">
+      <strong>{item.module.replaceAll('-', ' ')}</strong><span>Factory availability: {item.availability.replaceAll('-', ' ')}</span>
+      <div className="choice-row" role="group" aria-label={`${item.module} capability decision`}>
+        <button type="button" className={item.decision === 'exclude' ? 'choice active' : 'choice'} onClick={() => onDecision(item.module, 'exclude')}>Exclude from V1</button>
+        <button type="button" className={item.decision === 'custom-work' ? 'choice active' : 'choice'} onClick={() => onDecision(item.module, 'custom-work')}>Keep as custom work</button>
+      </div>
+    </article>)}</div>
+  </section>;
+}
+
 function ContractReview({ contract, onEditQuestion, onEditSources }: { contract: BuildContract; onEditQuestion: (id: string) => void; onEditSources: () => void }) {
   return <div className="contract-grid">
     <section className="contract-card span-two"><div className="card-heading"><span className="card-kicker">Project</span><button type="button" className="text-button" onClick={() => onEditQuestion('project_name')}>Edit</button></div><h3>{contract.project.name}</h3><p>{contract.project.primaryGoal}</p><dl><div><dt>Type</dt><dd>{contract.project.type.replaceAll('-', ' ')}</dd></div><div><dt>Users</dt><dd>{contract.project.targetUsers || 'Not specified'}</dd></div><div><dt>Design</dt><dd>{contract.designDirection.replaceAll('-', ' ')}</dd></div></dl></section>
     <section className="contract-card"><div className="card-heading"><span className="card-kicker">Core journeys</span><button type="button" className="text-button" onClick={() => onEditQuestion('must_have')}>Edit</button></div><ul>{contract.coreJourneys.map((item) => <li key={item}>{item}</li>)}</ul></section>
-    <section className="contract-card"><span className="card-kicker">Enabled modules</span><div className="chips">{contract.enabledModules.map((item) => <span key={item}>{item}</span>)}</div></section>
+    <section className="contract-card"><div className="card-heading"><span className="card-kicker">Major pages / surfaces</span><button type="button" className="text-button" onClick={() => onEditQuestion('major_surfaces')}>Edit</button></div><ul>{contract.majorSurfaces.map((item) => <li key={item}>{item}</li>)}</ul></section>
+    <section className="contract-card"><span className="card-kicker">Ready deterministic modules</span><div className="chips">{contract.enabledModules.length ? contract.enabledModules.map((item) => <span key={item}>{item}</span>) : <span>none</span>}</div>{contract.customWorkModules.length > 0 && <p><strong>Custom work:</strong> {contract.customWorkModules.join(', ')}</p>}</section>
     <section className="contract-card"><div className="card-heading"><span className="card-kicker">Source material</span><button type="button" className="text-button" onClick={onEditSources}>Edit</button></div>{contract.sourceInputs.length ? <ul>{contract.sourceInputs.map((item) => <li key={item.id}><strong>{item.label}</strong><br /><small>{item.kind.replaceAll('-', ' ')}{item.uri ? ` · ${item.uri}` : ''}</small></li>)}</ul> : <p>No structured source references recorded.</p>}</section>
-    <section className="contract-card"><div className="card-heading"><span className="card-kicker">Explicitly excluded</span><button type="button" className="text-button" onClick={() => onEditQuestion('out_of_scope')}>Edit</button></div>{contract.explicitlyExcluded.length ? <ul>{contract.explicitlyExcluded.map((item) => <li key={item}>{item}</li>)}</ul> : <p>No exclusions recorded.</p>}</section>
+    <section className="contract-card"><div className="card-heading"><span className="card-kicker">Explicitly excluded</span><button type="button" className="text-button" onClick={() => onEditQuestion('out_of_scope')}>Edit</button></div>{contract.explicitlyExcluded.length || contract.excludedModules.length ? <ul>{[...contract.explicitlyExcluded, ...contract.excludedModules.map((item) => `${item} capability`)].map((item) => <li key={item}>{item}</li>)}</ul> : <p>No exclusions recorded.</p>}</section>
   </div>;
 }
 
@@ -135,6 +140,7 @@ export default function App() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [error, setError] = useState('');
   const [approvedContract, setApprovedContract] = useState<BuildContract | null>(null);
+  const [capabilityDecisions, setCapabilityDecisions] = useState<CapabilityDecisions>({});
   const [draftAvailable, setDraftAvailable] = useState(() => typeof window !== 'undefined' && localStorage.getItem(DRAFT_KEY) !== null);
   const [sourceUrl, setSourceUrl] = useState('');
   const [sourceLabel, setSourceLabel] = useState('Existing website');
@@ -145,25 +151,26 @@ export default function App() {
 
   const mergedQuestions = useMemo(() => mergeQuestionnaires(base, questionnaireFor(projectType)), [projectType]);
   const questions = useMemo(() => questionsForMode(mergedQuestions, mode, answers).filter((question) => question.id !== 'project_type'), [mergedQuestions, mode, answers]);
-  const contract = useMemo(() => buildBuildContract({ projectType, answers, questions, projectTypesConfig: projectTypeConfig, sourceReferences }) as BuildContract, [projectType, answers, questions, sourceReferences]);
-  const manifest = useMemo(() => buildProjectManifest({ projectType, answers, projectTypesConfig: projectTypeConfig, sourceReferences }), [projectType, answers, sourceReferences]);
+  const contract = useMemo(() => buildBuildContract({ projectType, answers, questions, projectTypesConfig: projectTypeConfig, sourceReferences, capabilityDecisions }), [projectType, answers, questions, sourceReferences, capabilityDecisions]);
+  const manifest = useMemo(() => buildProjectManifest({ projectType, answers, projectTypesConfig: projectTypeConfig, sourceReferences, capabilityDecisions }), [projectType, answers, sourceReferences, capabilityDecisions]);
+  const blockerCount = contract.unresolvedHighImpactQuestions.length + contract.unresolvedCapabilityDecisions.length;
 
   useEffect(() => {
     if (stage === 'start') return;
-    const draft: SavedDraft = { version: 1, stage, projectType, mode, answers, sourceReferences, feedback, questionIndex, approvedContract };
+    const draft: SavedDraft = { version: 2, stage, projectType, mode, answers, sourceReferences, feedback, questionIndex, approvedContract, capabilityDecisions };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     setDraftAvailable(true);
-  }, [stage, projectType, mode, answers, sourceReferences, feedback, questionIndex, approvedContract]);
+  }, [stage, projectType, mode, answers, sourceReferences, feedback, questionIndex, approvedContract, capabilityDecisions]);
 
   function start() {
     const seed: Answers = { project_type: projectType };
     const visible = questionsForMode(mergedQuestions, mode, seed).filter((question) => question.id !== 'project_type');
     setAnswers(applyQuestionDefaults(visible, seed));
-    setSourceReferences([]); setFeedback([]); setQuestionIndex(0); setError(''); setApprovedContract(null); touchedQuestions.current.clear(); setStage('questions');
+    setSourceReferences([]); setFeedback([]); setQuestionIndex(0); setError(''); setApprovedContract(null); setCapabilityDecisions({}); touchedQuestions.current.clear(); setStage('questions');
   }
 
   function reset() {
-    localStorage.removeItem(DRAFT_KEY); setDraftAvailable(false); setAnswers({}); setSourceReferences([]); setFeedback([]); setQuestionIndex(0); setError(''); setApprovedContract(null); touchedQuestions.current.clear(); setStage('start');
+    localStorage.removeItem(DRAFT_KEY); setDraftAvailable(false); setAnswers({}); setSourceReferences([]); setFeedback([]); setQuestionIndex(0); setError(''); setApprovedContract(null); setCapabilityDecisions({}); touchedQuestions.current.clear(); setStage('start');
   }
 
   function resume() {
@@ -171,7 +178,7 @@ export default function App() {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const saved = JSON.parse(raw) as SavedDraft;
-      setProjectType(saved.projectType); setMode(saved.mode); setAnswers(saved.answers ?? {}); setSourceReferences(saved.sourceReferences ?? []); setFeedback(saved.feedback ?? []); setQuestionIndex(saved.questionIndex ?? 0); setApprovedContract(saved.approvedContract ?? null); setStage(saved.stage ?? 'questions'); setError('');
+      setProjectType(saved.projectType); setMode(saved.mode); setAnswers(saved.answers ?? {}); setSourceReferences(saved.sourceReferences ?? []); setFeedback(saved.feedback ?? []); setQuestionIndex(saved.questionIndex ?? 0); setApprovedContract(saved.approvedContract ?? null); setCapabilityDecisions(saved.capabilityDecisions ?? {}); setStage(saved.stage ?? 'questions'); setError('');
     } catch {
       localStorage.removeItem(DRAFT_KEY); setDraftAvailable(false); setError('The saved draft could not be restored, so it was cleared.');
     }
@@ -181,8 +188,9 @@ export default function App() {
     const previous = answers[question.id];
     if (touchedQuestions.current.has(question.id) && !sameValue(previous, value)) setFeedback((events) => [...events, createFeedbackEvent('corrected-answer', { questionId: question.id, previousValue: previous, nextValue: value })]);
     touchedQuestions.current.add(question.id);
-    const next = { ...answers, [question.id]: value };
-    setAnswers(applyQuestionDefaults(questionsForMode(mergedQuestions, mode, next), next));
+    const nextAnswers = { ...answers, [question.id]: value };
+    setAnswers(applyQuestionDefaults(questionsForMode(mergedQuestions, mode, nextAnswers), nextAnswers));
+    setCapabilityDecisions({});
     setError('');
   }
 
@@ -199,6 +207,7 @@ export default function App() {
     if (!current || current.required) return;
     setFeedback((events) => [...events, createFeedbackEvent('unnecessary-question', { questionId: current.id, detail: 'Marked not relevant during intake.' })]);
     setAnswers((currentAnswers) => ({ ...currentAnswers, [current.id]: undefined }));
+    setCapabilityDecisions({});
     next();
   }
 
@@ -225,8 +234,13 @@ export default function App() {
     if (index >= 0) { setQuestionIndex(index); setStage('questions'); }
   }
 
+  function setCapabilityDecision(module: string, decision: CapabilityDecision) {
+    setCapabilityDecisions((current) => ({ ...current, [module]: decision }));
+    setError('');
+  }
+
   function approve() {
-    try { setApprovedContract(approveBuildContract(contract) as BuildContract); setStage('approved'); setError(''); }
+    try { setApprovedContract(approveBuildContract(contract)); setStage('approved'); setError(''); }
     catch (caught) { setError(caught instanceof Error ? caught.message : 'The Build Contract is not ready for approval.'); }
   }
 
@@ -238,11 +252,12 @@ export default function App() {
 
   function makeSession(status: 'in-progress' | 'ready-for-review' | 'approved') {
     return {
-      ...createIntakeSession({ projectType, mode, questionnaireVersion: '1.2.0', questions, seedAnswers: answers, sourceReferences, feedback: collectAcceptedDefaultEvidence(questions, answers, feedback) }),
+      ...createIntakeSession({ projectType, mode, questionnaireVersion: '1.3.0', questions, seedAnswers: answers, sourceReferences, feedback: collectAcceptedDefaultEvidence(questions, answers, feedback) }),
       status,
       answers,
       sourceReferences,
-      feedback: collectAcceptedDefaultEvidence(questions, answers, feedback)
+      feedback: collectAcceptedDefaultEvidence(questions, answers, feedback),
+      capabilityDecisions
     };
   }
 
@@ -256,7 +271,7 @@ export default function App() {
   const progress = questions.length ? Math.round(((Math.min(questionIndex, questions.length - 1) + 1) / questions.length) * 100) : 0;
 
   return <main className="app-shell">
-    <header className="topbar"><button type="button" className="brand" onClick={reset} aria-label="App Builder home"><span className="brand-mark">A</span><span>App Builder</span></button><div className="topbar-meta"><span>Foundation v0.3</span><span className="dot" /><span>Phase 1 intake</span></div></header>
+    <header className="topbar"><button type="button" className="brand" onClick={reset} aria-label="App Builder home"><span className="brand-mark">A</span><span>App Builder</span></button><div className="topbar-meta"><span>Manifest v2</span><span className="dot" /><span>Composition prep</span></div></header>
 
     {stage === 'start' && <section className="start-layout">
       <div className="intro"><p className="eyebrow">New project</p><h1>Get the decisions right before the build starts.</h1><p className="lede">Choose the kind of project and how deep you want discovery to go. App Builder asks only relevant questions, then produces a reviewed Build Contract and portable manifest.</p>{draftAvailable && <button className="resume-button" type="button" onClick={resume}>Resume saved intake →</button>}{error && <div className="error-box" role="alert">{error}</div>}</div>
@@ -272,10 +287,10 @@ export default function App() {
       <div className="question-stage"><div className="question-meta"><span>{String(questionIndex + 1).padStart(2, '0')}</span><span>{current.impact ?? 'normal'} impact</span></div><h1>{current.label}</h1>{current.required && <p className="required-note">Required to shape V1</p>}<QuestionField question={current} value={answers[current.id]} onChange={(value) => updateAnswer(current, value)} />{error && <div className="error-box" role="alert">{error}</div>}<div className="question-actions"><button className="secondary" type="button" onClick={() => questionIndex === 0 ? setStage('start') : setQuestionIndex((index) => Math.max(0, index - 1))}>← Back</button><div className="action-cluster">{!current.required && <button className="text-button" type="button" onClick={markNotRelevant}>Not relevant</button>}<button className="primary" type="button" onClick={next}>{questionIndex >= questions.length - 1 ? 'Add source material' : 'Continue'} <span>→</span></button></div></div></div>
     </section>}
 
-    {stage === 'sources' && <section className="review-layout"><div className="review-heading"><div><p className="eyebrow">Source material</p><h1>Record what the build can rely on.</h1><p className="lede">Phase 1 stores references and file metadata only. Deep extraction, uploads and image processing come later, so intake stays portable and cheap.</p></div><div className="readiness ready"><span>Recorded</span><strong>{sourceReferences.length} sources</strong></div></div><div className="source-layout"><section className="source-panel"><span className="card-kicker">Website / URL</span><div className="field-stack"><input aria-label="Source label" value={sourceLabel} onChange={(event) => setSourceLabel(event.target.value)} placeholder="Existing website" /><input aria-label="Source URL" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://example.com" /><input aria-label="Source purpose" value={sourcePurpose} onChange={(event) => setSourcePurpose(event.target.value)} placeholder="What should the factory use it for?" /><button className="secondary" type="button" onClick={addUrlSource}>Add URL source</button></div><span className="card-kicker source-file-kicker">Files</span><label className="file-drop"><strong>Add logos, photos, screenshots or documents</strong><span>Only filename/type/size are retained by Phase 1.</span><input aria-label="Add source files" type="file" multiple onChange={(event) => addFiles(event.target.files)} /></label>{error && <div className="error-box" role="alert">{error}</div>}</section><section className="source-panel"><span className="card-kicker">Source inventory</span>{sourceReferences.length === 0 ? <div className="empty-state"><strong>No sources yet</strong><p>You can continue without them. The Build Contract will record that explicitly.</p></div> : <div className="source-list">{sourceReferences.map((source) => <article key={source.id} className="source-item"><div><strong>{source.label}</strong><span>{source.kind.replaceAll('-', ' ')}{source.name ? ` · ${source.name}` : ''}{source.size ? ` · ${Math.max(1, Math.round(source.size / 1024))} KB` : ''}</span>{source.uri && <small>{source.uri}</small>}</div><button type="button" className="text-button danger" onClick={() => setSourceReferences((items) => items.filter((item) => item.id !== source.id))}>Remove</button></article>)}</div>}</section></div><div className="review-actions"><button className="secondary" type="button" onClick={() => { setStage('questions'); setQuestionIndex(Math.max(questions.length - 1, 0)); }}>← Back to questions</button><button className="primary" type="button" onClick={goToReview}>Review Build Contract <span>→</span></button></div></section>}
+    {stage === 'sources' && <section className="review-layout"><div className="review-heading"><div><p className="eyebrow">Source material</p><h1>Record what the build can rely on.</h1><p className="lede">References and file metadata are captured here. Phase 3 already provides deterministic URL/document/image normalization; browser intake deliberately does not parse local file bytes itself.</p></div><div className="readiness ready"><span>Recorded</span><strong>{sourceReferences.length} sources</strong></div></div><div className="source-layout"><section className="source-panel"><span className="card-kicker">Website / URL</span><div className="field-stack"><input aria-label="Source label" value={sourceLabel} onChange={(event) => setSourceLabel(event.target.value)} placeholder="Existing website" /><input aria-label="Source URL" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://example.com" /><input aria-label="Source purpose" value={sourcePurpose} onChange={(event) => setSourcePurpose(event.target.value)} placeholder="What should the factory use it for?" /><button className="secondary" type="button" onClick={addUrlSource}>Add URL source</button></div><span className="card-kicker source-file-kicker">Files</span><label className="file-drop"><strong>Add logos, photos, screenshots or documents</strong><span>Filename/type/size are recorded here; the factory ingestion layer processes content.</span><input aria-label="Add source files" type="file" multiple onChange={(event) => addFiles(event.target.files)} /></label>{error && <div className="error-box" role="alert">{error}</div>}</section><section className="source-panel"><span className="card-kicker">Source inventory</span>{sourceReferences.length === 0 ? <div className="empty-state"><strong>No sources yet</strong><p>You can continue without them. The Build Contract will record that explicitly.</p></div> : <div className="source-list">{sourceReferences.map((source) => <article key={source.id} className="source-item"><div><strong>{source.label}</strong><span>{source.kind.replaceAll('-', ' ')}{source.name ? ` · ${source.name}` : ''}{source.size ? ` · ${Math.max(1, Math.round(source.size / 1024))} KB` : ''}</span>{source.uri && <small>{source.uri}</small>}</div><button type="button" className="text-button danger" onClick={() => setSourceReferences((items) => items.filter((item) => item.id !== source.id))}>Remove</button></article>)}</div>}</section></div><div className="review-actions"><button className="secondary" type="button" onClick={() => { setStage('questions'); setQuestionIndex(Math.max(questions.length - 1, 0)); }}>← Back to questions</button><button className="primary" type="button" onClick={goToReview}>Review Build Contract <span>→</span></button></div></section>}
 
-    {stage === 'review' && <section className="review-layout"><div className="review-heading"><div><p className="eyebrow">Build Contract</p><h1>Review the decisions before anything expensive happens.</h1></div><div className={contract.unresolvedHighImpactQuestions.length ? 'readiness warning' : 'readiness ready'}><span>{contract.unresolvedHighImpactQuestions.length ? 'Needs attention' : 'Ready for approval'}</span><strong>{contract.unresolvedHighImpactQuestions.length ? `${contract.unresolvedHighImpactQuestions.length} blockers` : '0 blockers'}</strong></div></div><ContractReview contract={contract} onEditQuestion={editQuestion} onEditSources={() => setStage('sources')} />{contract.ambiguityFollowUp.candidates.length > 0 && <section className="followup-panel"><div><span className="card-kicker">Optional ambiguity follow-up</span><h3>{contract.ambiguityFollowUp.candidates.length} high-impact answer{contract.ambiguityFollowUp.candidates.length === 1 ? '' : 's'} could benefit from clarification.</h3><p>No model has been called. A future economy-model pass is capped at {contract.ambiguityFollowUp.budget.maxTokens.toLocaleString()} tokens and {contract.ambiguityFollowUp.maxQuestions} questions.</p></div><div>{contract.ambiguityFollowUp.candidates.map((candidate) => <button key={candidate.id} className="followup-item" type="button" onClick={() => editQuestion(candidate.questionId)}><strong>{candidate.question}</strong><span>{candidate.reason} → edit</span></button>)}</div></section>}{contract.unresolvedHighImpactQuestions.length > 0 && <div className="error-box"><strong>Resolve before build:</strong> {contract.unresolvedHighImpactQuestions.join(' · ')}</div>}{error && <div className="error-box" role="alert">{error}</div>}<div className="review-actions"><button className="secondary" type="button" onClick={() => { setStage('questions'); setQuestionIndex(Math.max(questions.length - 1, 0)); }}>← Edit answers</button><button className="primary" type="button" onClick={approve} disabled={contract.unresolvedHighImpactQuestions.length > 0}>Approve Build Contract <span>→</span></button></div></section>}
+    {stage === 'review' && <section className="review-layout"><div className="review-heading"><div><p className="eyebrow">Build Contract</p><h1>Review the decisions before anything expensive happens.</h1></div><div className={blockerCount ? 'readiness warning' : 'readiness ready'}><span>{blockerCount ? 'Needs attention' : 'Ready for approval'}</span><strong>{blockerCount ? `${blockerCount} blockers` : '0 blockers'}</strong></div></div><ContractReview contract={contract} onEditQuestion={editQuestion} onEditSources={() => setStage('sources')} /><CapabilityReview contract={contract} onDecision={setCapabilityDecision} />{contract.ambiguityFollowUp.candidates.length > 0 && <section className="followup-panel"><div><span className="card-kicker">Optional ambiguity follow-up</span><h3>{contract.ambiguityFollowUp.candidates.length} high-impact answer{contract.ambiguityFollowUp.candidates.length === 1 ? '' : 's'} could benefit from clarification.</h3><p>No model has been called. A future economy-model pass is capped at {contract.ambiguityFollowUp.budget.maxTokens.toLocaleString()} tokens and {contract.ambiguityFollowUp.maxQuestions} questions.</p></div><div>{contract.ambiguityFollowUp.candidates.map((candidate) => <button key={candidate.id} className="followup-item" type="button" onClick={() => editQuestion(candidate.questionId)}><strong>{candidate.question}</strong><span>{candidate.reason} → edit</span></button>)}</div></section>}{contract.unresolvedHighImpactQuestions.length > 0 && <div className="error-box"><strong>Resolve before build:</strong> {contract.unresolvedHighImpactQuestions.join(' · ')}</div>}{contract.unresolvedCapabilityDecisions.length > 0 && <div className="error-box"><strong>Capability decision required:</strong> {contract.unresolvedCapabilityDecisions.join(' · ')}</div>}{error && <div className="error-box" role="alert">{error}</div>}<div className="review-actions"><button className="secondary" type="button" onClick={() => { setStage('questions'); setQuestionIndex(Math.max(questions.length - 1, 0)); }}>← Edit answers</button><button className="primary" type="button" onClick={approve} disabled={blockerCount > 0}>Approve Build Contract <span>→</span></button></div></section>}
 
-    {stage === 'approved' && approvedContract && <section className="approved-layout"><div className="approved-hero"><div className="success-mark">✓</div><p className="eyebrow">Approved</p><h1>{approvedContract.project.name} is ready for deterministic generation.</h1><p className="lede">The requirements are now a stable contract. The saved intake, evidence, source references and generated manifest can be exported as one portable bundle.</p><div className="export-row"><button className="secondary" type="button" onClick={() => downloadJson('build-contract.json', JSON.stringify(approvedContract, null, 2))}>Download contract</button><button className="secondary" type="button" onClick={() => downloadJson('project-manifest.json', JSON.stringify(manifest, null, 2))}>Download manifest</button><button className="primary" type="button" onClick={exportBundle}>Download intake bundle <span>↓</span></button></div></div><div className="output-grid"><section className="json-card"><div className="json-title"><span>BUILD CONTRACT</span><strong>approved</strong></div><pre>{JSON.stringify(approvedContract, null, 2)}</pre></section><section className="json-card"><div className="json-title"><span>PROJECT MANIFEST</span><strong>generated</strong></div><pre>{JSON.stringify(manifest, null, 2)}</pre></section></div><section className="learning-panel"><div><span className="card-kicker">Improve the next intake</span><h3>Record anything this questionnaire got wrong or missed.</h3><p>These are evidence records only. App Builder never silently rewrites its questionnaire.</p></div><div className="learning-form"><select aria-label="Learning type" value={learningType} onChange={(event) => setLearningType(event.target.value as FeedbackType)}><option value="missing-requirement">Missing requirement</option><option value="corrected-answer">Corrected answer</option><option value="unnecessary-question">Unnecessary question</option><option value="architecture-rework">Architecture rework</option></select><textarea aria-label="Intake learning" rows={3} value={learningDetail} onChange={(event) => setLearningDetail(event.target.value)} placeholder="What should a future questionnaire know?" /><button className="secondary" type="button" onClick={addLearning}>Add evidence</button></div><div className="evidence-summary"><strong>{feedback.length}</strong><span>evidence records in this intake</span></div></section><div className="review-actions"><button className="secondary" type="button" onClick={reset}>Start another project</button><button className="text-button" type="button" onClick={() => setStage('review')}>Review contract again</button></div></section>}
+    {stage === 'approved' && approvedContract && <section className="approved-layout"><div className="approved-hero"><div className="success-mark">✓</div><p className="eyebrow">Approved</p><h1>{approvedContract.customWorkModules.length ? `${approvedContract.project.name} is ready for deterministic foundation generation and planned custom work.` : `${approvedContract.project.name} is ready for deterministic generation.`}</h1><p className="lede">The requirements are now a stable v2 contract. Intake detail, buildability decisions, evidence, source references and the generated manifest can be exported as one portable bundle.</p><div className="export-row"><button className="secondary" type="button" onClick={() => downloadJson('build-contract.json', JSON.stringify(approvedContract, null, 2))}>Download contract</button><button className="secondary" type="button" onClick={() => downloadJson('project-manifest.json', JSON.stringify(manifest, null, 2))}>Download manifest</button><button className="primary" type="button" onClick={exportBundle}>Download intake bundle <span>↓</span></button></div></div><div className="output-grid"><section className="json-card"><div className="json-title"><span>BUILD CONTRACT</span><strong>approved</strong></div><pre>{JSON.stringify(approvedContract, null, 2)}</pre></section><section className="json-card"><div className="json-title"><span>PROJECT MANIFEST</span><strong>v2</strong></div><pre>{JSON.stringify(manifest, null, 2)}</pre></section></div><section className="learning-panel"><div><span className="card-kicker">Improve the next intake</span><h3>Record anything this questionnaire got wrong or missed.</h3><p>These are evidence records only. App Builder never silently rewrites its questionnaire.</p></div><div className="learning-form"><select aria-label="Learning type" value={learningType} onChange={(event) => setLearningType(event.target.value as FeedbackType)}><option value="missing-requirement">Missing requirement</option><option value="corrected-answer">Corrected answer</option><option value="unnecessary-question">Unnecessary question</option><option value="architecture-rework">Architecture rework</option></select><textarea aria-label="Intake learning" rows={3} value={learningDetail} onChange={(event) => setLearningDetail(event.target.value)} placeholder="What should a future questionnaire know?" /><button className="secondary" type="button" onClick={addLearning}>Add evidence</button></div><div className="evidence-summary"><strong>{feedback.length}</strong><span>evidence records in this intake</span></div></section><div className="review-actions"><button className="secondary" type="button" onClick={reset}>Start another project</button><button className="text-button" type="button" onClick={() => setStage('review')}>Review contract again</button></div></section>}
   </main>;
 }

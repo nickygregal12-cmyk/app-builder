@@ -83,6 +83,6 @@ test('Builder Console drives a real service generation, verification and preview
 
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
-  await expect(page.getByText('11')).toBeVisible();
+  await expect(page.getByLabel('Project metrics').getByText('11', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

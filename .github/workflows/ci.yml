@@ -20,27 +20,12 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: npm run build
-      - run: npm run generate:acceptance
 
-      - name: Install marketing acceptance app
-        run: npm install --no-audit --no-fund
-        working-directory: .tmp/generated-acceptance-marketing
-      - name: Check marketing acceptance app
-        run: npm run check
-        working-directory: .tmp/generated-acceptance-marketing
-      - name: Build marketing acceptance app
-        run: npm run build
-        working-directory: .tmp/generated-acceptance-marketing
+      - name: Generate six canonical acceptance apps
+        run: npm run generate:acceptance
 
-      - name: Install B2B acceptance app
-        run: npm install --no-audit --no-fund
-        working-directory: .tmp/generated-acceptance-b2b
-      - name: Check B2B acceptance app
-        run: npm run check
-        working-directory: .tmp/generated-acceptance-b2b
-      - name: Build B2B acceptance app
-        run: npm run build
-        working-directory: .tmp/generated-acceptance-b2b
+      - name: Benchmark independent generated-app installs, checks and builds
+        run: npm run benchmark:acceptance
 
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

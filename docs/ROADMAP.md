@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **Phase 3.5A — Factory Control Plane foundation**.
+Current stage: **Phase 3.5B — Evaluation and upgrade foundations**.
 
 The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The control-plane additions and reviewed improvement programme live in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
@@ -95,7 +95,7 @@ Phase 3 exit gate is complete: messy business/source material can be normalized 
 
 Purpose: make later AI/runtime autonomy measurable, resumable, reversible and permissioned before agents receive broad tools.
 
-### Phase 3.5A — Durable control primitives 🚧 Active
+### Phase 3.5A — Durable control primitives ✅ Complete
 
 - machine-readable factory status authority
 - durable task contract with explicit time/token/cost/iteration/no-progress budgets
@@ -107,17 +107,31 @@ Purpose: make later AI/runtime autonomy measurable, resumable, reversible and pe
 - provider-neutral control-plane package with no AI/runtime dependency
 - six-project benchmark registry and deterministic scoring foundation
 - Phase 3.5 doctor and regression tests
+- dedicated future Hetzner/OpenCode runtime architecture documented behind provider-neutral adapters
 
-### Phase 3.5B — Evaluation, upgrades and product contracts ⬜ Planned
+### Phase 3.5B — Evaluation and upgrade foundations 🚧 Active
 
-- runnable golden-build benchmark harness across all six project types
-- capability-intersection benchmark cases
-- independently install/check/build all six canonical generated apps
-- baseline quality/cost/time/intervention score records
-- recipe installed-version inventory and upgrade proposal contract
-- managed-file user-change detection and safe three-way upgrade strategy
-- Build Contract / Project Manifest v2 non-functional requirements: accessibility, performance, security, privacy, compatibility, localisation, operations and compliance
-- initial rich Design Contract schema for Phase 4
+- runnable deterministic golden-build benchmark across all six first-class project types
+- all six canonical projects generated, independently installed, checked and production-built in CI
+- structured benchmark report with gate score, duration, AI cost and intervention count
+- benchmark verifies generated projects remain portable and contain a clean recipe-upgrade inventory
+- future release-quality benchmark profile reserved for browser/security/accessibility/performance/Design Contract gates
+- capability-intersection cases registered for later activation
+- recipe installation inventory contract with managed-file hashes
+- newly generated projects persist installation-time recipe file hashes in `.app-builder/recipe-installations.json`
+- `upgrade:plan` factory command inspects an existing generated project without applying changes
+- fail-closed recipe-upgrade proposal contract and managed-file divergence detection
+- same-major upgrades require explicit declared `compatibleFrom`; major versions, missing files and user-modified managed files require review
+- recipe schema supports optional upgrade compatibility/migration metadata
+- standalone non-functional-requirements contract covering accessibility, performance, security, privacy, compatibility, localisation, operations and compliance
+- initial rich Design Contract covering personality, density, typography, hierarchy, colour, responsive composition, motion, imagery, interaction and reference adopt/avoid intent
+- NFR/Design contracts remain separate from live manifest v1 until deterministic generator/intake adoption is explicitly implemented and migration-tested
+
+Remaining within 3.5B:
+
+- add safe three-way upgrade/reconciliation mechanics for user-modified managed files rather than overwriting them
+- activate high-value capability-intersection benchmark manifests when the currently planned recipes they require are ready
+- define and test the reviewed migration path from Project Manifest / Build Contract v1 to v2 using the NFR and Design contracts
 
 ### Phase 3.5C — Sandbox and trace adapters ⬜ Planned
 
@@ -128,7 +142,7 @@ Purpose: make later AI/runtime autonomy measurable, resumable, reversible and pe
 - OpenTelemetry-style event/trace mapping for model/tool/test/cost telemetry
 - explicit production deploy/database approval boundary
 
-Phase 3.5 exit gate: a task can be created, checkpointed, resumed in a fresh session, bounded by deterministic guards, prevented from escaping its declared ChangeSet/capabilities, and measured against canonical factory benchmarks without depending on a specific agent runtime.
+Phase 3.5 exit gate: a task can be created, checkpointed, resumed in a fresh session, bounded by deterministic guards, prevented from escaping its declared ChangeSet/capabilities, measured against canonical factory benchmarks, and executed behind a sandbox abstraction without depending on a specific agent runtime.
 
 ## Phase 4 — Full Builder Console ⬜ Planned
 
@@ -143,7 +157,7 @@ Phase 3.5 exit gate: a task can be created, checkpointed, resumed in a fresh ses
 - test/health view
 - model/tool/cost trace view
 - preview/production deploy controls with approval gates
-- rich Design Contract: typography, hierarchy, spacing, colour semantics, motion, imagery, component language, responsive priorities, interaction feedback and reference-image intent
+- adopt the rich Design Contract into Build Contract/intake and visual-review workflows
 - repo-local specialist Skills registry/workflow groundwork
 - Playwright-based agent browser inspection layered on deterministic E2E tests
 

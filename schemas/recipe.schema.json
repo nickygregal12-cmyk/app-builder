@@ -31,6 +31,15 @@
         "fragments":{"type":"array","items":{"type":"string"}}
       },
       "additionalProperties":false
+    },
+    "upgrade": {
+      "type":"object",
+      "properties": {
+        "compatibleFrom":{"type":"array","uniqueItems":true,"items":{"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"}},
+        "migrationNotes":{"type":"array","items":{"type":"string"}},
+        "alwaysReview":{"type":"boolean"}
+      },
+      "additionalProperties":false
     }
   },
   "additionalProperties": false

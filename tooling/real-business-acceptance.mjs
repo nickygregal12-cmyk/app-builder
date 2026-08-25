@@ -74,7 +74,7 @@ const sourceRefs = pack.sources.map((source) => ({ id: source.id, kind: source.k
 const manifest = {
   schemaVersion: 2,
   project: { name: 'Acme Retrofit', slug: 'acme-retrofit', type: 'marketing-site', primaryGoal: 'Generate qualified residential retrofit enquiries.' },
-  audience: { targetUsers: 'Homeowners planning residential retrofit work', roles: [] },
+  audience: { summary: 'Homeowners planning residential retrofit work', roles: [] },
   journeys: ['Understand retrofit services', 'Review trust evidence and service areas', 'Contact Acme about a project'],
   majorSurfaces: ['Home', 'Services', 'About', 'Contact'],
   entities: [],

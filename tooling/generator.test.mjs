@@ -24,11 +24,10 @@ test('supabase backend is selected as infrastructure rather than a user module',
 });
 
 test('generation plan fails closed for enabled modules without a ready recipe', () => {
-  const withAuth = structuredClone(marketingManifest);
-  withAuth.modules.auth = true;
-  withAuth.infrastructure.backend = 'supabase';
-  const plan = buildGenerationPlan(withAuth, { catalog });
-  assert.ok(plan.missingModules.includes('auth'));
+  const withUnsupportedModule = structuredClone(marketingManifest);
+  withUnsupportedModule.modules.billing = true;
+  const plan = buildGenerationPlan(withUnsupportedModule, { catalog });
+  assert.ok(plan.missingModules.includes('billing'));
 });
 
 test('generated supabase project pins the SDK and writes public env contract', () => {

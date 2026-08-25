@@ -15,6 +15,8 @@
     "doctor":"node tooling/doctor.mjs",
     "validate:example":"node tooling/validate-manifest.mjs examples/project-manifest.example.json",
     "create-app":"node tooling/create-app.mjs",
+    "recipe":"node tooling/recipe.mjs",
+    "generate:acceptance":"node tooling/generate-acceptance.mjs",
     "check":"npm run doctor && npm run test && npm run validate:example && npm run typecheck && npm run lint"
   },
   "devDependencies":{"@playwright/test":"^1.62.1","oxlint":"^1.71.0","typescript":"~7.0.2"}

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "templates": {
+    "react-vite-neutral": {
+      "path": "templates/react-vite-neutral",
+      "version": "1.0.0",
+      "status": "ready",
+      "projectTypes": [
+        "marketing-site",
+        "b2b-saas",
+        "consumer-app",
+        "internal-tool",
+        "content-site",
+        "ai-app"
+      ]
+    }
+  },
+  "projectTypeDefaults": {
+    "marketing-site": "react-vite-neutral",
+    "b2b-saas": "react-vite-neutral",
+    "consumer-app": "react-vite-neutral",
+    "internal-tool": "react-vite-neutral",
+    "content-site": "react-vite-neutral",
+    "ai-app": "react-vite-neutral"
+  }
+}

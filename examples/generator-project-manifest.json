@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "North Star Studio",
+    "slug": "north-star-studio",
+    "type": "marketing-site",
+    "primaryGoal": "Explain the offer clearly and generate qualified enquiries."
+  },
+  "modules": {
+    "seo": true,
+    "feature-flags": true
+  },
+  "infrastructure": {
+    "backend": "none",
+    "deployment": "netlify"
+  },
+  "aiBudget": {
+    "mode": "economy",
+    "maxBuildCostGbp": 5
+  },
+  "brand": {
+    "designControl": "sensible-defaults"
+  },
+  "inputs": {
+    "sources": []
+  },
+  "outOfScope": ["authentication","billing"]
+}

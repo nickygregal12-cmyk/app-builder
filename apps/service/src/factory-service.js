@@ -77,6 +77,30 @@ async function waitForPreview(url, child, timeoutMs = 15_000) {
   throw new Error('Preview process did not become ready before the timeout.');
 }
 
+function signalPreview(child, signal) {
+  if (child.exitCode !== null) return;
+  if (process.platform !== 'win32' && child.pid) {
+    try {
+      process.kill(-child.pid, signal);
+      return;
+    } catch {
+      // Fall back to the direct child if the process group already disappeared.
+    }
+  }
+  child.kill(signal);
+}
+
+async function terminatePreview(child) {
+  if (child.exitCode !== null) return;
+  const exited = new Promise((resolve) => child.once('exit', resolve));
+  signalPreview(child, 'SIGTERM');
+  await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 1500))]);
+  if (child.exitCode === null) {
+    signalPreview(child, 'SIGKILL');
+    await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 1000))]);
+  }
+}
+
 export class FactoryService {
   constructor({ store, workspacesRoot, env = process.env }) {
     this.store = store;
@@ -293,6 +317,7 @@ export class FactoryService {
       cwd: workspace,
       stdio: 'ignore',
       shell: process.platform === 'win32',
+      detached: process.platform !== 'win32',
       env: { ...process.env, BROWSER: 'none' },
     });
     const preview = { process: child, port, url, startedAt: new Date().toISOString() };
@@ -305,7 +330,7 @@ export class FactoryService {
       await this.store.recordEvent(createEvent({ projectId, type: 'preview.started', actor: 'factory-service', payload: { url, port } }));
       return this.previewStatus(projectId);
     } catch (error) {
-      child.kill('SIGTERM');
+      await terminatePreview(child);
       this.previews.delete(projectId);
       throw error;
     }
@@ -318,7 +343,7 @@ export class FactoryService {
       this.previews.delete(projectId);
       return { state: 'stopped', url: null, port: null, startedAt: null };
     }
-    preview.process.kill('SIGTERM');
+    await terminatePreview(preview.process);
     this.previews.delete(projectId);
     await this.store.recordEvent(createEvent({ projectId, type: 'preview.stopped', actor: 'factory-service', payload: { port: preview.port } }));
     return { state: 'stopped', url: null, port: null, startedAt: null };

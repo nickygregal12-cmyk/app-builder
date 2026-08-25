@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "common": ["default", "empty", "loading", "error", "large-data"],
+  "conditional": {
+    "auth": ["new-user"],
+    "admin": ["admin"]
+  }
+}

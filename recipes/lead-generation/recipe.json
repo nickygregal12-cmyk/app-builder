@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "lead-generation",
+  "module": "lead-generation",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "entry": "src/features/lead-generation/index.tsx",
+  "files": ["src/features/lead-generation/index.tsx", "public/__forms.html", "docs/LEAD-GENERATION.md"],
+  "requires": [],
+  "requiresAdapters": ["netlify"],
+  "conflicts": [],
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+}

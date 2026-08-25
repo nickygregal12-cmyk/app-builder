@@ -60,6 +60,11 @@ export class FactoryServiceClient {
   readManifest(id) { return this.request('GET', `/projects/${projectId(id)}/manifest`); }
   readKnowledge(id) { return this.request('GET', `/projects/${projectId(id)}/knowledge-pack`); }
   readComposition(id) { return this.request('GET', `/projects/${projectId(id)}/composition`); }
+  readSources(id) { return this.request('GET', `/projects/${projectId(id)}/sources`); }
+  ingestSources(id, sources) {
+    if (!Array.isArray(sources) || !sources.length) throw new Error('sources must be a non-empty array.');
+    return this.request('POST', `/projects/${projectId(id)}/sources`, { sources });
+  }
   generateProject(id) { return this.request('POST', `/projects/${projectId(id)}/generate`); }
   verifyProject(id) { return this.request('POST', `/projects/${projectId(id)}/verify`); }
   readTasks(id) { return this.request('GET', `/projects/${projectId(id)}/tasks`); }

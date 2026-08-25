@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
 
 function send(response, status, value) {
@@ -45,6 +46,14 @@ export function createFactoryHttpServer({ service }) {
       if (request.method === 'GET' && route.action === null) return send(response, 200, { project });
       if (request.method === 'GET' && route.action === 'manifest') return send(response, 200, { manifest: service.getManifest(route.projectId) });
       if (request.method === 'GET' && route.action === 'knowledge-pack') return send(response, 200, { knowledgePack: service.getKnowledgePack(route.projectId) });
+      if (request.method === 'GET' && route.action === 'sources') return send(response, 200, { knowledge: service.knowledgeSummary(route.projectId) });
+      if (request.method === 'POST' && route.action === 'sources') {
+        // Uploaded bytes arrive base64-encoded, so the body limit is raised
+        // above the ordinary JSON ceiling but stays bounded.
+        const body = await readJson(request, 48 * 1024 * 1024);
+        const result = await service.ingestSources(route.projectId, parseSourceRequests(body.sources));
+        return send(response, 200, result);
+      }
       if (request.method === 'GET' && route.action === 'composition') return send(response, 200, { composition: service.getComposition(route.projectId) });
       if (request.method === 'POST' && route.action === 'generate') {
         const result = await service.generateProject(route.projectId);
@@ -73,7 +82,7 @@ export function createFactoryHttpServer({ service }) {
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      const status = /JSON|manifest|knowledge-pack|Request body|Unsafe|dependencies are not installed|no generated workspace/.test(message) ? 400 : 500;
+      const status = /JSON|manifest|knowledge pack|knowledge-pack|Request body|Unsafe|source|Source|Ingestion|dependencies are not installed|no generated workspace/.test(message) ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });
     }
   });

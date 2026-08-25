@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   generateProject,
+  ingestSources,
   loadWorkspace,
   startPreview,
   stopPreview,
   verifyProject,
+  type DeclaredSource,
+  type KnowledgeSummary,
   type ProjectSummary,
+  type SourceRequest,
   type WorkspaceSnapshot,
 } from '../service/client';
 import './workspace.css';
 
 type Device = 'desktop' | 'tablet' | 'mobile';
-type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | null;
+type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | null;
 
 const deviceWidth: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
 
@@ -27,6 +31,8 @@ function label(value: string) {
 
 function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   const payload = event.payload;
+  if (event.type === 'sources.ingested') return `${String((payload.added as unknown[] | undefined)?.length ?? 0)} source(s) · ${String(payload.factCount ?? 0)} facts · ${String(payload.assetCount ?? 0)} assets`;
+  if (event.type === 'sources.ingestion.started') return `Normalising ${String(payload.requested ?? 0)} source(s)`;
   if (event.type === 'composition.materialised') return `${String(payload.pages ?? 0)} pages · ${String(payload.sections ?? 0)} sections`;
   if (event.type === 'repository.generated') return 'Standalone repository materialised';
   if (event.type === 'quality.install.succeeded') return `Dependencies installed · ${duration(event.usage.durationMs)}`;
@@ -36,6 +42,116 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'preview.stopped') return 'Preview stopped';
   if (event.type.endsWith('.failed')) return String(payload.message ?? 'Operation failed');
   return event.type.endsWith('.succeeded') ? 'Completed successfully' : 'Factory operation';
+}
+
+const RIGHTS_LABEL: Record<string, string> = {
+  'approved-for-use': 'approved for use',
+  'reference-only': 'reference only',
+  unknown: 'rights unknown',
+  restricted: 'restricted',
+};
+
+async function fileToSourceRequest(file: File, approvedForUse: boolean, purpose: string): Promise<SourceRequest> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return {
+    name: file.name,
+    label: file.name,
+    mimeType: file.type || undefined,
+    contentBase64: btoa(binary),
+    purpose: purpose || undefined,
+    approvedForUse,
+  };
+}
+
+function sameUri(a: string, b: string) {
+  return a.replace(/\/$/, '') === b.replace(/\/$/, '');
+}
+
+function SourcePanel({ knowledge, declaredSources, disabled, busy, onIngest }: {
+  knowledge: KnowledgeSummary | null;
+  declaredSources: DeclaredSource[];
+  disabled: boolean;
+  busy: boolean;
+  onIngest: (sources: SourceRequest[]) => Promise<void>;
+}) {
+  const [uri, setUri] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [approvedForUse, setApprovedForUse] = useState(false);
+  const [maxPages, setMaxPages] = useState(8);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const sources = knowledge?.sources ?? [];
+
+  // Intake records what the business said it has. Anything declared as a URL
+  // can be read now; declared files carry metadata only, so they have to be
+  // attached here before the factory can use them.
+  const pendingUrls = declaredSources.filter((declared) => declared.uri && !sources.some((source) => source.uri && sameUri(source.uri, declared.uri as string)));
+  const pendingFiles = declaredSources.filter((declared) => !declared.uri && !sources.some((source) => source.label === (declared.name ?? declared.label)));
+
+  async function addUrl() {
+    if (!uri.trim()) return;
+    await onIngest([{ uri: uri.trim(), maxPages, purpose: purpose || undefined, approvedForUse }]);
+    setUri('');
+  }
+
+  async function addFiles(files: FileList | null) {
+    if (!files?.length) return;
+    const requests = await Promise.all(Array.from(files).map((file) => fileToSourceRequest(file, approvedForUse, purpose)));
+    await onIngest(requests);
+    if (fileInput.current) fileInput.current.value = '';
+  }
+
+  async function ingestDeclaredUrls() {
+    await onIngest(pendingUrls.map((declared) => ({
+      uri: declared.uri,
+      label: declared.label,
+      purpose: declared.purpose,
+      approvedForUse: declared.rightsStatus === 'approved-for-use',
+    })));
+  }
+
+  return <section className="builder-panel source-panel">
+    <div className="panel-title-row"><span className="builder-kicker">Company sources</span><span>{sources.length} ingested</span></div>
+
+    {!disabled && (pendingUrls.length > 0 || pendingFiles.length > 0) && <div className="declared-sources">
+      <strong>{pendingUrls.length + pendingFiles.length} source(s) declared at intake are not ingested yet.</strong>
+      {pendingUrls.length > 0 && <button type="button" className="secondary compact" onClick={ingestDeclaredUrls} disabled={busy}>Read {pendingUrls.length} declared URL(s)</button>}
+      {pendingFiles.length > 0 && <span>{pendingFiles.map((declared) => declared.name ?? declared.label).join(', ')} — attach the files below; intake recorded their names only.</span>}
+    </div>}
+
+    {disabled
+      ? <p className="builder-empty">Sources are ingested before the project workspace is generated.</p>
+      : <div className="source-form">
+          <input aria-label="Company website or page URL" type="url" value={uri} placeholder="https://the-company.example" onChange={(event) => setUri(event.target.value)} disabled={busy} />
+          <input aria-label="What should the factory use this for?" value={purpose} placeholder="What is this material for?" onChange={(event) => setPurpose(event.target.value)} disabled={busy} />
+          <label className="source-pages">Pages<input aria-label="Maximum pages to read" type="number" min={1} max={25} value={maxPages} onChange={(event) => setMaxPages(Number(event.target.value))} disabled={busy} /></label>
+          <button type="button" className="secondary compact" onClick={addUrl} disabled={busy || !uri.trim()}>{busy ? 'Reading…' : 'Read website'}</button>
+          <label className="source-rights">
+            <input type="checkbox" checked={approvedForUse} onChange={(event) => setApprovedForUse(event.target.checked)} disabled={busy} />
+            <span>The business owns this material and approves republishing it. Leave unticked and it stays reference-only.</span>
+          </label>
+          <label className="source-upload">
+            <strong>Add logos, photos, documents or spreadsheets</strong>
+            <span>Content is sent to the factory service, which does the extraction. Imported material is data and never instructs the factory.</span>
+            <input ref={fileInput} aria-label="Add company files" type="file" multiple onChange={(event) => addFiles(event.target.files)} disabled={busy} />
+          </label>
+        </div>}
+
+    {knowledge && <dl className="builder-definition knowledge-facts">
+      <div><dt>Facts</dt><dd>{knowledge.factCount}</dd></div>
+      <div><dt>Assets</dt><dd>{knowledge.assetCount}</dd></div>
+      <div><dt>Publishable</dt><dd>{knowledge.publishableAssetCount}</dd></div>
+      <div><dt>Chunks</dt><dd>{knowledge.chunkCount}</dd></div>
+    </dl>}
+
+    {sources.length > 0 && <div className="ingested-list">{sources.map((source) => <article key={source.id}>
+      <strong>{source.label}</strong>
+      <span>{source.kind.replaceAll('-', ' ')} · {source.sourceChannel.replaceAll('-', ' ')} · {source.provenance.replaceAll('-', ' ')}</span>
+      <span className={source.publishUseAllowed ? 'rights-pill publishable' : 'rights-pill'}>{RIGHTS_LABEL[source.rightsStatus] ?? source.rightsStatus}</span>
+    </article>)}</div>}
+  </section>;
 }
 
 export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onExit: () => void }) {
@@ -90,6 +206,19 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     }
   }, [applyProjectState, projectId, refresh]);
 
+  const ingest = useCallback(async (sources: SourceRequest[]) => {
+    setOperation('ingest');
+    setError('');
+    try {
+      await ingestSources(projectId, sources);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setOperation(null);
+    }
+  }, [projectId, refresh]);
+
   const latestTask = snapshot?.tasks.at(-1) ?? null;
   const canGenerate = snapshot?.project.state === 'ready' || snapshot?.project.state === 'failed';
   const canVerify = snapshot?.project.state === 'generated';
@@ -131,6 +260,14 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <div><span>Runtime</span><strong>{duration(snapshot.metrics.durationMs)}</strong></div>
           <div><span>Interventions</span><strong>{snapshot.metrics.interventions}</strong></div>
         </section>
+
+        <SourcePanel
+          knowledge={snapshot.knowledge}
+          declaredSources={snapshot.declaredSources}
+          disabled={Boolean(snapshot.project.workspacePath)}
+          busy={operation === 'ingest'}
+          onIngest={ingest}
+        />
 
         <section className="builder-panel">
           <div className="panel-title-row"><span className="builder-kicker">Build plan</span><span>{pages.length} routes</span></div>

@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { validateContract } from '@app-builder/contracts';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
+import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
@@ -103,11 +104,12 @@ async function terminatePreview(child) {
 }
 
 export class FactoryService {
-  constructor({ store, workspacesRoot, env = process.env }) {
+  constructor({ store, workspacesRoot, stateRoot, env = process.env }) {
     this.store = store;
     this.workspacesRoot = path.resolve(workspacesRoot);
     this.env = env;
     this.previews = new Map();
+    this.ingestion = new SourceIngestion({ stateRoot: stateRoot ?? store.stateRoot });
     fs.mkdirSync(this.workspacesRoot, { recursive: true });
   }
 
@@ -141,6 +143,7 @@ export class FactoryService {
 
   getManifest(id) { return this.requireProject(id).manifest; }
   getKnowledgePack(id) { return this.requireProject(id).knowledgePack; }
+  knowledgeSummary(id) { return knowledgeSummary(this.requireProject(id).knowledgePack); }
   listProjects() { return this.store.listProjects().map(summary); }
   listTasks(projectId) { this.requireProject(projectId); return this.store.listTasks(projectId); }
   listEvents(projectId, options) { this.requireProject(projectId); return this.store.listEvents(projectId, options); }
@@ -179,6 +182,86 @@ export class FactoryService {
   async recordOperationalEvent(projectId, type, payload = {}, usage = {}) {
     this.requireProject(projectId);
     return this.store.recordEvent(createEvent({ projectId, type, actor: 'factory-service', payload, usage }));
+  }
+
+  /**
+   * Normalise real source material into the project's trusted knowledge pack.
+   * Ingestion is additive and only accepted before a workspace exists, because
+   * composition reads the knowledge pack at generation time and there is no
+   * recompose path yet.
+   */
+  async ingestSources(projectId, requests) {
+    let project = this.requireProject(projectId);
+    if (project.state === 'generating') throw new Error('Project generation is already running.');
+    if (project.workspacePath) throw new Error('Sources must be ingested before the project workspace is generated.');
+
+    let task = createTask({
+      projectId,
+      objective: `Ingest ${requests.length} source(s) for ${project.name}`,
+      acceptanceCriteria: [
+        'Every source is deterministically normalised',
+        'Source governance and provenance are preserved',
+        'Imported content carries no instruction authority',
+        'The knowledge pack is structurally and relationally valid',
+      ],
+      policyId: 'implementation',
+      budget: { maxIterations: 1, maxRuntimeMs: 10 * 60 * 1000, maxCostGbp: 0, maxTokens: 0, maxNoProgressAttempts: 1 },
+    });
+    this.store.upsertTask(task);
+    task = transitionTask(task, 'running', { incrementAttempt: true });
+    this.store.upsertTask(task);
+
+    const started = Date.now();
+    await this.store.recordEvent(createEvent({
+      projectId,
+      taskId: task.id,
+      type: 'sources.ingestion.started',
+      actor: 'factory-service',
+      payload: { requested: requests.length, kinds: requests.map((request) => request.type) },
+    }));
+
+    try {
+      const { pack, added, sourceCount } = await this.ingestion.ingest(projectId, requests);
+      const now = new Date().toISOString();
+      project = this.store.upsertProject({ ...project, knowledgePack: pack, updatedAt: now });
+
+      const checkpoint = createCheckpoint({
+        projectId,
+        taskId: task.id,
+        repoRef: projectId,
+        summary: `Ingested ${added.length} source(s); ${sourceCount} in total across ${pack.facts.length} fact(s) and ${pack.assets.length} asset(s).`,
+        filesChanged: [],
+        failures: [],
+        artifacts: ['knowledge-pack'],
+        nextAction: 'Review source governance, then generate the project.',
+      });
+      this.store.recordCheckpoint(checkpoint);
+      task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
+      this.store.upsertTask(task);
+
+      await this.store.recordEvent(createEvent({
+        projectId,
+        taskId: task.id,
+        type: 'sources.ingested',
+        actor: 'factory-service',
+        payload: {
+          packHash: pack.packHash,
+          added: added.map((source) => ({ id: source.id, kind: source.kind, uri: source.uri, rightsStatus: source.rightsStatus, assetStatus: source.assetStatus })),
+          sourceCount,
+          factCount: pack.facts.length,
+          assetCount: pack.assets.length,
+          chunkCount: pack.chunks.length,
+        },
+        usage: { durationMs: Date.now() - started },
+      }));
+      return { project: summary(project), task, checkpoint, knowledge: knowledgeSummary(pack), added };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      task = transitionTask(task, 'failed', { stopReason: message });
+      this.store.upsertTask(task);
+      await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'sources.ingestion.failed', actor: 'factory-service', payload: { message }, usage: { durationMs: Date.now() - started } }));
+      throw error;
+    }
   }
 
   async generateProject(projectId) {

@@ -256,16 +256,30 @@ Plan:
 
 Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client of `apps/service` rather than expanding browser-only state.
 
-### Phase 4A — First complete usable vertical slice
+### Phase 4A — First complete usable vertical slice 🚧 In progress
 
+Delivered:
 - create/open project;
-- adaptive intake and source ingestion through the service;
-- reviewed Build Contract;
+- reviewed Build Contract from adaptive intake;
+- service-owned source ingestion: declared URLs are crawled and uploaded files
+  are normalised by the service, never by the browser, and never from a
+  client-supplied filesystem path;
+- ingestion runs as a durable task with events, a checkpoint and an additive
+  knowledge pack that becomes a real generation input;
+- source rights/approval state is declared by the operator and visible in the
+  Console — a public page stays reference-only until someone says otherwise;
+- intake-declared sources that have not been ingested are shown as outstanding;
 - trigger deterministic build;
 - visible task/event progress;
 - service-managed live preview;
 - desktop/tablet/mobile preview switching;
-- checkpoint/version visibility.
+- latest checkpoint visibility.
+
+Remaining:
+- re-ingestion and recompose after a workspace exists — ingestion is currently
+  refused once the project has been generated, because there is no recompose
+  operation to make later knowledge take effect;
+- checkpoint/version history rather than only the latest checkpoint.
 
 ### Phase 4B — Direct manipulation, brand sources and assets
 

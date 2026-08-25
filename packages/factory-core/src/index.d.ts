@@ -11,6 +11,30 @@ export type FeedbackType = 'missing-requirement' | 'corrected-answer' | 'unneces
 export interface FeedbackEvent { id: string; type: FeedbackType; questionId?: string; detail?: string; previousValue?: AnswerValue; nextValue?: AnswerValue; createdAt: string; }
 export interface FollowUpCandidate { id: string; questionId: string; question: string; reason: string; impact: string; }
 export interface AmbiguityFollowUpRequest { version: number; required: boolean; maxQuestions: number; aiAllowed: boolean; budget: { maxTokens: number; modelClass: 'economy' }; candidates: FollowUpCandidate[]; }
+export interface BuildContract {
+  version: number;
+  status: 'draft' | 'ready-for-review' | 'approved';
+  project: { name: string; type: string; primaryGoal: string; targetUsers: string };
+  coreJourneys: string[];
+  enabledModules: string[];
+  explicitlyExcluded: string[];
+  acceptanceCriteria: string[];
+  unresolvedHighImpactQuestions: string[];
+  ambiguityFollowUp: AmbiguityFollowUpRequest;
+  sourceInputs: SourceReference[];
+  designDirection: string;
+  approvedAt?: string;
+}
+export interface ProjectManifest {
+  schemaVersion: 1;
+  project: { name: string; slug: string; type: string; primaryGoal: string };
+  modules: Record<string, boolean>;
+  infrastructure: { backend: string; deployment: string };
+  aiBudget: { mode: string; maxBuildCostGbp: number };
+  brand: Record<string, unknown>;
+  inputs: { inventory: string[]; existingWebsite?: string; sources: SourceReference[] };
+  outOfScope: string[];
+}
 export const FACTORY_ENGINE_VERSION: number;
 export function slugify(value: unknown): string;
 export function mergeQuestionnaires(base: QuestionnaireDefinition, specific: QuestionnaireDefinition): Question[];
@@ -26,6 +50,6 @@ export function buildAmbiguityFollowUpRequest(input: { questions: Question[]; an
 export function createIntakeSession(input: { projectType: string; mode?: IntakeMode; questionnaireVersion?: string; questions: Question[]; seedAnswers?: Answers; sourceReferences?: SourceReference[]; feedback?: FeedbackEvent[] }): Record<string, unknown>;
 export function serializeIntakeBundle(input: { session: unknown; buildContract: unknown; projectManifest: unknown }): string;
 export function deriveEnabledModules(projectType: string, answers: Answers, projectTypesConfig: ProjectTypesConfig): string[];
-export function buildProjectManifest(input: { projectType: string; answers: Answers; projectTypesConfig: ProjectTypesConfig; sourceReferences?: SourceReference[] }): Record<string, unknown>;
-export function buildBuildContract(input: { projectType: string; answers: Answers; questions: Question[]; projectTypesConfig: ProjectTypesConfig; sourceReferences?: SourceReference[] }): Record<string, unknown>;
-export function approveBuildContract(contract: Record<string, unknown> & { unresolvedHighImpactQuestions?: string[] }): Record<string, unknown>;
+export function buildProjectManifest(input: { projectType: string; answers: Answers; projectTypesConfig: ProjectTypesConfig; sourceReferences?: SourceReference[] }): ProjectManifest;
+export function buildBuildContract(input: { projectType: string; answers: Answers; questions: Question[]; projectTypesConfig: ProjectTypesConfig; sourceReferences?: SourceReference[] }): BuildContract;
+export function approveBuildContract(contract: BuildContract): BuildContract;

@@ -13,6 +13,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('APP_BU
 const store = new FactoryStore({ stateRoot });
 const service = new FactoryService({ store, workspacesRoot });
 const server = createFactoryHttpServer({ service });
+let shuttingDown = false;
 
 server.listen(port, host, () => {
   console.log(`App Builder service listening on http://${host}:${port}`);
@@ -20,8 +21,11 @@ server.listen(port, host, () => {
   console.log(`Workspaces: ${workspacesRoot}`);
 });
 
-function shutdown() {
-  server.close(() => {
+async function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  server.close(async () => {
+    await service.close();
     store.close();
     process.exit(0);
   });

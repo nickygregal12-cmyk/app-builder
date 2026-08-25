@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { factoryToolContract } from './tool-contract.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -18,7 +19,7 @@ async function readJson(request, maxBytes = 10 * 1024 * 1024) {
 }
 
 function projectRoute(pathname) {
-  const match = pathname.match(/^\/projects\/([^/]+)(?:\/(generate|tasks|events|metrics|checkpoint))?$/);
+  const match = pathname.match(/^\/projects\/([^/]+)(?:\/(.+))?$/);
   return match ? { projectId: decodeURIComponent(match[1]), action: match[2] ?? null } : null;
 }
 
@@ -26,7 +27,9 @@ export function createFactoryHttpServer({ service }) {
   return http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
-      if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { ok: true, service: 'app-builder', version: 1 });
+      if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { ok: true, service: 'app-builder', version: 2 });
+      if (request.method === 'GET' && url.pathname === '/tools') return send(response, 200, factoryToolContract());
+      if (request.method === 'GET' && url.pathname === '/integrations') return send(response, 200, { integrations: service.integrationStatus() });
       if (request.method === 'GET' && url.pathname === '/projects') return send(response, 200, { projects: service.listProjects() });
       if (request.method === 'POST' && url.pathname === '/projects') {
         const body = await readJson(request);
@@ -40,6 +43,9 @@ export function createFactoryHttpServer({ service }) {
       if (!project) return send(response, 404, { error: 'unknown-project' });
 
       if (request.method === 'GET' && route.action === null) return send(response, 200, { project });
+      if (request.method === 'GET' && route.action === 'manifest') return send(response, 200, { manifest: service.getManifest(route.projectId) });
+      if (request.method === 'GET' && route.action === 'knowledge-pack') return send(response, 200, { knowledgePack: service.getKnowledgePack(route.projectId) });
+      if (request.method === 'GET' && route.action === 'composition') return send(response, 200, { composition: service.getComposition(route.projectId) });
       if (request.method === 'POST' && route.action === 'generate') {
         const result = await service.generateProject(route.projectId);
         return send(response, 200, {
@@ -49,6 +55,10 @@ export function createFactoryHttpServer({ service }) {
           composition: { hash: result.composition.compositionHash, pages: result.composition.pages.length, sections: result.composition.sections.length, warnings: result.composition.warnings },
         });
       }
+      if (request.method === 'POST' && route.action === 'verify') {
+        const result = await service.verifyProject(route.projectId);
+        return send(response, 200, result);
+      }
       if (request.method === 'GET' && route.action === 'tasks') return send(response, 200, { tasks: service.listTasks(route.projectId) });
       if (request.method === 'GET' && route.action === 'events') {
         const after = Number(url.searchParams.get('after') ?? 0);
@@ -57,10 +67,13 @@ export function createFactoryHttpServer({ service }) {
       }
       if (request.method === 'GET' && route.action === 'metrics') return send(response, 200, { metrics: service.metrics(route.projectId) });
       if (request.method === 'GET' && route.action === 'checkpoint') return send(response, 200, { checkpoint: service.latestCheckpoint(route.projectId) });
+      if (request.method === 'GET' && route.action === 'preview') return send(response, 200, { preview: service.previewStatus(route.projectId) });
+      if (request.method === 'POST' && route.action === 'preview/start') return send(response, 200, { preview: await service.startPreview(route.projectId) });
+      if (request.method === 'POST' && route.action === 'preview/stop') return send(response, 200, { preview: await service.stopPreview(route.projectId) });
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      const status = /JSON|manifest|knowledge-pack|Request body|Unsafe/.test(message) ? 400 : 500;
+      const status = /JSON|manifest|knowledge-pack|Request body|Unsafe|dependencies are not installed|no generated workspace/.test(message) ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });
     }
   });

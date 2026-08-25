@@ -83,7 +83,16 @@ export function createFactoryHttpServer({ service }) {
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      const status = /JSON|manifest|knowledge pack|knowledge-pack|Request body|Unsafe|source|Source|Ingestion|dependencies are not installed|no generated workspace/.test(message) ? 400 : 500;
+      // Only messages that name a caller mistake become 4xx. A bare word like
+      // "source" would also match internal failures and hide a real 500.
+      const clientError = [
+        /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
+        /Ingestion (requires|accepts)/, /Sources cannot reference/, /Only http\(s\) source URLs/,
+        /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
+        /Every source must be/, /exceeds the .* limit/,
+        /dependencies are not installed/, /no generated workspace/,
+      ].some((pattern) => pattern.test(message));
+      const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });
     }
   });

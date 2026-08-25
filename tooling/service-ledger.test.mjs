@@ -21,7 +21,18 @@ function manifest(slug = 'service-test') {
     aiBudget: { mode: 'economy', maxBuildCostGbp: 0 },
     brand: { designControl: 'sensible-defaults' },
     inputs: { inventory: [], sources: [] },
-    constraints: { tenantModel: null, integrations: [], uploads: {}, existingData: [], expectedScale: null, sensitivity: null, hardConstraints: [], customCapabilities: [], excludedCapabilities: [], unresolvedCapabilities: [] },
+    constraints: {
+      hard: [],
+      expectedScale: 'under-1000',
+      sensitivity: 'normal-business-data',
+      tenantModel: '',
+      integrations: [],
+      existingData: [],
+      uploadTypes: [],
+      customCapabilities: [],
+      excludedCapabilities: [],
+      unresolvedCapabilities: [],
+    },
     outOfScope: [],
   };
 }

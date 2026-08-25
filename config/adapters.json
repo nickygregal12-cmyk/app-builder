@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "adapters": {
+    "supabase": {
+      "path": "adapters/supabase",
+      "version": "1.0.0",
+      "kind": "backend",
+      "status": "ready",
+      "selectWhen": {"backend": "supabase"}
+    }
+  }
+}

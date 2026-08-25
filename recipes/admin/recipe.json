@@ -1,0 +1,14 @@
+{
+  "schemaVersion":1,
+  "id":"admin",
+  "module":"admin",
+  "version":"1.0.0",
+  "status":"ready",
+  "compatibleTemplates":["react-vite-neutral"],
+  "entry":"src/features/admin/index.tsx",
+  "files":["src/features/admin/index.tsx"],
+  "requires":["auth"],
+  "requiresAdapters":["supabase"],
+  "conflicts":[],
+  "package":{"dependencies":{},"devDependencies":{},"scripts":{}}
+}

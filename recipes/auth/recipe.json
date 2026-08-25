@@ -1,0 +1,14 @@
+{
+  "schemaVersion":1,
+  "id":"auth",
+  "module":"auth",
+  "version":"1.0.0",
+  "status":"ready",
+  "compatibleTemplates":["react-vite-neutral"],
+  "entry":"src/features/auth/index.tsx",
+  "files":["src/features/auth/index.tsx","src/features/auth/AuthContext.tsx","src/features/auth/AuthScreen.tsx","src/features/auth/auth.css"],
+  "requires":[],
+  "requiresAdapters":["supabase"],
+  "conflicts":[],
+  "package":{"dependencies":{},"devDependencies":{},"scripts":{}}
+}

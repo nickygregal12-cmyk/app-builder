@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "supabase",
+  "kind": "backend",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "files": [".env.example","src/platform/env.ts","src/platform/supabase/client.ts","supabase/README.md"],
+  "package": {
+    "dependencies": {"@supabase/supabase-js":"2.112.4"},
+    "devDependencies": {},
+    "scripts": {}
+  }
+}

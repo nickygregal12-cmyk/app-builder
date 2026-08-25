@@ -1,10 +1,10 @@
 {
   "version": 1,
   "modules": {
-    "auth": {"description":"Authentication and protected-route foundation","status":"planned","defaultEnabled":false},
-    "profiles": {"description":"User profiles and account settings","status":"planned","defaultEnabled":false},
-    "organisations": {"description":"Multi-tenant organisations, memberships and roles","status":"planned","defaultEnabled":false},
-    "admin": {"description":"Generic admin/back-office foundation","status":"planned","defaultEnabled":false},
+    "auth": {"description":"Authentication and protected-route foundation","status":"ready","defaultEnabled":false},
+    "profiles": {"description":"User profiles and account settings","status":"ready","defaultEnabled":false},
+    "organisations": {"description":"Multi-tenant organisations, memberships and roles","status":"ready","defaultEnabled":false},
+    "admin": {"description":"Generic admin/back-office foundation","status":"ready","defaultEnabled":false},
     "billing": {"description":"Subscriptions, plans and entitlement abstraction","status":"planned","defaultEnabled":false},
     "email": {"description":"Transactional email abstraction and templates","status":"planned","defaultEnabled":false},
     "notifications": {"description":"In-app/email/push notification abstraction","status":"planned","defaultEnabled":false},

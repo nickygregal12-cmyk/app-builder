@@ -1,17 +1,11 @@
 {
   "version": 1,
   "recipes": {
-    "seo": {
-      "path": "recipes/seo",
-      "version": "1.0.0",
-      "module": "seo",
-      "status": "ready"
-    },
-    "feature-flags": {
-      "path": "recipes/feature-flags",
-      "version": "1.0.0",
-      "module": "feature-flags",
-      "status": "ready"
-    }
+    "seo": {"path":"recipes/seo","version":"1.0.0","module":"seo","status":"ready"},
+    "feature-flags": {"path":"recipes/feature-flags","version":"1.0.0","module":"feature-flags","status":"ready"},
+    "auth": {"path":"recipes/auth","version":"1.0.0","module":"auth","status":"ready"},
+    "profiles": {"path":"recipes/profiles","version":"1.0.0","module":"profiles","status":"ready"},
+    "organisations": {"path":"recipes/organisations","version":"1.0.0","module":"organisations","status":"ready"},
+    "admin": {"path":"recipes/admin","version":"1.0.0","module":"admin","status":"ready"}
   }
 }

@@ -136,15 +136,19 @@ A long-running task should operate roughly as:
 ```text
 load durable task
 -> evaluate stop/approval/environment conditions
--> build minimal context packet
--> choose specialist + model + skills
+-> resolve pipeline stage and specialist role from the role registry
+-> build minimal role context packet (declared artifact kinds only)
+-> choose model + skill packet for that role
 -> start fresh/runtime session
 -> declare ChangeSet
 -> validate normalized file scope
 -> implement bounded change
 -> deterministic verification
+-> independent reviewer issues a verdict (never the author)
+-> evaluate handoff; promote only on artifacts + evidence + checks + verdict
 -> record events/cost/diff/result
 -> checkpoint
+-> evaluate convergence and route any failing gate to its owning role
 -> if complete: close task
 -> if useful progress: schedule next attempt
 -> if wrong specialist/model: hand off
@@ -156,18 +160,29 @@ No loop may continue merely because the model says it should. Deterministic loop
 
 ## Specialist workers
 
-Initial specialist profiles should be small and role-specific, for example:
+Specialist roles are no longer a runtime-era sketch. They are registered in `config/agent-roles.json`
+and routed by project class in `config/agent-pipelines.json`, with the deterministic primitives in
+`packages/control-plane/src/roles.js`. The runtime's job is to **execute** that registry, not to
+invent its own agent taxonomy.
 
-- planner/product bootstrapper;
-- frontend/design-system implementation;
-- backend/data implementation;
-- browser/visual review;
-- security review;
-- performance/accessibility review;
-- independent second-opinion review;
-- release/preview verification.
+Roles are permission profiles plus a small skill packet plus a bounded artifact surface — not
+personalities with unlimited access. Each role declares its capability policy, context route and
+ceiling, mutation scope, budget, stop criteria, escalation target and the independent reviewer that
+must promote its work.
 
-Roles are permission profiles plus selected skills, not personalities with unlimited access.
+The runtime must therefore:
+
+- resolve the pipeline for the project class rather than running one universal sequence;
+- start a **fresh session per role**, so a specialist does not inherit an unrelated specialist's context;
+- build the role's context packet with `buildRoleContextPacket` and pass nothing else;
+- refuse a ChangeSet scope the role does not own;
+- route the produced artifacts to the registered independent reviewer, never back to the author;
+- persist a `StageHandoff` and only then advance;
+- act on the `ConvergenceReport`: work the rework queue in severity order, re-entering the pipeline
+  at the role that owns each failure;
+- stop on convergence, a hard budget, or a genuine block — never because a model reported success.
+
+See `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
 
 ## Context-loss recovery
 
@@ -181,6 +196,7 @@ At the end of each attempt, persist a compact structured attempt summary contain
 - assumptions that remain unverified;
 - next recommended action;
 - whether the next attempt should use the same or a different specialist/model;
+- the current stage, its independent reviewer and the outstanding rework queue with owning roles;
 - current cost/iteration totals;
 - checkpoint/repo/environment reference.
 
@@ -253,7 +269,9 @@ Do not enable broad autonomous loops merely because OpenCode can run continuousl
 10. deterministic checks run before expensive AI review;
 11. database security recipes have executed acceptance where applicable;
 12. production deploy/database actions require explicit approval;
-13. generated apps remain independent of MCP/OpenCode/runtime infrastructure.
+13. generated apps remain independent of MCP/OpenCode/runtime infrastructure;
+14. specialist roles execute from the registry in disposable per-role sessions rather than one long general-purpose session;
+15. reviewer independence, handoff promotion and convergence stopping are enforced by the control plane rather than by prompt wording.
 
 ## Portability rule
 

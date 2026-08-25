@@ -1,0 +1,2200 @@
+{
+  "version": 1,
+  "status": "foundation",
+  "description": "Routing of specialist roles and required convergence gates by project class. Roles are registered in config/agent-roles.json.",
+  "gates": {
+    "product": {
+      "id": "product",
+      "label": "Product scope, journeys and acceptance criteria",
+      "evaluatedBy": "product-critic",
+      "defaultReworkRole": "product-specification",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "ProductSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "information-architecture": {
+      "id": "information-architecture",
+      "label": "Sitemap, navigation, taxonomy and content hierarchy",
+      "evaluatedBy": "ia-critic",
+      "defaultReworkRole": "information-architect",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "InformationArchitectureSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "ux": {
+      "id": "ux",
+      "label": "Task flows, state coverage and recovery",
+      "evaluatedBy": "ux-critic",
+      "defaultReworkRole": "ux-interaction",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "UXFlowSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "content": {
+      "id": "content",
+      "label": "Copy quality, voice and claim discipline",
+      "evaluatedBy": "product-critic",
+      "defaultReworkRole": "ux-writer",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "ContentSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "brand": {
+      "id": "brand",
+      "label": "Brand fidelity against supplied and observed evidence",
+      "evaluatedBy": "visual-critic",
+      "defaultReworkRole": "brand-research",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "BrandSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "architecture": {
+      "id": "architecture",
+      "label": "Data model, auth, tenancy and API boundaries",
+      "evaluatedBy": "security",
+      "defaultReworkRole": "solution-architect",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "ArchitectureSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "design-system": {
+      "id": "design-system",
+      "label": "Token, component, motion and accessibility contract completeness",
+      "evaluatedBy": "visual-critic",
+      "defaultReworkRole": "design-system",
+      "deterministicChecks": [
+        "design-system-lint"
+      ],
+      "requiredEvidence": [
+        "DesignSystemSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "visual": {
+      "id": "visual",
+      "label": "Rendered visual quality and distinctiveness",
+      "evaluatedBy": "design-critic",
+      "defaultReworkRole": "art-direction",
+      "deterministicChecks": [
+        "design-lint"
+      ],
+      "requiredEvidence": [
+        "RenderedEvidence",
+        "DesignLintReport"
+      ],
+      "minimumScore": 8.5,
+      "requiresIndependentReviewer": true
+    },
+    "functionality": {
+      "id": "functionality",
+      "label": "Acceptance journeys work in a real browser",
+      "evaluatedBy": "browser-qa",
+      "defaultReworkRole": "frontend-implementation",
+      "deterministicChecks": [
+        "e2e-tests"
+      ],
+      "requiredEvidence": [
+        "RenderedEvidence"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "responsive": {
+      "id": "responsive",
+      "label": "Composition holds at every declared width",
+      "evaluatedBy": "browser-qa",
+      "defaultReworkRole": "composition",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "RenderedEvidence"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "accessibility": {
+      "id": "accessibility",
+      "label": "No serious/critical automated failures and manual findings resolved",
+      "evaluatedBy": "accessibility",
+      "defaultReworkRole": "frontend-implementation",
+      "deterministicChecks": [
+        "axe-serious-critical"
+      ],
+      "requiredEvidence": [
+        "AccessibilityReport"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "performance": {
+      "id": "performance",
+      "label": "Declared performance budgets are met",
+      "evaluatedBy": "performance",
+      "defaultReworkRole": "frontend-implementation",
+      "deterministicChecks": [
+        "performance-budgets"
+      ],
+      "requiredEvidence": [
+        "PerformanceReport"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "seo": {
+      "id": "seo",
+      "label": "Crawlability, metadata, structured data and evidence-backed local signals",
+      "evaluatedBy": "seo-aeo",
+      "defaultReworkRole": "composition",
+      "deterministicChecks": [
+        "seo-aeo-scanner"
+      ],
+      "requiredEvidence": [
+        "SeoReport"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "security": {
+      "id": "security",
+      "label": "Auth, tenancy, input, secrets, storage and deployment boundaries",
+      "evaluatedBy": "security",
+      "defaultReworkRole": "backend-implementation",
+      "deterministicChecks": [
+        "executed-rls-acceptance",
+        "dependency-audit",
+        "secret-scan"
+      ],
+      "requiredEvidence": [
+        "SecurityReport"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "provenance": {
+      "id": "provenance",
+      "label": "Every published fact and asset retains source and rights state",
+      "evaluatedBy": "deterministic",
+      "defaultReworkRole": "ux-writer",
+      "deterministicChecks": [
+        "fact-provenance-check",
+        "asset-rights-check"
+      ],
+      "requiredEvidence": [],
+      "minimumScore": null,
+      "requiresIndependentReviewer": false
+    },
+    "tests": {
+      "id": "tests",
+      "label": "Coverage, regression protection and deterministic checks",
+      "evaluatedBy": "code-reviewer",
+      "defaultReworkRole": "test-engineer",
+      "deterministicChecks": [
+        "typecheck",
+        "lint",
+        "unit-tests",
+        "e2e-tests"
+      ],
+      "requiredEvidence": [
+        "TestPlan"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "launchability": {
+      "id": "launchability",
+      "label": "The build is genuinely ready to launch",
+      "evaluatedBy": "ship-release",
+      "defaultReworkRole": "product-specification",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "ConvergenceReport"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    }
+  },
+  "pipelines": {
+    "marketing-site": {
+      "id": "marketing-site",
+      "label": "Marketing / local-business website",
+      "notes": "Brand, art direction, conversion copy and SEO/AEO carry real weight here.",
+      "stages": [
+        {
+          "id": "intake",
+          "role": "requirements-interviewer",
+          "reviewer": "human",
+          "requires": [
+            "BuildContract",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "IntakeBrief"
+          ]
+        },
+        {
+          "id": "research",
+          "role": "research-agent",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ResearchPack"
+          ]
+        },
+        {
+          "id": "discovery",
+          "role": "product-discovery",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductDecision"
+          ]
+        },
+        {
+          "id": "product-spec",
+          "role": "product-specification",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductDecision",
+            "ProjectManifest",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductSpec"
+          ]
+        },
+        {
+          "id": "information-architecture",
+          "role": "information-architect",
+          "reviewer": "ia-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "InformationArchitectureSpec"
+          ]
+        },
+        {
+          "id": "ux-flows",
+          "role": "ux-interaction",
+          "reviewer": "ux-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "marketing-content",
+          "role": "marketing-content",
+          "reviewer": "product-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "MarketingContentSpec"
+          ]
+        },
+        {
+          "id": "brand",
+          "role": "brand-research",
+          "reviewer": "visual-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductSpec"
+          ],
+          "produces": [
+            "BrandSpec"
+          ]
+        },
+        {
+          "id": "art-direction",
+          "role": "art-direction",
+          "reviewer": "visual-critic",
+          "requires": [
+            "BrandSpec",
+            "InformationArchitectureSpec",
+            "MarketingContentSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArtDirectionPlan",
+            "ImagePlan"
+          ]
+        },
+        {
+          "id": "design-system",
+          "role": "design-system",
+          "reviewer": "visual-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "DesignSystemSpec",
+            "MotionContract",
+            "ComponentManifest"
+          ]
+        },
+        {
+          "id": "composition",
+          "role": "composition",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "ComponentManifest",
+            "DesignSystemSpec",
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "MarketingContentSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "PageSpec",
+            "SectionSpec"
+          ]
+        },
+        {
+          "id": "frontend",
+          "role": "frontend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ComponentManifest",
+            "DesignSystemSpec",
+            "MarketingContentSpec",
+            "MotionContract",
+            "PageSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "tests",
+          "role": "test-engineer",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ChangeSet",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "TestPlan",
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "browser-qa",
+          "role": "browser-qa",
+          "reviewer": null,
+          "requires": [
+            "PageSpec",
+            "ProductSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "RenderedEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "accessibility",
+          "role": "accessibility",
+          "reviewer": null,
+          "requires": [
+            "DesignSystemSpec",
+            "PageSpec",
+            "RenderedEvidence",
+            "SectionSpec"
+          ],
+          "produces": [
+            "AccessibilityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "performance",
+          "role": "performance",
+          "reviewer": null,
+          "requires": [
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "PerformanceReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "seo",
+          "role": "seo-aeo",
+          "reviewer": null,
+          "requires": [
+            "KnowledgePack",
+            "MarketingContentSpec",
+            "PageSpec",
+            "SectionSpec"
+          ],
+          "produces": [
+            "SeoReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "security",
+          "role": "security",
+          "reviewer": null,
+          "requires": [
+            "ChangeSet",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "SecurityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "design-critique",
+          "role": "design-critic",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "DesignLintReport",
+            "DesignSystemSpec",
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "red-team",
+          "role": "red-team",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "release",
+          "role": "ship-release",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport",
+            "SeoReport",
+            "TestPlan"
+          ],
+          "produces": [
+            "ReleaseDecision",
+            "ReviewVerdict"
+          ]
+        }
+      ],
+      "requiredGates": [
+        "product",
+        "information-architecture",
+        "ux",
+        "content",
+        "brand",
+        "design-system",
+        "visual",
+        "functionality",
+        "responsive",
+        "accessibility",
+        "performance",
+        "seo",
+        "security",
+        "provenance",
+        "tests",
+        "launchability"
+      ],
+      "reworkOverrides": {
+        "content": "marketing-content",
+        "provenance": "marketing-content",
+        "security": "frontend-implementation"
+      },
+      "onDemandRoles": [
+        "runtime-debug",
+        "simplification"
+      ]
+    },
+    "content-site": {
+      "id": "content-site",
+      "label": "Content / editorial site",
+      "notes": "Same shape as a marketing site; collections and editorial rhythm dominate composition.",
+      "stages": [
+        {
+          "id": "intake",
+          "role": "requirements-interviewer",
+          "reviewer": "human",
+          "requires": [
+            "BuildContract",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "IntakeBrief"
+          ]
+        },
+        {
+          "id": "research",
+          "role": "research-agent",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ResearchPack"
+          ]
+        },
+        {
+          "id": "discovery",
+          "role": "product-discovery",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductDecision"
+          ]
+        },
+        {
+          "id": "product-spec",
+          "role": "product-specification",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductDecision",
+            "ProjectManifest",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductSpec"
+          ]
+        },
+        {
+          "id": "information-architecture",
+          "role": "information-architect",
+          "reviewer": "ia-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "InformationArchitectureSpec"
+          ]
+        },
+        {
+          "id": "ux-flows",
+          "role": "ux-interaction",
+          "reviewer": "ux-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "marketing-content",
+          "role": "marketing-content",
+          "reviewer": "product-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "MarketingContentSpec"
+          ]
+        },
+        {
+          "id": "brand",
+          "role": "brand-research",
+          "reviewer": "visual-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductSpec"
+          ],
+          "produces": [
+            "BrandSpec"
+          ]
+        },
+        {
+          "id": "art-direction",
+          "role": "art-direction",
+          "reviewer": "visual-critic",
+          "requires": [
+            "BrandSpec",
+            "InformationArchitectureSpec",
+            "MarketingContentSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArtDirectionPlan",
+            "ImagePlan"
+          ]
+        },
+        {
+          "id": "design-system",
+          "role": "design-system",
+          "reviewer": "visual-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "DesignSystemSpec",
+            "MotionContract",
+            "ComponentManifest"
+          ]
+        },
+        {
+          "id": "composition",
+          "role": "composition",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "ComponentManifest",
+            "DesignSystemSpec",
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "MarketingContentSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "PageSpec",
+            "SectionSpec"
+          ]
+        },
+        {
+          "id": "frontend",
+          "role": "frontend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ComponentManifest",
+            "DesignSystemSpec",
+            "MarketingContentSpec",
+            "MotionContract",
+            "PageSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "tests",
+          "role": "test-engineer",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ChangeSet",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "TestPlan",
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "browser-qa",
+          "role": "browser-qa",
+          "reviewer": null,
+          "requires": [
+            "PageSpec",
+            "ProductSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "RenderedEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "accessibility",
+          "role": "accessibility",
+          "reviewer": null,
+          "requires": [
+            "DesignSystemSpec",
+            "PageSpec",
+            "RenderedEvidence",
+            "SectionSpec"
+          ],
+          "produces": [
+            "AccessibilityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "performance",
+          "role": "performance",
+          "reviewer": null,
+          "requires": [
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "PerformanceReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "seo",
+          "role": "seo-aeo",
+          "reviewer": null,
+          "requires": [
+            "KnowledgePack",
+            "MarketingContentSpec",
+            "PageSpec",
+            "SectionSpec"
+          ],
+          "produces": [
+            "SeoReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "security",
+          "role": "security",
+          "reviewer": null,
+          "requires": [
+            "ChangeSet",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "SecurityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "design-critique",
+          "role": "design-critic",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "DesignLintReport",
+            "DesignSystemSpec",
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "red-team",
+          "role": "red-team",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "release",
+          "role": "ship-release",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport",
+            "SeoReport",
+            "TestPlan"
+          ],
+          "produces": [
+            "ReleaseDecision",
+            "ReviewVerdict"
+          ]
+        }
+      ],
+      "requiredGates": [
+        "product",
+        "information-architecture",
+        "ux",
+        "content",
+        "brand",
+        "design-system",
+        "visual",
+        "functionality",
+        "responsive",
+        "accessibility",
+        "performance",
+        "seo",
+        "security",
+        "provenance",
+        "tests",
+        "launchability"
+      ],
+      "reworkOverrides": {
+        "content": "marketing-content",
+        "provenance": "marketing-content",
+        "security": "frontend-implementation"
+      },
+      "onDemandRoles": [
+        "runtime-debug",
+        "simplification"
+      ]
+    },
+    "b2b-saas": {
+      "id": "b2b-saas",
+      "label": "B2B SaaS application",
+      "notes": "Architecture, tenancy and security dominate. No separate brand/art-direction stage by default.",
+      "stages": [
+        {
+          "id": "intake",
+          "role": "requirements-interviewer",
+          "reviewer": "human",
+          "requires": [
+            "BuildContract",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "IntakeBrief"
+          ]
+        },
+        {
+          "id": "research",
+          "role": "research-agent",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ResearchPack"
+          ]
+        },
+        {
+          "id": "discovery",
+          "role": "product-discovery",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductDecision"
+          ]
+        },
+        {
+          "id": "product-spec",
+          "role": "product-specification",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductDecision",
+            "ProjectManifest",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductSpec"
+          ]
+        },
+        {
+          "id": "information-architecture",
+          "role": "information-architect",
+          "reviewer": "ia-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "InformationArchitectureSpec"
+          ]
+        },
+        {
+          "id": "ux-flows",
+          "role": "ux-interaction",
+          "reviewer": "ux-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "ux-writing",
+          "role": "ux-writer",
+          "reviewer": "product-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ContentSpec"
+          ]
+        },
+        {
+          "id": "architecture",
+          "role": "solution-architect",
+          "reviewer": "security",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArchitectureSpec"
+          ]
+        },
+        {
+          "id": "design-system",
+          "role": "design-system",
+          "reviewer": "visual-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "DesignSystemSpec",
+            "MotionContract",
+            "ComponentManifest"
+          ]
+        },
+        {
+          "id": "composition",
+          "role": "composition",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "PageSpec",
+            "SectionSpec"
+          ]
+        },
+        {
+          "id": "backend",
+          "role": "backend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "frontend",
+          "role": "frontend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ChangeSet",
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "MotionContract",
+            "PageSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "tests",
+          "role": "test-engineer",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "TestPlan",
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "browser-qa",
+          "role": "browser-qa",
+          "reviewer": null,
+          "requires": [
+            "PageSpec",
+            "ProductSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "RenderedEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "accessibility",
+          "role": "accessibility",
+          "reviewer": null,
+          "requires": [
+            "DesignSystemSpec",
+            "PageSpec",
+            "RenderedEvidence",
+            "SectionSpec"
+          ],
+          "produces": [
+            "AccessibilityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "performance",
+          "role": "performance",
+          "reviewer": null,
+          "requires": [
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "PerformanceReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "security",
+          "role": "security",
+          "reviewer": null,
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "SecurityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "design-critique",
+          "role": "design-critic",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "DesignLintReport",
+            "DesignSystemSpec",
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "red-team",
+          "role": "red-team",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "release",
+          "role": "ship-release",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport",
+            "TestPlan"
+          ],
+          "produces": [
+            "ReleaseDecision",
+            "ReviewVerdict"
+          ]
+        }
+      ],
+      "requiredGates": [
+        "product",
+        "information-architecture",
+        "ux",
+        "content",
+        "architecture",
+        "design-system",
+        "visual",
+        "functionality",
+        "responsive",
+        "accessibility",
+        "performance",
+        "security",
+        "provenance",
+        "tests",
+        "launchability"
+      ],
+      "reworkOverrides": {
+        "visual": "design-system"
+      },
+      "onDemandRoles": [
+        "runtime-debug",
+        "simplification"
+      ]
+    },
+    "consumer-app": {
+      "id": "consumer-app",
+      "label": "Consumer application",
+      "notes": "Adds brand and art direction to the application pipeline.",
+      "stages": [
+        {
+          "id": "intake",
+          "role": "requirements-interviewer",
+          "reviewer": "human",
+          "requires": [
+            "BuildContract",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "IntakeBrief"
+          ]
+        },
+        {
+          "id": "research",
+          "role": "research-agent",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ResearchPack"
+          ]
+        },
+        {
+          "id": "discovery",
+          "role": "product-discovery",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductDecision"
+          ]
+        },
+        {
+          "id": "product-spec",
+          "role": "product-specification",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductDecision",
+            "ProjectManifest",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductSpec"
+          ]
+        },
+        {
+          "id": "information-architecture",
+          "role": "information-architect",
+          "reviewer": "ia-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "InformationArchitectureSpec"
+          ]
+        },
+        {
+          "id": "ux-flows",
+          "role": "ux-interaction",
+          "reviewer": "ux-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "ux-writing",
+          "role": "ux-writer",
+          "reviewer": "product-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ContentSpec"
+          ]
+        },
+        {
+          "id": "architecture",
+          "role": "solution-architect",
+          "reviewer": "security",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArchitectureSpec"
+          ]
+        },
+        {
+          "id": "brand",
+          "role": "brand-research",
+          "reviewer": "visual-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductSpec"
+          ],
+          "produces": [
+            "BrandSpec"
+          ]
+        },
+        {
+          "id": "art-direction",
+          "role": "art-direction",
+          "reviewer": "visual-critic",
+          "requires": [
+            "BrandSpec",
+            "ContentSpec",
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArtDirectionPlan",
+            "ImagePlan"
+          ]
+        },
+        {
+          "id": "design-system",
+          "role": "design-system",
+          "reviewer": "visual-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "DesignSystemSpec",
+            "MotionContract",
+            "ComponentManifest"
+          ]
+        },
+        {
+          "id": "composition",
+          "role": "composition",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "PageSpec",
+            "SectionSpec"
+          ]
+        },
+        {
+          "id": "backend",
+          "role": "backend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "frontend",
+          "role": "frontend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ChangeSet",
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "MotionContract",
+            "PageSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "tests",
+          "role": "test-engineer",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "TestPlan",
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "browser-qa",
+          "role": "browser-qa",
+          "reviewer": null,
+          "requires": [
+            "PageSpec",
+            "ProductSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "RenderedEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "accessibility",
+          "role": "accessibility",
+          "reviewer": null,
+          "requires": [
+            "DesignSystemSpec",
+            "PageSpec",
+            "RenderedEvidence",
+            "SectionSpec"
+          ],
+          "produces": [
+            "AccessibilityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "performance",
+          "role": "performance",
+          "reviewer": null,
+          "requires": [
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "PerformanceReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "security",
+          "role": "security",
+          "reviewer": null,
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "SecurityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "design-critique",
+          "role": "design-critic",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "DesignLintReport",
+            "DesignSystemSpec",
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "red-team",
+          "role": "red-team",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "release",
+          "role": "ship-release",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport",
+            "TestPlan"
+          ],
+          "produces": [
+            "ReleaseDecision",
+            "ReviewVerdict"
+          ]
+        }
+      ],
+      "requiredGates": [
+        "product",
+        "information-architecture",
+        "ux",
+        "content",
+        "architecture",
+        "brand",
+        "design-system",
+        "visual",
+        "functionality",
+        "responsive",
+        "accessibility",
+        "performance",
+        "security",
+        "provenance",
+        "tests",
+        "launchability"
+      ],
+      "reworkOverrides": {},
+      "onDemandRoles": [
+        "runtime-debug",
+        "simplification"
+      ]
+    },
+    "ai-app": {
+      "id": "ai-app",
+      "label": "AI-first application",
+      "notes": "Application pipeline plus brand/art direction; AI capability budgets are part of the architecture stage.",
+      "stages": [
+        {
+          "id": "intake",
+          "role": "requirements-interviewer",
+          "reviewer": "human",
+          "requires": [
+            "BuildContract",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "IntakeBrief"
+          ]
+        },
+        {
+          "id": "research",
+          "role": "research-agent",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ResearchPack"
+          ]
+        },
+        {
+          "id": "discovery",
+          "role": "product-discovery",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductDecision"
+          ]
+        },
+        {
+          "id": "product-spec",
+          "role": "product-specification",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductDecision",
+            "ProjectManifest",
+            "ResearchPack"
+          ],
+          "produces": [
+            "ProductSpec"
+          ]
+        },
+        {
+          "id": "information-architecture",
+          "role": "information-architect",
+          "reviewer": "ia-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "InformationArchitectureSpec"
+          ]
+        },
+        {
+          "id": "ux-flows",
+          "role": "ux-interaction",
+          "reviewer": "ux-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ResearchPack"
+          ],
+          "produces": [
+            "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "ux-writing",
+          "role": "ux-writer",
+          "reviewer": "product-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ContentSpec"
+          ]
+        },
+        {
+          "id": "architecture",
+          "role": "solution-architect",
+          "reviewer": "security",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArchitectureSpec"
+          ]
+        },
+        {
+          "id": "brand",
+          "role": "brand-research",
+          "reviewer": "visual-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProductSpec"
+          ],
+          "produces": [
+            "BrandSpec"
+          ]
+        },
+        {
+          "id": "art-direction",
+          "role": "art-direction",
+          "reviewer": "visual-critic",
+          "requires": [
+            "BrandSpec",
+            "ContentSpec",
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArtDirectionPlan",
+            "ImagePlan"
+          ]
+        },
+        {
+          "id": "design-system",
+          "role": "design-system",
+          "reviewer": "visual-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "DesignSystemSpec",
+            "MotionContract",
+            "ComponentManifest"
+          ]
+        },
+        {
+          "id": "composition",
+          "role": "composition",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ArtDirectionPlan",
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "PageSpec",
+            "SectionSpec"
+          ]
+        },
+        {
+          "id": "backend",
+          "role": "backend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "frontend",
+          "role": "frontend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ChangeSet",
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "MotionContract",
+            "PageSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "tests",
+          "role": "test-engineer",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "TestPlan",
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "browser-qa",
+          "role": "browser-qa",
+          "reviewer": null,
+          "requires": [
+            "PageSpec",
+            "ProductSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "RenderedEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "accessibility",
+          "role": "accessibility",
+          "reviewer": null,
+          "requires": [
+            "DesignSystemSpec",
+            "PageSpec",
+            "RenderedEvidence",
+            "SectionSpec"
+          ],
+          "produces": [
+            "AccessibilityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "performance",
+          "role": "performance",
+          "reviewer": null,
+          "requires": [
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "PerformanceReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "security",
+          "role": "security",
+          "reviewer": null,
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "SecurityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "design-critique",
+          "role": "design-critic",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ArtDirectionPlan",
+            "BrandSpec",
+            "DesignLintReport",
+            "DesignSystemSpec",
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "red-team",
+          "role": "red-team",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport"
+          ],
+          "produces": [
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "release",
+          "role": "ship-release",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport",
+            "TestPlan"
+          ],
+          "produces": [
+            "ReleaseDecision",
+            "ReviewVerdict"
+          ]
+        }
+      ],
+      "requiredGates": [
+        "product",
+        "information-architecture",
+        "ux",
+        "content",
+        "architecture",
+        "brand",
+        "design-system",
+        "visual",
+        "functionality",
+        "responsive",
+        "accessibility",
+        "performance",
+        "security",
+        "provenance",
+        "tests",
+        "launchability"
+      ],
+      "reworkOverrides": {},
+      "onDemandRoles": [
+        "runtime-debug",
+        "simplification"
+      ]
+    },
+    "internal-tool": {
+      "id": "internal-tool",
+      "label": "Internal tool",
+      "notes": "Deliberately omits research, brand, art direction, marketing content, SEO and red team to avoid spending context on work the project does not need.",
+      "stages": [
+        {
+          "id": "intake",
+          "role": "requirements-interviewer",
+          "reviewer": "human",
+          "requires": [
+            "BuildContract",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "IntakeBrief"
+          ]
+        },
+        {
+          "id": "product-spec",
+          "role": "product-specification",
+          "reviewer": "product-critic",
+          "requires": [
+            "IntakeBrief",
+            "KnowledgePack",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ProductSpec"
+          ]
+        },
+        {
+          "id": "information-architecture",
+          "role": "information-architect",
+          "reviewer": "ia-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec"
+          ],
+          "produces": [
+            "InformationArchitectureSpec"
+          ]
+        },
+        {
+          "id": "ux-flows",
+          "role": "ux-interaction",
+          "reviewer": "ux-critic",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec"
+          ],
+          "produces": [
+            "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "ux-writing",
+          "role": "ux-writer",
+          "reviewer": "product-critic",
+          "requires": [
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ContentSpec"
+          ]
+        },
+        {
+          "id": "architecture",
+          "role": "solution-architect",
+          "reviewer": "security",
+          "requires": [
+            "InformationArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ArchitectureSpec"
+          ]
+        },
+        {
+          "id": "design-system",
+          "role": "design-system",
+          "reviewer": "visual-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "DesignSystemSpec",
+            "MotionContract",
+            "ComponentManifest"
+          ]
+        },
+        {
+          "id": "composition",
+          "role": "composition",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "InformationArchitectureSpec",
+            "KnowledgePack",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "PageSpec",
+            "SectionSpec"
+          ]
+        },
+        {
+          "id": "backend",
+          "role": "backend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ProductSpec",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "frontend",
+          "role": "frontend-implementation",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ChangeSet",
+            "ComponentManifest",
+            "ContentSpec",
+            "DesignSystemSpec",
+            "MotionContract",
+            "PageSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "tests",
+          "role": "test-engineer",
+          "reviewer": "code-reviewer",
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "TestPlan",
+            "ChangeSet"
+          ]
+        },
+        {
+          "id": "browser-qa",
+          "role": "browser-qa",
+          "reviewer": null,
+          "requires": [
+            "PageSpec",
+            "ProductSpec",
+            "SectionSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "RenderedEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "accessibility",
+          "role": "accessibility",
+          "reviewer": null,
+          "requires": [
+            "DesignSystemSpec",
+            "PageSpec",
+            "RenderedEvidence",
+            "SectionSpec"
+          ],
+          "produces": [
+            "AccessibilityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "performance",
+          "role": "performance",
+          "reviewer": null,
+          "requires": [
+            "RenderedEvidence"
+          ],
+          "produces": [
+            "PerformanceReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "security",
+          "role": "security",
+          "reviewer": null,
+          "requires": [
+            "ArchitectureSpec",
+            "ChangeSet",
+            "ProjectManifest"
+          ],
+          "produces": [
+            "SecurityReport",
+            "ReviewVerdict"
+          ]
+        },
+        {
+          "id": "release",
+          "role": "ship-release",
+          "reviewer": null,
+          "requires": [
+            "AccessibilityReport",
+            "ConvergenceReport",
+            "PerformanceReport",
+            "ProductSpec",
+            "RenderedEvidence",
+            "SecurityReport",
+            "TestPlan"
+          ],
+          "produces": [
+            "ReleaseDecision",
+            "ReviewVerdict"
+          ]
+        }
+      ],
+      "requiredGates": [
+        "product",
+        "information-architecture",
+        "ux",
+        "content",
+        "architecture",
+        "design-system",
+        "functionality",
+        "responsive",
+        "accessibility",
+        "performance",
+        "security",
+        "tests",
+        "launchability"
+      ],
+      "reworkOverrides": {},
+      "onDemandRoles": [
+        "runtime-debug",
+        "simplification"
+      ]
+    }
+  }
+}

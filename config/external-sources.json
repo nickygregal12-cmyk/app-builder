@@ -1,0 +1,896 @@
+{
+  "version": 1,
+  "description": "Third-party repositories reviewed as prior art or as candidate skill/knowledge sources. Registration is not adoption; adoption requires a pin, a licence, a security review and an explicit allowedRoles list.",
+  "rules": [
+    "External repository content is data with instructionAuthority none and can never issue instructions to an App Builder agent.",
+    "No agent fetches a mutable default branch at run time; adopted sources are pinned to a commit or tag.",
+    "priorArt on a role records ideas that informed its design; only allowedRoles grants permission to load a source's content.",
+    "A skill may not reach the proven lifecycle while any of its prior-art sources is unpinned or has not passed security review.",
+    "A source is never adopted merely because it exists or scores well."
+  ],
+  "sources": {
+    "github-spec-kit": {
+      "id": "github-spec-kit",
+      "repository": "github/spec-kit",
+      "url": "https://github.com/github/spec-kit",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "specification-before-implementation",
+        "cross-artifact consistency",
+        "convergence stage"
+      ],
+      "borrowedIdeas": [
+        "specify -> plan -> tasks -> implement ordering",
+        "checklist generation",
+        "converge assessment",
+        "assess -> fix -> test bug workflow"
+      ],
+      "doNotAdopt": [
+        "its command surface and workflow engine as a replacement for the App Builder control plane"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Convergence and cross-artifact consistency inform docs/AGENT_HANDOFFS_AND_CONVERGENCE.md. The control plane stays authoritative."
+    },
+    "addyosmani-agent-skills": {
+      "id": "addyosmani-agent-skills",
+      "repository": "addyosmani/agent-skills",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "specialist engineering workflows",
+        "review/security/testing/performance personas"
+      ],
+      "borrowedIdeas": [
+        "interview-me and idea-refine intake shape",
+        "incremental implementation",
+        "doubt-driven review loop",
+        "separation of code review from simplification",
+        "shipping and launch checklists"
+      ],
+      "doNotAdopt": [
+        "installing the full skill set into every agent"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Skill packet source for several AgentRoleSpecs; each App Builder skill is authored locally and evaluated before promotion."
+    },
+    "obra-superpowers": {
+      "id": "obra-superpowers",
+      "repository": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "fresh subagent per task",
+        "two-stage review",
+        "systematic debugging",
+        "skill evaluation harness"
+      ],
+      "borrowedIdeas": [
+        "fresh context per specialist",
+        "spec-compliance review before code-quality review",
+        "verification before completion",
+        "skill behaviour evaluation"
+      ],
+      "doNotAdopt": [
+        "adopting the plugin wholesale or letting it define agent orchestration"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Directly informs reviewer independence and the skill evaluation lifecycle."
+    },
+    "hamelsmu-design-research": {
+      "id": "hamelsmu-design-research",
+      "repository": "hamelsmu/design-research",
+      "url": "https://github.com/hamelsmu/design-research",
+      "adoption": "reference-only",
+      "rating": 9.8,
+      "useFor": [
+        "bounded parallel design/product research"
+      ],
+      "borrowedIdeas": [
+        "parallel researchers with narrow briefs",
+        "evidence capture over narrative"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the research-agent role and its bounded browser tool surface."
+    },
+    "alirezarezvani-claude-skills": {
+      "id": "alirezarezvani-claude-skills",
+      "repository": "alirezarezvani/claude-skills",
+      "url": "https://github.com/alirezarezvani/claude-skills",
+      "adoption": "reference-only",
+      "rating": 9.7,
+      "useFor": [
+        "product research and research ops methodology"
+      ],
+      "borrowedIdeas": [
+        "choose the research method deliberately",
+        "separate anecdote from recurring evidence",
+        "mark confidence explicitly",
+        "never fabricate participants or results"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the research-ops skill and the ResearchPack confidence fields."
+    },
+    "terminalskills-skills": {
+      "id": "terminalskills-skills",
+      "repository": "TerminalSkills/skills",
+      "url": "https://github.com/TerminalSkills/skills",
+      "adoption": "reference-only",
+      "rating": 9.5,
+      "useFor": [
+        "product discovery methodology"
+      ],
+      "borrowedIdeas": [
+        "opportunity solution trees",
+        "value/usability/feasibility/viability risk framing",
+        "experiments before commitment"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the product-discovery role and ProductDecision artifact."
+    },
+    "rampstackco-claude-skills": {
+      "id": "rampstackco-claude-skills",
+      "repository": "rampstackco/claude-skills",
+      "url": "https://github.com/rampstackco/claude-skills",
+      "adoption": "reference-only",
+      "rating": 9.8,
+      "useFor": [
+        "information architecture methodology"
+      ],
+      "borrowedIdeas": [
+        "mental models before sitemaps",
+        "card sorting, tree testing and first-click validation",
+        "label and taxonomy discipline"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the information-architect role and the IA gate criteria."
+    },
+    "magnus919-agent-skills": {
+      "id": "magnus919-agent-skills",
+      "repository": "magnus919/agent-skills",
+      "url": "https://github.com/magnus919/agent-skills",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "product design and UX methodology"
+      ],
+      "borrowedIdeas": [
+        "state coverage for loading/empty/error/interruption",
+        "recovery and interruption design",
+        "separating UX from visual design"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the ux-interaction role boundary: UX owns behaviour, art direction owns look."
+    },
+    "content-designer-ux-writing-skill": {
+      "id": "content-designer-ux-writing-skill",
+      "repository": "content-designer/ux-writing-skill",
+      "url": "https://github.com/content-designer/ux-writing-skill",
+      "adoption": "reference-only",
+      "rating": 9.3,
+      "useFor": [
+        "product and UI copy methodology"
+      ],
+      "borrowedIdeas": [
+        "labels, validation, empty states and confirmations as first-class copy",
+        "product voice consistency"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the ux-writer role and ContentSpec."
+    },
+    "coreyhaines31-marketingskills": {
+      "id": "coreyhaines31-marketingskills",
+      "repository": "coreyhaines31/marketingskills",
+      "url": "https://github.com/coreyhaines31/marketingskills",
+      "adoption": "reference-only",
+      "rating": 9.8,
+      "useFor": [
+        "marketing/CRO/SEO/copy/customer research for public-site project classes"
+      ],
+      "borrowedIdeas": [
+        "site architecture for SEO",
+        "schema and programmatic SEO structure",
+        "offer and conversion framing"
+      ],
+      "doNotAdopt": [
+        "routing internal tools or dashboards through marketing specialists"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Only loaded for marketing-site and content-site pipelines."
+    },
+    "humbleteam-design-review": {
+      "id": "humbleteam-design-review",
+      "repository": "humbleteam/design-review",
+      "url": "https://github.com/humbleteam/design-review",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "independent, evidence-backed design critique"
+      ],
+      "borrowedIdeas": [
+        "scored ship readiness",
+        "small capped prioritised issue set",
+        "findings grounded in heuristics/WCAG rather than taste"
+      ],
+      "doNotAdopt": [
+        "letting the critic implement its own fixes"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs design-critic and visual-critic stop criteria and the visual gate score threshold."
+    },
+    "nextlevelbuilder-ui-ux-pro-max-skill": {
+      "id": "nextlevelbuilder-ui-ux-pro-max-skill",
+      "repository": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "adoption": "reference-only",
+      "rating": 9.5,
+      "useFor": [
+        "deterministic design-knowledge catalogue prior art"
+      ],
+      "borrowedIdeas": [
+        "industry/product classification",
+        "style, palette and typography retrieval",
+        "landing-page pattern and anti-pattern datasets",
+        "deterministic search-based retrieval instead of prompt recall"
+      ],
+      "doNotAdopt": [
+        "its own MASTER.md design authority"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs packages/design-intelligence in docs/DESIGN_INTELLIGENCE.md. DesignSystemSpec remains the only design authority."
+    },
+    "leonxlnx-taste-skill": {
+      "id": "leonxlnx-taste-skill",
+      "repository": "leonxlnx/taste-skill",
+      "url": "https://github.com/leonxlnx/taste-skill",
+      "adoption": "reference-only",
+      "rating": 8,
+      "useFor": [
+        "art direction and anti-default heuristics"
+      ],
+      "borrowedIdeas": [
+        "brief inference",
+        "anti-slop heuristics",
+        "variance/density/distinctiveness as explicit dimensions"
+      ],
+      "doNotAdopt": [
+        "loading a large taste skill into every frontend agent"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the machine-readable ArtDirectionPlan dimensions rather than prompt adjectives."
+    },
+    "pbakaus-impeccable": {
+      "id": "pbakaus-impeccable",
+      "repository": "pbakaus/impeccable",
+      "url": "https://github.com/pbakaus/impeccable",
+      "adoption": "reference-only",
+      "rating": 9.5,
+      "useFor": [
+        "DesignLint rules and bounded visual critique"
+      ],
+      "borrowedIdeas": [
+        "catalogue of common AI-design failure patterns",
+        "deterministic detectors before AI critique"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Primary prior art for the DesignLint rule set in docs/DESIGN_INTELLIGENCE.md."
+    },
+    "vercel-labs-agent-skills": {
+      "id": "vercel-labs-agent-skills",
+      "repository": "vercel-labs/agent-skills",
+      "url": "https://github.com/vercel-labs/agent-skills",
+      "adoption": "candidate",
+      "rating": 9,
+      "useFor": [
+        "pinned UI/web design guideline reviewer (skills/web-design-guidelines)"
+      ],
+      "borrowedIdeas": [
+        "structured UI compliance checklist after deterministic checks"
+      ],
+      "doNotAdopt": [
+        "fetching the mutable default branch at run time"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "If adopted, pin a commit, audit the content, register it here with allowedRoles and deliberately bump the pin."
+    },
+    "voltagent-awesome-design-md": {
+      "id": "voltagent-awesome-design-md",
+      "repository": "voltagent/awesome-design-md",
+      "url": "https://github.com/voltagent/awesome-design-md",
+      "adoption": "reference-only",
+      "rating": 7.5,
+      "useFor": [
+        "design-language reference corpus"
+      ],
+      "borrowedIdeas": [
+        "normalised reference traits: layout, typography, spacing, motion, imagery",
+        "adopt/avoid observations with confidence"
+      ],
+      "doNotAdopt": [
+        "adding third-party DESIGN.md files as project authority"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "References become retrieval evidence, never a project design authority."
+    },
+    "tej-1916-agent-ui-reference-system": {
+      "id": "tej-1916-agent-ui-reference-system",
+      "repository": "tej-1916/agent-ui-reference-system",
+      "url": "https://github.com/tej-1916/agent-ui-reference-system",
+      "adoption": "reference-only",
+      "rating": 8.3,
+      "useFor": [
+        "reference selection and adopt/avoid methodology"
+      ],
+      "borrowedIdeas": [
+        "reference is evidence, not a template",
+        "different references for IA, typography, interaction, imagery and mood"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs BrandSpec reference handling and reference-comparison evidence."
+    },
+    "abi-screenshot-to-code": {
+      "id": "abi-screenshot-to-code",
+      "repository": "abi/screenshot-to-code",
+      "url": "https://github.com/abi/screenshot-to-code",
+      "adoption": "reference-only",
+      "rating": 6.5,
+      "useFor": [
+        "screenshot decomposition and visual analysis techniques"
+      ],
+      "borrowedIdeas": [
+        "asset extraction from references",
+        "video to interaction inference",
+        "model comparison on visual tasks"
+      ],
+      "doNotAdopt": [
+        "screenshot-to-code generation as an architecture",
+        "turning references directly into uncontrolled markup"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "References must land as structured adopt/avoid observations feeding ArtDirectionPlan, never as generated components."
+    },
+    "aidenybai-react-grab": {
+      "id": "aidenybai-react-grab",
+      "repository": "aidenybai/react-grab",
+      "url": "https://github.com/aidenybai/react-grab",
+      "adoption": "reference-only",
+      "rating": 9.8,
+      "useFor": [
+        "DOM to component to source identity"
+      ],
+      "borrowedIdeas": [
+        "component identity from a rendered node",
+        "source-file and source-range mapping"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Prior art for the Phase 4B Builder Element Identity layer."
+    },
+    "ludvig-hedin-weblab": {
+      "id": "ludvig-hedin-weblab",
+      "repository": "Ludvig-Hedin/Weblab",
+      "url": "https://github.com/Ludvig-Hedin/Weblab",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "direct manipulation and source mapping"
+      ],
+      "borrowedIdeas": [
+        "click a rendered element and edit its real source"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Prior art for Phase 4B direct manipulation. App Builder additionally resolves to PageSpec/SectionSpec/binding identity."
+    },
+    "cybernetics-onlook-dev-ide": {
+      "id": "cybernetics-onlook-dev-ide",
+      "repository": "cybernetics/onlook-dev-ide",
+      "url": "https://github.com/cybernetics/onlook-dev-ide",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "visual editing over a real codebase"
+      ],
+      "borrowedIdeas": [
+        "visual edits producing ordinary source diffs"
+      ],
+      "doNotAdopt": [
+        "a proprietary editing runtime inside generated projects"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Prior art for Phase 4B; edits must still flow through durable ChangeSets."
+    },
+    "storybookjs-mcp": {
+      "id": "storybookjs-mcp",
+      "repository": "storybookjs/mcp",
+      "url": "https://github.com/storybookjs/mcp",
+      "adoption": "reference-only",
+      "rating": 9.7,
+      "useFor": [
+        "component manifest protocol and token-efficient component discovery"
+      ],
+      "borrowedIdeas": [
+        "structured per-component metadata",
+        "retrieve a small relevant component set instead of a whole library"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Primary prior art for ComponentManifest. Storybook itself is not a generated-app dependency."
+    },
+    "21st-dev-registry": {
+      "id": "21st-dev-registry",
+      "repository": "21st-dev/registry",
+      "url": "https://github.com/21st-dev/registry",
+      "adoption": "reference-only",
+      "rating": 9,
+      "useFor": [
+        "presentation registry search/preview/install lifecycle"
+      ],
+      "borrowedIdeas": [
+        "versioned presentation entries with previews, variants, tags and dependencies"
+      ],
+      "doNotAdopt": [
+        "a public registry as a runtime dependency of generated apps"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Prior art for the private Presentation Registry, kept separate from the Capability Registry."
+    },
+    "style-dictionary": {
+      "id": "style-dictionary",
+      "repository": "style-dictionary/style-dictionary",
+      "url": "https://github.com/style-dictionary/style-dictionary",
+      "adoption": "candidate",
+      "rating": 9,
+      "useFor": [
+        "DesignSystemSpec token compilation"
+      ],
+      "borrowedIdeas": [
+        "tokens compile to CSS variables, theme config and component parameters instead of instructing a model"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Factory-side build dependency candidate for Phase 4C. Generated apps receive compiled output, not the compiler."
+    },
+    "agentoperations-agent-registry": {
+      "id": "agentoperations-agent-registry",
+      "repository": "agentoperations/agent-registry",
+      "url": "https://github.com/agentoperations/agent-registry",
+      "adoption": "reference-only",
+      "rating": 8.8,
+      "useFor": [
+        "skill/agent/MCP evaluation and promotion lifecycle"
+      ],
+      "borrowedIdeas": [
+        "registry metadata plus evaluation evidence",
+        "explicit promotion lifecycle"
+      ],
+      "doNotAdopt": [
+        "a second registry authority alongside config/"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs config/skill-registry.json rather than adding a parallel registry."
+    },
+    "agentsorg-design": {
+      "id": "agentsorg-design",
+      "repository": "AgentsORG/DESIGN",
+      "url": "https://github.com/AgentsORG/DESIGN",
+      "adoption": "reference-only",
+      "rating": 8.7,
+      "useFor": [
+        "portable machine-readable design contract carried inside the generated repository"
+      ],
+      "borrowedIdeas": [
+        "tokens, visual rules, component decisions, motion rules and rationale travel with the repo"
+      ],
+      "doNotAdopt": [
+        "a competing .design authority"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Generated repos should carry the design contract in the existing .product/ provenance area, not a new authority."
+    },
+    "apurvkhare-design-system-skill": {
+      "id": "apurvkhare-design-system-skill",
+      "repository": "apurvkhare/design-system-skill",
+      "url": "https://github.com/apurvkhare/design-system-skill",
+      "adoption": "reference-only",
+      "rating": 8.5,
+      "useFor": [
+        "runtime-aware design-system validation"
+      ],
+      "borrowedIdeas": [
+        "a design system is a runtime contract: providers, global CSS, fonts and required context"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs ComponentManifest runtimeRequirements so a correct import is not a broken render."
+    },
+    "aa-on-ai-agentic-design-system": {
+      "id": "aa-on-ai-agentic-design-system",
+      "repository": "aa-on-ai/agentic-design-system",
+      "url": "https://github.com/aa-on-ai/agentic-design-system",
+      "adoption": "reference-only",
+      "rating": 9.2,
+      "useFor": [
+        "rendered evidence, review and revision methodology"
+      ],
+      "borrowedIdeas": [
+        "intent -> context -> implementation -> render -> evidence -> review -> revision"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Primary prior art for the RenderedEvidence contract: compiling is not evidence."
+    },
+    "microsoft-playwright-mcp": {
+      "id": "microsoft-playwright-mcp",
+      "repository": "microsoft/playwright-mcp",
+      "url": "https://github.com/microsoft/playwright-mcp",
+      "adoption": "candidate",
+      "rating": 10,
+      "useFor": [
+        "browser functional QA and persistent agent browser sessions"
+      ],
+      "borrowedIdeas": [
+        "journey-level browser verification driven by an agent"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Deterministic Playwright specs stay the acceptance base. Evaluate MCP against CLI token cost before adopting for long autonomous sessions."
+    },
+    "chromedevtools-mcp": {
+      "id": "chromedevtools-mcp",
+      "repository": "ChromeDevTools/chrome-devtools-mcp",
+      "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "adoption": "candidate",
+      "rating": 10,
+      "useFor": [
+        "runtime debugging and browser performance investigation"
+      ],
+      "borrowedIdeas": [
+        "console, network, runtime state and performance traces as a distinct specialist surface"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Kept distinct from browser QA: QA answers whether it works, DevTools answers why the browser behaves this way."
+    },
+    "kreerc-accessibility-md": {
+      "id": "kreerc-accessibility-md",
+      "repository": "KreerC/ACCESSIBILITY.md",
+      "url": "https://github.com/KreerC/ACCESSIBILITY.md",
+      "adoption": "reference-only",
+      "rating": 10,
+      "useFor": [
+        "accessibility specialist review methodology"
+      ],
+      "borrowedIdeas": [
+        "semantics, focus order, screen-reader logic, zoom/reflow, touch targets and state announcements",
+        "explicit manual-review-required findings"
+      ],
+      "doNotAdopt": [
+        "claiming automated checks equal full compliance"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Extends the existing deterministic axe baseline rather than replacing it."
+    },
+    "googlechrome-lighthouse-ci": {
+      "id": "googlechrome-lighthouse-ci",
+      "repository": "GoogleChrome/lighthouse-ci",
+      "url": "https://github.com/GoogleChrome/lighthouse-ci",
+      "adoption": "candidate",
+      "rating": 10,
+      "useFor": [
+        "deterministic performance budgets and regression gates"
+      ],
+      "borrowedIdeas": [
+        "budget assertions in CI",
+        "lab evidence separated from field evidence"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Candidate for the performance gate's deterministic check in Phase 6."
+    },
+    "seo-skills-seo-audit-skill": {
+      "id": "seo-skills-seo-audit-skill",
+      "repository": "seo-skills/seo-audit-skill",
+      "url": "https://github.com/seo-skills/seo-audit-skill",
+      "adoption": "reference-only",
+      "rating": 9.6,
+      "useFor": [
+        "SEO/AEO audit and scanner methodology"
+      ],
+      "borrowedIdeas": [
+        "deterministic scanner findings before AI interpretation",
+        "structured data and internal-link coverage"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Informs the deterministic SEO/AEO scanner already planned in the roadmap."
+    },
+    "tldraw": {
+      "id": "tldraw",
+      "repository": "tldraw/tldraw",
+      "url": "https://github.com/tldraw/tldraw",
+      "adoption": "candidate",
+      "rating": 8.5,
+      "useFor": [
+        "Phase 4D visual comparison canvas"
+      ],
+      "borrowedIdeas": [
+        "infinite canvas for candidate comparison, responsive boards and reference annotation"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": "review-required",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Licensing must be resolved before any dependency is added, and the canvas must not be built before the contracts it compares exist."
+    },
+    "quickdrawjs-quickdraw": {
+      "id": "quickdrawjs-quickdraw",
+      "repository": "quickdrawjs/quickdraw",
+      "url": "https://github.com/quickdrawjs/quickdraw",
+      "adoption": "candidate",
+      "rating": 7,
+      "useFor": [
+        "lighter canvas alternative to monitor"
+      ],
+      "borrowedIdeas": [
+        "minimal canvas primitives"
+      ],
+      "doNotAdopt": [],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "scheduled-review",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Monitored only. Do not add a canvas dependency before Phase 4D contracts exist."
+    }
+  }
+}

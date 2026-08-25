@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/convergence-report.schema.json",
+  "title": "App Builder Factory Convergence Report",
+  "description": "Deterministic assessment of every required quality gate for one project, plus the routing decision for each failure.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "projectId", "pipelineId", "iteration", "gates", "converged", "stopReason", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "pipelineId": {"type": "string", "minLength": 1},
+    "iteration": {"type": "integer", "minimum": 0},
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["pass", "pass-with-observations", "fail", "blocked", "not-run", "not-applicable"]},
+          "evaluatedBy": {"type": ["string", "null"]},
+          "score": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
+          "minimumScore": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
+          "returnToRole": {"type": ["string", "null"]},
+          "severity": {"enum": ["none", "observation", "minor", "major", "blocker"]},
+          "verdictId": {"type": ["string", "null"]},
+          "failingCriteria": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "rework": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gateId", "role", "severity"],
+        "properties": {
+          "gateId": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["observation", "minor", "major", "blocker"]},
+          "reasons": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "converged": {"type": "boolean"},
+    "stopReason": {
+      "enum": ["converged", "rework-required", "gate-not-run", "blocked", "iteration-budget-exhausted", "runtime-budget-exhausted", "cost-budget-exhausted", "token-budget-exhausted", "no-progress-limit-reached"]
+    },
+    "createdAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

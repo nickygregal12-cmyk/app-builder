@@ -93,6 +93,10 @@
       "reason": "Capability policies are consumed only by the control plane; migrate with the agent runtime."
     },
     {
+      "schema": "agent-role.schema.json",
+      "reason": "Specialist role specs are read by the control-plane doctor and the agent-architecture tests; migrate when a runtime actually dispatches against them."
+    },
+    {
       "schema": "ambiguity-followup.schema.json",
       "reason": "Inlined into the build-contract and intake-session families."
     },
@@ -109,8 +113,16 @@
       "reason": "Routed context packets are internal to the control plane until the agent runtime exists."
     },
     {
+      "schema": "convergence-report.schema.json",
+      "reason": "Convergence reports are a planning artifact until a loop actually emits them."
+    },
+    {
       "schema": "design-contract.schema.json",
       "reason": "Design Contract is groundwork and still changing in Phase 4C."
+    },
+    {
+      "schema": "external-source.schema.json",
+      "reason": "The external knowledge/skill source registry is governance documentation until a runtime resolves against it."
     },
     {
       "schema": "genuine-business-acceptance.schema.json",
@@ -133,10 +145,6 @@
       "reason": "Inlined into the composition family."
     },
     {
-      "schema": "recipe.schema.json",
-      "reason": "Recipe registry entries remain validated by the registry doctor."
-    },
-    {
       "schema": "recipe-installation.schema.json",
       "reason": "Installation inventories are generated and verified by the upgrade tooling."
     },
@@ -145,12 +153,28 @@
       "reason": "Upgrade proposals are read-only planning output today."
     },
     {
+      "schema": "recipe.schema.json",
+      "reason": "Recipe registry entries remain validated by the registry doctor."
+    },
+    {
+      "schema": "review-verdict.schema.json",
+      "reason": "Review verdicts are asserted by the agent-architecture tests, not yet produced or consumed at a service boundary."
+    },
+    {
       "schema": "section-spec.schema.json",
       "reason": "Inlined into the composition family."
     },
     {
+      "schema": "skill-registration.schema.json",
+      "reason": "Skill registrations describe the Phase 5 skill lifecycle; nothing registers a skill at runtime yet."
+    },
+    {
       "schema": "source-reference.schema.json",
       "reason": "Inlined into the build-contract and intake-session families."
+    },
+    {
+      "schema": "stage-handoff.schema.json",
+      "reason": "Handoff promotion is verified statically today; it becomes a runtime family when the agent runtime exchanges handoffs."
     },
     {
       "schema": "template.schema.json",

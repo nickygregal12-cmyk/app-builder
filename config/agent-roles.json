@@ -1,0 +1,1623 @@
+{
+  "version": 1,
+  "status": "foundation",
+  "description": "Specialist agent roles separated by decision boundary. Registration defines the boundary; docs/AGENT_SPECIALIST_ARCHITECTURE.md explains it. No role approves its own work.",
+  "reservedReviewers": [
+    "human"
+  ],
+  "artifacts": {
+    "IntakeBrief": {
+      "description": "Reviewed statement of what the owner asked for, before research or specification.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "BuildContract": {
+      "description": "Approved build contract.",
+      "deterministic": true,
+      "schema": "schemas/build-contract.schema.json",
+      "status": "available"
+    },
+    "ProjectManifest": {
+      "description": "Approved project manifest.",
+      "deterministic": true,
+      "schema": "schemas/project-manifest.schema.json",
+      "status": "available"
+    },
+    "KnowledgePack": {
+      "description": "Trusted normalized source knowledge with provenance.",
+      "deterministic": true,
+      "schema": "schemas/knowledge-pack.schema.json",
+      "status": "available"
+    },
+    "ResearchPack": {
+      "description": "Bounded evidence about market, competitors, audience and reference products, with confidence and source ids.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ProductDecision": {
+      "description": "Opportunity/assumption/risk decisions taken before a specification is written.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ProductSpec": {
+      "description": "Scope, audiences, jobs, journeys, acceptance criteria and explicit exclusions.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "InformationArchitectureSpec": {
+      "description": "Mental model, sitemap, navigation, taxonomy, URL hierarchy, labels and content hierarchy.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "UXFlowSpec": {
+      "description": "Task flows, interaction models, loading/empty/error/interruption states and recovery behaviour.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ContentSpec": {
+      "description": "Product/UI copy: labels, validation, onboarding, empty states, confirmations and voice.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "MarketingContentSpec": {
+      "description": "Marketing/CRO copy, offers, proof strategy and conversion messaging for public sites.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ArchitectureSpec": {
+      "description": "Technical architecture: data model, auth/tenancy, API contracts, migrations and integration boundaries.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "BrandSpec": {
+      "description": "Palette, logo usage, typography intent, imagery/icon language, tone and brand adjectives with confidence and sources.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ArtDirectionPlan": {
+      "description": "Machine-readable visual strategy: layout variance, motion intensity, density, distinctiveness and restraint.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "DesignSystemSpec": {
+      "description": "Token, primitive, component, section-family, responsive, motion and accessibility contract.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "MotionContract": {
+      "description": "Entrance, scroll, transition, hover/press, stagger, density and reduced-motion rules.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ComponentManifest": {
+      "description": "Structured description of each presentation component so agents retrieve a small relevant set instead of a whole library.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ImagePlan": {
+      "description": "Per-section image jobs with real-vs-generated requirement, candidates, rights and approval state.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "PageSpec": {
+      "description": "Composed page structure.",
+      "deterministic": true,
+      "schema": "schemas/page-spec.schema.json",
+      "status": "available"
+    },
+    "SectionSpec": {
+      "description": "Composed section structure and bindings.",
+      "deterministic": true,
+      "schema": "schemas/section-spec.schema.json",
+      "status": "available"
+    },
+    "ElementIdentityMap": {
+      "description": "Rendered element to page/section/component/binding/provenance identity map.",
+      "deterministic": true,
+      "schema": null,
+      "status": "planned"
+    },
+    "ChangeSet": {
+      "description": "Declared bounded repository mutation.",
+      "deterministic": false,
+      "schema": "schemas/change-set.schema.json",
+      "status": "available"
+    },
+    "TestPlan": {
+      "description": "Test strategy, missing coverage, regression cases and reproduction steps.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "RenderedEvidence": {
+      "description": "Screenshots, interaction states and responsive captures proving what the build actually renders.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "RuntimeDiagnostics": {
+      "description": "Console errors, network traces, runtime state and performance traces explaining browser behaviour.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "DesignLintReport": {
+      "description": "Deterministic visual-defect findings produced before expensive AI critique.",
+      "deterministic": true,
+      "schema": null,
+      "status": "planned"
+    },
+    "AccessibilityReport": {
+      "description": "Deterministic axe results plus specialist findings that automation cannot establish.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "PerformanceReport": {
+      "description": "Measured lab/field performance against declared budgets.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "SeoReport": {
+      "description": "Deterministic crawlability/metadata/structured-data findings plus AEO interpretation.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "SecurityReport": {
+      "description": "Independent assessment of auth, tenancy, input handling, secrets, storage and deployment boundaries.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "ReviewVerdict": {
+      "description": "Independent verdict on one artifact or stage.",
+      "deterministic": false,
+      "schema": "schemas/review-verdict.schema.json",
+      "status": "foundation"
+    },
+    "StageHandoff": {
+      "description": "Durable promotion record for one stage, written by the control plane rather than by a role.",
+      "deterministic": true,
+      "schema": "schemas/stage-handoff.schema.json",
+      "status": "foundation"
+    },
+    "ConvergenceReport": {
+      "description": "Deterministic gate matrix and rework routing.",
+      "deterministic": true,
+      "schema": "schemas/convergence-report.schema.json",
+      "status": "foundation"
+    },
+    "ReleaseDecision": {
+      "description": "PASS/BLOCKED release verdict with the evidence it was based on.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    }
+  },
+  "roles": {
+    "requirements-interviewer": {
+      "id": "requirements-interviewer",
+      "kind": "creator",
+      "purpose": "Turns rough owner input into an explicit, contradiction-free intake brief before any research or build spend.",
+      "stageClass": "intake",
+      "reads": [
+        "IntakeBrief",
+        "BuildContract",
+        "ProjectManifest"
+      ],
+      "writes": [
+        "IntakeBrief"
+      ],
+      "mayNot": [
+        "invent requirements the owner did not state",
+        "start implementation",
+        "approve its own brief"
+      ],
+      "skills": [
+        "requirements-interview"
+      ],
+      "policyId": "specification",
+      "routeId": "intake",
+      "contextCeilingTokens": 5000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.5,
+        "maxTokens": 40000
+      },
+      "reviewedBy": [
+        "human"
+      ],
+      "stopCriteria": [
+        "all high-impact questions answered or explicitly deferred",
+        "intake budget reached"
+      ],
+      "escalatesTo": "product-critic",
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "github-spec-kit"
+      ],
+      "status": "planned"
+    },
+    "research-agent": {
+      "id": "research-agent",
+      "kind": "creator",
+      "purpose": "Gathers bounded, cited evidence about the market, competitors, audience and reference products.",
+      "stageClass": "research",
+      "reads": [
+        "IntakeBrief",
+        "ProjectManifest",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "ResearchPack"
+      ],
+      "mayNot": [
+        "assert findings without a source and confidence",
+        "fabricate participants or results",
+        "decide product scope"
+      ],
+      "skills": [
+        "research-ops"
+      ],
+      "policyId": "research",
+      "routeId": "research",
+      "contextCeilingTokens": 25000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1800000,
+        "maxCostGbp": 1.5,
+        "maxTokens": 120000
+      },
+      "reviewedBy": [
+        "product-critic"
+      ],
+      "stopCriteria": [
+        "research questions answered with cited evidence",
+        "research budget reached"
+      ],
+      "escalatesTo": "product-critic",
+      "priorArt": [
+        "hamelsmu-design-research",
+        "alirezarezvani-claude-skills",
+        "terminalskills-skills"
+      ],
+      "status": "planned"
+    },
+    "product-discovery": {
+      "id": "product-discovery",
+      "kind": "creator",
+      "purpose": "Frames opportunities, assumptions and value/usability/feasibility/viability risks before a specification is committed.",
+      "stageClass": "product",
+      "reads": [
+        "IntakeBrief",
+        "ResearchPack",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "ProductDecision"
+      ],
+      "mayNot": [
+        "write the final product specification",
+        "commit engineering work",
+        "approve its own decisions"
+      ],
+      "skills": [
+        "product-discovery"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "product-critic"
+      ],
+      "stopCriteria": [
+        "each major assumption is either evidenced or explicitly flagged as a risk"
+      ],
+      "escalatesTo": "product-critic",
+      "priorArt": [
+        "terminalskills-skills",
+        "github-spec-kit"
+      ],
+      "status": "planned"
+    },
+    "product-critic": {
+      "id": "product-critic",
+      "kind": "reviewer",
+      "purpose": "Independently judges research quality, product decisions and specification completeness.",
+      "stageClass": "product",
+      "reads": [
+        "IntakeBrief",
+        "ResearchPack",
+        "ProductDecision",
+        "ProductSpec",
+        "MarketingContentSpec",
+        "ContentSpec",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "author or edit the artifacts it reviews",
+        "write implementation code"
+      ],
+      "skills": [
+        "doubt-driven-review"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a verdict is issued for every named criterion"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "github-spec-kit"
+      ],
+      "status": "planned"
+    },
+    "product-specification": {
+      "id": "product-specification",
+      "kind": "creator",
+      "purpose": "Owns scope, audiences, journeys, acceptance criteria and explicit exclusions.",
+      "stageClass": "product",
+      "reads": [
+        "IntakeBrief",
+        "ResearchPack",
+        "ProductDecision",
+        "ProjectManifest",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "ProductSpec"
+      ],
+      "mayNot": [
+        "design information architecture",
+        "choose visual direction",
+        "approve its own specification"
+      ],
+      "skills": [
+        "spec-authoring"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "product-critic"
+      ],
+      "stopCriteria": [
+        "every journey has acceptance criteria",
+        "no unresolved high-impact requirement remains"
+      ],
+      "escalatesTo": "product-critic",
+      "priorArt": [
+        "github-spec-kit",
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "information-architect": {
+      "id": "information-architect",
+      "kind": "creator",
+      "purpose": "Owns mental models, sitemap, navigation, taxonomy, URL hierarchy, labels and content hierarchy.",
+      "stageClass": "structure",
+      "reads": [
+        "ProductSpec",
+        "ResearchPack",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "InformationArchitectureSpec"
+      ],
+      "mayNot": [
+        "write production implementation",
+        "redefine approved product scope",
+        "alter BrandSpec"
+      ],
+      "skills": [
+        "information-architecture"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "ia-critic"
+      ],
+      "stopCriteria": [
+        "every required surface has a place in the hierarchy",
+        "labels are validated or explicitly assumed"
+      ],
+      "escalatesTo": "product-critic",
+      "priorArt": [
+        "rampstackco-claude-skills",
+        "coreyhaines31-marketingskills"
+      ],
+      "status": "planned"
+    },
+    "ia-critic": {
+      "id": "ia-critic",
+      "kind": "reviewer",
+      "purpose": "Independently judges whether the information architecture matches user mental models and product scope.",
+      "stageClass": "structure",
+      "reads": [
+        "ProductSpec",
+        "InformationArchitectureSpec",
+        "ResearchPack"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "author or edit the information architecture",
+        "write implementation code"
+      ],
+      "skills": [
+        "information-architecture"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a verdict is issued for every named criterion"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "rampstackco-claude-skills"
+      ],
+      "status": "planned"
+    },
+    "ux-interaction": {
+      "id": "ux-interaction",
+      "kind": "creator",
+      "purpose": "Owns task flows, interaction models, state coverage, recovery and responsive interaction expectations.",
+      "stageClass": "experience",
+      "reads": [
+        "ProductSpec",
+        "InformationArchitectureSpec",
+        "ResearchPack"
+      ],
+      "writes": [
+        "UXFlowSpec"
+      ],
+      "mayNot": [
+        "choose final art direction or typography palette",
+        "implement visual styling",
+        "change product scope"
+      ],
+      "skills": [
+        "ux-interaction-design"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "ux-critic"
+      ],
+      "stopCriteria": [
+        "loading, empty, error and interruption states exist for every critical flow"
+      ],
+      "escalatesTo": "information-architect",
+      "priorArt": [
+        "magnus919-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "ux-critic": {
+      "id": "ux-critic",
+      "kind": "reviewer",
+      "purpose": "Independently judges flow completeness, recoverability and interaction quality.",
+      "stageClass": "experience",
+      "reads": [
+        "ProductSpec",
+        "InformationArchitectureSpec",
+        "UXFlowSpec",
+        "PageSpec",
+        "SectionSpec",
+        "RenderedEvidence"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "author or edit UX flows",
+        "write implementation code"
+      ],
+      "skills": [
+        "ux-interaction-design"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a verdict is issued for every named criterion"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "magnus919-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "ux-writer": {
+      "id": "ux-writer",
+      "kind": "creator",
+      "purpose": "Owns product/UI copy: labels, validation, onboarding, empty states, confirmations and voice.",
+      "stageClass": "content",
+      "reads": [
+        "ProductSpec",
+        "UXFlowSpec",
+        "BrandSpec",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "ContentSpec"
+      ],
+      "mayNot": [
+        "make factual claims beyond trusted knowledge",
+        "change flows or scope"
+      ],
+      "skills": [
+        "ux-writing"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "product-critic"
+      ],
+      "stopCriteria": [
+        "every interactive surface named in the UX flows has copy"
+      ],
+      "escalatesTo": "ux-critic",
+      "priorArt": [
+        "content-designer-ux-writing-skill"
+      ],
+      "status": "planned"
+    },
+    "marketing-content": {
+      "id": "marketing-content",
+      "kind": "creator",
+      "purpose": "Owns marketing/CRO copy, offers, proof strategy and conversion messaging for public sites.",
+      "stageClass": "content",
+      "reads": [
+        "ProductSpec",
+        "InformationArchitectureSpec",
+        "ResearchPack",
+        "BrandSpec",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "MarketingContentSpec"
+      ],
+      "mayNot": [
+        "promote generated claims to facts",
+        "change product scope",
+        "override brand tone"
+      ],
+      "skills": [
+        "marketing-copy-cro"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "product-critic"
+      ],
+      "stopCriteria": [
+        "every claim is source-backed or explicitly marked as generated"
+      ],
+      "escalatesTo": "product-critic",
+      "priorArt": [
+        "coreyhaines31-marketingskills"
+      ],
+      "status": "planned"
+    },
+    "brand-research": {
+      "id": "brand-research",
+      "kind": "creator",
+      "purpose": "Derives BrandSpec from supplied assets, the existing site and approved public profiles, with confidence and rights state.",
+      "stageClass": "brand",
+      "reads": [
+        "IntakeBrief",
+        "KnowledgePack",
+        "ProductSpec"
+      ],
+      "writes": [
+        "BrandSpec"
+      ],
+      "mayNot": [
+        "treat publicly visible assets as approved for republication",
+        "invent brand history",
+        "choose page layouts"
+      ],
+      "skills": [
+        "brand-research"
+      ],
+      "policyId": "research",
+      "routeId": "research",
+      "contextCeilingTokens": 25000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1800000,
+        "maxCostGbp": 1.5,
+        "maxTokens": 120000
+      },
+      "reviewedBy": [
+        "visual-critic"
+      ],
+      "stopCriteria": [
+        "each brand signal has a source and confidence",
+        "rights state is recorded for every asset"
+      ],
+      "escalatesTo": "art-direction",
+      "priorArt": [
+        "tej-1916-agent-ui-reference-system",
+        "voltagent-awesome-design-md"
+      ],
+      "status": "planned"
+    },
+    "art-direction": {
+      "id": "art-direction",
+      "kind": "creator",
+      "purpose": "Produces bounded, machine-readable art-direction candidates and the image plan that supports them.",
+      "stageClass": "design",
+      "reads": [
+        "ProductSpec",
+        "InformationArchitectureSpec",
+        "UXFlowSpec",
+        "BrandSpec",
+        "MarketingContentSpec",
+        "ContentSpec"
+      ],
+      "writes": [
+        "ArtDirectionPlan",
+        "ImagePlan"
+      ],
+      "mayNot": [
+        "edit the design system tokens directly",
+        "write implementation code",
+        "approve its own direction"
+      ],
+      "skills": [
+        "art-direction",
+        "design-intelligence-retrieval"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 5,
+        "maxRuntimeMs": 1800000,
+        "maxCostGbp": 1.5,
+        "maxTokens": 100000
+      },
+      "reviewedBy": [
+        "visual-critic"
+      ],
+      "stopCriteria": [
+        "between two and four genuinely different candidates exist",
+        "each candidate declares its variance, density, motion and distinctiveness values"
+      ],
+      "escalatesTo": "brand-research",
+      "priorArt": [
+        "leonxlnx-taste-skill",
+        "nextlevelbuilder-ui-ux-pro-max-skill",
+        "pbakaus-impeccable",
+        "voltagent-awesome-design-md"
+      ],
+      "status": "planned"
+    },
+    "visual-critic": {
+      "id": "visual-critic",
+      "kind": "reviewer",
+      "purpose": "Independently judges brand fidelity and art direction against evidence, before any implementation spend.",
+      "stageClass": "design",
+      "reads": [
+        "BrandSpec",
+        "ArtDirectionPlan",
+        "DesignSystemSpec",
+        "RenderedEvidence",
+        "DesignLintReport"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "author or edit brand or art direction",
+        "write implementation code"
+      ],
+      "skills": [
+        "design-critique"
+      ],
+      "policyId": "visual-review",
+      "routeId": "visual-review",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a scored verdict is issued with a capped, prioritised issue set"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "humbleteam-design-review",
+        "pbakaus-impeccable"
+      ],
+      "status": "planned"
+    },
+    "design-system": {
+      "id": "design-system",
+      "kind": "creator",
+      "purpose": "Compiles the approved art direction into a token/primitive/component/motion contract and component manifests.",
+      "stageClass": "design",
+      "reads": [
+        "BrandSpec",
+        "ArtDirectionPlan",
+        "UXFlowSpec",
+        "ProductSpec"
+      ],
+      "writes": [
+        "DesignSystemSpec",
+        "MotionContract",
+        "ComponentManifest"
+      ],
+      "mayNot": [
+        "invent a second design system",
+        "change art direction",
+        "write page content"
+      ],
+      "skills": [
+        "design-system-authoring"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 5,
+        "maxRuntimeMs": 1800000,
+        "maxCostGbp": 1.5,
+        "maxTokens": 100000
+      },
+      "reviewedBy": [
+        "visual-critic"
+      ],
+      "stopCriteria": [
+        "every token, component and motion rule the composition needs is defined and compiles"
+      ],
+      "escalatesTo": "art-direction",
+      "priorArt": [
+        "style-dictionary",
+        "storybookjs-mcp",
+        "apurvkhare-design-system-skill",
+        "aa-on-ai-agentic-design-system"
+      ],
+      "status": "planned"
+    },
+    "composition": {
+      "id": "composition",
+      "kind": "creator",
+      "purpose": "Composes pages and sections from approved structure, content and design contracts using the presentation registry.",
+      "stageClass": "composition",
+      "reads": [
+        "ProductSpec",
+        "InformationArchitectureSpec",
+        "UXFlowSpec",
+        "ContentSpec",
+        "MarketingContentSpec",
+        "DesignSystemSpec",
+        "ComponentManifest",
+        "ArtDirectionPlan",
+        "KnowledgePack"
+      ],
+      "writes": [
+        "PageSpec",
+        "SectionSpec"
+      ],
+      "mayNot": [
+        "invent components outside the presentation registry",
+        "change information architecture",
+        "bypass design tokens"
+      ],
+      "skills": [
+        "section-composition"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 5,
+        "maxRuntimeMs": 1800000,
+        "maxCostGbp": 1.5,
+        "maxTokens": 100000
+      },
+      "reviewedBy": [
+        "ux-critic"
+      ],
+      "stopCriteria": [
+        "every page in the information architecture is composed",
+        "no section bypasses the design system"
+      ],
+      "escalatesTo": "information-architect",
+      "priorArt": [
+        "21st-dev-registry",
+        "storybookjs-mcp"
+      ],
+      "status": "planned"
+    },
+    "solution-architect": {
+      "id": "solution-architect",
+      "kind": "creator",
+      "purpose": "Owns data model, auth/tenancy, API contracts, migrations and integration boundaries.",
+      "stageClass": "implementation",
+      "reads": [
+        "ProductSpec",
+        "UXFlowSpec",
+        "InformationArchitectureSpec",
+        "ProjectManifest"
+      ],
+      "writes": [
+        "ArchitectureSpec"
+      ],
+      "mayNot": [
+        "implement production code",
+        "approve its own security posture",
+        "grant itself capabilities"
+      ],
+      "skills": [
+        "api-and-interface-design"
+      ],
+      "policyId": "specification",
+      "routeId": "architecture",
+      "contextCeilingTokens": 40000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 4,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 80000
+      },
+      "reviewedBy": [
+        "security"
+      ],
+      "stopCriteria": [
+        "every entity, role and API boundary in the product spec is covered"
+      ],
+      "escalatesTo": "security",
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "frontend-implementation": {
+      "id": "frontend-implementation",
+      "kind": "creator",
+      "purpose": "Implements composed pages and interactions inside the design system and declared ChangeSet scope.",
+      "stageClass": "implementation",
+      "reads": [
+        "PageSpec",
+        "SectionSpec",
+        "DesignSystemSpec",
+        "ComponentManifest",
+        "MotionContract",
+        "UXFlowSpec",
+        "ContentSpec",
+        "MarketingContentSpec",
+        "ChangeSet"
+      ],
+      "writes": [
+        "ChangeSet"
+      ],
+      "mayNot": [
+        "decide whether its own test coverage is sufficient",
+        "approve its own work",
+        "change design tokens or product scope"
+      ],
+      "skills": [
+        "frontend-implementation",
+        "incremental-implementation",
+        "systematic-debugging"
+      ],
+      "policyId": "implementation",
+      "routeId": "implementation",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [
+        "src/**",
+        "app/**",
+        "public/**"
+      ],
+      "budget": {
+        "maxIterations": 8,
+        "maxRuntimeMs": 2700000,
+        "maxCostGbp": 3.0,
+        "maxTokens": 200000
+      },
+      "reviewedBy": [
+        "code-reviewer"
+      ],
+      "stopCriteria": [
+        "declared acceptance checks pass",
+        "iteration or no-progress budget reached"
+      ],
+      "escalatesTo": "code-reviewer",
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "status": "planned"
+    },
+    "backend-implementation": {
+      "id": "backend-implementation",
+      "kind": "creator",
+      "purpose": "Implements data, auth, API and migration work inside the approved architecture and ChangeSet scope.",
+      "stageClass": "implementation",
+      "reads": [
+        "ArchitectureSpec",
+        "ProductSpec",
+        "ProjectManifest",
+        "ChangeSet"
+      ],
+      "writes": [
+        "ChangeSet"
+      ],
+      "mayNot": [
+        "decide whether its own security posture is acceptable",
+        "approve its own work",
+        "touch production data"
+      ],
+      "skills": [
+        "backend-implementation",
+        "incremental-implementation",
+        "systematic-debugging"
+      ],
+      "policyId": "implementation",
+      "routeId": "implementation",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [
+        "src/**",
+        "supabase/**",
+        "migrations/**"
+      ],
+      "budget": {
+        "maxIterations": 8,
+        "maxRuntimeMs": 2700000,
+        "maxCostGbp": 3.0,
+        "maxTokens": 200000
+      },
+      "reviewedBy": [
+        "code-reviewer",
+        "security"
+      ],
+      "stopCriteria": [
+        "declared acceptance checks pass",
+        "iteration or no-progress budget reached"
+      ],
+      "escalatesTo": "solution-architect",
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "status": "planned"
+    },
+    "test-engineer": {
+      "id": "test-engineer",
+      "kind": "creator",
+      "purpose": "Owns test strategy, missing coverage, regression cases and failure reproduction.",
+      "stageClass": "implementation",
+      "reads": [
+        "ProductSpec",
+        "UXFlowSpec",
+        "ArchitectureSpec",
+        "ChangeSet",
+        "RuntimeDiagnostics"
+      ],
+      "writes": [
+        "TestPlan",
+        "ChangeSet"
+      ],
+      "mayNot": [
+        "weaken or skip a test to make a build pass",
+        "approve implementation work"
+      ],
+      "skills": [
+        "test-driven-development"
+      ],
+      "policyId": "implementation",
+      "routeId": "implementation",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [
+        "tests/**",
+        "tooling/**"
+      ],
+      "budget": {
+        "maxIterations": 8,
+        "maxRuntimeMs": 2700000,
+        "maxCostGbp": 3.0,
+        "maxTokens": 200000
+      },
+      "reviewedBy": [
+        "code-reviewer"
+      ],
+      "stopCriteria": [
+        "every acceptance criterion has an executable check or an explicit gap record"
+      ],
+      "escalatesTo": "code-reviewer",
+      "priorArt": [
+        "obra-superpowers",
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "simplification": {
+      "id": "simplification",
+      "kind": "creator",
+      "purpose": "Removes accidental complexity after correctness is established, preserving exact behaviour.",
+      "stageClass": "implementation",
+      "reads": [
+        "ChangeSet",
+        "TestPlan"
+      ],
+      "writes": [
+        "ChangeSet"
+      ],
+      "mayNot": [
+        "change behaviour",
+        "run before correctness review",
+        "approve its own work"
+      ],
+      "skills": [
+        "code-simplification"
+      ],
+      "policyId": "implementation",
+      "routeId": "implementation",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [
+        "src/**",
+        "app/**"
+      ],
+      "budget": {
+        "maxIterations": 8,
+        "maxRuntimeMs": 2700000,
+        "maxCostGbp": 3.0,
+        "maxTokens": 200000
+      },
+      "reviewedBy": [
+        "code-reviewer"
+      ],
+      "stopCriteria": [
+        "no behaviour-preserving simplification remains, or the diff stops shrinking"
+      ],
+      "escalatesTo": "code-reviewer",
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "code-reviewer": {
+      "id": "code-reviewer",
+      "kind": "reviewer",
+      "purpose": "Independently judges correctness, architecture, API design, maintainability and unintended scope.",
+      "stageClass": "verification",
+      "reads": [
+        "ChangeSet",
+        "TestPlan",
+        "ArchitectureSpec",
+        "ProductSpec"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "approve a change it authored"
+      ],
+      "skills": [
+        "code-review"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a verdict is issued for every named criterion"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "status": "planned"
+    },
+    "browser-qa": {
+      "id": "browser-qa",
+      "kind": "reviewer",
+      "purpose": "Proves that real journeys, forms, navigation, state transitions and responsive layouts actually work in a browser.",
+      "stageClass": "verification",
+      "reads": [
+        "ProductSpec",
+        "UXFlowSpec",
+        "PageSpec",
+        "SectionSpec"
+      ],
+      "writes": [
+        "RenderedEvidence",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "explain why the browser behaves as it does"
+      ],
+      "skills": [
+        "browser-functional-qa"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every acceptance journey has a pass/fail result and captured evidence"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "microsoft-playwright-mcp"
+      ],
+      "status": "planned"
+    },
+    "runtime-debug": {
+      "id": "runtime-debug",
+      "kind": "reviewer",
+      "purpose": "Explains why the browser behaves as it does using console, network, runtime state and performance traces.",
+      "stageClass": "verification",
+      "reads": [
+        "RenderedEvidence",
+        "ChangeSet"
+      ],
+      "writes": [
+        "RuntimeDiagnostics",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "declare a journey passing or failing"
+      ],
+      "skills": [
+        "runtime-debugging"
+      ],
+      "policyId": "review",
+      "routeId": "complex-debug",
+      "contextCeilingTokens": 35000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a root cause or an explicit unknown is recorded for each investigated symptom"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "chromedevtools-mcp"
+      ],
+      "status": "planned"
+    },
+    "accessibility": {
+      "id": "accessibility",
+      "kind": "reviewer",
+      "purpose": "Owns semantics, keyboard operation, focus order, screen-reader logic, zoom/reflow, motion and touch accessibility beyond automated checks.",
+      "stageClass": "verification",
+      "reads": [
+        "RenderedEvidence",
+        "PageSpec",
+        "SectionSpec",
+        "DesignSystemSpec",
+        "AccessibilityReport"
+      ],
+      "writes": [
+        "AccessibilityReport",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "claim automated results equal full compliance"
+      ],
+      "skills": [
+        "accessibility-review"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "deterministic results are consumed and manual-review-required findings are named"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "kreerc-accessibility-md"
+      ],
+      "status": "planned"
+    },
+    "performance": {
+      "id": "performance",
+      "kind": "reviewer",
+      "purpose": "Measures against declared budgets, distinguishes lab from field evidence and names actual bottlenecks.",
+      "stageClass": "verification",
+      "reads": [
+        "RenderedEvidence",
+        "RuntimeDiagnostics",
+        "PerformanceReport"
+      ],
+      "writes": [
+        "PerformanceReport",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "propose speculative micro-optimisation without measurement"
+      ],
+      "skills": [
+        "performance-budgets"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every declared budget has a measured result"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "googlechrome-lighthouse-ci",
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "seo-aeo": {
+      "id": "seo-aeo",
+      "kind": "reviewer",
+      "purpose": "Judges crawlability, metadata, structured data, internal linking, service/location evidence and AI-search readiness.",
+      "stageClass": "verification",
+      "reads": [
+        "PageSpec",
+        "SectionSpec",
+        "MarketingContentSpec",
+        "KnowledgePack",
+        "SeoReport"
+      ],
+      "writes": [
+        "SeoReport",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "invent service areas or locations without evidence"
+      ],
+      "skills": [
+        "seo-aeo-audit"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "deterministic scanner findings are consumed and interpreted"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "seo-skills-seo-audit-skill",
+        "coreyhaines31-marketingskills"
+      ],
+      "status": "planned"
+    },
+    "security": {
+      "id": "security",
+      "kind": "reviewer",
+      "purpose": "Independently assesses auth, authorization, tenancy, input handling, secrets, storage, policies, APIs and deployment boundaries.",
+      "stageClass": "verification",
+      "reads": [
+        "ArchitectureSpec",
+        "ChangeSet",
+        "ProjectManifest",
+        "SecurityReport"
+      ],
+      "writes": [
+        "SecurityReport",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "waive a failed deterministic security gate"
+      ],
+      "skills": [
+        "security-hardening"
+      ],
+      "policyId": "security-review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every security-relevant surface in scope has a finding or an explicit clean result"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "design-critic": {
+      "id": "design-critic",
+      "kind": "reviewer",
+      "purpose": "Scores ship readiness of the rendered product against brand, art direction and design system, with a capped prioritised issue set.",
+      "stageClass": "verification",
+      "reads": [
+        "BrandSpec",
+        "ArtDirectionPlan",
+        "DesignSystemSpec",
+        "RenderedEvidence",
+        "DesignLintReport",
+        "AccessibilityReport"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "implement fixes",
+        "issue vague aesthetic commentary without grounded evidence"
+      ],
+      "skills": [
+        "design-critique"
+      ],
+      "policyId": "visual-review",
+      "routeId": "visual-review",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a scored verdict with at most the configured number of prioritised issues is issued"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "humbleteam-design-review",
+        "pbakaus-impeccable",
+        "vercel-labs-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "red-team": {
+      "id": "red-team",
+      "kind": "reviewer",
+      "purpose": "Fresh-context adversarial reviewer: extracts the claims the factory is making and tries to refute them.",
+      "stageClass": "verification",
+      "reads": [
+        "ProductSpec",
+        "ReleaseDecision",
+        "SecurityReport",
+        "AccessibilityReport",
+        "PerformanceReport",
+        "RenderedEvidence",
+        "ConvergenceReport"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "edit production code",
+        "reuse the conversation context of the work it reviews"
+      ],
+      "skills": [
+        "doubt-driven-review"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every extracted claim is either reconciled with evidence or recorded as unverified"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "status": "planned"
+    },
+    "ship-release": {
+      "id": "ship-release",
+      "kind": "reviewer",
+      "purpose": "Collects release evidence and issues PASS or BLOCKED. It never fixes anything.",
+      "stageClass": "release",
+      "reads": [
+        "ConvergenceReport",
+        "ProductSpec",
+        "SecurityReport",
+        "AccessibilityReport",
+        "PerformanceReport",
+        "SeoReport",
+        "TestPlan",
+        "RenderedEvidence"
+      ],
+      "writes": [
+        "ReleaseDecision",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "fix failures",
+        "waive a failed gate",
+        "deploy without explicit approval"
+      ],
+      "skills": [
+        "release-readiness"
+      ],
+      "policyId": "release",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.5,
+        "maxTokens": 50000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every required gate has a recorded result"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    }
+  }
+}

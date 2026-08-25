@@ -12,3 +12,5 @@ generated/
 .tmp/
 test-results/
 playwright-report/
+*.tsbuildinfo
+package-lock.json

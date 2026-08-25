@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/skill-registration.schema.json",
+  "title": "App Builder Skill Registration",
+  "description": "Lifecycle and evaluation record for one repo-local specialist skill. An installed or authored skill is never trusted until evidence promotes it.",
+  "type": "object",
+  "required": ["id", "purpose", "lifecycle", "version", "contextTokensBudget", "evaluation"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "purpose": {"type": "string", "minLength": 1},
+    "lifecycle": {
+      "enum": ["planned", "experimental", "candidate", "evaluated", "proven", "deprecated"],
+      "description": "Promotion is evidence-driven and one step at a time; proven additionally requires every external prior-art source to be adopted-pinned and security reviewed."
+    },
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "path": {"type": ["string", "null"], "description": "Repo-relative SKILL.md path once authored."},
+    "contextTokensBudget": {"type": "integer", "minimum": 500},
+    "priorArt": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "supersedes": {"type": ["string", "null"]},
+    "evaluation": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["not-evaluated", "in-evaluation", "evaluated", "regressed"]},
+        "benchmarkCases": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "qualityScore": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
+        "regressions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "falsePositiveRate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "medianTokens": {"type": ["integer", "null"], "minimum": 0},
+        "medianRuntimeMs": {"type": ["integer", "null"], "minimum": 0},
+        "medianCostGbp": {"type": ["number", "null"], "minimum": 0},
+        "failurePatterns": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "comparedAgainst": {"type": ["string", "null"]},
+        "recordedAt": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

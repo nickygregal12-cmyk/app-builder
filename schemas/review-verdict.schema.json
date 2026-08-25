@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/review-verdict.schema.json",
+  "title": "App Builder Review Verdict",
+  "description": "Independent verdict on one artifact or stage. Creators never issue the final verdict on their own work.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "projectId", "stageId", "artifactKind", "reviewerRole", "authorRoles", "verdict", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "taskId": {"type": ["string", "null"]},
+    "stageId": {"type": "string", "minLength": 1},
+    "artifactId": {"type": ["string", "null"]},
+    "artifactKind": {"type": "string", "minLength": 1},
+    "reviewerRole": {"type": "string", "minLength": 1},
+    "authorRoles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Roles that created or materially changed the artifact. The reviewer must not appear here."
+    },
+    "verdict": {"enum": ["pass", "pass-with-observations", "rework-required", "blocked"]},
+    "severity": {"enum": ["none", "observation", "minor", "major", "blocker"]},
+    "failingCriteria": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Named criteria that failed. Required when the verdict is rework-required or blocked."
+    },
+    "requiredChanges": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "observations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "returnToRole": {"type": ["string", "null"], "description": "Creator role that owns the rework. Required when the verdict is rework-required."},
+    "returnToStageId": {"type": ["string", "null"]},
+    "blockedReason": {"type": ["string", "null"], "description": "Required when the verdict is blocked: what is missing outside the reviewer's control."},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "ref": {"type": "string", "minLength": 1},
+          "hash": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "score": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
+    "createdAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

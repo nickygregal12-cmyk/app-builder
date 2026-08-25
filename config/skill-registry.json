@@ -1,0 +1,789 @@
+{
+  "version": 1,
+  "description": "Repo-local specialist skills and their evaluation lifecycle. A skill is not trusted because it exists or because a model liked it.",
+  "lifecycleStates": [
+    "planned",
+    "experimental",
+    "candidate",
+    "evaluated",
+    "proven",
+    "deprecated"
+  ],
+  "promotionRules": [
+    "Promotion moves one lifecycle state at a time and requires recorded evidence.",
+    "A skill reaches evaluated only with benchmark cases, quality score, token, runtime and cost evidence.",
+    "A skill reaches proven only when every prior-art source it draws on is adopted-pinned with a passed security review.",
+    "A replacement skill version must be compared against the incumbent before it supersedes it.",
+    "A skill that regresses on its benchmark cases returns to candidate or is deprecated."
+  ],
+  "skills": {
+    "accessibility-review": {
+      "id": "accessibility-review",
+      "purpose": "Review semantics, keyboard operation, focus order, screen-reader logic, zoom/reflow and touch targets beyond automated checks.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "kreerc-accessibility-md"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "api-and-interface-design": {
+      "id": "api-and-interface-design",
+      "purpose": "Design data models, API contracts, auth and tenancy boundaries.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "art-direction": {
+      "id": "art-direction",
+      "purpose": "Produce bounded, machine-readable art-direction candidates that avoid default and generic output.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "leonxlnx-taste-skill",
+        "pbakaus-impeccable"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "backend-implementation": {
+      "id": "backend-implementation",
+      "purpose": "Implement data, auth, API and migration work inside the approved architecture.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "brand-research": {
+      "id": "brand-research",
+      "purpose": "Derive palette, logo usage, typography intent, imagery language and tone with confidence and rights state.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "tej-1916-agent-ui-reference-system",
+        "voltagent-awesome-design-md"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "browser-functional-qa": {
+      "id": "browser-functional-qa",
+      "purpose": "Drive real journeys, forms, navigation and responsive layouts in a browser and capture evidence.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "microsoft-playwright-mcp"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "code-review": {
+      "id": "code-review",
+      "purpose": "Judge correctness, architecture, API design, maintainability and unintended scope.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "code-simplification": {
+      "id": "code-simplification",
+      "purpose": "Remove accidental complexity while preserving exact behaviour, after correctness is established.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 4000,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "design-critique": {
+      "id": "design-critique",
+      "purpose": "Score ship readiness with a capped, prioritised, evidence-grounded issue set.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "humbleteam-design-review",
+        "pbakaus-impeccable",
+        "vercel-labs-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "design-intelligence-retrieval": {
+      "id": "design-intelligence-retrieval",
+      "purpose": "Query the versioned design-knowledge catalogue for layout families, palettes, typography pairings and anti-patterns.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 4000,
+      "priorArt": [
+        "nextlevelbuilder-ui-ux-pro-max-skill",
+        "voltagent-awesome-design-md"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "design-system-authoring": {
+      "id": "design-system-authoring",
+      "purpose": "Compile art direction into tokens, primitives, components, motion rules and runtime requirements.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "style-dictionary",
+        "apurvkhare-design-system-skill",
+        "storybookjs-mcp"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "doubt-driven-review": {
+      "id": "doubt-driven-review",
+      "purpose": "Fresh-context adversarial review: claim, extract, doubt, reconcile, stop.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "frontend-implementation": {
+      "id": "frontend-implementation",
+      "purpose": "Implement composed pages inside the design system and declared ChangeSet scope.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "incremental-implementation": {
+      "id": "incremental-implementation",
+      "purpose": "Work in small verified increments with verification before completion.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 3000,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "obra-superpowers"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "information-architecture": {
+      "id": "information-architecture",
+      "purpose": "Model mental models, sitemap, taxonomy, labels and content hierarchy, and validate rather than guess.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "rampstackco-claude-skills",
+        "coreyhaines31-marketingskills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "marketing-copy-cro": {
+      "id": "marketing-copy-cro",
+      "purpose": "Write evidence-backed marketing copy, offers and conversion messaging.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "coreyhaines31-marketingskills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "performance-budgets": {
+      "id": "performance-budgets",
+      "purpose": "Measure against declared budgets, separate lab from field evidence and name real bottlenecks.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "googlechrome-lighthouse-ci",
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "product-discovery": {
+      "id": "product-discovery",
+      "purpose": "Frame opportunities, assumptions and value/usability/feasibility/viability risks.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "terminalskills-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "release-readiness": {
+      "id": "release-readiness",
+      "purpose": "Collect release evidence and issue a PASS or BLOCKED decision without fixing anything.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "requirements-interview": {
+      "id": "requirements-interview",
+      "purpose": "Elicit missing high-impact requirements and surface contradictions before build spend.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 4000,
+      "priorArt": [
+        "addyosmani-agent-skills",
+        "github-spec-kit"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "research-ops": {
+      "id": "research-ops",
+      "purpose": "Choose a research method, separate anecdote from recurring evidence and mark confidence explicitly.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "alirezarezvani-claude-skills",
+        "hamelsmu-design-research"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "runtime-debugging": {
+      "id": "runtime-debugging",
+      "purpose": "Use console, network, runtime state and performance traces to explain browser behaviour.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "chromedevtools-mcp"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "section-composition": {
+      "id": "section-composition",
+      "purpose": "Compose pages and sections from registered presentation entries without inventing a second system.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "21st-dev-registry",
+        "storybookjs-mcp"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "security-hardening": {
+      "id": "security-hardening",
+      "purpose": "Assess auth, authorization, tenancy, input handling, secrets, storage, policies and deployment boundaries.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "seo-aeo-audit": {
+      "id": "seo-aeo-audit",
+      "purpose": "Interpret deterministic crawlability, metadata, structured-data and AI-search findings.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "seo-skills-seo-audit-skill",
+        "coreyhaines31-marketingskills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "spec-authoring": {
+      "id": "spec-authoring",
+      "purpose": "Write a testable specification with acceptance criteria and explicit exclusions.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "github-spec-kit",
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "systematic-debugging": {
+      "id": "systematic-debugging",
+      "purpose": "Reproduce, localise, reduce, find the root cause, repair and guard with a regression test.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 4000,
+      "priorArt": [
+        "obra-superpowers"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "test-driven-development": {
+      "id": "test-driven-development",
+      "purpose": "Own test strategy, coverage gaps, regression cases and failure reproduction.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "obra-superpowers",
+        "addyosmani-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "ux-interaction-design": {
+      "id": "ux-interaction-design",
+      "purpose": "Design task flows, state coverage, recovery and responsive interaction.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [
+        "magnus919-agent-skills"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
+    "ux-writing": {
+      "id": "ux-writing",
+      "purpose": "Write labels, validation, onboarding, empty states and confirmations in a consistent product voice.",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 4000,
+      "priorArt": [
+        "content-designer-ux-writing-skill"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    }
+  }
+}

@@ -40,6 +40,13 @@ A powerful agent is not a security boundary. File scope, environment identity, c
 | Rich Design Contract / DesignSystemSpec | 9.0/10 | Phase 4 | Typography, hierarchy, motion, density, responsive composition, imagery, component/token rules and reference intent are explicit. |
 | Six-project + capability-intersection acceptance matrix | 8.8/10 | Phase 3.5 benchmark expansion, enforced before Phase 5 | All first-class project types plus risky recipe combinations generate/check/build; AI changes cannot hide regressions in untested classes. |
 | Machine-readable roadmap/status source | 8.0/10 | Phase 3.5 | README/roadmap status is checked against one config authority to reduce documentation drift. |
+| Specialist roles separated by decision boundary | 10/10 | Phase 3.8H registry, Phase 5 execution | Every role declares bounded reads/writes/skills/tools/mutation scope/budget and a named independent reviewer. |
+| Reviewer independence (no self-approval) | 10/10 | Phase 3.8H | A creator cannot issue the verdict on its own artifact; reviewers own no mutation scope; the doctor rejects self-approving pipeline stages. |
+| Handoff promotion contract | 9.8/10 | Phase 3.8H | A stage advances on artifacts, prerequisites, evidence, passed deterministic checks and an independent verdict — never because an agent said it was finished. |
+| Typed rework routing | 9.7/10 | Phase 3.8H | Disagreement between specialists becomes a named failing criterion, a severity and an owning creator role rather than an argument. |
+| Convergence engine | 10/10 | Phase 3.8H contracts, Phase 6 gate evidence | Every required gate is assessed; unrun gates never pass; failures route to their owner; a hard budget outranks a rework loop. |
+| Skill promotion lifecycle | 8.8/10 | Phase 3.8H registry, Phase 5.5 harness | A skill is trusted only after recorded benchmark, quality, regression, token, runtime and cost evidence. |
+| External source governance | 9.0/10 | Phase 3.8H | Third-party repositories stay prior art with `instructionAuthority: none` until pinned, licensed, security reviewed and granted to a named role. |
 
 ## Phase 3.5 delivery slices
 
@@ -113,6 +120,34 @@ Generated Supabase recipes must be exercised in a local database with authentica
 
 The database security matrix should become durable benchmark evidence alongside build/browser results.
 
+## Phase 3.8H specialist-role addendum
+
+The control plane now owns four additional deterministic primitives, implemented in
+`packages/control-plane/src/roles.js`:
+
+- `assertReviewIndependence` / `createReviewVerdict` — a creator cannot promote its own artifact, a
+  rework verdict must name failing criteria, a severity and an owning role, and a blocked verdict
+  must state what is missing;
+- `evaluateHandoff` — stage promotion requires the declared artifacts, satisfied prerequisites,
+  required evidence, passed deterministic checks (a `not-run` check blocks exactly like a failing
+  one) and an independent verdict or explicit human approval;
+- `evaluateConvergence` / `planRework` — every required gate is assessed, a below-threshold score is
+  converted to a failure, an unrun gate never counts as a pass, failures route to the creator role
+  that owns them, rework is ordered by severity, and a hard budget stop outranks a rework loop;
+- `buildRoleContextPacket` / `assertMutationAllowed` — a role receives only the artifact kinds its
+  role spec declares and may only declare the ChangeSet scope rules it owns.
+
+The registries live in `config/agent-roles.json`, `config/agent-pipelines.json`,
+`config/skill-registry.json` and `config/external-sources.json`, and the contracts in
+`schemas/agent-role.schema.json`, `schemas/review-verdict.schema.json`,
+`schemas/stage-handoff.schema.json`, `schemas/skill-registration.schema.json`,
+`schemas/convergence-report.schema.json` and `schemas/external-source.schema.json`.
+
+This is not a new orchestration layer. Roles execute inside the existing durable task, budget,
+policy, ChangeSet, checkpoint and event model; they do not get their own scheduler, budgets or
+permission system. See `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and
+`docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
+
 ## Durable state model
 
 Every autonomous task should be reconstructible from:
@@ -129,7 +164,8 @@ Every autonomous task should be reconstructible from:
 - latest deterministic failures;
 - latest checkpoint;
 - relevant skills/authorities;
-- explicit blockers, approvals and next action.
+- explicit blockers, approvals and next action;
+- the specialist role, its independent reviewer and the gate that owns any outstanding rework.
 
 Long chat history is optional diagnostic material, not required state.
 

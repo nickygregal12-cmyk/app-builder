@@ -240,6 +240,36 @@ Do not expose production deploy/database writes, raw secrets, arbitrary filesyst
 
 MCP remains an adapter rather than a new source of factory truth.
 
+### 3.8H — Specialist agent architecture foundation ✅ Complete
+
+Delivered as contracts, registries and deterministic primitives — not as a running agent system:
+
+- `AgentRoleSpec` (`schemas/agent-role.schema.json`) and a registry of specialist roles separated by
+  decision boundary (`config/agent-roles.json`);
+- project-class routing and required convergence gates (`config/agent-pipelines.json`), so an
+  internal tool is not routed through brand, marketing, research or SEO specialists;
+- deterministic **no-self-approval**: a creator cannot issue the verdict on its own artifact, a
+  reviewer owns no repository mutation scope, and the doctor rejects any pipeline stage that would
+  let a role approve itself;
+- `HandoffContract` semantics via `evaluateHandoff` — required artifacts, prerequisites, evidence,
+  passed deterministic checks and an independent verdict, or the stage does not advance;
+- typed rework (`schemas/review-verdict.schema.json`) with named failing criteria, severity and an
+  owning creator role, so backward routing is data rather than argument;
+- a deterministic convergence engine (`schemas/convergence-report.schema.json`) that assesses every
+  required gate, converts a below-threshold score into a failure, refuses to call an unrun gate a
+  pass, orders rework by severity and lets a hard budget stop outrank a rework loop;
+- bounded per-role context packets and per-role capability/route ceilings;
+- an evidence-driven skill promotion lifecycle (`config/skill-registry.json`);
+- an external-source governance registry (`config/external-sources.json`) where registration is
+  explicitly not adoption.
+
+Architecture: `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
+Primitives: `packages/control-plane/src/roles.js`. Coverage: `tooling/agent-architecture.test.mjs`
+and the extended control-plane doctor.
+
+This foundation does not close the outstanding Phase 3.8E genuine-business product gate, and it adds
+no new orchestration framework.
+
 ### 3.8G — Brand-source and asset-provenance foundation — P1/P2
 
 Extend the existing content/asset intelligence rather than creating a second extraction subsystem.
@@ -296,13 +326,28 @@ Delivered:
   workspace composition module is what the preview renders;
 - first-class company image/logo/document upload (delivered in 4A);
 - import exact existing-site sources through the service (delivered in 4A);
-- source confidence, provenance and asset-rights state shown per source.
+- source confidence, provenance and asset-rights state shown per source;
+- governed source decisions before ingestion.
 
 Composition stays a pure function of manifest and knowledge. Edits live beside
 it rather than inside it, which is what keeps generation deterministic while
 still allowing a person to write the words.
 
+**Builder Element Identity is only partly satisfied.** Shipped click-to-edit
+resolves a rendered element to section id, binding key and provenance, and
+refuses to act on an element carrying none. It does not yet resolve component
+or instance identity, source location, the full editable-property set or design
+tokens, and it has no RenderedEvidence capture. Editing is therefore currently
+bounded to text bindings; extending it to components and assets requires the
+fuller identity model below first.
+
 Remaining:
+- **Builder Element Identity** completed to component/instance level, with
+  source location, editable properties and design tokens, refusing any visual
+  edit that cannot resolve to one;
+- **RenderedEvidence** as a first-class artifact: desktop/tablet/mobile
+  captures plus critical interaction states, because a compiling build is not
+  evidence that a visual change is correct;
 - asset manager: replacement, crop and focal-point selection;
 - marking assets approved, suggested, generated, rejected or "do not use" from
   the Console rather than at ingestion;
@@ -312,6 +357,11 @@ Remaining:
 - Design Contract editing.
 
 Original scope for reference:
+- **Builder Element Identity** before any click-to-edit is enabled: resolve a rendered element to
+  page/section/component/instance identity, content bindings, source location, editable properties,
+  provenance references and design tokens, and refuse a visual edit that cannot resolve to one;
+- **RenderedEvidence** as a first-class artifact: desktop/tablet/mobile captures plus critical
+  interaction states, because a compiling build is not evidence that a visual change is correct;
 - click-to-select/edit through PageSpec/SectionSpec identity;
 - text/content editing with provenance awareness;
 - component/section variant selection;
@@ -348,6 +398,13 @@ Create distinct but related registries:
 
 Add deterministic design-system linting so later AI cannot silently invent a second design system.
 
+Add the design-intelligence layer specified in `docs/DESIGN_INTELLIGENCE.md`:
+- a versioned, deterministically queryable design-knowledge catalogue feeding BrandSpec/ArtDirectionPlan;
+- a **Component Manifest Protocol** so agents retrieve a small relevant component set, not a library;
+- runtime-aware component contracts (providers, global CSS, fonts, theme context);
+- **DesignLint** deterministic visual-defect rules ahead of AI critique;
+- `DesignSystemSpec` that compiles to tokens/CSS variables/theme config/component parameters.
+
 Introduce a machine-readable `BrandSpec` grounded in supplied/observed evidence:
 - approved/observed palette and logo assets;
 - typography intent;
@@ -357,7 +414,9 @@ Introduce a machine-readable `BrandSpec` grounded in supplied/observed evidence:
 - reference sources and confidence;
 - source-vs-generated asset policy.
 
-Introduce `ArtDirectionPlan` above individual SectionSpecs:
+Introduce `ArtDirectionPlan` above individual SectionSpecs, with machine-readable dimensions
+(`layoutVariance`, `motionIntensity`, `informationDensity`, `visualDistinctiveness`, `restraintLevel`)
+rather than prompt adjectives, plus:
 - narrative/emotional sequence;
 - attention hierarchy;
 - page tempo/density changes;
@@ -380,7 +439,8 @@ Introduce `MotionContract`:
 ### Phase 4D — Visual design canvas and controlled art-direction variants
 
 - produce 2–4 genuinely different bounded candidate art directions/layouts from the same product/content truth;
-- ingest moodboards, screenshots, existing sites and design references into adopt/avoid intent rather than blindly copying them;
+- ingest moodboards, screenshots, existing sites and design references into normalized traits and
+  adopt/avoid intent rather than blindly copying them, and never into uncontrolled generated markup;
 - large/infinite comparison canvas or equivalent workspace;
 - responsive and interaction-state preview;
 - explicit promote/reject flow into durable BrandSpec/ArtDirectionPlan/Design Contract/composition state;
@@ -485,8 +545,10 @@ Resume deferred 3.5C immediately before powerful autonomous agents are enabled:
 - deterministic task/context router;
 - model router by measured task capability, quality threshold and cost;
 - compact trusted context packets;
-- versioned `SKILL.md` specialist skills;
-- implementation/design/backend/security/review specialists;
+- versioned `SKILL.md` specialist skills authored against `config/skill-registry.json`, promoted only on recorded evidence;
+- the registered specialist roles executed in **disposable per-role sessions** rather than one long general-purpose session;
+- durable stage handoffs, typed rework routing and convergence-driven stopping;
+- reviewer independence enforced by the control plane, not by prompt wording;
 - machine-readable outputs and ChangeSets;
 - bounded autonomous work/fix loops;
 - provider-neutral `AgentRuntimeAdapter`;
@@ -522,13 +584,19 @@ MCP delivers early interoperability, but it does **not** replace the later runti
 - dangerous-tool/permission-bypass tests;
 - context-router leakage tests;
 - second-opinion agreement metrics;
+- skill/agent evaluation lab: benchmark cases, quality scores, regressions, false positives, token,
+  runtime, cost and context footprint per skill version, with promotion only one lifecycle state at a time;
 - image-model/provider benchmark by task class, quality, acceptance rate and cost;
 - generated-image rights/provenance/policy tests;
 - evaluate Promptfoo specifically where it materially improves red-team coverage.
 
 ## Phase 6 — Quality and Autonomous Verification ⬜ Planned
 
-- full unit/integration/E2E/accessibility/performance/security gates;
+- full unit/integration/E2E/accessibility/performance/security gates feeding the convergence gate registry;
+- a dedicated browser functional QA specialist and a separate runtime/DevTools debugging specialist;
+- Lighthouse-style deterministic performance budgets as the performance gate's check;
+- a deterministic SEO/AEO scanner as the SEO gate's check;
+- a fresh-context red-team pass before the release decision;
 - screenshot/visual review against Design Contract/DesignSystemSpec/BrandSpec/ArtDirectionPlan;
 - independent second-opinion review for material changes;
 - render representative widths around 375px, 430px, tablet, laptop, desktop and wide desktop where useful;
@@ -630,4 +698,7 @@ A project outside the proven envelope must be classified honestly as factory-sup
 - do not make Hono authoritative for contracts;
 - evaluate `@mozilla/readability` against real crawled sites before adopting it;
 - do not adopt Temporal/LangGraph/large orchestration frameworks unless measured complexity later justifies them;
-- generated projects remain ordinary repositories and never require the Builder Console, MCP server or Hetzner/OpenCode runtime to operate.
+- generated projects remain ordinary repositories and never require the Builder Console, MCP server or Hetzner/OpenCode runtime to operate;
+- external repositories in `config/external-sources.json` stay prior art until pinned, licensed, security reviewed and granted to a named role; no agent fetches a mutable branch at run time;
+- do not add a canvas dependency (tldraw, quickdraw or otherwise) before `ArtDirectionPlan`, `RenderedEvidence` and `ElementIdentity` exist;
+- do not adopt a screenshot-to-code generation architecture; references become structured adopt/avoid observations.

@@ -81,7 +81,7 @@ function entityBinding(key, pack, field, manifestItems = []) {
       if (seen.has(marker)) return false;
       seen.add(marker);
       return true;
-    }).map(({ id, sourceId, provenance, verification, ...data }) => data);
+    }).map((item) => Object.fromEntries(Object.entries(item).filter(([fieldName]) => !['id', 'sourceId', 'provenance', 'verification'].includes(fieldName))));
     return binding(key, items, 'knowledge-entity', {
       sourceIds: knowledgeItems.map((item) => item.sourceId),
       entityIds: knowledgeItems.map((item) => item.id),
@@ -228,7 +228,7 @@ function contentSection(pageId, pack) {
   if (!items.length) return null;
   return section(`${pageId}-content`, 'content-list', 'Present source-backed content records', [
     manifestBinding('title', 'Content'),
-    binding('items', items.map(({ sourceId, ...item }) => item), 'knowledge-entity', { sourceIds: items.map((item) => item.sourceId) }),
+    binding('items', items.map((item) => ({ title: item.title })), 'knowledge-entity', { sourceIds: items.map((item) => item.sourceId) }),
   ], [], [], 'list');
 }
 

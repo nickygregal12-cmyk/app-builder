@@ -3,6 +3,7 @@ import path from 'node:path';
 import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
+import { validateContract } from '@app-builder/contracts';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
@@ -113,7 +114,10 @@ export class FactoryService {
   createProject({ manifest, knowledgePack = null, id = null }) {
     const errors = validateManifest(manifest);
     if (errors.length) throw new Error(`Invalid project manifest: ${errors.join('; ')}`);
-    if (knowledgePack && knowledgePack.schemaVersion !== 1) throw new Error('Unsupported knowledge-pack schema version.');
+    if (knowledgePack) {
+      const packErrors = validateContract('knowledge-pack', knowledgePack);
+      if (packErrors.length) throw new Error(`Invalid knowledge pack: ${packErrors.join('; ')}`);
+    }
     const now = new Date().toISOString();
     const project = this.store.upsertProject({
       id: id ?? `project-${randomUUID()}`,

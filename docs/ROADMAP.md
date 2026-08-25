@@ -182,20 +182,23 @@ Delivered:
 The exit gate is met: no textual-prefix scope escape survives either the
 hand-written adversarial cases or the generated property cases.
 
-### 3.8B — Schema/type/runtime contract unification ✅ First contract family complete
+### 3.8B — Schema/type/runtime contract unification ✅ Core contract families complete
 
 Target architecture:
 
 `JSON Schema -> generated packages/contracts types -> Ajv boundary validation`
 
-Delivered for Project Manifest v1/v2:
+Delivered:
 - `/schemas` is the runtime validation authority;
-- Ajv validates the Manifest directly from JSON Schema;
-- schema-derived TypeScript declaration generation exists;
-- duplicated manifest validation enums/rules have been removed from the handwritten runtime validator;
+- `config/contract-families.json` declares which schemas are generated families and which are explicitly deferred, so a new schema forces a migration decision;
+- `@app-builder/contracts` compiles every family with Ajv and exports `validateContract`/`assertContract` for service, tooling and package boundaries;
+- schema-derived TypeScript is generated per family with a root-type barrel;
+- nine families are migrated: Project Manifest, Build Contract, Intake Session, Knowledge Pack, Composition, Control Task, Build Event, Checkpoint and ChangeSet;
+- duplicated validation enums/rules have been removed from the handwritten Manifest and Knowledge Pack validators, which now keep only relational and governance rules JSON Schema cannot express;
+- `npm run contracts:check` fails on schema-hash or generated-type drift and runs inside `npm run check`;
 - structural validity remains separate from adapter/module buildability.
 
-Continue incrementally for remaining stable contract families rather than attempting a risky all-at-once type rewrite. Add deterministic contract-generation/drift CI as generated/shared contracts become consumed by more apps.
+Remaining schemas stay listed as pending with a recorded reason. Migrate them when they become real exchanged boundaries rather than attempting a risky all-at-once rewrite; `schemas/genuine-business-acceptance.schema.json` also needs its draft-07 dialect migrated first.
 
 ### 3.8C — Executed Supabase security acceptance — P0
 

@@ -168,17 +168,19 @@ Further service capabilities should be added only when Phase 4 actually needs th
 
 Purpose: close high-value correctness gaps discovered by audit/review and establish the few foundations that are cheaper to solve before the Builder Console becomes large.
 
-### 3.8A — ChangeSet path-policy correctness ✅ Core fix complete
+### 3.8A — ChangeSet path-policy correctness ✅ Complete
 
 Delivered:
 - segment-correct repository path semantics instead of textual-prefix matching;
 - canonical repository-relative paths and Windows separator normalization;
 - fail-closed rejection of traversal/absolute/ambiguous paths;
 - unsafe/unsupported declared scope rules rejected before work starts;
-- adversarial sibling-prefix regression tests.
+- adversarial sibling-prefix regression tests;
+- `fast-check` property tests over allow/deny/expected-file behavior, separator
+  canonicalisation, traversal rejection and forbidden-scope precedence.
 
-Follow-up before broad autonomous mutation:
-- add `fast-check` property tests around allow/deny/expected-file behavior.
+The exit gate is met: no textual-prefix scope escape survives either the
+hand-written adversarial cases or the generated property cases.
 
 ### 3.8B — Schema/type/runtime contract unification ✅ First contract family complete
 

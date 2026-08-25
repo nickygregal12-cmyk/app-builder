@@ -84,7 +84,18 @@ const manifest = {
   aiBudget: { mode: 'economy', maxBuildCostGbp: 0 },
   brand: { designControl: 'sensible-defaults', accentColor: '#123456' },
   inputs: { inventory: ['existing website', 'logo/brand', 'photos', 'PDFs/docs', 'spreadsheets/CSV'], existingWebsite: 'https://acme.example/', sources: sourceRefs },
-  constraints: { tenantModel: null, integrations: [], uploads: {}, existingData: [], expectedScale: 'under-1000', sensitivity: 'normal-business-data', hardConstraints: [], customCapabilities: [], excludedCapabilities: [], unresolvedCapabilities: [] },
+  constraints: {
+    hard: [],
+    expectedScale: 'under-1000',
+    sensitivity: 'normal-business-data',
+    tenantModel: '',
+    integrations: [],
+    existingData: [],
+    uploadTypes: [],
+    customCapabilities: [],
+    excludedCapabilities: [],
+    unresolvedCapabilities: [],
+  },
   outOfScope: ['Online payments'],
 };
 fs.writeFileSync(path.join(root, 'project-manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

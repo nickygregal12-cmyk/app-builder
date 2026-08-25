@@ -40,7 +40,7 @@ try {
     failed = true;
   }
 
-  const requiredTools = ['project.generate', 'project.verify', 'project.events.read', 'project.metrics.read', 'project.preview.start', 'project.preview.stop'];
+  const requiredTools = ['project.create', 'project.generate', 'project.verify', 'project.events.read', 'project.metrics.read', 'project.preview.start', 'project.preview.stop'];
   for (const name of requiredTools) {
     if (!FACTORY_TOOLS.some((tool) => tool.name === name)) {
       console.error(`Factory tool contract is missing ${name}.`);
@@ -48,7 +48,7 @@ try {
     }
   }
   if (FACTORY_TOOLS.some((tool) => /deploy|secret.*write|production/.test(tool.name))) {
-    console.error('Phase 3.7 tool contract must not expose production deployment or secret mutation operations.');
+    console.error('Factory tool contract must not expose production deployment or secret mutation operations.');
     failed = true;
   }
 

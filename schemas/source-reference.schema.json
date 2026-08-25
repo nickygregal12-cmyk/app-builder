@@ -1,0 +1,19 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"App Builder Source Reference",
+  "type":"object",
+  "required":["id","kind","label","provenance","recordedAt"],
+  "properties":{
+    "id":{"type":"string","minLength":1},
+    "kind":{"enum":["url","logo","image","screenshot","document","spreadsheet","database-api","other"]},
+    "label":{"type":"string","minLength":1},
+    "uri":{"type":"string"},
+    "name":{"type":"string"},
+    "mimeType":{"type":"string"},
+    "size":{"type":"number","minimum":0},
+    "provenance":{"enum":["user-supplied","existing-site","external-research","generated"]},
+    "purpose":{"type":"string"},
+    "recordedAt":{"type":"string"}
+  },
+  "additionalProperties":false
+}

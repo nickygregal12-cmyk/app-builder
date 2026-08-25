@@ -1,13 +1,15 @@
 {
-  "version":"1.1.0","id":"b2b-saas","extends":"base","questions":[
+  "version":"1.2.0","id":"b2b-saas","extends":"base","questions":[
     {"id":"tenant_model","label":"Who owns business data?","type":"single-select","depth":"quick","impact":"blocking","default":"organisation","options":["individual user","organisation","both/depends","decide for me"]},
-    {"id":"roles","label":"What roles are required?","type":"multi-select","depth":"standard","impact":"high","default":["owner","admin","member"],"options":["owner","admin","editor","member","viewer","custom"]},
+    {"id":"roles","label":"What roles are required?","type":"multi-select","depth":"standard","impact":"high","default":["owner","admin","member"],"options":["owner","admin","editor","member","viewer","custom"],"when":{"questionId":"tenant_model","in":["organisation","both/depends"]}},
     {"id":"core_entities","label":"What are the main things the product stores or manages?","type":"list","required":true,"depth":"quick","impact":"blocking"},
     {"id":"uploads","label":"Will users upload files?","type":"boolean","depth":"quick","impact":"high","default":false},
+    {"id":"upload_types","label":"What kinds of files will users upload?","type":"list","depth":"standard","impact":"high","followUpIfMissing":true,"when":{"questionId":"uploads","equals":true}},
     {"id":"billing","label":"Does V1 need billing or subscriptions?","type":"boolean","depth":"standard","impact":"high","default":false},
+    {"id":"billing_model","label":"How should customers pay?","type":"single-select","depth":"standard","impact":"high","default":"subscription","options":["subscription","usage","one-off","mixed","decide for me"],"when":{"questionId":"billing","equals":true}},
     {"id":"integrations","label":"What existing systems or APIs must it connect to?","type":"list","depth":"standard","impact":"high"},
     {"id":"sensitivity","label":"Does it handle confidential, regulated or unusually sensitive business data?","type":"single-select","depth":"standard","impact":"high","default":"normal-business-data","options":["normal-business-data","confidential","regulated/unknown"]},
-    {"id":"admin_needs","label":"What should an administrator be able to manage?","type":"list","depth":"thorough","impact":"normal"},
+    {"id":"admin_needs","label":"What should an administrator be able to manage?","type":"list","depth":"thorough","impact":"normal","when":{"questionId":"roles","includes":["admin"]}},
     {"id":"existing_data","label":"Does V1 need to import or migrate existing data?","type":"multi-select","depth":"thorough","impact":"high","options":["spreadsheet/CSV","database","third-party API","documents","none"]}
   ]
 }

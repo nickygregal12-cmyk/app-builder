@@ -3,7 +3,7 @@ import { project } from './generated/project';
 import { design } from './generated/design';
 import { composition } from './generated/composition';
 import { assets } from './generated/assets';
-import { initializeRecipes, installedRecipes } from './generated/recipes';
+import { initializeRecipes, installedRecipes, recipeSections } from './generated/recipes';
 import { currentScenario } from './scenarios';
 
 type Action = { label: string; href: string };
@@ -203,6 +203,15 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
       <Actions actions={section.actions} navigate={navigate} />
     </section>;
   }
+
+  // A capability recipe owns how its own section renders. The composer decided
+  // the section belongs here; it does not know what an enquiry form looks like.
+  const RecipeSection = recipeSections[section.type];
+  if (RecipeSection) return <section className={`page-section recipe-section section-${section.type}`} id={section.id} data-section-id={section.id} data-section-type={section.type}>
+    {title && <h2>{text(title.value)}</h2>}
+    {body && <p className="section-copy">{text(body.value)}</p>}
+    <RecipeSection sectionId={section.id} />
+  </section>;
 
   if (section.type === 'cta') return <section className="page-section cta-section" id={section.id} data-section-id={section.id}>
     <div>{title && <h2>{text(title.value)}</h2>}{body && <p>{text(body.value)}</p>}</div>

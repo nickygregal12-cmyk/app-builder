@@ -70,6 +70,17 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .social-links a { display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-ink); font-size: .9rem; font-weight: 700; text-decoration: none; text-transform: capitalize }
 .social-links a:hover { border-color: var(--color-accent); color: var(--color-accent) }
 
+/* Recipe-owned sections ------------------------------------------------- */
+.recipe-section h2 { margin-bottom: 28px }
+.enquiry-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 46rem }
+.enquiry-form label { display: flex; flex-direction: column; gap: 8px; color: var(--color-text-muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em }
+.enquiry-form label.span-two, .enquiry-actions { grid-column: 1 / -1 }
+.enquiry-form input, .enquiry-form textarea { width: 100%; padding: 14px 16px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-ink); font-size: 1rem; font-weight: 400; text-transform: none; letter-spacing: normal }
+.enquiry-form input:focus-visible, .enquiry-form textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-color: var(--color-accent) }
+.enquiry-form textarea { resize: vertical; min-height: 140px }
+.enquiry-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap }
+.enquiry-actions p { margin: 0; color: var(--color-text-muted); font-size: .9rem }
+
 /* Closing call to action ------------------------------------------------ */
 .cta-section { display: flex; align-items: center; justify-content: space-between; gap: 40px; margin: 0 max(20px, calc((100vw - var(--layout-max-width)) / 2)) var(--section-space); padding: clamp(40px, 5vw, 64px); border-radius: calc(var(--layout-radius) * 1.5); background: var(--color-surface-inverse); color: var(--color-text-inverse) }
 .cta-section h2, .cta-section p { color: var(--color-text-inverse) }
@@ -107,6 +118,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 @media (max-width: 880px) {
   .hero-section.has-image { grid-template-columns: 1fr; gap: 32px }
   .item-grid, .gallery-grid, .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .enquiry-form { grid-template-columns: 1fr }
   .cta-section { flex-direction: column; align-items: flex-start; gap: 28px }
 }
 

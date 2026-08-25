@@ -158,12 +158,28 @@ function platformFor(url) {
   return known.find((name) => host === `${name}.com` || host.endsWith(`.${name}.com`)) ?? host;
 }
 
+// project.primaryGoal is what the owner wants from the site — "win local
+// enquiries" — not something a visitor should ever read. Where no description
+// exists, a sentence is assembled from declared services and areas instead;
+// it states only what the manifest already asserts and claims nothing extra.
+function summaryFromDeclaredFacts(pack, manifest) {
+  const services = list(pack?.companyProfile?.services).map((item) => item.name).filter(Boolean);
+  const declared = services.length ? services : list(manifest?.company?.services).map(String);
+  const areas = list(pack?.companyProfile?.serviceAreas).map((item) => item.value).filter(Boolean);
+  const locations = areas.length ? areas : list(manifest?.company?.locations).map(String);
+  if (!declared.length) return null;
+  const phrase = declared.length === 1
+    ? declared[0]
+    : `${declared.slice(0, -1).join(', ')} and ${declared.at(-1)}`;
+  const where = locations.length ? ` in ${locations.length === 1 ? locations[0] : `${locations.slice(0, -1).join(', ')} and ${locations.at(-1)}`}` : '';
+  return defaultBinding('body', `${phrase.charAt(0).toUpperCase()}${phrase.slice(1).toLowerCase()}${where}.`);
+}
+
 function projectDescriptionBinding(pack, manifest) {
   return profileFieldBinding('body', pack, 'identity', 'description')
     ?? factBinding('body', pack, 'identity.description')
     ?? (manifest?.company?.identity?.description ? manifestBinding('body', manifest.company.identity.description) : null)
-    ?? (manifest?.project?.primaryGoal ? manifestBinding('body', manifest.project.primaryGoal) : null)
-    ?? defaultBinding('body', `Information about ${manifest?.project?.name ?? 'this project'}.`);
+    ?? summaryFromDeclaredFacts(pack, manifest);
 }
 
 function companyNameBinding(pack, manifest) {
@@ -192,9 +208,9 @@ function section(id, type, purpose, bindings, actions = [], assetIds = [], varia
 
 function hero(pageId, surface, index, manifest, pack, action) {
   const title = index === 0 ? companyNameBinding(pack, manifest) : manifestBinding('title', surface);
-  const body = index === 0 || /about/i.test(surface)
-    ? projectDescriptionBinding(pack, manifest)
-    : defaultBinding('body', `${surface} for ${manifest.project.name}.`);
+  // A secondary page says what it is in its heading. "Work for MGB Decor."
+  // adds nothing and reads as unfinished.
+  const body = index === 0 || /about/i.test(surface) ? projectDescriptionBinding(pack, manifest) : null;
   // No eyebrow. It previously carried the project type, which published a
   // Build Contract field — "marketing site" — as a caption above the business
   // name on every page.
@@ -243,11 +259,21 @@ function locationsSection(pageId, pack, manifest) {
   return section(`${pageId}-locations`, 'location-list', 'Present confirmed service areas or locations', [manifestBinding('title', 'Locations'), items], [], [], 'list');
 }
 
+function enquiryFormSection(pageId, manifest) {
+  if (manifest?.modules?.['lead-generation'] !== true) return null;
+  return section(`${pageId}-enquiry`, 'enquiry-form', 'Capture enquiries where the capability is installed', [
+    manifestBinding('title', 'Send an enquiry'),
+  ], [], [], 'panel');
+}
+
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
   const profiles = socialProfileBinding(pack, manifest);
   if (!bindings.length && !profiles) return null;
-  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', 'Contact'), ...bindings, profiles], [], [], 'panel');
+  // A panel holding only social profiles is not "Contact" — naming it for what
+  // it holds also keeps it from being deduped against a page called Contact.
+  const title = bindings.length ? 'Contact' : 'Find us online';
+  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', title), ...bindings, profiles], [], [], 'panel');
 }
 
 function entitiesSection(pageId, manifest) {
@@ -309,11 +335,15 @@ function contentSection(pageId, pack) {
   ], [], [], 'list');
 }
 
-function ctaSection(pageId, manifest, action) {
+function ctaSection(pageId, pack, manifest, action) {
   if (!action) return null;
+  const goals = list(manifest?.company?.conversionGoals).map((item) => String(item).toLowerCase());
+  const title = goals.some((goal) => goal.includes('quote')) ? 'Get a quote'
+    : goals.some((goal) => goal.includes('book') || goal.includes('appointment')) ? 'Book an appointment'
+    : 'Get in touch';
   return section(`${pageId}-cta`, 'cta', 'Provide the primary next action', [
-    defaultBinding('title', 'Next step'),
-    manifestBinding('body', manifest.project.primaryGoal),
+    defaultBinding('title', title),
+    summaryFromDeclaredFacts(pack, manifest),
   ], [action], [], 'accent');
 }
 
@@ -345,6 +375,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(locationsSection(pageId, pack, manifest));
   } else if (/contact|quote|book/.test(lower)) {
     output.push(contactSection(pageId, pack, manifest));
+    output.push(enquiryFormSection(pageId, manifest));
   } else if (/content|article|post|news|detail/.test(lower)) {
     output.push(contentSection(pageId, pack));
   } else if (/dashboard|workspace|record|experience|input|result|history|admin|setting|profile/.test(lower)) {
@@ -355,7 +386,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(entitiesSection(pageId, manifest));
   }
 
-  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, manifest, action));
+  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, action));
   const unique = output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
   return dropRepeatedHeading(unique);
 }

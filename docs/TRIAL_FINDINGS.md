@@ -46,7 +46,7 @@ project, and the action is attached to every page including `/contact` itself.
 The contact page therefore shipped a "Request a quote" button whose href is the
 current page. This is wrong independently of what content is missing.
 
-### F3 — A contact page with no contact details ships as a dead end — P1 ✅ Partly fixed
+### F3 — A contact page with no contact details ships as a dead end — P1 ✅ Fixed
 
 With no email, phone or address, `contactSection` returns null and the page
 degrades to a hero alone: a heading, the filler line "Contact for MGB Decor.",
@@ -188,6 +188,39 @@ further.
 That is the Phase 3.8D gate paying for itself on the first design change made
 after it landed, and an argument for keeping deterministic checks ahead of
 visual review rather than behind it.
+
+### F12 — The owner's objective was published as visitor-facing copy — P0 ✅ Fixed
+
+The same class as F1 and missed on the first pass. `projectDescriptionBinding`
+fell back to `manifest.project.primaryGoal`, so the homepage lede read "Win
+local painting and decorating enquiries in Glasgow" — what the owner wants from
+the site, presented to visitors as though it described the business. The closing
+call to action published it a second time under the heading "Next step".
+
+Nothing may publish `primaryGoal` now. Where no description exists, a sentence
+is assembled from services and service areas the manifest already asserts
+("Interior painting, exterior painting and wallpapering in Glasgow"), marked as
+a deterministic default and claiming nothing beyond what was declared. The
+closing action is named from the conversion intent instead — "Get a quote".
+
+Secondary pages no longer carry filler bodies. "Work for MGB Decor." said
+nothing the heading had not already said.
+
+A regression test asserts `primaryGoal` appears nowhere in a composition.
+
+### F13 — An installed capability could not contribute a section — P1 ✅ Fixed
+
+The `lead-generation` recipe ships a working Netlify-backed enquiry form, and
+the module was enabled on this project, but nothing rendered it: the recipe
+registry supported `setup`, `Provider` and `Gate`, with no way for a capability
+to own a piece of the page. A business with no published phone or email
+therefore had no contact route at all.
+
+Recipes can now export a `sections` map of section type to component. The
+composer decides an `enquiry-form` section belongs on contact surfaces where the
+capability is installed; the recipe that owns the capability decides how it
+looks. That is the capability/presentation registry seam Phase 4C describes, in
+miniature, and it is the mechanism later presentation work should build on.
 
 ### Edit-count estimate
 

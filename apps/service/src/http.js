@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { factoryToolContract } from './tool-contract.js';
+import { updateProjectSourceGovernance } from './source-governance.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -42,6 +43,13 @@ export function createFactoryHttpServer({ service }) {
       const project = service.getProject(route.projectId);
       if (!project) return send(response, 404, { error: 'unknown-project' });
 
+      const sourceGovernanceRoute = route.action?.match(/^sources\/([^/]+)\/governance$/);
+      if (request.method === 'POST' && sourceGovernanceRoute) {
+        const body = await readJson(request);
+        const result = await updateProjectSourceGovernance(service, route.projectId, decodeURIComponent(sourceGovernanceRoute[1]), body.decision);
+        return send(response, 200, result);
+      }
+
       if (request.method === 'GET' && route.action === null) return send(response, 200, { project });
       if (request.method === 'GET' && route.action === 'manifest') return send(response, 200, { manifest: service.getManifest(route.projectId) });
       if (request.method === 'GET' && route.action === 'knowledge-pack') return send(response, 200, { knowledgePack: service.getKnowledgePack(route.projectId) });
@@ -73,7 +81,7 @@ export function createFactoryHttpServer({ service }) {
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      const status = /JSON|manifest|knowledge-pack|Request body|Unsafe|dependencies are not installed|no generated workspace/.test(message) ? 400 : 500;
+      const status = /JSON|manifest|knowledge-pack|Request body|Unsafe|dependencies are not installed|no generated workspace|source governance|project source|Public URL|user-supplied/i.test(message) ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });
     }
   });

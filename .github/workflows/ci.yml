@@ -35,3 +35,28 @@ jobs:
 
       - name: Verify generated real-business app in Chromium
         run: npm run test:e2e:real-business
+
+  database-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+
+      - name: Generate canonical Supabase-backed app
+        run: npm run generate:acceptance
+
+      - name: Initialise isolated Supabase acceptance project
+        run: |
+          mkdir -p .tmp/supabase-rls-acceptance
+          npx --yes supabase@2.115.0 init --workdir .tmp/supabase-rls-acceptance
+          npm run acceptance:supabase-rls:prepare
+
+      - name: Start local Supabase for RLS acceptance
+        run: npx --yes supabase@2.115.0 start --workdir .tmp/supabase-rls-acceptance -x studio,imgproxy,mailpit,realtime,storage-api,postgres-meta,edge-runtime,logflare,vector,supavisor
+
+      - name: Execute pgTAP security acceptance
+        run: npx --yes supabase@2.115.0 test db --workdir .tmp/supabase-rls-acceptance

@@ -111,8 +111,13 @@ export async function listProjects() {
   return (await request<{ projects: ProjectSummary[] }>('/projects')).projects;
 }
 
-export async function createProject(manifest: AppBuilderProjectManifest) {
-  return (await request<{ project: ProjectSummary }>('/projects', { method: 'POST', body: JSON.stringify({ manifest }) })).project;
+export async function createProject(manifest: object) {
+  // factory-core still exposes the pre-3.8 handwritten ProjectManifestV2 type.
+  // Runtime validation is schema/Ajv-authoritative; adapt that legacy compile-time
+  // shape at this one boundary until factory-core itself consumes the generated
+  // contract family. Do not copy manifest fields or enums into the Console.
+  const schemaManifest = manifest as unknown as AppBuilderProjectManifest;
+  return (await request<{ project: ProjectSummary }>('/projects', { method: 'POST', body: JSON.stringify({ manifest: schemaManifest }) })).project;
 }
 
 export async function generateProject(projectId: string) {

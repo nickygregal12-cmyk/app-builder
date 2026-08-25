@@ -1,0 +1,28 @@
+{
+  "name": "app-builder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal AI-first website and app factory",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm --workspace @app-builder/console run dev",
+    "build": "npm --workspace @app-builder/console run build",
+    "typecheck": "npm --workspace @app-builder/console run typecheck",
+    "lint": "oxlint . --deny-warnings",
+    "test": "node --test tooling/**/*.test.mjs",
+    "doctor": "node tooling/doctor.mjs",
+    "validate:example": "node tooling/validate-manifest.mjs examples/project-manifest.example.json",
+    "create-app": "node tooling/create-app.mjs",
+    "check": "npm run doctor && npm run test && npm run validate:example && npm run typecheck && npm run lint"
+  },
+  "devDependencies": {
+    "oxlint": "^1.71.0",
+    "typescript": "~7.0.2"
+  }
+}

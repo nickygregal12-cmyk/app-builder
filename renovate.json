@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "rangeStrategy": "replace",
+  "dependencyDashboard": true,
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "groupName": "development tooling",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    }
+  ]
+}

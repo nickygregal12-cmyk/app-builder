@@ -187,7 +187,7 @@ function seoSnapshot(source) {
 }
 
 function packLevelResearch(facts, entities, pageSnapshots) {
-  const contactMethods = ['contact.email', 'contact.phone', 'contact.website'].filter((path) => bestFact(facts, path)).map((path) => path.replace('contact.', ''));
+  const contactMethods = ['contact.email', 'contact.phone', 'contact.website'].filter((factPath) => bestFact(facts, factPath)).map((factPath) => factPath.replace('contact.', ''));
   const serviceAreas = facts.filter((fact) => fact.path === 'serviceAreas').map((fact) => fact.value);
   return [
     {
@@ -215,6 +215,18 @@ function packLevelResearch(facts, entities, pageSnapshots) {
       inventedClaimsAllowed: false,
     },
   ];
+}
+
+function assetGovernance(source) {
+  return {
+    provenance: source.provenance,
+    rightsStatus: source.rightsStatus,
+    assetStatus: source.assetStatus,
+    sourceRole: source.sourceRole,
+    sourceChannel: source.sourceChannel,
+    instructionAuthority: source.instructionAuthority,
+    publishUseAllowed: source.publishUseAllowed,
+  };
 }
 
 export function buildKnowledgePack(normalizedSources, options = {}) {
@@ -251,7 +263,16 @@ export function buildKnowledgePack(normalizedSources, options = {}) {
       fontMap.set(font, current);
     }
     if (extraction.type === 'image') {
-      const asset = { id: stableId('asset', source.contentHash, source.id), sourceId: source.id, kind: source.kind, contentHash: source.contentHash, mimeType: source.mimeType, metadata: extraction.metadata, variants: source.variants };
+      const asset = {
+        id: stableId('asset', source.contentHash, source.id),
+        sourceId: source.id,
+        kind: source.kind,
+        contentHash: source.contentHash,
+        mimeType: source.mimeType,
+        ...assetGovernance(source),
+        metadata: extraction.metadata,
+        variants: source.variants,
+      };
       if (exactAssets.has(source.contentHash)) asset.duplicateOf = exactAssets.get(source.contentHash);
       else exactAssets.set(source.contentHash, asset.id);
       const fingerprint = extraction.metadata?.visualFingerprint;
@@ -278,19 +299,25 @@ export function buildKnowledgePack(normalizedSources, options = {}) {
     extractionSummary: { type: extraction.type, truncated: Boolean(extraction.truncated), cacheHit: source.cacheHit },
     variantCount: variants.length,
   }));
+  const brandSources = sources
+    .filter((source) => source.sourceRole === 'primary-brand' || source.sourceRole === 'brand-supporting')
+    .map((source) => ({ sourceId: source.id, role: source.sourceRole, channel: source.sourceChannel, rightsStatus: source.rightsStatus, publishUseAllowed: source.publishUseAllowed }));
   const brand = {
     colors: [...colorMap.values()].sort((a, b) => b.sourceIds.length - a.sourceIds.length || a.value.localeCompare(b.value)),
     fontFamilies: [...fontMap.values()].sort((a, b) => b.sourceIds.length - a.sourceIds.length || a.value.localeCompare(b.value)),
     titles,
+    sourceCandidates: brandSources,
     logoCandidates: assets.filter((asset) => asset.kind === 'logo').map((asset) => asset.id),
     screenshotCandidates: assets.filter((asset) => asset.kind === 'screenshot').map((asset) => asset.id),
+    publishableAssetIds: assets.filter((asset) => asset.publishUseAllowed).map((asset) => asset.id),
+    referenceOnlyAssetIds: assets.filter((asset) => !asset.publishUseAllowed).map((asset) => asset.id),
     generatedBrandClaims: [],
   };
   const chunks = mergeChunks(normalizedSources);
   const companyProfile = createCompanyProfile(facts, entities);
   const base = {
     schemaVersion: 1,
-    intelligenceVersion: options.intelligenceVersion ?? '1.1.0',
+    intelligenceVersion: options.intelligenceVersion ?? '1.2.0',
     project: options.project ?? null,
     sources,
     facts,

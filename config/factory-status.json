@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "currentPhase": "3.8",
-  "currentStage": "Phase 3.8E — Genuine business product proof",
+  "currentStage": "Phase 3.8 — Product proof and correctness hardening",
+  "activeStage": "Phase 3.8E — Genuine business product proof",
   "status": "active",
   "completedPhases": ["0", "1", "2", "3"],
   "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D"],

@@ -33,6 +33,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
+      - name: Accessibility gate for canonical generated app
+        run: npm run test:e2e:accessibility
+
       - name: Verify generated real-business app in Chromium
         run: npm run test:e2e:real-business
 

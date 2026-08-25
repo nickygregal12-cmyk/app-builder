@@ -13,7 +13,7 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm --prefix .tmp/real-business-acceptance/app run dev -- --host 127.0.0.1 --port 4273',
+    command: 'npm --prefix .tmp/real-business-acceptance/workspaces/acme-retrofit run dev -- --host 127.0.0.1 --port 4273',
     url: 'http://127.0.0.1:4273',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

@@ -1,7 +1,8 @@
-export const FACTORY_TOOL_CONTRACT_VERSION = 1;
+export const FACTORY_TOOL_CONTRACT_VERSION = 2;
 
 export const FACTORY_TOOLS = Object.freeze([
   { name: 'project.list', method: 'GET', path: '/projects', mutating: false, approvalRequired: false },
+  { name: 'project.create', method: 'POST', path: '/projects', mutating: true, approvalRequired: false },
   { name: 'project.read', method: 'GET', path: '/projects/{projectId}', mutating: false, approvalRequired: false },
   { name: 'project.manifest.read', method: 'GET', path: '/projects/{projectId}/manifest', mutating: false, approvalRequired: false },
   { name: 'project.knowledge.read', method: 'GET', path: '/projects/{projectId}/knowledge-pack', mutating: false, approvalRequired: false },

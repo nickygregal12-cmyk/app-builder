@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/routing-benchmark-case.schema.json",
+  "title": "App Builder Routing Benchmark Case",
+  "description": "One representative prompt and the deterministic routing outcome it must produce. These are navigation acceptance cases, not product authorities. Negative expectations matter as much as positive ones: a case exists to prove that expensive or irrelevant specialists are NOT selected.",
+  "type": "object",
+  "required": ["id", "prompt"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "prompt": {"type": "string", "minLength": 1},
+    "rationale": {"type": "string", "minLength": 1, "description": "Why this case is held, in one sentence."},
+    "requiredRoutes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Task route ids from config/agent-routing.json that must match."
+    },
+    "requiredRoles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Role ids from config/agent-roles.json that must appear in the packet."
+    },
+    "forbiddenRoles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Negative triggers. These roles must not be selected for this prompt."
+    },
+    "requiredSkills": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Skill ids from config/skill-registry.json that must be loaded."
+    },
+    "forbiddenSkills": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Negative triggers. These skills must not be loaded for this prompt."
+    },
+    "maxAuthorities": {"type": "integer", "minimum": 0},
+    "maxSelectedRoles": {"type": "integer", "minimum": 0},
+    "maxSelectedSkills": {"type": "integer", "minimum": 0},
+    "expectUnclassified": {
+      "type": "boolean",
+      "description": "True when the prompt must stay unclassified rather than guess a subsystem. The correct next step is bounded repository orientation, not a high-cost specialist."
+    }
+  },
+  "additionalProperties": false
+}

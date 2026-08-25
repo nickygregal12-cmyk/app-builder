@@ -12,6 +12,7 @@ const required = [
   'docs/AGENT_SPECIALIST_ARCHITECTURE.md',
   'docs/AGENT_HANDOFFS_AND_CONVERGENCE.md',
   'docs/DESIGN_INTELLIGENCE.md',
+  'docs/ENGINEERING_QUALITY_PROGRAMME.md',
   'config/factory-status.json',
   'config/agent-policies.json',
   'config/factory-benchmarks.json',
@@ -19,6 +20,7 @@ const required = [
   'config/agent-pipelines.json',
   'config/skill-registry.json',
   'config/external-sources.json',
+  'config/agent-routing-benchmarks.json',
   'schemas/control-task.schema.json',
   'schemas/build-event.schema.json',
   'schemas/change-set.schema.json',
@@ -35,15 +37,19 @@ const required = [
   'schemas/convergence-report.schema.json',
   'schemas/skill-registration.schema.json',
   'schemas/external-source.schema.json',
+  'schemas/routing-benchmark-case.schema.json',
   'packages/control-plane/package.json',
   'packages/control-plane/src/index.js',
   'packages/control-plane/src/upgrades.js',
   'packages/control-plane/src/roles.js',
+  'packages/control-plane/src/routing.js',
   'tooling/lib/recipe-upgrades.mjs',
   'tooling/plan-recipe-upgrades.mjs',
   'tooling/control-plane.test.mjs',
   'tooling/control-plane-upgrades.test.mjs',
   'tooling/agent-architecture.test.mjs',
+  'tooling/agent-routing-benchmark.test.mjs',
+  'tooling/agent-route.mjs',
   'tooling/benchmark-acceptance.mjs',
 ];
 
@@ -64,7 +70,7 @@ try {
     console.error('Factory status must identify an active delivery stage.');
     failed = true;
   }
-  for (const stage of ['3.5A', '3.5B', '3.8H']) {
+  for (const stage of ['3.5A', '3.5B', '3.8H', '3.8I']) {
     if (!(status.completedStages ?? []).includes(stage)) {
       console.error(`Factory status must retain Phase ${stage} as a completed foundation.`);
       failed = true;
@@ -144,6 +150,10 @@ try {
   }
   if (pkg.exports?.['./roles'] !== './src/roles.js') {
     console.error('Control-plane package must expose the specialist-role primitives.');
+    failed = true;
+  }
+  if (pkg.exports?.['./routing'] !== './src/routing.js') {
+    console.error('Control-plane package must expose the deterministic routing primitives.');
     failed = true;
   }
 
@@ -255,6 +265,54 @@ try {
         failed = true;
       }
     }
+  }
+
+  // Routing discipline. Installed is not loaded, and a broad prompt must not buy expensive
+  // specialists. The full positive/negative case set runs in tooling/agent-routing-benchmark.test.mjs.
+  const routing = readJson('config/agent-routing.json');
+  const loadBudget = routing.skillLoadBudget ?? {};
+  for (const [roleId, role] of Object.entries(roles)) {
+    const loaded = {};
+    for (const skill of role.skills ?? []) {
+      const loadClass = skillRegistry.skills?.[skill]?.loadClass;
+      if (!loadClass || !Object.hasOwn(loadBudget, loadClass)) {
+        console.error(`Skill ${skill} requested by role ${roleId} has no budgeted load class.`);
+        failed = true;
+        continue;
+      }
+      loaded[loadClass] = (loaded[loadClass] ?? 0) + 1;
+    }
+    for (const [loadClass, count] of Object.entries(loaded)) {
+      if (count > loadBudget[loadClass]) {
+        console.error(`Role ${roleId} loads ${count} competing ${loadClass} skills; the budget allows ${loadBudget[loadClass]}.`);
+        failed = true;
+      }
+    }
+  }
+  for (const route of routing.taskRoutes ?? []) {
+    if (!routing.routes?.[route.contextRoute]) {
+      console.error(`Task route ${route.id} names unknown context route ${route.contextRoute}.`);
+      failed = true;
+    }
+    for (const roleId of route.roles ?? []) {
+      if (!roles[roleId]) {
+        console.error(`Task route ${route.id} names unknown role ${roleId}.`);
+        failed = true;
+      }
+    }
+  }
+  const benchmarkCases = readJson('config/agent-routing-benchmarks.json').cases ?? [];
+  if (!benchmarkCases.some((benchmarkCase) => benchmarkCase.expectUnclassified)) {
+    console.error('Routing benchmarks must hold at least one prompt that stays unclassified rather than guessing.');
+    failed = true;
+  }
+  if (!benchmarkCases.some((benchmarkCase) => (benchmarkCase.forbiddenRoles ?? []).length > 0)) {
+    console.error('Routing benchmarks must hold negative triggers, not only positive ones.');
+    failed = true;
+  }
+  if (!String(readJson('package.json').scripts?.['agent:bench'] ?? '').includes('agent-route.mjs')) {
+    console.error('Root package must expose the deterministic routing benchmark as agent:bench.');
+    failed = true;
   }
 
   const rootPackage = readJson('package.json');

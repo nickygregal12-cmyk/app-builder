@@ -4,10 +4,14 @@
   "title": "App Builder Skill Registration",
   "description": "Lifecycle and evaluation record for one repo-local specialist skill. An installed or authored skill is never trusted until evidence promotes it.",
   "type": "object",
-  "required": ["id", "purpose", "lifecycle", "version", "contextTokensBudget", "evaluation"],
+  "required": ["id", "purpose", "loadClass", "lifecycle", "version", "contextTokensBudget", "evaluation"],
   "properties": {
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
     "purpose": {"type": "string", "minLength": 1},
+    "loadClass": {
+      "enum": ["navigation", "process", "domain", "specialist", "review", "critic"],
+      "description": "Load-budget class. A role packet normally carries at most one skill per class, so complementary lenses compose instead of competing. Installed is not loaded."
+    },
     "lifecycle": {
       "enum": ["planned", "experimental", "candidate", "evaluated", "proven", "deprecated"],
       "description": "Promotion is evidence-driven and one step at a time; proven additionally requires every external prior-art source to be adopted-pinned and security reviewed."

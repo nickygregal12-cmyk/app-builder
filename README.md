@@ -43,13 +43,15 @@ Current invariants include:
 - Generated projects remain normal repositories with no proprietary runtime lock-in.
 - MCP, OpenCode, the Builder Console and the Hetzner runtime are development/control adapters, never production requirements of generated apps.
 
-Machine-readable progress lives in `config/factory-status.json`. See `docs/MASTER_PLAN.md` for the full delivery plan, `docs/ROADMAP.md` for the staged roadmap, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts and `docs/AGENT_RUNTIME.md` for the future Hetzner/OpenCode runtime architecture.
+Machine-readable progress lives in `config/factory-status.json`. See `docs/MASTER_PLAN.md` for the full delivery plan, `docs/ROADMAP.md` for the staged roadmap, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts, `docs/ENGINEERING_QUALITY_PROGRAMME.md` for the deterministic engineering gates and tool responsibility map, and `docs/AGENT_RUNTIME.md` for the future Hetzner/OpenCode runtime architecture.
 
 ## Commands
 
 ```bash
 npm install
 npm run doctor
+npm run agent:route -- "Signup does not work"
+npm run agent:bench
 npm test
 npm run generate:acceptance
 npm run benchmark:acceptance

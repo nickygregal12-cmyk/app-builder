@@ -4,7 +4,7 @@ Current stage: **Phase 3.8 — Product proof and correctness hardening**.
 
 Implementation has reached the Phase 3.7 service/tool-boundary exit. Before broad Phase 4 work accelerates, the remaining Phase 3.8 correctness/product gates should be closed while the surface area is still small, and the genuine real-business product proof should be completed rather than relying only on synthetic acceptance fixtures.
 
-The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
+The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The deterministic engineering-gate programme lives in `docs/ENGINEERING_QUALITY_PROGRAMME.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
 Machine-readable progress authority: `config/factory-status.json`.
 
@@ -263,6 +263,44 @@ and the extended control-plane doctor.
 This foundation does not close the outstanding Phase 3.8E genuine-business product gate, and it adds
 no new orchestration framework.
 
+### 3.8I — Routing discipline and agent operating-system hardening ✅ Complete
+
+Audit finding this closes: the factory had the stronger control plane, but the weaker
+*development-agent operating system*. More AI capability requires stronger routing discipline, and
+that is far cheaper to establish before the specialist system grows large than afterwards.
+
+Delivered as deterministic contracts and executable acceptance:
+
+- **Deterministic routing acceptance benchmarks** — `schemas/routing-benchmark-case.schema.json`
+  and `config/agent-routing-benchmarks.json` hold representative prompts with **positive and
+  negative triggers**. A route that selects the right specialist but also drags in an expensive
+  irrelevant one fails. `npm run agent:bench` runs them; `npm run agent:route -- "TASK"` prints the
+  packet. Primitives live in `packages/control-plane/src/routing.js`.
+- **Task routes** (`taskRoutes` in `config/agent-routing.json`) map bounded natural-language intent
+  to specialist roles, canonical authorities and a small skill set. Broad words such as
+  `refactor this component` or an ordinary `architecture review` deliberately stay **unclassified**
+  so the next step is bounded orientation rather than an expensive guess.
+- **First-orientation context ceilings** — candidate paths, authorities, selected roles, selected
+  skills and deterministic packet bytes. These are context-efficiency guards: a real task expands
+  deliberately after the first packet instead of raising a global ceiling.
+- **Skill load budgets** — every registered skill declares a `loadClass`
+  (navigation/process/domain/specialist/review/critic) and a role packet normally carries at most
+  one per class, so complementary lenses compose instead of competing. Installed is not loaded, and
+  the doctor and tests enforce it.
+- **New specialist roles** registered in `config/agent-roles.json`: `state-matrix`,
+  `journey-closure`, `product-opportunity-scout`, `differential-reviewer`,
+  `independent-second-opinion`, `environment-guardian` and `compound-learning`, with the
+  `StateMatrixSpec`, `JourneyClosureEvidence`, `ProductOpportunityReport`, `RiskClassification`,
+  `EnvironmentIdentity` and `CompoundLearningCandidate` artifact kinds they exchange.
+- **New convergence gates** — `state-completeness` and `journey-closure` are now required in every
+  project pipeline, because a compiling build is not evidence that a journey is finished.
+- **Conditional review routing** — the risk-sensitive roles are `onDemandRoles`, selected by a
+  deterministic `RiskClassification`, so an ordinary CSS change never pays for adversarial security
+  review while an auth/RLS/secrets/deployment change does.
+
+Roles remain `planned`: this stage defines the decision boundaries, routing and budgets. Authoring
+their `SKILL.md` packets and executing them is Phase 4 groundwork and Phase 5 runtime work.
+
 ### 3.8G — Brand-source and asset-provenance foundation — P1/P2
 
 Extend the existing content/asset intelligence rather than creating a second extraction subsystem.
@@ -290,7 +328,12 @@ Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client
 - visible task/event progress;
 - service-managed live preview;
 - desktop/tablet/mobile preview switching;
-- checkpoint/version visibility.
+- checkpoint/version visibility;
+- close the current source-ingestion work before widening the Console surface.
+
+The `state-matrix` and `journey-closure` specialists registered in Phase 3.8I get their first real
+inputs here: the vertical slice is what makes a `StateMatrixSpec` and a `JourneyClosureEvidence`
+ledger possible to produce and check.
 
 ### Phase 4B — Direct manipulation, brand sources and assets
 
@@ -314,7 +357,16 @@ Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client
   - supplied + optimise;
   - supplied + generate gaps;
   - generation-forward;
-- Design Contract editing.
+- Design Contract editing;
+- **Product Opportunity Scout** for existing-app improvement: a broad prompt such as "improve this
+  page" resolves to at most three ranked, materially different opportunities grounded in the current
+  implementation, not to a default redesign;
+- **State Matrix foundation**: derive the real state axes a capability exposes, remove impossible
+  combinations, rank by user risk and give the important states deterministic fixtures;
+- **Journey Closure workflow**: prove entry, prerequisites, primary action, validation, authoritative
+  write/read, observable success, refusal, retry/recovery, persistence, deep links, back/return,
+  mobile/desktop, keyboard/accessibility, reduced motion, rollout state and executable acceptance
+  evidence. A component existing is not journey-completion evidence.
 
 ### Phase 4C — Design System Registry, BrandSpec and art direction
 
@@ -334,6 +386,11 @@ Create distinct but related registries:
 - accessibility constraints.
 
 Add deterministic design-system linting so later AI cannot silently invent a second design system.
+
+Engineering gates that belong with this stage are specified in `docs/ENGINEERING_QUALITY_PROGRAMME.md`:
+component/state preview surface (evaluate Storybook against a repo-native preview route, adopt only
+if it serves the Component Manifest/Presentation Registry cleanly), design-token enforcement, and the
+foundations of curated visual contracts.
 
 Add the design-intelligence layer specified in `docs/DESIGN_INTELLIGENCE.md`:
 - a versioned, deterministically queryable design-knowledge catalogue feeding BrandSpec/ArtDirectionPlan;
@@ -382,7 +439,10 @@ Introduce `MotionContract`:
 - responsive and interaction-state preview;
 - explicit promote/reject flow into durable BrandSpec/ArtDirectionPlan/Design Contract/composition state;
 - variant decisions recorded as evidence rather than accumulating unofficial forks;
-- require at least one appropriate distinctive visual moment for premium marketing builds while preserving restraint.
+- require at least one appropriate distinctive visual moment for premium marketing builds while preserving restraint;
+- curated visual regression contracts over a small approved surface set — never screenshot
+  everything, and never let a passing journey stand in for "the design did not regress";
+- an independent visual critic on a different model or runtime for release-critical visual decisions.
 
 ### Phase 4E — Environments, integrations and release controls
 
@@ -392,6 +452,17 @@ Introduce explicit **development / preview / production** environment identity:
 - migration state;
 - allowed actions;
 - preview/release URLs/checkpoints.
+
+Give the `environment-guardian` role a machine-readable `EnvironmentIdentity` card that must resolve
+before any environment-sensitive mutation: project, target environment, deploy target/site,
+repository revision, hosted revision, production revision, whether production mutation is authorised,
+secret availability, whether provider/API use is authorised, database target, migration/version
+identity and rollback target.
+
+Never infer that development equals production, that preview equals production, that repository state
+equals deployed state, or that "deploy" means production. **Fail closed when target identity is
+ambiguous.** Verify a hosted result independently before recording it; a repository-only change never
+updates hosted truth.
 
 Then add:
 - integrations/secrets status and approval UI;
@@ -471,7 +542,11 @@ Resume deferred 3.5C immediately before powerful autonomous agents are enabled:
 - secret/network/resource restrictions;
 - trace/export mapping;
 - production action approval boundary;
-- dead/orphan integration detection (`Knip` where justified);
+- dead/orphan integration detection (`Knip` where justified), non-blocking until baselined;
+- targeted mutation testing of ChangeSet scope, approval rules, no-self-approval, rights/provenance,
+  environment guards, routing predicates and deployment safety — scheduled or pre-release, never
+  repository-wide on every pull request;
+- staged supply-chain hardening per `docs/ENGINEERING_QUALITY_PROGRAMME.md`;
 - CSP baseline in deployment adapters;
 - safe three-way recipe reconciliation (`git merge-file` where useful);
 - re-run all ChangeSet/contract/RLS/accessibility properties under the real sandbox/tool runtime.
@@ -493,7 +568,26 @@ Resume deferred 3.5C immediately before powerful autonomous agents are enabled:
 - OpenCode as initial runtime implementation rather than stable product dependency;
 - clean-session/context-loss recovery;
 - isolated per-project/per-task workspaces and scoped secrets;
-- browser/visual agent workflows.
+- browser/visual agent workflows;
+- **graph-assisted context discovery** — once the repository has grown through specialist agents,
+  the presentation registry, design intelligence, multiple templates, recipes, runtime adapters, the
+  Builder Console and deployment machinery, add an optional bounded graph query between the
+  deterministic route and the file shortlist:
+  `task -> deterministic route -> optional bounded graph query -> shortlisted files -> exact symbol
+  search -> small context packet -> specialist agent`.
+  Indexes and graphs are **navigation evidence, never repository truth**, the query stays inside the
+  first-orientation token budget, and the layer must not become a required dependency or CI gate.
+  Do not adopt it while bounded search still answers the question;
+- **genuinely independent second opinions** — for security, architecture, release-critical,
+  cross-layer, irreversible or high-cost decisions, the reviewer runs on a different model or
+  runtime with fresh context, read-only access and a bounded diff. A different persona on the same
+  model is not independence, and the skip is reported rather than disguised. Preserve disagreement
+  instead of manufacturing consensus, and do not buy this for trivial changes;
+- **compound learning closeout** — after substantial completed work, encode a genuinely reusable,
+  evidence-backed lesson in the narrowest existing durable home (regression test or deterministic
+  check, then architecture authority, then skill adapter/evaluation, then operations authority) or
+  record nothing. Never `LESSONS.md`, `MEMORY.md` or any other uncontrolled documentation dump. The
+  aim is better future behaviour with **less** context.
 
 ### Phase 5 visual/content specialists
 
@@ -523,6 +617,14 @@ MCP delivers early interoperability, but it does **not** replace the later runti
 - second-opinion agreement metrics;
 - skill/agent evaluation lab: benchmark cases, quality scores, regressions, false positives, token,
   runtime, cost and context footprint per skill version, with promotion only one lifecycle state at a time;
+- controlled skill comparison as the promotion method: the **same task and the same authority/context
+  packet**, baseline without the candidate skill versus with it, measuring correctness, scope
+  discipline, root-cause quality, evidence quality, trigger accuracy, false-positive and
+  false-negative routing, token/context cost, runtime, cost and regressions. A skill is never
+  promoted because its markdown sounds intelligent, and a skill that helps one prompt while
+  triggering on unrelated work has failed;
+- routing regression coverage: every new or changed skill adds positive **and** negative cases to
+  `config/agent-routing-benchmarks.json` before promotion;
 - image-model/provider benchmark by task class, quality, acceptance rate and cost;
 - generated-image rights/provenance/policy tests;
 - evaluate Promptfoo specifically where it materially improves red-team coverage.
@@ -548,6 +650,9 @@ MCP delivers early interoperability, but it does **not** replace the later runti
 - slow/offline/failing-API scenarios;
 - Lighthouse-style performance budgets;
 - Semgrep/Gitleaks-style security/secret gates where they outperform bespoke doctor checks;
+- the staged deterministic gates in `docs/ENGINEERING_QUALITY_PROGRAMME.md`: architecture dependency
+  gates, curated visual contracts, per-project-class performance and payload budgets, dead-code
+  analysis, property tests, targeted mutation testing and supply-chain hardening;
 - bounded autonomous correction through control-plane tasks;
 - deployment smoke tests.
 
@@ -638,4 +743,8 @@ A project outside the proven envelope must be classified honestly as factory-sup
 - generated projects remain ordinary repositories and never require the Builder Console, MCP server or Hetzner/OpenCode runtime to operate;
 - external repositories in `config/external-sources.json` stay prior art until pinned, licensed, security reviewed and granted to a named role; no agent fetches a mutable branch at run time;
 - do not add a canvas dependency (tldraw, quickdraw or otherwise) before `ArtDirectionPlan`, `RenderedEvidence` and `ElementIdentity` exist;
-- do not adopt a screenshot-to-code generation architecture; references become structured adopt/avoid observations.
+- do not adopt a screenshot-to-code generation architecture; references become structured adopt/avoid observations;
+- routing benchmark ceilings are context-efficiency guards: expand a single task's context deliberately rather than raising a global ceiling;
+- a graph/index layer is navigation evidence and never becomes repository authority, a required dependency or a CI gate;
+- do not claim independent review when both reviewers run on the same model or runtime;
+- do not create a second memory/lessons documentation system; one fact gets one home.

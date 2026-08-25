@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **Phase 2 — Deterministic Project Generator and Recipes**.
+Current stage: **Phase 2B — Backend foundation and core application recipes**.
 
 The detailed delivery specification lives in `docs/MASTER_PLAN.md`. This file is the short progress view.
 
@@ -32,18 +32,40 @@ Phase 1 intentionally records file references/metadata only. Deep file parsing, 
 
 ## Phase 2 — Deterministic Project Generator 🚧 Active
 
+### Phase 2A — Generator core ✅ Complete
+
+- versioned template and recipe contracts/registries
+- neutral standalone React 19 / TypeScript / Vite template
+- deterministic `create-app --plan` and real project materialisation
+- fail-closed handling when a requested capability has no ready recipe
+- recipe dependency/conflict resolution
+- safe managed recipe add/remove reconciliation
+- generated provenance records without runtime lock-in
+- first ready recipes: feature flags and SEO defaults
+- generated-app CI acceptance: independent install, check and production build
+
+### Phase 2B — Backend foundation and core recipes 🚧 Active
+
 Execution order:
 
-1. define versioned template and recipe contracts;
-2. generate one neutral runnable React/TypeScript project from an approved manifest;
-3. add deterministic recipe install/remove and compatibility validation;
-4. implement the smallest reusable recipe set first: auth, profiles, organisations/RBAC, admin, uploads/email as justified;
-5. add environment/backend/deployment adapters, initially Supabase + Netlify;
-6. add design tokens/layout-pattern catalogue;
-7. add seed/scenario framework and generated handover docs;
-8. prove different manifests generate different clean projects without AI or domain baggage.
+1. define versioned environment/backend adapter contracts;
+2. add the Supabase client/environment adapter as infrastructure selected by the manifest;
+3. implement a real auth recipe;
+4. implement profiles;
+5. implement organisations, memberships and RBAC with explicit database/RLS contracts;
+6. implement the generic admin foundation;
+7. add uploads and email only after the shared backend contracts are stable;
+8. prove a B2B SaaS manifest generates and builds with the selected backend/core recipes and no AI.
 
-Exit gate: a valid manifest deterministically generates a runnable, tested repository containing only selected capabilities.
+### Phase 2C — Project finishing system ⬜ Planned
+
+- Netlify deployment adapter and environment handoff
+- design tokens and reusable layout-pattern catalogue
+- seed/scenario framework
+- generated architecture/handover documentation
+- multi-manifest acceptance across materially different project types
+
+Phase 2 exit gate: a valid manifest deterministically generates a runnable, tested repository containing only selected capabilities and no domain-specific baggage.
 
 ## Phase 3 — Content and Asset Intelligence ⬜ Planned
 
@@ -89,7 +111,7 @@ Exit gate: a valid manifest deterministically generates a runnable, tested repos
 - analytics/observability/feedback
 - post-launch audits
 - upgrade propagation from factory modules to existing apps
-- reusable-pattern promotion workflow
+- reusable pattern promotion workflow
 - automatic handover documentation
 
 ## Phase 8 — Evidence-Driven Factory Improvement ⬜ Planned

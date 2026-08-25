@@ -10,6 +10,36 @@ The first intended deployment is a private service on the owner's Hetzner server
 
 The runtime should let specialist agents work in bounded loops for long periods, hand work to other specialists, lose/compact conversation context safely, resume after interruption, run tests and browser checks, create checkpoints and continue until a clear success/stop condition is reached.
 
+## Important sequencing: MCP before full runtime
+
+The Phase 3.7 factory service/tool contract makes a smaller interoperability step useful before this hosted runtime exists.
+
+A Phase 3.8 MCP v2 adapter may expose safe deterministic factory operations to Codex/ChatGPT, Claude Code, OpenCode and other compatible clients:
+
+```text
+External coding client
+      |
+    MCP v2
+      |
+Factory service tool facade
+      |
+Factory/control-plane deterministic operations
+```
+
+This is deliberately **not** the autonomous runtime.
+
+MCP may provide project/build/verify/preview/read operations, but it does not own:
+- durable task truth;
+- budgets/loop guards;
+- specialist scheduling;
+- sandbox lifecycle;
+- environment/production authority;
+- secret policy;
+- checkpoints/recovery;
+- production deployment approval.
+
+Those remain service/control-plane/runtime responsibilities. MCP is another adapter.
+
 ## Core invariant: sessions are disposable; state is durable
 
 An agent conversation is never the source of truth for a build.
@@ -18,13 +48,15 @@ A fresh agent session must be able to reconstruct the next useful action from pe
 
 - approved Build Contract and Project Manifest;
 - project knowledge pack and trusted source provenance;
+- Design Contract/DesignSystemSpec where relevant;
+- explicit development/preview/production environment identity;
 - current repository/ref/worktree;
 - active task specification and acceptance criteria;
 - Build/Event Ledger;
 - declared ChangeSet and actual diff;
-- latest deterministic test/CI/browser failures;
+- latest deterministic test/CI/browser/database/accessibility failures;
 - checkpoints and prior attempt summaries;
-- relevant architecture/recipe/skill authorities;
+- relevant architecture/recipe/presentation/skill authorities;
 - remaining cost/time/iteration budget;
 - explicit blockers or approval gates.
 
@@ -39,7 +71,7 @@ The initial implementation may use OpenCode, but the factory must not encode Ope
 ```text
 Builder Console
       |
-Factory Control Plane
+Factory Service / Control Plane
       |
       +-- Task / Event Ledger
       +-- Context Packet Builder
@@ -47,6 +79,7 @@ Factory Control Plane
       +-- Cost / Model Router
       +-- Checkpoint Store
       +-- Verification Gates
+      +-- Environment Identity
       |
 AgentRuntimeAdapter
       |
@@ -73,6 +106,7 @@ Hetzner
     +-- preview proxy/ports
     +-- task/event/checkpoint persistence
     +-- scoped secret broker
+    +-- environment/project identity map
     +-- logs/traces/usage accounting
 ```
 
@@ -93,7 +127,7 @@ A future `AgentRuntimeAdapter` should support operations conceptually equivalent
 - compact/end a session and persist an attempt summary;
 - start a clean session from the latest durable checkpoint.
 
-It should not own project truth, permissions, budget rules or deploy approval. Those remain control-plane responsibilities.
+It should not own project truth, permissions, budget rules, environment authority or deploy approval. Those remain control-plane/service responsibilities.
 
 ## Autonomous loop
 
@@ -101,11 +135,12 @@ A long-running task should operate roughly as:
 
 ```text
 load durable task
--> evaluate stop/approval conditions
+-> evaluate stop/approval/environment conditions
 -> build minimal context packet
 -> choose specialist + model + skills
 -> start fresh/runtime session
 -> declare ChangeSet
+-> validate normalized file scope
 -> implement bounded change
 -> deterministic verification
 -> record events/cost/diff/result
@@ -124,7 +159,7 @@ No loop may continue merely because the model says it should. Deterministic loop
 Initial specialist profiles should be small and role-specific, for example:
 
 - planner/product bootstrapper;
-- frontend implementation;
+- frontend/design-system implementation;
 - backend/data implementation;
 - browser/visual review;
 - security review;
@@ -147,7 +182,7 @@ At the end of each attempt, persist a compact structured attempt summary contain
 - next recommended action;
 - whether the next attempt should use the same or a different specialist/model;
 - current cost/iteration totals;
-- checkpoint/repo reference.
+- checkpoint/repo/environment reference.
 
 The next session should consume this summary plus current machine state, not replay the full previous transcript.
 
@@ -159,12 +194,30 @@ Requirements:
 
 - bounded CPU/memory/runtime;
 - project-specific filesystem/worktree;
+- normalized/segment-correct ChangeSet file-scope enforcement;
 - public network access only when task policy allows it;
-- secrets injected only by scope and only when required;
+- secrets injected only by scope and environment and only when required;
 - no inheritance of unrelated project secrets;
 - no ordinary agent access to production credentials;
 - preview deployments separated from production approval;
+- database migration permission bound to the intended environment;
 - workspace/checkpoint can be destroyed without losing durable task state.
+
+## Deterministic gates before model judgement
+
+Before expensive AI review/fix loops, the runtime should consume factory-owned results for applicable checks such as:
+
+- schema/Ajv boundary validation;
+- typecheck/lint/unit/E2E;
+- generated-app build;
+- executed Supabase RLS/security tests;
+- accessibility/axe gates;
+- ChangeSet/path-policy validation;
+- performance/security/static checks;
+- DesignSystemSpec linting;
+- browser smoke tests.
+
+A model may interpret failures or propose fixes, but it does not decide whether a deterministic gate ran or whether a failed security boundary should be waived.
 
 ## Builder Console integration
 
@@ -174,7 +227,8 @@ The Console should eventually show the runtime as a controllable system rather t
 - current specialist/model/skill set;
 - progress/event timeline;
 - current ChangeSet and diff scope;
-- tests/browser/security results;
+- target environment;
+- tests/browser/database/security/accessibility results;
 - cost/time/iteration budget consumed;
 - latest checkpoint;
 - pause/cancel/resume/retry controls;
@@ -187,17 +241,22 @@ The Console should eventually show the runtime as a controllable system rather t
 
 Do not enable broad autonomous loops merely because OpenCode can run continuously. The hosted runtime is ready only when:
 
-1. Phase 3.5 control-plane contracts are implemented and tested;
+1. durable control-plane/service contracts are implemented and tested;
 2. task state survives session deletion/restart;
-3. ChangeSet scope escape fails closed;
+3. ChangeSet scope matching has normalized segment-correct semantics and property/adversarial coverage;
 4. untrusted source content cannot grant instruction authority or tools;
 5. permissions are deny-by-default;
 6. cost/time/iteration/no-progress loop guards work;
 7. workspaces and secrets are isolated;
-8. canonical benchmark builds detect regressions;
-9. deterministic checks run before expensive AI review;
-10. production deploy/database actions require explicit approval.
+8. development/preview/production environment identity is explicit and policy-enforced;
+9. canonical benchmark builds detect regressions;
+10. deterministic checks run before expensive AI review;
+11. database security recipes have executed acceptance where applicable;
+12. production deploy/database actions require explicit approval;
+13. generated apps remain independent of MCP/OpenCode/runtime infrastructure.
 
 ## Portability rule
 
-Generated apps must never need OpenCode, the Hetzner control service, the Builder Console or App Builder packages to run in production. The runtime is development infrastructure only.
+Generated apps must never need OpenCode, the Hetzner control service, MCP, the Builder Console or App Builder packages to run in production. The runtime is development infrastructure only.
+
+See `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog and `docs/FACTORY_CONTROL_PLANE.md` for the deterministic safety/control contracts this runtime must obey.

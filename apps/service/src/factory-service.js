@@ -350,6 +350,9 @@ export class FactoryService {
   }
 
   async close() {
-    for (const projectId of [...this.previews.keys()]) await this.stopPreview(projectId);
+    while (this.previews.size) {
+      const projectId = this.previews.keys().next().value;
+      await this.stopPreview(projectId);
+    }
   }
 }

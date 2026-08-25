@@ -1,8 +1,15 @@
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { FactoryStore } from './store.js';
 import { FactoryService } from './factory-service.js';
 import { createFactoryHttpServer } from './http.js';
+
+// npm workspace scripts execute with the workspace as cwd. The factory service
+// owns repository-level templates/config, so make that root deterministic before
+// resolving service defaults or invoking generation code that reads process.cwd().
+const factoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+process.chdir(factoryRoot);
 
 const stateRoot = path.resolve(process.env.APP_BUILDER_STATE_ROOT ?? '.app-builder/service');
 const workspacesRoot = path.resolve(process.env.APP_BUILDER_WORKSPACES_ROOT ?? '.app-builder/workspaces');

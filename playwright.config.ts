@@ -13,9 +13,10 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm --workspace @app-builder/console run dev:e2e',
+    command: 'node tooling/dev-stack.mjs --e2e',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 },
   },
 });

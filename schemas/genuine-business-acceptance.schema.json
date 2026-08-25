@@ -17,29 +17,68 @@
     "observedShortcomings"
   ],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": {
+      "const": 1
+    },
     "run": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "startedAt", "completedAt", "factoryCommit"],
+      "required": [
+        "id",
+        "startedAt",
+        "completedAt",
+        "factoryCommit"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "startedAt": { "type": "string", "minLength": 10 },
-        "completedAt": { "type": "string", "minLength": 10 },
-        "factoryCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startedAt": {
+          "type": "string",
+          "minLength": 10
+        },
+        "completedAt": {
+          "type": "string",
+          "minLength": 10
+        },
+        "factoryCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
       }
     },
     "business": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "primaryUrl", "projectType", "synthetic"],
+      "required": [
+        "name",
+        "primaryUrl",
+        "projectType",
+        "synthetic"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1 },
-        "primaryUrl": { "type": "string", "minLength": 8 },
-        "projectType": {
-          "enum": ["marketing-site", "b2b-saas", "consumer-app", "internal-tool", "content-site", "ai-app"]
+        "name": {
+          "type": "string",
+          "minLength": 1
         },
-        "synthetic": { "const": false }
+        "primaryUrl": {
+          "type": "string",
+          "minLength": 8
+        },
+        "projectType": {
+          "enum": [
+            "marketing-site",
+            "b2b-saas",
+            "consumer-app",
+            "internal-tool",
+            "content-site",
+            "ai-app"
+          ]
+        },
+        "synthetic": {
+          "const": false
+        }
       }
     },
     "sources": {
@@ -48,53 +87,154 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "kind", "label", "uri", "provenance", "rightsStatus"],
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "uri",
+          "provenance",
+          "rightsStatus"
+        ],
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
-          "kind": { "enum": ["website", "document", "logo", "image", "spreadsheet", "other"] },
-          "label": { "type": "string", "minLength": 1 },
-          "uri": { "type": "string", "minLength": 1 },
-          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-          "provenance": { "enum": ["user-supplied", "existing-site", "authorised-public"] },
-          "rightsStatus": { "enum": ["approved-for-use", "reference-only", "unknown"] }
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "website",
+              "document",
+              "logo",
+              "image",
+              "spreadsheet",
+              "other"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "provenance": {
+            "enum": [
+              "user-supplied",
+              "existing-site",
+              "authorised-public"
+            ]
+          },
+          "rightsStatus": {
+            "enum": [
+              "approved-for-use",
+              "reference-only",
+              "unknown"
+            ]
+          }
         }
       }
     },
     "journeys": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["intake", "buildContract", "manifest", "ingest", "compose", "generate", "verify", "preview", "deploy"],
+      "required": [
+        "intake",
+        "buildContract",
+        "manifest",
+        "ingest",
+        "compose",
+        "generate",
+        "verify",
+        "preview",
+        "deploy"
+      ],
       "properties": {
-        "intake": { "$ref": "#/definitions/requiredJourney" },
-        "buildContract": { "$ref": "#/definitions/requiredJourney" },
-        "manifest": { "$ref": "#/definitions/requiredJourney" },
-        "ingest": { "$ref": "#/definitions/requiredJourney" },
-        "compose": { "$ref": "#/definitions/requiredJourney" },
-        "generate": { "$ref": "#/definitions/requiredJourney" },
-        "verify": { "$ref": "#/definitions/requiredJourney" },
-        "preview": { "$ref": "#/definitions/requiredJourney" },
-        "deploy": { "enum": ["passed", "not-applicable"] }
+        "intake": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "buildContract": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "manifest": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "ingest": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "compose": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "generate": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "verify": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "preview": {
+          "$ref": "#/definitions/requiredJourney"
+        },
+        "deploy": {
+          "enum": [
+            "passed",
+            "not-applicable"
+          ]
+        }
       }
     },
     "manualEdits": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["total", "targetMaximum", "entries"],
+      "required": [
+        "total",
+        "targetMaximum",
+        "entries"
+      ],
       "properties": {
-        "total": { "type": "integer", "minimum": 0 },
-        "targetMaximum": { "const": 20 },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "targetMaximum": {
+          "const": 20
+        },
         "entries": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["category", "description", "meaningful"],
+            "required": [
+              "category",
+              "description",
+              "meaningful"
+            ],
             "properties": {
               "category": {
-                "enum": ["content", "brand", "imagery", "layout", "responsive", "visual", "behavior", "integration", "accessibility", "data", "other"]
+                "enum": [
+                  "content",
+                  "brand",
+                  "imagery",
+                  "layout",
+                  "responsive",
+                  "visual",
+                  "behavior",
+                  "integration",
+                  "accessibility",
+                  "data",
+                  "other"
+                ]
               },
-              "description": { "type": "string", "minLength": 1 },
-              "meaningful": { "const": true }
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "meaningful": {
+                "const": true
+              }
             }
           }
         }
@@ -103,21 +243,50 @@
     "productReview": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["launchable", "reviewer", "notes", "checks"],
+      "required": [
+        "launchable",
+        "reviewer",
+        "notes",
+        "checks"
+      ],
       "properties": {
-        "launchable": { "const": true },
-        "reviewer": { "type": "string", "minLength": 1 },
-        "notes": { "type": "string", "minLength": 1 },
+        "launchable": {
+          "const": true
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        },
         "checks": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["factualAccuracy", "brandFit", "visualQuality", "responsiveQuality", "accessibility"],
+          "required": [
+            "factualAccuracy",
+            "brandFit",
+            "visualQuality",
+            "responsiveQuality",
+            "accessibility"
+          ],
           "properties": {
-            "factualAccuracy": { "const": "passed" },
-            "brandFit": { "const": "passed" },
-            "visualQuality": { "const": "passed" },
-            "responsiveQuality": { "const": "passed" },
-            "accessibility": { "const": "passed" }
+            "factualAccuracy": {
+              "const": "passed"
+            },
+            "brandFit": {
+              "const": "passed"
+            },
+            "visualQuality": {
+              "const": "passed"
+            },
+            "responsiveQuality": {
+              "const": "passed"
+            },
+            "accessibility": {
+              "const": "passed"
+            }
           }
         }
       }
@@ -125,65 +294,183 @@
     "metrics": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["aiCalls", "inputTokens", "outputTokens", "costGbp", "elapsedMs", "retries", "interventions", "qualityFailures"],
+      "required": [
+        "aiCalls",
+        "inputTokens",
+        "outputTokens",
+        "costGbp",
+        "elapsedMs",
+        "retries",
+        "interventions",
+        "qualityFailures"
+      ],
       "properties": {
-        "aiCalls": { "type": "integer", "minimum": 0 },
-        "inputTokens": { "type": "integer", "minimum": 0 },
-        "outputTokens": { "type": "integer", "minimum": 0 },
-        "costGbp": { "type": "number", "minimum": 0 },
-        "elapsedMs": { "type": "integer", "minimum": 0 },
-        "retries": { "type": "integer", "minimum": 0 },
-        "interventions": { "type": "integer", "minimum": 0 },
-        "qualityFailures": { "type": "integer", "minimum": 0 }
+        "aiCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "costGbp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interventions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qualityFailures": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "artifacts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["manifest", "knowledgePack", "composition", "generatedRepository", "verificationReport"],
+      "required": [
+        "manifest",
+        "knowledgePack",
+        "composition",
+        "generatedRepository",
+        "verificationReport"
+      ],
       "properties": {
-        "manifest": { "$ref": "#/definitions/artifactFile" },
-        "knowledgePack": { "$ref": "#/definitions/artifactFile" },
-        "composition": { "$ref": "#/definitions/artifactFile" },
-        "generatedRepository": { "$ref": "#/definitions/artifactDirectory" },
-        "verificationReport": { "$ref": "#/definitions/artifactFile" }
+        "manifest": {
+          "$ref": "#/definitions/artifactFile"
+        },
+        "knowledgePack": {
+          "$ref": "#/definitions/artifactFile"
+        },
+        "composition": {
+          "$ref": "#/definitions/artifactFile"
+        },
+        "generatedRepository": {
+          "$ref": "#/definitions/artifactDirectory"
+        },
+        "verificationReport": {
+          "$ref": "#/definitions/artifactFile"
+        }
       }
     },
     "observedShortcomings": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["brandAssets", "genericDesign", "imageGaps", "copyMessaging", "responsiveVisual", "other"],
+      "required": [
+        "brandAssets",
+        "genericDesign",
+        "imageGaps",
+        "copyMessaging",
+        "responsiveVisual",
+        "other"
+      ],
       "properties": {
-        "brandAssets": { "$ref": "#/definitions/stringList" },
-        "genericDesign": { "$ref": "#/definitions/stringList" },
-        "imageGaps": { "$ref": "#/definitions/stringList" },
-        "copyMessaging": { "$ref": "#/definitions/stringList" },
-        "responsiveVisual": { "$ref": "#/definitions/stringList" },
-        "other": { "$ref": "#/definitions/stringList" }
+        "brandAssets": {
+          "$ref": "#/definitions/stringList"
+        },
+        "genericDesign": {
+          "$ref": "#/definitions/stringList"
+        },
+        "imageGaps": {
+          "$ref": "#/definitions/stringList"
+        },
+        "copyMessaging": {
+          "$ref": "#/definitions/stringList"
+        },
+        "responsiveVisual": {
+          "$ref": "#/definitions/stringList"
+        },
+        "other": {
+          "$ref": "#/definitions/stringList"
+        }
+      }
+    },
+    "launchReadiness": {
+      "type": "object",
+      "description": "The deterministic launch-readiness audit taken at handover, before the human review that produces manualEdits. Recording it makes the 3.8E result reproducible and lets predicted edits be compared against real ones.",
+      "required": [
+        "predictedManualEdits",
+        "blockersAtHandover"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "predictedManualEdits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockersAtHandover": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Blocker findings still open when the build was handed to a reviewer. Must be zero: nobody should spend a hand review on defects the factory already knew about."
+        },
+        "evidenceGaps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reportPath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path to the launch-readiness report, relative to the evidence file."
+        }
       }
     }
   },
   "definitions": {
-    "requiredJourney": { "const": "passed" },
+    "requiredJourney": {
+      "const": "passed"
+    },
     "stringList": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "artifactFile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256"],
+      "required": [
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 },
-        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       }
     },
     "artifactDirectory": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 }
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     }
   }

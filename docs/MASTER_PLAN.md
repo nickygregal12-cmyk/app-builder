@@ -408,6 +408,17 @@ Turns two Phase 3.8I planning items into enforced behaviour:
 
 Neither displaces the outstanding 3.8E genuine-business product proof.
 
+
+### 3.8K — Launch readiness: making the new tooling serve the product ✅ Complete
+
+3.8H–3.8J improved how agents work on the factory. This points that machinery at what the factory produces, which is what Phase 3.8E is actually judged on.
+
+- `npm run audit:launch` audits composed output before a human reviews it, predicting meaningful manual edits in the same category vocabulary 3.8E records, each naming the specialist role that owns the fix;
+- `StateMatrixSpec` and `JourneyClosureEvidence` are derived deterministically from composed output, ranked by user risk rather than enumerated combinatorially;
+- missing evidence is counted separately from defects, so the prediction stays trustworthy;
+- `config/factory-benchmarks.json` records a measured predicted-edit ceiling per canonical project type and `generate:acceptance` fails when generated product gets worse;
+- the 3.8E evidence records the audit taken at handover, and the validator refuses a run whose build still carried known blocker findings.
+
 ---
 
 ## Phase 4 — Full Builder Console ⬜ Planned

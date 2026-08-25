@@ -338,6 +338,43 @@ purpose: a design-token file matched the authentication `token` signal, and a JS
 matched the *database* schema surface. Matching is now word-accurate and both cases are held by
 tests.
 
+### 3.8K — Launch readiness: making the new tooling serve the product ✅ Complete
+
+Phases 3.8H–3.8J built a stronger *development-agent operating system*. None of it changed what the
+factory produces, and 3.8E is judged on exactly that. This stage points the machinery at generated
+product.
+
+**`npm run audit:launch -- --project <dir>` audits composed output before a human sees it.** Every
+finding uses the same category vocabulary as `manualEdits` in
+`schemas/genuine-business-acceptance.schema.json` and names the specialist role that owns the fix, so
+a predicted edit is actionable rather than a complaint. It catches unresolved bindings, placeholder
+copy, generated claims with no source, heroes with no imagery, dead internal links, unreachable
+pages, a missing not-found route, no conversion path, and unresolved or custom capabilities.
+
+**`StateMatrixSpec` and `JourneyClosureEvidence` are now derived deterministically**, not left as
+registry entries waiting for an agent. State axes come from what a surface actually exposes — a page
+with no capture surface has no write axis — and are ranked by user risk rather than enumerated
+combinatorially. Journeys are derived from composed output rather than a manifest field that is often
+absent, with each step marked proven, unproven, or needing executable evidence.
+
+**Missing proof and a defect are counted separately.** A high-risk state with no fixture is a gap in
+the factory's evidence, not an edit a person makes to the site. Merging them would inflate the
+prediction into a number nobody could trust.
+
+**Canonical generation now gates on product quality.** `config/factory-benchmarks.json` records a
+predicted-edit ceiling per project type, measured rather than guessed, and `generate:acceptance`
+fails when output gets worse. Ceilings are lowered as the factory improves and never raised to make a
+regression pass.
+
+**Phase 3.8E is directly served.** `launchReadiness` on the acceptance evidence records the audit
+taken at handover, and the validator refuses a run whose build still carried known blocker findings.
+A hand review is for judgement, not for rediscovering an empty hero. The 20-edit budget now starts
+where the factory's own knowledge ends.
+
+Current canonical baselines: marketing-site 10, content-site 8, b2b-saas 13, consumer-app 15,
+internal-tool 15, ai-app 15 predicted edits. Every one is below the 20-edit target and every one is
+worth reducing.
+
 ### 3.8G — Brand-source and asset-provenance foundation — P1/P2
 
 Extend the existing content/asset intelligence rather than creating a second extraction subsystem.

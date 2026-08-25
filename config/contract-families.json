@@ -133,6 +133,10 @@
       "reason": "Inlined into the intake-session family."
     },
     {
+      "schema": "launch-readiness-report.schema.json",
+      "reason": "Launch-readiness reports are produced by tooling/lib and read by acceptance; migrate if the Console or service consumes them across a boundary."
+    },
+    {
       "schema": "non-functional-requirements.schema.json",
       "reason": "Consumed only by the control-plane doctor today."
     },

@@ -23,6 +23,7 @@ const required = [
   'config/agent-routing-benchmarks.json',
   'config/architecture-boundaries.json',
   'config/risk-surfaces.json',
+  'config/launch-readiness-rules.json',
   'schemas/control-task.schema.json',
   'schemas/build-event.schema.json',
   'schemas/change-set.schema.json',
@@ -41,6 +42,7 @@ const required = [
   'schemas/external-source.schema.json',
   'schemas/routing-benchmark-case.schema.json',
   'schemas/risk-classification.schema.json',
+  'schemas/launch-readiness-report.schema.json',
   'packages/control-plane/package.json',
   'packages/control-plane/src/index.js',
   'packages/control-plane/src/upgrades.js',
@@ -58,6 +60,9 @@ const required = [
   'tooling/architecture-boundaries.mjs',
   'tooling/architecture-boundaries.test.mjs',
   'tooling/risk-classification.test.mjs',
+  'tooling/lib/launch-readiness.mjs',
+  'tooling/launch-readiness.mjs',
+  'tooling/launch-readiness.test.mjs',
   'tooling/benchmark-acceptance.mjs',
 ];
 
@@ -358,6 +363,33 @@ try {
   if (!String(readJson('package.json').scripts?.check ?? '').includes('architecture')) {
     console.error('Root check must run the executable architecture boundaries.');
     failed = true;
+  }
+
+  // Generated product quality is a first-class gate, not a report nobody reads.
+  const launchRules = readJson('config/launch-readiness-rules.json');
+  const editCategories = readJson('schemas/genuine-business-acceptance.schema.json')
+    .properties?.manualEdits?.properties?.entries?.items?.properties?.category?.enum ?? [];
+  for (const [checkId, check] of Object.entries(launchRules.checks ?? {})) {
+    if (roles[check.owningRole]?.id !== check.owningRole) {
+      console.error(`Launch-readiness check ${checkId} names unknown owning role ${check.owningRole}.`);
+      failed = true;
+    }
+    if (!editCategories.includes(check.category)) {
+      console.error(`Launch-readiness check ${checkId} uses category ${check.category}, which Phase 3.8E cannot record.`);
+      failed = true;
+    }
+  }
+  const launchBenchmarks = readJson('config/factory-benchmarks.json').launchReadiness;
+  if (!launchBenchmarks?.ceilings) {
+    console.error('Benchmark registry must record launch-readiness ceilings per canonical project type.');
+    failed = true;
+  } else {
+    for (const [type, ceiling] of Object.entries(launchBenchmarks.ceilings)) {
+      if (ceiling >= launchBenchmarks.targetMaximum) {
+        console.error(`Launch-readiness ceiling for ${type} (${ceiling}) is not below the ${launchBenchmarks.targetMaximum} edit target.`);
+        failed = true;
+      }
+    }
   }
 
   const benchmarkCases = readJson('config/agent-routing-benchmarks.json').cases ?? [];

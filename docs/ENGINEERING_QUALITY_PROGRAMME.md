@@ -42,6 +42,7 @@ budgets and credit disappear.
 | Is the supply chain and workflow estate sound? | dependency review, secret scanning, SBOM, static analysis | security CI |
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
+| Is the generated product worth launching? | `npm run audit:launch` | generated-product quality |
 
 Playwright and DevTools are deliberately different tools: Playwright proves **what a user can do**,
 DevTools explains **why the browser behaves as it does**. A trace is not a passing journey, and a

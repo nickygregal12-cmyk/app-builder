@@ -164,6 +164,22 @@ export function validateGenuineBusinessEvidence(evidence, { evidenceFile } = {})
     if (!source.sha256) errors.push(`approved user-supplied source ${source.id} must record sha256`);
   }
 
+  // The factory must not hand a person a build carrying defects it already detected. A hand review
+  // is for judgement, not for rediscovering an empty hero or a dead link.
+  const launch = evidence.launchReadiness;
+  if (launch) {
+    if (launch.blockersAtHandover > 0) {
+      errors.push(
+        `launchReadiness.blockersAtHandover is ${launch.blockersAtHandover}; a build with known blocker findings must be fixed before a human review, not counted against the manual-edit budget`,
+      );
+    }
+    if (launch.predictedManualEdits > evidence.manualEdits.targetMaximum - 1) {
+      errors.push(
+        `launchReadiness.predictedManualEdits (${launch.predictedManualEdits}) already exceeds the ${evidence.manualEdits.targetMaximum - 1} edit budget before review began`,
+      );
+    }
+  }
+
   if (evidence.manualEdits.total !== evidence.manualEdits.entries.length) {
     errors.push('manualEdits.total must equal the number of meaningful edit entries');
   }

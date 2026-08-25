@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "App Builder Knowledge Pack",
+  "type": "object",
+  "required": ["schemaVersion", "intelligenceVersion", "project", "sources", "facts", "brand", "assets", "content", "references", "requirements", "research", "generatedCopy", "packHash"],
+  "properties": {
+    "schemaVersion": {"const": 1}, "intelligenceVersion": {"type": "string"}, "project": {"type": ["object", "null"]},
+    "sources": {"type": "array", "items": {"type": "object"}},
+    "facts": {"type": "array", "items": {"type": "object", "required": ["id", "path", "value", "sourceId", "provenance", "confidence", "verification"], "properties": {"id": {"type": "string"}, "path": {"type": "string"}, "value": {}, "sourceId": {"type": "string"}, "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}, "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]}}, "additionalProperties": false}},
+    "brand": {"type": "object", "required": ["colors", "fontFamilies", "titles", "logoCandidates"], "properties": {"colors": {"type": "array"}, "fontFamilies": {"type": "array"}, "titles": {"type": "array"}, "logoCandidates": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
+    "assets": {"type": "array", "items": {"type": "object"}}, "content": {"type": "array", "items": {"type": "object"}}, "references": {"type": "array", "items": {"type": "object"}}, "requirements": {"type": "array", "items": {"type": "object"}}, "research": {"type": "array", "items": {"type": "object"}}, "generatedCopy": {"type": "array", "items": {"type": "object"}},
+    "packHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

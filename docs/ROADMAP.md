@@ -308,6 +308,36 @@ Delivered as deterministic contracts and executable acceptance:
 Roles remain `planned`: this stage defines the decision boundaries, routing and budgets. Authoring
 their `SKILL.md` packets and executing them is Phase 4 groundwork and Phase 5 runtime work.
 
+### 3.8J — Executable architecture and deterministic risk classification ✅ Complete
+
+Phase 3.8I recorded these as planning. This stage makes both executable, and neither displaces the
+outstanding 3.8E genuine-business proof or the Console work.
+
+**Architecture boundaries are now a blocking gate.** `AGENTS.md` stated the dependency direction in
+prose; `npm run architecture` now enforces it inside `npm run check`, so CI rejects an illegal edge.
+Seven rules cover generated-output portability, the Console/service boundary, the MCP adapter
+boundary, control-plane provider-neutrality, dependency-light contracts, composition purity and
+content-intelligence independence, plus a cycle check over the zone graph. It parses module
+specifiers and declared dependencies rather than scanning for substrings, so a deep relative path
+cannot dodge a package-name rule and a package named in prose is not a violation.
+`dependency-cruiser` was evaluated and deliberately not adopted; see
+`docs/ENGINEERING_QUALITY_PROGRAMME.md` for that decision and for the two real findings the first
+run surfaced.
+
+**Conditional review is now genuinely conditional.** 3.8I registered `differential-reviewer`,
+`independent-second-opinion` and `environment-guardian` but nothing could select them.
+`config/risk-surfaces.json` and `packages/control-plane/src/risk.js` classify a declared ChangeSet
+against eleven risk surfaces and the requested capability actions, and return the reviewers the
+change must buy. Severity is the highest matched surface, never an average; independent review is
+bought at the threshold the registry names rather than by anyone's sense of importance; and an
+ordinary presentation or documentation change returns no reviewers at all, which is what keeps the
+expensive lenses affordable. A model does not decide whether a risky surface was touched.
+
+Two false positives were found and fixed while building it, both of which would have defeated the
+purpose: a design-token file matched the authentication `token` signal, and a JSON Schema contract
+matched the *database* schema surface. Matching is now word-accurate and both cases are held by
+tests.
+
 ### 3.8G — Brand-source and asset-provenance foundation — P1/P2
 
 Extend the existing content/asset intelligence rather than creating a second extraction subsystem.

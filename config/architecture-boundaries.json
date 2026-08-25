@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "description": "Executable architecture boundaries. AGENTS.md states the direction in prose; this registry is the machine-readable form the gate enforces. A rule here is a claim about the real import graph, not an aspiration: `npm run architecture` fails when source or a declared dependency crosses a forbidden edge.",
+  "rules": [
+    "A zone is a set of repository path prefixes. A module specifier is classified as a workspace package, an external package or a relative path resolved back to its zone.",
+    "Relative imports are resolved before matching, so a deep relative path cannot dodge a package-name rule.",
+    "Declared dependencies in package.json, template.json, recipe.json and adapter.json count as edges, because a dependency is a coupling whether or not a file imports it yet.",
+    "This gate answers one question: is the dependency direction legal. Prose mentions of a package are a different question and stay with the doctors.",
+    "tooling-cli holds CLIs, doctors and tests. It reads every zone on purpose \u2014 a verification script importing what it verifies is not a coupling \u2014 so it is not constrained as a `from` zone. tooling-lib is the deterministic factory implementation the service delegates to and imports nothing from apps/.",
+    "The parser is deliberately conservative: example import syntax inside a test fixture or documentation string counts as an edge. It therefore fails closed, never open. A fixture that must contain a forbidden specifier belongs in tooling-cli, which is unconstrained, rather than inside a constrained zone."
+  ],
+  "zones": {
+    "console": {
+      "paths": [
+        "apps/console"
+      ],
+      "package": "@app-builder/console"
+    },
+    "service": {
+      "paths": [
+        "apps/service"
+      ],
+      "package": "@app-builder/service"
+    },
+    "mcp": {
+      "paths": [
+        "apps/mcp"
+      ],
+      "package": "@app-builder/mcp"
+    },
+    "composition": {
+      "paths": [
+        "packages/composition"
+      ],
+      "package": "@app-builder/composition"
+    },
+    "content-intelligence": {
+      "paths": [
+        "packages/content-intelligence"
+      ],
+      "package": "@app-builder/content-intelligence"
+    },
+    "contracts": {
+      "paths": [
+        "packages/contracts"
+      ],
+      "package": "@app-builder/contracts"
+    },
+    "control-plane": {
+      "paths": [
+        "packages/control-plane"
+      ],
+      "package": "@app-builder/control-plane"
+    },
+    "factory-core": {
+      "paths": [
+        "packages/factory-core"
+      ],
+      "package": "@app-builder/factory-core"
+    },
+    "generated": {
+      "paths": [
+        "templates",
+        "recipes",
+        "adapters"
+      ],
+      "package": null
+    },
+    "tooling-lib": {
+      "paths": [
+        "tooling/lib"
+      ],
+      "package": null
+    },
+    "tooling-cli": {
+      "paths": [
+        "tooling"
+      ],
+      "package": null
+    }
+  },
+  "boundaries": [
+    {
+      "id": "generated-output-stays-portable",
+      "from": "generated",
+      "forbidZones": [
+        "console",
+        "service",
+        "mcp",
+        "composition",
+        "content-intelligence",
+        "contracts",
+        "control-plane",
+        "factory-core",
+        "tooling-lib",
+        "tooling-cli"
+      ],
+      "reason": "Generated projects are ordinary repositories. They must build and run with no App Builder package, Console, service, MCP adapter or agent runtime present."
+    },
+    {
+      "id": "console-goes-through-the-service",
+      "from": "console",
+      "forbidZones": [
+        "service",
+        "mcp",
+        "composition",
+        "content-intelligence",
+        "control-plane",
+        "tooling-lib",
+        "tooling-cli"
+      ],
+      "reason": "The Console is a human interface. It calls the service over its contract instead of owning generation, ingestion, composition or durable orchestration. Two couplings are deliberate and permitted: @app-builder/contracts for shared data contracts, and @app-builder/factory-core for deterministic intake helpers such as manifest construction and questionnaire typing. Both are dependency-free pure libraries. Generation, ingestion and orchestration remain the service's, and reaching them directly is what this rule forbids."
+    },
+    {
+      "id": "mcp-uses-the-service-contract",
+      "from": "mcp",
+      "forbidZones": [
+        "console",
+        "service",
+        "composition",
+        "content-intelligence",
+        "control-plane",
+        "factory-core",
+        "tooling-cli"
+      ],
+      "reason": "MCP is an adapter over the service tool contract, reached by HTTP. Importing service internals would make it a second implementation of the factory rather than a client of it."
+    },
+    {
+      "id": "control-plane-stays-provider-neutral",
+      "from": "control-plane",
+      "forbidZones": [
+        "console",
+        "service",
+        "mcp",
+        "composition",
+        "content-intelligence",
+        "contracts",
+        "factory-core",
+        "tooling-lib",
+        "tooling-cli"
+      ],
+      "reason": "Durable task, event, ChangeSet, checkpoint, policy, role and routing primitives must not acquire a dependency on an app, a model provider or a runtime."
+    },
+    {
+      "id": "contracts-stay-dependency-light",
+      "from": "contracts",
+      "forbidZones": [
+        "console",
+        "service",
+        "mcp",
+        "composition",
+        "content-intelligence",
+        "control-plane",
+        "factory-core",
+        "tooling-lib",
+        "tooling-cli"
+      ],
+      "reason": "Shared contracts are consumed by every other zone. Anything they import becomes a transitive dependency of everything."
+    },
+    {
+      "id": "composition-stays-a-pure-function",
+      "from": "composition",
+      "forbidZones": [
+        "console",
+        "service",
+        "mcp",
+        "content-intelligence",
+        "control-plane",
+        "factory-core",
+        "tooling-lib",
+        "tooling-cli"
+      ],
+      "reason": "Composition is a deterministic function of manifest and knowledge. Reaching into an app or the control plane would make generation depend on runtime state."
+    },
+    {
+      "id": "content-intelligence-serves-the-factory-not-the-console",
+      "from": "content-intelligence",
+      "forbidZones": [
+        "console",
+        "service",
+        "mcp",
+        "composition",
+        "control-plane",
+        "factory-core",
+        "tooling-lib",
+        "tooling-cli"
+      ],
+      "reason": "Source normalization produces trusted knowledge for the factory. It must not depend on the interface that happens to display it."
+    }
+  ],
+  "cycles": {
+    "check": true,
+    "reason": "The verified zone graph is cycle-free. A new cycle means two zones have stopped being separable and fails immediately."
+  }
+}

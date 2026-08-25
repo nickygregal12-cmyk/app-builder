@@ -398,6 +398,16 @@ Delivered:
 
 Roles remain `planned`. This stage defines decision boundaries, routing and budgets; authoring the skill packets and executing the roles is Phase 4 groundwork and Phase 5 runtime work.
 
+
+### 3.8J — Executable architecture and deterministic risk classification ✅ Complete
+
+Turns two Phase 3.8I planning items into enforced behaviour:
+
+- `npm run architecture` makes the dependency direction in `AGENTS.md` a blocking CI gate across eleven zones and seven rules, with a cycle check. It parses module specifiers and declared dependencies, so prose mentioning a package is not a violation and a deep relative path cannot dodge a package-name rule. `dependency-cruiser` was evaluated and deliberately not adopted.
+- `config/risk-surfaces.json` plus `packages/control-plane/src/risk.js` classify a declared ChangeSet deterministically and return the conditional reviewers it must buy. An ordinary presentation change buys none; an auth, RLS, secrets, billing, capability-policy or production-deploy change buys the differential reviewer, the security reviewer, the environment guardian or an independent second opinion as the surface requires.
+
+Neither displaces the outstanding 3.8E genuine-business product proof.
+
 ---
 
 ## Phase 4 — Full Builder Console ⬜ Planned

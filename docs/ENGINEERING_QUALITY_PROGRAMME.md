@@ -34,13 +34,14 @@ budgets and credit disappear.
 | Are there serious/critical accessibility failures? | `@axe-core/playwright` | accessibility CI |
 | Which exact symbol calls this? | symbol/code intelligence | semantic navigation |
 | Which subsystems does this change touch? | graph-assisted navigation | architecture orientation |
-| Is the dependency direction legal? | architecture dependency gate | blocking architecture CI |
+| Is the dependency direction legal? | `npm run architecture` | blocking architecture CI |
 | Is deterministic behaviour correct? | `node --test` unit/contract tests | CI |
 | Do invariants survive a broad input space? | property tests | domain verification |
 | Would a plausible mutation escape the tests? | mutation testing | test-strength verification |
 | Is anything unused or orphaned? | dead-code/unused-dependency analysis | hygiene |
 | Is the supply chain and workflow estate sound? | dependency review, secret scanning, SBOM, static analysis | security CI |
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
+| Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
 
 Playwright and DevTools are deliberately different tools: Playwright proves **what a user can do**,
 DevTools explains **why the browser behaves as it does**. A trace is not a passing journey, and a
@@ -52,25 +53,43 @@ acceptance dimensions separate.
 Sequencing follows the roadmap rather than tool enthusiasm. Nothing here displaces the outstanding
 Phase 3.8E genuine-business product gate or the active Phase 4 source-ingestion and Console work.
 
-### Stage Q1 — architecture made executable (alongside Phase 4A/4B)
+### Stage Q1 — architecture made executable ✅ Delivered
 
-Architectural direction currently lives in prose in `AGENTS.md`. Prose does not fail CI.
+`AGENTS.md` stated the dependency direction in prose. Prose does not fail CI. It now does:
+`npm run architecture`, inside `npm run check`, so every pull request runs it.
 
-Candidate invariants:
+- `config/architecture-boundaries.json` — zones and the seven boundary rules, each with a reason;
+- `tooling/architecture-boundaries.mjs` — the gate;
+- `tooling/architecture-boundaries.test.mjs` — coverage, including a planted-violation case, because
+  a gate that cannot fail is not a gate.
 
-- generated applications must not depend on `@app-builder/control-plane`, the Builder Console, the
-  agent runtime or factory internals;
-- the Console must not bypass the `apps/service` boundary;
-- the MCP adapter must not import service implementation internals where the tool contract applies;
-- `packages/content-intelligence` must not depend on the Console;
-- `packages/contracts` stays dependency-light and provider-neutral;
-- templates and recipes respect the allowed dependency direction;
-- no import cycles in factory source.
+Enforced today: generated output stays portable (no App Builder package, app, or tooling reaches
+`templates/`, `recipes/` or `adapters/`); the Console goes through the service instead of owning
+generation, ingestion, composition or orchestration; MCP uses the service tool contract rather than
+service internals; the control plane stays provider-neutral; contracts stay dependency-light;
+composition stays a pure function; content intelligence does not depend on the interface that
+displays it. The zone graph is checked for cycles.
 
-Implementation choice is open. Evaluate `dependency-cruiser` first because it expresses exactly
-these rules and runs as a standalone config rather than an application dependency. Adopt it only if
-no existing deterministic mechanism (the doctors, the portability checks, the contamination guard)
-already enforces the boundary better. Whatever wins, the rule must be executable and blocking.
+**`dependency-cruiser` was evaluated and not adopted.** It expresses these rules well, but the gate
+needed to read the workspace registries and resolve zone membership directly, the rules fit in a
+dependency-free script, and `AGENTS.md` principle 6 asks that a new package solve a problem the
+platform does not. A boundary checker that adds a dependency to argue for restraint is the wrong
+shape. Revisit if the rules outgrow path and specifier matching.
+
+Two things the first run found, both real, neither papered over:
+
+1. **The Console imports `@app-builder/factory-core`** — mostly types, plus `buildProjectManifest`.
+   That is deterministic *intake* logic in a dependency-free library, not generation or
+   orchestration, so the rule records it as a permitted, named coupling with its limit stated.
+   Silently dropping the rule or forcing an out-of-scope Console refactor would both have been worse.
+2. **A `service -> tooling -> service` cycle** — an artefact of one zone conflating two things.
+   `tooling/lib` is the deterministic factory implementation the service delegates to and imports
+   nothing from `apps/`; the rest of `tooling` is CLIs, doctors and tests that legitimately read what
+   they verify. Splitting the zone models the real architecture rather than excusing a cycle.
+
+The parser is deliberately conservative: example import syntax inside a fixture counts as an edge, so
+it fails closed rather than open. A fixture needing a forbidden specifier belongs in `tooling-cli`,
+which is unconstrained by design.
 
 ### Stage Q2 — curated visual contracts (alongside Phase 4C/4D)
 

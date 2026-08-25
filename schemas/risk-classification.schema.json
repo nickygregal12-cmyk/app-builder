@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/risk-classification.schema.json",
+  "title": "App Builder ChangeSet Risk Classification",
+  "description": "Deterministic classification of a declared ChangeSet against risk surfaces. It decides which conditional review roles a change must buy. Produced by packages/control-plane/src/risk.js from config/risk-surfaces.json; never produced by a model.",
+  "type": "object",
+  "required": ["severity", "surfaces", "requiredReviewers", "conditionalReviewRequired"],
+  "properties": {
+    "severity": {
+      "enum": ["low", "elevated", "high", "critical"],
+      "description": "The highest matched surface severity, not an average. One blocker surface is enough."
+    },
+    "surfaces": {
+      "type": "array",
+      "description": "Matched risk surfaces, highest severity first.",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "reviewers", "matchedBy"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "label": {"type": "string"},
+          "severity": {"enum": ["low", "elevated", "high", "critical"]},
+          "reviewers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "matchedPaths": {"type": "array", "items": {"type": "string"}},
+          "matchedBy": {"enum": ["path", "capability", "path+capability"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "requiredReviewers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Conditional reviewer role ids from config/agent-roles.json. Empty for an ordinary change, which is the common case."
+    },
+    "conditionalReviewRequired": {"type": "boolean"},
+    "rationale": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "description": "Why each surface matched, so a required review can be argued with on evidence rather than asserted."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "description": "Deterministic ChangeSet risk classification. This is what selects the conditional review roles registered in config/agent-roles.json, so an ordinary presentation change never pays for adversarial security review while an auth, RLS, secrets or deployment change always does. Model judgement does not decide whether a surface was touched; paths and requested capabilities do.",
+  "rules": [
+    "Classification is a pure function of declared ChangeSet paths and requested capability actions. It never consults a model.",
+    "A surface matches on repository path segments and filename signals, so a rename cannot quietly drop a review requirement.",
+    "Severity is the highest matched surface, not an average. One blocker surface is enough.",
+    "Reviewers are additive and deduplicated: several matched surfaces requesting the same reviewer buy it once.",
+    "Unmatched changes are low risk by default. That is the common case and is exactly why the expensive lenses stay affordable."
+  ],
+  "severityOrder": [
+    "low",
+    "elevated",
+    "high",
+    "critical"
+  ],
+  "surfaces": {
+    "authentication": {
+      "label": "Authentication and session handling",
+      "severity": "critical",
+      "pathPatterns": [
+        "recipes/auth/",
+        "auth/",
+        "session/"
+      ],
+      "fileSignals": [
+        "auth",
+        "session",
+        "login",
+        "signup",
+        "password",
+        "credentials"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "authorization": {
+      "label": "Authorization, roles and tenancy",
+      "severity": "critical",
+      "pathPatterns": [
+        "recipes/organisations/",
+        "recipes/profiles/",
+        "recipes/admin/"
+      ],
+      "fileSignals": [
+        "rbac",
+        "role",
+        "roles",
+        "permission",
+        "permissions",
+        "tenant",
+        "tenancy",
+        "membership"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "database-schema": {
+      "label": "Database schema and migrations",
+      "severity": "high",
+      "pathPatterns": [
+        "supabase/",
+        "migrations/",
+        "database/"
+      ],
+      "fileSignals": [
+        "migration",
+        "migrations",
+        "sql"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "row-level-security": {
+      "label": "Row level security policies",
+      "severity": "critical",
+      "pathPatterns": [],
+      "fileSignals": [
+        "rls",
+        "row-level-security",
+        "policies"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "secrets": {
+      "label": "Secret handling and scoped credentials",
+      "severity": "critical",
+      "pathPatterns": [],
+      "fileSignals": [
+        "secret",
+        "secrets",
+        "credential",
+        "api-key",
+        "apikey",
+        "env"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "capability-policy": {
+      "label": "Agent capability policy and mutation scope",
+      "severity": "critical",
+      "pathPatterns": [
+        "config/agent-policies.json",
+        "packages/control-plane/"
+      ],
+      "fileSignals": [
+        "change-set",
+        "changeset",
+        "policy",
+        "policies",
+        "capability",
+        "capabilities"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security",
+        "independent-second-opinion"
+      ]
+    },
+    "source-ingestion": {
+      "label": "External source ingestion and fetch boundaries",
+      "severity": "high",
+      "pathPatterns": [
+        "packages/content-intelligence/",
+        "apps/service/src/ingestion.js"
+      ],
+      "fileSignals": [
+        "ingest",
+        "ingestion",
+        "crawl",
+        "crawler",
+        "fetch",
+        "upload",
+        "uploads",
+        "extractor",
+        "extractors"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "deployment": {
+      "label": "Deployment, environments and release control",
+      "severity": "high",
+      "pathPatterns": [
+        "adapters/netlify/",
+        ".github/workflows/"
+      ],
+      "fileSignals": [
+        "deploy",
+        "deployment",
+        "release",
+        "environment",
+        "environments",
+        "workflow",
+        "workflows"
+      ],
+      "reviewers": [
+        "environment-guardian",
+        "differential-reviewer"
+      ]
+    },
+    "provider-boundary": {
+      "label": "Provider and runtime adapter boundaries",
+      "severity": "elevated",
+      "pathPatterns": [
+        "adapters/"
+      ],
+      "fileSignals": [
+        "adapter",
+        "adapters",
+        "provider",
+        "providers",
+        "runtime"
+      ],
+      "reviewers": [
+        "differential-reviewer"
+      ]
+    },
+    "billing": {
+      "label": "Billing and payment flows",
+      "severity": "critical",
+      "pathPatterns": [
+        "recipes/billing/"
+      ],
+      "fileSignals": [
+        "billing",
+        "payment",
+        "payments",
+        "invoice",
+        "subscription",
+        "checkout"
+      ],
+      "reviewers": [
+        "differential-reviewer",
+        "security"
+      ]
+    },
+    "cross-layer-contract": {
+      "label": "Shared contracts consumed across layers",
+      "severity": "high",
+      "pathPatterns": [
+        "schemas/",
+        "packages/contracts/"
+      ],
+      "fileSignals": [],
+      "reviewers": [
+        "differential-reviewer"
+      ]
+    }
+  },
+  "capabilityActions": {
+    "deploy.production": {
+      "surface": "deployment",
+      "severity": "critical",
+      "reviewers": [
+        "environment-guardian",
+        "independent-second-opinion"
+      ]
+    },
+    "database.production_write": {
+      "surface": "database-schema",
+      "severity": "critical",
+      "reviewers": [
+        "environment-guardian",
+        "independent-second-opinion"
+      ]
+    },
+    "database.migrate_preview": {
+      "surface": "database-schema",
+      "severity": "high",
+      "reviewers": [
+        "environment-guardian"
+      ]
+    },
+    "deploy.preview": {
+      "surface": "deployment",
+      "severity": "elevated",
+      "reviewers": [
+        "environment-guardian"
+      ]
+    },
+    "secret.read_scoped": {
+      "surface": "secrets",
+      "severity": "high",
+      "reviewers": [
+        "differential-reviewer"
+      ]
+    }
+  },
+  "escalation": {
+    "independentSecondOpinionAtOrAbove": "critical",
+    "reason": "A critical surface is where an irreversible or security-relevant mistake is most expensive, and where a genuinely different model or runtime is worth its cost. Below that, native review and the deterministic gates are enough."
+  }
+}

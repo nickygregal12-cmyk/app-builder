@@ -456,13 +456,13 @@ older equivalent, App Builder keeps its own.
 | Skill evaluation with baseline-vs-candidate comparison | 10/10 | Lifecycle landed in 3.8H; harness planned | `config/skill-registry.json`, Phase 5.5 |
 | Journey Closure specialist and gate | 10/10 | **Registered**; workflow planned | `journey-closure` role/gate, Phase 4B |
 | State Matrix specialist and gate | 9.8/10 | **Registered**; workflow planned | `state-matrix` role/gate, Phase 4B |
-| Genuinely independent second opinion (different model/runtime) | 9.8/10 | **Registered**; execution planned | `independent-second-opinion` role, Phase 5 |
-| Conditional differential review driven by risk classification | 9.8/10 | **Registered**; classifier planned | `differential-reviewer` role, `RiskClassification` |
-| Architecture dependency gate (evaluate `dependency-cruiser`) | 9.7/10 | **Newly planned** | Engineering programme stage Q1 |
+| Genuinely independent second opinion (different model/runtime) | 9.8/10 | **Registered**, and now bought automatically at critical severity; execution planned | `independent-second-opinion` role, Phase 5 |
+| Conditional differential review driven by risk classification | 9.8/10 | **Implemented** — a deterministic classifier selects the conditional reviewers | `config/risk-surfaces.json`, `packages/control-plane/src/risk.js` |
+| Architecture dependency gate | 9.7/10 | **Implemented** (`npm run architecture`); `dependency-cruiser` evaluated and not adopted | Stage Q1, delivered |
 | Curated visual regression contracts | 9.7/10 | **Newly planned** | Stage Q2, Phase 4C/4D |
 | Compound learning closeout | 9.6/10 | **Registered**; process planned | `compound-learning` role, Phase 5 |
 | Graph-assisted repository navigation | 9.5/10 | **Newly planned, deliberately later** | Phase 5 |
-| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | **Registered**; card planned | `environment-guardian` role, Phase 4E |
+| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | **Registered and now selectable** by the risk classifier; identity card planned | `environment-guardian` role, Phase 4E |
 | Tool responsibility map — one question per tool | 9.4/10 | **Implemented** | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
 | Product Opportunity Scout for broad prompts | 9.4/10 | **Registered**; workflow planned | `product-opportunity-scout` role, Phase 4B |
 | Lighthouse-style performance and payload budgets | 9.3/10 | **Newly planned** | Stage Q4, Phase 4.2/6 |

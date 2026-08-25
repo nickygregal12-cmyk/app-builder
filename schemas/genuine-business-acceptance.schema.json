@@ -401,7 +401,7 @@
     },
     "launchReadiness": {
       "type": "object",
-      "description": "The deterministic launch-readiness audit taken at handover, before the human review that produces manualEdits. Recording it makes the 3.8E result reproducible and lets predicted edits be compared against real ones.",
+      "description": "The deterministic launch-readiness audit taken at handover, before the human review that produces manualEdits. Recorded so the run is reproducible and so predicted edits can be compared against real ones. It is evidence about the state of the factory, not a precondition for running the proof: while the factory is still being built, a genuine 3.8E run is expected to start from a build that still has known findings.",
       "required": [
         "predictedManualEdits",
         "blockersAtHandover"
@@ -415,7 +415,7 @@
         "blockersAtHandover": {
           "type": "integer",
           "minimum": 0,
-          "description": "Blocker findings still open when the build was handed to a reviewer. Must be zero: nobody should spend a hand review on defects the factory already knew about."
+          "description": "Blocker findings still open when the build was handed to a reviewer. Recorded, not enforced. A high number is a finding about the factory and useful evidence; it is not a reason to refuse the run."
         },
         "evidenceGaps": {
           "type": "integer",

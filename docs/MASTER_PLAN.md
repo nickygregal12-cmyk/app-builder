@@ -417,7 +417,7 @@ Neither displaces the outstanding 3.8E genuine-business product proof.
 - `StateMatrixSpec` and `JourneyClosureEvidence` are derived deterministically from composed output, ranked by user risk rather than enumerated combinatorially;
 - missing evidence is counted separately from defects, so the prediction stays trustworthy;
 - `config/factory-benchmarks.json` records a measured predicted-edit ceiling per canonical project type and `generate:acceptance` fails when generated product gets worse;
-- the 3.8E evidence records the audit taken at handover, and the validator refuses a run whose build still carried known blocker findings.
+- the 3.8E evidence records the audit taken at handover and the validator reports it against the real edit count, including how far the prediction was off. It is recorded, not enforced: while the factory is still being built a genuine run is expected to start from a build that still has known findings, and refusing it would make the proof unrunnable.
 
 ---
 

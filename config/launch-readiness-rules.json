@@ -5,9 +5,14 @@
     "A finding is a prediction that a human would otherwise have to make this edit by hand. Categories match schemas/genuine-business-acceptance.schema.json so predicted and actual edits are directly comparable.",
     "Severity is about launchability, not taste. blocker: the site should not go live. major: a reviewer will almost certainly change this. minor: worth knowing, not worth blocking.",
     "Every rule names an owning role from config/agent-roles.json. A finding with no owner is a complaint.",
-    "This audit reads composed output. It cannot see rendered pixels, so it never claims a design is good or bad — that stays with rendered evidence and the design critic."
+    "This audit reads composed output. It cannot see rendered pixels, so it never claims a design is good or bad \u2014 that stays with rendered evidence and the design critic.",
+    "This audit informs Phase 3.8E; it does not gate it. While the factory is still being built a real run is expected to start from a build that still has findings. Ceilings apply to synthetic canonical fixtures, where they can only catch a regression."
   ],
-  "severityOrder": ["minor", "major", "blocker"],
+  "severityOrder": [
+    "minor",
+    "major",
+    "blocker"
+  ],
   "checks": {
     "unresolved-binding": {
       "category": "content",

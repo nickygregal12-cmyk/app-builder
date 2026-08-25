@@ -366,14 +366,19 @@ predicted-edit ceiling per project type, measured rather than guessed, and `gene
 fails when output gets worse. Ceilings are lowered as the factory improves and never raised to make a
 regression pass.
 
-**Phase 3.8E is directly served.** `launchReadiness` on the acceptance evidence records the audit
-taken at handover, and the validator refuses a run whose build still carried known blocker findings.
-A hand review is for judgement, not for rediscovering an empty hero. The 20-edit budget now starts
-where the factory's own knowledge ends.
+**Phase 3.8E is served without being gated.** `launchReadiness` on the acceptance evidence records
+the audit taken at handover, and the validator reports it alongside the real edit count, including
+how far the prediction was off. It is deliberately **recorded, not enforced**: the factory is still
+being built, so a genuine run is expected to start from a build that still carries known findings.
+Refusing such a run would make the proof unrunnable and would reward omitting the field over
+recording it honestly. The value is that a reviewer knows what the factory already knew, and that
+prediction accuracy becomes measurable. Tightening this into a gate is a decision for after the
+first real run, not before it.
 
 Current canonical baselines: marketing-site 10, content-site 8, b2b-saas 13, consumer-app 15,
 internal-tool 15, ai-app 15 predicted edits. Every one is below the 20-edit target and every one is
-worth reducing.
+worth reducing. These ceilings gate **synthetic canonical fixtures**, where they can only catch a
+regression; they are not a quality bar applied to a real business build.
 
 ### 3.8G — Brand-source and asset-provenance foundation — P1/P2
 

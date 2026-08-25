@@ -8,7 +8,9 @@ App Builder is designed around one rule:
 
 The long-term goal is a private builder that can accept an idea, company details, URLs, documents, spreadsheets, screenshots, logos, images, design references and existing repositories; turn them into a reviewed Build Contract; compose real pages and application surfaces from proven capabilities and trusted source material; use AI only for genuinely novel work; test and visually review the result; and deploy an ordinary portable repository.
 
-## Current milestone: Phase 3.8E — Genuine business product proof
+## Current milestone: Phase 3.8 — Product proof and correctness hardening
+
+**Active substage: Phase 3.8E — Genuine business product proof.**
 
 Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is also now landed: ChangeSet path-scope correctness, schema-first Manifest validation/types, executed Supabase RLS acceptance and serious/critical generated-app accessibility gates.
 

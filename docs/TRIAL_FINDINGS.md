@@ -222,6 +222,20 @@ capability is installed; the recipe that owns the capability decides how it
 looks. That is the capability/presentation registry seam Phase 4C describes, in
 miniature, and it is the mechanism later presentation work should build on.
 
+### F14 — A declared contract family was never enforced — P0 ✅ Fixed
+
+Found while starting Phase 4B. `composition` had been a declared contract family
+since the registry was created, and its boundary was recorded as "composer
+output and generated `.app-builder/composition.json` reads" — but nothing
+validated against it. The `gallery` and `enquiry-form` section types added
+during this trial were never added to `section-spec.schema.json`, so every
+generated project since had shipped a composition that violated its own
+contract, silently.
+
+Declaring a family is not enforcement. `generateComposedProject` now asserts the
+composition before writing it as an artifact, and a test composes all six
+canonical project types and validates each one.
+
 ### Edit-count estimate
 
 Roughly eleven meaningful edits at first build, against the Phase 3.8E target of

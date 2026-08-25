@@ -1,1 +1,1 @@
-{"name":"@app-builder/service","version":"0.1.0","private":true,"type":"module","engines":{"node":">=22.13"},"scripts":{"start":"node src/server.js"},"dependencies":{"@app-builder/contracts":"0.1.0","@app-builder/control-plane":"*"}}
+{"name":"@app-builder/service","version":"0.1.0","private":true,"type":"module","engines":{"node":">=22.13"},"scripts":{"start":"node src/server.js"},"dependencies":{"@app-builder/composition":"0.1.0","@app-builder/contracts":"0.1.0","@app-builder/control-plane":"*"}}

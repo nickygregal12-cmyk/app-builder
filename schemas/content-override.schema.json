@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/content-override.schema.json",
+  "title": "App Builder Content Overrides",
+  "description": "Human edits applied on top of a deterministic composition. Composition stays a pure function of manifest and knowledge; authorship is recorded separately so it survives a rebuild and never masquerades as source-backed fact.",
+  "type": "object",
+  "required": ["schemaVersion", "projectId", "overrides"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sectionId", "bindingKey", "value", "editedAt"],
+        "properties": {
+          "sectionId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "bindingKey": {"type": "string", "minLength": 1},
+          "value": {"type": "string"},
+          "editedAt": {"type": "string", "minLength": 1},
+          "editedBy": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

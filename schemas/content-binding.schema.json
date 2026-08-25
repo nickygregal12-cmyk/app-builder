@@ -7,11 +7,12 @@
   "properties":{
     "key":{"type":"string","minLength":1},
     "value":{},
-    "origin":{"enum":["manifest","knowledge-fact","knowledge-entity","deterministic-default"]},
+    "origin":{"enum":["manifest","knowledge-fact","knowledge-entity","deterministic-default","human"]},
     "sourceIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
     "factIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
     "entityIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
-    "generated":{"type":"boolean"}
+    "generated":{"type":"boolean"},
+    "overriddenFrom":{"type":"object","description":"The deterministic binding this edit replaced, retained so provenance is never silently lost.","required":["origin","value"],"properties":{"origin":{"type":"string"},"value":{}},"additionalProperties":false}
   },
   "additionalProperties":false
 }

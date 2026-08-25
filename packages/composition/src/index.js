@@ -463,4 +463,71 @@ export function composeProject({ manifest, knowledgePack = null } = {}) {
   return { ...base, compositionHash: hash(base) };
 }
 
+/**
+ * Remove human edits, returning the composition the factory would have produced.
+ *
+ * The hash is recomputed: a composition whose hash describes different content
+ * than it holds is worse than no hash at all.
+ */
+export function stripContentOverrides(composition) {
+  let restored = 0;
+  const sections = composition.sections.map((section) => ({
+    ...section,
+    bindings: section.bindings.map((entry) => {
+      if (!entry.overriddenFrom) return entry;
+      restored += 1;
+      const { overriddenFrom, ...rest } = entry;
+      return { ...rest, value: overriddenFrom.value, origin: overriddenFrom.origin, generated: overriddenFrom.origin === 'deterministic-default' };
+    }),
+  }));
+  if (!restored) return composition;
+  const base = { ...composition, sections };
+  delete base.compositionHash;
+  return { ...base, compositionHash: hash(base) };
+}
+
+/**
+ * Apply human edits over a deterministic composition.
+ *
+ * Composition stays a pure function of manifest and knowledge; edits live
+ * beside it and are replayed on top. An edited binding is marked `human` and
+ * keeps what it replaced in `overriddenFrom`, so a human sentence can never be
+ * mistaken for a source-backed fact and the deterministic value is always
+ * recoverable.
+ */
+export function applyContentOverrides(composition, overrides = []) {
+  const bySection = new Map();
+  for (const override of list(overrides)) {
+    if (!override?.sectionId || !override?.bindingKey) continue;
+    const entries = bySection.get(override.sectionId) ?? new Map();
+    entries.set(override.bindingKey, override);
+    bySection.set(override.sectionId, entries);
+  }
+  if (!bySection.size) return composition;
+
+  let applied = 0;
+  const sections = composition.sections.map((section) => {
+    const entries = bySection.get(section.id);
+    if (!entries) return section;
+    const bindings = section.bindings.map((entry) => {
+      const override = entries.get(entry.key);
+      if (!override || override.value === entry.value) return entry;
+      applied += 1;
+      return {
+        ...entry,
+        value: override.value,
+        origin: 'human',
+        generated: false,
+        overriddenFrom: entry.overriddenFrom ?? { origin: entry.origin, value: entry.value },
+      };
+    });
+    return { ...section, bindings };
+  });
+
+  if (!applied) return composition;
+  const base = { ...composition, sections };
+  delete base.compositionHash;
+  return { ...base, compositionHash: hash(base) };
+}
+
 export { COMPOSITION_VERSION };

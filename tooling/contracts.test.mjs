@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { CONTRACT_FAMILIES, assertContract, contractSchema, validateContract } from '@app-builder/contracts';
 import { ASSET_STATUSES, RIGHTS_STATUSES, SOURCE_CHANNELS, SOURCE_ROLES } from '../packages/content-intelligence/src/governance.js';
+import { composeProject } from '../packages/composition/src/index.js';
 import { readContractRegistry, undeclaredSchemas } from './lib/contract-families.mjs';
 import { readJson } from './lib/manifest.mjs';
 
@@ -52,5 +53,13 @@ test('generated contract types stay in step with the schemas', () => {
     const declarations = fs.readFileSync(`packages/contracts/generated/${family.id}.d.ts`, 'utf8');
     assert.match(declarations, new RegExp(`\\b(?:interface|type) ${family.typeName}\\b`));
     assert.match(declarations, /GENERATED FILE — DO NOT EDIT/);
+  }
+});
+
+test('every composed project type satisfies the composition contract', () => {
+  const base = readJson('examples/project-manifest.example.json');
+  for (const type of ['marketing-site', 'b2b-saas', 'consumer-app', 'internal-tool', 'content-site', 'ai-app']) {
+    const manifest = { ...base, project: { ...base.project, type } };
+    assert.deepEqual(validateContract('composition', composeProject({ manifest })), [], `${type} composition must satisfy its own contract`);
   }
 });

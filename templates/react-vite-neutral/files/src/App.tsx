@@ -87,6 +87,22 @@ function binding(section: SectionSpec, key: string) {
   return section.bindings.find((item) => item.key === key);
 }
 
+// Editing identity. The Builder Console addresses content by (sectionId,
+// bindingKey), so every editable element carries both. The attributes are inert
+// in a deployed site; only the postMessage bridge below is gated on edit mode,
+// and that is off unless the page is opened with ?__builder=1.
+function editable(section: SectionSpec, entry: Binding | undefined) {
+  if (!entry) return {};
+  return {
+    'data-section-id': section.id,
+    'data-binding-key': entry.key,
+    'data-binding-origin': entry.origin,
+    'data-generated': String(entry.generated),
+  };
+}
+
+const BUILDER_MODE = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('__builder');
+
 function primitiveEntries(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
   return Object.entries(value).filter(([, item]) => ['string', 'number', 'boolean'].includes(typeof item) && String(item).trim());
@@ -150,8 +166,8 @@ function GenericSection({ section, navigate }: { section: SectionSpec; navigate:
   const itemBindings = section.bindings.filter((item) => !['title', 'body', 'eyebrow', 'email', 'phone', 'address', 'website', 'profiles'].includes(item.key));
   return <section className={`page-section section-${section.type} variant-${section.variant}`} id={section.id} data-section-id={section.id} data-section-type={section.type}>
     <div className="section-heading">
-      {title && <h2 data-binding-origin={title.origin} data-generated={String(title.generated)}>{text(title.value)}</h2>}
-      {body && <p className="section-copy" data-binding-origin={body.origin} data-generated={String(body.generated)}>{text(body.value)}</p>}
+      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+      {body && <p className="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
     </div>
     {itemBindings.map((item) => <Items key={item.key} values={item.value} />)}
     <Actions actions={section.actions} navigate={navigate} />
@@ -167,9 +183,9 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
     const [lead] = assetsFor(section);
     return <section className={`page-section hero-section variant-${section.variant}${lead ? ' has-image' : ''}`} id={section.id} data-section-id={section.id}>
       <div className="hero-copy-column">
-        {eyebrow && <p className="eyebrow" data-binding-origin={eyebrow.origin}>{text(eyebrow.value)}</p>}
-        {title && <h1 data-binding-origin={title.origin} data-generated={String(title.generated)}>{text(title.value)}</h1>}
-        {body && <p className="hero-copy" data-binding-origin={body.origin} data-generated={String(body.generated)}>{text(body.value)}</p>}
+        {eyebrow && <p className="eyebrow" {...editable(section, eyebrow)}>{text(eyebrow.value)}</p>}
+        {title && <h1 {...editable(section, title)}>{text(title.value)}</h1>}
+        {body && <p className="hero-copy" {...editable(section, body)}>{text(body.value)}</p>}
         <Actions actions={section.actions} navigate={navigate} />
       </div>
       {lead && <Picture asset={lead} role="hero-16x9" className="hero-image" sizes="(max-width: 880px) 100vw, 50vw" />}
@@ -182,7 +198,7 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
     const address = binding(section, 'address');
     const website = binding(section, 'website');
     return <section className="page-section contact-section" id={section.id} data-section-id={section.id}>
-      {title && <h2>{text(title.value)}</h2>}
+      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
       <div className="contact-grid">
         {email && <a href={`mailto:${text(email.value)}`} data-binding-origin={email.origin}><span>Email</span><strong>{text(email.value)}</strong></a>}
         {phone && <a href={`tel:${text(phone.value).replace(/\s+/g, '')}`} data-binding-origin={phone.origin}><span>Phone</span><strong>{text(phone.value)}</strong></a>}
@@ -197,8 +213,8 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
     const items = assetsFor(section);
     if (!items.length && !section.actions.length) return null;
     return <section className="page-section gallery-section" id={section.id} data-section-id={section.id}>
-      {title && <h2>{text(title.value)}</h2>}
-      {body && <p className="section-copy">{text(body.value)}</p>}
+      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+      {body && <p className="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
       {items.length > 0 && <div className="gallery-grid">{items.map((asset) => <Picture key={asset.id} asset={asset} role="card-4x3" className="gallery-item" sizes="(max-width: 880px) 100vw, 33vw" />)}</div>}
       <Actions actions={section.actions} navigate={navigate} />
     </section>;
@@ -208,13 +224,13 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
   // the section belongs here; it does not know what an enquiry form looks like.
   const RecipeSection = recipeSections[section.type];
   if (RecipeSection) return <section className={`page-section recipe-section section-${section.type}`} id={section.id} data-section-id={section.id} data-section-type={section.type}>
-    {title && <h2>{text(title.value)}</h2>}
-    {body && <p className="section-copy">{text(body.value)}</p>}
+    {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+    {body && <p className="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
     <RecipeSection sectionId={section.id} />
   </section>;
 
   if (section.type === 'cta') return <section className="page-section cta-section" id={section.id} data-section-id={section.id}>
-    <div>{title && <h2>{text(title.value)}</h2>}{body && <p>{text(body.value)}</p>}</div>
+    <div>{title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}{body && <p {...editable(section, body)}>{text(body.value)}</p>}</div>
     <Actions actions={section.actions} navigate={navigate} />
   </section>;
 
@@ -262,8 +278,48 @@ function SiteFooter({ navigation, navigate }: { navigation: readonly PageSpec[];
   </footer>;
 }
 
+/**
+ * Builder edit mode.
+ *
+ * Off unless the page is opened with `?__builder=1`, so a deployed site never
+ * carries selection behaviour. When on, a click on any element carrying editing
+ * identity is reported to the parent frame instead of following its default
+ * action, and the Console decides what to do with it.
+ */
+function useBuilderBridge(pathname: string) {
+  useEffect(() => {
+    if (!BUILDER_MODE) return;
+    function onClick(event: globalThis.MouseEvent) {
+      const target = (event.target as HTMLElement | null)?.closest('[data-binding-key]');
+      if (!(target instanceof HTMLElement)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      for (const marked of document.querySelectorAll('.builder-selected')) marked.classList.remove('builder-selected');
+      target.classList.add('builder-selected');
+      window.parent.postMessage({
+        source: 'app-builder-preview',
+        type: 'binding-selected',
+        sectionId: target.dataset.sectionId,
+        bindingKey: target.dataset.bindingKey,
+        origin: target.dataset.bindingOrigin,
+        generated: target.dataset.generated === 'true',
+        value: target.textContent ?? '',
+        path: window.location.pathname,
+      }, '*');
+    }
+    document.addEventListener('click', onClick, true);
+    document.documentElement.classList.add('builder-mode');
+    window.parent.postMessage({ source: 'app-builder-preview', type: 'ready', path: pathname }, '*');
+    return () => {
+      document.removeEventListener('click', onClick, true);
+      document.documentElement.classList.remove('builder-mode');
+    };
+  }, [pathname]);
+}
+
 export default function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname || '/');
+  useBuilderBridge(pathname);
   useEffect(() => { initializeRecipes(project); }, []);
   useEffect(() => {
     const onPopState = () => setPathname(window.location.pathname || '/');

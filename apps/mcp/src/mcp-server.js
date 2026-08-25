@@ -14,6 +14,8 @@ export const MCP_TOOL_BINDINGS = Object.freeze([
   { name: 'project_sources_read', serviceTool: 'project.sources.read', mutating: false },
   { name: 'project_sources_ingest', serviceTool: 'project.sources.ingest', mutating: true },
   { name: 'project_composition_read', serviceTool: 'project.composition.read', mutating: false },
+  { name: 'project_overrides_read', serviceTool: 'project.overrides.read', mutating: false },
+  { name: 'project_overrides_write', serviceTool: 'project.overrides.write', mutating: true },
   { name: 'project_generate', serviceTool: 'project.generate', mutating: true },
   { name: 'project_verify', serviceTool: 'project.verify', mutating: true },
   { name: 'project_tasks_read', serviceTool: 'project.tasks.read', mutating: false },
@@ -128,6 +130,26 @@ export function createAppBuilderMcpServer({ client = new FactoryServiceClient() 
     inputSchema: projectInput,
     annotations: annotations(false),
   }, invoke(({ projectId }) => client.readComposition(projectId)));
+
+  server.registerTool('project_overrides_read', {
+    description: 'Read the human content edits recorded for a project.',
+    inputSchema: projectInput,
+    annotations: annotations(false),
+  }, invoke(({ projectId }) => client.readOverrides(projectId)));
+
+  server.registerTool('project_overrides_write', {
+    description: 'Replace the human content edits for a project. Each entry targets one binding of one composed section; edits are replayed over deterministic composition and never become source-backed facts.',
+    inputSchema: z.object({
+      projectId: projectIdSchema,
+      overrides: z.array(z.object({
+        sectionId: z.string(),
+        bindingKey: z.string(),
+        value: z.string(),
+        editedAt: z.string(),
+      })).max(500),
+    }),
+    annotations: annotations(true),
+  }, invoke(({ projectId, overrides }) => client.writeOverrides(projectId, overrides))); 
 
   server.registerTool('project_generate', {
     description: 'Run the deterministic factory generation task for an existing durable project.',

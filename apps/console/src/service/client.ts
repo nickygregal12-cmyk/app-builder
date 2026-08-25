@@ -134,6 +134,14 @@ export type DeclaredSource = {
   assetStatus?: string;
 };
 
+export type ContentOverride = {
+  sectionId: string;
+  bindingKey: string;
+  value: string;
+  editedAt: string;
+  editedBy?: string;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
   input?: { manifestVersion: number; knowledgePackHash: string | null };
@@ -154,6 +162,7 @@ export type WorkspaceSnapshot = {
   knowledge: KnowledgeSummary | null;
   declaredSources: DeclaredSource[];
   checkpoints: Checkpoint[];
+  overrides: ContentOverride[];
 };
 
 const API_ROOT = '/api';
@@ -189,6 +198,13 @@ export async function ingestSources(projectId: string, sources: SourceRequest[])
   );
 }
 
+export async function saveOverrides(projectId: string, overrides: ContentOverride[]) {
+  return await request<{ overrides: ContentOverride[]; composition: { compositionHash: string } | null }>(
+    `/projects/${encodeURIComponent(projectId)}/overrides`,
+    { method: 'PUT', body: JSON.stringify({ overrides }) },
+  );
+}
+
 export async function generateProject(projectId: string) {
   return (await request<{ project: ProjectSummary }>(`/projects/${encodeURIComponent(projectId)}/generate`, { method: 'POST' })).project;
 }
@@ -207,7 +223,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, manifestResult, checkpointsResult] = await Promise.all([
+  const [projectResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, manifestResult, checkpointsResult, overridesResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
     request<{ events: BuildEvent[] }>(`/projects/${id}/events`),
@@ -219,6 +235,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ knowledge: KnowledgeSummary | null }>(`/projects/${id}/sources`),
     request<{ manifest: { inputs?: { sources?: DeclaredSource[] } } }>(`/projects/${id}/manifest`),
     request<{ checkpoints: Checkpoint[] }>(`/projects/${id}/checkpoints`),
+    request<{ overrides: ContentOverride[] }>(`/projects/${id}/overrides`),
   ]);
   return {
     project: projectResult.project,
@@ -232,5 +249,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     knowledge: knowledgeResult.knowledge,
     declaredSources: manifestResult.manifest?.inputs?.sources ?? [],
     checkpoints: checkpointsResult.checkpoints,
+    overrides: overridesResult.overrides,
   };
 }

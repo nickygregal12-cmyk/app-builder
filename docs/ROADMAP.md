@@ -281,8 +281,37 @@ Delivered:
 - desktop/tablet/mobile preview switching;
 - checkpoint and build-version history, with the live build marked.
 
-### Phase 4B — Direct manipulation, brand sources and assets
+### Phase 4B — Direct manipulation, brand sources and assets 🚧 In progress
 
+Delivered:
+- click-to-select through PageSpec/SectionSpec identity: every rendered binding
+  carries its section id, binding key and provenance, and a preview opened by
+  the Console reports selections to it;
+- text editing with provenance awareness — an edited binding becomes `human`,
+  keeps what it replaced in `overriddenFrom`, and can be reverted to the
+  generated value;
+- edits are durable and replayed over freshly composed output, so a rebuild
+  picks up new source material without discarding hand-written copy;
+- a saved edit reaches the running preview without a rebuild, because the
+  workspace composition module is what the preview renders;
+- first-class company image/logo/document upload (delivered in 4A);
+- import exact existing-site sources through the service (delivered in 4A);
+- source confidence, provenance and asset-rights state shown per source.
+
+Composition stays a pure function of manifest and knowledge. Edits live beside
+it rather than inside it, which is what keeps generation deterministic while
+still allowing a person to write the words.
+
+Remaining:
+- asset manager: replacement, crop and focal-point selection;
+- marking assets approved, suggested, generated, rejected or "do not use" from
+  the Console rather than at ingestion;
+- comparing supplied and generated alternatives;
+- section/component variant selection;
+- project asset policy modes;
+- Design Contract editing.
+
+Original scope for reference:
 - click-to-select/edit through PageSpec/SectionSpec identity;
 - text/content editing with provenance awareness;
 - component/section variant selection;

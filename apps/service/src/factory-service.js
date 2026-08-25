@@ -3,7 +3,8 @@ import path from 'node:path';
 import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
-import { validateContract } from '@app-builder/contracts';
+import { assertContract, validateContract } from '@app-builder/contracts';
+import { applyContentOverrides, stripContentOverrides } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
@@ -155,6 +156,60 @@ export class FactoryService {
   getManifest(id) { return this.requireProject(id).manifest; }
   getKnowledgePack(id) { return this.requireProject(id).knowledgePack; }
   knowledgeSummary(id) { return knowledgeSummary(this.requireProject(id).knowledgePack); }
+
+  overridesPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'content-overrides.json');
+  }
+
+  readOverrides(projectId) {
+    this.requireProject(projectId);
+    const file = this.overridesPath(projectId);
+    if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, overrides: [] };
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  /**
+   * Record a human edit and replay it into the live workspace.
+   *
+   * The composition on disk is what the running preview renders, so rewriting
+   * it lets an edit appear immediately without a rebuild. The durable record is
+   * the override file: a later rebuild replays it over freshly composed output.
+   */
+  async saveOverrides(projectId, overrides) {
+    const project = this.requireProject(projectId);
+    const document = assertContract('content-override', {
+      schemaVersion: 1,
+      projectId,
+      overrides: overrides.map((entry) => ({ editedBy: 'console', ...entry })),
+    });
+    fs.mkdirSync(path.dirname(this.overridesPath(projectId)), { recursive: true });
+    fs.writeFileSync(this.overridesPath(projectId), `${JSON.stringify(document, null, 2)}\n`);
+
+    let composition = null;
+    if (project.workspacePath && fs.existsSync(project.workspacePath)) {
+      composition = this.rewriteWorkspaceComposition(project.workspacePath, document.overrides);
+    }
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'content.overrides.saved',
+      actor: 'console',
+      payload: { count: document.overrides.length, compositionHash: composition?.compositionHash ?? null },
+    }));
+    return { overrides: document.overrides, composition: composition ? { compositionHash: composition.compositionHash } : null };
+  }
+
+  rewriteWorkspaceComposition(workspace, overrides) {
+    const file = path.join(workspace, '.app-builder', 'composition.json');
+    if (!fs.existsSync(file)) return null;
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    // Replay from the deterministic baseline so removing an edit restores the
+    // generated value rather than leaving the previous override in place.
+    const baseline = stripContentOverrides(stored);
+    const next = assertContract('composition', applyContentOverrides(baseline, overrides));
+    fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
+    fs.writeFileSync(path.join(workspace, 'src/generated/composition.ts'), `export const composition = ${JSON.stringify(next, null, 2)} as const;\n`);
+    return next;
+  }
   listProjects() { return this.store.listProjects().map(summary); }
   listTasks(projectId) { this.requireProject(projectId); return this.store.listTasks(projectId); }
   listEvents(projectId, options) { this.requireProject(projectId); return this.store.listEvents(projectId, options); }
@@ -307,6 +362,7 @@ export class FactoryService {
       const { plan, composition } = generateComposedProject(project.manifest, workspace, {
         knowledgePack: project.knowledgePack,
         assetSourceDir: this.ingestion.assetDirectory(projectId),
+        contentOverrides: this.readOverrides(projectId).overrides,
       });
       await this.store.recordEvent(createEvent({
         projectId,

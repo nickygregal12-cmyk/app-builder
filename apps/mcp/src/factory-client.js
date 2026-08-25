@@ -61,6 +61,11 @@ export class FactoryServiceClient {
   readKnowledge(id) { return this.request('GET', `/projects/${projectId(id)}/knowledge-pack`); }
   readComposition(id) { return this.request('GET', `/projects/${projectId(id)}/composition`); }
   readSources(id) { return this.request('GET', `/projects/${projectId(id)}/sources`); }
+  readOverrides(id) { return this.request('GET', `/projects/${projectId(id)}/overrides`); }
+  writeOverrides(id, overrides) {
+    if (!Array.isArray(overrides)) throw new Error('overrides must be an array.');
+    return this.request('PUT', `/projects/${projectId(id)}/overrides`, { overrides });
+  }
   ingestSources(id, sources) {
     if (!Array.isArray(sources) || !sources.length) throw new Error('sources must be a non-empty array.');
     return this.request('POST', `/projects/${projectId(id)}/sources`, { sources });

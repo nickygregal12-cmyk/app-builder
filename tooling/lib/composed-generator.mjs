@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { composeProject } from '../../packages/composition/src/index.js';
+import { assertContract } from '@app-builder/contracts';
+import { applyContentOverrides, composeProject } from '../../packages/composition/src/index.js';
 import { generateProject } from './generator.mjs';
 
 function writeJson(file, value) {
@@ -57,9 +58,15 @@ function materializeAssets(composition, knowledgePack, { assetSourceDir, outputD
   return manifest;
 }
 
-export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, factoryRoot = process.cwd(), catalog } = {}) {
+export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], factoryRoot = process.cwd(), catalog } = {}) {
   const plan = generateProject(manifest, outputDir, { factoryRoot, ...(catalog ? { catalog } : {}) });
-  const composition = composeProject({ manifest, knowledgePack });
+  // The composition becomes a durable artifact here, so this is where its
+  // contract is enforced. Declaring the family was not enough on its own: two
+  // new section types reached generated projects without ever being added to
+  // the schema, because nothing validated the output.
+  // Human edits are replayed over freshly composed output, so a rebuild picks
+  // up new source material without discarding what someone wrote by hand.
+  const composition = assertContract('composition', applyContentOverrides(composeProject({ manifest, knowledgePack }), contentOverrides));
   const out = path.resolve(outputDir);
   const assets = materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir: out });
   writeJson(path.join(out, '.app-builder/composition.json'), composition);

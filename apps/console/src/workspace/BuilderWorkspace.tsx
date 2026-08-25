@@ -3,9 +3,11 @@ import {
   generateProject,
   ingestSources,
   loadWorkspace,
+  saveOverrides,
   startPreview,
   stopPreview,
   verifyProject,
+  type ContentOverride,
   type DeclaredSource,
   type KnowledgeSummary,
   type ProjectSummary,
@@ -154,11 +156,47 @@ function SourcePanel({ knowledge, declaredSources, disabled, busy, onIngest }: {
   </section>;
 }
 
+type Selection = { sectionId: string; bindingKey: string; origin: string; value: string };
+
+const ORIGIN_LABEL: Record<string, string> = {
+  'knowledge-fact': 'from a source you supplied',
+  'knowledge-entity': 'from a source you supplied',
+  manifest: 'from your Build Contract',
+  'deterministic-default': 'written by the factory',
+  human: 'edited by you',
+};
+
+function ContentEditor({ selection, override, onSave, onRevert, onClose, busy }: {
+  selection: Selection;
+  override: ContentOverride | null;
+  onSave: (value: string) => Promise<void>;
+  onRevert: () => Promise<void>;
+  onClose: () => void;
+  busy: boolean;
+}) {
+  const [draft, setDraft] = useState(selection.value);
+  useEffect(() => { setDraft(selection.value); }, [selection.sectionId, selection.bindingKey, selection.value]);
+
+  return <section className="builder-panel editor-panel">
+    <div className="panel-title-row"><span className="builder-kicker">Edit content</span><button type="button" className="text-button" onClick={onClose}>Close</button></div>
+    <p className="editor-target">{selection.sectionId.replace(/^page-/, '').replaceAll('-', ' ')} · {selection.bindingKey}</p>
+    <p className="editor-provenance">{ORIGIN_LABEL[selection.origin] ?? selection.origin}</p>
+    <textarea aria-label="Content value" rows={4} value={draft} onChange={(event) => setDraft(event.target.value)} disabled={busy} />
+    <div className="editor-actions">
+      <button type="button" className="primary compact" onClick={() => onSave(draft)} disabled={busy || draft === selection.value}>{busy ? 'Saving…' : 'Save'}</button>
+      {override && <button type="button" className="secondary compact" onClick={onRevert} disabled={busy}>Revert to generated</button>}
+    </div>
+  </section>;
+}
+
 export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onExit: () => void }) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
   const [operation, setOperation] = useState<Operation>(null);
   const [error, setError] = useState('');
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [previewNonce, setPreviewNonce] = useState(0);
 
   const refresh = useCallback(async () => {
     const next = await loadWorkspace(projectId);
@@ -218,6 +256,55 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       setOperation(null);
     }
   }, [projectId, refresh]);
+
+  // The preview runs the generated app in an iframe and reports what was
+  // clicked. It is a different origin in principle, so messages are matched on
+  // their declared source rather than trusted wholesale.
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      const data = event.data as Record<string, unknown> | null;
+      if (!data || data.source !== 'app-builder-preview' || data.type !== 'binding-selected') return;
+      if (typeof data.sectionId !== 'string' || typeof data.bindingKey !== 'string') return;
+      setSelection({ sectionId: data.sectionId, bindingKey: data.bindingKey, origin: String(data.origin ?? 'unknown'), value: String(data.value ?? '') });
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  const writeOverrides = useCallback(async (next: ContentOverride[]) => {
+    setSavingEdit(true);
+    setError('');
+    try {
+      await saveOverrides(projectId, next);
+      await refresh();
+      // Vite serves the generated app and watches its composition module, so a
+      // saved edit reaches the preview without a rebuild. The nonce forces the
+      // frame to pick it up even when hot reload is unavailable.
+      setPreviewNonce((value) => value + 1);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [projectId, refresh]);
+
+  const overrides = snapshot?.overrides ?? [];
+  const activeOverride = selection
+    ? overrides.find((entry) => entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey) ?? null
+    : null;
+
+  const saveEdit = useCallback(async (value: string) => {
+    if (!selection) return;
+    const others = overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey));
+    await writeOverrides([...others, { sectionId: selection.sectionId, bindingKey: selection.bindingKey, value, editedAt: new Date().toISOString() }]);
+    setSelection({ ...selection, value, origin: 'human' });
+  }, [overrides, selection, writeOverrides]);
+
+  const revertEdit = useCallback(async () => {
+    if (!selection) return;
+    await writeOverrides(overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey)));
+    setSelection(null);
+  }, [overrides, selection, writeOverrides]);
 
   const latestTask = snapshot?.tasks.at(-1) ?? null;
   // Ingested material only reaches the product through a build, so a knowledge
@@ -294,11 +381,25 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <div className="device-switcher" role="group" aria-label="Preview device">{(['desktop', 'tablet', 'mobile'] as Device[]).map((value) => <button type="button" key={value} className={device === value ? 'active' : ''} onClick={() => setDevice(value)}>{value}</button>)}</div>
         </div>
         <div className={`preview-canvas preview-${device}`}>
-          {previewRunning ? <iframe title={`${snapshot.project.name} preview`} src={snapshot.preview.url ?? undefined} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
+          {previewRunning ? <iframe key={previewNonce} title={`${snapshot.project.name} preview`} src={`${snapshot.preview.url}?__builder=1`} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
         </div>
       </section>
 
       <aside className="activity-sidebar">
+        {selection && <ContentEditor
+          selection={selection}
+          override={activeOverride}
+          onSave={saveEdit}
+          onRevert={revertEdit}
+          onClose={() => setSelection(null)}
+          busy={savingEdit}
+        />}
+
+        {previewRunning && !selection && <section className="builder-panel">
+          <span className="builder-kicker">Editing</span>
+          <p className="builder-empty">Click any heading or paragraph in the preview to edit it. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
+        </section>}
+
         <section className="builder-panel checkpoint-panel">
           <span className="builder-kicker">Latest checkpoint</span>
           {snapshot.checkpoint ? <><strong>{snapshot.checkpoint.summary}</strong><p>{snapshot.checkpoint.nextAction}</p><small>{new Date(snapshot.checkpoint.createdAt).toLocaleString()}</small></> : <p className="builder-empty">No durable checkpoint yet.</p>}

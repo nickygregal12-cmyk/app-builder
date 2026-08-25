@@ -39,7 +39,7 @@
       "schema": "composition.schema.json",
       "typeName": "DeterministicProjectComposition",
       "boundary": "Composer output and generated .app-builder/composition.json reads.",
-      "typesHash": "30782f00e145df49f1184cf8e2bb25f1d0f66022ac039de7ba823ec2d887e4a1",
+      "typesHash": "a2fcf2d55500ab2b23d96bd79d51112cfce9a29861f18e8c4e9d772e01b1dfc7",
       "schemaHash": "13bc15d2497c00cdbf7ddca6a247a253310b94638228806b7a6c94976b3ed854"
     },
     {
@@ -73,6 +73,14 @@
       "boundary": "Declared autonomous mutation scope.",
       "typesHash": "111a944b07e1a1d2771530c3ea10b7be66a26b03187bc35d3a84f7163ee6517f",
       "schemaHash": "062ed2af3fd030ea0f25c9bab6a48b854201e1731490f5aad7560b5c7e73e578"
+    },
+    {
+      "id": "content-override",
+      "schema": "content-override.schema.json",
+      "typeName": "AppBuilderContentOverrides",
+      "boundary": "Human content edits stored by the service and applied over a deterministic composition.",
+      "schemaHash": "c34b6773099787b9ba83ce9045b9cd1b73af023983340d2668863ff831febcdf",
+      "typesHash": "2e6cc623ea17196452983ab50a9bf86570a846204885767f88581cc23b26c0a5"
     }
   ],
   "pending": [

@@ -11,7 +11,7 @@ function manifest(slug = 'service-test') {
   return {
     schemaVersion: 2,
     project: { name: 'Service Test', slug, type: 'marketing-site', primaryGoal: 'Prove service-backed deterministic generation.' },
-    audience: { targetUsers: 'Test users', roles: [] },
+    audience: { summary: 'Test users', roles: [] },
     journeys: ['Read the generated site'],
     majorSurfaces: ['Home', 'Contact'],
     entities: [],

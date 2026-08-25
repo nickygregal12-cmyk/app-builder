@@ -24,11 +24,11 @@ function manifestFor(type) {
   };
 }
 
-function filesUnder(root) {
+function filesUnder(root, base = root) {
   if (!fs.existsSync(root)) return [];
   return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(root, entry.name);
-    return entry.isDirectory() ? filesUnder(full) : [path.relative(root, full)];
+    return entry.isDirectory() ? filesUnder(full, base) : [path.relative(base, full)];
   }).sort();
 }
 

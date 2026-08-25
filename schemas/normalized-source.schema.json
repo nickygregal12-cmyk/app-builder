@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "App Builder Normalized Source",
+  "type": "object",
+  "required": ["id", "kind", "label", "mimeType", "sizeBytes", "provenance", "contentHash", "cacheKey", "cacheHit", "extractorVersion", "extraction", "variants"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["url", "logo", "image", "screenshot", "document", "spreadsheet", "database-api", "other"]},
+    "label": {"type": "string", "minLength": 1},
+    "uri": {"type": ["string", "null"]},
+    "mimeType": {"type": "string", "minLength": 1},
+    "sizeBytes": {"type": "integer", "minimum": 0},
+    "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]},
+    "purpose": {"type": ["string", "null"]},
+    "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "cacheKey": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "cacheHit": {"type": "boolean"},
+    "extractorVersion": {"type": "string"},
+    "extraction": {"type": "object", "required": ["type", "text", "truncated", "metadata"], "properties": {"type": {"enum": ["text", "markdown", "json", "html", "csv", "pdf", "docx", "xlsx", "image", "binary"]}, "text": {"type": "string"}, "truncated": {"type": "boolean"}, "headings": {"type": "array"}, "tables": {"type": "array"}, "links": {"type": "array", "items": {"type": "string"}}, "images": {"type": "array"}, "structuredData": {}, "metadata": {"type": "object"}}, "additionalProperties": false},
+    "variants": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

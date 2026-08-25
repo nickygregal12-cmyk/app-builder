@@ -1,0 +1,308 @@
+import { sha256, stableId } from './shared.js';
+
+const VERIFICATION_RANK = { rejected: 0, candidate: 1, verified: 2, 'user-provided': 3 };
+
+function primitiveObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { name: String(value ?? '') };
+  return Object.fromEntries(Object.entries(value).filter(([, item]) => item === null || ['string', 'number', 'boolean'].includes(typeof item)));
+}
+
+function addFact(factMap, fact) {
+  const valueKey = typeof fact.value === 'string' ? fact.value.toLowerCase() : JSON.stringify(fact.value);
+  const key = `${fact.path}::${valueKey}`;
+  const evidence = { sourceId: fact.sourceId, provenance: fact.provenance, confidence: fact.confidence, verification: fact.verification };
+  const existing = factMap.get(key);
+  if (existing) {
+    if (!existing.evidence.some((item) => item.sourceId === evidence.sourceId)) existing.evidence.push(evidence);
+    existing.confidence = Math.max(existing.confidence, fact.confidence);
+    if ((VERIFICATION_RANK[fact.verification] ?? 0) > (VERIFICATION_RANK[existing.verification] ?? 0)) existing.verification = fact.verification;
+    return existing;
+  }
+  const created = { id: stableId('fact', fact.path, valueKey), ...fact, evidence: [evidence] };
+  factMap.set(key, created);
+  return created;
+}
+
+function addEntity(target, kind, value, source, verification) {
+  if (value === undefined || value === null || value === '') return;
+  const data = primitiveObject(value);
+  if (!Object.values(data).some((item) => item !== '')) return;
+  target[kind].push({
+    id: stableId(kind.slice(0, -1) || kind, source.id, JSON.stringify(data)),
+    ...data,
+    sourceId: source.id,
+    provenance: source.provenance,
+    verification,
+  });
+}
+
+function structuredCompany(source, factMap, entities) {
+  if (source.extraction.type !== 'json') return;
+  const raw = source.extraction.structuredData;
+  if (!raw || Array.isArray(raw) || typeof raw !== 'object') return;
+  const company = raw.company && typeof raw.company === 'object' && !Array.isArray(raw.company) ? raw.company : raw;
+  const verification = source.provenance === 'user-supplied' ? 'user-provided' : 'candidate';
+  const confidence = verification === 'user-provided' ? 1 : 0.85;
+  const fields = [
+    ['identity.name', company.name ?? company.companyName],
+    ['identity.legalName', company.legalName],
+    ['identity.description', company.description ?? company.about],
+    ['contact.email', company.email],
+    ['contact.phone', company.phone ?? company.telephone],
+    ['contact.website', company.website ?? company.url],
+    ['contact.address', typeof company.address === 'string' ? company.address : null],
+  ];
+  for (const [factPath, value] of fields) {
+    if (typeof value !== 'string' || !value.trim()) continue;
+    addFact(factMap, { path: factPath, value: value.trim(), sourceId: source.id, provenance: source.provenance, confidence, verification });
+  }
+  for (const value of Array.isArray(company.serviceAreas) ? company.serviceAreas : []) {
+    if (typeof value === 'string' && value.trim()) addFact(factMap, { path: 'serviceAreas', value: value.trim(), sourceId: source.id, provenance: source.provenance, confidence, verification });
+  }
+  const entityFields = [['services', company.services], ['people', company.people ?? company.team], ['projects', company.projects ?? company.caseStudies], ['testimonials', company.testimonials], ['accreditations', company.accreditations]];
+  for (const [kind, values] of entityFields) for (const value of Array.isArray(values) ? values : []) addEntity(entities, kind, value, source, verification);
+}
+
+function spreadsheetEntities(source, entities) {
+  if (!['csv', 'xlsx'].includes(source.extraction.type)) return;
+  for (const table of source.extraction.tables ?? []) {
+    const [header, ...rows] = table.rows ?? [];
+    if (!header) continue;
+    const normalizedHeader = header.map((value) => String(value).trim().toLowerCase());
+    const nameIndex = normalizedHeader.findIndex((value) => ['service', 'services', 'product', 'offering'].includes(value));
+    if (nameIndex < 0) continue;
+    const priceIndex = normalizedHeader.findIndex((value) => ['price', 'cost', 'rate'].includes(value));
+    for (const row of rows) {
+      const name = String(row[nameIndex] ?? '').trim();
+      if (!name) continue;
+      const value = { name };
+      if (priceIndex >= 0 && String(row[priceIndex] ?? '').trim()) value.price = String(row[priceIndex]).trim();
+      addEntity(entities, 'services', value, source, source.provenance === 'user-supplied' ? 'user-provided' : 'candidate');
+    }
+  }
+}
+
+function contactFacts(source, factMap) {
+  const text = source.extraction.text ?? '';
+  for (const email of text.match(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi) ?? []) {
+    addFact(factMap, { path: 'contact.email', value: email, sourceId: source.id, provenance: source.provenance, confidence: 0.96, verification: 'candidate' });
+  }
+  for (const match of text.match(/(?:\+?\d[\d\s().-]{7,}\d)/g) ?? []) {
+    const digits = match.replace(/\D/g, '');
+    if (digits.length < 9 || digits.length > 15) continue;
+    addFact(factMap, { path: 'contact.phone', value: match.replace(/\s+/g, ' ').trim(), sourceId: source.id, provenance: source.provenance, confidence: 0.82, verification: 'candidate' });
+  }
+}
+
+function chunksForSource(source, maxChars = 6000, overlap = 400) {
+  const text = String(source.extraction.text ?? '').trim();
+  if (!text) return [];
+  const chunks = [];
+  let start = 0;
+  while (start < text.length) {
+    let end = Math.min(text.length, start + maxChars);
+    if (end < text.length) {
+      const paragraphBreak = text.lastIndexOf('\n\n', end);
+      if (paragraphBreak > start + Math.floor(maxChars * 0.6)) end = paragraphBreak;
+    }
+    const chunkText = text.slice(start, end).trim();
+    if (chunkText) {
+      const contentHash = sha256(chunkText);
+      chunks.push({ contentHash, text: chunkText, sourceId: source.id, provenance: source.provenance, start, end, approxTokens: Math.ceil(chunkText.length / 4) });
+    }
+    if (end >= text.length) break;
+    start = Math.max(start + 1, end - overlap);
+  }
+  return chunks;
+}
+
+function mergeChunks(sources) {
+  const byHash = new Map();
+  for (const source of sources) {
+    for (const chunk of chunksForSource(source)) {
+      const existing = byHash.get(chunk.contentHash);
+      if (existing) {
+        if (!existing.sourceIds.includes(chunk.sourceId)) existing.sourceIds.push(chunk.sourceId);
+        continue;
+      }
+      byHash.set(chunk.contentHash, {
+        id: `chunk-${chunk.contentHash.slice(0, 16)}`,
+        contentHash: chunk.contentHash,
+        text: chunk.text,
+        sourceIds: [chunk.sourceId],
+        provenance: chunk.provenance,
+        approxTokens: chunk.approxTokens,
+      });
+    }
+  }
+  return [...byHash.values()];
+}
+
+function bestFact(facts, path) {
+  return facts
+    .filter((fact) => fact.path === path && fact.verification !== 'rejected')
+    .sort((a, b) => (VERIFICATION_RANK[b.verification] ?? 0) - (VERIFICATION_RANK[a.verification] ?? 0) || b.confidence - a.confidence)[0] ?? null;
+}
+
+function createCompanyProfile(facts, entities) {
+  const field = (path) => {
+    const fact = bestFact(facts, path);
+    return fact ? { value: fact.value, factId: fact.id, verification: fact.verification, confidence: fact.confidence } : null;
+  };
+  return {
+    identity: { name: field('identity.name'), legalName: field('identity.legalName'), description: field('identity.description') },
+    contact: { email: field('contact.email'), phone: field('contact.phone'), website: field('contact.website'), address: field('contact.address') },
+    serviceAreas: facts.filter((fact) => fact.path === 'serviceAreas').map((fact) => ({ value: fact.value, factId: fact.id, verification: fact.verification })),
+    services: entities.services,
+    people: entities.people,
+    projects: entities.projects,
+    testimonials: entities.testimonials,
+    accreditations: entities.accreditations,
+  };
+}
+
+function seoSnapshot(source) {
+  const extraction = source.extraction;
+  const h1Count = (extraction.headings ?? []).filter((heading) => heading.level === 1).length;
+  const missingAlt = (extraction.images ?? []).filter((image) => !String(image.alt ?? '').trim()).length;
+  const issues = [];
+  if (!extraction.metadata?.title) issues.push('missing-title');
+  if (!extraction.metadata?.description) issues.push('missing-meta-description');
+  if (h1Count !== 1) issues.push(h1Count === 0 ? 'missing-h1' : 'multiple-h1');
+  if (!extraction.metadata?.canonical) issues.push('missing-canonical');
+  if (missingAlt > 0) issues.push('images-missing-alt');
+  return {
+    id: stableId('research', source.id, 'seo'),
+    type: 'existing-site-seo-snapshot',
+    sourceId: source.id,
+    title: extraction.metadata?.title ?? '',
+    description: extraction.metadata?.description ?? '',
+    canonical: extraction.metadata?.canonical ?? '',
+    h1Count,
+    imageCount: extraction.images?.length ?? 0,
+    imagesMissingAlt: missingAlt,
+    jsonLdTypes: extraction.metadata?.jsonLdTypes ?? [],
+    issues,
+  };
+}
+
+function packLevelResearch(facts, entities, pageSnapshots) {
+  const contactMethods = ['contact.email', 'contact.phone', 'contact.website'].filter((path) => bestFact(facts, path)).map((path) => path.replace('contact.', ''));
+  const serviceAreas = facts.filter((fact) => fact.path === 'serviceAreas').map((fact) => fact.value);
+  return [
+    {
+      id: stableId('research', 'seo-summary', pageSnapshots.length, JSON.stringify(pageSnapshots.flatMap((page) => page.issues))),
+      type: 'seo-summary',
+      pageCount: pageSnapshots.length,
+      pagesWithIssues: pageSnapshots.filter((page) => page.issues.length).length,
+      issueCounts: Object.fromEntries([...new Set(pageSnapshots.flatMap((page) => page.issues))].map((issue) => [issue, pageSnapshots.filter((page) => page.issues.includes(issue)).length])),
+    },
+    {
+      id: stableId('research', 'local-seo', JSON.stringify(serviceAreas)),
+      type: 'local-seo-inputs',
+      addressFactId: bestFact(facts, 'contact.address')?.id ?? null,
+      phoneFactId: bestFact(facts, 'contact.phone')?.id ?? null,
+      serviceAreas,
+      generatedLocations: [],
+    },
+    {
+      id: stableId('research', 'lead-generation', contactMethods.join(','), entities.services.length),
+      type: 'lead-generation-inputs',
+      contactMethods,
+      serviceCount: entities.services.length,
+      testimonialCount: entities.testimonials.length,
+      accreditationCount: entities.accreditations.length,
+      inventedClaimsAllowed: false,
+    },
+  ];
+}
+
+export function buildKnowledgePack(normalizedSources, options = {}) {
+  const factMap = new Map();
+  const content = [];
+  const assets = [];
+  const references = [];
+  const requirements = [];
+  const research = [];
+  const colorMap = new Map();
+  const fontMap = new Map();
+  const titles = [];
+  const exactAssets = new Map();
+  const visualAssets = new Map();
+  const entities = { services: [], people: [], projects: [], testimonials: [], accreditations: [] };
+  const pageSnapshots = [];
+  for (const source of normalizedSources) {
+    structuredCompany(source, factMap, entities);
+    spreadsheetEntities(source, entities);
+    contactFacts(source, factMap);
+    const extraction = source.extraction;
+    if (extraction.metadata?.title) {
+      titles.push({ value: extraction.metadata.title, sourceId: source.id });
+      addFact(factMap, { path: 'identity.nameCandidate', value: extraction.metadata.title, sourceId: source.id, provenance: source.provenance, confidence: 0.55, verification: 'candidate' });
+    }
+    for (const color of extraction.metadata?.colors ?? []) {
+      const current = colorMap.get(color) ?? { value: color, sourceIds: [] };
+      if (!current.sourceIds.includes(source.id)) current.sourceIds.push(source.id);
+      colorMap.set(color, current);
+    }
+    for (const font of extraction.metadata?.fontFamilies ?? []) {
+      const current = fontMap.get(font) ?? { value: font, sourceIds: [] };
+      if (!current.sourceIds.includes(source.id)) current.sourceIds.push(source.id);
+      fontMap.set(font, current);
+    }
+    if (extraction.type === 'image') {
+      const asset = { id: stableId('asset', source.contentHash, source.id), sourceId: source.id, kind: source.kind, contentHash: source.contentHash, mimeType: source.mimeType, metadata: extraction.metadata, variants: source.variants };
+      if (exactAssets.has(source.contentHash)) asset.duplicateOf = exactAssets.get(source.contentHash);
+      else exactAssets.set(source.contentHash, asset.id);
+      const fingerprint = extraction.metadata?.visualFingerprint;
+      if (!asset.duplicateOf && fingerprint && visualAssets.has(fingerprint)) asset.visualDuplicateOf = visualAssets.get(fingerprint);
+      else if (fingerprint) visualAssets.set(fingerprint, asset.id);
+      assets.push(asset);
+    } else {
+      content.push({ id: stableId('content', source.id, extraction.type), sourceId: source.id, kind: extraction.type, text: extraction.text ?? '', headings: extraction.headings ?? [], tables: extraction.tables ?? [], metadata: extraction.metadata ?? {}, truncated: Boolean(extraction.truncated) });
+    }
+    if (/^https?:/i.test(source.uri ?? '')) references.push({ id: stableId('reference', source.uri), type: 'source-url', value: source.uri, sourceId: source.id });
+    for (const link of extraction.links ?? []) references.push({ id: stableId('reference', source.id, link), type: 'link', value: link, sourceId: source.id });
+    for (const image of extraction.images ?? []) references.push({ id: stableId('reference', source.id, image.src), type: 'image-reference', value: image.src, label: image.alt || undefined, sourceId: source.id });
+    if (/requirement|brief|scope/i.test(source.purpose ?? '')) requirements.push({ id: stableId('requirement', source.id), sourceId: source.id, text: extraction.text ?? '', provenance: source.provenance });
+    if (extraction.type === 'html') {
+      const snapshot = seoSnapshot(source);
+      pageSnapshots.push(snapshot);
+      research.push(snapshot);
+    }
+  }
+  const facts = [...factMap.values()];
+  research.push(...packLevelResearch(facts, entities, pageSnapshots));
+  const sources = normalizedSources.map(({ extraction, variants, ...source }) => ({
+    ...source,
+    extractionSummary: { type: extraction.type, truncated: Boolean(extraction.truncated), cacheHit: source.cacheHit },
+    variantCount: variants.length,
+  }));
+  const brand = {
+    colors: [...colorMap.values()].sort((a, b) => b.sourceIds.length - a.sourceIds.length || a.value.localeCompare(b.value)),
+    fontFamilies: [...fontMap.values()].sort((a, b) => b.sourceIds.length - a.sourceIds.length || a.value.localeCompare(b.value)),
+    titles,
+    logoCandidates: assets.filter((asset) => asset.kind === 'logo').map((asset) => asset.id),
+    screenshotCandidates: assets.filter((asset) => asset.kind === 'screenshot').map((asset) => asset.id),
+    generatedBrandClaims: [],
+  };
+  const chunks = mergeChunks(normalizedSources);
+  const companyProfile = createCompanyProfile(facts, entities);
+  const base = {
+    schemaVersion: 1,
+    intelligenceVersion: options.intelligenceVersion ?? '1.1.0',
+    project: options.project ?? null,
+    sources,
+    facts,
+    companyProfile,
+    brand,
+    assets,
+    content,
+    chunks,
+    references,
+    requirements,
+    research,
+    generatedCopy: [],
+  };
+  return { ...base, packHash: sha256(JSON.stringify(base)) };
+}

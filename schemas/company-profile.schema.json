@@ -1,10 +1,60 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Company Profile",
+  "title": "App Builder Company Profile",
+  "$defs": {
+    "factPointer": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": {},
+        "factId": {"type": "string"},
+        "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "required": ["value", "factId", "verification", "confidence"],
+      "additionalProperties": false
+    },
+    "entity": {
+      "type": "object",
+      "required": ["id", "sourceId", "provenance", "verification"],
+      "properties": {
+        "id": {"type": "string"},
+        "sourceId": {"type": "string"},
+        "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]},
+        "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]}
+      },
+      "additionalProperties": true
+    }
+  },
   "type": "object",
+  "required": ["identity", "contact", "serviceAreas", "services", "people", "projects", "testimonials", "accreditations"],
   "properties": {
-    "identity":{"type":"object"},"contact":{"type":"object"},"brand":{"type":"object"},
-    "services":{"type":"array"},"people":{"type":"array"},"projects":{"type":"array"},"testimonials":{"type":"array"},"accreditations":{"type":"array"},"assets":{"type":"array"},
-    "provenance":{"type":"array","items":{"type":"object","required":["field","sourceType"],"properties":{"field":{"type":"string"},"sourceType":{"enum":["user-provided","uploaded-document","existing-site","external-research","ai-generated"]},"source":{"type":"string"},"verified":{"type":"boolean"}}}}
-  }
+    "identity": {
+      "type": "object",
+      "required": ["name", "legalName", "description"],
+      "properties": {
+        "name": {"$ref": "#/$defs/factPointer"},
+        "legalName": {"$ref": "#/$defs/factPointer"},
+        "description": {"$ref": "#/$defs/factPointer"}
+      },
+      "additionalProperties": false
+    },
+    "contact": {
+      "type": "object",
+      "required": ["email", "phone", "website", "address"],
+      "properties": {
+        "email": {"$ref": "#/$defs/factPointer"},
+        "phone": {"$ref": "#/$defs/factPointer"},
+        "website": {"$ref": "#/$defs/factPointer"},
+        "address": {"$ref": "#/$defs/factPointer"}
+      },
+      "additionalProperties": false
+    },
+    "serviceAreas": {"type": "array", "items": {"type": "object", "required": ["value", "factId", "verification"], "properties": {"value": {}, "factId": {"type": "string"}, "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]}}, "additionalProperties": false}},
+    "services": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "people": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "projects": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "testimonials": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "accreditations": {"type": "array", "items": {"$ref": "#/$defs/entity"}}
+  },
+  "additionalProperties": false
 }

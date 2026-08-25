@@ -2,12 +2,9 @@
 
 Current stage: **Phase 3.8 — Product proof and correctness hardening**.
 
-Implementation has reached the Phase 3.7 service/tool-boundary exit, but two things must be true before broad Phase 4 work accelerates:
+Implementation has reached the Phase 3.7 service/tool-boundary exit. Before broad Phase 4 work accelerates, the remaining Phase 3.8 correctness/product gates should be closed while the surface area is still small, and the genuine real-business product proof should be completed rather than relying only on synthetic acceptance fixtures.
 
-1. the genuine real-business `<20 meaningful edits` product proof still has to be completed using real source material rather than only the synthetic Acme regression fixture;
-2. newly identified correctness/security gaps should be closed while the surface area is still small.
-
-The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
+The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
 Machine-readable progress authority: `config/factory-status.json`.
 
@@ -78,6 +75,8 @@ Machine-readable progress authority: `config/factory-status.json`.
 - `npm run ingest` CLI
 - Phase 3 doctor and mixed business-pack acceptance
 
+The existing Phase 3 brand observations are the base for later BrandSpec/asset intelligence; do not create a second parallel brand-extraction pipeline.
+
 ## Phase 3.5 — Factory Control Plane ✅ Foundation Complete
 
 ### Phase 3.5A — Durable control primitives ✅ Complete
@@ -146,11 +145,9 @@ The existing Acme mixed-source acceptance remains valuable as a reproducible reg
 - meaningful manual edits counted and categorized;
 - deterministic/AI cost, elapsed work and interventions recorded.
 
-Initial target: fewer than **20 meaningful manual edits** between generated output and a launchable result.
+Initial target: fewer than **20 meaningful manual edits** between generated output and a launchable result. This target should tighten toward <=5 median edits for proven mainstream website classes as the real-world corpus grows.
 
 ## Phase 3.7 — Factory Service and Real Ledger Integration ✅ Core exit complete
-
-The service boundary now exists and owns durable project operations needed before the full Console becomes a real client.
 
 Delivered/core exit:
 - `apps/service` private/local service boundary;
@@ -169,33 +166,34 @@ Further service capabilities should be added only when Phase 4 actually needs th
 
 ## Phase 3.8 — Product Proof and Correctness Hardening 🚧 Current
 
-Purpose: close high-value correctness gaps discovered by the audit and establish the few foundations that are cheaper to solve before the Builder Console becomes large.
+Purpose: close high-value correctness gaps discovered by audit/review and establish the few foundations that are cheaper to solve before the Builder Console becomes large.
 
-### 3.8A — ChangeSet path-policy correctness — P0
+### 3.8A — ChangeSet path-policy correctness ✅ Core fix complete
 
-- replace prefix-like scope matching with normalized, segment-correct glob semantics;
-- reject absolute/traversal/ambiguous repository paths before matching;
-- prefer Node 22 native glob matching if it satisfies the required contract;
-- add adversarial examples for sibling-prefix escape (`src/**` must not match `src2/...`);
-- add `fast-check` property tests around allow/deny/expected-file policy behavior.
+Delivered:
+- segment-correct repository path semantics instead of textual-prefix matching;
+- canonical repository-relative paths and Windows separator normalization;
+- fail-closed rejection of traversal/absolute/ambiguous paths;
+- unsafe/unsupported declared scope rules rejected before work starts;
+- adversarial sibling-prefix regression tests.
 
-Exit gate: autonomous ChangeSet scope cannot be escaped via textual path-prefix collisions.
+Follow-up before broad autonomous mutation:
+- add `fast-check` property tests around allow/deny/expected-file behavior.
 
-### 3.8B — Schema/type/runtime contract unification — P0
+### 3.8B — Schema/type/runtime contract unification ✅ First contract family complete
 
-Target:
+Target architecture:
 
 `JSON Schema -> generated packages/contracts types -> Ajv boundary validation`
 
-- make `/schemas` canonical for machine-readable data contracts;
-- generate TypeScript contracts rather than maintaining overlapping handwritten declarations;
-- remove hand-duplicated validator enums/rules as each schema moves to Ajv;
-- add deterministic contract-generation/drift CI;
-- keep structural validity separate from adapter/module buildability.
+Delivered for Project Manifest v1/v2:
+- `/schemas` is the runtime validation authority;
+- Ajv validates the Manifest directly from JSON Schema;
+- schema-derived TypeScript declaration generation exists;
+- duplicated manifest validation enums/rules have been removed from the handwritten runtime validator;
+- structural validity remains separate from adapter/module buildability.
 
-Candidate tooling:
-- `ajv`;
-- `json-schema-to-typescript` or the best equivalent proven against current schemas.
+Continue incrementally for remaining stable contract families rather than attempting a risky all-at-once type rewrite. Add deterministic contract-generation/drift CI as generated/shared contracts become consumed by more apps.
 
 ### 3.8C — Executed Supabase security acceptance — P0
 
@@ -216,6 +214,8 @@ Candidate tooling:
 
 Complete Phase 3.6C honestly and feed observed edit categories back into composer/templates/recipes before major Phase 4 polish.
 
+In addition to correctness, record brand/asset shortcomings, generic-design issues, image gaps, copy/messaging edits and responsive/visual edits so the later Visual Excellence programme is evidence-led.
+
 ### 3.8F — MCP interoperability facade — P1
 
 Expose the existing safe factory service tool contract through MCP v2:
@@ -233,6 +233,20 @@ Do not expose production deploy/database writes, raw secrets, arbitrary filesyst
 
 MCP remains an adapter rather than a new source of factory truth.
 
+### 3.8G — Brand-source and asset-provenance foundation — P1/P2
+
+Extend the existing content/asset intelligence rather than creating a second extraction subsystem.
+
+Plan:
+- accept company-uploaded logos, photos, screenshots and brand guidelines as first-class assets;
+- treat the existing company website as a primary brand/content source;
+- accept exact user-provided public company profile URLs (for example Facebook, Instagram, LinkedIn) as optional enrichment sources;
+- prefer authorised APIs/connectors when available and do not build platform-bypass scraping as a dependency;
+- support explicitly reviewed public discovery only where permitted and useful;
+- derive palette/logo/typography/imagery/tone/navigation/style signals with confidence and source references;
+- introduce asset-rights/use status so "publicly visible" never silently means "approved to republish";
+- preserve `instructionAuthority: none` for all imported external content.
+
 ## Phase 4 — Full Builder Console ⬜ Planned
 
 Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client of `apps/service` rather than expanding browser-only state.
@@ -248,16 +262,26 @@ Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client
 - desktop/tablet/mobile preview switching;
 - checkpoint/version visibility.
 
-### Phase 4B — Direct manipulation and assets
+### Phase 4B — Direct manipulation, brand sources and assets
 
 - click-to-select/edit through PageSpec/SectionSpec identity;
 - text/content editing with provenance awareness;
 - component/section variant selection;
-- asset manager/replacement/crop selection;
+- first-class company image/logo/document upload;
+- import exact existing-site and approved/public company profile sources through the service;
+- show source confidence, provenance and asset-rights/use state;
+- asset manager/replacement/crop/focal-point selection;
+- mark assets approved, suggested, generated, rejected or "do not use";
+- compare supplied and generated alternatives;
 - explicit generated-vs-source-backed content state;
+- project asset policy modes:
+  - supplied only;
+  - supplied + optimise;
+  - supplied + generate gaps;
+  - generation-forward;
 - Design Contract editing.
 
-### Phase 4C — Design System Registry and `DesignSystemSpec`
+### Phase 4C — Design System Registry, BrandSpec and art direction
 
 Use shadcn registry architecture as prior art, not as a mandatory runtime dependency.
 
@@ -276,13 +300,44 @@ Create distinct but related registries:
 
 Add deterministic design-system linting so later AI cannot silently invent a second design system.
 
-### Phase 4D — Visual design canvas and controlled variants
+Introduce a machine-readable `BrandSpec` grounded in supplied/observed evidence:
+- approved/observed palette and logo assets;
+- typography intent;
+- imagery and icon language;
+- tone/voice examples;
+- brand adjectives/anti-adjectives;
+- reference sources and confidence;
+- source-vs-generated asset policy.
 
-- bounded candidate design/layout variants from the same product/content truth;
+Introduce `ArtDirectionPlan` above individual SectionSpecs:
+- narrative/emotional sequence;
+- attention hierarchy;
+- page tempo/density changes;
+- hero strategy;
+- photographic/editorial/product/UI emphasis;
+- distinctive moments;
+- restraint rules;
+- desktop/mobile composition intent;
+- conversion emphasis appropriate to the business category.
+
+Introduce `MotionContract`:
+- entrances, scroll and page transitions;
+- hover/focus/press language;
+- hero/parallax/background allowances;
+- stagger/density limits;
+- mobile reductions;
+- reduced-motion behavior;
+- explicit no-motion zones.
+
+### Phase 4D — Visual design canvas and controlled art-direction variants
+
+- produce 2–4 genuinely different bounded candidate art directions/layouts from the same product/content truth;
+- ingest moodboards, screenshots, existing sites and design references into adopt/avoid intent rather than blindly copying them;
 - large/infinite comparison canvas or equivalent workspace;
 - responsive and interaction-state preview;
-- explicit promote/reject flow into durable design/composition state;
-- variant decisions recorded as evidence rather than accumulating unofficial forks.
+- explicit promote/reject flow into durable BrandSpec/ArtDirectionPlan/Design Contract/composition state;
+- variant decisions recorded as evidence rather than accumulating unofficial forks;
+- require at least one appropriate distinctive visual moment for premium marketing builds while preserving restraint.
 
 ### Phase 4E — Environments, integrations and release controls
 
@@ -319,7 +374,9 @@ Default direction:
 - Pagefind search recipe for compatible marketing/content builds;
 - knowledge-derived typed JSON-LD (`Organization`, `LocalBusiness`, `Service`, `FAQPage`, `Article`, breadcrumbs etc. where evidence supports it);
 - deterministic OG/social images with Satori + existing Sharp;
-- page-level SEO/meta output appropriate to the selected template.
+- page-level SEO/meta output appropriate to the selected template;
+- deterministic asset suitability/quality scoring, responsive crop variants and focal-point metadata;
+- detect duplicate, undersized, badly-cropped and obviously unsuitable assets before AI image generation is considered.
 
 ## Phase 4.3 — Mature Website-Builder Capabilities ⬜ Planned
 
@@ -391,6 +448,21 @@ Resume deferred 3.5C immediately before powerful autonomous agents are enabled:
 - isolated per-project/per-task workspaces and scoped secrets;
 - browser/visual agent workflows.
 
+### Phase 5 visual/content specialists
+
+Add specialists only after the deterministic BrandSpec/asset/design contracts exist:
+
+- **art-direction specialist** — proposes bounded ArtDirectionPlan candidates, not arbitrary redesigns;
+- **messaging/positioning specialist** — keeps facts, permitted claims, messaging, voice and conversion strategy separate;
+- **image-planning specialist** — creates a provider-neutral `ImagePlan` per page/section;
+- **image generation/edit adapter** — factory-side only; selectable provider(s), no generated-app runtime dependency;
+- **asset selection specialist** — ranks supplied/approved assets before generating replacements;
+- **visual second opinion** — independently reviews whether the proposed design is distinctive, appropriate and on-brand.
+
+`ImagePlan` should record purpose, subject/composition, aspect ratio, real-vs-generated requirement, candidate supplied assets, brand references, focal point/safe zones, responsive variants, provenance/rights, approval state and generation/edit cost/history.
+
+Generated imagery must not misleadingly imply real staff, completed projects, customers, premises or products when those things are not real/approved.
+
 MCP delivers early interoperability, but it does **not** replace the later runtime's sandboxing, scheduling, specialist routing, resumability and hard-budget responsibilities.
 
 ## Phase 5.5 — AI Evaluation and Red Team ⬜ Planned
@@ -402,19 +474,31 @@ MCP delivers early interoperability, but it does **not** replace the later runti
 - dangerous-tool/permission-bypass tests;
 - context-router leakage tests;
 - second-opinion agreement metrics;
+- image-model/provider benchmark by task class, quality, acceptance rate and cost;
+- generated-image rights/provenance/policy tests;
 - evaluate Promptfoo specifically where it materially improves red-team coverage.
 
 ## Phase 6 — Quality and Autonomous Verification ⬜ Planned
 
 - full unit/integration/E2E/accessibility/performance/security gates;
-- screenshot/visual review against Design Contract/DesignSystemSpec;
+- screenshot/visual review against Design Contract/DesignSystemSpec/BrandSpec/ArtDirectionPlan;
 - independent second-opinion review for material changes;
+- render representative widths around 375px, 430px, tablet, laptop, desktop and wide desktop where useful;
+- review hierarchy, attention, whitespace, density and repetitive section rhythm;
+- review mobile composition rather than only responsive correctness;
+- review CTA visibility and conversion flow;
+- review typography consistency/legibility;
+- review image relevance, crop/focal-point quality and responsive crop safety;
+- detect face/text/logo distortion and implausible/misleading synthetic imagery;
+- review motion restraint and reduced-motion behavior against MotionContract;
 - responsive/data/error/loading/empty/large-data stress scenarios;
 - slow/offline/failing-API scenarios;
 - Lighthouse-style performance budgets;
 - Semgrep/Gitleaks-style security/secret gates where they outperform bespoke doctor checks;
 - bounded autonomous correction through control-plane tasks;
 - deployment smoke tests.
+
+Visual findings should become structured bounded ChangeSets with a limited correction pass rather than an unbounded "make it prettier" loop.
 
 ## Phase 7 — Launch, Operations and Upgrade Propagation ⬜ Planned
 
@@ -426,7 +510,9 @@ MCP delivers early interoperability, but it does **not** replace the later runti
 - handover/architecture documentation;
 - reviewed recipe/module/presentation-registry upgrade propagation;
 - safe three-way managed-file reconciliation;
-- reusable pattern promotion workflow.
+- reusable pattern promotion workflow;
+- approved brand/asset usage report so generated/supplied/public assets remain traceable;
+- common integration acceptance for the small set of integrations the factory claims as first-class rather than a shallow catalogue of hundreds.
 
 ## Phase 7.5 — Experiments and Controlled Personalization ⬜ Later
 
@@ -437,23 +523,62 @@ After analytics, privacy and deployment state are mature:
 - conversion evidence captured into the factory improvement system;
 - personalization only when explicit, measurable, privacy-compliant and reversible.
 
-## Phase 8 — Evidence-Driven Factory Improvement ⬜ Planned
+## Phase 8 — Evidence-Driven Factory Improvement and Gold Standard ⬜ Planned
 
 - analyse manual edits and rework across projects;
 - propose versioned questionnaire improvements;
 - identify capabilities worth promoting into reusable recipes/sections/components;
 - measure tokens/cost/time saved;
-- track design-variant acceptance/rejection evidence;
+- track design/art-direction variant acceptance/rejection evidence;
+- track asset problems and generated-image acceptance/rejection reasons;
 - track experiment outcomes where enabled;
 - benchmark one-prompt builds only after the deterministic pipeline is genuinely useful;
-- compare model/skill/router versions against accepted baselines;
+- compare model/skill/router/image-provider versions against accepted baselines;
+- retire repeatedly weak/generic visual patterns rather than only adding new ones;
 - no silent self-modification: every improvement remains reviewed, versioned and regression-tested.
+
+### Real-world benchmark corpus
+
+The six canonical project classes remain engineering regressions. Build a separate corpus that grows toward roughly **30–50 varied real-world projects** across local services/trades, professional services, hospitality, health, property/construction, charity, SaaS/B2B, AI products, creator/editorial, ecommerce/brands and internal applications.
+
+Track per project:
+- first-build success;
+- meaningful manual edits before acceptable launch;
+- visual/product and mobile scores;
+- content accuracy/unsupported claims;
+- accessibility/performance/SEO/security;
+- functional journey success;
+- elapsed time and AI/model/tool cost;
+- human interventions;
+- accepted/rejected art-direction variants;
+- asset issues and generated-image acceptance rate.
+
+### Long-run 10/10 Gold Standard
+
+For **supported mainstream website classes**, target measurable evidence rather than a marketing label:
+
+- >=98% build success without developer intervention;
+- median <=5 meaningful manual edits before launch;
+- a growing material share launchable untouched;
+- blind human visual/product review average >=9/10;
+- no unsupported factual claims;
+- no serious/critical accessibility failures;
+- agreed Core Web Vitals/performance budgets pass;
+- zero known critical/high security findings at release;
+- all Build Contract acceptance journeys pass;
+- generated repos independently clone/install/build;
+- AI/model/tool cost stays within the declared budget.
+
+A project outside the proven envelope must be classified honestly as factory-supported, supported with custom implementation, specialist/novel engineering required, or unsupported/approval-required. Do not pretend a standard business site and highly bespoke WebGPU/multiplayer/creative software have the same expected first-pass reliability.
 
 ## Architectural follow-ups to preserve
 
 - add short ADRs for durable-state choice, control-plane ownership, template strategy, backend defaults, deployment defaults and environment identity;
 - do not adopt `lucide-react` as a default generated dependency when static SVG copying solves the need;
-- do not add another SVG rasterizer while Sharp satisfies the social-image pipeline;
+- do not add another SVG rasterizer while Sharp satisfies the deterministic social-image pipeline;
+- image-generation providers remain factory adapters, not generated-app dependencies;
+- social/profile enrichment must prefer exact URLs, official/public surfaces and authorised connectors rather than platform-bypass scraping;
+- publicly visible assets retain rights/use state and are never assumed approved for republication;
 - do not make Hono authoritative for contracts;
 - evaluate `@mozilla/readability` against real crawled sites before adopting it;
 - do not adopt Temporal/LangGraph/large orchestration frameworks unless measured complexity later justifies them;

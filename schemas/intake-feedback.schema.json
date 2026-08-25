@@ -1,0 +1,16 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"App Builder Intake Feedback",
+  "type":"object",
+  "required":["id","type","createdAt"],
+  "properties":{
+    "id":{"type":"string"},
+    "type":{"enum":["missing-requirement","corrected-answer","unnecessary-question","accepted-default","architecture-rework"]},
+    "questionId":{"type":"string"},
+    "detail":{"type":"string"},
+    "previousValue":{},
+    "nextValue":{},
+    "createdAt":{"type":"string"}
+  },
+  "additionalProperties":false
+}

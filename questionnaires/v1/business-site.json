@@ -1,11 +1,11 @@
 {
-  "version":"1.1.0","id":"business-site","extends":"base","questions":[
+  "version":"1.2.0","id":"business-site","extends":"base","questions":[
     {"id":"company_identity","label":"Tell us about the company","type":"company-identity","required":true,"depth":"quick","impact":"blocking"},
     {"id":"services","label":"What services/products should the site present?","type":"list","required":true,"depth":"quick","impact":"blocking"},
-    {"id":"locations","label":"What areas/locations does the company serve?","type":"list","depth":"standard","impact":"high"},
+    {"id":"locations","label":"What areas/locations does the company serve?","type":"list","depth":"standard","impact":"high","followUpIfMissing":true},
     {"id":"conversion","label":"What should visitors do next?","type":"multi-select","depth":"quick","impact":"high","default":["contact form"],"options":["call","email","contact form","quote request","book appointment","buy","other"]},
     {"id":"trust","label":"What proof can we use?","type":"multi-select","depth":"standard","impact":"normal","options":["testimonials","accreditations","case studies","project photos","awards","client logos","none"]},
-    {"id":"existing_site","label":"Is there an existing website to migrate or research?","type":"url","depth":"standard","impact":"normal"},
+    {"id":"existing_site","label":"What existing website should we migrate or research?","type":"url","depth":"standard","impact":"normal","when":{"questionId":"existing_inputs","includes":["existing website"]}},
     {"id":"contact_details","label":"What contact details should be public?","type":"contact-details","depth":"standard","impact":"high"},
     {"id":"seo_priority","label":"How important is local/search visibility for V1?","type":"single-select","depth":"standard","impact":"normal","default":"important","options":["basic","important","critical"]},
     {"id":"content_approval","label":"Who must approve generated company copy before publishing?","type":"single-select","depth":"thorough","impact":"normal","default":"me","options":["me","company contact","no formal approval"]}

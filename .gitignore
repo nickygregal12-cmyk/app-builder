@@ -8,3 +8,5 @@ coverage/
 *.log
 generated/
 .tmp/
+test-results/
+playwright-report/

@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Bounded Ambiguity Follow-up Request",
+  "type":"object",
+  "required":["version","required","maxQuestions","aiAllowed","budget","candidates"],
+  "properties":{
+    "version":{"const":1},
+    "required":{"type":"boolean"},
+    "maxQuestions":{"type":"integer","minimum":0,"maximum":5},
+    "aiAllowed":{"type":"boolean"},
+    "budget":{"type":"object","required":["maxTokens","modelClass"],"properties":{"maxTokens":{"type":"integer","minimum":0,"maximum":2000},"modelClass":{"const":"economy"}}},
+    "candidates":{"type":"array","maxItems":5,"items":{"type":"object","required":["id","questionId","question","reason","impact"],"properties":{"id":{"type":"string"},"questionId":{"type":"string"},"question":{"type":"string"},"reason":{"type":"string"},"impact":{"type":"string"}}}}
+  }
+}

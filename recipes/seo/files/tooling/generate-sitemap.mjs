@@ -1,0 +1,2 @@
+import fs from 'node:fs';
+const siteUrl=process.env.SITE_URL?.replace(/\/$/,'');if(!siteUrl){console.log('SITE_URL is not set; skipping sitemap generation.');process.exit(0);}const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${siteUrl}/</loc></url>\n</urlset>\n`;fs.mkdirSync('public',{recursive:true});fs.writeFileSync('public/sitemap.xml',xml);console.log(`Generated sitemap for ${siteUrl}`);

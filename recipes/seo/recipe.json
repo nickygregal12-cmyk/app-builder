@@ -5,9 +5,9 @@
   "version": "1.0.0",
   "status": "ready",
   "compatibleTemplates": ["react-vite-neutral"],
-  "files": ["src/features/seo/index.ts"],
+  "files": ["src/features/seo/index.ts","public/robots.txt","tooling/generate-sitemap.mjs"],
   "requires": [],
   "conflicts": [],
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{}},
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{"prebuild":"node tooling/generate-sitemap.mjs"}},
   "entry": "src/features/seo/index.ts"
 }

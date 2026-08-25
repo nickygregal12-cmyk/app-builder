@@ -40,12 +40,13 @@ test('Builder Console drives a real service generation, verification and preview
 
   // Playwright retries share the same service process. Give each attempt a
   // unique durable project/workspace so a failed first attempt cannot poison
-  // the retry with an already-materialised repository.
+  // the retry with an already-materialised repository or ambiguous project tile.
   const suffix = `${testInfo.workerIndex}-${testInfo.retry}`;
   const projectId = `project-workspace-e2e-${suffix}`;
+  const projectName = `Workspace E2E ${suffix}`;
   const projectManifest = {
     ...manifest,
-    project: { ...manifest.project, slug: `workspace-e2e-${suffix}` },
+    project: { ...manifest.project, name: projectName, slug: `workspace-e2e-${suffix}` },
   };
 
   const created = await page.request.post('/api/projects', { data: { id: projectId, manifest: projectManifest } });
@@ -53,11 +54,11 @@ test('Builder Console drives a real service generation, verification and preview
 
   await page.goto('/builder');
   await expect(page.getByRole('heading', { name: 'Projects become durable factory work.' })).toBeVisible();
-  const project = page.locator('.project-tile').filter({ hasText: 'Workspace E2E' });
+  const project = page.locator('.project-tile').filter({ hasText: projectName });
   await expect(project.getByText('ready', { exact: true })).toBeVisible();
   await project.getByRole('button', { name: /Open workspace/ }).click();
 
-  await expect(page.getByRole('heading', { name: 'Workspace E2E' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: projectName })).toBeVisible();
   await expect(page.getByText('£0.00')).toBeVisible();
   await page.getByRole('button', { name: 'Generate project' }).click();
   await expect(page.locator('.state-pill')).toHaveText('generated', { timeout: 30_000 });
@@ -72,7 +73,7 @@ test('Builder Console drives a real service generation, verification and preview
 
   await page.getByRole('button', { name: 'Start preview' }).click();
   await expect(page.getByRole('button', { name: 'Stop preview' })).toBeVisible({ timeout: 20_000 });
-  const preview = page.getByTitle('Workspace E2E preview');
+  const preview = page.getByTitle(`${projectName} preview`);
   await expect(preview).toBeVisible();
   await expect(preview.contentFrame().getByRole('heading', { name: 'Workspace E2E' })).toBeVisible({ timeout: 20_000 });
 

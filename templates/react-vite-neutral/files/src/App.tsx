@@ -68,8 +68,26 @@ function itemDetail(value: unknown) {
   return entries.map(([key, item]) => `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`);
 }
 
+type SocialProfile = { platform?: string; url?: string; value?: string };
+
+function socialProfiles(value: unknown): SocialProfile[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is SocialProfile => Boolean(item) && typeof item === 'object');
+}
+
+function SocialLinks({ profiles }: { profiles: unknown }) {
+  const entries = socialProfiles(profiles).map((item) => ({ platform: text(item.platform) || 'profile', url: text(item.url ?? item.value) })).filter((item) => item.url);
+  if (!entries.length) return null;
+  return <ul className="social-links">{entries.map((item) => <li key={item.url}>
+    <a href={item.url} rel="noopener noreferrer" target="_blank">{item.platform}</a>
+  </li>)}</ul>;
+}
+
+// Items with nothing but a name are a list, not a grid of tall empty cards.
 function Items({ values, className = 'item-grid' }: { values: unknown; className?: string }) {
   if (!Array.isArray(values) || values.length === 0) return null;
+  const detailed = values.some((item) => itemDetail(item).length > 0);
+  if (!detailed) return <ul className="plain-list">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}</ul>;
   return <div className={className}>{values.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
     <h3>{itemTitle(item)}</h3>
     {itemDetail(item).map((detail) => <p key={detail}>{detail}</p>)}
@@ -84,7 +102,7 @@ function Actions({ actions, navigate }: { actions: readonly Action[]; navigate: 
 function GenericSection({ section, navigate }: { section: SectionSpec; navigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void }) {
   const title = binding(section, 'title');
   const body = binding(section, 'body');
-  const itemBindings = section.bindings.filter((item) => !['title', 'body', 'eyebrow', 'email', 'phone', 'address'].includes(item.key));
+  const itemBindings = section.bindings.filter((item) => !['title', 'body', 'eyebrow', 'email', 'phone', 'address', 'website', 'profiles'].includes(item.key));
   return <section className={`page-section section-${section.type} variant-${section.variant}`} id={section.id} data-section-id={section.id} data-section-type={section.type}>
     <div className="section-heading">
       {title && <h2 data-binding-origin={title.origin} data-generated={String(title.generated)}>{text(title.value)}</h2>}
@@ -111,13 +129,16 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
     const email = binding(section, 'email');
     const phone = binding(section, 'phone');
     const address = binding(section, 'address');
+    const website = binding(section, 'website');
     return <section className="page-section contact-section" id={section.id} data-section-id={section.id}>
       {title && <h2>{text(title.value)}</h2>}
       <div className="contact-grid">
         {email && <a href={`mailto:${text(email.value)}`} data-binding-origin={email.origin}><span>Email</span><strong>{text(email.value)}</strong></a>}
         {phone && <a href={`tel:${text(phone.value).replace(/\s+/g, '')}`} data-binding-origin={phone.origin}><span>Phone</span><strong>{text(phone.value)}</strong></a>}
         {address && <div data-binding-origin={address.origin}><span>Address</span><strong>{text(address.value)}</strong></div>}
+        {website && <a href={text(website.value)} data-binding-origin={website.origin}><span>Website</span><strong>{text(website.value)}</strong></a>}
       </div>
+      <SocialLinks profiles={binding(section, 'profiles')?.value} />
     </section>;
   }
 
@@ -134,6 +155,40 @@ function LegacyFoundation() {
     <section className="legacy-hero"><p className="eyebrow">{project.type.replaceAll('-', ' ')}</p><h1>{project.name}</h1><p className="hero-copy">{project.primaryGoal}</p></section>
     <section className="legacy-status"><strong>Composition has not been generated for this low-level factory call.</strong><span>{installedRecipes.length} recipe{installedRecipes.length === 1 ? '' : 's'} installed.</span></section>
   </main>;
+}
+
+// Everything here is business information. Factory diagnostics — design label,
+// recipe count, composition warnings — are development-only: publishing them
+// put build metadata in front of customers.
+function SiteFooter({ navigation, navigate }: { navigation: readonly PageSpec[]; navigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void }) {
+  const contact = composed.sections.find((item) => item.type === 'contact-panel');
+  const email = contact && binding(contact, 'email');
+  const phone = contact && binding(contact, 'phone');
+  const areas = composed.sections.find((item) => item.type === 'location-list');
+  const areaNames = Array.isArray(areas && binding(areas, 'items')?.value)
+    ? (binding(areas!, 'items')!.value as unknown[]).map(itemTitle).filter(Boolean)
+    : [];
+
+  return <footer className="site-footer">
+    <div className="footer-identity">
+      <strong>{project.name}</strong>
+      {areaNames.length > 0 && <span>{areaNames.join(' · ')}</span>}
+      <small>© {new Date().getFullYear()} {project.name}</small>
+    </div>
+    <div className="footer-contact">
+      {email && <a href={`mailto:${text(email.value)}`}>{text(email.value)}</a>}
+      {phone && <a href={`tel:${text(phone.value).replace(/\s+/g, '')}`}>{text(phone.value)}</a>}
+      {contact && <SocialLinks profiles={binding(contact, 'profiles')?.value} />}
+    </div>
+    <nav className="footer-nav" aria-label="Footer navigation">
+      {navigation.map((page) => <a href={page.path} onClick={(event) => navigate(event, page.path)} key={page.id}>{page.navigation.label}</a>)}
+    </nav>
+    {import.meta.env.DEV && <div className="factory-meta" data-development-only="true">
+      <span>{design.label}</span>
+      <span>{installedRecipes.length} deterministic capabilities</span>
+      <span>{composed.warnings.length ? `${composed.warnings.length} composition warnings` : 'Composition complete'}</span>
+    </div>}
+  </footer>;
 }
 
 export default function App() {
@@ -166,6 +221,6 @@ export default function App() {
     <main className="app-shell" data-page-id={currentPage.id}>
       {currentPage.sectionIds.map((sectionId) => sectionMap.get(sectionId)).filter((section): section is SectionSpec => Boolean(section)).map((section) => <Section key={section.id} section={section} navigate={navigate} />)}
     </main>
-    <footer className="site-footer"><div><strong>{project.name}</strong><span>{project.primaryGoal}</span></div><div className="factory-meta"><span>{design.label}</span><span>{installedRecipes.length} deterministic capabilities</span><span>{composed.warnings.length ? `${composed.warnings.length} composition warnings` : 'Composition complete'}</span></div></footer>
+    <SiteFooter navigation={navigation} navigate={navigate} />
   </div>;
 }

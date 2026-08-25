@@ -7,8 +7,8 @@
       "schema": "project-manifest.schema.json",
       "typeName": "AppBuilderProjectManifest",
       "boundary": "Service project creation, generator input and manifest file reads.",
-      "typesHash": "922dcf8a65143ae0410d4bba864030c7e91e1f5fb7d11fc95521a57ed4920148",
-      "schemaHash": "d8a740f71d146b9234b57945948dfc8582ed2521916181ed800437bfa3cec3c2"
+      "typesHash": "ae8b75621a2ed2daf13530bc4528c1493373cc417e0438858fa59962ad6cba0e",
+      "schemaHash": "1e2578080d3d3d6d74135f201924c1a8fc0b02b2ff63ed64ecf44ef81fb3e04c"
     },
     {
       "id": "build-contract",
@@ -31,7 +31,7 @@
       "schema": "knowledge-pack.schema.json",
       "typeName": "AppBuilderKnowledgePack",
       "boundary": "Content-intelligence output, service ingestion and composition input.",
-      "typesHash": "6a92936d0982ba423259f870b0905700d227f7be3f54d26680f0ecd7a54f63a5",
+      "typesHash": "aba82cecea07208e912f216c70495b7f9d611eede4d55e5c3e590e10aedfd0dc",
       "schemaHash": "5243d0150873895afcdea1b6216d561edea863b1b5c8e3679f609343bf237d7f"
     },
     {

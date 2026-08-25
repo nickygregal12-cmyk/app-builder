@@ -108,13 +108,38 @@ function serviceAreaBinding(pack, manifest) {
   return locations.length ? manifestBinding('items', locations.map((name) => ({ name }))) : null;
 }
 
+const CONTACT_FIELDS = ['email', 'phone', 'address', 'website'];
+
 function contactBindings(pack, manifest) {
-  const output = [];
   const manifestContact = manifest?.company?.contactDetails ?? {};
-  for (const field of ['email', 'phone', 'address']) {
-    output.push(profileFieldBinding(field, pack, 'contact', field) ?? (manifestContact[field] ? manifestBinding(field, manifestContact[field]) : null));
+  return CONTACT_FIELDS
+    .map((field) => profileFieldBinding(field, pack, 'contact', field) ?? (manifestContact[field] ? manifestBinding(field, manifestContact[field]) : null))
+    .filter(Boolean);
+}
+
+// A social profile is often the only web presence a small business has, so it
+// is a first-class contact route rather than an extra. Rights are irrelevant
+// here: linking to a public profile is not republishing its content.
+function socialProfileBinding(pack, manifest) {
+  const fromKnowledge = list(pack?.companyProfile?.socialProfiles);
+  if (fromKnowledge.length) {
+    const factIds = fromKnowledge.map((item) => item.factId).filter(Boolean);
+    return binding('profiles', fromKnowledge.map((item) => ({ platform: item.platform, url: item.value })), 'knowledge-fact', {
+      factIds,
+      sourceIds: list(pack?.facts).filter((fact) => factIds.includes(fact.id)).map((fact) => fact.sourceId),
+    });
   }
-  return output.filter(Boolean);
+  const declared = list(manifest?.company?.socialProfiles)
+    .map((item) => (typeof item === 'string' ? { platform: platformFor(item), url: item } : { platform: item.platform ?? platformFor(item.url), url: item.url }))
+    .filter((item) => item.url);
+  return declared.length ? manifestBinding('profiles', declared) : null;
+}
+
+function platformFor(url) {
+  let host = '';
+  try { host = new URL(String(url)).hostname.toLowerCase().replace(/^www\./, ''); } catch { return 'website'; }
+  const known = ['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x', 'twitter', 'pinterest'];
+  return known.find((name) => host === `${name}.com` || host.endsWith(`.${name}.com`)) ?? host;
 }
 
 function projectDescriptionBinding(pack, manifest) {
@@ -138,8 +163,11 @@ function primaryAction(manifest, surfaces, pack) {
   if (goals.some((goal) => goal.includes('email')) && contact.email) return { label: 'Email', href: `mailto:${contact.email}` };
   const contactSurface = surfaces.find((surface) => /contact|quote|book/i.test(surface));
   if (contactSurface) return { label: goals.some((goal) => goal.includes('quote')) ? 'Request a quote' : 'Contact', href: `/${slugify(contactSurface)}` };
-  const journey = list(manifest?.journeys)[0];
-  return journey ? { label: String(journey), href: '#next' } : null;
+  if (contact.email) return { label: 'Email', href: `mailto:${contact.email}` };
+  if (contact.phone) return { label: 'Call', href: `tel:${String(contact.phone).replace(/\s+/g, '')}` };
+  // Deliberately no journey fallback: a journey is an internal acceptance item
+  // and "#next" was never a real destination.
+  return null;
 }
 
 function section(id, type, purpose, bindings, actions = [], assetIds = [], variant = 'default') {
@@ -151,8 +179,10 @@ function hero(pageId, surface, index, manifest, pack, action) {
   const body = index === 0 || /about/i.test(surface)
     ? projectDescriptionBinding(pack, manifest)
     : defaultBinding('body', `${surface} for ${manifest.project.name}.`);
-  const bindings = [manifestBinding('eyebrow', manifest.project.type.replaceAll('-', ' ')), title, body];
-  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, bindings, action ? [action] : [], [], index === 0 ? 'primary' : 'compact');
+  // No eyebrow. It previously carried the project type, which published a
+  // Build Contract field — "marketing site" — as a caption above the business
+  // name on every page.
+  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], action ? [action] : [], [], index === 0 ? 'primary' : 'compact');
 }
 
 function servicesSection(pageId, pack, manifest) {
@@ -198,8 +228,9 @@ function locationsSection(pageId, pack, manifest) {
 
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
-  if (!bindings.length) return null;
-  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', 'Contact'), ...bindings], [], [], 'panel');
+  const profiles = socialProfileBinding(pack, manifest);
+  if (!bindings.length && !profiles) return null;
+  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', 'Contact'), ...bindings, profiles], [], [], 'panel');
 }
 
 function entitiesSection(pageId, manifest) {
@@ -211,7 +242,14 @@ function entitiesSection(pageId, manifest) {
   ], [], [], 'list');
 }
 
+// Journeys describe what a product lets a user do, which is real content for an
+// application surface. On a published business or content site they are visitor
+// intents recorded during intake — "Understand what the company does" — and
+// must never be rendered as website copy.
+const PUBLISHED_SITE_TYPES = new Set(['marketing-site', 'content-site']);
+
 function journeysSection(pageId, manifest) {
+  if (PUBLISHED_SITE_TYPES.has(manifest?.project?.type)) return null;
   const journeys = list(manifest?.journeys);
   if (!journeys.length) return null;
   return section(`${pageId}-journeys`, 'item-grid', 'Present the core user journeys', [
@@ -275,7 +313,22 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
   }
 
   if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, manifest, action));
-  return output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
+  const unique = output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
+  return dropRepeatedHeading(unique);
+}
+
+// A page named Contact does not need a section also headed "Contact" directly
+// beneath it. The section keeps its identity and content; only the duplicated
+// heading is dropped.
+function dropRepeatedHeading(sections) {
+  const heroTitle = sections.find((item) => item.type === 'hero')?.bindings.find((item) => item.key === 'title')?.value;
+  if (typeof heroTitle !== 'string') return sections;
+  return sections.map((item) => {
+    if (item.type === 'hero') return item;
+    const title = item.bindings.find((entry) => entry.key === 'title');
+    if (typeof title?.value !== 'string' || title.value.toLowerCase() !== heroTitle.toLowerCase()) return item;
+    return { ...item, bindings: item.bindings.filter((entry) => entry !== title) };
+  });
 }
 
 function surfacesFor(manifest) {
@@ -290,7 +343,10 @@ function warningsFor(manifest, pack) {
   if (manifest?.project?.type === 'marketing-site') {
     if (!list(pack?.companyProfile?.services).length && !list(manifest?.company?.services).length) warnings.push('missing-services');
     const contacts = contactBindings(pack, manifest);
-    if (!contacts.length) warnings.push('missing-contact-details');
+    if (!contacts.length && !socialProfileBinding(pack, manifest)) warnings.push('missing-contact-details');
+    // A marketing site with no imagery is not launchable for most business
+    // classes, so silence here would be misleading.
+    if (!list(pack?.assets).length) warnings.push('no-imagery-available');
   }
   for (const capability of list(manifest?.constraints?.customCapabilities)) warnings.push(`custom-capability:${capability}`);
   for (const capability of list(manifest?.constraints?.unresolvedCapabilities)) warnings.push(`unresolved-capability:${capability}`);
@@ -300,16 +356,20 @@ function warningsFor(manifest, pack) {
 export function composeProject({ manifest, knowledgePack = null } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
   const surfaces = surfacesFor(manifest);
-  const action = primaryAction(manifest, surfaces, knowledgePack);
+  const projectAction = primaryAction(manifest, surfaces, knowledgePack);
   const sections = [];
   const pages = surfaces.map((surface, index) => {
     const slug = index === 0 ? 'home' : slugify(surface);
     const pageId = `page-${slug}`;
+    const path = index === 0 ? '/' : `/${slug}`;
+    // A call to action that links to the page the visitor is already on is a
+    // dead end, so it is dropped for that page rather than rendered.
+    const action = projectAction && projectAction.href === path ? null : projectAction;
     const pageSections = sectionsForPage({ surface, pageId, index, manifest, pack: knowledgePack, action });
     sections.push(...pageSections);
     return {
       id: pageId,
-      path: index === 0 ? '/' : `/${slug}`,
+      path,
       title: index === 0 ? manifest.project.name : surface,
       purpose: index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface} surface for ${manifest.project.name}.`,
       navigation: { label: surface, order: index, visible: true },

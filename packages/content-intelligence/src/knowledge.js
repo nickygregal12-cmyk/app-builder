@@ -82,6 +82,25 @@ function spreadsheetEntities(source, entities) {
   }
 }
 
+const SOCIAL_PLATFORMS = Object.freeze(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest']);
+
+function socialPlatform(url) {
+  let host = '';
+  try { host = new URL(String(url)).hostname.toLowerCase().replace(/^www\./, ''); } catch { return null; }
+  return SOCIAL_PLATFORMS.find((name) => host === `${name}.com` || host.endsWith(`.${name}.com`)) ?? null;
+}
+
+// A business site almost always links its own social profiles from the header
+// or footer. Those links are the profile identities themselves, so they are
+// facts about the company rather than content that needs republishing rights.
+function socialProfileFacts(source, factMap) {
+  for (const href of source.extraction.links ?? []) {
+    const platform = socialPlatform(href);
+    if (!platform) continue;
+    addFact(factMap, { path: `contact.social.${platform}`, value: String(href), sourceId: source.id, provenance: source.provenance, confidence: 0.9, verification: 'candidate' });
+  }
+}
+
 function contactFacts(source, factMap) {
   const text = source.extraction.text ?? '';
   for (const email of text.match(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi) ?? []) {
@@ -152,6 +171,9 @@ function createCompanyProfile(facts, entities) {
   return {
     identity: { name: field('identity.name'), legalName: field('identity.legalName'), description: field('identity.description') },
     contact: { email: field('contact.email'), phone: field('contact.phone'), website: field('contact.website'), address: field('contact.address') },
+    socialProfiles: facts
+      .filter((fact) => fact.path.startsWith('contact.social.'))
+      .map((fact) => ({ platform: fact.path.slice('contact.social.'.length), value: fact.value, factId: fact.id, verification: fact.verification })),
     serviceAreas: facts.filter((fact) => fact.path === 'serviceAreas').map((fact) => ({ value: fact.value, factId: fact.id, verification: fact.verification })),
     services: entities.services,
     people: entities.people,
@@ -247,6 +269,7 @@ export function buildKnowledgePack(normalizedSources, options = {}) {
     structuredCompany(source, factMap, entities);
     spreadsheetEntities(source, entities);
     contactFacts(source, factMap);
+    socialProfileFacts(source, factMap);
     const extraction = source.extraction;
     if (extraction.metadata?.title) {
       titles.push({ value: extraction.metadata.title, sourceId: source.id });

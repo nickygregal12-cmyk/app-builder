@@ -52,4 +52,4 @@ export function serializeIntakeBundle(input: { session: unknown; buildContract: 
 export function deriveEnabledModules(projectType: string, answers: Answers, projectTypesConfig: ProjectTypesConfig): string[];
 export function buildProjectManifest(input: { projectType: string; answers: Answers; projectTypesConfig: ProjectTypesConfig; sourceReferences?: SourceReference[] }): ProjectManifest;
 export function buildBuildContract(input: { projectType: string; answers: Answers; questions: Question[]; projectTypesConfig: ProjectTypesConfig; sourceReferences?: SourceReference[] }): BuildContract;
-export function approveBuildContract(contract: BuildContract): BuildContract;
+export function approveBuildContract(contract: Record<string, unknown> & { unresolvedHighImpactQuestions?: string[] }): BuildContract;

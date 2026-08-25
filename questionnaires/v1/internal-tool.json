@@ -1,12 +1,11 @@
 {
-  "version":"1.0.0",
-  "id":"internal-tool",
-  "extends":"base",
-  "questions":[
-    {"id":"internal_users","label":"Which teams or roles will use the tool?","type":"list","required":true},
-    {"id":"permissions","label":"Do different users need different permissions?","type":"single-select","default":"simple","options":["none","simple","complex/custom","decide for me"]},
-    {"id":"data_sources","label":"Where does the current data/workflow live?","type":"multi-select","options":["spreadsheets","documents","database","third-party API","email/manual process","new system"]},
-    {"id":"integrations","label":"What existing systems must it connect to?","type":"list","required":false},
-    {"id":"sensitivity","label":"How sensitive is the data?","type":"single-select","default":"normal-business-data","options":["normal-business-data","confidential","regulated/unknown"]}
+  "version":"1.1.0","id":"internal-tool","extends":"base","questions":[
+    {"id":"internal_users","label":"Which teams or job roles will use this tool?","type":"list","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"core_entities","label":"What records or work items does it manage?","type":"list","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"roles","label":"Do different users need different permissions?","type":"multi-select","depth":"standard","impact":"high","default":["admin","member"],"options":["admin","editor","member","viewer","custom"]},
+    {"id":"uploads","label":"Will users upload files?","type":"boolean","depth":"quick","impact":"high","default":false},
+    {"id":"integrations","label":"Which company systems or APIs must it connect to?","type":"list","depth":"standard","impact":"high"},
+    {"id":"audit_required","label":"Do changes/actions need an audit trail?","type":"boolean","depth":"standard","impact":"high","default":true},
+    {"id":"external_access","label":"Will anyone outside the company need access?","type":"boolean","depth":"thorough","impact":"high","default":false}
   ]
 }

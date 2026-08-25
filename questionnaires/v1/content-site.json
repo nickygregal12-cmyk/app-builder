@@ -1,12 +1,10 @@
 {
-  "version":"1.0.0",
-  "id":"content-site",
-  "extends":"base",
-  "questions":[
-    {"id":"content_types","label":"What kinds of content will be published?","type":"list","required":true},
-    {"id":"content_source","label":"Where will content come from?","type":"multi-select","options":["written in app","Markdown/files","existing website","CMS/API","AI-assisted","mixed"]},
-    {"id":"editorial_workflow","label":"Does content need draft/review/approval states?","type":"boolean","default":false},
-    {"id":"site_search","label":"Does V1 need on-site search?","type":"boolean","default":false},
-    {"id":"newsletter","label":"Does V1 need newsletter/email capture?","type":"boolean","default":false}
+  "version":"1.1.0","id":"content-site","extends":"base","questions":[
+    {"id":"content_types","label":"What kinds of content will be published?","type":"list","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"authors","label":"Who can create or edit content?","type":"single-select","depth":"quick","impact":"high","default":"single-owner","options":["single-owner","small-team","many-authors","decide for me"]},
+    {"id":"publishing_frequency","label":"How often will new content be published?","type":"single-select","depth":"standard","impact":"normal","default":"weekly-or-less","options":["rarely","weekly-or-less","daily","many-times-daily"]},
+    {"id":"site_search","label":"Does V1 need site search?","type":"boolean","depth":"standard","impact":"normal","default":false},
+    {"id":"newsletter","label":"Does V1 need newsletter/email capture?","type":"boolean","depth":"standard","impact":"normal","default":false},
+    {"id":"content_migration","label":"Is existing content being migrated?","type":"multi-select","depth":"thorough","impact":"high","options":["existing website","CMS export","documents","spreadsheet/CSV","none"]}
   ]
 }

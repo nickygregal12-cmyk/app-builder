@@ -1,14 +1,17 @@
 {
-  "version":"1.0.0","id":"base",
+  "version":"1.1.0","id":"base",
   "principles":["ask only relevant questions","prefer structured options/defaults","flag high-impact ambiguity before build","allow explicit decide-for-me answers"],
   "questions":[
-    {"id":"project_type","label":"What are you building?","type":"single-select","required":true,"options":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]},
-    {"id":"primary_goal","label":"What is the single most important outcome?","type":"text","required":true},
-    {"id":"target_users","label":"Who is it for?","type":"text","required":true},
-    {"id":"must_have","label":"What must V1 let users do?","type":"list","required":true},
-    {"id":"out_of_scope","label":"What should V1 explicitly not include?","type":"list","required":false},
-    {"id":"existing_inputs","label":"What source material do you already have?","type":"multi-select","options":["existing website","logo/brand","photos","screenshots","PDFs/docs","spreadsheets/CSV","database/API","none"]},
-    {"id":"design_control","label":"How much should the factory decide?","type":"single-select","default":"sensible-defaults","options":["sensible-defaults","show-design-directions","closely-follow-reference"]},
-    {"id":"cost_priority","label":"Optimise external running costs for","type":"single-select","default":"lowest-sensible-cost","options":["lowest-sensible-cost","balanced","performance-first"]}
+    {"id":"project_type","label":"What are you building?","type":"single-select","required":true,"depth":"quick","impact":"blocking","options":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]},
+    {"id":"project_name","label":"What should this project be called?","type":"text","required":true,"depth":"quick","impact":"blocking","placeholder":"e.g. TenderCheck"},
+    {"id":"primary_goal","label":"What is the single most important outcome?","type":"textarea","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"target_users","label":"Who is it for?","type":"textarea","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"must_have","label":"What must V1 let users do?","type":"list","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"out_of_scope","label":"What should V1 explicitly not include?","type":"list","depth":"standard","impact":"normal"},
+    {"id":"existing_inputs","label":"What source material do you already have?","type":"multi-select","depth":"standard","impact":"normal","options":["existing website","logo/brand","photos","screenshots","PDFs/docs","spreadsheets/CSV","database/API","none"]},
+    {"id":"design_control","label":"How much should the factory decide?","type":"single-select","depth":"quick","impact":"normal","default":"sensible-defaults","options":["sensible-defaults","show-design-directions","closely-follow-reference"]},
+    {"id":"cost_priority","label":"Optimise external running costs for","type":"single-select","depth":"quick","impact":"normal","default":"lowest-sensible-cost","options":["lowest-sensible-cost","balanced","performance-first"]},
+    {"id":"expected_scale","label":"Roughly how many users or visitors do you expect in the first year?","type":"single-select","depth":"standard","impact":"high","default":"under-1000","options":["under-100","under-1000","1000-10000","10000-plus","unknown"]},
+    {"id":"hard_constraints","label":"Are there any technologies, providers, budgets, deadlines or other hard constraints?","type":"list","depth":"thorough","impact":"high"}
   ]
 }

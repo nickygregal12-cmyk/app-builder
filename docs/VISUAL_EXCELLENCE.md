@@ -4,6 +4,12 @@ Status: **cross-cutting product-quality programme**. This document defines the a
 
 This is not a separate proprietary runtime. It extends the existing Manifest, knowledge-pack, Design Contract, DesignSystemSpec, PageSpec/SectionSpec, asset, evaluation and Builder Console architecture.
 
+The design-side machinery this programme depends on — the design-intelligence catalogue, machine-readable
+ArtDirectionPlan dimensions, DesignLint, the Component Manifest Protocol, Builder Element Identity, the
+RenderedEvidence contract and the portable design contract — is specified in `docs/DESIGN_INTELLIGENCE.md`.
+The specialists that own each of those decisions, and the reviewers that must independently approve them,
+are defined in `docs/AGENT_SPECIALIST_ARCHITECTURE.md`.
+
 ## Goal
 
 For supported website classes, App Builder should aim for boutique-agency / strong senior product-team quality on the first build, with measurable evidence rather than subjective claims.
@@ -198,6 +204,11 @@ The visual reviewer should evaluate more than DOM validity:
 
 Findings should become bounded ChangeSets with a limited correction pass, not an unbounded "make it prettier" loop.
 
+The reviewer is independent by construction: `design-critic` and `visual-critic` own no repository mutation
+scope, so they issue a scored `ReviewVerdict` and route rework to `art-direction`, `design-system` or
+`composition` rather than editing the product themselves. Deterministic DesignLint runs first, so the
+vision model spends its context on judgement rather than on defects a rule could have caught.
+
 ## 7. Real-world benchmark corpus
 
 The six canonical project classes remain engineering regression cases. They are not enough to prove design quality.
@@ -260,5 +271,6 @@ Patterns should become reusable factory capability only after repeated evidence:
 - frequently accepted image strategies can become deterministic rules;
 - common manual edits can improve questionnaires/composer/recipes;
 - weak or generic patterns should be retired;
+- skills and design-knowledge entries are promoted only through the lifecycle in `config/skill-registry.json`;
 - model/image-provider choices should be benchmarked by task class and cost;
 - all promotions remain reviewed, versioned and regression-tested.

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/stage-handoff.schema.json",
+  "title": "App Builder Stage Handoff",
+  "description": "Durable record of one stage promotion. An agent saying it is finished never advances a stage; this record does.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "projectId", "pipelineId", "stageId", "ownerRole", "producedArtifacts", "promoted", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "pipelineId": {"type": "string", "minLength": 1},
+    "stageId": {"type": "string", "minLength": 1},
+    "ownerRole": {"type": "string", "minLength": 1},
+    "nextStageId": {"type": ["string", "null"]},
+    "producedArtifacts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "ref": {"type": "string", "minLength": 1},
+          "hash": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "ref": {"type": "string", "minLength": 1},
+          "hash": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "deterministicChecks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["pass", "fail", "not-run", "not-applicable"]},
+          "ref": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "reviewVerdictId": {"type": ["string", "null"]},
+    "approvedBy": {"type": ["string", "null"], "description": "Independent reviewer role id, or 'human' for explicit user approval."},
+    "promoted": {"type": "boolean"},
+    "blockers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "createdAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

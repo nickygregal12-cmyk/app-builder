@@ -9,9 +9,16 @@ let failed = false;
 const required = [
   'docs/FACTORY_CONTROL_PLANE.md',
   'docs/AGENT_RUNTIME.md',
+  'docs/AGENT_SPECIALIST_ARCHITECTURE.md',
+  'docs/AGENT_HANDOFFS_AND_CONVERGENCE.md',
+  'docs/DESIGN_INTELLIGENCE.md',
   'config/factory-status.json',
   'config/agent-policies.json',
   'config/factory-benchmarks.json',
+  'config/agent-roles.json',
+  'config/agent-pipelines.json',
+  'config/skill-registry.json',
+  'config/external-sources.json',
   'schemas/control-task.schema.json',
   'schemas/build-event.schema.json',
   'schemas/change-set.schema.json',
@@ -22,13 +29,21 @@ const required = [
   'schemas/design-contract.schema.json',
   'schemas/recipe-installation.schema.json',
   'schemas/recipe-upgrade-proposal.schema.json',
+  'schemas/agent-role.schema.json',
+  'schemas/review-verdict.schema.json',
+  'schemas/stage-handoff.schema.json',
+  'schemas/convergence-report.schema.json',
+  'schemas/skill-registration.schema.json',
+  'schemas/external-source.schema.json',
   'packages/control-plane/package.json',
   'packages/control-plane/src/index.js',
   'packages/control-plane/src/upgrades.js',
+  'packages/control-plane/src/roles.js',
   'tooling/lib/recipe-upgrades.mjs',
   'tooling/plan-recipe-upgrades.mjs',
   'tooling/control-plane.test.mjs',
   'tooling/control-plane-upgrades.test.mjs',
+  'tooling/agent-architecture.test.mjs',
   'tooling/benchmark-acceptance.mjs',
 ];
 
@@ -49,9 +64,11 @@ try {
     console.error('Factory status must identify an active delivery stage.');
     failed = true;
   }
-  if (!(status.completedStages ?? []).includes('3.5A') || !(status.completedStages ?? []).includes('3.5B')) {
-    console.error('Factory status must retain Phase 3.5A/3.5B as completed control-plane foundations.');
-    failed = true;
+  for (const stage of ['3.5A', '3.5B', '3.8H']) {
+    if (!(status.completedStages ?? []).includes(stage)) {
+      console.error(`Factory status must retain Phase ${stage} as a completed foundation.`);
+      failed = true;
+    }
   }
   for (const doc of ['README.md', 'docs/ROADMAP.md']) {
     const text = fs.readFileSync(path.join(root, doc), 'utf8');
@@ -125,6 +142,120 @@ try {
     console.error('Control-plane package must expose the upgrade-planning helper.');
     failed = true;
   }
+  if (pkg.exports?.['./roles'] !== './src/roles.js') {
+    console.error('Control-plane package must expose the specialist-role primitives.');
+    failed = true;
+  }
+
+  // Specialist-agent architecture invariants. The detailed cross-reference checks live in
+  // tooling/agent-architecture.test.mjs; the doctor guards the boundaries that must never drift.
+  const roleRegistry = readJson('config/agent-roles.json');
+  const pipelineRegistry = readJson('config/agent-pipelines.json');
+  const skillRegistry = readJson('config/skill-registry.json');
+  const sourceRegistry = readJson('config/external-sources.json');
+  const routes = readJson('config/agent-routing.json').routes ?? {};
+  const roles = roleRegistry.roles ?? {};
+  const pipelines = pipelineRegistry.pipelines ?? {};
+
+  for (const [roleId, role] of Object.entries(roles)) {
+    if (!policies.policies?.[role.policyId]) {
+      console.error(`Role ${roleId} references unknown capability policy ${role.policyId}.`);
+      failed = true;
+    }
+    const route = routes[role.routeId];
+    if (!route) {
+      console.error(`Role ${roleId} references unknown context route ${role.routeId}.`);
+      failed = true;
+    } else if (role.contextCeilingTokens > route.maxTokens) {
+      console.error(`Role ${roleId} exceeds the ${role.routeId} context ceiling.`);
+      failed = true;
+    }
+    for (const skill of role.skills ?? []) {
+      if (!skillRegistry.skills?.[skill]) {
+        console.error(`Role ${roleId} requests unregistered skill ${skill}.`);
+        failed = true;
+      }
+    }
+    if (role.kind === 'reviewer' && (role.mutationScopes ?? []).length > 0) {
+      console.error(`Reviewer role ${roleId} must not own repository mutation scope.`);
+      failed = true;
+    }
+    if (role.kind === 'creator' && (role.reviewedBy ?? []).length === 0) {
+      console.error(`Creator role ${roleId} must declare an independent reviewer.`);
+      failed = true;
+    }
+    if ((role.reviewedBy ?? []).includes(roleId)) {
+      console.error(`Role ${roleId} cannot review itself.`);
+      failed = true;
+    }
+  }
+
+  const projectTypes = readJson('config/project-types.json').projectTypes ?? {};
+  for (const projectType of Object.keys(projectTypes)) {
+    if (!pipelines[projectType]) {
+      console.error(`Project type ${projectType} has no specialist pipeline.`);
+      failed = true;
+    }
+  }
+
+  for (const [pipelineId, pipeline] of Object.entries(pipelines)) {
+    for (const stage of pipeline.stages ?? []) {
+      const role = roles[stage.role];
+      if (!role) {
+        console.error(`${pipelineId}/${stage.id} references unknown role ${stage.role}.`);
+        failed = true;
+        continue;
+      }
+      if (role.kind === 'creator' && (!stage.reviewer || stage.reviewer === stage.role)) {
+        console.error(`${pipelineId}/${stage.id} would let ${stage.role} approve its own work.`);
+        failed = true;
+      }
+      if (role.kind === 'reviewer' && stage.reviewer) {
+        console.error(`${pipelineId}/${stage.id} is a reviewer stage and must not carry its own reviewer.`);
+        failed = true;
+      }
+    }
+    for (const gateId of pipeline.requiredGates ?? []) {
+      const gate = pipelineRegistry.gates?.[gateId];
+      if (!gate) {
+        console.error(`${pipelineId} requires unregistered gate ${gateId}.`);
+        failed = true;
+        continue;
+      }
+      const reworkRole = pipeline.reworkOverrides?.[gateId] ?? gate.defaultReworkRole;
+      if (roles[reworkRole]?.kind !== 'creator') {
+        console.error(`${pipelineId} gate ${gateId} must route rework to a creator role.`);
+        failed = true;
+      }
+    }
+  }
+
+  for (const [sourceId, source] of Object.entries(sourceRegistry.sources ?? {})) {
+    if (source.instructionAuthority !== 'none') {
+      console.error(`External source ${sourceId} must remain data, never instruction authority.`);
+      failed = true;
+    }
+    if (source.adoption === 'adopted-pinned') {
+      if (!source.pinnedRef || source.securityReview !== 'passed' || !source.license) {
+        console.error(`Adopted source ${sourceId} must be pinned, licensed and security reviewed.`);
+        failed = true;
+      }
+    } else if ((source.allowedRoles ?? []).length > 0) {
+      console.error(`Source ${sourceId} grants role access without being adopted and pinned.`);
+      failed = true;
+    }
+  }
+
+  for (const [skillId, skill] of Object.entries(skillRegistry.skills ?? {})) {
+    if (skill.lifecycle !== 'proven') continue;
+    for (const sourceId of skill.priorArt ?? []) {
+      const source = sourceRegistry.sources?.[sourceId];
+      if (source?.adoption !== 'adopted-pinned' || source?.securityReview !== 'passed') {
+        console.error(`Proven skill ${skillId} depends on unpinned or unreviewed source ${sourceId}.`);
+        failed = true;
+      }
+    }
+  }
 
   const rootPackage = readJson('package.json');
   if (!String(rootPackage.scripts?.doctor ?? '').includes('control-plane-doctor.mjs')) {
@@ -170,4 +301,4 @@ try {
 }
 
 if (failed) process.exit(1);
-console.log('Control-plane doctor: durable state, permissions, trust, six-project benchmarks, upgrade inventories/NFR/design contracts and portability remain valid.');
+console.log('Control-plane doctor: durable state, permissions, trust, specialist roles/pipelines/gates, reviewer independence, skill and external-source governance, six-project benchmarks, upgrade inventories/NFR/design contracts and portability remain valid.');

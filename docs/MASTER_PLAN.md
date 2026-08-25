@@ -349,6 +349,26 @@ Do not initially expose:
 
 MCP is an adapter, not project truth. Use the current MCP TypeScript v2 server package when implemented.
 
+### 3.8H — Specialist agent architecture foundation ✅ Complete
+
+Delivered as a bounded architecture/contract foundation, not as a running agent system:
+
+- `AgentRoleSpec` contract and a registry of specialist roles separated by decision boundary;
+- project-class routing so a marketing site, a SaaS build and an internal tool run different specialists;
+- deterministic **no-self-approval** enforcement: creators cannot promote their own artifacts and reviewers own no mutation scope;
+- `HandoffContract` semantics — a stage advances on artifacts, evidence, passed deterministic checks and an independent verdict, never on an agent declaring itself finished;
+- typed `ReviewVerdict` rework with a named owning role, severity and failing criteria;
+- a deterministic convergence engine that assesses every required gate, routes each failure to the creator role that owns it and stops only on convergence, a hard budget or a genuine block;
+- bounded per-role context packets and per-role capability/route ceilings;
+- a skill registry with an evidence-driven promotion lifecycle;
+- an external-source registry where registration is explicitly not adoption.
+
+Architecture: `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
+Design-side artifacts: `docs/DESIGN_INTELLIGENCE.md`.
+
+This stage adds no new orchestration framework. It is a tighter expression of the existing control plane, and it does not
+close the outstanding Phase 3.8E genuine-business product gate.
+
 ---
 
 ## Phase 4 — Full Builder Console ⬜ Planned
@@ -370,9 +390,14 @@ Build a complete useful loop before adding every editor feature:
 
 ### Phase 4B — Direct editing and assets
 
+- **Builder Element Identity** — resolve a rendered element to page/section/component/instance,
+  content bindings, source location, editable properties, provenance and design tokens before any
+  visual editing is enabled; a visual edit that cannot resolve to an ElementIdentity is refused;
 - click-to-select through stable PageSpec/SectionSpec identity;
-- click-to-edit content/assets/components;
+- click-to-edit content/assets/components through the resolved binding, not through DOM guesswork;
 - preserve source-vs-generated provenance;
+- **RenderedEvidence foundation** — screenshots, interaction states and responsive captures become a
+  first-class artifact, because a compiling build is not evidence that a visual change is correct;
 - asset manager and replacement/crop choices;
 - section/component variant selection;
 - Design Contract editing;
@@ -402,9 +427,22 @@ Introduce `DesignSystemSpec` covering:
 
 Add deterministic design-system linting before AI visual review.
 
+Phase 4C also introduces the design-intelligence layer specified in `docs/DESIGN_INTELLIGENCE.md`:
+
+- a versioned, deterministically queryable design-knowledge catalogue feeding BrandSpec and ArtDirectionPlan;
+- a **Component Manifest Protocol** so agents retrieve a small relevant component set instead of a whole library;
+- runtime-aware component contracts, so a correct import cannot produce a broken render;
+- **DesignLint** — deterministic visual-defect rules that run before expensive AI critique;
+- `DesignSystemSpec` that **compiles** to tokens, CSS variables, theme config and component parameters
+  rather than merely instructing a model;
+- machine-readable `ArtDirectionPlan` dimensions (layout variance, motion intensity, information
+  density, visual distinctiveness, restraint) instead of prompt adjectives.
+
 ### Phase 4D — Visual canvas and controlled variants
 
 Best-in-class visual workflow:
+- structured reference analysis: screenshots, moodboards, existing sites and design references become
+  adopt/avoid observations feeding ArtDirectionPlan, never uncontrolled generated markup;
 - bounded candidate design/layout variants from the same product/content truth;
 - visual comparison canvas/workspace;
 - desktop/tablet/mobile and hover/active states;
@@ -581,11 +619,12 @@ Candidate tooling where justified:
 Purpose: add AI orchestration after the deterministic factory is demonstrably useful and safety boundaries are proven.
 
 Build:
-- deterministic task/context router;
-- measured model router by task class/quality/cost;
-- compact trusted context packets;
-- versioned `SKILL.md` specialist skills;
-- specialist product/design/frontend/backend/security/review roles;
+- deterministic task/context router driven by `config/agent-roles.json` and `config/agent-pipelines.json`;
+- measured model router by task class/quality/cost, selected per role;
+- compact trusted context packets built by `buildRoleContextPacket`;
+- versioned `SKILL.md` specialist skills authored against `config/skill-registry.json` and promoted only on evidence;
+- specialist roles executed in **disposable per-role sessions** rather than one long general-purpose session;
+- durable stage handoffs, typed rework routing and convergence-driven stopping;
 - machine-readable outputs/ChangeSets;
 - bounded fix/work loops;
 - provider-neutral `AgentRuntimeAdapter`;
@@ -753,9 +792,9 @@ Best-in-class capabilities such as CMS, localization, Figma mapping, existing-re
 6. **Add the MCP v2 adapter** over the existing service tool boundary.
 7. Begin **Phase 4A service-backed Console vertical slice**.
 8. In parallel only where it directly improves generated output, prove the **static/content second template** and its Pagefind/structured-data/social-image path.
-9. Build the **Design System Registry + DesignSystemSpec** before scaling AI-generated visual variation.
+9. Build the **Design System Registry + DesignSystemSpec + Component Manifest + DesignLint** before scaling AI-generated visual variation, and land **Builder Element Identity** before enabling direct manipulation.
 10. Complete environments/direct editing/visual variants, then mature CMS/localization/Figma/existing-repo adoption.
 11. Complete sandbox/security hardening before broad autonomous agents.
 12. Add the Hetzner/OpenCode runtime and low-credit AI orchestration only after deterministic product/safety boundaries prove useful.
 
-`AGENTS.md` remains the root engineering authority. Schemas/config are machine-readable authorities for their contracts; `config/factory-status.json` is the machine-readable delivery status. `docs/BEST_IN_CLASS_CAPABILITIES.md` records the reviewed capability recommendations and explicit non-adoptions.
+`AGENTS.md` remains the root engineering authority. `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` and `docs/DESIGN_INTELLIGENCE.md` are detail documents under these authorities and never override them. Schemas/config are machine-readable authorities for their contracts; `config/factory-status.json` is the machine-readable delivery status. `docs/BEST_IN_CLASS_CAPABILITIES.md` records the reviewed capability recommendations and explicit non-adoptions.

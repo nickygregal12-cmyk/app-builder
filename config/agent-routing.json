@@ -1,11 +1,21 @@
 {
-  "version": 1,
+  "version": 2,
   "defaultContextTokenCeiling": 15000,
   "routes": {
     "intake": {
       "kind": "deterministic-first",
       "maxTokens": 5000,
       "context": ["project intake", "questionnaire", "project type defaults"]
+    },
+    "research": {
+      "kind": "bounded-research",
+      "maxTokens": 25000,
+      "context": ["intake brief", "approved source references", "bounded browser/read tools"]
+    },
+    "specification": {
+      "kind": "specialist",
+      "maxTokens": 20000,
+      "context": ["approved upstream artifacts only", "project manifest", "relevant knowledge chunks"]
     },
     "implementation": {
       "kind": "specialist",
@@ -16,6 +26,11 @@
       "kind": "specialist",
       "maxTokens": 35000,
       "context": ["manifest", "filtered failures", "relevant source/tests"]
+    },
+    "review": {
+      "kind": "independent-review",
+      "maxTokens": 20000,
+      "context": ["artifact under review", "acceptance criteria", "deterministic reports", "evidence pack"]
     },
     "architecture": {
       "kind": "high-reasoning",

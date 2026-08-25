@@ -21,6 +21,20 @@ import {
 
 const fixed = '2026-08-25T11:30:00.000Z';
 
+function boundedConsoleChangeSet(overrides = {}) {
+  return createChangeSet({
+    id: 'changeset-scope',
+    taskId: 'task-1',
+    objective: 'Edit console surface',
+    expectedFiles: ['apps/console/src/**'],
+    allowedFiles: ['apps/console/src/**', 'tooling/control-plane.test.mjs'],
+    forbiddenFiles: ['.env*', 'schemas/**'],
+    acceptanceChecks: ['npm run check'],
+    rollback: 'restore checkpoint',
+    ...overrides,
+  }, fixed);
+}
+
 test('control tasks have durable budgets and fail-closed transitions', () => {
   const task = createTask({
     id: 'task-1',
@@ -41,21 +55,62 @@ test('control tasks have durable budgets and fail-closed transitions', () => {
 });
 
 test('ChangeSets reject forbidden and undeclared file scope', () => {
-  const changeSet = createChangeSet({
-    id: 'changeset-1',
-    taskId: 'task-1',
-    objective: 'Edit console surface',
-    expectedFiles: ['apps/console/src/**'],
-    allowedFiles: ['apps/console/src/**', 'tooling/control-plane.test.mjs'],
-    forbiddenFiles: ['.env*', 'schemas/**'],
-    acceptanceChecks: ['npm run check'],
-    rollback: 'restore checkpoint',
-  }, fixed);
+  const changeSet = boundedConsoleChangeSet({ id: 'changeset-1' });
   assert.deepEqual(validateChangeSetResult(changeSet, ['apps/console/src/App.tsx']).ok, true);
   const bad = validateChangeSetResult(changeSet, ['apps/console/src/App.tsx', 'schemas/project-manifest.schema.json', 'README.md']);
   assert.equal(bad.ok, false);
   assert.deepEqual(bad.forbiddenHits, ['schemas/project-manifest.schema.json']);
   assert.deepEqual(bad.outOfScope, ['schemas/project-manifest.schema.json', 'README.md']);
+  assert.deepEqual(bad.invalidPaths, []);
+});
+
+test('ChangeSet directory scopes are segment-correct rather than textual prefixes', () => {
+  const changeSet = boundedConsoleChangeSet();
+  for (const sibling of [
+    'apps/console/src2/escape.ts',
+    'apps/console/src-old/escape.ts',
+    'apps/console/src_copy/escape.ts',
+    'apps/console/src.bak/escape.ts',
+    'apps/console/srcx/escape.ts',
+  ]) {
+    const result = validateChangeSetResult(changeSet, [sibling]);
+    assert.equal(result.ok, false, `${sibling} must not match apps/console/src/**`);
+    assert.deepEqual(result.outOfScope, [sibling]);
+  }
+  assert.equal(validateChangeSetResult(changeSet, ['apps/console/src/nested/Panel.tsx']).ok, true);
+});
+
+test('ChangeSet actual paths are canonical repository-relative paths and fail closed when ambiguous', () => {
+  const changeSet = boundedConsoleChangeSet();
+  assert.equal(validateChangeSetResult(changeSet, ['apps\\console\\src\\App.tsx']).ok, true, 'Windows separators normalize to repository separators');
+
+  for (const unsafe of [
+    '../apps/console/src/App.tsx',
+    'apps/console/src/../secrets.txt',
+    './apps/console/src/App.tsx',
+    '/apps/console/src/App.tsx',
+    'C:\\apps\\console\\src\\App.tsx',
+    'apps//console/src/App.tsx',
+    'apps/console/src/',
+  ]) {
+    const result = validateChangeSetResult(changeSet, [unsafe]);
+    assert.equal(result.ok, false, `${unsafe} must fail closed`);
+    assert.deepEqual(result.invalidPaths, [unsafe]);
+    assert.deepEqual(result.outOfScope, [unsafe]);
+  }
+});
+
+test('ChangeSet declarations reject unsafe or unsupported scope rules before work starts', () => {
+  for (const allowedFiles of [
+    ['../apps/**'],
+    ['/tmp/**'],
+    ['C:\\tmp\\**'],
+    ['apps//console/**'],
+    ['apps/**/secrets/**'],
+    ['apps/../schemas/**'],
+  ]) {
+    assert.throws(() => boundedConsoleChangeSet({ allowedFiles }), /scope rule|repository-relative/);
+  }
 });
 
 test('external and generated content can never become instructions', () => {

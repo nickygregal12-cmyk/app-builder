@@ -123,9 +123,48 @@ export async function readEvents(filePath) {
   }
 }
 
+function normalizedRepositoryPath(value) {
+  const candidate = String(value ?? '').trim().replaceAll('\\', '/');
+  if (!candidate || candidate.includes('\0')) return null;
+  if (candidate.startsWith('/') || candidate.startsWith('//') || /^[A-Za-z]:\//.test(candidate)) return null;
+  if (candidate.endsWith('/') || candidate.includes('//')) return null;
+  const segments = candidate.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
+  return segments.join('/');
+}
+
+function normalizedScopeRule(value, label) {
+  const candidate = String(value ?? '').trim().replaceAll('\\', '/');
+  if (candidate === '*') return candidate;
+  if (!candidate || candidate.includes('\0')) throw new Error(`${label} contains an invalid scope rule.`);
+  if (candidate.startsWith('/') || candidate.startsWith('//') || /^[A-Za-z]:\//.test(candidate) || candidate.includes('//')) {
+    throw new Error(`${label} must contain repository-relative scope rules.`);
+  }
+
+  let suffix = '';
+  if (candidate.endsWith('/**')) suffix = '/**';
+  else if (candidate.endsWith('*')) suffix = '*';
+  else if (candidate.endsWith('/')) suffix = '/';
+
+  const stem = suffix ? candidate.slice(0, -suffix.length) : candidate;
+  if (!stem || stem.includes('*')) throw new Error(`${label} contains an unsupported scope rule: ${candidate}`);
+  const segments = stem.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+    throw new Error(`${label} contains an unsafe scope rule: ${candidate}`);
+  }
+  return `${segments.join('/')}${suffix}`;
+}
+
+function scopeRules(value, label, options) {
+  return requireStringArray(value, label, options).map((rule) => normalizedScopeRule(rule, label));
+}
+
 function scopeMatches(file, rule) {
   if (rule === '*') return true;
-  if (rule.endsWith('/**')) return file.startsWith(rule.slice(0, -3));
+  if (rule.endsWith('/**')) {
+    const directory = rule.slice(0, -3);
+    return file === directory || file.startsWith(`${directory}/`);
+  }
   if (rule.endsWith('*')) return file.startsWith(rule.slice(0, -1));
   if (rule.endsWith('/')) return file.startsWith(rule);
   return file === rule;
@@ -137,9 +176,9 @@ export function createChangeSet(input, now = new Date().toISOString()) {
     id: input.id ?? `changeset-${randomUUID()}`,
     taskId: requireText(input.taskId, 'ChangeSet taskId'),
     objective: requireText(input.objective, 'ChangeSet objective'),
-    expectedFiles: requireStringArray(input.expectedFiles ?? [], 'ChangeSet expectedFiles'),
-    allowedFiles: requireStringArray(input.allowedFiles, 'ChangeSet allowedFiles', { nonEmpty: true }),
-    forbiddenFiles: requireStringArray(input.forbiddenFiles ?? [], 'ChangeSet forbiddenFiles'),
+    expectedFiles: scopeRules(input.expectedFiles ?? [], 'ChangeSet expectedFiles'),
+    allowedFiles: scopeRules(input.allowedFiles, 'ChangeSet allowedFiles', { nonEmpty: true }),
+    forbiddenFiles: scopeRules(input.forbiddenFiles ?? [], 'ChangeSet forbiddenFiles'),
     acceptanceChecks: requireStringArray(input.acceptanceChecks, 'ChangeSet acceptanceChecks', { nonEmpty: true }),
     securityImpact: String(input.securityImpact ?? 'none').trim() || 'none',
     rollback: requireText(input.rollback, 'ChangeSet rollback'),
@@ -148,15 +187,27 @@ export function createChangeSet(input, now = new Date().toISOString()) {
 }
 
 export function validateChangeSetResult(changeSet, actualFiles) {
-  const files = [...new Set(requireStringArray(actualFiles, 'Actual files'))];
+  const originalFiles = [...new Set(requireStringArray(actualFiles, 'Actual files'))];
+  const entries = originalFiles.map((original) => ({ original, normalized: normalizedRepositoryPath(original) }));
+  const invalidPaths = entries.filter((entry) => entry.normalized === null).map((entry) => entry.original);
+  const files = [...new Set(entries.filter((entry) => entry.normalized !== null).map((entry) => entry.normalized))];
   const forbiddenHits = files.filter((file) => changeSet.forbiddenFiles.some((rule) => scopeMatches(file, rule)));
-  const outOfScope = files.filter((file) => !changeSet.allowedFiles.some((rule) => scopeMatches(file, rule)));
-  const unexpectedFiles = files.filter((file) => changeSet.expectedFiles.length > 0 && !changeSet.expectedFiles.some((rule) => scopeMatches(file, rule)));
+  const outOfScope = [
+    ...invalidPaths,
+    ...files.filter((file) => !changeSet.allowedFiles.some((rule) => scopeMatches(file, rule))),
+  ];
+  const unexpectedFiles = changeSet.expectedFiles.length > 0
+    ? [
+        ...invalidPaths,
+        ...files.filter((file) => !changeSet.expectedFiles.some((rule) => scopeMatches(file, rule))),
+      ]
+    : [];
   return {
     ok: forbiddenHits.length === 0 && outOfScope.length === 0,
     forbiddenHits,
     outOfScope,
     unexpectedFiles,
+    invalidPaths,
   };
 }
 

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "modules": {
+    "auth": {"description":"Authentication and protected-route foundation","status":"planned","defaultEnabled":false},
+    "profiles": {"description":"User profiles and account settings","status":"planned","defaultEnabled":false},
+    "organisations": {"description":"Multi-tenant organisations, memberships and roles","status":"planned","defaultEnabled":false},
+    "admin": {"description":"Generic admin/back-office foundation","status":"planned","defaultEnabled":false},
+    "billing": {"description":"Subscriptions, plans and entitlement abstraction","status":"planned","defaultEnabled":false},
+    "email": {"description":"Transactional email abstraction and templates","status":"planned","defaultEnabled":false},
+    "notifications": {"description":"In-app/email/push notification abstraction","status":"planned","defaultEnabled":false},
+    "uploads": {"description":"File/media upload, validation and storage abstraction","status":"planned","defaultEnabled":false},
+    "search": {"description":"Generic search interface","status":"planned","defaultEnabled":false},
+    "audit-log": {"description":"Actor/action/entity audit trail","status":"planned","defaultEnabled":false},
+    "feature-flags": {"description":"Controlled feature rollout","status":"planned","defaultEnabled":false},
+    "analytics": {"description":"Product and conversion analytics abstraction","status":"planned","defaultEnabled":false},
+    "observability": {"description":"Errors, health and operational telemetry","status":"planned","defaultEnabled":false},
+    "seo": {"description":"Metadata, sitemap, structured data and social sharing","status":"planned","defaultEnabled":false},
+    "lead-generation": {"description":"Enquiry, quote and contact flows","status":"planned","defaultEnabled":false},
+    "pwa": {"description":"Installability, service worker and offline patterns","status":"planned","defaultEnabled":false},
+    "ai": {"description":"Provider-agnostic AI capability layer","status":"planned","defaultEnabled":false},
+    "jobs": {"description":"Background/scheduled job abstraction","status":"planned","defaultEnabled":false},
+    "integrations": {"description":"External API/webhook framework","status":"planned","defaultEnabled":false},
+    "feedback": {"description":"User feedback capture and admin review","status":"planned","defaultEnabled":false}
+  }
+}

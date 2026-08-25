@@ -1,0 +1,11 @@
+{
+  "version":"1.0.0","id":"business-site","extends":"base",
+  "questions":[
+    {"id":"company_identity","label":"Company name, legal name if relevant, and short description","type":"company-identity","required":true},
+    {"id":"services","label":"What services/products should the site present?","type":"list","required":true},
+    {"id":"locations","label":"What areas/locations does the company serve?","type":"list","required":false},
+    {"id":"conversion","label":"What should visitors do next?","type":"multi-select","options":["call","email","contact form","quote request","book appointment","buy","other"]},
+    {"id":"trust","label":"What proof can we use?","type":"multi-select","options":["testimonials","accreditations","case studies","project photos","awards","client logos","none"]},
+    {"id":"existing_site","label":"Is there an existing website to migrate/research?","type":"url","required":false}
+  ]
+}

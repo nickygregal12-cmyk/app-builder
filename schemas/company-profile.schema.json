@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Company Profile",
+  "type": "object",
+  "properties": {
+    "identity":{"type":"object"},"contact":{"type":"object"},"brand":{"type":"object"},
+    "services":{"type":"array"},"people":{"type":"array"},"projects":{"type":"array"},"testimonials":{"type":"array"},"accreditations":{"type":"array"},"assets":{"type":"array"},
+    "provenance":{"type":"array","items":{"type":"object","required":["field","sourceType"],"properties":{"field":{"type":"string"},"sourceType":{"enum":["user-provided","uploaded-document","existing-site","external-research","ai-generated"]},"source":{"type":"string"},"verified":{"type":"boolean"}}}}
+  }
+}

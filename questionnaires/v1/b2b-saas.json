@@ -1,0 +1,12 @@
+{
+  "version":"1.0.0","id":"b2b-saas","extends":"base",
+  "questions":[
+    {"id":"tenant_model","label":"Who owns business data?","type":"single-select","default":"organisation","options":["individual user","organisation","both/depends","decide for me"]},
+    {"id":"roles","label":"What roles are required?","type":"multi-select","default":["owner","admin","member"],"options":["owner","admin","editor","member","viewer","custom"]},
+    {"id":"core_entities","label":"What are the main things the product stores/manages?","type":"list","required":true},
+    {"id":"uploads","label":"Will users upload files?","type":"boolean","default":false},
+    {"id":"billing","label":"Does V1 need billing/subscriptions?","type":"boolean","default":false},
+    {"id":"integrations","label":"What existing systems/APIs must it connect to?","type":"list","required":false},
+    {"id":"sensitivity","label":"Does it handle confidential, regulated or unusually sensitive business data?","type":"single-select","default":"normal-business-data","options":["normal-business-data","confidential","regulated/unknown"]}
+  ]
+}

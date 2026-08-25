@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/project-manifest.schema.json",
+  "title": "App Builder Project Manifest",
+  "type": "object",
+  "required": ["schemaVersion","project","modules","infrastructure","aiBudget"],
+  "properties": {
+    "schemaVersion": {"const":1},
+    "project": {"type":"object","required":["name","slug","type","primaryGoal"],"properties":{"name":{"type":"string","minLength":1},"slug":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},"type":{"enum":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]},"primaryGoal":{"type":"string","minLength":1}}},
+    "modules": {"type":"object","additionalProperties":{"type":"boolean"}},
+    "infrastructure": {"type":"object","required":["backend","deployment"],"properties":{"backend":{"enum":["none","supabase"]},"deployment":{"enum":["netlify","cloudflare","vercel","none"]}}},
+    "aiBudget": {"type":"object","required":["mode","maxBuildCostGbp"],"properties":{"mode":{"enum":["economy","balanced","quality"]},"maxBuildCostGbp":{"type":"number","minimum":0}}},
+    "brand": {"type":"object"},
+    "inputs": {"type":"object"},
+    "outOfScope": {"type":"array","items":{"type":"string"}}
+  },
+  "additionalProperties": true
+}

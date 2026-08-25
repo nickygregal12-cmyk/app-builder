@@ -1,0 +1,4 @@
+{
+  "version":"1.0.0",
+  "fields":["projectId","questionnaireVersion","missedRequirements","correctionsAfterBuild","unnecessaryQuestions","successfulDefaults","proposedChanges"]
+}

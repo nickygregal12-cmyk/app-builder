@@ -1,0 +1,9 @@
+{
+  "version":1,"status":"approved",
+  "project":{"name":"Example Tender Workspace","type":"b2b-saas"},
+  "coreJourneys":["Create an organisation","Create a project","Upload documents","Review project documents"],
+  "enabledModules":["auth","profiles","organisations","admin","uploads","email","audit-log","analytics","observability"],
+  "explicitlyExcluded":["billing","native mobile app"],
+  "acceptanceCriteria":["Organisation data is isolated","Core journeys pass end-to-end tests","Mobile and desktop layouts have no blocking accessibility issues"],
+  "unresolvedHighImpactQuestions":[]
+}

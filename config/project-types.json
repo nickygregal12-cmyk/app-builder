@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "projectTypes": {
+    "marketing-site": {"label":"Marketing / business website","defaultModules":["seo","lead-generation","analytics","observability"],"questionnaire":"business-site"},
+    "b2b-saas": {"label":"B2B SaaS","defaultModules":["auth","profiles","organisations","admin","email","audit-log","analytics","observability"],"questionnaire":"b2b-saas"},
+    "consumer-app": {"label":"Consumer app","defaultModules":["auth","profiles","notifications","analytics","observability"],"questionnaire":"consumer-app"},
+    "internal-tool": {"label":"Internal tool","defaultModules":["auth","admin","audit-log","observability"],"questionnaire":"internal-tool"},
+    "content-site": {"label":"Content site","defaultModules":["seo","analytics","observability"],"questionnaire":"content-site"},
+    "ai-app": {"label":"AI-first application","defaultModules":["auth","profiles","ai","analytics","observability"],"questionnaire":"ai-app"}
+  }
+}

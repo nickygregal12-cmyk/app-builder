@@ -1,0 +1,14 @@
+{
+  "version":"1.0.0","id":"base",
+  "principles":["ask only relevant questions","prefer structured options/defaults","flag high-impact ambiguity before build","allow explicit decide-for-me answers"],
+  "questions":[
+    {"id":"project_type","label":"What are you building?","type":"single-select","required":true,"options":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]},
+    {"id":"primary_goal","label":"What is the single most important outcome?","type":"text","required":true},
+    {"id":"target_users","label":"Who is it for?","type":"text","required":true},
+    {"id":"must_have","label":"What must V1 let users do?","type":"list","required":true},
+    {"id":"out_of_scope","label":"What should V1 explicitly not include?","type":"list","required":false},
+    {"id":"existing_inputs","label":"What source material do you already have?","type":"multi-select","options":["existing website","logo/brand","photos","screenshots","PDFs/docs","spreadsheets/CSV","database/API","none"]},
+    {"id":"design_control","label":"How much should the factory decide?","type":"single-select","default":"sensible-defaults","options":["sensible-defaults","show-design-directions","closely-follow-reference"]},
+    {"id":"cost_priority","label":"Optimise external running costs for","type":"single-select","default":"lowest-sensible-cost","options":["lowest-sensible-cost","balanced","performance-first"]}
+  ]
+}

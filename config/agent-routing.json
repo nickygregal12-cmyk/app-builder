@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "defaultContextTokenCeiling": 15000,
+  "routes": {
+    "intake": {
+      "kind": "deterministic-first",
+      "maxTokens": 5000,
+      "context": ["project intake", "questionnaire", "project type defaults"]
+    },
+    "implementation": {
+      "kind": "specialist",
+      "maxTokens": 15000,
+      "context": ["manifest", "relevant contracts", "target module/files", "target tests"]
+    },
+    "complex-debug": {
+      "kind": "specialist",
+      "maxTokens": 35000,
+      "context": ["manifest", "filtered failures", "relevant source/tests"]
+    },
+    "architecture": {
+      "kind": "high-reasoning",
+      "maxTokens": 60000,
+      "context": ["product contract", "architecture", "affected registries/contracts"]
+    },
+    "visual-review": {
+      "kind": "vision-review",
+      "maxTokens": 15000,
+      "context": ["build contract", "final screenshots", "relevant design tokens"]
+    }
+  }
+}

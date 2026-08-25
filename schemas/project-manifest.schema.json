@@ -21,7 +21,23 @@
     "outOfScope": {"type":"array","items":{"type":"string"}}
   },
   "allOf": [
-    {"if":{"properties":{"schemaVersion":{"const":2}}},"then":{"required":["audience","journeys","majorSurfaces","entities","company","constraints","brand","inputs","outOfScope"]}}
+    {
+      "if": {"properties":{"schemaVersion":{"const":2}}},
+      "then": {
+        "required":["audience","journeys","majorSurfaces","entities","company","constraints","brand","inputs","outOfScope"],
+        "properties": {
+          "audience": true,
+          "journeys": true,
+          "majorSurfaces": true,
+          "entities": true,
+          "company": true,
+          "constraints": true,
+          "brand": true,
+          "inputs": true,
+          "outOfScope": true
+        }
+      }
+    }
   ],
   "additionalProperties": true
 }

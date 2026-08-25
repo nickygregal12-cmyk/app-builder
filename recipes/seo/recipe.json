@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "seo",
+  "module": "seo",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "files": ["src/features/seo/index.ts"],
+  "requires": [],
+  "conflicts": [],
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{}},
+  "entry": "src/features/seo/index.ts"
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "recipes": {
+    "seo": {
+      "path": "recipes/seo",
+      "version": "1.0.0",
+      "module": "seo",
+      "status": "ready"
+    },
+    "feature-flags": {
+      "path": "recipes/feature-flags",
+      "version": "1.0.0",
+      "module": "feature-flags",
+      "status": "ready"
+    }
+  }
+}

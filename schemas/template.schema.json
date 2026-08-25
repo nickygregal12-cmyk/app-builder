@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "App Builder Project Template",
+  "type": "object",
+  "required": ["schemaVersion","id","version","status","projectTypes","filesRoot"],
+  "properties": {
+    "schemaVersion": {"const":1},
+    "id": {"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "version": {"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"},
+    "status": {"enum":["draft","ready","deprecated"]},
+    "projectTypes": {"type":"array","minItems":1,"items":{"enum":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]}},
+    "filesRoot": {"type":"string","minLength":1},
+    "managedFiles": {"type":"array","items":{"type":"string"}}
+  },
+  "additionalProperties": false
+}

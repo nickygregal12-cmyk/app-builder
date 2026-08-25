@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "feature-flags",
+  "module": "feature-flags",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "files": ["src/features/feature-flags/index.ts"],
+  "requires": [],
+  "conflicts": [],
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{}},
+  "entry": "src/features/feature-flags/index.ts"
+}

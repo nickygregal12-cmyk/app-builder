@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "react-vite-neutral",
+  "version": "1.0.0",
+  "status": "ready",
+  "projectTypes": ["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"],
+  "filesRoot": "files",
+  "managedFiles": ["src/generated/project.ts","src/generated/recipes.ts",".app-builder/manifest.json",".app-builder/project.json",".app-builder/recipes.json",".app-builder/template-package.json","README.md"]
+}

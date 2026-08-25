@@ -240,13 +240,61 @@ function writeGeneratedState(projectDir, manifest, plan, templatePackage, packag
 }
 
 function writeHandover(projectDir, manifest, plan, databaseFragments) {
-  const adapters = plan.adapters.length ? plan.adapters.map((adapter) => `- ${adapter.id} ${adapter.version} (${adapter.kind})`).join('\n') : '- none';
-  const recipes = plan.recipes.length ? plan.recipes.map((recipe) => `- ${recipe.id} ${recipe.version}`).join('\n') : '- none';
-  const fragments = databaseFragments.length ? databaseFragments.map((entry) => `- ${entry.file}`).join('\n') : '- none';
-  const envNotes = plan.adapters.some((adapter) => adapter.id === 'supabase') ? '\nFor Supabase, copy `.env.example` to `.env.local` and set the URL and publishable key. Never put service-role or secret keys in Vite variables.\n' : '';
-  const netlifyNotes = plan.adapters.some((adapter) => adapter.id === 'netlify') ? '\nNetlify deployment is configured by `netlify.toml`. Keep secrets in Netlify environment settings, not in repository configuration.\n' : '';
+  const adapterLines = plan.adapters.length ? plan.adapters.map((adapter) => `- ${adapter.id} ${adapter.version} (${adapter.kind})`) : ['- none'];
+  const recipeLines = plan.recipes.length ? plan.recipes.map((recipe) => `- ${recipe.id} ${recipe.version}`) : ['- none'];
+  const fragmentLines = databaseFragments.length ? databaseFragments.map((entry) => `- ${entry.file}`) : ['- none'];
+  const lines = [
+    `# ${manifest.project.name} — handover`,
+    '',
+    '## Product',
+    '',
+    `- Type: ${manifest.project.type}`,
+    `- Goal: ${manifest.project.primaryGoal}`,
+    `- Template: ${plan.template.id} ${plan.template.version}`,
+    `- Layout: ${plan.design.patternId} (${plan.design.label})`,
+    `- AI budget mode: ${manifest.aiBudget.mode}`,
+    '- App Builder runtime dependency: none',
+    '',
+    '## Infrastructure',
+    '',
+    ...adapterLines,
+  ];
+  if (plan.adapters.some((adapter) => adapter.id === 'supabase')) {
+    lines.push('', 'For Supabase, copy `.env.example` to `.env.local` and set the URL and publishable key. Never put service-role or secret keys in Vite variables.');
+  }
+  if (plan.adapters.some((adapter) => adapter.id === 'netlify')) {
+    lines.push('', 'Netlify deployment is configured by `netlify.toml`. Keep secrets in Netlify environment settings, not in repository configuration.');
+  }
+  lines.push(
+    '',
+    '## Installed recipes',
+    '',
+    ...recipeLines,
+    '',
+    '## Test scenarios',
+    '',
+    ...plan.scenarios.map((scenario) => `- ${scenario}`),
+    '',
+    'Set `VITE_APP_SCENARIO` during local/test work to select a supported scenario. Unknown values safely fall back to `default`.',
+    '',
+    '## Database fragments',
+    '',
+    ...fragmentLines,
+    '',
+    "Database fragments are deterministic source material, not fabricated migration history. Review them and use the backend provider's real migration workflow before production.",
+    '',
+    '## Commands',
+    '',
+    '```bash',
+    'npm install',
+    'npm run check',
+    'npm run build',
+    'npm run dev',
+    '```',
+    '',
+  );
   fs.mkdirSync(path.join(projectDir, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(projectDir, 'docs/HANDOVER.md'), `# ${manifest.project.name} — handover\n\n## Product\n\n- Type: ${manifest.project.type}\n- Goal: ${manifest.project.primaryGoal}\n- Template: ${plan.template.id} ${plan.template.version}\n- Layout: ${plan.design.patternId} (${plan.design.label})\n- AI budget mode: ${manifest.aiBudget.mode}\n- App Builder runtime dependency: none\n\n## Infrastructure\n\n${adapters}\n${envNotes}${netlifyNotes}\n## Installed recipes\n\n${recipes}\n\n## Test scenarios\n\n${plan.scenarios.map((scenario) => `- ${scenario}`).join('\n')}\n\nSet `VITE_APP_SCENARIO` during local/test work to select a supported scenario. Unknown values safely fall back to `default`.\n\n## Database fragments\n\n${fragments}\n\nDatabase fragments are deterministic source material, not fabricated migration history. Review them and use the backend provider's real migration workflow before production.\n\n## Commands\n\n\`\`\`bash\nnpm install\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n`);
+  fs.writeFileSync(path.join(projectDir, 'docs/HANDOVER.md'), lines.join('\n'));
 }
 
 function writeReadme(projectDir, manifest, plan) {

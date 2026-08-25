@@ -1,0 +1,15 @@
+{
+  "schemaVersion":1,
+  "id":"profiles",
+  "module":"profiles",
+  "version":"1.0.0",
+  "status":"ready",
+  "compatibleTemplates":["react-vite-neutral"],
+  "entry":"src/features/profiles/index.tsx",
+  "files":["src/features/profiles/index.tsx","src/features/profiles/ProfileContext.tsx","src/features/profiles/ProfileSettings.tsx"],
+  "requires":["auth"],
+  "requiresAdapters":["supabase"],
+  "conflicts":[],
+  "package":{"dependencies":{},"devDependencies":{},"scripts":{}},
+  "database":{"adapter":"supabase","fragments":["database/profiles.sql"]}
+}

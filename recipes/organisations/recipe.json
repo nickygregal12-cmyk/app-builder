@@ -1,0 +1,15 @@
+{
+  "schemaVersion":1,
+  "id":"organisations",
+  "module":"organisations",
+  "version":"1.0.0",
+  "status":"ready",
+  "compatibleTemplates":["react-vite-neutral"],
+  "entry":"src/features/organisations/index.tsx",
+  "files":["src/features/organisations/index.tsx","src/features/organisations/OrganisationsContext.tsx"],
+  "requires":["auth","profiles"],
+  "requiresAdapters":["supabase"],
+  "conflicts":[],
+  "package":{"dependencies":{},"devDependencies":{},"scripts":{}},
+  "database":{"adapter":"supabase","fragments":["database/organisations.sql"]}
+}

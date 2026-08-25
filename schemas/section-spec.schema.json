@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://app-builder.local/schemas/section-spec.schema.json",
+  "title":"Composition Section Spec",
+  "type":"object",
+  "required":["id","type","purpose","bindings","actions","assetIds","variant"],
+  "properties":{
+    "id":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "type":{"enum":["hero","rich-text","item-grid","proof-grid","people-grid","location-list","contact-panel","entity-list","content-list","cta"]},
+    "purpose":{"type":"string","minLength":1},
+    "bindings":{"type":"array","items":{"$ref":"content-binding.schema.json"}},
+    "actions":{"type":"array","items":{"type":"object","required":["label","href"],"properties":{"label":{"type":"string","minLength":1},"href":{"type":"string","minLength":1}},"additionalProperties":false}},
+    "assetIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "variant":{"type":"string","minLength":1}
+  },
+  "additionalProperties":false
+}

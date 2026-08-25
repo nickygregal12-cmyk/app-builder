@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://app-builder.local/schemas/content-binding.schema.json",
+  "title":"Composition Content Binding",
+  "type":"object",
+  "required":["key","value","origin","sourceIds","factIds","entityIds","generated"],
+  "properties":{
+    "key":{"type":"string","minLength":1},
+    "value":{},
+    "origin":{"enum":["manifest","knowledge-fact","knowledge-entity","deterministic-default"]},
+    "sourceIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "factIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "entityIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "generated":{"type":"boolean"}
+  },
+  "additionalProperties":false
+}

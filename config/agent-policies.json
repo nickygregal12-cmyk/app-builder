@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "defaultPolicy": "implementation",
+  "actions": [
+    "repo.read",
+    "repo.write",
+    "process.test",
+    "process.build",
+    "browser.inspect",
+    "network.public",
+    "secret.read_scoped",
+    "database.migrate_preview",
+    "deploy.preview",
+    "deploy.production",
+    "database.production_write"
+  ],
+  "policies": {
+    "planner": {
+      "allow": ["repo.read", "browser.inspect", "network.public"],
+      "approvalRequired": [],
+      "deny": ["repo.write", "secret.read_scoped", "database.migrate_preview", "deploy.preview", "deploy.production", "database.production_write"]
+    },
+    "implementation": {
+      "allow": ["repo.read", "repo.write", "process.test", "process.build", "browser.inspect", "network.public", "secret.read_scoped", "database.migrate_preview", "deploy.preview"],
+      "approvalRequired": ["secret.read_scoped", "database.migrate_preview", "deploy.preview"],
+      "deny": ["deploy.production", "database.production_write"]
+    },
+    "visual-review": {
+      "allow": ["repo.read", "browser.inspect", "network.public"],
+      "approvalRequired": [],
+      "deny": ["repo.write", "secret.read_scoped", "database.migrate_preview", "deploy.preview", "deploy.production", "database.production_write"]
+    },
+    "security-review": {
+      "allow": ["repo.read", "process.test", "process.build", "browser.inspect"],
+      "approvalRequired": [],
+      "deny": ["repo.write", "network.public", "secret.read_scoped", "database.migrate_preview", "deploy.preview", "deploy.production", "database.production_write"]
+    },
+    "release": {
+      "allow": ["repo.read", "process.test", "process.build", "browser.inspect", "deploy.preview"],
+      "approvalRequired": ["deploy.preview", "deploy.production"],
+      "deny": ["repo.write", "secret.read_scoped", "database.migrate_preview", "database.production_write"]
+    }
+  }
+}

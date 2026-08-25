@@ -63,12 +63,12 @@ test('factory client maps only typed project operations onto fixed service paths
   assert.deepEqual(calls[1].body, { manifest: { schemaVersion: 2 }, knowledgePack: null, id: 'project-mcp-test' });
 });
 
-test('factory client rejects unbounded project identifiers and event cursors before fetch', async () => {
+test('factory client rejects unbounded project identifiers and event cursors before fetch', () => {
   let calls = 0;
   const client = new FactoryServiceClient({ fetchImpl: async () => { calls += 1; return jsonResponse({}); } });
-  await assert.rejects(() => client.readProject('../escape'));
-  await assert.rejects(() => client.readProject('project/child'));
-  await assert.rejects(() => client.readEvents('project-safe', { after: -1 }));
+  assert.throws(() => client.readProject('../escape'));
+  assert.throws(() => client.readProject('project/child'));
+  assert.throws(() => client.readEvents('project-safe', { after: -1 }));
   assert.equal(calls, 0);
 });
 

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { extractBuffer, materializeImageVariants } from './extractors.js';
+import { deriveSourceGovernance } from './governance.js';
 import { CONTENT_INTELLIGENCE_VERSION, DEFAULT_LIMITS, assertSafeRemoteUrl, inferMime, inferSourceKind, loadSourceBytes, sha256, stableId } from './shared.js';
 
 async function readCachedExtraction(cacheDir, cacheKey) {
@@ -31,6 +32,8 @@ export async function normalizeSource(source, options = {}) {
     ? await materializeImageVariants(loaded.buffer, contentHash, { ...options, fs })
     : [];
   const kind = inferSourceKind({ ...source, mimeType });
+  const provenance = source.provenance ?? (kind === 'url' ? 'existing-site' : 'user-supplied');
+  const governance = deriveSourceGovernance({ ...source, uri: loaded.resolvedUri, provenance }, kind);
   return {
     id: source.id ?? stableId('source', source.label ?? source.name ?? loaded.resolvedUri ?? contentHash, contentHash),
     kind,
@@ -38,8 +41,9 @@ export async function normalizeSource(source, options = {}) {
     uri: loaded.resolvedUri,
     mimeType,
     sizeBytes: loaded.buffer.length,
-    provenance: source.provenance ?? (kind === 'url' ? 'existing-site' : 'user-supplied'),
+    provenance,
     purpose: source.purpose ?? null,
+    ...governance,
     contentHash,
     cacheKey,
     cacheHit: Boolean(cached),
@@ -53,6 +57,33 @@ export async function normalizeSources(sources, options = {}) {
   const normalized = [];
   for (const source of sources) normalized.push(await normalizeSource(source, options));
   return normalized;
+}
+
+export function normalizeReferenceSource(source) {
+  if (!source?.uri) throw new Error('Reference source requires uri.');
+  const uri = assertSafeRemoteUrl(source.uri).toString();
+  const kind = source.kind ?? 'url';
+  const provenance = source.provenance ?? 'external-research';
+  const governance = deriveSourceGovernance({ ...source, uri, provenance, rightsStatus: source.rightsStatus ?? 'reference-only' }, kind);
+  const contentHash = sha256(`reference:${uri}`);
+  return {
+    id: source.id ?? stableId('source', source.label ?? uri, contentHash),
+    kind,
+    label: String(source.label ?? uri),
+    uri,
+    mimeType: 'text/uri-list',
+    sizeBytes: 0,
+    provenance,
+    purpose: source.purpose ?? 'public reference',
+    ...governance,
+    contentHash,
+    cacheKey: null,
+    cacheHit: false,
+    extractorVersion: CONTENT_INTELLIGENCE_VERSION,
+    extraction: { type: 'reference', text: '', truncated: false, metadata: {}, headings: [], tables: [], links: [], images: [] },
+    variants: [],
+    referenceOnly: true,
+  };
 }
 
 function crawlCandidate(href, baseUrl, acceptedOrigin) {

@@ -5,13 +5,13 @@
   "activeStage": "Phase 3.8E — Genuine business product proof",
   "status": "active",
   "completedPhases": ["0", "1", "2", "3"],
-  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D"],
+  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8F"],
   "activeWork": [
     "genuine-real-business-acceptance",
-    "mcp-service-facade"
+    "brand-source-asset-provenance"
   ],
   "outstandingProductGates": [
     "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits"
   ],
-  "nextStage": "Phase 3.8E — Genuine business product proof"
+  "nextStage": "Phase 3.8G — Brand-source and asset-provenance foundation"
 }

@@ -162,7 +162,6 @@ export class SourceIngestion {
   }
 
   async ingest(projectId, requests) {
-    const projectRoot = this.projectRoot(projectId);
     const cacheDir = path.join(this.root, '.cache');
     const assetOutputDir = this.assetDirectory(projectId);
     fs.mkdirSync(assetOutputDir, { recursive: true });

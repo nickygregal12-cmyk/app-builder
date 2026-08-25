@@ -152,6 +152,43 @@ would do, and CI exercises the imagery path as a result.
 The knowledge-pack half of F4 has a producer — extraction — but no trial has
 exercised it yet, because MGB Decor has no website to extract from.
 
+### F10 — The neutral template is flat, not merely unbranded — P1 ⚠️ Baseline raised
+
+Reviewer verdict on the first image-bearing build: "too flat and generic". The
+complaint was fair and the cause was structural rather than a matter of taste.
+
+The token set held one accent and one border colour with no tints, no type
+scale and no elevation range, so every component reached for the same three
+values. Every section carried identical padding and a hairline rule beneath it,
+which gave the page no tempo: hero, section, section, section, all weighted the
+same. The heading scale topped out at `7rem`, shouting at content that never
+justified it.
+
+"Neutral" is the template's job — it must not invent a brand it has not been
+given. Flat is not the same thing, and the two had been conflated.
+
+Raised the baseline: a real type scale, accent tints derived through
+`color-mix` so a supplied brand accent carries into every tinted surface,
+alternating section grounds in place of hairline rules, a dark closing
+call-to-action band, accent-ruled service cards, image hover treatment and a
+reduced-motion block.
+
+This is a better floor, not the answer. Multiple art directions, brand-derived
+palettes and the promote/reject variant flow remain Phase 4C/4D, and no amount
+of template polish substitutes for real photographs.
+
+### F11 — Deterministic accessibility gate caught a design regression — no action
+
+Worth recording as evidence rather than a defect. The section-rhythm rule used
+`:nth-of-type(even)`, which outspecified the closing call-to-action's own
+background and left white text on a tinted ground. The axe gate failed the
+`/services` route with `serious: color-contrast` before the change went any
+further.
+
+That is the Phase 3.8D gate paying for itself on the first design change made
+after it landed, and an argument for keeping deterministic checks ahead of
+visual review rather than behind it.
+
 ### Edit-count estimate
 
 Roughly eleven meaningful edits at first build, against the Phase 3.8E target of

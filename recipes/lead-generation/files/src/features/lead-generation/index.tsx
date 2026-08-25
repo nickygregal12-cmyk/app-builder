@@ -8,9 +8,10 @@ export function EnquiryForm() {
     event.preventDefault();
     setStatus('Sending…');
     const form = event.currentTarget;
-    const body = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
+    const params = new URLSearchParams();
+    for (const [key, value] of new FormData(form).entries()) if (typeof value === 'string') params.append(key, value);
     try {
-      const response = await fetch('/__forms.html', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+      const response = await fetch('/__forms.html', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
       if (!response.ok) throw new Error('Submission failed.');
       form.reset();
       setStatus('Thanks — your enquiry has been sent.');

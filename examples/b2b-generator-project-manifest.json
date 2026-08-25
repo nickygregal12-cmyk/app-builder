@@ -1,31 +1,10 @@
 {
   "schemaVersion": 1,
-  "project": {
-    "name": "Acme Workspace",
-    "slug": "acme-workspace",
-    "type": "b2b-saas",
-    "primaryGoal": "Give teams a secure shared workspace with profiles, organisations and administration."
-  },
-  "modules": {
-    "auth": true,
-    "profiles": true,
-    "organisations": true,
-    "admin": true,
-    "feature-flags": true
-  },
-  "infrastructure": {
-    "backend": "supabase",
-    "deployment": "none"
-  },
-  "aiBudget": {
-    "mode": "economy",
-    "maxBuildCostGbp": 5
-  },
-  "brand": {
-    "designControl": "sensible-defaults"
-  },
-  "inputs": {
-    "sources": []
-  },
-  "outOfScope": ["billing", "email delivery"]
+  "project": {"name":"Acme Workspace","slug":"acme-workspace","type":"b2b-saas","primaryGoal":"Give teams a secure shared workspace with profiles, organisations, uploads and administration."},
+  "modules": {"auth":true,"profiles":true,"organisations":true,"admin":true,"uploads":true,"analytics":true,"observability":true,"feature-flags":true},
+  "infrastructure": {"backend":"supabase","deployment":"netlify"},
+  "aiBudget": {"mode":"economy","maxBuildCostGbp":5},
+  "brand": {"designControl":"sensible-defaults","accentColor":"#4b4f8f"},
+  "inputs": {"sources":[]},
+  "outOfScope": ["billing","email delivery"]
 }

@@ -9,6 +9,7 @@ export const FACTORY_TOOLS = Object.freeze([
   { name: 'project.sources.read', method: 'GET', path: '/projects/{projectId}/sources', mutating: false, approvalRequired: false },
   { name: 'project.sources.ingest', method: 'POST', path: '/projects/{projectId}/sources', mutating: true, approvalRequired: false },
   { name: 'project.composition.read', method: 'GET', path: '/projects/{projectId}/composition', mutating: false, approvalRequired: false },
+  { name: 'project.source.governance.update', method: 'POST', path: '/projects/{projectId}/sources/{sourceId}/governance', mutating: true, approvalRequired: true },
   { name: 'project.overrides.read', method: 'GET', path: '/projects/{projectId}/overrides', mutating: false, approvalRequired: false },
   { name: 'project.overrides.write', method: 'PUT', path: '/projects/{projectId}/overrides', mutating: true, approvalRequired: false },
   { name: 'project.generate', method: 'POST', path: '/projects/{projectId}/generate', mutating: true, approvalRequired: false },

@@ -1,4 +1,7 @@
 import type { AppBuilderProjectManifest } from '@app-builder/contracts';
+import type { SourceReference } from '@app-builder/factory-core';
+
+export type { SourceReference };
 
 // Service transport projections remain local until their contract families are
 // migrated to schema-derived packages/contracts. Do not treat these as a
@@ -76,6 +79,7 @@ export type PreviewState = {
 };
 
 export type IntegrationStatus = { id: string; configured: boolean };
+export type SourceGovernanceDecision = 'approve-for-use' | 'reference-only' | 'do-not-use';
 
 export type IngestedSource = {
   id: string;
@@ -120,20 +124,6 @@ export type SourceRequest = {
   approvedForUse?: boolean;
 };
 
-/** Source material recorded during intake. URLs can be ingested directly;
- * declared files carry metadata only, because browser intake deliberately does
- * not read file bytes. */
-export type DeclaredSource = {
-  id: string;
-  kind: string;
-  label: string;
-  uri?: string;
-  name?: string;
-  purpose?: string;
-  rightsStatus?: string;
-  assetStatus?: string;
-};
-
 export type ContentOverride = {
   sectionId: string;
   bindingKey: string;
@@ -152,6 +142,7 @@ export type CompositionSummary = {
 
 export type WorkspaceSnapshot = {
   project: ProjectSummary;
+  sources: SourceReference[];
   tasks: ControlTask[];
   events: BuildEvent[];
   metrics: ProjectMetrics;
@@ -160,7 +151,6 @@ export type WorkspaceSnapshot = {
   composition: CompositionSummary | null;
   integrations: IntegrationStatus[];
   knowledge: KnowledgeSummary | null;
-  declaredSources: DeclaredSource[];
   checkpoints: Checkpoint[];
   overrides: ContentOverride[];
 };
@@ -205,6 +195,13 @@ export async function saveOverrides(projectId: string, overrides: ContentOverrid
   );
 }
 
+export async function updateSourceGovernance(projectId: string, sourceId: string, decision: SourceGovernanceDecision) {
+  return await request<{ source: SourceReference; project: ProjectSummary }>(
+    `/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}/governance`,
+    { method: 'POST', body: JSON.stringify({ decision }) },
+  );
+}
+
 export async function generateProject(projectId: string) {
   return (await request<{ project: ProjectSummary }>(`/projects/${encodeURIComponent(projectId)}/generate`, { method: 'POST' })).project;
 }
@@ -223,8 +220,9 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, manifestResult, checkpointsResult, overridesResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
+    request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
     request<{ events: BuildEvent[] }>(`/projects/${id}/events`),
     request<{ metrics: ProjectMetrics }>(`/projects/${id}/metrics`),
@@ -233,12 +231,13 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ composition: CompositionSummary | null }>(`/projects/${id}/composition`),
     request<{ integrations: IntegrationStatus[] }>('/integrations'),
     request<{ knowledge: KnowledgeSummary | null }>(`/projects/${id}/sources`),
-    request<{ manifest: { inputs?: { sources?: DeclaredSource[] } } }>(`/projects/${id}/manifest`),
     request<{ checkpoints: Checkpoint[] }>(`/projects/${id}/checkpoints`),
     request<{ overrides: ContentOverride[] }>(`/projects/${id}/overrides`),
   ]);
+  const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
     project: projectResult.project,
+    sources: Array.isArray(manifestWithSources.inputs?.sources) ? manifestWithSources.inputs.sources : [],
     tasks: tasksResult.tasks,
     events: eventsResult.events,
     metrics: metricsResult.metrics,
@@ -247,7 +246,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     composition: compositionResult.composition,
     integrations: integrationsResult.integrations,
     knowledge: knowledgeResult.knowledge,
-    declaredSources: manifestResult.manifest?.inputs?.sources ?? [],
     checkpoints: checkpointsResult.checkpoints,
     overrides: overridesResult.overrides,
   };

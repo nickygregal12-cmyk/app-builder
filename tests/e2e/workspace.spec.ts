@@ -19,7 +19,24 @@ const manifest = {
   infrastructure: { backend: 'none', deployment: 'netlify' },
   aiBudget: { mode: 'economy', maxBuildCostGbp: 0 },
   brand: { designControl: 'sensible-defaults' },
-  inputs: { inventory: [], sources: [] },
+  inputs: {
+    inventory: ['logo/brand'],
+    sources: [{
+      id: 'approved-logo',
+      kind: 'logo',
+      label: 'Approved logo candidate',
+      name: 'logo.svg',
+      provenance: 'user-supplied',
+      purpose: 'brand identity',
+      rightsStatus: 'unknown',
+      assetStatus: 'suggested',
+      sourceRole: 'brand-supporting',
+      sourceChannel: 'upload',
+      instructionAuthority: 'none',
+      publishUseAllowed: false,
+      recordedAt: '2026-08-25T00:00:00.000Z',
+    }],
+  },
   constraints: {
     hard: [],
     expectedScale: 'under-1000',
@@ -35,7 +52,7 @@ const manifest = {
   outOfScope: [],
 } as const;
 
-test('Builder Console drives a real service generation, verification and preview lifecycle', async ({ page }, testInfo) => {
+test('Builder Console drives governed sources, generation, verification and preview through the real service', async ({ page }, testInfo) => {
   test.setTimeout(120_000);
 
   // Playwright retries share the same service process. Give each attempt a
@@ -60,11 +77,20 @@ test('Builder Console drives a real service generation, verification and preview
 
   await expect(page.getByRole('heading', { name: projectName })).toBeVisible();
   await expect(page.getByText('£0.00')).toBeVisible();
+  const sourcePanel = page.getByLabel('Source and asset rights');
+  await expect(sourcePanel.getByText('Approved logo candidate')).toBeVisible();
+  await expect(sourcePanel.getByText('unknown', { exact: true })).toBeVisible();
+  await sourcePanel.getByRole('button', { name: 'Approve use' }).click();
+  await expect(sourcePanel.getByText('approved for use', { exact: true })).toBeVisible();
+  await expect(sourcePanel.getByText('Publishable', { exact: true })).toBeVisible();
+  await expect(page.getByText('source · governance · updated')).toBeVisible();
+
   await page.getByRole('button', { name: 'Generate project' }).click();
   await expect(page.locator('.state-pill')).toHaveText('generated', { timeout: 30_000 });
   await expect(page.getByRole('button', { name: 'Verify build' })).toBeVisible();
   await expect(page.getByText('composition · materialised')).toBeVisible();
   await expect(page.getByText('3 routes')).toBeVisible();
+  await expect(sourcePanel.getByText(/Rights are locked after knowledge ingestion or generation/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Verify build' }).click();
   await expect(page.locator('.state-pill')).toHaveText('verified', { timeout: 60_000 });
@@ -97,6 +123,8 @@ test('Builder Console drives a real service generation, verification and preview
 
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
-  await expect(page.getByLabel('Project metrics').getByText('13', { exact: true })).toBeVisible();
+  // 11 build/quality/preview events, one source governance decision, and the
+  // save and revert of one content edit.
+  await expect(page.getByLabel('Project metrics').getByText('14', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
+import { updateProjectSourceGovernance } from './source-governance.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -42,6 +43,13 @@ export function createFactoryHttpServer({ service }) {
       if (!route) return send(response, 404, { error: 'not-found' });
       const project = service.getProject(route.projectId);
       if (!project) return send(response, 404, { error: 'unknown-project' });
+
+      const sourceGovernanceRoute = route.action?.match(/^sources\/([^/]+)\/governance$/);
+      if (request.method === 'POST' && sourceGovernanceRoute) {
+        const body = await readJson(request);
+        const result = await updateProjectSourceGovernance(service, route.projectId, decodeURIComponent(sourceGovernanceRoute[1]), body.decision);
+        return send(response, 200, result);
+      }
 
       if (request.method === 'GET' && route.action === null) return send(response, 200, { project });
       if (request.method === 'GET' && route.action === 'manifest') return send(response, 200, { manifest: service.getManifest(route.projectId) });
@@ -96,6 +104,7 @@ export function createFactoryHttpServer({ service }) {
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,
+        /source governance/i, /Unknown project source/, /Public URL references/, /Only user-supplied source material/,
       ].some((pattern) => pattern.test(message));
       const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });

@@ -6,11 +6,13 @@ import {
   saveOverrides,
   startPreview,
   stopPreview,
+  updateSourceGovernance,
   verifyProject,
   type ContentOverride,
-  type DeclaredSource,
   type KnowledgeSummary,
   type ProjectSummary,
+  type SourceGovernanceDecision,
+  type SourceReference,
   type SourceRequest,
   type WorkspaceSnapshot,
 } from '../service/client';
@@ -40,6 +42,7 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'quality.install.succeeded') return `Dependencies installed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.check.succeeded') return `Checks passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.build.succeeded') return `Production build passed · ${duration(event.usage.durationMs)}`;
+  if (event.type === 'source.governance.updated') return `${String(payload.sourceId ?? 'Source')} · ${label(String(payload.decision ?? 'updated'))}`;
   if (event.type === 'preview.started') return 'Local preview available';
   if (event.type === 'preview.stopped') return 'Preview stopped';
   if (event.type.endsWith('.failed')) return String(payload.message ?? 'Operation failed');
@@ -73,7 +76,7 @@ function sameUri(a: string, b: string) {
 
 function SourcePanel({ knowledge, declaredSources, disabled, busy, onIngest }: {
   knowledge: KnowledgeSummary | null;
-  declaredSources: DeclaredSource[];
+  declaredSources: SourceReference[];
   disabled: boolean;
   busy: boolean;
   onIngest: (sources: SourceRequest[]) => Promise<void>;
@@ -193,6 +196,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
   const [operation, setOperation] = useState<Operation>(null);
+  const [sourceOperation, setSourceOperation] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [selection, setSelection] = useState<Selection | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -306,6 +310,20 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     setSelection(null);
   }, [overrides, selection, writeOverrides]);
 
+  const decideSource = useCallback(async (sourceId: string, decision: SourceGovernanceDecision) => {
+    setSourceOperation(sourceId);
+    setError('');
+    try {
+      await updateSourceGovernance(projectId, sourceId, decision);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      await refresh().catch(() => undefined);
+    } finally {
+      setSourceOperation(null);
+    }
+  }, [projectId, refresh]);
+
   const latestTask = snapshot?.tasks.at(-1) ?? null;
   // Ingested material only reaches the product through a build, so a knowledge
   // pack newer than the live composition is a call to rebuild, not a warning.
@@ -322,13 +340,15 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
   if (!snapshot) return <main className="builder-loading"><div className="builder-spinner" /><p>{error || 'Loading real factory state…'}</p><button type="button" className="secondary" onClick={onExit}>Back</button></main>;
 
+  const sourceGovernanceEditable = snapshot.project.state === 'ready' && !snapshot.project.knowledgePackHash;
+
   return <main className="builder-shell">
     <header className="builder-topbar">
       <button type="button" className="builder-brand" onClick={onExit}><span className="brand-mark">A</span><span>App Builder</span></button>
       <div className="builder-project-meta"><span className={`state-pill state-${snapshot.project.state}`}>{snapshot.project.state}</span><strong>{snapshot.project.name}</strong><span>{snapshot.project.type.replaceAll('-', ' ')}</span></div>
       <div className="builder-actions">
-        <button type="button" className="secondary compact" onClick={() => refresh()} disabled={Boolean(operation)}>Refresh</button>
-        {canGenerate && <button type="button" className={knowledgeIsNewerThanBuild || !rebuild ? 'primary compact' : 'secondary compact'} onClick={() => run('generate')} disabled={Boolean(operation)}>{operation === 'generate' ? (rebuild ? 'Rebuilding…' : 'Generating…') : (rebuild ? 'Rebuild project' : 'Generate project')}</button>}
+        <button type="button" className="secondary compact" onClick={() => refresh()} disabled={Boolean(operation) || Boolean(sourceOperation)}>Refresh</button>
+        {canGenerate && <button type="button" className={knowledgeIsNewerThanBuild || !rebuild ? 'primary compact' : 'secondary compact'} onClick={() => run('generate')} disabled={Boolean(operation) || Boolean(sourceOperation)}>{operation === 'generate' ? (rebuild ? 'Rebuilding…' : 'Generating…') : (rebuild ? 'Rebuild project' : 'Generate project')}</button>}
         {canVerify && <button type="button" className="primary compact" onClick={() => run('verify')} disabled={Boolean(operation)}>{operation === 'verify' ? 'Verifying…' : 'Verify build'}</button>}
         {canPreview && <button type="button" className="primary compact" onClick={() => run('start-preview')} disabled={Boolean(operation)}>{operation === 'start-preview' ? 'Starting…' : 'Start preview'}</button>}
         {previewRunning && <button type="button" className="secondary compact" onClick={() => run('stop-preview')} disabled={Boolean(operation)}>{operation === 'stop-preview' ? 'Stopping…' : 'Stop preview'}</button>}
@@ -348,6 +368,27 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <dl className="builder-definition"><div><dt>Manifest</dt><dd>v{snapshot.project.manifestVersion}</dd></div><div><dt>Knowledge</dt><dd>{snapshot.project.knowledgePackHash ? 'attached' : 'manifest only'}</dd></div><div><dt>Workspace</dt><dd>{snapshot.project.workspacePath ? 'materialised' : 'not generated'}</dd></div></dl>
         </section>
 
+        <section className="builder-panel source-governance-panel" aria-label="Source and asset rights">
+          <div className="panel-title-row"><span className="builder-kicker">Sources & rights</span><span>{snapshot.sources.length}</span></div>
+          <p className="source-governance-copy">Observed brand material can guide the build without granting republication rights. Approve only source files you are entitled to use.</p>
+          {snapshot.sources.length ? <div className="source-governance-list">{snapshot.sources.map((source) => {
+            const publicReference = source.kind === 'url' || /^https?:/i.test(source.uri ?? '');
+            const canApprove = sourceGovernanceEditable && source.provenance === 'user-supplied' && !publicReference;
+            const busy = sourceOperation === source.id;
+            return <article className="source-governance-item" key={source.id}>
+              <div className="source-governance-heading"><strong>{source.label}</strong><span className={`rights-pill rights-${source.rightsStatus ?? 'unknown'}`}>{label(source.rightsStatus ?? 'unknown')}</span></div>
+              <span className="source-governance-meta">{label(source.kind)} · {label(source.sourceChannel ?? (publicReference ? 'website' : 'upload'))}</span>
+              {source.purpose && <small>{source.purpose}</small>}
+              <div className="source-governance-state"><span>{label(source.assetStatus ?? 'suggested')}</span><strong>{source.publishUseAllowed ? 'Publishable' : 'Reference / blocked'}</strong></div>
+              {sourceGovernanceEditable ? <div className="source-governance-actions">
+                {canApprove && <button type="button" onClick={() => decideSource(source.id, 'approve-for-use')} disabled={busy || Boolean(operation)}>Approve use</button>}
+                <button type="button" onClick={() => decideSource(source.id, 'reference-only')} disabled={busy || Boolean(operation)}>Reference only</button>
+                <button type="button" onClick={() => decideSource(source.id, 'do-not-use')} disabled={busy || Boolean(operation)}>Do not use</button>
+              </div> : <small className="source-lock-note">Rights are locked after knowledge ingestion or generation so durable source truth cannot diverge.</small>}
+            </article>;
+          })}</div> : <p className="builder-empty">No source references were recorded in the approved intake.</p>}
+        </section>
+
         <section className="builder-panel metric-grid" aria-label="Project metrics">
           <div><span>Cost</span><strong>£{snapshot.metrics.costGbp.toFixed(2)}</strong></div>
           <div><span>Events</span><strong>{snapshot.metrics.eventCount}</strong></div>
@@ -357,7 +398,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
         <SourcePanel
           knowledge={snapshot.knowledge}
-          declaredSources={snapshot.declaredSources}
+          declaredSources={snapshot.sources}
           disabled={snapshot.project.state === 'generating'}
           busy={operation === 'ingest'}
           onIngest={ingest}
@@ -422,7 +463,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
         <section className="builder-panel activity-panel">
           <div className="panel-title-row"><span className="builder-kicker">Event ledger</span><span>{snapshot.events.length}</span></div>
-          <div className="event-list">{snapshot.events.length ? snapshot.events.slice().reverse().map((event) => <article key={event.id}><div className="event-line"><span className={`event-dot ${event.type.endsWith('.failed') ? 'failed' : event.type.endsWith('.succeeded') || event.type.includes('generated') || event.type.includes('materialised') ? 'passed' : ''}`} /><strong>{label(event.type)}</strong></div><p>{eventSummary(event)}</p><time>{new Date(event.timestamp).toLocaleTimeString()}</time></article>) : <p className="builder-empty">Factory events will appear here as real work happens.</p>}</div>
+          <div className="event-list">{snapshot.events.length ? snapshot.events.slice().reverse().map((event) => <article key={event.id}><div className="event-line"><span className={`event-dot ${event.type.endsWith('.failed') ? 'failed' : event.type.endsWith('.succeeded') || event.type.includes('generated') || event.type.includes('materialised') || event.type === 'source.governance.updated' ? 'passed' : ''}`} /><strong>{label(event.type)}</strong></div><p>{eventSummary(event)}</p><time>{new Date(event.timestamp).toLocaleTimeString()}</time></article>) : <p className="builder-empty">Factory events will appear here as real work happens.</p>}</div>
         </section>
       </aside>
     </section>

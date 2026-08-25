@@ -114,6 +114,7 @@ export function createAppBuilderMcpServer({ client = new FactoryServiceClient() 
         contentBase64: z.string().optional(),
         label: z.string().optional(),
         purpose: z.string().optional(),
+        provenance: z.enum(['user-supplied', 'existing-site', 'external-research', 'generated']).optional(),
         rightsStatus: z.enum(['approved-for-use', 'reference-only', 'unknown', 'restricted']).optional(),
         assetStatus: z.enum(['approved', 'suggested', 'generated', 'rejected', 'do-not-use']).optional(),
         approvedForUse: z.boolean().optional(),

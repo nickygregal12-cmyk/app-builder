@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { project } from './generated/project';
 import { design } from './generated/design';
 import { composition } from './generated/composition';
+import { assets } from './generated/assets';
 import { initializeRecipes, installedRecipes } from './generated/recipes';
 import { currentScenario } from './scenarios';
 
@@ -39,7 +40,42 @@ type ProjectComposition = {
   warnings: readonly string[];
 };
 
+type AssetVariant = { role: string; format: string; width: number | null; height: number | null; uri: string };
+type GeneratedAsset = { id: string; kind: string; provenance: string; assetStatus: string; rightsStatus: string; alt: string | null; variants: readonly AssetVariant[] };
+
 const composed = composition as unknown as ProjectComposition;
+const assetMap = assets as unknown as Record<string, GeneratedAsset>;
+
+function assetsFor(section: SectionSpec) {
+  return section.assetIds.map((id) => assetMap[id]).filter(Boolean);
+}
+
+// Prefers the crop the layout asked for, falls back to the widest responsive
+// variant, and never invents alt text: an unlabelled decorative image is
+// better than a confident guess about what it shows.
+function Picture({ asset, role, className, sizes }: { asset: GeneratedAsset; role: string; className?: string; sizes: string }) {
+  const crop = asset.variants.find((variant) => variant.role === role);
+  const responsive = asset.variants.filter((variant) => variant.role === 'responsive');
+  const webp = responsive.filter((variant) => variant.format === 'webp').sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+  const avif = responsive.filter((variant) => variant.format === 'avif').sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+  const fallback = crop ?? webp.at(-1) ?? asset.variants[0];
+  if (!fallback) return null;
+  const srcSet = (list: readonly AssetVariant[]) => list.map((variant) => `${variant.uri} ${variant.width}w`).join(', ');
+  return <picture className={className}>
+    {!crop && avif.length > 0 && <source type="image/avif" srcSet={srcSet(avif)} sizes={sizes} />}
+    {!crop && webp.length > 0 && <source type="image/webp" srcSet={srcSet(webp)} sizes={sizes} />}
+    <img
+      src={fallback.uri}
+      width={fallback.width ?? undefined}
+      height={fallback.height ?? undefined}
+      alt={asset.alt ?? ''}
+      loading="lazy"
+      decoding="async"
+      data-asset-provenance={asset.provenance}
+      data-asset-status={asset.assetStatus}
+    />
+  </picture>;
+}
 
 function text(value: unknown) {
   if (value === null || value === undefined) return '';
@@ -96,7 +132,16 @@ function Items({ values, className = 'item-grid' }: { values: unknown; className
 
 function Actions({ actions, navigate }: { actions: readonly Action[]; navigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void }) {
   if (!actions.length) return null;
-  return <div className="section-actions">{actions.map((action, index) => <a className={index === 0 ? 'button primary-action' : 'button secondary-action'} href={action.href} onClick={(event) => navigate(event, action.href)} key={`${action.label}-${action.href}`}>{action.label}</a>)}</div>;
+  return <div className="section-actions">{actions.map((action, index) => {
+    const external = /^https?:\/\//.test(action.href);
+    return <a
+      className={index === 0 ? 'button primary-action' : 'button secondary-action'}
+      href={action.href}
+      onClick={(event) => navigate(event, action.href)}
+      key={`${action.label}-${action.href}`}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >{action.label}</a>;
+  })}</div>;
 }
 
 function GenericSection({ section, navigate }: { section: SectionSpec; navigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void }) {
@@ -118,12 +163,18 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
   const body = binding(section, 'body');
   const eyebrow = binding(section, 'eyebrow');
 
-  if (section.type === 'hero') return <section className={`page-section hero-section variant-${section.variant}`} id={section.id} data-section-id={section.id}>
-    {eyebrow && <p className="eyebrow" data-binding-origin={eyebrow.origin}>{text(eyebrow.value)}</p>}
-    {title && <h1 data-binding-origin={title.origin} data-generated={String(title.generated)}>{text(title.value)}</h1>}
-    {body && <p className="hero-copy" data-binding-origin={body.origin} data-generated={String(body.generated)}>{text(body.value)}</p>}
-    <Actions actions={section.actions} navigate={navigate} />
-  </section>;
+  if (section.type === 'hero') {
+    const [lead] = assetsFor(section);
+    return <section className={`page-section hero-section variant-${section.variant}${lead ? ' has-image' : ''}`} id={section.id} data-section-id={section.id}>
+      <div className="hero-copy-column">
+        {eyebrow && <p className="eyebrow" data-binding-origin={eyebrow.origin}>{text(eyebrow.value)}</p>}
+        {title && <h1 data-binding-origin={title.origin} data-generated={String(title.generated)}>{text(title.value)}</h1>}
+        {body && <p className="hero-copy" data-binding-origin={body.origin} data-generated={String(body.generated)}>{text(body.value)}</p>}
+        <Actions actions={section.actions} navigate={navigate} />
+      </div>
+      {lead && <Picture asset={lead} role="hero-16x9" className="hero-image" sizes="(max-width: 880px) 100vw, 50vw" />}
+    </section>;
+  }
 
   if (section.type === 'contact-panel') {
     const email = binding(section, 'email');
@@ -139,6 +190,17 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
         {website && <a href={text(website.value)} data-binding-origin={website.origin}><span>Website</span><strong>{text(website.value)}</strong></a>}
       </div>
       <SocialLinks profiles={binding(section, 'profiles')?.value} />
+    </section>;
+  }
+
+  if (section.type === 'gallery') {
+    const items = assetsFor(section);
+    if (!items.length && !section.actions.length) return null;
+    return <section className="page-section gallery-section" id={section.id} data-section-id={section.id}>
+      {title && <h2>{text(title.value)}</h2>}
+      {body && <p className="section-copy">{text(body.value)}</p>}
+      {items.length > 0 && <div className="gallery-grid">{items.map((asset) => <Picture key={asset.id} asset={asset} role="card-4x3" className="gallery-item" sizes="(max-width: 880px) 100vw, 33vw" />)}</div>}
+      <Actions actions={section.actions} navigate={navigate} />
     </section>;
   }
 

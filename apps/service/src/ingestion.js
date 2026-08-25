@@ -16,6 +16,7 @@ export const INGESTION_LIMITS = Object.freeze({
 
 const RIGHTS_STATUSES = ['approved-for-use', 'reference-only', 'unknown', 'restricted'];
 const ASSET_STATUSES = ['approved', 'suggested', 'generated', 'rejected', 'do-not-use'];
+const PROVENANCES = ['user-supplied', 'existing-site', 'external-research', 'generated'];
 
 function requireText(value, label) {
   const text = String(value ?? '').trim();
@@ -36,6 +37,10 @@ function optionalEnum(value, allowed, label) {
 function declaredGovernance(input) {
   return {
     purpose: input.purpose ? String(input.purpose) : null,
+    // Stock and generated imagery must be recorded as such. Without this a
+    // placeholder becomes indistinguishable from a photograph of the business's
+    // own work once it is in the knowledge pack.
+    provenance: optionalEnum(input.provenance, PROVENANCES, 'provenance'),
     rightsStatus: optionalEnum(input.rightsStatus, RIGHTS_STATUSES, 'rightsStatus'),
     assetStatus: optionalEnum(input.assetStatus, ASSET_STATUSES, 'assetStatus'),
     approvedForUse: input.approvedForUse === true ? true : undefined,
@@ -143,6 +148,10 @@ export class SourceIngestion {
     return target;
   }
 
+  assetDirectory(projectId) {
+    return path.join(this.projectRoot(projectId), 'assets');
+  }
+
   normalizedPath(projectId) {
     return path.join(this.projectRoot(projectId), 'normalized-sources.json');
   }
@@ -155,7 +164,7 @@ export class SourceIngestion {
   async ingest(projectId, requests) {
     const projectRoot = this.projectRoot(projectId);
     const cacheDir = path.join(this.root, '.cache');
-    const assetOutputDir = path.join(projectRoot, 'assets');
+    const assetOutputDir = this.assetDirectory(projectId);
     fs.mkdirSync(assetOutputDir, { recursive: true });
     const options = { cacheDir, assetOutputDir, assetUriPrefix: 'assets' };
 
@@ -181,7 +190,7 @@ export class SourceIngestion {
           rightsStatus: request.rightsStatus,
           assetStatus: request.assetStatus,
           approvedForUse: request.approvedForUse,
-          provenance: 'user-supplied',
+          provenance: request.provenance ?? 'user-supplied',
         }, options));
       }
     }

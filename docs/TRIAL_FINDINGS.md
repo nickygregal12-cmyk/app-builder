@@ -76,14 +76,14 @@ three tall cards containing a title and nothing else. `location-list` falls
 through to the generic item grid, so a single service area renders as one large
 card containing the word "Glasgow".
 
-### F6 — No imagery, and nothing that asks for it — P1 ⚠️ Warned, not solved
+### F6 — No imagery, and nothing that asks for it — P1 ✅ Fixed
 
 The generated site contains no images. For a portfolio trade this alone makes it
 unlaunchable, and the composer neither warns about it nor reserves a place for
 it. Section specs carry `assetIds`, but nothing populates them and nothing
 notices when they are empty for a business class that plainly needs pictures.
 
-### F7 — Social-only businesses cannot be ingested through an authorised path — P1 ⬜ Open
+### F7 — Social-only businesses cannot be ingested through an authorised path — P1 ⚠️ Mitigated, not solved
 
 MGB Decor's only web presence is Facebook and Instagram. Both are login-walled
 to unauthenticated requests, and `docs/ROADMAP.md` 3.8G correctly rules out
@@ -105,6 +105,13 @@ identity and content.
 A defect that only appears once an earlier one is fixed is worth noting as a
 pattern: the empty-state path had been hiding it.
 
+### F9 — Ingestion could not record that an asset is stock or generated — P1 ✅ Fixed
+
+Uploads were hardcoded to `provenance: 'user-supplied'`. Placeholder or stock
+imagery therefore became indistinguishable from a photograph of the business's
+own work the moment it entered the knowledge pack — the exact confusion the
+governance rules exist to prevent. Ingestion now accepts a declared provenance.
+
 ## Fixes applied after trial 1
 
 - hero eyebrow carrying the project type: removed;
@@ -122,7 +129,25 @@ pattern: the empty-state path had been hiding it.
   `contact.social.<platform>` facts, so a business site's own footer links
   populate the profile;
 - name-only item lists render as inline chips instead of tall empty cards;
-- new `no-imagery-available` composition warning for marketing sites.
+- imagery pipeline: the composer places approved assets on the hero and in a
+  gallery section, the generator copies the placed variants into the generated
+  repository's `public/assets/` with a typed asset manifest, and the template
+  renders them as `<picture>` with responsive `srcset` and the existing
+  hero/card/square crops. Only assets with `publishUseAllowed` are placed, so
+  rights state decides what reaches the site;
+- ingestion accepts a declared provenance, so stock and generated imagery stay
+  labelled as such through the pack, the composition and the rendered `<img>`
+  (`data-asset-provenance`);
+- where a business keeps its portfolio on social media, the gallery links out to
+  it rather than implying the few images on the site are the whole body of work;
+- external actions render with `target="_blank"` and `rel="noopener noreferrer"`;
+- `no-imagery-available` warning replaced with `no-publishable-imagery`, which
+  reflects what can actually be shown rather than what happens to be stored.
+
+The Acme regression fixture supplied a logo and a project photo without
+approving either, so it had no publishable imagery and the new warning fired.
+The fixture now approves them, which is what a business supplying its own logo
+would do, and CI exercises the imagery path as a result.
 
 The knowledge-pack half of F4 has a producer — extraction — but no trial has
 exercised it yet, because MGB Decor has no website to extract from.
@@ -132,7 +157,8 @@ exercised it yet, because MGB Decor has no website to extract from.
 Roughly eleven meaningful edits at first build, against the Phase 3.8E target of
 fewer than twenty — before real content arrives, which normally adds more.
 
-After the fixes above, the remaining blockers on this input are imagery (F6),
-real contact details, and the generic visual treatment that Phase 4C/4D exists
-to address. The count is not a Phase 3.8E result: no company asset was ingested
+After the fixes above, the remaining blockers on this input are real
+photographs, real contact details, and the generic visual treatment that Phase
+4C/4D exists to address. A rebuild with four deterministic placeholder images
+produced zero composition warnings. The count is not a Phase 3.8E result: no company asset was ingested
 and no human review was recorded.

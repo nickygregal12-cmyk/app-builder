@@ -94,6 +94,22 @@ function entityBinding(key, pack, field, manifestItems = []) {
   return null;
 }
 
+// Only assets the business has approved for publication can be placed. An asset
+// that is reference-only, rejected or awaiting approval stays out of the
+// generated site regardless of how good it looks.
+function publishableAssets(pack) {
+  return list(pack?.assets).filter((asset) => asset.publishUseAllowed && !asset.duplicateOf);
+}
+
+function assetCrop(asset, role) {
+  return list(asset.variants).find((variant) => variant.role === role) ?? null;
+}
+
+function leadAsset(pack) {
+  const assets = publishableAssets(pack);
+  return assets.find((asset) => assetCrop(asset, 'hero-16x9')) ?? assets[0] ?? null;
+}
+
 function serviceAreaBinding(pack, manifest) {
   const areas = list(pack?.companyProfile?.serviceAreas);
   if (areas.length) {
@@ -182,7 +198,8 @@ function hero(pageId, surface, index, manifest, pack, action) {
   // No eyebrow. It previously carried the project type, which published a
   // Build Contract field — "marketing site" — as a caption above the business
   // name on every page.
-  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], action ? [action] : [], [], index === 0 ? 'primary' : 'compact');
+  const lead = index === 0 ? leadAsset(pack) : null;
+  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], action ? [action] : [], lead ? [lead.id] : [], index === 0 ? 'primary' : 'compact');
 }
 
 function servicesSection(pageId, pack, manifest) {
@@ -242,6 +259,28 @@ function entitiesSection(pageId, manifest) {
   ], [], [], 'list');
 }
 
+// Where a business keeps its portfolio on social media, the site should send
+// people there rather than pretend the handful of images it holds is the whole
+// body of work.
+function socialWorkActions(pack, manifest) {
+  const profiles = socialProfileBinding(pack, manifest);
+  const values = Array.isArray(profiles?.value) ? profiles.value : [];
+  return values
+    .filter((profile) => ['instagram', 'facebook'].includes(String(profile.platform)))
+    .map((profile) => ({ label: `More work on ${String(profile.platform).replace(/^./, (letter) => letter.toUpperCase())}`, href: profile.url }));
+}
+
+function gallerySection(pageId, pack, manifest) {
+  const lead = leadAsset(pack);
+  const assets = publishableAssets(pack).filter((asset) => asset.id !== lead?.id);
+  const actions = socialWorkActions(pack, manifest);
+  if (!assets.length && !actions.length) return null;
+  return section(`${pageId}-gallery`, 'gallery', 'Show approved work and point to where the rest of it lives', [
+    manifestBinding('title', manifest?.project?.type === 'marketing-site' ? 'Recent work' : 'Gallery'),
+    assets.length ? null : defaultBinding('body', 'Recent projects are posted to our social profiles.'),
+  ], actions, assets.map((asset) => asset.id), 'grid');
+}
+
 // Journeys describe what a product lets a user do, which is real content for an
 // application surface. On a published business or content site they are visitor
 // intents recorded during intake — "Understand what the company does" — and
@@ -287,6 +326,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(servicesSection(pageId, pack, manifest));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
+    output.push(gallerySection(pageId, pack, manifest));
     output.push(projectsSection(pageId, pack));
     output.push(proofSection(pageId, pack, manifest));
     output.push(locationsSection(pageId, pack, manifest));
@@ -298,6 +338,9 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)], [], [], 'prose'));
     output.push(peopleSection(pageId, pack));
     output.push(proofSection(pageId, pack, manifest));
+  } else if (/work|gallery|portfolio|project/.test(lower)) {
+    output.push(gallerySection(pageId, pack, manifest));
+    output.push(projectsSection(pageId, pack));
   } else if (/location|area/.test(lower)) {
     output.push(locationsSection(pageId, pack, manifest));
   } else if (/contact|quote|book/.test(lower)) {
@@ -346,7 +389,7 @@ function warningsFor(manifest, pack) {
     if (!contacts.length && !socialProfileBinding(pack, manifest)) warnings.push('missing-contact-details');
     // A marketing site with no imagery is not launchable for most business
     // classes, so silence here would be misleading.
-    if (!list(pack?.assets).length) warnings.push('no-imagery-available');
+    if (!publishableAssets(pack).length) warnings.push('no-publishable-imagery');
   }
   for (const capability of list(manifest?.constraints?.customCapabilities)) warnings.push(`custom-capability:${capability}`);
   for (const capability of list(manifest?.constraints?.unresolvedCapabilities)) warnings.push(`unresolved-capability:${capability}`);

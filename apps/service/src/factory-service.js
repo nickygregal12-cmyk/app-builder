@@ -304,7 +304,10 @@ export class FactoryService {
     await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.started', actor: 'factory-service', payload: { buildVersion: version, manifestVersion: project.manifest.schemaVersion ?? 1, knowledgePackHash: project.knowledgePack?.packHash ?? null } }));
 
     try {
-      const { plan, composition } = generateComposedProject(project.manifest, workspace, { knowledgePack: project.knowledgePack });
+      const { plan, composition } = generateComposedProject(project.manifest, workspace, {
+        knowledgePack: project.knowledgePack,
+        assetSourceDir: this.ingestion.assetDirectory(projectId),
+      });
       await this.store.recordEvent(createEvent({
         projectId,
         taskId: task.id,

@@ -470,7 +470,7 @@ older equivalent, App Builder keeps its own.
 | Supply-chain and workflow hardening, staged | 9.2/10 | **Newly planned** | Stage Q9 |
 | Design-token enforcement beyond DesignLint | 9/10 | **Newly planned** | Stage Q5, Phase 4C |
 | Dead-code/unused-dependency analysis (`Knip`) | 8.8/10 | Already noted; now staged and non-blocking until baselined | Stage Q6, Phase 4.5 |
-| Property-based testing (`fast-check`) | 8.7/10 | Already planned; scope widened | Stage Q7 |
+| Property-based testing (`fast-check`) | 8.7/10 | Adopted for ChangeSet scope; scope widened for the rest | Stage Q7 |
 | Targeted mutation testing | 8.4/10 | **Newly planned** | Stage Q8, Phase 4.5/6 |
 | Bundle analysis | 8.4/10 | **Newly planned** | Stage Q4 |
 

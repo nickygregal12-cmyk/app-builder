@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "description": "Contract families whose JSON Schema in /schemas is the canonical authority. Generated TypeScript lives in packages/contracts/generated and Ajv validators are exported from @app-builder/contracts. Run `npm run contracts:generate` after editing any listed schema; `npm run contracts:check` fails when generated output drifts from the recorded hash.",
+  "families": [
+    {
+      "id": "project-manifest",
+      "schema": "project-manifest.schema.json",
+      "typeName": "AppBuilderProjectManifest",
+      "boundary": "Service project creation, generator input and manifest file reads.",
+      "typesHash": "ae8b75621a2ed2daf13530bc4528c1493373cc417e0438858fa59962ad6cba0e",
+      "schemaHash": "1e2578080d3d3d6d74135f201924c1a8fc0b02b2ff63ed64ecf44ef81fb3e04c"
+    },
+    {
+      "id": "build-contract",
+      "schema": "build-contract.schema.json",
+      "typeName": "ReviewedBuildContract",
+      "boundary": "Reviewed intake handoff into the factory.",
+      "typesHash": "d9d93c6629cc31b02ac0190dbd14390840e8c243e936f4527805fc16848dc481",
+      "schemaHash": "4b73a85711b7e2f32b0edef6606a92993c1c1a9ec1fbcb888d38d3f9a9206a0c"
+    },
+    {
+      "id": "intake-session",
+      "schema": "intake-session.schema.json",
+      "typeName": "AppBuilderIntakeSession",
+      "boundary": "Exported intake bundles and resumed intake drafts.",
+      "typesHash": "b592021eb90c2dac3efd0b2c2ea8546e82addea04566bb54dd3d640b4b669166",
+      "schemaHash": "b51bb553accbffeab291f5c6b25c477a07904a279319f76a8bd1276a1dc02dd9"
+    },
+    {
+      "id": "knowledge-pack",
+      "schema": "knowledge-pack.schema.json",
+      "typeName": "AppBuilderKnowledgePack",
+      "boundary": "Content-intelligence output, service ingestion and composition input.",
+      "typesHash": "aba82cecea07208e912f216c70495b7f9d611eede4d55e5c3e590e10aedfd0dc",
+      "schemaHash": "5243d0150873895afcdea1b6216d561edea863b1b5c8e3679f609343bf237d7f"
+    },
+    {
+      "id": "composition",
+      "schema": "composition.schema.json",
+      "typeName": "DeterministicProjectComposition",
+      "boundary": "Composer output and generated .app-builder/composition.json reads.",
+      "typesHash": "a2fcf2d55500ab2b23d96bd79d51112cfce9a29861f18e8c4e9d772e01b1dfc7",
+      "schemaHash": "13bc15d2497c00cdbf7ddca6a247a253310b94638228806b7a6c94976b3ed854"
+    },
+    {
+      "id": "control-task",
+      "schema": "control-task.schema.json",
+      "typeName": "AppBuilderControlTask",
+      "boundary": "Durable control-plane task records.",
+      "typesHash": "2c5c36235ec98762f8ea32e50af38d3ea3c576e7a3b5cb1cb73d65c02377489a",
+      "schemaHash": "5654ec4025443f7aa257ef1fc2686b4607fafddebc343c6d29e26ad6d071ac93"
+    },
+    {
+      "id": "build-event",
+      "schema": "build-event.schema.json",
+      "typeName": "AppBuilderBuildEvent",
+      "boundary": "Build/Event Ledger records and service event reads.",
+      "typesHash": "84e87ede60dbba0b1b431e4617d298e2e30138bc991c27cfb21a9efce29a23e6",
+      "schemaHash": "6d8c5bc8d6baa80ad3f4136fa2d5545fc7308f584f7f557938d930610ddec6f0"
+    },
+    {
+      "id": "checkpoint",
+      "schema": "checkpoint.schema.json",
+      "typeName": "AppBuilderCheckpoint",
+      "boundary": "Durable checkpoints and fresh-session resume packets.",
+      "typesHash": "62cc541c77ab8b7126fcb5b8d160f287ab99f73e08302c9f0ca6bc7802e15993",
+      "schemaHash": "faeb57c47b4136ceb3ff8ce2c7ff4dac8fab86be271bba379f683d23dd956282"
+    },
+    {
+      "id": "change-set",
+      "schema": "change-set.schema.json",
+      "typeName": "AppBuilderChangeSet",
+      "boundary": "Declared autonomous mutation scope.",
+      "typesHash": "111a944b07e1a1d2771530c3ea10b7be66a26b03187bc35d3a84f7163ee6517f",
+      "schemaHash": "062ed2af3fd030ea0f25c9bab6a48b854201e1731490f5aad7560b5c7e73e578"
+    },
+    {
+      "id": "content-override",
+      "schema": "content-override.schema.json",
+      "typeName": "AppBuilderContentOverrides",
+      "boundary": "Human content edits stored by the service and applied over a deterministic composition.",
+      "schemaHash": "c34b6773099787b9ba83ce9045b9cd1b73af023983340d2668863ff831febcdf",
+      "typesHash": "2e6cc623ea17196452983ab50a9bf86570a846204885767f88581cc23b26c0a5"
+    }
+  ],
+  "pending": [
+    {
+      "schema": "adapter.schema.json",
+      "reason": "Infrastructure adapter registry entries are still validated by the adapter registry doctor."
+    },
+    {
+      "schema": "agent-policy.schema.json",
+      "reason": "Capability policies are consumed only by the control plane; migrate with the agent runtime."
+    },
+    {
+      "schema": "agent-role.schema.json",
+      "reason": "Specialist role specs are read by the control-plane doctor and the agent-architecture tests; migrate when a runtime actually dispatches against them."
+    },
+    {
+      "schema": "ambiguity-followup.schema.json",
+      "reason": "Inlined into the build-contract and intake-session families."
+    },
+    {
+      "schema": "company-profile.schema.json",
+      "reason": "Inlined into the knowledge-pack family."
+    },
+    {
+      "schema": "content-binding.schema.json",
+      "reason": "Inlined into the composition family."
+    },
+    {
+      "schema": "context-item.schema.json",
+      "reason": "Routed context packets are internal to the control plane until the agent runtime exists."
+    },
+    {
+      "schema": "convergence-report.schema.json",
+      "reason": "Convergence reports are a planning artifact until a loop actually emits them."
+    },
+    {
+      "schema": "design-contract.schema.json",
+      "reason": "Design Contract is groundwork and still changing in Phase 4C."
+    },
+    {
+      "schema": "external-source.schema.json",
+      "reason": "The external knowledge/skill source registry is governance documentation until a runtime resolves against it."
+    },
+    {
+      "schema": "genuine-business-acceptance.schema.json",
+      "reason": "Validated directly by the acceptance evidence validator and still written against JSON Schema draft-07; migrate the dialect before adopting it as a runtime family."
+    },
+    {
+      "schema": "intake-feedback.schema.json",
+      "reason": "Inlined into the intake-session family."
+    },
+    {
+      "schema": "non-functional-requirements.schema.json",
+      "reason": "Consumed only by the control-plane doctor today."
+    },
+    {
+      "schema": "normalized-source.schema.json",
+      "reason": "Normalised sources are an internal content-intelligence stage, not an exchanged document."
+    },
+    {
+      "schema": "page-spec.schema.json",
+      "reason": "Inlined into the composition family."
+    },
+    {
+      "schema": "recipe-installation.schema.json",
+      "reason": "Installation inventories are generated and verified by the upgrade tooling."
+    },
+    {
+      "schema": "recipe-upgrade-proposal.schema.json",
+      "reason": "Upgrade proposals are read-only planning output today."
+    },
+    {
+      "schema": "recipe.schema.json",
+      "reason": "Recipe registry entries remain validated by the registry doctor."
+    },
+    {
+      "schema": "review-verdict.schema.json",
+      "reason": "Review verdicts are asserted by the agent-architecture tests, not yet produced or consumed at a service boundary."
+    },
+    {
+      "schema": "routing-benchmark-case.schema.json",
+      "reason": "Routing benchmark cases are read only by the deterministic routing benchmark and the control-plane doctor; migrate if a runtime ever dispatches against them."
+    },
+    {
+      "schema": "section-spec.schema.json",
+      "reason": "Inlined into the composition family."
+    },
+    {
+      "schema": "skill-registration.schema.json",
+      "reason": "Skill registrations describe the Phase 5 skill lifecycle; nothing registers a skill at runtime yet."
+    },
+    {
+      "schema": "source-reference.schema.json",
+      "reason": "Inlined into the build-contract and intake-session families."
+    },
+    {
+      "schema": "stage-handoff.schema.json",
+      "reason": "Handoff promotion is verified statically today; it becomes a runtime family when the agent runtime exchanges handoffs."
+    },
+    {
+      "schema": "template.schema.json",
+      "reason": "Template registry entries remain validated by the registry doctor."
+    }
+  ]
+}

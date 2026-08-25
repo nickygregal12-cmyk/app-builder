@@ -107,8 +107,24 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.locator('.preview-canvas')).toHaveClass(/preview-mobile/);
   await expect(preview).toHaveCSS('width', '390px');
 
+  // Builder edit mode: click a heading in the live preview, change it, and see
+  // the preview update without a rebuild.
+  await expect(page.getByText('Click any heading or paragraph in the preview to edit it.')).toBeVisible();
+  await preview.contentFrame().getByRole('heading', { level: 1 }).click();
+  await expect(page.getByText('Edit content')).toBeVisible();
+  await expect(page.getByText('from your Build Contract')).toBeVisible();
+  await page.getByLabel('Content value').fill('Painters and decorators');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(preview.contentFrame().getByRole('heading', { name: 'Painters and decorators' })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText('edited by you')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Revert to generated' }).click();
+  await expect(preview.contentFrame().getByRole('heading', { name: 'Workspace E2E', exact: true })).toBeVisible({ timeout: 20_000 });
+
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
-  await expect(page.getByLabel('Project metrics').getByText('12', { exact: true })).toBeVisible();
+  // 11 build/quality/preview events, one source governance decision, and the
+  // save and revert of one content edit.
+  await expect(page.getByLabel('Project metrics').getByText('14', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

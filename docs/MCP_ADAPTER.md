@@ -36,6 +36,7 @@ The initial surface mirrors `apps/service/src/tool-contract.js`:
 
 - project list/create/read;
 - Manifest, knowledge-pack and composition reads;
+- source ingestion and the ingested-source inventory;
 - deterministic generate and independent verify;
 - task/event/metric/checkpoint reads;
 - preview status/start/stop;
@@ -54,7 +55,15 @@ The MCP facade does **not** expose:
 - secret reads or mutation;
 - arbitrary filesystem paths;
 - shell/command execution;
-- arbitrary HTTP URLs.
+- general-purpose HTTP fetching.
+
+Source ingestion is the one operation that causes outbound requests, and it is
+not a fetch proxy. Remote sources must be public `http(s)` addresses; the
+deterministic content-intelligence pipeline refuses private, loopback and
+otherwise unsafe destinations, bounds response size, redirects and crawl
+breadth, and returns normalised source data rather than raw responses. Uploaded
+files arrive as inline content — a client cannot name a filesystem path — and
+everything imported keeps `instructionAuthority: none`.
 
 The MCP client cannot choose a project filesystem path. Project identifiers are bounded and every project operation maps to a fixed service route. The service remains responsible for Manifest/knowledge validation, durable tasks/events/checkpoints and workspace containment.
 

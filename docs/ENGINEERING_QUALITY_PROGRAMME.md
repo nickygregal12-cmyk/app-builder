@@ -129,11 +129,13 @@ registry entries all cost context and credit.
 Evaluate `Knip` for the factory itself and, where cheap, for generated-project verification. Keep it
 **non-blocking until baselined** — a noisy first run that blocks CI teaches the team to ignore it.
 
-### Stage Q7 — property-based testing (from Phase 3.8A onward, selectively)
+### Stage Q7 — property-based testing (started; continue selectively)
 
-Use property tests where the input space is broad and an invariant is precise:
+**Adopted.** `fast-check` is a dev dependency and `tooling/change-set-scope.property.test.mjs`
+covers ChangeSet path safety and scope matching — the highest-risk case, done first.
 
-- ChangeSet path safety and scope matching;
+Extend it only where the input space is broad and an invariant is precise:
+
 - manifest/schema validation and conversions;
 - control-plane state transitions;
 - deterministic routing predicates and context ceilings;
@@ -142,8 +144,8 @@ Use property tests where the input space is broad and an invariant is precise:
 - budget enforcement;
 - permission matrices.
 
-`fast-check` is the candidate. Do not use property tests where a handful of examples is clearer —
-ordinary UI components do not need generated input.
+Do not use property tests where a handful of examples is clearer — ordinary UI components do not
+need generated input.
 
 ### Stage Q8 — targeted mutation testing (Phase 4.5/Phase 6)
 

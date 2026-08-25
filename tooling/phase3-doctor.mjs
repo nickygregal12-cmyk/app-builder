@@ -35,7 +35,9 @@ try {
   for (const [name, version] of Object.entries(expected)) {
     if (pkg.dependencies?.[name] !== version) { console.error(`Phase 3 dependency ${name} must be pinned to ${version}.`); failed = true; }
   }
-  const unexpected = Object.keys(pkg.dependencies ?? {}).filter((name) => !(name in expected));
+  // First-party workspace packages are allowed; the guard exists to stop
+  // third-party extraction dependencies creeping into content intelligence.
+  const unexpected = Object.keys(pkg.dependencies ?? {}).filter((name) => !(name in expected) && !name.startsWith('@app-builder/'));
   if (unexpected.length) { console.error(`Unexpected Phase 3 dependencies: ${unexpected.join(', ')}`); failed = true; }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);

@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
 import { updateProjectSourceGovernance } from './source-governance.js';
 
@@ -53,7 +54,20 @@ export function createFactoryHttpServer({ service }) {
       if (request.method === 'GET' && route.action === null) return send(response, 200, { project });
       if (request.method === 'GET' && route.action === 'manifest') return send(response, 200, { manifest: service.getManifest(route.projectId) });
       if (request.method === 'GET' && route.action === 'knowledge-pack') return send(response, 200, { knowledgePack: service.getKnowledgePack(route.projectId) });
+      if (request.method === 'GET' && route.action === 'sources') return send(response, 200, { knowledge: service.knowledgeSummary(route.projectId) });
+      if (request.method === 'POST' && route.action === 'sources') {
+        // Uploaded bytes arrive base64-encoded, so the body limit is raised
+        // above the ordinary JSON ceiling but stays bounded.
+        const body = await readJson(request, 48 * 1024 * 1024);
+        const result = await service.ingestSources(route.projectId, parseSourceRequests(body.sources));
+        return send(response, 200, result);
+      }
       if (request.method === 'GET' && route.action === 'composition') return send(response, 200, { composition: service.getComposition(route.projectId) });
+      if (request.method === 'GET' && route.action === 'overrides') return send(response, 200, service.readOverrides(route.projectId));
+      if (request.method === 'PUT' && route.action === 'overrides') {
+        const body = await readJson(request);
+        return send(response, 200, await service.saveOverrides(route.projectId, Array.isArray(body.overrides) ? body.overrides : []));
+      }
       if (request.method === 'POST' && route.action === 'generate') {
         const result = await service.generateProject(route.projectId);
         return send(response, 200, {
@@ -75,13 +89,24 @@ export function createFactoryHttpServer({ service }) {
       }
       if (request.method === 'GET' && route.action === 'metrics') return send(response, 200, { metrics: service.metrics(route.projectId) });
       if (request.method === 'GET' && route.action === 'checkpoint') return send(response, 200, { checkpoint: service.latestCheckpoint(route.projectId) });
+      if (request.method === 'GET' && route.action === 'checkpoints') return send(response, 200, { checkpoints: service.listCheckpoints(route.projectId) });
       if (request.method === 'GET' && route.action === 'preview') return send(response, 200, { preview: service.previewStatus(route.projectId) });
       if (request.method === 'POST' && route.action === 'preview/start') return send(response, 200, { preview: await service.startPreview(route.projectId) });
       if (request.method === 'POST' && route.action === 'preview/stop') return send(response, 200, { preview: await service.stopPreview(route.projectId) });
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      const status = /JSON|manifest|knowledge-pack|Request body|Unsafe|dependencies are not installed|no generated workspace|source governance|project source|Public URL|user-supplied/i.test(message) ? 400 : 500;
+      // Only messages that name a caller mistake become 4xx. A bare word like
+      // "source" would also match internal failures and hide a real 500.
+      const clientError = [
+        /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
+        /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /Sources cannot reference/, /Only http\(s\) source URLs/,
+        /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
+        /Every source must be/, /exceeds the .* limit/,
+        /dependencies are not installed/, /no generated workspace/,
+        /source governance/i, /Unknown project source/, /Public URL references/, /Only user-supplied source material/,
+      ].some((pattern) => pattern.test(message));
+      const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });
     }
   });

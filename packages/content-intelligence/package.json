@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "exports": "./src/index.js",
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
+    "@app-builder/contracts": "*",
     "exceljs": "4.4.0",
     "mammoth": "1.12.1",
     "pdf-parse": "2.4.5",

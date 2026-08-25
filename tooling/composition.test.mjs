@@ -70,12 +70,25 @@ test('manifest data is used without pretending it came from source intelligence'
 
 test('deterministic defaults are explicitly marked generated', () => {
   const composition = composeProject({ manifest:marketingManifest({ company:{ identity:{name:'North Star Roofing'}, services:[], locations:[], contactDetails:{}, trustSignals:[], conversionGoals:[] } }) });
-  const nonHomeHero = composition.sections.find((section) => section.id === 'page-services-hero');
-  const body = nonHomeHero.bindings.find((entry) => entry.key === 'body');
-  assert.equal(body.origin, 'deterministic-default');
-  assert.equal(body.generated, true);
+  const defaults = composition.sections.flatMap((section) => section.bindings).filter((entry) => entry.origin === 'deterministic-default');
+  assert.ok(defaults.length > 0, 'the composer still produces deterministic defaults');
+  assert.equal(defaults.every((entry) => entry.generated === true), true, 'every deterministic default is marked generated');
   assert.ok(composition.warnings.includes('missing-services'));
   assert.ok(composition.warnings.includes('missing-contact-details'));
+});
+
+test('a secondary page heading is not padded out with filler copy', () => {
+  const composition = composeProject({ manifest:marketingManifest() });
+  const secondaryHero = composition.sections.find((section) => section.id === 'page-services-hero');
+  assert.equal(secondaryHero.bindings.some((entry) => entry.key === 'body'), false, '"Services for X." says nothing the heading has not');
+});
+
+test('the owner\'s primary goal is never published as visitor-facing copy', () => {
+  const manifest = marketingManifest();
+  const composition = composeProject({ manifest });
+  assert.ok(manifest.project.primaryGoal.length > 0);
+  const published = JSON.stringify(composition.sections);
+  assert.equal(published.includes(manifest.project.primaryGoal), false, 'primaryGoal is an internal objective, not website copy');
 });
 
 test('composition is byte-stable in meaning for identical inputs', () => {

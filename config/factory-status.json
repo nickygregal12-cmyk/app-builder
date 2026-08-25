@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "currentPhase": "3.8",
   "currentStage": "Phase 3.8 — Product proof and correctness hardening",
-  "activeStage": "Phase 3.8E — Genuine business product proof",
+  "activeStage": "Phase 3.8E — Genuine business product proof; Phase 4A vertical slice complete",
   "status": "active",
   "completedPhases": ["0", "1", "2", "3"],
-  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8F", "3.8G", "3.8H", "3.8I"],
+  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8F", "3.8G", "3.8H", "3.8I", "4A"],
   "activeWork": [
     "genuine-real-business-acceptance"
   ],
   "outstandingProductGates": [
     "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits"
   ],
-  "nextStage": "Phase 4B — Direct manipulation, governed brand sources and assets after the genuine-business product gate"
+  "nextStage": "Phase 4B — direct manipulation, governed brand sources and assets"
 }

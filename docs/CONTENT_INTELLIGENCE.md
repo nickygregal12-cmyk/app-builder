@@ -103,3 +103,32 @@ Outputs:
 - `assets/` — responsive and review-required crop candidates.
 
 The shared extraction cache defaults to `.app-builder/cache/content`.
+
+## Service ingestion
+
+The CLI stays useful for scripted runs, but the Builder Console and MCP clients
+ingest through the factory service instead:
+
+```text
+POST /projects/{projectId}/sources
+GET  /projects/{projectId}/sources
+```
+
+A request declares each source as either a public `http(s)` URL to normalise —
+optionally crawled, bounded to 25 pages — or inline base64 file content. A
+client can never supply a filesystem path, and the SSRF guard above still
+refuses private and loopback destinations.
+
+Ingestion runs as a durable control-plane task: `sources.ingestion.started` and
+`sources.ingested` (or `sources.ingestion.failed`) reach the event ledger, and a
+checkpoint records what was ingested and what to do next. It is additive —
+earlier material survives a later upload, and identical bytes from the same URI
+are ingested once — and it is refused only while a build is running. Composition
+reads the knowledge pack at generation time, so material ingested after a build
+reaches the product through a rebuild, which materialises the next workspace
+version rather than overwriting the previous one.
+
+Rights are declared, never inferred. An operator can mark supplied material
+`approvedForUse` (or set `rightsStatus`/`assetStatus` explicitly); without that,
+a crawled public page stays `reference-only` and `do-not-use`. Everything
+imported keeps `instructionAuthority: none`.

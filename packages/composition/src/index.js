@@ -94,6 +94,22 @@ function entityBinding(key, pack, field, manifestItems = []) {
   return null;
 }
 
+// Only assets the business has approved for publication can be placed. An asset
+// that is reference-only, rejected or awaiting approval stays out of the
+// generated site regardless of how good it looks.
+function publishableAssets(pack) {
+  return list(pack?.assets).filter((asset) => asset.publishUseAllowed && !asset.duplicateOf);
+}
+
+function assetCrop(asset, role) {
+  return list(asset.variants).find((variant) => variant.role === role) ?? null;
+}
+
+function leadAsset(pack) {
+  const assets = publishableAssets(pack);
+  return assets.find((asset) => assetCrop(asset, 'hero-16x9')) ?? assets[0] ?? null;
+}
+
 function serviceAreaBinding(pack, manifest) {
   const areas = list(pack?.companyProfile?.serviceAreas);
   if (areas.length) {
@@ -108,21 +124,62 @@ function serviceAreaBinding(pack, manifest) {
   return locations.length ? manifestBinding('items', locations.map((name) => ({ name }))) : null;
 }
 
+const CONTACT_FIELDS = ['email', 'phone', 'address', 'website'];
+
 function contactBindings(pack, manifest) {
-  const output = [];
   const manifestContact = manifest?.company?.contactDetails ?? {};
-  for (const field of ['email', 'phone', 'address']) {
-    output.push(profileFieldBinding(field, pack, 'contact', field) ?? (manifestContact[field] ? manifestBinding(field, manifestContact[field]) : null));
+  return CONTACT_FIELDS
+    .map((field) => profileFieldBinding(field, pack, 'contact', field) ?? (manifestContact[field] ? manifestBinding(field, manifestContact[field]) : null))
+    .filter(Boolean);
+}
+
+// A social profile is often the only web presence a small business has, so it
+// is a first-class contact route rather than an extra. Rights are irrelevant
+// here: linking to a public profile is not republishing its content.
+function socialProfileBinding(pack, manifest) {
+  const fromKnowledge = list(pack?.companyProfile?.socialProfiles);
+  if (fromKnowledge.length) {
+    const factIds = fromKnowledge.map((item) => item.factId).filter(Boolean);
+    return binding('profiles', fromKnowledge.map((item) => ({ platform: item.platform, url: item.value })), 'knowledge-fact', {
+      factIds,
+      sourceIds: list(pack?.facts).filter((fact) => factIds.includes(fact.id)).map((fact) => fact.sourceId),
+    });
   }
-  return output.filter(Boolean);
+  const declared = list(manifest?.company?.socialProfiles)
+    .map((item) => (typeof item === 'string' ? { platform: platformFor(item), url: item } : { platform: item.platform ?? platformFor(item.url), url: item.url }))
+    .filter((item) => item.url);
+  return declared.length ? manifestBinding('profiles', declared) : null;
+}
+
+function platformFor(url) {
+  let host = '';
+  try { host = new URL(String(url)).hostname.toLowerCase().replace(/^www\./, ''); } catch { return 'website'; }
+  const known = ['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x', 'twitter', 'pinterest'];
+  return known.find((name) => host === `${name}.com` || host.endsWith(`.${name}.com`)) ?? host;
+}
+
+// project.primaryGoal is what the owner wants from the site — "win local
+// enquiries" — not something a visitor should ever read. Where no description
+// exists, a sentence is assembled from declared services and areas instead;
+// it states only what the manifest already asserts and claims nothing extra.
+function summaryFromDeclaredFacts(pack, manifest) {
+  const services = list(pack?.companyProfile?.services).map((item) => item.name).filter(Boolean);
+  const declared = services.length ? services : list(manifest?.company?.services).map(String);
+  const areas = list(pack?.companyProfile?.serviceAreas).map((item) => item.value).filter(Boolean);
+  const locations = areas.length ? areas : list(manifest?.company?.locations).map(String);
+  if (!declared.length) return null;
+  const phrase = declared.length === 1
+    ? declared[0]
+    : `${declared.slice(0, -1).join(', ')} and ${declared.at(-1)}`;
+  const where = locations.length ? ` in ${locations.length === 1 ? locations[0] : `${locations.slice(0, -1).join(', ')} and ${locations.at(-1)}`}` : '';
+  return defaultBinding('body', `${phrase.charAt(0).toUpperCase()}${phrase.slice(1).toLowerCase()}${where}.`);
 }
 
 function projectDescriptionBinding(pack, manifest) {
   return profileFieldBinding('body', pack, 'identity', 'description')
     ?? factBinding('body', pack, 'identity.description')
     ?? (manifest?.company?.identity?.description ? manifestBinding('body', manifest.company.identity.description) : null)
-    ?? (manifest?.project?.primaryGoal ? manifestBinding('body', manifest.project.primaryGoal) : null)
-    ?? defaultBinding('body', `Information about ${manifest?.project?.name ?? 'this project'}.`);
+    ?? summaryFromDeclaredFacts(pack, manifest);
 }
 
 function companyNameBinding(pack, manifest) {
@@ -138,8 +195,11 @@ function primaryAction(manifest, surfaces, pack) {
   if (goals.some((goal) => goal.includes('email')) && contact.email) return { label: 'Email', href: `mailto:${contact.email}` };
   const contactSurface = surfaces.find((surface) => /contact|quote|book/i.test(surface));
   if (contactSurface) return { label: goals.some((goal) => goal.includes('quote')) ? 'Request a quote' : 'Contact', href: `/${slugify(contactSurface)}` };
-  const journey = list(manifest?.journeys)[0];
-  return journey ? { label: String(journey), href: '#next' } : null;
+  if (contact.email) return { label: 'Email', href: `mailto:${contact.email}` };
+  if (contact.phone) return { label: 'Call', href: `tel:${String(contact.phone).replace(/\s+/g, '')}` };
+  // Deliberately no journey fallback: a journey is an internal acceptance item
+  // and "#next" was never a real destination.
+  return null;
 }
 
 function section(id, type, purpose, bindings, actions = [], assetIds = [], variant = 'default') {
@@ -148,11 +208,14 @@ function section(id, type, purpose, bindings, actions = [], assetIds = [], varia
 
 function hero(pageId, surface, index, manifest, pack, action) {
   const title = index === 0 ? companyNameBinding(pack, manifest) : manifestBinding('title', surface);
-  const body = index === 0 || /about/i.test(surface)
-    ? projectDescriptionBinding(pack, manifest)
-    : defaultBinding('body', `${surface} for ${manifest.project.name}.`);
-  const bindings = [manifestBinding('eyebrow', manifest.project.type.replaceAll('-', ' ')), title, body];
-  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, bindings, action ? [action] : [], [], index === 0 ? 'primary' : 'compact');
+  // A secondary page says what it is in its heading. "Work for MGB Decor."
+  // adds nothing and reads as unfinished.
+  const body = index === 0 || /about/i.test(surface) ? projectDescriptionBinding(pack, manifest) : null;
+  // No eyebrow. It previously carried the project type, which published a
+  // Build Contract field — "marketing site" — as a caption above the business
+  // name on every page.
+  const lead = index === 0 ? leadAsset(pack) : null;
+  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], action ? [action] : [], lead ? [lead.id] : [], index === 0 ? 'primary' : 'compact');
 }
 
 function servicesSection(pageId, pack, manifest) {
@@ -196,10 +259,21 @@ function locationsSection(pageId, pack, manifest) {
   return section(`${pageId}-locations`, 'location-list', 'Present confirmed service areas or locations', [manifestBinding('title', 'Locations'), items], [], [], 'list');
 }
 
+function enquiryFormSection(pageId, manifest) {
+  if (manifest?.modules?.['lead-generation'] !== true) return null;
+  return section(`${pageId}-enquiry`, 'enquiry-form', 'Capture enquiries where the capability is installed', [
+    manifestBinding('title', 'Send an enquiry'),
+  ], [], [], 'panel');
+}
+
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
-  if (!bindings.length) return null;
-  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', 'Contact'), ...bindings], [], [], 'panel');
+  const profiles = socialProfileBinding(pack, manifest);
+  if (!bindings.length && !profiles) return null;
+  // A panel holding only social profiles is not "Contact" — naming it for what
+  // it holds also keeps it from being deduped against a page called Contact.
+  const title = bindings.length ? 'Contact' : 'Find us online';
+  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', title), ...bindings, profiles], [], [], 'panel');
 }
 
 function entitiesSection(pageId, manifest) {
@@ -211,7 +285,36 @@ function entitiesSection(pageId, manifest) {
   ], [], [], 'list');
 }
 
+// Where a business keeps its portfolio on social media, the site should send
+// people there rather than pretend the handful of images it holds is the whole
+// body of work.
+function socialWorkActions(pack, manifest) {
+  const profiles = socialProfileBinding(pack, manifest);
+  const values = Array.isArray(profiles?.value) ? profiles.value : [];
+  return values
+    .filter((profile) => ['instagram', 'facebook'].includes(String(profile.platform)))
+    .map((profile) => ({ label: `More work on ${String(profile.platform).replace(/^./, (letter) => letter.toUpperCase())}`, href: profile.url }));
+}
+
+function gallerySection(pageId, pack, manifest) {
+  const lead = leadAsset(pack);
+  const assets = publishableAssets(pack).filter((asset) => asset.id !== lead?.id);
+  const actions = socialWorkActions(pack, manifest);
+  if (!assets.length && !actions.length) return null;
+  return section(`${pageId}-gallery`, 'gallery', 'Show approved work and point to where the rest of it lives', [
+    manifestBinding('title', manifest?.project?.type === 'marketing-site' ? 'Recent work' : 'Gallery'),
+    assets.length ? null : defaultBinding('body', 'Recent projects are posted to our social profiles.'),
+  ], actions, assets.map((asset) => asset.id), 'grid');
+}
+
+// Journeys describe what a product lets a user do, which is real content for an
+// application surface. On a published business or content site they are visitor
+// intents recorded during intake — "Understand what the company does" — and
+// must never be rendered as website copy.
+const PUBLISHED_SITE_TYPES = new Set(['marketing-site', 'content-site']);
+
 function journeysSection(pageId, manifest) {
+  if (PUBLISHED_SITE_TYPES.has(manifest?.project?.type)) return null;
   const journeys = list(manifest?.journeys);
   if (!journeys.length) return null;
   return section(`${pageId}-journeys`, 'item-grid', 'Present the core user journeys', [
@@ -232,11 +335,15 @@ function contentSection(pageId, pack) {
   ], [], [], 'list');
 }
 
-function ctaSection(pageId, manifest, action) {
+function ctaSection(pageId, pack, manifest, action) {
   if (!action) return null;
+  const goals = list(manifest?.company?.conversionGoals).map((item) => String(item).toLowerCase());
+  const title = goals.some((goal) => goal.includes('quote')) ? 'Get a quote'
+    : goals.some((goal) => goal.includes('book') || goal.includes('appointment')) ? 'Book an appointment'
+    : 'Get in touch';
   return section(`${pageId}-cta`, 'cta', 'Provide the primary next action', [
-    defaultBinding('title', 'Next step'),
-    manifestBinding('body', manifest.project.primaryGoal),
+    defaultBinding('title', title),
+    summaryFromDeclaredFacts(pack, manifest),
   ], [action], [], 'accent');
 }
 
@@ -249,6 +356,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(servicesSection(pageId, pack, manifest));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
+    output.push(gallerySection(pageId, pack, manifest));
     output.push(projectsSection(pageId, pack));
     output.push(proofSection(pageId, pack, manifest));
     output.push(locationsSection(pageId, pack, manifest));
@@ -260,10 +368,14 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)], [], [], 'prose'));
     output.push(peopleSection(pageId, pack));
     output.push(proofSection(pageId, pack, manifest));
+  } else if (/work|gallery|portfolio|project/.test(lower)) {
+    output.push(gallerySection(pageId, pack, manifest));
+    output.push(projectsSection(pageId, pack));
   } else if (/location|area/.test(lower)) {
     output.push(locationsSection(pageId, pack, manifest));
   } else if (/contact|quote|book/.test(lower)) {
     output.push(contactSection(pageId, pack, manifest));
+    output.push(enquiryFormSection(pageId, manifest));
   } else if (/content|article|post|news|detail/.test(lower)) {
     output.push(contentSection(pageId, pack));
   } else if (/dashboard|workspace|record|experience|input|result|history|admin|setting|profile/.test(lower)) {
@@ -274,8 +386,23 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(entitiesSection(pageId, manifest));
   }
 
-  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, manifest, action));
-  return output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
+  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, action));
+  const unique = output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
+  return dropRepeatedHeading(unique);
+}
+
+// A page named Contact does not need a section also headed "Contact" directly
+// beneath it. The section keeps its identity and content; only the duplicated
+// heading is dropped.
+function dropRepeatedHeading(sections) {
+  const heroTitle = sections.find((item) => item.type === 'hero')?.bindings.find((item) => item.key === 'title')?.value;
+  if (typeof heroTitle !== 'string') return sections;
+  return sections.map((item) => {
+    if (item.type === 'hero') return item;
+    const title = item.bindings.find((entry) => entry.key === 'title');
+    if (typeof title?.value !== 'string' || title.value.toLowerCase() !== heroTitle.toLowerCase()) return item;
+    return { ...item, bindings: item.bindings.filter((entry) => entry !== title) };
+  });
 }
 
 function surfacesFor(manifest) {
@@ -290,7 +417,10 @@ function warningsFor(manifest, pack) {
   if (manifest?.project?.type === 'marketing-site') {
     if (!list(pack?.companyProfile?.services).length && !list(manifest?.company?.services).length) warnings.push('missing-services');
     const contacts = contactBindings(pack, manifest);
-    if (!contacts.length) warnings.push('missing-contact-details');
+    if (!contacts.length && !socialProfileBinding(pack, manifest)) warnings.push('missing-contact-details');
+    // A marketing site with no imagery is not launchable for most business
+    // classes, so silence here would be misleading.
+    if (!publishableAssets(pack).length) warnings.push('no-publishable-imagery');
   }
   for (const capability of list(manifest?.constraints?.customCapabilities)) warnings.push(`custom-capability:${capability}`);
   for (const capability of list(manifest?.constraints?.unresolvedCapabilities)) warnings.push(`unresolved-capability:${capability}`);
@@ -300,16 +430,20 @@ function warningsFor(manifest, pack) {
 export function composeProject({ manifest, knowledgePack = null } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
   const surfaces = surfacesFor(manifest);
-  const action = primaryAction(manifest, surfaces, knowledgePack);
+  const projectAction = primaryAction(manifest, surfaces, knowledgePack);
   const sections = [];
   const pages = surfaces.map((surface, index) => {
     const slug = index === 0 ? 'home' : slugify(surface);
     const pageId = `page-${slug}`;
+    const path = index === 0 ? '/' : `/${slug}`;
+    // A call to action that links to the page the visitor is already on is a
+    // dead end, so it is dropped for that page rather than rendered.
+    const action = projectAction && projectAction.href === path ? null : projectAction;
     const pageSections = sectionsForPage({ surface, pageId, index, manifest, pack: knowledgePack, action });
     sections.push(...pageSections);
     return {
       id: pageId,
-      path: index === 0 ? '/' : `/${slug}`,
+      path,
       title: index === 0 ? manifest.project.name : surface,
       purpose: index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface} surface for ${manifest.project.name}.`,
       navigation: { label: surface, order: index, visible: true },
@@ -326,6 +460,73 @@ export function composeProject({ manifest, knowledgePack = null } = {}) {
     sections,
     warnings: warningsFor(manifest, knowledgePack),
   };
+  return { ...base, compositionHash: hash(base) };
+}
+
+/**
+ * Remove human edits, returning the composition the factory would have produced.
+ *
+ * The hash is recomputed: a composition whose hash describes different content
+ * than it holds is worse than no hash at all.
+ */
+export function stripContentOverrides(composition) {
+  let restored = 0;
+  const sections = composition.sections.map((section) => ({
+    ...section,
+    bindings: section.bindings.map((entry) => {
+      if (!entry.overriddenFrom) return entry;
+      restored += 1;
+      const { overriddenFrom, ...rest } = entry;
+      return { ...rest, value: overriddenFrom.value, origin: overriddenFrom.origin, generated: overriddenFrom.origin === 'deterministic-default' };
+    }),
+  }));
+  if (!restored) return composition;
+  const base = { ...composition, sections };
+  delete base.compositionHash;
+  return { ...base, compositionHash: hash(base) };
+}
+
+/**
+ * Apply human edits over a deterministic composition.
+ *
+ * Composition stays a pure function of manifest and knowledge; edits live
+ * beside it and are replayed on top. An edited binding is marked `human` and
+ * keeps what it replaced in `overriddenFrom`, so a human sentence can never be
+ * mistaken for a source-backed fact and the deterministic value is always
+ * recoverable.
+ */
+export function applyContentOverrides(composition, overrides = []) {
+  const bySection = new Map();
+  for (const override of list(overrides)) {
+    if (!override?.sectionId || !override?.bindingKey) continue;
+    const entries = bySection.get(override.sectionId) ?? new Map();
+    entries.set(override.bindingKey, override);
+    bySection.set(override.sectionId, entries);
+  }
+  if (!bySection.size) return composition;
+
+  let applied = 0;
+  const sections = composition.sections.map((section) => {
+    const entries = bySection.get(section.id);
+    if (!entries) return section;
+    const bindings = section.bindings.map((entry) => {
+      const override = entries.get(entry.key);
+      if (!override || override.value === entry.value) return entry;
+      applied += 1;
+      return {
+        ...entry,
+        value: override.value,
+        origin: 'human',
+        generated: false,
+        overriddenFrom: entry.overriddenFrom ?? { origin: entry.origin, value: entry.value },
+      };
+    });
+    return { ...section, bindings };
+  });
+
+  if (!applied) return composition;
+  const base = { ...composition, sections };
+  delete base.compositionHash;
   return { ...base, compositionHash: hash(base) };
 }
 

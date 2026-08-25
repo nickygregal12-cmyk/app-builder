@@ -6,6 +6,7 @@ import test from 'node:test';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { updateProjectSourceGovernance } from '../apps/service/src/source-governance.js';
+import { buildKnowledgePack } from '../packages/content-intelligence/src/index.js';
 
 function manifest() {
   return {
@@ -40,7 +41,9 @@ test('source governance cannot diverge from an already attached knowledge pack',
     service.createProject({
       id: 'project-knowledge',
       manifest: manifest(),
-      knowledgePack: { schemaVersion: 1, packHash: 'a'.repeat(64) },
+      // A real (if empty) pack: the service validates knowledge packs in full,
+      // so a stub with only a schemaVersion is rejected at creation.
+      knowledgePack: buildKnowledgePack([]),
     });
     await assert.rejects(
       () => updateProjectSourceGovernance(service, 'project-knowledge', 'logo-upload', 'approve-for-use'),

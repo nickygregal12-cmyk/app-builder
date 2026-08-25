@@ -1,8 +1,10 @@
 # Roadmap
 
-Current stage: **Phase 3.8 — Product proof and correctness hardening**.
+Current stage: **Phase 3.8 — Product proof and correctness hardening**. The Phase 4A Console vertical slice is delivered.
 
-Implementation has reached the Phase 3.7 service/tool-boundary exit. Before broad Phase 4 work accelerates, the remaining Phase 3.8 correctness/product gates should be closed while the surface area is still small, and the genuine real-business product proof should be completed rather than relying only on synthetic acceptance fixtures.
+The Phase 3.8 correctness gates are closed except the genuine real-business product proof (3.8E), which needs actual company material and a human product review rather than more infrastructure. The Phase 4A slice was built alongside it because that proof has to run through the product — real intake, real source ingestion, real generation — not through a CLI beside it.
+
+Phase 4B and later Console work should not accelerate until 3.8E has actually been run against a real business and its findings fed back.
 
 The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The deterministic engineering-gate programme lives in `docs/ENGINEERING_QUALITY_PROGRAMME.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
@@ -168,32 +170,37 @@ Further service capabilities should be added only when Phase 4 actually needs th
 
 Purpose: close high-value correctness gaps discovered by audit/review and establish the few foundations that are cheaper to solve before the Builder Console becomes large.
 
-### 3.8A — ChangeSet path-policy correctness ✅ Core fix complete
+### 3.8A — ChangeSet path-policy correctness ✅ Complete
 
 Delivered:
 - segment-correct repository path semantics instead of textual-prefix matching;
 - canonical repository-relative paths and Windows separator normalization;
 - fail-closed rejection of traversal/absolute/ambiguous paths;
 - unsafe/unsupported declared scope rules rejected before work starts;
-- adversarial sibling-prefix regression tests.
+- adversarial sibling-prefix regression tests;
+- `fast-check` property tests over allow/deny/expected-file behavior, separator
+  canonicalisation, traversal rejection and forbidden-scope precedence.
 
-Follow-up before broad autonomous mutation:
-- add `fast-check` property tests around allow/deny/expected-file behavior.
+The exit gate is met: no textual-prefix scope escape survives either the
+hand-written adversarial cases or the generated property cases.
 
-### 3.8B — Schema/type/runtime contract unification ✅ First contract family complete
+### 3.8B — Schema/type/runtime contract unification ✅ Core contract families complete
 
 Target architecture:
 
 `JSON Schema -> generated packages/contracts types -> Ajv boundary validation`
 
-Delivered for Project Manifest v1/v2:
+Delivered:
 - `/schemas` is the runtime validation authority;
-- Ajv validates the Manifest directly from JSON Schema;
-- schema-derived TypeScript declaration generation exists;
-- duplicated manifest validation enums/rules have been removed from the handwritten runtime validator;
+- `config/contract-families.json` declares which schemas are generated families and which are explicitly deferred, so a new schema forces a migration decision;
+- `@app-builder/contracts` compiles every family with Ajv and exports `validateContract`/`assertContract` for service, tooling and package boundaries;
+- schema-derived TypeScript is generated per family with a root-type barrel;
+- nine families are migrated: Project Manifest, Build Contract, Intake Session, Knowledge Pack, Composition, Control Task, Build Event, Checkpoint and ChangeSet;
+- duplicated validation enums/rules have been removed from the handwritten Manifest and Knowledge Pack validators, which now keep only relational and governance rules JSON Schema cannot express;
+- `npm run contracts:check` fails on schema-hash or generated-type drift and runs inside `npm run check`;
 - structural validity remains separate from adapter/module buildability.
 
-Continue incrementally for remaining stable contract families rather than attempting a risky all-at-once type rewrite. Add deterministic contract-generation/drift CI as generated/shared contracts become consumed by more apps.
+Remaining schemas stay listed as pending with a recorded reason. Migrate them when they become real exchanged boundaries rather than attempting a risky all-at-once rewrite; `schemas/genuine-business-acceptance.schema.json` also needs its draft-07 dialect migrated first.
 
 ### 3.8C — Executed Supabase security acceptance — P0
 
@@ -319,24 +326,88 @@ Plan:
 
 Begins after the Phase 3.8 P0 gates are addressed. Build the Console as a client of `apps/service` rather than expanding browser-only state.
 
-### Phase 4A — First complete usable vertical slice
+### Phase 4A — First complete usable vertical slice ✅ Complete
 
+Delivered:
 - create/open project;
-- adaptive intake and source ingestion through the service;
-- reviewed Build Contract;
+- reviewed Build Contract from adaptive intake;
+- service-owned source ingestion: declared URLs are crawled and uploaded files
+  are normalised by the service, never by the browser, and never from a
+  client-supplied filesystem path;
+- ingestion runs as a durable task with events, a checkpoint and an additive
+  knowledge pack that becomes a real generation input;
+- source rights/approval state is declared by the operator and visible in the
+  Console — a public page stays reference-only until someone says otherwise;
+- intake-declared sources that have not been ingested are shown as outstanding;
 - trigger deterministic build;
+- material can still arrive after a build: each build materialises its own
+  workspace version, so a rebuild never overwrites the repository someone is
+  reviewing, and the Console says when the live build no longer reflects the
+  ingested knowledge;
 - visible task/event progress;
-- service-managed live preview;
+- service-managed live preview, stopped automatically before a rebuild;
 - desktop/tablet/mobile preview switching;
-- checkpoint/version visibility;
-- close the current source-ingestion work before widening the Console surface.
+- checkpoint and build-version history, with the live build marked.
 
 The `state-matrix` and `journey-closure` specialists registered in Phase 3.8I get their first real
-inputs here: the vertical slice is what makes a `StateMatrixSpec` and a `JourneyClosureEvidence`
-ledger possible to produce and check.
+inputs from this slice: it is what makes a `StateMatrixSpec` and a `JourneyClosureEvidence` ledger
+possible to produce and check against a real build.
 
-### Phase 4B — Direct manipulation, brand sources and assets
+### Phase 4B — Direct manipulation, brand sources and assets 🚧 In progress
 
+Delivered:
+- click-to-select through PageSpec/SectionSpec identity: every rendered binding
+  carries its section id, binding key and provenance, and a preview opened by
+  the Console reports selections to it;
+- text editing with provenance awareness — an edited binding becomes `human`,
+  keeps what it replaced in `overriddenFrom`, and can be reverted to the
+  generated value;
+- edits are durable and replayed over freshly composed output, so a rebuild
+  picks up new source material without discarding hand-written copy;
+- a saved edit reaches the running preview without a rebuild, because the
+  workspace composition module is what the preview renders;
+- first-class company image/logo/document upload (delivered in 4A);
+- import exact existing-site sources through the service (delivered in 4A);
+- source confidence, provenance and asset-rights state shown per source;
+- governed source decisions before ingestion.
+
+Composition stays a pure function of manifest and knowledge. Edits live beside
+it rather than inside it, which is what keeps generation deterministic while
+still allowing a person to write the words.
+
+**Builder Element Identity is only partly satisfied.** Shipped click-to-edit
+resolves a rendered element to section id, binding key and provenance, and
+refuses to act on an element carrying none. It does not yet resolve component
+or instance identity, source location, the full editable-property set or design
+tokens, and it has no RenderedEvidence capture. Editing is therefore currently
+bounded to text bindings; extending it to components and assets requires the
+fuller identity model below first.
+
+Remaining:
+- **Builder Element Identity** completed to component/instance level, with
+  source location, editable properties and design tokens, refusing any visual
+  edit that cannot resolve to one;
+- **RenderedEvidence** as a first-class artifact: desktop/tablet/mobile
+  captures plus critical interaction states, because a compiling build is not
+  evidence that a visual change is correct;
+- asset manager: replacement, crop and focal-point selection;
+- marking assets approved, suggested, generated, rejected or "do not use" from
+  the Console rather than at ingestion;
+- comparing supplied and generated alternatives;
+- section/component variant selection;
+- project asset policy modes;
+- Design Contract editing;
+- **Product Opportunity Scout** for existing-app improvement: a broad prompt such as "improve this
+  page" resolves to at most three ranked, materially different opportunities grounded in the current
+  implementation, not to a default redesign;
+- **State Matrix foundation**: derive the real state axes a capability exposes, remove impossible
+  combinations, rank by user risk and give the important states deterministic fixtures;
+- **Journey Closure workflow**: prove entry, prerequisites, primary action, validation, authoritative
+  write/read, observable success, refusal, retry/recovery, persistence, deep links, back/return,
+  mobile/desktop, keyboard/accessibility, reduced motion, rollout state and executable acceptance
+  evidence. A component existing is not journey-completion evidence.
+
+Original scope for reference:
 - **Builder Element Identity** before any click-to-edit is enabled: resolve a rendered element to
   page/section/component/instance identity, content bindings, source location, editable properties,
   provenance references and design tokens, and refuse a visual edit that cannot resolve to one;
@@ -357,16 +428,7 @@ ledger possible to produce and check.
   - supplied + optimise;
   - supplied + generate gaps;
   - generation-forward;
-- Design Contract editing;
-- **Product Opportunity Scout** for existing-app improvement: a broad prompt such as "improve this
-  page" resolves to at most three ranked, materially different opportunities grounded in the current
-  implementation, not to a default redesign;
-- **State Matrix foundation**: derive the real state axes a capability exposes, remove impossible
-  combinations, rank by user risk and give the important states deterministic fixtures;
-- **Journey Closure workflow**: prove entry, prerequisites, primary action, validation, authoritative
-  write/read, observable success, refusal, retry/recovery, persistence, deep links, back/return,
-  mobile/desktop, keyboard/accessibility, reduced motion, rollout state and executable acceptance
-  evidence. A component existing is not journey-completion evidence.
+- Design Contract editing.
 
 ### Phase 4C — Design System Registry, BrandSpec and art direction
 

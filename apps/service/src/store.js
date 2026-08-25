@@ -143,6 +143,10 @@ export class FactoryStore {
     return checkpoint;
   }
 
+  listCheckpoints(projectId) {
+    return this.db.prepare('SELECT checkpoint_json FROM checkpoints WHERE project_id = ? ORDER BY created_at ASC').all(projectId).map((row) => parse(row.checkpoint_json));
+  }
+
   latestCheckpoint(projectId) {
     const row = this.db.prepare('SELECT checkpoint_json FROM checkpoints WHERE project_id = ? ORDER BY created_at DESC LIMIT 1').get(projectId);
     return row ? parse(row.checkpoint_json) : null;

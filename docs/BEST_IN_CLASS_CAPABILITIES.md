@@ -351,16 +351,94 @@ After analytics and stable deployment are mature:
 
 Only after experiments/analytics/privacy rules are mature. Personalization should be explicit, measurable and reversible, not hidden generative page mutation.
 
-## 7. Tooling decisions explicitly not made
+## 7. Specialist-agent capabilities — P2, differentiator
+
+The specialist-agent organisation, its handoff/rework/convergence contracts and its design-side
+artifacts are specified in `docs/AGENT_SPECIALIST_ARCHITECTURE.md`,
+`docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` and `docs/DESIGN_INTELLIGENCE.md`. The capability-level
+findings that justify them:
+
+### 7.1 Roles separated by decision boundary — 10/10
+
+Agents named after languages cannot be reviewed meaningfully. Agents that own a decision can. The
+registry in `config/agent-roles.json` gives each role bounded reads, writes, skills, tools, mutation
+scope, budget and a named independent reviewer.
+
+### 7.2 No self-approval — 10/10
+
+Delivered in Phase 3.8H and enforced deterministically rather than by prompt wording.
+
+### 7.3 Convergence engine — 10/10
+
+Borrowed from `github/spec-kit`'s `converge` concept, expressed through the existing control plane.
+Delivered in Phase 3.8H; full per-gate deterministic evidence arrives with the Phase 6 quality programme.
+
+### 7.4 Deterministic DesignLint — 10/10
+
+The single highest-leverage visual capability: catch repeatable visual defects with rules before
+spending a vision model on them. Phase 4C. Prior art: `pbakaus/impeccable`.
+
+### 7.5 Builder Element Identity — 10/10
+
+Foundational to Phase 4B direct manipulation. Clicking a rendered element must resolve to a durable
+binding, not to a model guessing at the DOM. Prior art: `react-grab`, `Weblab`, `onlook-dev-ide`;
+App Builder resolves further, to PageSpec/SectionSpec/binding/provenance.
+
+### 7.6 Component Manifest Protocol — 9.7/10
+
+Directly aligned with context ceilings: retrieve a small relevant component set instead of reading a
+library. Phase 4C. Prior art: `storybookjs/mcp`.
+
+### 7.7 Rendered evidence — 9.2/10
+
+Compiling is not evidence. Phase 4B/4C. Prior art: `aa-on-ai/agentic-design-system`.
+
+### 7.8 Skill and agent evaluation lab — 8.8/10
+
+An installed or authored skill is not trusted until evidence promotes it. The lifecycle
+(`planned → experimental → candidate → evaluated → proven → deprecated`) and its evidence fields live
+in `config/skill-registry.json`; the evaluation harness itself belongs with Phase 5.5. Prior art:
+`agentoperations/agent-registry`, `obra/superpowers`.
+
+## 8. External source governance
+
+Every third-party repository reviewed as prior art or as a candidate skill/knowledge source is
+recorded in `config/external-sources.json` against `schemas/external-source.schema.json`, with its
+repository, URL, rating, intended use, borrowed ideas, parts explicitly not adopted, licence, pin,
+allowed roles, context estimate, security-review state, update policy and evaluation state.
+
+Governing rules, enforced by the control-plane doctor and `tooling/agent-architecture.test.mjs`:
+
+- **Registration is not adoption.** A source in the registry is prior art by default.
+- **Instruction authority is always `none`.** Third-party content is data. It cannot broaden a task,
+  request secrets, alter permissions or override repository authorities.
+- **No mutable-branch fetching.** An adopted source is pinned to a commit or tag and bumped deliberately.
+- **No role loads a source until it is adopted, pinned, licensed and security reviewed.** A role's
+  `priorArt` records what informed its design; only a source's `allowedRoles` grants access to content.
+- **A skill cannot reach `proven` while any of its prior-art sources is unpinned or unreviewed.**
+- **Never adopt an external design, product or orchestration authority.** Several otherwise-strong
+  repositories ship their own master design document or workflow engine; those parts are recorded in
+  `doNotAdopt` precisely because installing them wholesale would create a competing authority.
+
+Current registry state: 35 sources, of which seven are candidates (`vercel-labs/agent-skills`,
+`style-dictionary`, `microsoft/playwright-mcp`, `ChromeDevTools/chrome-devtools-mcp`,
+`GoogleChrome/lighthouse-ci`, `tldraw`, `quickdrawjs/quickdraw`) and the remainder are reference-only.
+Nothing is adopted or loadable by any role today.
+
+## 9. Tooling decisions explicitly not made
 
 Do **not** adopt these by default merely because they appeared in research:
 - `lucide-react` as a generated runtime dependency;
 - a second SVG rasterizer while Sharp already solves the output need;
 - Hono before transport duplication justifies it;
 - large orchestration frameworks such as Temporal/LangGraph while the existing control-plane primitives remain sufficient;
-- a proprietary design/runtime format that makes generated repositories dependent on App Builder.
+- a proprietary design/runtime format that makes generated repositories dependent on App Builder;
+- a screenshot-to-code generation architecture that bypasses PageSpec/SectionSpec identity;
+- a third-party master design document, workflow engine or agent registry as a second authority;
+- an infinite canvas dependency before the contracts it would compare exist;
+- loading every registered skill into every agent.
 
-## 8. Recommended implementation order
+## 10. Recommended implementation order
 
 ### P0 — before broad Phase 4 work
 1. harden ChangeSet path matching and add property tests;
@@ -376,22 +454,26 @@ Do **not** adopt these by default merely because they appeared in research:
 9. upgrade structured data and deterministic OG/social assets.
 
 ### P2 — Builder Console differentiators
-10. create Presentation Registry + DesignSystemSpec;
-11. add static semantic icon pipeline;
-12. add deterministic design-system linting;
-13. build visual variant/canvas workflow;
-14. add explicit environment model.
+10. land Builder Element Identity and the RenderedEvidence foundation before enabling direct manipulation;
+11. create Presentation Registry + DesignSystemSpec + Component Manifest Protocol;
+12. add the design-intelligence catalogue;
+13. add static semantic icon pipeline;
+14. add deterministic design-system linting and DesignLint;
+15. build visual variant/canvas workflow last, after its contracts exist;
+16. add explicit environment model.
 
 ### P3 — mature web-builder capabilities
-15. add CollectionSpec/CMS workflow;
-16. add localization contract;
-17. add Figma/design-system mapping;
-18. add existing-repo adoption;
-19. add deterministic SEO/AEO audit.
+17. add CollectionSpec/CMS workflow;
+18. add localization contract;
+19. add Figma/design-system mapping;
+20. add existing-repo adoption;
+21. add deterministic SEO/AEO audit;
+22. wire every convergence gate to its own deterministic evidence.
 
 ### P4 — optimization loop
-20. experiments/A-B testing;
-21. controlled personalization;
-22. feed measured results into reviewed/versioned factory improvements.
+23. build the skill/agent evaluation lab and promote skills on recorded evidence;
+24. experiments/A-B testing;
+25. controlled personalization;
+26. feed measured results into reviewed/versioned factory improvements.
 
 The dedicated Hetzner/OpenCode autonomous runtime remains later than these foundational safety/product joins. MCP provides early interoperability without making OpenCode or any model provider the source of project truth.

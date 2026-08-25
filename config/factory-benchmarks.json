@@ -1,24 +1,20 @@
 {
-  "version": 1,
+  "version": 2,
   "scoreVersion": 1,
   "requiredProjectTypes": ["marketing-site", "b2b-saas", "consumer-app", "internal-tool", "content-site", "ai-app"],
-  "defaultWeights": {
-    "generate": 1,
-    "install": 1,
-    "check": 2,
-    "build": 2,
-    "browser": 1,
-    "portable": 1,
-    "security": 2
+  "profiles": {
+    "deterministicBuild": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 2},
+    "releaseQualityFuture": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 1, "browser": 1, "security": 2, "accessibility": 1, "performance": 1, "designContract": 1}
   },
   "cases": [
-    {"id":"marketing-basic","projectType":"marketing-site","status":"ready","manifest":"examples/generator-project-manifest.json","tags":["seo","leads"]},
-    {"id":"b2b-core","projectType":"b2b-saas","status":"ready","manifest":"examples/b2b-generator-project-manifest.json","tags":["auth","profiles","organisations","admin"]},
-    {"id":"consumer-canonical","projectType":"consumer-app","status":"required-before-phase5","tags":["auth","profiles","notifications"]},
-    {"id":"internal-canonical","projectType":"internal-tool","status":"required-before-phase5","tags":["auth","admin","dense-ui"]},
-    {"id":"content-canonical","projectType":"content-site","status":"required-before-phase5","tags":["seo","content","analytics"]},
-    {"id":"ai-canonical","projectType":"ai-app","status":"required-before-phase5","tags":["ai","uploads","budget"]},
-    {"id":"intersection-multitenant-files","projectType":"b2b-saas","status":"planned","tags":["auth","organisations","admin","uploads"]},
-    {"id":"intersection-ai-commercial","projectType":"ai-app","status":"planned","tags":["auth","uploads","billing","ai"]}
+    {"id":"marketing-basic","projectType":"marketing-site","canonical":true,"status":"ready","tags":["seo","leads"]},
+    {"id":"b2b-core","projectType":"b2b-saas","canonical":true,"status":"ready","tags":["auth","profiles","organisations","admin"]},
+    {"id":"consumer-canonical","projectType":"consumer-app","canonical":true,"status":"ready","tags":["auth","profiles","engagement"]},
+    {"id":"internal-canonical","projectType":"internal-tool","canonical":true,"status":"ready","tags":["auth","admin","dense-ui"]},
+    {"id":"content-canonical","projectType":"content-site","canonical":true,"status":"ready","tags":["seo","content","analytics"]},
+    {"id":"ai-canonical","projectType":"ai-app","canonical":true,"status":"ready","tags":["ai","uploads","budget"]},
+    {"id":"intersection-multitenant-files","projectType":"b2b-saas","canonical":false,"status":"planned","tags":["auth","organisations","admin","uploads"]},
+    {"id":"intersection-ai-commercial","projectType":"ai-app","canonical":false,"status":"planned","tags":["auth","uploads","billing","ai"]},
+    {"id":"intersection-marketing-growth","projectType":"marketing-site","canonical":false,"status":"planned","tags":["seo","lead-generation","analytics"]}
   ]
 }

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/non-functional-requirements.schema.json",
+  "title": "App Builder Non-Functional Requirements",
+  "type": "object",
+  "properties": {
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "target": {"enum": ["best-effort", "wcag-aa", "wcag-aaa"]},
+        "keyboardRequired": {"type": "boolean"},
+        "screenReaderCriticalJourneys": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "lcpMs": {"type": "integer", "minimum": 0},
+        "clsMax": {"type": "number", "minimum": 0},
+        "initialJsKbMax": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "reviewLevel": {"enum": ["baseline", "standard", "high"]},
+        "dataSensitivity": {"enum": ["public", "internal", "personal", "sensitive"]},
+        "threatModelRequired": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "privacy": {
+      "type": "object",
+      "properties": {
+        "personalData": {"type": "boolean"},
+        "analyticsConsentRequired": {"type": "boolean"},
+        "retentionDays": {"type": ["integer", "null"], "minimum": 0},
+        "deletionWorkflowRequired": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "browsers": {"type": "array", "items": {"type": "string"}},
+        "mobileRequired": {"type": "boolean"},
+        "offlineRequired": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "localisation": {
+      "type": "object",
+      "properties": {
+        "locales": {"type": "array", "items": {"type": "string"}},
+        "rtlRequired": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "operations": {
+      "type": "object",
+      "properties": {
+        "availabilityTarget": {"type": ["string", "null"]},
+        "backupRequired": {"type": "boolean"},
+        "observabilityRequired": {"type": "boolean"},
+        "recoveryObjective": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "regimes": {"type": "array", "items": {"type": "string"}},
+        "humanReviewRequired": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

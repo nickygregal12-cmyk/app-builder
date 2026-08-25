@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/recipe-installation.schema.json",
+  "title": "App Builder Recipe Installation Inventory",
+  "type": "object",
+  "required": ["schemaVersion", "recipeId", "version", "managedFiles"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "recipeId": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "installedAtFactoryVersion": {"type": ["string", "null"]},
+    "managedFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -18,9 +18,16 @@ const required = [
   'schemas/checkpoint.schema.json',
   'schemas/context-item.schema.json',
   'schemas/agent-policy.schema.json',
+  'schemas/non-functional-requirements.schema.json',
+  'schemas/design-contract.schema.json',
+  'schemas/recipe-installation.schema.json',
+  'schemas/recipe-upgrade-proposal.schema.json',
   'packages/control-plane/package.json',
   'packages/control-plane/src/index.js',
+  'packages/control-plane/src/upgrades.js',
   'tooling/control-plane.test.mjs',
+  'tooling/control-plane-upgrades.test.mjs',
+  'tooling/benchmark-acceptance.mjs',
 ];
 
 for (const relative of required) {
@@ -39,6 +46,13 @@ try {
   if (status.currentPhase !== '3.5' || status.status !== 'active') {
     console.error('Factory status must identify Phase 3.5 as active while the control-plane foundation is being built.');
     failed = true;
+  }
+  for (const doc of ['README.md', 'docs/ROADMAP.md']) {
+    const text = fs.readFileSync(path.join(root, doc), 'utf8');
+    if (!text.includes(status.currentStage)) {
+      console.error(`${doc} does not match machine-readable currentStage: ${status.currentStage}`);
+      failed = true;
+    }
   }
 
   const policies = readJson('config/agent-policies.json');
@@ -65,27 +79,49 @@ try {
   }
 
   const benchmarks = readJson('config/factory-benchmarks.json');
-  const presentTypes = new Set((benchmarks.cases ?? []).map((entry) => entry.projectType));
+  const canonical = (benchmarks.cases ?? []).filter((entry) => entry.canonical === true);
+  const presentTypes = new Set(canonical.map((entry) => entry.projectType));
   for (const type of benchmarks.requiredProjectTypes ?? []) {
     if (!presentTypes.has(type)) {
-      console.error(`Benchmark registry has no case for project type: ${type}`);
+      console.error(`Benchmark registry has no canonical case for project type: ${type}`);
       failed = true;
     }
   }
-  if ((benchmarks.requiredProjectTypes ?? []).length !== 6) {
-    console.error('Benchmark registry must cover the six first-class project types.');
+  if ((benchmarks.requiredProjectTypes ?? []).length !== 6 || canonical.length !== 6 || canonical.some((entry) => entry.status !== 'ready')) {
+    console.error('Benchmark registry must contain six ready canonical first-class project cases.');
     failed = true;
+  }
+  if (!benchmarks.profiles?.deterministicBuild) {
+    console.error('Benchmark registry is missing deterministicBuild scoring weights.');
+    failed = true;
+  }
+
+  const nfr = readJson('schemas/non-functional-requirements.schema.json');
+  for (const key of ['accessibility', 'performance', 'security', 'privacy', 'compatibility', 'localisation', 'operations', 'compliance']) {
+    if (!nfr.properties?.[key]) { console.error(`NFR contract is missing ${key}.`); failed = true; }
+  }
+  const design = readJson('schemas/design-contract.schema.json');
+  for (const key of ['typography', 'hierarchy', 'responsive', 'motion', 'imagery', 'interaction']) {
+    if (!design.properties?.[key]) { console.error(`Design contract is missing ${key}.`); failed = true; }
   }
 
   const pkg = readJson('packages/control-plane/package.json');
   if (pkg.name !== '@app-builder/control-plane' || pkg.dependencies) {
-    console.error('Control-plane package must remain a provider-neutral dependency-free factory package in Phase 3.5A.');
+    console.error('Control-plane package must remain provider-neutral and dependency-free in Phase 3.5.');
+    failed = true;
+  }
+  if (pkg.exports?.['./upgrades'] !== './src/upgrades.js') {
+    console.error('Control-plane package must expose the upgrade-planning helper.');
     failed = true;
   }
 
   const rootPackage = readJson('package.json');
   if (!String(rootPackage.scripts?.doctor ?? '').includes('control-plane-doctor.mjs')) {
     console.error('Root doctor must run the Phase 3.5 control-plane doctor.');
+    failed = true;
+  }
+  if (!rootPackage.scripts?.['benchmark:acceptance']) {
+    console.error('Root scripts must expose the six-project acceptance benchmark.');
     failed = true;
   }
 
@@ -114,4 +150,4 @@ try {
 }
 
 if (failed) process.exit(1);
-console.log('Phase 3.5 control-plane doctor: durable-state contracts, permissions, trust boundary, benchmark coverage and portability are valid.');
+console.log('Phase 3.5 control-plane doctor: durable state, permissions, trust, benchmark coverage, upgrade/NFR/design contracts and portability are valid.');

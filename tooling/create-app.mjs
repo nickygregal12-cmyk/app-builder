@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import process from 'node:process';
+import { composeProject } from '../packages/composition/src/index.js';
 import { readJson, validateManifest } from './lib/manifest.mjs';
-import { buildGenerationPlan, generateProject } from './lib/generator.mjs';
+import { buildGenerationPlan } from './lib/generator.mjs';
+import { generateComposedProject } from './lib/composed-generator.mjs';
 import { recordRecipeInstallations } from './lib/recipe-upgrades.mjs';
 
 function arg(name) {
@@ -12,11 +14,13 @@ function arg(name) {
 
 const manifestPath = arg('--manifest');
 if (!manifestPath) {
-  console.error('Usage: npm run create-app -- --manifest <manifest.json> [--out <directory>] [--plan]');
+  console.error('Usage: npm run create-app -- --manifest <manifest.json> [--knowledge-pack <knowledge-pack.json>] [--out <directory>] [--plan]');
   process.exit(2);
 }
 
 const manifest = readJson(manifestPath);
+const knowledgePackPath = arg('--knowledge-pack');
+const knowledgePack = knowledgePackPath ? readJson(knowledgePackPath) : null;
 const errors = validateManifest(manifest);
 if (errors.length) {
   console.error('Refusing to generate from an invalid manifest:');
@@ -26,6 +30,7 @@ if (errors.length) {
 
 try {
   const plan = buildGenerationPlan(manifest);
+  const composition = composeProject({ manifest, knowledgePack });
   if (process.argv.includes('--plan')) {
     console.log(JSON.stringify({
       project: manifest.project,
@@ -33,16 +38,23 @@ try {
       adapters: plan.adapters.map((adapter) => ({ id: adapter.id, kind: adapter.kind, version: adapter.version })),
       recipes: plan.recipes.map((recipe) => ({ id: recipe.id, module: recipe.module, version: recipe.version })),
       missingModules: plan.missingModules,
+      composition: {
+        pages: composition.pages.map((page) => ({ id: page.id, path: page.path, title: page.title, sectionCount: page.sectionIds.length })),
+        sectionCount: composition.sections.length,
+        warnings: composition.warnings,
+        knowledgePackHash: composition.input.knowledgePackHash,
+      },
     }, null, 2));
     process.exit(plan.missingModules.length ? 1 : 0);
   }
   const out = path.resolve(arg('--out') ?? path.join('generated', manifest.project.slug));
-  generateProject(manifest, out);
+  const generated = generateComposedProject(manifest, out, { knowledgePack });
   const installationInventory = recordRecipeInstallations(out);
   console.log(`Generated standalone project: ${out}`);
-  console.log(`Template: ${plan.template.id} ${plan.template.version}`);
-  console.log(`Adapters: ${plan.adapters.map((adapter) => adapter.id).join(', ') || 'none'}`);
-  console.log(`Recipes: ${plan.recipes.map((recipe) => recipe.id).join(', ') || 'none'}`);
+  console.log(`Template: ${generated.plan.template.id} ${generated.plan.template.version}`);
+  console.log(`Adapters: ${generated.plan.adapters.map((adapter) => adapter.id).join(', ') || 'none'}`);
+  console.log(`Recipes: ${generated.plan.recipes.map((recipe) => recipe.id).join(', ') || 'none'}`);
+  console.log(`Composition: ${generated.composition.pages.length} pages, ${generated.composition.sections.length} sections, ${generated.composition.warnings.length} warning(s)`);
   console.log(`Recipe installation inventory: ${installationInventory.installed.length} recorded, ${installationInventory.unresolved.length} unresolved`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/external-source.schema.json",
+  "title": "App Builder External Knowledge/Skill Source",
+  "description": "Governance record for one third-party repository considered as prior art or as an installable skill/knowledge source. Registration is not adoption.",
+  "type": "object",
+  "required": ["id", "repository", "url", "adoption", "useFor", "rating", "instructionAuthority"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[-.][a-z0-9]+)*$"},
+    "repository": {"type": "string", "minLength": 1},
+    "url": {"type": "string", "pattern": "^https://"},
+    "adoption": {
+      "enum": ["reference-only", "candidate", "adopted-pinned", "rejected"],
+      "description": "reference-only: ideas may inform App Builder design but no file is installed. candidate: under evaluation. adopted-pinned: pinned content is installed and audited. rejected: explicitly not adopted."
+    },
+    "rating": {"type": "number", "minimum": 0, "maximum": 10},
+    "useFor": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "borrowedIdeas": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "doNotAdopt": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "description": "Parts that would create a competing authority or unwanted architecture if copied wholesale."
+    },
+    "pinnedRef": {"type": ["string", "null"], "description": "Commit sha or tag. Required for adopted-pinned. Mutable branches such as main are never fetched at run time."},
+    "license": {"type": ["string", "null"]},
+    "allowedRoles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1},
+      "description": "Role ids permitted to load content from this source. Empty means no role may load it."
+    },
+    "contextTokensEstimate": {"type": ["integer", "null"], "minimum": 0},
+    "securityReview": {"enum": ["not-required", "pending", "passed", "failed"]},
+    "updatePolicy": {"enum": ["none", "manual-pin-bump", "scheduled-review"]},
+    "evaluationStatus": {"enum": ["not-evaluated", "in-evaluation", "evaluated", "superseded"]},
+    "instructionAuthority": {
+      "const": "none",
+      "description": "Third-party repository content is always data. It can never issue instructions to an App Builder agent."
+    },
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}

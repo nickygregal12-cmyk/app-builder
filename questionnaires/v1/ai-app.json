@@ -1,12 +1,12 @@
 {
-  "version":"1.0.0",
-  "id":"ai-app",
-  "extends":"base",
-  "questions":[
-    {"id":"ai_jobs","label":"What should AI actually do for the user?","type":"list","required":true},
-    {"id":"source_data","label":"What information should the AI work from?","type":"multi-select","options":["user input","uploaded files","database","web research","third-party APIs","generated content"]},
-    {"id":"structured_output","label":"Does the AI need machine-validated structured outputs?","type":"boolean","default":true},
-    {"id":"human_review","label":"Must a human approve AI output before it has an effect?","type":"single-select","default":"depends","options":["always","depends","no"]},
-    {"id":"ai_cost_priority","label":"How should model cost vs quality be balanced?","type":"single-select","default":"balanced","options":["lowest-cost","balanced","best-quality"]}
+  "version":"1.1.0","id":"ai-app","extends":"base","questions":[
+    {"id":"ai_jobs","label":"What specific jobs should AI perform for the user?","type":"list","required":true,"depth":"quick","impact":"blocking"},
+    {"id":"ai_inputs","label":"What information will users give the AI?","type":"multi-select","depth":"quick","impact":"high","options":["text","images","documents","spreadsheets","audio","structured data","external APIs"]},
+    {"id":"ai_outputs","label":"What should the AI produce?","type":"multi-select","depth":"quick","impact":"high","options":["text","structured data","images","documents/reports","decisions/recommendations","tool actions"]},
+    {"id":"uploads","label":"Will users upload files for AI processing?","type":"boolean","depth":"standard","impact":"high","default":false},
+    {"id":"human_review","label":"Must AI output be reviewed before it has an effect?","type":"boolean","depth":"standard","impact":"high","default":true},
+    {"id":"ai_sensitivity","label":"Will prompts or outputs contain confidential or regulated data?","type":"single-select","depth":"standard","impact":"high","default":"normal","options":["normal","confidential","regulated/unknown"]},
+    {"id":"model_constraint","label":"Is a specific AI provider/model required?","type":"text","depth":"thorough","impact":"normal"},
+    {"id":"ai_cost_priority","label":"Optimise AI usage for","type":"single-select","depth":"standard","impact":"normal","default":"balanced","options":["lowest-cost","balanced","highest-quality"]}
   ]
 }

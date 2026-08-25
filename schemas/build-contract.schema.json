@@ -2,15 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Reviewed Build Contract",
   "type": "object",
-  "required": ["version","status","project","coreJourneys","enabledModules","acceptanceCriteria"],
+  "required": ["version", "status", "project", "coreJourneys", "enabledModules", "acceptanceCriteria"],
   "properties": {
-    "version":{"type":"integer","minimum":1},
-    "status":{"enum":["draft","reviewed","approved"]},
-    "project":{"type":"object"},
-    "coreJourneys":{"type":"array","items":{"type":"string"}},
-    "enabledModules":{"type":"array","items":{"type":"string"}},
-    "explicitlyExcluded":{"type":"array","items":{"type":"string"}},
-    "acceptanceCriteria":{"type":"array","items":{"type":"string"}},
-    "unresolvedHighImpactQuestions":{"type":"array","items":{"type":"string"}}
+    "version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["draft", "ready-for-review", "approved"]},
+    "project": {"type": "object"},
+    "coreJourneys": {"type": "array", "items": {"type": "string"}},
+    "enabledModules": {"type": "array", "items": {"type": "string"}},
+    "explicitlyExcluded": {"type": "array", "items": {"type": "string"}},
+    "acceptanceCriteria": {"type": "array", "items": {"type": "string"}},
+    "unresolvedHighImpactQuestions": {"type": "array", "items": {"type": "string"}},
+    "sourceInputs": {"type": "array", "items": {"type": "string"}},
+    "designDirection": {"type": "string"}
   }
 }

@@ -1,12 +1,11 @@
 {
-  "version":"1.0.0",
-  "id":"consumer-app",
-  "extends":"base",
-  "questions":[
-    {"id":"account_required","label":"Does V1 require user accounts?","type":"boolean","default":true},
-    {"id":"user_content","label":"Will users create or upload their own content/files?","type":"boolean","default":false},
-    {"id":"notifications","label":"Which notifications are useful in V1?","type":"multi-select","options":["in-app","email","push","none"]},
-    {"id":"social_features","label":"Does V1 need sharing, following, messaging or other social features?","type":"list","required":false},
-    {"id":"monetisation","label":"Does V1 need payments or subscriptions?","type":"boolean","default":false}
+  "version":"1.1.0","id":"consumer-app","extends":"base","questions":[
+    {"id":"account_required","label":"Does V1 require user accounts?","type":"boolean","depth":"quick","impact":"high","default":true},
+    {"id":"user_content","label":"Will users create or upload their own content/files?","type":"boolean","depth":"quick","impact":"high","default":false},
+    {"id":"notifications","label":"Which notifications are useful in V1?","type":"multi-select","depth":"standard","impact":"normal","options":["in-app","email","push","none"]},
+    {"id":"social_features","label":"Does V1 need sharing, following, messaging or other social features?","type":"list","depth":"standard","impact":"high"},
+    {"id":"monetisation","label":"Does V1 need payments or subscriptions?","type":"boolean","depth":"standard","impact":"high","default":false},
+    {"id":"moderation","label":"Will user-generated content require moderation or reporting?","type":"boolean","depth":"thorough","impact":"high","default":false},
+    {"id":"offline","label":"Does V1 need meaningful offline/installable-app behaviour?","type":"boolean","depth":"thorough","impact":"normal","default":false}
   ]
 }

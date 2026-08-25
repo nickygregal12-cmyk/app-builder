@@ -1,0 +1,12 @@
+{
+  "version":"1.0.0",
+  "id":"content-site",
+  "extends":"base",
+  "questions":[
+    {"id":"content_types","label":"What kinds of content will be published?","type":"list","required":true},
+    {"id":"content_source","label":"Where will content come from?","type":"multi-select","options":["written in app","Markdown/files","existing website","CMS/API","AI-assisted","mixed"]},
+    {"id":"editorial_workflow","label":"Does content need draft/review/approval states?","type":"boolean","default":false},
+    {"id":"site_search","label":"Does V1 need on-site search?","type":"boolean","default":false},
+    {"id":"newsletter","label":"Does V1 need newsletter/email capture?","type":"boolean","default":false}
+  ]
+}

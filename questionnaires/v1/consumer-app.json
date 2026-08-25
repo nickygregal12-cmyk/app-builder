@@ -1,0 +1,12 @@
+{
+  "version":"1.0.0",
+  "id":"consumer-app",
+  "extends":"base",
+  "questions":[
+    {"id":"account_required","label":"Does V1 require user accounts?","type":"boolean","default":true},
+    {"id":"user_content","label":"Will users create or upload their own content/files?","type":"boolean","default":false},
+    {"id":"notifications","label":"Which notifications are useful in V1?","type":"multi-select","options":["in-app","email","push","none"]},
+    {"id":"social_features","label":"Does V1 need sharing, following, messaging or other social features?","type":"list","required":false},
+    {"id":"monetisation","label":"Does V1 need payments or subscriptions?","type":"boolean","default":false}
+  ]
+}

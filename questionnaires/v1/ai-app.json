@@ -1,0 +1,12 @@
+{
+  "version":"1.0.0",
+  "id":"ai-app",
+  "extends":"base",
+  "questions":[
+    {"id":"ai_jobs","label":"What should AI actually do for the user?","type":"list","required":true},
+    {"id":"source_data","label":"What information should the AI work from?","type":"multi-select","options":["user input","uploaded files","database","web research","third-party APIs","generated content"]},
+    {"id":"structured_output","label":"Does the AI need machine-validated structured outputs?","type":"boolean","default":true},
+    {"id":"human_review","label":"Must a human approve AI output before it has an effect?","type":"single-select","default":"depends","options":["always","depends","no"]},
+    {"id":"ai_cost_priority","label":"How should model cost vs quality be balanced?","type":"single-select","default":"balanced","options":["lowest-cost","balanced","best-quality"]}
+  ]
+}

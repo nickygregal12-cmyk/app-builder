@@ -22,6 +22,19 @@ for (const rel of ['config/modules.json','config/project-types.json','config/age
   catch { console.error(`Invalid JSON: ${rel}`); failed = true; }
 }
 
+try {
+  const projectTypes = JSON.parse(fs.readFileSync(path.join(root, 'config/project-types.json'), 'utf8')).projectTypes ?? {};
+  for (const [projectType, config] of Object.entries(projectTypes)) {
+    const questionnaire = path.join(root, 'questionnaires', 'v1', `${config.questionnaire}.json`);
+    if (!fs.existsSync(questionnaire)) {
+      console.error(`Project type ${projectType} references missing questionnaire: ${config.questionnaire}`);
+      failed = true;
+    }
+  }
+} catch {
+  failed = true;
+}
+
 const scanRoots = ['apps','packages','config','schemas','questionnaires','tooling','templates','recipes'];
 const banned = [/euro[- ]?2028/i, /football predictor/i, /last man standing/i, /golden boot/i, /joker scoring/i];
 function walk(dir) {
@@ -45,4 +58,4 @@ for (const base of scanRoots) {
   }
 }
 if (failed) process.exit(1);
-console.log('App Builder doctor: foundation contracts present, JSON valid, contamination guard clean.');
+console.log('App Builder doctor: foundation contracts present, registry references valid, JSON valid, contamination guard clean.');

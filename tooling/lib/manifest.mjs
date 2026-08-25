@@ -1,36 +1,42 @@
 import fs from 'node:fs';
+import Ajv2020 from 'ajv/dist/2020.js';
 
-const PROJECT_TYPES = new Set([
-  'marketing-site', 'b2b-saas', 'consumer-app', 'internal-tool', 'content-site', 'ai-app',
-]);
+const manifestSchema = JSON.parse(fs.readFileSync(new URL('../../schemas/project-manifest.schema.json', import.meta.url), 'utf8'));
+const ajv = new Ajv2020({ allErrors: true, strict: true });
+const validateProjectManifest = ajv.compile(manifestSchema);
 
 export function readJson(path) {
   return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
 
-export function validateManifest(manifest) {
-  const errors = [];
-  if (![1, 2].includes(manifest?.schemaVersion)) errors.push('schemaVersion must be 1 or 2');
-  if (!manifest?.project?.name?.trim()) errors.push('project.name is required');
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(manifest?.project?.slug ?? '')) errors.push('project.slug must be kebab-case');
-  if (!PROJECT_TYPES.has(manifest?.project?.type)) errors.push('project.type is unsupported');
-  if (!manifest?.project?.primaryGoal?.trim()) errors.push('project.primaryGoal is required');
-  if (!manifest?.modules || typeof manifest.modules !== 'object' || Array.isArray(manifest.modules)) errors.push('modules must be an object');
-  else for (const [key, value] of Object.entries(manifest.modules)) if (typeof value !== 'boolean') errors.push(`modules.${key} must be boolean`);
-  if (!['none','supabase'].includes(manifest?.infrastructure?.backend)) errors.push('infrastructure.backend is unsupported');
-  if (!['netlify','cloudflare','vercel','none'].includes(manifest?.infrastructure?.deployment)) errors.push('infrastructure.deployment is unsupported');
-  if (!['economy','balanced','quality'].includes(manifest?.aiBudget?.mode)) errors.push('aiBudget.mode is unsupported');
-  if (typeof manifest?.aiBudget?.maxBuildCostGbp !== 'number' || manifest.aiBudget.maxBuildCostGbp < 0) errors.push('aiBudget.maxBuildCostGbp must be >= 0');
-  if (manifest?.schemaVersion === 2) {
-    if (typeof manifest?.audience?.summary !== 'string' || !Array.isArray(manifest?.audience?.roles)) errors.push('audience must include summary and roles');
-    if (!Array.isArray(manifest?.journeys)) errors.push('journeys must be an array');
-    if (!Array.isArray(manifest?.majorSurfaces) || manifest.majorSurfaces.length === 0) errors.push('majorSurfaces must contain at least one surface');
-    if (!Array.isArray(manifest?.entities)) errors.push('entities must be an array');
-    if (!manifest?.company || typeof manifest.company !== 'object' || Array.isArray(manifest.company)) errors.push('company must be an object');
-    if (!manifest?.constraints || typeof manifest.constraints !== 'object' || Array.isArray(manifest.constraints)) errors.push('constraints must be an object');
-    if (!Array.isArray(manifest?.constraints?.customCapabilities)) errors.push('constraints.customCapabilities must be an array');
-    if (!Array.isArray(manifest?.constraints?.excludedCapabilities)) errors.push('constraints.excludedCapabilities must be an array');
-    if (!Array.isArray(manifest?.constraints?.unresolvedCapabilities)) errors.push('constraints.unresolvedCapabilities must be an array');
+function instancePath(error) {
+  return String(error.instancePath ?? '')
+    .split('/')
+    .filter(Boolean)
+    .map((part) => part.replaceAll('~1', '/').replaceAll('~0', '~'))
+    .join('.');
+}
+
+function formatValidationError(error) {
+  const location = instancePath(error);
+  if (error.keyword === 'required') {
+    const missing = String(error.params?.missingProperty ?? 'field');
+    return `${location ? `${location}.` : ''}${missing} is required`;
   }
-  return errors;
+  if (error.keyword === 'pattern' && location === 'project.slug') return 'project.slug must be kebab-case';
+  if (error.keyword === 'pattern') return `${location || 'value'} must contain non-whitespace text`;
+  if (error.keyword === 'enum') return `${location || 'value'} is unsupported`;
+  if (error.keyword === 'type') return `${location || 'value'} must be ${String(error.params?.type ?? 'the expected type')}`;
+  if (error.keyword === 'minimum') return `${location || 'value'} must be >= ${String(error.params?.limit)}`;
+  if (error.keyword === 'minItems') return `${location || 'value'} must contain at least ${String(error.params?.limit)} item(s)`;
+  if (error.keyword === 'additionalProperties') {
+    const property = String(error.params?.additionalProperty ?? 'property');
+    return `${location ? `${location}.` : ''}${property} is not allowed`;
+  }
+  return `${location || 'manifest'} ${error.message ?? 'is invalid'}`;
+}
+
+export function validateManifest(manifest) {
+  if (validateProjectManifest(manifest)) return [];
+  return [...new Set((validateProjectManifest.errors ?? []).map(formatValidationError))];
 }

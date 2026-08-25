@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://app-builder.local/schemas/genuine-business-acceptance.schema.json",
+  "title": "Genuine Business Acceptance Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "run",
+    "business",
+    "sources",
+    "journeys",
+    "manualEdits",
+    "productReview",
+    "metrics",
+    "artifacts",
+    "observedShortcomings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "startedAt", "completedAt", "factoryCommit"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "startedAt": { "type": "string", "minLength": 10 },
+        "completedAt": { "type": "string", "minLength": 10 },
+        "factoryCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "business": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "primaryUrl", "projectType", "synthetic"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "primaryUrl": { "type": "string", "minLength": 8 },
+        "projectType": {
+          "enum": ["marketing-site", "b2b-saas", "consumer-app", "internal-tool", "content-site", "ai-app"]
+        },
+        "synthetic": { "const": false }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "label", "uri", "provenance", "rightsStatus"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["website", "document", "logo", "image", "spreadsheet", "other"] },
+          "label": { "type": "string", "minLength": 1 },
+          "uri": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "provenance": { "enum": ["user-supplied", "existing-site", "authorised-public"] },
+          "rightsStatus": { "enum": ["approved-for-use", "reference-only", "unknown"] }
+        }
+      }
+    },
+    "journeys": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intake", "buildContract", "manifest", "ingest", "compose", "generate", "verify", "preview", "deploy"],
+      "properties": {
+        "intake": { "$ref": "#/definitions/requiredJourney" },
+        "buildContract": { "$ref": "#/definitions/requiredJourney" },
+        "manifest": { "$ref": "#/definitions/requiredJourney" },
+        "ingest": { "$ref": "#/definitions/requiredJourney" },
+        "compose": { "$ref": "#/definitions/requiredJourney" },
+        "generate": { "$ref": "#/definitions/requiredJourney" },
+        "verify": { "$ref": "#/definitions/requiredJourney" },
+        "preview": { "$ref": "#/definitions/requiredJourney" },
+        "deploy": { "enum": ["passed", "not-applicable"] }
+      }
+    },
+    "manualEdits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "targetMaximum", "entries"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "targetMaximum": { "const": 20 },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["category", "description", "meaningful"],
+            "properties": {
+              "category": {
+                "enum": ["content", "brand", "imagery", "layout", "responsive", "visual", "behavior", "integration", "accessibility", "data", "other"]
+              },
+              "description": { "type": "string", "minLength": 1 },
+              "meaningful": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    "productReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["launchable", "reviewer", "notes", "checks"],
+      "properties": {
+        "launchable": { "const": true },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string", "minLength": 1 },
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["factualAccuracy", "brandFit", "visualQuality", "responsiveQuality", "accessibility"],
+          "properties": {
+            "factualAccuracy": { "const": "passed" },
+            "brandFit": { "const": "passed" },
+            "visualQuality": { "const": "passed" },
+            "responsiveQuality": { "const": "passed" },
+            "accessibility": { "const": "passed" }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aiCalls", "inputTokens", "outputTokens", "costGbp", "elapsedMs", "retries", "interventions", "qualityFailures"],
+      "properties": {
+        "aiCalls": { "type": "integer", "minimum": 0 },
+        "inputTokens": { "type": "integer", "minimum": 0 },
+        "outputTokens": { "type": "integer", "minimum": 0 },
+        "costGbp": { "type": "number", "minimum": 0 },
+        "elapsedMs": { "type": "integer", "minimum": 0 },
+        "retries": { "type": "integer", "minimum": 0 },
+        "interventions": { "type": "integer", "minimum": 0 },
+        "qualityFailures": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "knowledgePack", "composition", "generatedRepository", "verificationReport"],
+      "properties": {
+        "manifest": { "$ref": "#/definitions/artifactFile" },
+        "knowledgePack": { "$ref": "#/definitions/artifactFile" },
+        "composition": { "$ref": "#/definitions/artifactFile" },
+        "generatedRepository": { "$ref": "#/definitions/artifactDirectory" },
+        "verificationReport": { "$ref": "#/definitions/artifactFile" }
+      }
+    },
+    "observedShortcomings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["brandAssets", "genericDesign", "imageGaps", "copyMessaging", "responsiveVisual", "other"],
+      "properties": {
+        "brandAssets": { "$ref": "#/definitions/stringList" },
+        "genericDesign": { "$ref": "#/definitions/stringList" },
+        "imageGaps": { "$ref": "#/definitions/stringList" },
+        "copyMessaging": { "$ref": "#/definitions/stringList" },
+        "responsiveVisual": { "$ref": "#/definitions/stringList" },
+        "other": { "$ref": "#/definitions/stringList" }
+      }
+    }
+  },
+  "definitions": {
+    "requiredJourney": { "const": "passed" },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "artifactFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "artifactDirectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

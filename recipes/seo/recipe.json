@@ -7,6 +7,7 @@
   "compatibleTemplates": ["react-vite-neutral"],
   "files": ["src/features/seo/index.ts","public/robots.txt","tooling/generate-sitemap.mjs"],
   "requires": [],
+  "requiresAdapters": [],
   "conflicts": [],
   "package": {"dependencies":{},"devDependencies":{},"scripts":{"prebuild":"node tooling/generate-sitemap.mjs"}},
   "entry": "src/features/seo/index.ts"

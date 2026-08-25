@@ -3,58 +3,219 @@
   "title": "App Builder Company Profile",
   "$defs": {
     "factPointer": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
         "value": {},
-        "factId": {"type": "string"},
-        "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]},
-        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        "factId": {
+          "type": "string"
+        },
+        "verification": {
+          "enum": [
+            "user-provided",
+            "candidate",
+            "verified",
+            "rejected"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       },
-      "required": ["value", "factId", "verification", "confidence"],
+      "required": [
+        "value",
+        "factId",
+        "verification",
+        "confidence"
+      ],
       "additionalProperties": false
     },
     "entity": {
       "type": "object",
-      "required": ["id", "sourceId", "provenance", "verification"],
+      "required": [
+        "id",
+        "sourceId",
+        "provenance",
+        "verification"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "sourceId": {"type": "string"},
-        "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]},
-        "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]}
+        "id": {
+          "type": "string"
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "user-supplied",
+            "existing-site",
+            "external-research",
+            "generated"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "user-provided",
+            "candidate",
+            "verified",
+            "rejected"
+          ]
+        }
       },
       "additionalProperties": true
     }
   },
   "type": "object",
-  "required": ["identity", "contact", "serviceAreas", "services", "people", "projects", "testimonials", "accreditations"],
+  "required": [
+    "identity",
+    "contact",
+    "serviceAreas",
+    "services",
+    "people",
+    "projects",
+    "testimonials",
+    "accreditations",
+    "socialProfiles"
+  ],
   "properties": {
     "identity": {
       "type": "object",
-      "required": ["name", "legalName", "description"],
+      "required": [
+        "name",
+        "legalName",
+        "description"
+      ],
       "properties": {
-        "name": {"$ref": "#/$defs/factPointer"},
-        "legalName": {"$ref": "#/$defs/factPointer"},
-        "description": {"$ref": "#/$defs/factPointer"}
+        "name": {
+          "$ref": "#/$defs/factPointer"
+        },
+        "legalName": {
+          "$ref": "#/$defs/factPointer"
+        },
+        "description": {
+          "$ref": "#/$defs/factPointer"
+        }
       },
       "additionalProperties": false
     },
     "contact": {
       "type": "object",
-      "required": ["email", "phone", "website", "address"],
+      "required": [
+        "email",
+        "phone",
+        "website",
+        "address"
+      ],
       "properties": {
-        "email": {"$ref": "#/$defs/factPointer"},
-        "phone": {"$ref": "#/$defs/factPointer"},
-        "website": {"$ref": "#/$defs/factPointer"},
-        "address": {"$ref": "#/$defs/factPointer"}
+        "email": {
+          "$ref": "#/$defs/factPointer"
+        },
+        "phone": {
+          "$ref": "#/$defs/factPointer"
+        },
+        "website": {
+          "$ref": "#/$defs/factPointer"
+        },
+        "address": {
+          "$ref": "#/$defs/factPointer"
+        }
       },
       "additionalProperties": false
     },
-    "serviceAreas": {"type": "array", "items": {"type": "object", "required": ["value", "factId", "verification"], "properties": {"value": {}, "factId": {"type": "string"}, "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]}}, "additionalProperties": false}},
-    "services": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
-    "people": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
-    "projects": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
-    "testimonials": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
-    "accreditations": {"type": "array", "items": {"$ref": "#/$defs/entity"}}
+    "socialProfiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "platform",
+          "value",
+          "factId",
+          "verification"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factId": {
+            "type": "string"
+          },
+          "verification": {
+            "enum": [
+              "user-provided",
+              "candidate",
+              "verified",
+              "rejected"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "serviceAreas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "value",
+          "factId",
+          "verification"
+        ],
+        "properties": {
+          "value": {},
+          "factId": {
+            "type": "string"
+          },
+          "verification": {
+            "enum": [
+              "user-provided",
+              "candidate",
+              "verified",
+              "rejected"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    },
+    "testimonials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    },
+    "accreditations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    }
   },
   "additionalProperties": false
 }

@@ -18,7 +18,7 @@ const port = Number(process.env.APP_BUILDER_SERVICE_PORT ?? 4310);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('APP_BUILDER_SERVICE_PORT must be a valid TCP port.');
 
 const store = new FactoryStore({ stateRoot });
-const service = new FactoryService({ store, workspacesRoot });
+const service = new FactoryService({ store, workspacesRoot, stateRoot });
 const server = createFactoryHttpServer({ service });
 let shuttingDown = false;
 

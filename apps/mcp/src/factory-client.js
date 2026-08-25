@@ -60,6 +60,16 @@ export class FactoryServiceClient {
   readManifest(id) { return this.request('GET', `/projects/${projectId(id)}/manifest`); }
   readKnowledge(id) { return this.request('GET', `/projects/${projectId(id)}/knowledge-pack`); }
   readComposition(id) { return this.request('GET', `/projects/${projectId(id)}/composition`); }
+  readSources(id) { return this.request('GET', `/projects/${projectId(id)}/sources`); }
+  readOverrides(id) { return this.request('GET', `/projects/${projectId(id)}/overrides`); }
+  writeOverrides(id, overrides) {
+    if (!Array.isArray(overrides)) throw new Error('overrides must be an array.');
+    return this.request('PUT', `/projects/${projectId(id)}/overrides`, { overrides });
+  }
+  ingestSources(id, sources) {
+    if (!Array.isArray(sources) || !sources.length) throw new Error('sources must be a non-empty array.');
+    return this.request('POST', `/projects/${projectId(id)}/sources`, { sources });
+  }
   generateProject(id) { return this.request('POST', `/projects/${projectId(id)}/generate`); }
   verifyProject(id) { return this.request('POST', `/projects/${projectId(id)}/verify`); }
   readTasks(id) { return this.request('GET', `/projects/${projectId(id)}/tasks`); }
@@ -69,6 +79,7 @@ export class FactoryServiceClient {
   }
   readMetrics(id) { return this.request('GET', `/projects/${projectId(id)}/metrics`); }
   readCheckpoint(id) { return this.request('GET', `/projects/${projectId(id)}/checkpoint`); }
+  readCheckpoints(id) { return this.request('GET', `/projects/${projectId(id)}/checkpoints`); }
   previewStatus(id) { return this.request('GET', `/projects/${projectId(id)}/preview`); }
   startPreview(id) { return this.request('POST', `/projects/${projectId(id)}/preview/start`); }
   stopPreview(id) { return this.request('POST', `/projects/${projectId(id)}/preview/stop`); }

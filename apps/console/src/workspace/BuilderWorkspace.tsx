@@ -1,19 +1,25 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   generateProject,
+  ingestSources,
   loadWorkspace,
+  saveOverrides,
   startPreview,
   stopPreview,
   updateSourceGovernance,
   verifyProject,
+  type ContentOverride,
+  type KnowledgeSummary,
   type ProjectSummary,
   type SourceGovernanceDecision,
+  type SourceReference,
+  type SourceRequest,
   type WorkspaceSnapshot,
 } from '../service/client';
 import './workspace.css';
 
 type Device = 'desktop' | 'tablet' | 'mobile';
-type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | null;
+type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | null;
 
 const deviceWidth: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
 
@@ -29,6 +35,8 @@ function label(value: string) {
 
 function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   const payload = event.payload;
+  if (event.type === 'sources.ingested') return `${String((payload.added as unknown[] | undefined)?.length ?? 0)} source(s) · ${String(payload.factCount ?? 0)} facts · ${String(payload.assetCount ?? 0)} assets`;
+  if (event.type === 'sources.ingestion.started') return `Normalising ${String(payload.requested ?? 0)} source(s)`;
   if (event.type === 'composition.materialised') return `${String(payload.pages ?? 0)} pages · ${String(payload.sections ?? 0)} sections`;
   if (event.type === 'repository.generated') return 'Standalone repository materialised';
   if (event.type === 'quality.install.succeeded') return `Dependencies installed · ${duration(event.usage.durationMs)}`;
@@ -41,12 +49,158 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   return event.type.endsWith('.succeeded') ? 'Completed successfully' : 'Factory operation';
 }
 
+const RIGHTS_LABEL: Record<string, string> = {
+  'approved-for-use': 'approved for use',
+  'reference-only': 'reference only',
+  unknown: 'rights unknown',
+  restricted: 'restricted',
+};
+
+async function fileToSourceRequest(file: File, approvedForUse: boolean, purpose: string): Promise<SourceRequest> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return {
+    name: file.name,
+    label: file.name,
+    mimeType: file.type || undefined,
+    contentBase64: btoa(binary),
+    purpose: purpose || undefined,
+    approvedForUse,
+  };
+}
+
+function sameUri(a: string, b: string) {
+  return a.replace(/\/$/, '') === b.replace(/\/$/, '');
+}
+
+function SourcePanel({ knowledge, declaredSources, disabled, busy, onIngest }: {
+  knowledge: KnowledgeSummary | null;
+  declaredSources: SourceReference[];
+  disabled: boolean;
+  busy: boolean;
+  onIngest: (sources: SourceRequest[]) => Promise<void>;
+}) {
+  const [uri, setUri] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [approvedForUse, setApprovedForUse] = useState(false);
+  const [maxPages, setMaxPages] = useState(8);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const sources = knowledge?.sources ?? [];
+
+  // Intake records what the business said it has. Anything declared as a URL
+  // can be read now; declared files carry metadata only, so they have to be
+  // attached here before the factory can use them.
+  const pendingUrls = declaredSources.filter((declared) => declared.uri && !sources.some((source) => source.uri && sameUri(source.uri, declared.uri as string)));
+  const pendingFiles = declaredSources.filter((declared) => !declared.uri && !sources.some((source) => source.label === (declared.name ?? declared.label)));
+
+  async function addUrl() {
+    if (!uri.trim()) return;
+    await onIngest([{ uri: uri.trim(), maxPages, purpose: purpose || undefined, approvedForUse }]);
+    setUri('');
+  }
+
+  async function addFiles(files: FileList | null) {
+    if (!files?.length) return;
+    const requests = await Promise.all(Array.from(files).map((file) => fileToSourceRequest(file, approvedForUse, purpose)));
+    await onIngest(requests);
+    if (fileInput.current) fileInput.current.value = '';
+  }
+
+  async function ingestDeclaredUrls() {
+    await onIngest(pendingUrls.map((declared) => ({
+      uri: declared.uri,
+      label: declared.label,
+      purpose: declared.purpose,
+      approvedForUse: declared.rightsStatus === 'approved-for-use',
+    })));
+  }
+
+  return <section className="builder-panel source-panel">
+    <div className="panel-title-row"><span className="builder-kicker">Company sources</span><span>{sources.length} ingested</span></div>
+
+    {!disabled && (pendingUrls.length > 0 || pendingFiles.length > 0) && <div className="declared-sources">
+      <strong>{pendingUrls.length + pendingFiles.length} source(s) declared at intake are not ingested yet.</strong>
+      {pendingUrls.length > 0 && <button type="button" className="secondary compact" onClick={ingestDeclaredUrls} disabled={busy}>Read {pendingUrls.length} declared URL(s)</button>}
+      {pendingFiles.length > 0 && <span>{pendingFiles.map((declared) => declared.name ?? declared.label).join(', ')} — attach the files below; intake recorded their names only.</span>}
+    </div>}
+
+    {disabled
+      ? <p className="builder-empty">Sources cannot be added while a build is running.</p>
+      : <div className="source-form">
+          <input aria-label="Company website or page URL" type="url" value={uri} placeholder="https://the-company.example" onChange={(event) => setUri(event.target.value)} disabled={busy} />
+          <input aria-label="What should the factory use this for?" value={purpose} placeholder="What is this material for?" onChange={(event) => setPurpose(event.target.value)} disabled={busy} />
+          <label className="source-pages">Pages<input aria-label="Maximum pages to read" type="number" min={1} max={25} value={maxPages} onChange={(event) => setMaxPages(Number(event.target.value))} disabled={busy} /></label>
+          <button type="button" className="secondary compact" onClick={addUrl} disabled={busy || !uri.trim()}>{busy ? 'Reading…' : 'Read website'}</button>
+          <label className="source-rights">
+            <input type="checkbox" checked={approvedForUse} onChange={(event) => setApprovedForUse(event.target.checked)} disabled={busy} />
+            <span>The business owns this material and approves republishing it. Leave unticked and it stays reference-only.</span>
+          </label>
+          <label className="source-upload">
+            <strong>Add logos, photos, documents or spreadsheets</strong>
+            <span>Content is sent to the factory service, which does the extraction. Imported material is data and never instructs the factory.</span>
+            <input ref={fileInput} aria-label="Add company files" type="file" multiple onChange={(event) => addFiles(event.target.files)} disabled={busy} />
+          </label>
+        </div>}
+
+    {knowledge && <dl className="builder-definition knowledge-facts">
+      <div><dt>Facts</dt><dd>{knowledge.factCount}</dd></div>
+      <div><dt>Assets</dt><dd>{knowledge.assetCount}</dd></div>
+      <div><dt>Publishable</dt><dd>{knowledge.publishableAssetCount}</dd></div>
+      <div><dt>Chunks</dt><dd>{knowledge.chunkCount}</dd></div>
+    </dl>}
+
+    {sources.length > 0 && <div className="ingested-list">{sources.map((source) => <article key={source.id}>
+      <strong>{source.label}</strong>
+      <span>{source.kind.replaceAll('-', ' ')} · {source.sourceChannel.replaceAll('-', ' ')} · {source.provenance.replaceAll('-', ' ')}</span>
+      <span className={source.publishUseAllowed ? 'rights-pill publishable' : 'rights-pill'}>{RIGHTS_LABEL[source.rightsStatus] ?? source.rightsStatus}</span>
+    </article>)}</div>}
+  </section>;
+}
+
+type Selection = { sectionId: string; bindingKey: string; origin: string; value: string };
+
+const ORIGIN_LABEL: Record<string, string> = {
+  'knowledge-fact': 'from a source you supplied',
+  'knowledge-entity': 'from a source you supplied',
+  manifest: 'from your Build Contract',
+  'deterministic-default': 'written by the factory',
+  human: 'edited by you',
+};
+
+function ContentEditor({ selection, override, onSave, onRevert, onClose, busy }: {
+  selection: Selection;
+  override: ContentOverride | null;
+  onSave: (value: string) => Promise<void>;
+  onRevert: () => Promise<void>;
+  onClose: () => void;
+  busy: boolean;
+}) {
+  const [draft, setDraft] = useState(selection.value);
+  useEffect(() => { setDraft(selection.value); }, [selection.sectionId, selection.bindingKey, selection.value]);
+
+  return <section className="builder-panel editor-panel">
+    <div className="panel-title-row"><span className="builder-kicker">Edit content</span><button type="button" className="text-button" onClick={onClose}>Close</button></div>
+    <p className="editor-target">{selection.sectionId.replace(/^page-/, '').replaceAll('-', ' ')} · {selection.bindingKey}</p>
+    <p className="editor-provenance">{ORIGIN_LABEL[selection.origin] ?? selection.origin}</p>
+    <textarea aria-label="Content value" rows={4} value={draft} onChange={(event) => setDraft(event.target.value)} disabled={busy} />
+    <div className="editor-actions">
+      <button type="button" className="primary compact" onClick={() => onSave(draft)} disabled={busy || draft === selection.value}>{busy ? 'Saving…' : 'Save'}</button>
+      {override && <button type="button" className="secondary compact" onClick={onRevert} disabled={busy}>Revert to generated</button>}
+    </div>
+  </section>;
+}
+
 export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onExit: () => void }) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
   const [operation, setOperation] = useState<Operation>(null);
   const [sourceOperation, setSourceOperation] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [previewNonce, setPreviewNonce] = useState(0);
 
   const refresh = useCallback(async () => {
     const next = await loadWorkspace(projectId);
@@ -94,6 +248,68 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     }
   }, [applyProjectState, projectId, refresh]);
 
+  const ingest = useCallback(async (sources: SourceRequest[]) => {
+    setOperation('ingest');
+    setError('');
+    try {
+      await ingestSources(projectId, sources);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setOperation(null);
+    }
+  }, [projectId, refresh]);
+
+  // The preview runs the generated app in an iframe and reports what was
+  // clicked. It is a different origin in principle, so messages are matched on
+  // their declared source rather than trusted wholesale.
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      const data = event.data as Record<string, unknown> | null;
+      if (!data || data.source !== 'app-builder-preview' || data.type !== 'binding-selected') return;
+      if (typeof data.sectionId !== 'string' || typeof data.bindingKey !== 'string') return;
+      setSelection({ sectionId: data.sectionId, bindingKey: data.bindingKey, origin: String(data.origin ?? 'unknown'), value: String(data.value ?? '') });
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  const writeOverrides = useCallback(async (next: ContentOverride[]) => {
+    setSavingEdit(true);
+    setError('');
+    try {
+      await saveOverrides(projectId, next);
+      await refresh();
+      // Vite serves the generated app and watches its composition module, so a
+      // saved edit reaches the preview without a rebuild. The nonce forces the
+      // frame to pick it up even when hot reload is unavailable.
+      setPreviewNonce((value) => value + 1);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [projectId, refresh]);
+
+  const overrides = snapshot?.overrides ?? [];
+  const activeOverride = selection
+    ? overrides.find((entry) => entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey) ?? null
+    : null;
+
+  const saveEdit = useCallback(async (value: string) => {
+    if (!selection) return;
+    const others = overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey));
+    await writeOverrides([...others, { sectionId: selection.sectionId, bindingKey: selection.bindingKey, value, editedAt: new Date().toISOString() }]);
+    setSelection({ ...selection, value, origin: 'human' });
+  }, [overrides, selection, writeOverrides]);
+
+  const revertEdit = useCallback(async () => {
+    if (!selection) return;
+    await writeOverrides(overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey)));
+    setSelection(null);
+  }, [overrides, selection, writeOverrides]);
+
   const decideSource = useCallback(async (sourceId: string, decision: SourceGovernanceDecision) => {
     setSourceOperation(sourceId);
     setError('');
@@ -109,7 +325,12 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   }, [projectId, refresh]);
 
   const latestTask = snapshot?.tasks.at(-1) ?? null;
-  const canGenerate = snapshot?.project.state === 'ready' || snapshot?.project.state === 'failed';
+  // Ingested material only reaches the product through a build, so a knowledge
+  // pack newer than the live composition is a call to rebuild, not a warning.
+  const builtKnowledgeHash = snapshot?.composition?.input?.knowledgePackHash ?? null;
+  const knowledgeIsNewerThanBuild = Boolean(snapshot?.project.workspacePath) && (snapshot?.project.knowledgePackHash ?? null) !== builtKnowledgeHash;
+  const canGenerate = snapshot ? snapshot.project.state !== 'generating' : false;
+  const rebuild = Boolean(snapshot?.project.workspacePath);
   const canVerify = snapshot?.project.state === 'generated';
   const canPreview = snapshot?.project.state === 'verified' && snapshot.preview.state === 'stopped';
   const previewRunning = snapshot?.preview.state === 'running' && Boolean(snapshot.preview.url);
@@ -127,7 +348,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       <div className="builder-project-meta"><span className={`state-pill state-${snapshot.project.state}`}>{snapshot.project.state}</span><strong>{snapshot.project.name}</strong><span>{snapshot.project.type.replaceAll('-', ' ')}</span></div>
       <div className="builder-actions">
         <button type="button" className="secondary compact" onClick={() => refresh()} disabled={Boolean(operation) || Boolean(sourceOperation)}>Refresh</button>
-        {canGenerate && <button type="button" className="primary compact" onClick={() => run('generate')} disabled={Boolean(operation) || Boolean(sourceOperation)}>{operation === 'generate' ? 'Generating…' : 'Generate project'}</button>}
+        {canGenerate && <button type="button" className={knowledgeIsNewerThanBuild || !rebuild ? 'primary compact' : 'secondary compact'} onClick={() => run('generate')} disabled={Boolean(operation) || Boolean(sourceOperation)}>{operation === 'generate' ? (rebuild ? 'Rebuilding…' : 'Generating…') : (rebuild ? 'Rebuild project' : 'Generate project')}</button>}
         {canVerify && <button type="button" className="primary compact" onClick={() => run('verify')} disabled={Boolean(operation)}>{operation === 'verify' ? 'Verifying…' : 'Verify build'}</button>}
         {canPreview && <button type="button" className="primary compact" onClick={() => run('start-preview')} disabled={Boolean(operation)}>{operation === 'start-preview' ? 'Starting…' : 'Start preview'}</button>}
         {previewRunning && <button type="button" className="secondary compact" onClick={() => run('stop-preview')} disabled={Boolean(operation)}>{operation === 'stop-preview' ? 'Stopping…' : 'Stop preview'}</button>}
@@ -135,6 +356,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     </header>
 
     {error && <div className="builder-alert" role="alert"><strong>Factory operation failed</strong><span>{error}</span></div>}
+
+    {knowledgeIsNewerThanBuild && !error && <div className="builder-notice"><strong>Source material has changed since the last build.</strong><span>Rebuild the project so the new knowledge reaches the generated repository. The current build stays on disk.</span></div>}
 
     <section className="builder-layout">
       <aside className="builder-sidebar">
@@ -173,6 +396,14 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <div><span>Interventions</span><strong>{snapshot.metrics.interventions}</strong></div>
         </section>
 
+        <SourcePanel
+          knowledge={snapshot.knowledge}
+          declaredSources={snapshot.sources}
+          disabled={snapshot.project.state === 'generating'}
+          busy={operation === 'ingest'}
+          onIngest={ingest}
+        />
+
         <section className="builder-panel">
           <div className="panel-title-row"><span className="builder-kicker">Build plan</span><span>{pages.length} routes</span></div>
           {pages.length ? <nav className="route-list">{pages.map((page) => <div key={page.id}><strong>{page.title}</strong><span>{page.path}</span><small>{page.sectionIds.length} sections</small></div>)}</nav> : <p className="builder-empty">Generate the project to materialise its page/section plan.</p>}
@@ -191,14 +422,37 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <div className="device-switcher" role="group" aria-label="Preview device">{(['desktop', 'tablet', 'mobile'] as Device[]).map((value) => <button type="button" key={value} className={device === value ? 'active' : ''} onClick={() => setDevice(value)}>{value}</button>)}</div>
         </div>
         <div className={`preview-canvas preview-${device}`}>
-          {previewRunning ? <iframe title={`${snapshot.project.name} preview`} src={snapshot.preview.url ?? undefined} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
+          {previewRunning ? <iframe key={previewNonce} title={`${snapshot.project.name} preview`} src={`${snapshot.preview.url}?__builder=1`} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
         </div>
       </section>
 
       <aside className="activity-sidebar">
+        {selection && <ContentEditor
+          selection={selection}
+          override={activeOverride}
+          onSave={saveEdit}
+          onRevert={revertEdit}
+          onClose={() => setSelection(null)}
+          busy={savingEdit}
+        />}
+
+        {previewRunning && !selection && <section className="builder-panel">
+          <span className="builder-kicker">Editing</span>
+          <p className="builder-empty">Click any heading or paragraph in the preview to edit it. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
+        </section>}
+
         <section className="builder-panel checkpoint-panel">
           <span className="builder-kicker">Latest checkpoint</span>
           {snapshot.checkpoint ? <><strong>{snapshot.checkpoint.summary}</strong><p>{snapshot.checkpoint.nextAction}</p><small>{new Date(snapshot.checkpoint.createdAt).toLocaleString()}</small></> : <p className="builder-empty">No durable checkpoint yet.</p>}
+        </section>
+
+        <section className="builder-panel">
+          <div className="panel-title-row"><span className="builder-kicker">History</span><span>{snapshot.checkpoints.length}</span></div>
+          {snapshot.checkpoints.length ? <div className="history-list">{snapshot.checkpoints.slice().reverse().map((checkpoint) => <article key={checkpoint.id} className={checkpoint.repoRef === snapshot.project.workspacePath ? 'current' : undefined}>
+            <strong>{checkpoint.summary}</strong>
+            <time>{new Date(checkpoint.createdAt).toLocaleString()}</time>
+            {checkpoint.repoRef === snapshot.project.workspacePath && <span>live build</span>}
+          </article>)}</div> : <p className="builder-empty">Checkpoints appear as durable work completes.</p>}
         </section>
 
         <section className="builder-panel">

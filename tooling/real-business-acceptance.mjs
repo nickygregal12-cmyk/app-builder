@@ -64,9 +64,9 @@ sheet.addRow(['Home survey', '250']);
 sheet.addRow(['Retrofit installation', '1200']);
 const spreadsheet = await normalizeSource({ data: Buffer.from(await workbook.xlsx.writeBuffer()), name: 'pricing.xlsx', label: 'Pricing', kind: 'spreadsheet', provenance: 'user-supplied' }, { cacheDir });
 const brochure = await normalizeSource({ data: PDF_FIXTURE, name: 'brochure.pdf', label: 'Company brochure', kind: 'document', provenance: 'user-supplied' }, { cacheDir });
-const logo = await normalizeSource({ data: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="#123456"/><text x="120" y="240" font-size="100">ACME</text></svg>'), name: 'company-logo.svg', label: 'Company logo', kind: 'logo', provenance: 'user-supplied' }, { cacheDir, assetOutputDir, assetUriPrefix: 'assets' });
+const logo = await normalizeSource({ data: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="#123456"/><text x="120" y="240" font-size="100">ACME</text></svg>'), name: 'company-logo.svg', label: 'Company logo', kind: 'logo', provenance: 'user-supplied', approvedForUse: true }, { cacheDir, assetOutputDir, assetUriPrefix: 'assets' });
 const photoBuffer = await sharp({ create: { width: 1800, height: 1200, channels: 3, background: { r: 120, g: 140, b: 160 } } }).jpeg().toBuffer();
-const photo = await normalizeSource({ data: photoBuffer, name: 'project-photo.jpg', label: 'Completed retrofit project', kind: 'image', provenance: 'user-supplied' }, { cacheDir, assetOutputDir, assetUriPrefix: 'assets' });
+const photo = await normalizeSource({ data: photoBuffer, name: 'project-photo.jpg', label: 'Completed retrofit project', kind: 'image', provenance: 'user-supplied', approvedForUse: true }, { cacheDir, assetOutputDir, assetUriPrefix: 'assets' });
 
 const pack = assertKnowledgePack(buildKnowledgePack([...website, approvedCompany, spreadsheet, brochure, logo, photo], { project: { name: 'Acme Retrofit', type: 'marketing-site' } }));
 fs.writeFileSync(path.join(root, 'knowledge-pack.json'), JSON.stringify(pack, null, 2) + '\n');

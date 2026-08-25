@@ -13,7 +13,9 @@ const required = [
   'apps/service/src/factory-service.js',
   'apps/service/src/http.js',
   'apps/service/src/tool-contract.js',
+  'apps/service/src/ingestion.js',
   'tooling/service-ledger.test.mjs',
+  'tooling/service-source-ingestion.test.mjs',
 ];
 
 for (const relative of required) {
@@ -40,7 +42,7 @@ try {
     failed = true;
   }
 
-  const requiredTools = ['project.create', 'project.generate', 'project.verify', 'project.events.read', 'project.metrics.read', 'project.preview.start', 'project.preview.stop'];
+  const requiredTools = ['project.create', 'project.sources.ingest', 'project.sources.read', 'project.generate', 'project.verify', 'project.events.read', 'project.metrics.read', 'project.preview.start', 'project.preview.stop'];
   for (const name of requiredTools) {
     if (!FACTORY_TOOLS.some((tool) => tool.name === name)) {
       console.error(`Factory tool contract is missing ${name}.`);
@@ -49,6 +51,19 @@ try {
   }
   if (FACTORY_TOOLS.some((tool) => /deploy|secret.*write|production/.test(tool.name))) {
     console.error('Factory tool contract must not expose production deployment or secret mutation operations.');
+    failed = true;
+  }
+
+  // Ingestion accepts source material from a client, so the boundary that keeps
+  // it from becoming an arbitrary file reader is worth asserting, not just
+  // testing.
+  const ingestion = fs.readFileSync(path.join(root, 'apps/service/src/ingestion.js'), 'utf8');
+  if (!ingestion.includes('Sources cannot reference a filesystem path')) {
+    console.error('Source ingestion must reject client-supplied filesystem paths.');
+    failed = true;
+  }
+  if (!ingestion.includes('Only http(s) source URLs can be ingested.')) {
+    console.error('Source ingestion must restrict remote sources to http(s) URLs.');
     failed = true;
   }
 

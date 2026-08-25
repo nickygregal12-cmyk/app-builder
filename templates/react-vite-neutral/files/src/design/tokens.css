@@ -4,21 +4,56 @@
   background: var(--color-page);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --color-page: #f7f7f5;
+
+  /* Surfaces. The tinted surface exists so sections can change ground without
+     a hairline rule between every one of them. */
+  --color-page: #fbfaf8;
   --color-surface: #ffffff;
-  --color-surface-muted: #efefec;
-  --color-text: #1c1c1a;
-  --color-text-muted: #686863;
-  --color-border: #deded9;
+  --color-surface-muted: #f1efea;
+  --color-surface-inverse: #1a1c1b;
+
+  /* Ink. Headings sit darker than body copy so hierarchy survives without
+     relying on size alone. */
+  --color-ink: #14161a;
+  --color-text: #2b2e33;
+  --color-text-muted: #62666e;
+  --color-text-inverse: #f6f5f2;
+  --color-border: #e3e0d9;
+  --color-border-strong: #cbc7be;
+
   --color-accent: #315b72;
   --color-accent-contrast: #ffffff;
+  /* Derived so a brand accent supplied through generated/brand.css carries
+     through to every tinted surface without a second declaration. */
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 9%, var(--color-page));
+  --color-accent-line: color-mix(in srgb, var(--color-accent) 26%, var(--color-page));
+
+  /* A bounded type scale. The previous 7rem ceiling shouted at content that
+     never justified it. */
+  --text-sm: 0.85rem;
+  --text-base: 1rem;
+  --text-lg: clamp(1.05rem, 0.5vw + 0.95rem, 1.25rem);
+  --text-xl: clamp(1.25rem, 1vw + 1rem, 1.6rem);
+  --text-2xl: clamp(1.6rem, 1.6vw + 1.15rem, 2.2rem);
+  --text-3xl: clamp(2rem, 2.4vw + 1.35rem, 3rem);
+  --text-4xl: clamp(2.5rem, 3.6vw + 1.5rem, 4.2rem);
+
   --layout-max-width: 72rem;
   --layout-radius: 1rem;
+  --radius-sm: 0.6rem;
+  --radius-pill: 999px;
   --space-unit: 0.25rem;
-  --shadow-soft: 0 12px 36px rgb(28 28 26 / 8%);
+  --section-space: clamp(56px, 7vw, 104px);
+
+  --shadow-soft: 0 10px 30px rgb(20 22 26 / 7%);
+  --shadow-lifted: 0 24px 60px -20px rgb(20 22 26 / 26%);
 }
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, input, textarea, select { font: inherit; }
 a { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

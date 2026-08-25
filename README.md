@@ -12,7 +12,9 @@ The long-term goal is a private builder that can accept an idea, company details
 
 **Active product gate: Phase 3.8E — Genuine business product proof.**
 
-Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is landed. Phase 3.8F provides a bounded MCP v2 facade over the loopback factory service without giving MCP direct deploy, production-database, secret, filesystem or shell powers. Phase 3.8G has also landed the brand-source and asset-provenance foundation on top of the existing content-intelligence pipeline. Phase 3.8H has landed the specialist-agent architecture foundation: roles separated by decision boundary, deterministic no-self-approval, handoff promotion, typed rework routing, a convergence engine, an evidence-driven skill lifecycle and an external-source governance registry.
+Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is landed: the ChangeSet path policy is property-checked, and `/schemas` is now the runtime authority for ten contract families with a drift gate in `npm run check`. Phase 3.8F provides a bounded MCP v2 facade over the loopback factory service without giving MCP direct deploy, production-database, secret, filesystem or shell powers. Phase 3.8G has also landed the brand-source and asset-provenance foundation on top of the existing content-intelligence pipeline. Phase 3.8H has landed the specialist-agent architecture foundation: roles separated by decision boundary, deterministic no-self-approval, handoff promotion, typed rework routing, a convergence engine, an evidence-driven skill lifecycle and an external-source governance registry.
+
+The Phase 4A Console vertical slice is delivered, because the 3.8E proof has to run through the product rather than beside it: real company material is ingested by the factory service — declared URLs crawled, uploaded files normalised, never from a client-supplied filesystem path — as a durable task with events and a checkpoint, and each build materialises its own workspace version so later material reaches the product through a rebuild instead of overwriting the repository under review. Phase 4B has begun: content bindings carry editing identity and provenance, and a person can edit generated copy from the Console without composition ceasing to be deterministic.
 
 The one outstanding Phase 3.8 product gate is deliberately real-world: prove the factory against genuine business material rather than another synthetic fixture. A passing Phase 3.8E evidence pack must use a real public company website plus approved user-supplied company material, record the real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/deploy journey, pass launchability review, retain artifact hashes and finish with fewer than 20 meaningful manual edits.
 
@@ -44,6 +46,38 @@ Current invariants include:
 - MCP, OpenCode, the Builder Console and the Hetzner runtime are development/control adapters, never production requirements of generated apps.
 
 Machine-readable progress lives in `config/factory-status.json`. See `docs/MASTER_PLAN.md` for the full delivery plan, `docs/ROADMAP.md` for the staged roadmap, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts and `docs/AGENT_RUNTIME.md` for the future Hetzner/OpenCode runtime architecture.
+
+## Run it yourself
+
+```bash
+npm install
+npm run dev
+```
+
+That starts the factory service on `127.0.0.1:4310` and the Builder Console on
+`127.0.0.1:5173`. Node 22.13 or newer is the only prerequisite; no accounts,
+tokens or cloud services are needed to build and preview a site.
+
+In the Console you can today:
+
+- work through the adaptive intake questionnaire and approve a Build Contract;
+- create a durable project from the resulting Manifest;
+- ingest real source material — company URLs to crawl, or logos, photos,
+  documents and spreadsheets uploaded from your machine — declaring what the
+  business has approved for republication;
+- generate the project, verify that it installs, checks and builds on its own,
+  and open a live preview at desktop, tablet and mobile widths;
+- watch durable tasks, the event ledger, cost and build history;
+- add more material later and rebuild — each build gets its own workspace, so
+  the previous one stays intact for comparison.
+
+Generated projects are ordinary repositories. `.app-builder/workspaces/`
+holds them; copy one anywhere, `npm install && npm run dev`, and it runs with no
+dependency on the factory.
+
+Not in the Console yet: editing content or swapping images by clicking them
+(Phase 4B), choosing a design direction (4C/4D), and deploying (4E). Until then
+a finished site is deployed by hand from its own repository.
 
 ## Commands
 

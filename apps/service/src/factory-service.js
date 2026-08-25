@@ -3,7 +3,10 @@ import path from 'node:path';
 import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
+import { assertContract, validateContract } from '@app-builder/contracts';
+import { applyContentOverrides, stripContentOverrides } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
+import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
@@ -13,6 +16,17 @@ function safeChild(root, name) {
   const target = path.resolve(base, name);
   if (target === base || !target.startsWith(`${base}${path.sep}`)) throw new Error(`Unsafe workspace name: ${name}`);
   return target;
+}
+
+// Each build gets its own directory so a rebuild after new source material
+// never overwrites the repository someone may already be reviewing. The first
+// build keeps the plain slug; later builds are suffixed.
+function nextWorkspace(root, slug, limit = 50) {
+  for (let version = 1; version <= limit; version += 1) {
+    const candidate = safeChild(root, version === 1 ? slug : `${slug}-v${version}`);
+    if (!fs.existsSync(candidate)) return { workspace: candidate, version };
+  }
+  throw new Error(`Refusing to allocate more than ${limit} build workspaces for ${slug}.`);
 }
 
 function summary(project) {
@@ -102,18 +116,22 @@ async function terminatePreview(child) {
 }
 
 export class FactoryService {
-  constructor({ store, workspacesRoot, env = process.env }) {
+  constructor({ store, workspacesRoot, stateRoot, env = process.env }) {
     this.store = store;
     this.workspacesRoot = path.resolve(workspacesRoot);
     this.env = env;
     this.previews = new Map();
+    this.ingestion = new SourceIngestion({ stateRoot: stateRoot ?? store.stateRoot });
     fs.mkdirSync(this.workspacesRoot, { recursive: true });
   }
 
   createProject({ manifest, knowledgePack = null, id = null }) {
     const errors = validateManifest(manifest);
     if (errors.length) throw new Error(`Invalid project manifest: ${errors.join('; ')}`);
-    if (knowledgePack && knowledgePack.schemaVersion !== 1) throw new Error('Unsupported knowledge-pack schema version.');
+    if (knowledgePack) {
+      const packErrors = validateContract('knowledge-pack', knowledgePack);
+      if (packErrors.length) throw new Error(`Invalid knowledge pack: ${packErrors.join('; ')}`);
+    }
     const now = new Date().toISOString();
     const project = this.store.upsertProject({
       id: id ?? `project-${randomUUID()}`,
@@ -137,11 +155,67 @@ export class FactoryService {
 
   getManifest(id) { return this.requireProject(id).manifest; }
   getKnowledgePack(id) { return this.requireProject(id).knowledgePack; }
+  knowledgeSummary(id) { return knowledgeSummary(this.requireProject(id).knowledgePack); }
+
+  overridesPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'content-overrides.json');
+  }
+
+  readOverrides(projectId) {
+    this.requireProject(projectId);
+    const file = this.overridesPath(projectId);
+    if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, overrides: [] };
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  /**
+   * Record a human edit and replay it into the live workspace.
+   *
+   * The composition on disk is what the running preview renders, so rewriting
+   * it lets an edit appear immediately without a rebuild. The durable record is
+   * the override file: a later rebuild replays it over freshly composed output.
+   */
+  async saveOverrides(projectId, overrides) {
+    const project = this.requireProject(projectId);
+    const document = assertContract('content-override', {
+      schemaVersion: 1,
+      projectId,
+      overrides: overrides.map((entry) => ({ editedBy: 'console', ...entry })),
+    });
+    fs.mkdirSync(path.dirname(this.overridesPath(projectId)), { recursive: true });
+    fs.writeFileSync(this.overridesPath(projectId), `${JSON.stringify(document, null, 2)}\n`);
+
+    let composition = null;
+    if (project.workspacePath && fs.existsSync(project.workspacePath)) {
+      composition = this.rewriteWorkspaceComposition(project.workspacePath, document.overrides);
+    }
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'content.overrides.saved',
+      actor: 'console',
+      payload: { count: document.overrides.length, compositionHash: composition?.compositionHash ?? null },
+    }));
+    return { overrides: document.overrides, composition: composition ? { compositionHash: composition.compositionHash } : null };
+  }
+
+  rewriteWorkspaceComposition(workspace, overrides) {
+    const file = path.join(workspace, '.app-builder', 'composition.json');
+    if (!fs.existsSync(file)) return null;
+    const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+    // Replay from the deterministic baseline so removing an edit restores the
+    // generated value rather than leaving the previous override in place.
+    const baseline = stripContentOverrides(stored);
+    const next = assertContract('composition', applyContentOverrides(baseline, overrides));
+    fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
+    fs.writeFileSync(path.join(workspace, 'src/generated/composition.ts'), `export const composition = ${JSON.stringify(next, null, 2)} as const;\n`);
+    return next;
+  }
   listProjects() { return this.store.listProjects().map(summary); }
   listTasks(projectId) { this.requireProject(projectId); return this.store.listTasks(projectId); }
   listEvents(projectId, options) { this.requireProject(projectId); return this.store.listEvents(projectId, options); }
   metrics(projectId) { this.requireProject(projectId); return this.store.metrics(projectId); }
   latestCheckpoint(projectId) { this.requireProject(projectId); return this.store.latestCheckpoint(projectId); }
+  listCheckpoints(projectId) { this.requireProject(projectId); return this.store.listCheckpoints(projectId); }
 
   getComposition(projectId) {
     const project = this.requireProject(projectId);
@@ -177,15 +251,96 @@ export class FactoryService {
     return this.store.recordEvent(createEvent({ projectId, type, actor: 'factory-service', payload, usage }));
   }
 
-  async generateProject(projectId) {
+  /**
+   * Normalise real source material into the project's trusted knowledge pack.
+   * Ingestion is additive and only accepted before a workspace exists, because
+   * composition reads the knowledge pack at generation time and there is no
+   * recompose path yet.
+   */
+  async ingestSources(projectId, requests) {
     let project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');
-    const workspace = safeChild(this.workspacesRoot, project.slug);
-    if (fs.existsSync(workspace)) throw new Error(`Refusing to overwrite existing project workspace: ${workspace}`);
 
     let task = createTask({
       projectId,
-      objective: `Generate standalone project ${project.name}`,
+      objective: `Ingest ${requests.length} source(s) for ${project.name}`,
+      acceptanceCriteria: [
+        'Every source is deterministically normalised',
+        'Source governance and provenance are preserved',
+        'Imported content carries no instruction authority',
+        'The knowledge pack is structurally and relationally valid',
+      ],
+      policyId: 'implementation',
+      budget: { maxIterations: 1, maxRuntimeMs: 10 * 60 * 1000, maxCostGbp: 0, maxTokens: 0, maxNoProgressAttempts: 1 },
+    });
+    this.store.upsertTask(task);
+    task = transitionTask(task, 'running', { incrementAttempt: true });
+    this.store.upsertTask(task);
+
+    const started = Date.now();
+    await this.store.recordEvent(createEvent({
+      projectId,
+      taskId: task.id,
+      type: 'sources.ingestion.started',
+      actor: 'factory-service',
+      payload: { requested: requests.length, kinds: requests.map((request) => request.type) },
+    }));
+
+    try {
+      const { pack, added, sourceCount } = await this.ingestion.ingest(projectId, requests);
+      const now = new Date().toISOString();
+      project = this.store.upsertProject({ ...project, knowledgePack: pack, updatedAt: now });
+
+      const checkpoint = createCheckpoint({
+        projectId,
+        taskId: task.id,
+        repoRef: projectId,
+        summary: `Ingested ${added.length} source(s); ${sourceCount} in total across ${pack.facts.length} fact(s) and ${pack.assets.length} asset(s).`,
+        filesChanged: [],
+        failures: [],
+        artifacts: ['knowledge-pack'],
+        nextAction: project.workspacePath ? 'Review source governance, then rebuild the project so the new material reaches the generated repository.' : 'Review source governance, then generate the project.',
+      });
+      this.store.recordCheckpoint(checkpoint);
+      task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
+      this.store.upsertTask(task);
+
+      await this.store.recordEvent(createEvent({
+        projectId,
+        taskId: task.id,
+        type: 'sources.ingested',
+        actor: 'factory-service',
+        payload: {
+          packHash: pack.packHash,
+          added: added.map((source) => ({ id: source.id, kind: source.kind, uri: source.uri, rightsStatus: source.rightsStatus, assetStatus: source.assetStatus })),
+          sourceCount,
+          factCount: pack.facts.length,
+          assetCount: pack.assets.length,
+          chunkCount: pack.chunks.length,
+        },
+        usage: { durationMs: Date.now() - started },
+      }));
+      return { project: summary(project), task, checkpoint, knowledge: knowledgeSummary(pack), added };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      task = transitionTask(task, 'failed', { stopReason: message });
+      this.store.upsertTask(task);
+      await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'sources.ingestion.failed', actor: 'factory-service', payload: { message }, usage: { durationMs: Date.now() - started } }));
+      throw error;
+    }
+  }
+
+  async generateProject(projectId) {
+    let project = this.requireProject(projectId);
+    if (project.state === 'generating') throw new Error('Project generation is already running.');
+    const { workspace, version } = nextWorkspace(this.workspacesRoot, project.slug);
+    // A running preview serves the previous build's workspace, so it must not
+    // survive into a rebuild and quietly show stale output.
+    if (version > 1) await this.stopPreview(projectId);
+
+    let task = createTask({
+      projectId,
+      objective: version === 1 ? `Generate standalone project ${project.name}` : `Rebuild ${project.name} as build v${version}`,
       acceptanceCriteria: [
         'Manifest is valid and buildable',
         'Composition is materialised with provenance',
@@ -201,10 +356,14 @@ export class FactoryService {
 
     project = this.store.upsertProject({ ...project, state: 'generating', updatedAt: new Date().toISOString() });
     const started = Date.now();
-    await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.started', actor: 'factory-service', payload: { manifestVersion: project.manifest.schemaVersion ?? 1, knowledgePackHash: project.knowledgePack?.packHash ?? null } }));
+    await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.started', actor: 'factory-service', payload: { buildVersion: version, manifestVersion: project.manifest.schemaVersion ?? 1, knowledgePackHash: project.knowledgePack?.packHash ?? null } }));
 
     try {
-      const { plan, composition } = generateComposedProject(project.manifest, workspace, { knowledgePack: project.knowledgePack });
+      const { plan, composition } = generateComposedProject(project.manifest, workspace, {
+        knowledgePack: project.knowledgePack,
+        assetSourceDir: this.ingestion.assetDirectory(projectId),
+        contentOverrides: this.readOverrides(projectId).overrides,
+      });
       await this.store.recordEvent(createEvent({
         projectId,
         taskId: task.id,
@@ -220,7 +379,7 @@ export class FactoryService {
         taskId: task.id,
         type: 'repository.generated',
         actor: 'factory-service',
-        payload: { workspace, templateId: plan.template.id, recipes: plan.recipes.map((recipe) => recipe.id), adapters: plan.adapters.map((adapter) => adapter.id) },
+        payload: { workspace, buildVersion: version, templateId: plan.template.id, recipes: plan.recipes.map((recipe) => recipe.id), adapters: plan.adapters.map((adapter) => adapter.id) },
         usage: { durationMs: Date.now() - started },
       }));
 
@@ -228,7 +387,7 @@ export class FactoryService {
         projectId,
         taskId: task.id,
         repoRef: workspace,
-        summary: `Generated ${project.name} from Manifest v${project.manifest.schemaVersion ?? 1}${project.knowledgePack ? ' and trusted knowledge pack' : ''}.`,
+        summary: `Build v${version}: generated ${project.name} from Manifest v${project.manifest.schemaVersion ?? 1}${project.knowledgePack ? ' and trusted knowledge pack' : ''}.`,
         filesChanged: [],
         failures: [],
         artifacts: ['.app-builder/manifest.json', '.app-builder/composition.json', '.app-builder/recipe-installations.json'],

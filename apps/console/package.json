@@ -10,7 +10,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@app-builder/contracts": "0.0.0",
+    "@app-builder/contracts": "0.1.0",
     "@app-builder/factory-core": "0.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

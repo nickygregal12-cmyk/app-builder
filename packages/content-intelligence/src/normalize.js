@@ -109,7 +109,10 @@ export async function normalizeWebsite(startUrl, options = {}) {
     const current = queue.shift();
     if (visited.has(current)) continue;
     visited.add(current);
-    const normalized = await normalizeSource({ uri: current, label: current, kind: 'url', provenance: 'existing-site', purpose: 'existing-site page' }, options);
+    // Operator-declared defaults (purpose, rights, asset status) apply to every
+    // crawled page. Without them a crawl stays reference-only: publicly visible
+    // is never the same as approved for republication.
+    const normalized = await normalizeSource({ label: current, purpose: 'existing-site page', ...options.sourceDefaults, uri: current, kind: 'url', provenance: 'existing-site' }, options);
     sources.push(normalized);
     const resolved = normalized.uri ?? current;
     if (sources.length === 1) acceptedOrigin = new URL(resolved).origin;

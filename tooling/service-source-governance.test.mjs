@@ -95,7 +95,7 @@ test('HTTP facade exposes bounded governance decisions and advertises them in th
     const base = `http://127.0.0.1:${address.port}`;
 
     const tools = await fetch(`${base}/tools`).then((response) => response.json());
-    assert.equal(tools.contractVersion, 3);
+    assert.equal(tools.contractVersion, 4);
     assert.equal(tools.tools.some((tool) => tool.name === 'project.source.governance.update'), true);
 
     const response = await fetch(`${base}/projects/project-governed/sources/logo-upload/governance`, {

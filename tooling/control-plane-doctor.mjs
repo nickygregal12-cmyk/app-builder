@@ -43,6 +43,7 @@ const required = [
   'tooling/plan-recipe-upgrades.mjs',
   'tooling/control-plane.test.mjs',
   'tooling/control-plane-upgrades.test.mjs',
+  'tooling/change-set-scope.property.test.mjs',
   'tooling/agent-architecture.test.mjs',
   'tooling/benchmark-acceptance.mjs',
 ];

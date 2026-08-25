@@ -2,6 +2,10 @@ import { useState, type FormEvent } from 'react';
 
 export const recipe = { id: 'lead-generation', label: 'Lead generation form' };
 
+// The composer places an enquiry-form section wherever this capability is
+// installed and the page is a contact surface; this recipe owns how it renders.
+export const sections = { 'enquiry-form': EnquiryForm };
+
 export function EnquiryForm() {
   const [status, setStatus] = useState('');
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -17,14 +21,16 @@ export function EnquiryForm() {
       setStatus('Thanks — your enquiry has been sent.');
     } catch { setStatus('We could not send your enquiry. Please try again.'); }
   }
-  return <form name="enquiry" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" onSubmit={submit}>
+  return <form className="enquiry-form" name="enquiry" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" onSubmit={submit}>
     <input type="hidden" name="form-name" value="enquiry" />
     <p hidden><label>Do not fill this in <input name="bot-field" /></label></p>
     <label>Name <input name="name" autoComplete="name" required /></label>
     <label>Email <input name="email" type="email" autoComplete="email" required /></label>
     <label>Phone <input name="phone" type="tel" autoComplete="tel" /></label>
-    <label>Message <textarea name="message" required /></label>
-    <button type="submit">Send enquiry</button>
-    <p aria-live="polite">{status}</p>
+    <label className="span-two">Message <textarea name="message" rows={5} required /></label>
+    <div className="enquiry-actions">
+      <button className="button primary-action" type="submit">Send enquiry</button>
+      <p aria-live="polite">{status}</p>
+    </div>
   </form>;
 }

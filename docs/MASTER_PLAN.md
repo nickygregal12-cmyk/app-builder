@@ -25,7 +25,7 @@ A second rule is equally important: **do not build more infrastructure while exi
 
 A third rule now follows from the latest audit: **do not scale autonomous or visual-builder surface area on top of unproven contract/security boundaries. Correctness gates move earlier when they are cheap and deterministic.**
 
-Detailed capability findings and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`.
+Detailed capability findings and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The deterministic engineering-gate programme lives in `docs/ENGINEERING_QUALITY_PROGRAMME.md`.
 
 ---
 
@@ -62,6 +62,18 @@ Reusable visual/product presentation belongs in versioned presentation primitive
 ### Small context packets
 
 Agents receive only the product authority, manifest, relevant knowledge chunks, files, contracts, design-system records and tests needed for the task. Whole-repository reads are exceptional.
+
+### Routing discipline scales with capability
+
+More AI capability requires **stronger routing discipline**, not more loaded tools. The intended shape is:
+
+`task -> smallest deterministic route -> minimal authorities -> minimal complementary skills -> specialist agent -> structured artifact -> independent review -> executable evidence -> typed rework if needed -> convergence -> release`
+
+and never:
+
+`task -> load every tool and skill -> one giant agent -> huge context -> self-review -> declare done`.
+
+Installed is not loaded. A specialist carries at most one skill per load class, an ambiguous prompt orients rather than guessing a subsystem, and deterministic routing benchmarks with **positive and negative** triggers hold that contract in CI.
 
 ### Sessions are disposable; project state is durable
 
@@ -368,6 +380,23 @@ Design-side artifacts: `docs/DESIGN_INTELLIGENCE.md`.
 
 This stage adds no new orchestration framework. It is a tighter expression of the existing control plane, and it does not
 close the outstanding Phase 3.8E genuine-business product gate.
+
+### 3.8I — Routing discipline and agent operating-system hardening ✅ Complete
+
+An audit against internal prior art found that App Builder had the stronger factory/control-plane architecture but the weaker **development-agent operating system**. Routing discipline is far cheaper to establish before the specialist system grows large.
+
+Delivered:
+
+- `RoutingBenchmarkCase` contract plus a deterministic benchmark of representative prompts with **positive and negative triggers**, run by `npm run agent:bench`;
+- deterministic task routes mapping bounded natural-language intent to roles, authorities and a small skill set, with `npm run agent:route -- "TASK"` printing the first-orientation packet;
+- first-orientation ceilings for candidate paths, authorities, selected roles, selected skills and packet bytes;
+- skill **load classes and budgets** so complementary lenses compose instead of competing;
+- ambiguous prompts stay unclassified so the next step is bounded orientation rather than an expensive guess;
+- seven new specialist roles — state matrix, journey closure, product opportunity scout, differential reviewer, independent second opinion, environment guardian and compound-learning closeout — with the artifact kinds they exchange;
+- `state-completeness` and `journey-closure` as required convergence gates in every project pipeline;
+- conditional review routing driven by a deterministic `RiskClassification`, so ordinary presentation work never pays for adversarial security review.
+
+Roles remain `planned`. This stage defines decision boundaries, routing and budgets; authoring the skill packets and executing the roles is Phase 4 groundwork and Phase 5 runtime work.
 
 ---
 
@@ -794,7 +823,7 @@ Best-in-class capabilities such as CMS, localization, Figma mapping, existing-re
 8. In parallel only where it directly improves generated output, prove the **static/content second template** and its Pagefind/structured-data/social-image path.
 9. Build the **Design System Registry + DesignSystemSpec + Component Manifest + DesignLint** before scaling AI-generated visual variation, and land **Builder Element Identity** before enabling direct manipulation.
 10. Complete environments/direct editing/visual variants, then mature CMS/localization/Figma/existing-repo adoption.
-11. Complete sandbox/security hardening before broad autonomous agents.
+11. Complete sandbox/security hardening before broad autonomous agents, and stage the deterministic engineering gates in `docs/ENGINEERING_QUALITY_PROGRAMME.md` — architecture dependency gates first, then curated visual contracts, performance/payload budgets, design-token enforcement, dead-code analysis, property tests, targeted mutation testing and supply-chain hardening.
 12. Add the Hetzner/OpenCode runtime and low-credit AI orchestration only after deterministic product/safety boundaries prove useful.
 
-`AGENTS.md` remains the root engineering authority. `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` and `docs/DESIGN_INTELLIGENCE.md` are detail documents under these authorities and never override them. Schemas/config are machine-readable authorities for their contracts; `config/factory-status.json` is the machine-readable delivery status. `docs/BEST_IN_CLASS_CAPABILITIES.md` records the reviewed capability recommendations and explicit non-adoptions.
+`AGENTS.md` remains the root engineering authority. `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`, `docs/DESIGN_INTELLIGENCE.md` and `docs/ENGINEERING_QUALITY_PROGRAMME.md` are detail documents under these authorities and never override them. Schemas/config are machine-readable authorities for their contracts; `config/factory-status.json` is the machine-readable delivery status. `docs/BEST_IN_CLASS_CAPABILITIES.md` records the reviewed capability recommendations and explicit non-adoptions.

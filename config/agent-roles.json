@@ -209,6 +209,42 @@
       "deterministic": false,
       "schema": null,
       "status": "planned"
+    },
+    "ProductOpportunityReport": {
+      "description": "At most three ranked, materially different improvement opportunities for a broad prompt, each grounded in the current implementation. Candidate scope, never approved scope.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "StateMatrixSpec": {
+      "description": "The real state axes a capability exposes, impossible combinations removed, remaining states ranked by user risk, with the fixtures and evidence each important state requires.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "JourneyClosureEvidence": {
+      "description": "Per-step closure ledger for one user journey: proven complete, deliberately out of scope, blocked, and the exact executable evidence used. A component existing is not closure.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
+    },
+    "RiskClassification": {
+      "description": "Deterministic classification of a ChangeSet against risk surfaces (auth, authorization, database/schema, RLS, secrets, environment config, file ingestion, SSRF, deployment, provider boundaries, billing, production mutation, cross-layer refactor). Decides whether conditional review is required.",
+      "deterministic": true,
+      "schema": null,
+      "status": "planned"
+    },
+    "EnvironmentIdentity": {
+      "description": "Machine-readable identity card for an environment-sensitive action: project, target environment, deploy target, repository revision, hosted revision, production revision, mutation authorisation, secret availability, database/migration target and rollback target.",
+      "deterministic": true,
+      "schema": null,
+      "status": "planned"
+    },
+    "CompoundLearningCandidate": {
+      "description": "One evidence-backed reusable lesson plus the narrowest existing durable home that should hold it. Most completed work produces none.",
+      "deterministic": false,
+      "schema": null,
+      "status": "planned"
     }
   },
   "roles": {
@@ -1616,6 +1652,311 @@
       "escalatesTo": null,
       "priorArt": [
         "addyosmani-agent-skills"
+      ],
+      "status": "planned"
+    },
+    "product-opportunity-scout": {
+      "id": "product-opportunity-scout",
+      "kind": "creator",
+      "purpose": "Turns a broad outcome prompt such as \"improve this page\" into at most three ranked, materially different opportunities grounded in the current implementation.",
+      "stageClass": "product",
+      "reads": [
+        "IntakeBrief",
+        "ProjectManifest",
+        "KnowledgePack",
+        "PageSpec",
+        "SectionSpec",
+        "RenderedEvidence"
+      ],
+      "writes": [
+        "ProductOpportunityReport"
+      ],
+      "mayNot": [
+        "default a broad improvement prompt to visual redesign",
+        "invent a second backend or data truth",
+        "treat a candidate opportunity as approved scope",
+        "manufacture work when the current surface is already strong"
+      ],
+      "skills": [
+        "product-opportunity-scouting"
+      ],
+      "policyId": "research",
+      "routeId": "research",
+      "contextCeilingTokens": 18000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.6,
+        "maxTokens": 50000
+      },
+      "reviewedBy": [
+        "product-critic"
+      ],
+      "stopCriteria": [
+        "at most three ranked opportunities are recorded, or the report states that no bounded improvement earned its complexity"
+      ],
+      "escalatesTo": "product-discovery",
+      "priorArt": [],
+      "status": "planned"
+    },
+    "state-matrix": {
+      "id": "state-matrix",
+      "kind": "creator",
+      "purpose": "Derives the state axes a capability genuinely exposes, removes impossible combinations, ranks the rest by user risk and names the fixtures each important state needs.",
+      "stageClass": "experience",
+      "reads": [
+        "ProductSpec",
+        "UXFlowSpec",
+        "InformationArchitectureSpec",
+        "PageSpec",
+        "SectionSpec",
+        "ComponentManifest"
+      ],
+      "writes": [
+        "StateMatrixSpec"
+      ],
+      "mayNot": [
+        "invent backend states the product does not expose",
+        "emit a combinatorial matrix of impossible states",
+        "add snapshots that cannot distinguish a real regression"
+      ],
+      "skills": [
+        "state-matrix-derivation"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 16000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.5,
+        "maxTokens": 45000
+      },
+      "reviewedBy": [
+        "ux-critic"
+      ],
+      "stopCriteria": [
+        "every retained state is reachable, ranked by user risk and carries a named fixture or evidence requirement"
+      ],
+      "escalatesTo": "ux-interaction",
+      "priorArt": [],
+      "status": "planned"
+    },
+    "journey-closure": {
+      "id": "journey-closure",
+      "kind": "reviewer",
+      "purpose": "Proves a user journey is complete rather than implemented, walking entry, action, authoritative write/read, refusal, recovery, persistence, deep links, navigation, responsive and accessibility evidence.",
+      "stageClass": "release",
+      "reads": [
+        "ProductSpec",
+        "UXFlowSpec",
+        "StateMatrixSpec",
+        "PageSpec",
+        "TestPlan",
+        "RenderedEvidence",
+        "AccessibilityReport",
+        "ConvergenceReport"
+      ],
+      "writes": [
+        "JourneyClosureEvidence",
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "implement the missing seam it finds",
+        "accept a component or unit test as journey evidence",
+        "claim closure while a required browser, permission or environment proof is absent",
+        "expand one journey into a repository-wide sweep"
+      ],
+      "skills": [
+        "journey-closure"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 1200000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every closure step is proven, deliberately out of scope, or recorded as blocked with its owner"
+      ],
+      "escalatesTo": null,
+      "priorArt": [],
+      "status": "planned"
+    },
+    "differential-reviewer": {
+      "id": "differential-reviewer",
+      "kind": "reviewer",
+      "purpose": "Conditional adversarial blast-radius review of a diff that the deterministic risk classifier flagged. Ordinary UI changes never pay for it.",
+      "stageClass": "verification",
+      "reads": [
+        "ChangeSet",
+        "RiskClassification",
+        "ArchitectureSpec",
+        "SecurityReport",
+        "ProjectManifest"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "run on a diff the risk classifier did not flag",
+        "fix what it flags",
+        "replace the security reviewer on a security-critical change"
+      ],
+      "skills": [
+        "differential-review"
+      ],
+      "policyId": "security-review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 0.8,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "every flagged risk surface has a verdict grounded in the diff"
+      ],
+      "escalatesTo": "security",
+      "priorArt": [],
+      "status": "planned"
+    },
+    "independent-second-opinion": {
+      "id": "independent-second-opinion",
+      "kind": "reviewer",
+      "purpose": "Read-only, diff-bounded pressure-test of a high-stakes decision by a genuinely different model or runtime. A different persona on the same model is not independence.",
+      "stageClass": "verification",
+      "reads": [
+        "ChangeSet",
+        "ArchitectureSpec",
+        "ReviewVerdict",
+        "ConvergenceReport",
+        "RiskClassification"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "claim independence when it runs on the implementing model or runtime",
+        "run on trivial or reversible changes",
+        "be forced into consensus when it disagrees",
+        "mutate the repository"
+      ],
+      "skills": [
+        "independent-second-opinion"
+      ],
+      "policyId": "review",
+      "routeId": "review",
+      "contextCeilingTokens": 20000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 1,
+        "maxRuntimeMs": 900000,
+        "maxCostGbp": 1.0,
+        "maxTokens": 60000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "a verdict is issued naming the model/runtime used, or the skip is recorded because no independent runtime was available"
+      ],
+      "escalatesTo": null,
+      "priorArt": [],
+      "status": "planned"
+    },
+    "environment-guardian": {
+      "id": "environment-guardian",
+      "kind": "reviewer",
+      "purpose": "Establishes an explicit environment identity before an environment-sensitive mutation and fails closed when the target is ambiguous.",
+      "stageClass": "release",
+      "reads": [
+        "EnvironmentIdentity",
+        "ChangeSet",
+        "RiskClassification",
+        "ProjectManifest",
+        "ConvergenceReport"
+      ],
+      "writes": [
+        "ReviewVerdict"
+      ],
+      "mayNot": [
+        "infer that development equals production, preview equals production, or repository state equals deployed state",
+        "copy a known value from one environment into another because they are expected to match",
+        "perform the mutation it authorises",
+        "proceed while the target identity is ambiguous"
+      ],
+      "skills": [
+        "environment-contract-guard"
+      ],
+      "policyId": "release",
+      "routeId": "review",
+      "contextCeilingTokens": 15000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 2,
+        "maxRuntimeMs": 600000,
+        "maxCostGbp": 0.4,
+        "maxTokens": 40000
+      },
+      "reviewedBy": [],
+      "stopCriteria": [
+        "the identity card resolves every field, or the action is refused"
+      ],
+      "escalatesTo": null,
+      "priorArt": [],
+      "status": "planned"
+    },
+    "compound-learning": {
+      "id": "compound-learning",
+      "kind": "creator",
+      "purpose": "After substantial completed work, decides whether a non-obvious reusable lesson exists and names the narrowest existing durable home for it. Most work produces nothing.",
+      "stageClass": "release",
+      "reads": [
+        "ConvergenceReport",
+        "ReviewVerdict",
+        "ChangeSet",
+        "StageHandoff"
+      ],
+      "writes": [
+        "CompoundLearningCandidate"
+      ],
+      "mayNot": [
+        "create LESSONS.md, MEMORY.md or any other uncontrolled documentation dump",
+        "record a lesson already encoded by a test, contract, lint rule or authority",
+        "record a temporary run fact as a durable authority",
+        "encode the lesson itself instead of routing it to the owning creator role"
+      ],
+      "skills": [
+        "compound-learning"
+      ],
+      "policyId": "specification",
+      "routeId": "specification",
+      "contextCeilingTokens": 12000,
+      "mutationScopes": [],
+      "budget": {
+        "maxIterations": 1,
+        "maxRuntimeMs": 600000,
+        "maxCostGbp": 0.3,
+        "maxTokens": 30000
+      },
+      "reviewedBy": [
+        "code-reviewer"
+      ],
+      "stopCriteria": [
+        "a candidate lesson names its evidence and existing home, or nothing is recorded"
+      ],
+      "escalatesTo": null,
+      "priorArt": [
+        "obra-superpowers"
       ],
       "status": "planned"
     }

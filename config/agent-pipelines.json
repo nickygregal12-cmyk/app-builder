@@ -229,6 +229,32 @@
       ],
       "minimumScore": null,
       "requiresIndependentReviewer": true
+    },
+    "state-completeness": {
+      "id": "state-completeness",
+      "label": "Every reachable, user-visible state is designed and evidenced",
+      "evaluatedBy": "ux-critic",
+      "defaultReworkRole": "state-matrix",
+      "deterministicChecks": [],
+      "requiredEvidence": [
+        "StateMatrixSpec"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
+    },
+    "journey-closure": {
+      "id": "journey-closure",
+      "label": "Each acceptance journey is complete end to end, not merely implemented",
+      "evaluatedBy": "journey-closure",
+      "defaultReworkRole": "frontend-implementation",
+      "deterministicChecks": [
+        "e2e-tests"
+      ],
+      "requiredEvidence": [
+        "JourneyClosureEvidence"
+      ],
+      "minimumScore": null,
+      "requiresIndependentReviewer": true
     }
   },
   "pipelines": {
@@ -317,6 +343,18 @@
           ]
         },
         {
+          "id": "state-matrix",
+          "role": "state-matrix",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "StateMatrixSpec"
+          ]
+        },
+        {
           "id": "marketing-content",
           "role": "marketing-content",
           "reviewer": "product-critic",
@@ -528,6 +566,21 @@
           ]
         },
         {
+          "id": "journey-closure",
+          "role": "journey-closure",
+          "reviewer": null,
+          "requires": [
+            "ProductSpec",
+            "StateMatrixSpec",
+            "TestPlan",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "JourneyClosureEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
           "id": "release",
           "role": "ship-release",
           "reviewer": null,
@@ -563,7 +616,9 @@
         "security",
         "provenance",
         "tests",
-        "launchability"
+        "launchability",
+        "state-completeness",
+        "journey-closure"
       ],
       "reworkOverrides": {
         "content": "marketing-content",
@@ -572,7 +627,12 @@
       },
       "onDemandRoles": [
         "runtime-debug",
-        "simplification"
+        "simplification",
+        "product-opportunity-scout",
+        "differential-reviewer",
+        "independent-second-opinion",
+        "environment-guardian",
+        "compound-learning"
       ]
     },
     "content-site": {
@@ -660,6 +720,18 @@
           ]
         },
         {
+          "id": "state-matrix",
+          "role": "state-matrix",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "StateMatrixSpec"
+          ]
+        },
+        {
           "id": "marketing-content",
           "role": "marketing-content",
           "reviewer": "product-critic",
@@ -871,6 +943,21 @@
           ]
         },
         {
+          "id": "journey-closure",
+          "role": "journey-closure",
+          "reviewer": null,
+          "requires": [
+            "ProductSpec",
+            "StateMatrixSpec",
+            "TestPlan",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "JourneyClosureEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
           "id": "release",
           "role": "ship-release",
           "reviewer": null,
@@ -906,7 +993,9 @@
         "security",
         "provenance",
         "tests",
-        "launchability"
+        "launchability",
+        "state-completeness",
+        "journey-closure"
       ],
       "reworkOverrides": {
         "content": "marketing-content",
@@ -915,7 +1004,12 @@
       },
       "onDemandRoles": [
         "runtime-debug",
-        "simplification"
+        "simplification",
+        "product-opportunity-scout",
+        "differential-reviewer",
+        "independent-second-opinion",
+        "environment-guardian",
+        "compound-learning"
       ]
     },
     "b2b-saas": {
@@ -1003,6 +1097,18 @@
           ]
         },
         {
+          "id": "state-matrix",
+          "role": "state-matrix",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "StateMatrixSpec"
+          ]
+        },
+        {
           "id": "ux-writing",
           "role": "ux-writer",
           "reviewer": "product-critic",
@@ -1194,6 +1300,21 @@
           ]
         },
         {
+          "id": "journey-closure",
+          "role": "journey-closure",
+          "reviewer": null,
+          "requires": [
+            "ProductSpec",
+            "StateMatrixSpec",
+            "TestPlan",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "JourneyClosureEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
           "id": "release",
           "role": "ship-release",
           "reviewer": null,
@@ -1227,14 +1348,21 @@
         "security",
         "provenance",
         "tests",
-        "launchability"
+        "launchability",
+        "state-completeness",
+        "journey-closure"
       ],
       "reworkOverrides": {
         "visual": "design-system"
       },
       "onDemandRoles": [
         "runtime-debug",
-        "simplification"
+        "simplification",
+        "product-opportunity-scout",
+        "differential-reviewer",
+        "independent-second-opinion",
+        "environment-guardian",
+        "compound-learning"
       ]
     },
     "consumer-app": {
@@ -1322,6 +1450,18 @@
           ]
         },
         {
+          "id": "state-matrix",
+          "role": "state-matrix",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "StateMatrixSpec"
+          ]
+        },
+        {
           "id": "ux-writing",
           "role": "ux-writer",
           "reviewer": "product-critic",
@@ -1547,6 +1687,21 @@
           ]
         },
         {
+          "id": "journey-closure",
+          "role": "journey-closure",
+          "reviewer": null,
+          "requires": [
+            "ProductSpec",
+            "StateMatrixSpec",
+            "TestPlan",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "JourneyClosureEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
           "id": "release",
           "role": "ship-release",
           "reviewer": null,
@@ -1581,12 +1736,19 @@
         "security",
         "provenance",
         "tests",
-        "launchability"
+        "launchability",
+        "state-completeness",
+        "journey-closure"
       ],
       "reworkOverrides": {},
       "onDemandRoles": [
         "runtime-debug",
-        "simplification"
+        "simplification",
+        "product-opportunity-scout",
+        "differential-reviewer",
+        "independent-second-opinion",
+        "environment-guardian",
+        "compound-learning"
       ]
     },
     "ai-app": {
@@ -1674,6 +1836,18 @@
           ]
         },
         {
+          "id": "state-matrix",
+          "role": "state-matrix",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "StateMatrixSpec"
+          ]
+        },
+        {
           "id": "ux-writing",
           "role": "ux-writer",
           "reviewer": "product-critic",
@@ -1899,6 +2073,21 @@
           ]
         },
         {
+          "id": "journey-closure",
+          "role": "journey-closure",
+          "reviewer": null,
+          "requires": [
+            "ProductSpec",
+            "StateMatrixSpec",
+            "TestPlan",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "JourneyClosureEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
           "id": "release",
           "role": "ship-release",
           "reviewer": null,
@@ -1933,12 +2122,19 @@
         "security",
         "provenance",
         "tests",
-        "launchability"
+        "launchability",
+        "state-completeness",
+        "journey-closure"
       ],
       "reworkOverrides": {},
       "onDemandRoles": [
         "runtime-debug",
-        "simplification"
+        "simplification",
+        "product-opportunity-scout",
+        "differential-reviewer",
+        "independent-second-opinion",
+        "environment-guardian",
+        "compound-learning"
       ]
     },
     "internal-tool": {
@@ -1993,6 +2189,18 @@
           ],
           "produces": [
             "UXFlowSpec"
+          ]
+        },
+        {
+          "id": "state-matrix",
+          "role": "state-matrix",
+          "reviewer": "ux-critic",
+          "requires": [
+            "ProductSpec",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "StateMatrixSpec"
           ]
         },
         {
@@ -2157,6 +2365,21 @@
           ]
         },
         {
+          "id": "journey-closure",
+          "role": "journey-closure",
+          "reviewer": null,
+          "requires": [
+            "ProductSpec",
+            "StateMatrixSpec",
+            "TestPlan",
+            "UXFlowSpec"
+          ],
+          "produces": [
+            "JourneyClosureEvidence",
+            "ReviewVerdict"
+          ]
+        },
+        {
           "id": "release",
           "role": "ship-release",
           "reviewer": null,
@@ -2188,12 +2411,19 @@
         "performance",
         "security",
         "tests",
-        "launchability"
+        "launchability",
+        "state-completeness",
+        "journey-closure"
       ],
       "reworkOverrides": {},
       "onDemandRoles": [
         "runtime-debug",
-        "simplification"
+        "simplification",
+        "product-opportunity-scout",
+        "differential-reviewer",
+        "independent-second-opinion",
+        "environment-guardian",
+        "compound-learning"
       ]
     }
   }

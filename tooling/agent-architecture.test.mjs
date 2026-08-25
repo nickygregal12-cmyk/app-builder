@@ -75,7 +75,7 @@ test('reviewers never author what they judge and creators never approve themselv
   for (const [id, role] of Object.entries(ROLES)) {
     if (role.kind === 'reviewer') {
       assert.deepEqual(
-        role.writes.filter((kind) => !['ReviewVerdict', 'ReleaseDecision', 'RenderedEvidence', 'RuntimeDiagnostics', 'AccessibilityReport', 'PerformanceReport', 'SeoReport', 'SecurityReport'].includes(kind)),
+        role.writes.filter((kind) => !['ReviewVerdict', 'ReleaseDecision', 'RenderedEvidence', 'RuntimeDiagnostics', 'AccessibilityReport', 'PerformanceReport', 'SeoReport', 'SecurityReport', 'JourneyClosureEvidence'].includes(kind)),
         [],
         `reviewer ${id} must only write verdicts, decisions and evidence reports`,
       );
@@ -222,6 +222,32 @@ test('skills validate, stay bounded and cannot be promoted ahead of their prior 
   const requested = new Set(Object.values(ROLES).flatMap((role) => role.skills));
   for (const id of Object.keys(skillRegistry.skills)) {
     assert.ok(requested.has(id), `skill ${id} is registered but no role requests it`);
+  }
+});
+
+test('installed is not loaded: no role packet exceeds the skill load budget', () => {
+  const budget = routes.skillLoadBudget;
+  assert.ok(budget, 'config/agent-routing.json must declare a skill load budget');
+  for (const [id, role] of Object.entries(ROLES)) {
+    const loaded = {};
+    for (const skill of role.skills) {
+      const loadClass = skillRegistry.skills[skill].loadClass;
+      assert.ok(
+        Object.hasOwn(budget, loadClass),
+        `skill ${skill} declares load class ${loadClass}, which has no budget`,
+      );
+      loaded[loadClass] = (loaded[loadClass] ?? 0) + 1;
+    }
+    for (const [loadClass, count] of Object.entries(loaded)) {
+      assert.ok(
+        count <= budget[loadClass],
+        `role ${id} loads ${count} competing ${loadClass} skills; the budget allows ${budget[loadClass]}`,
+      );
+    }
+    assert.ok(
+      role.skills.length <= routes.packet.maxSelectedSkills,
+      `role ${id} loads ${role.skills.length} skills; the first-orientation ceiling is ${routes.packet.maxSelectedSkills}`,
+    );
   }
 });
 

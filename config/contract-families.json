@@ -161,6 +161,10 @@
       "reason": "Review verdicts are asserted by the agent-architecture tests, not yet produced or consumed at a service boundary."
     },
     {
+      "schema": "routing-benchmark-case.schema.json",
+      "reason": "Routing benchmark cases are read only by the deterministic routing benchmark and the control-plane doctor; migrate if a runtime ever dispatches against them."
+    },
+    {
       "schema": "section-spec.schema.json",
       "reason": "Inlined into the composition family."
     },

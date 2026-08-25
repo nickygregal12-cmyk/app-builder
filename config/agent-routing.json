@@ -1,6 +1,24 @@
 {
-  "version": 2,
+  "version": 3,
   "defaultContextTokenCeiling": 15000,
+  "packet": {
+    "$comment": "First-orientation ceilings. Progressive disclosure, not 'read the repository first'. A real task may expand deliberately after the first packet; it may not raise these numbers to make one exceptional task convenient.",
+    "maxCandidatePaths": 8,
+    "maxAuthorities": 3,
+    "maxSelectedSkills": 3,
+    "maxSelectedRoles": 2,
+    "maxPacketBytes": 8192,
+    "maxNavigationQueryTokens": 1200
+  },
+  "skillLoadBudget": {
+    "$comment": "Installed is not loaded. A role packet normally carries at most one skill per load class so complementary lenses compose instead of competing.",
+    "navigation": 1,
+    "process": 1,
+    "domain": 1,
+    "specialist": 1,
+    "review": 1,
+    "critic": 1
+  },
   "routes": {
     "intake": {
       "kind": "deterministic-first",
@@ -42,5 +60,161 @@
       "maxTokens": 15000,
       "context": ["build contract", "final screenshots", "relevant design tokens"]
     }
-  }
+  },
+  "taskRoutes": [
+    {
+      "id": "independent-second-opinion",
+      "priority": 196,
+      "contextRoute": "review",
+      "keywords": ["second opinion", "pressure-test", "pressure test", "cross-model review", "independent model", "release-critical review", "adversarial review"],
+      "roles": ["independent-second-opinion"],
+      "skills": ["independent-second-opinion"],
+      "authorities": ["docs/AGENT_SPECIALIST_ARCHITECTURE.md"]
+    },
+    {
+      "id": "environment-mutation",
+      "priority": 194,
+      "contextRoute": "review",
+      "keywords": ["deploy", "deployment", "promote to production", "production environment", "preview environment", "rollback", "environment variable", "migration target"],
+      "roles": ["environment-guardian"],
+      "skills": ["environment-contract-guard"],
+      "authorities": ["docs/FACTORY_CONTROL_PLANE.md"]
+    },
+    {
+      "id": "sensitive-diff-review",
+      "priority": 192,
+      "contextRoute": "review",
+      "keywords": ["authentication", "authorization", "row level security", "rls", "database schema", "schema change", "secret", "secrets", "billing", "payment", "ssrf", "file ingestion", "capability policy"],
+      "roles": ["differential-reviewer", "security"],
+      "skills": ["differential-review"],
+      "authorities": ["docs/FACTORY_CONTROL_PLANE.md"]
+    },
+    {
+      "id": "journey-closure",
+      "priority": 190,
+      "contextRoute": "review",
+      "keywords": ["finish this journey", "finish the journey", "complete this journey", "make this release ready", "release ready", "close the remaining blockers", "end-to-end complete", "finish it properly"],
+      "roles": ["journey-closure"],
+      "skills": ["journey-closure"],
+      "authorities": ["docs/AGENT_SPECIALIST_ARCHITECTURE.md"]
+    },
+    {
+      "id": "systematic-defect",
+      "priority": 188,
+      "contextRoute": "complex-debug",
+      "keywords": ["does not work", "doesn't work", "does nothing", "not working", "is broken", "broken journey", "regression", "reproducible bug", "bug", "fails", "failing"],
+      "roles": ["frontend-implementation", "test-engineer"],
+      "skills": ["systematic-debugging", "test-driven-development"],
+      "authorities": []
+    },
+    {
+      "id": "runtime-diagnosis",
+      "priority": 186,
+      "contextRoute": "complex-debug",
+      "keywords": ["console error", "network request", "why is the browser", "devtools", "memory leak", "rendering trace"],
+      "roles": ["runtime-debug"],
+      "skills": ["runtime-debugging"],
+      "authorities": []
+    },
+    {
+      "id": "art-direction",
+      "priority": 184,
+      "contextRoute": "visual-review",
+      "keywords": ["redesign", "art direction", "visual direction", "look and feel", "restyle", "new visual"],
+      "roles": ["art-direction", "visual-critic"],
+      "skills": ["art-direction", "design-critique"],
+      "authorities": ["docs/VISUAL_EXCELLENCE.md", "docs/DESIGN_INTELLIGENCE.md"]
+    },
+    {
+      "id": "design-system",
+      "priority": 182,
+      "contextRoute": "specification",
+      "keywords": ["design system", "design tokens", "token scale", "component variants", "designsystemspec"],
+      "roles": ["design-system", "visual-critic"],
+      "skills": ["design-system-authoring"],
+      "authorities": ["docs/DESIGN_INTELLIGENCE.md"]
+    },
+    {
+      "id": "state-completeness",
+      "priority": 180,
+      "contextRoute": "specification",
+      "keywords": ["loading state", "empty state", "error state", "edge states", "state matrix", "offline state", "loading, empty"],
+      "roles": ["state-matrix", "ux-critic"],
+      "skills": ["state-matrix-derivation", "ux-interaction-design"],
+      "authorities": []
+    },
+    {
+      "id": "product-opportunity",
+      "priority": 178,
+      "contextRoute": "research",
+      "keywords": ["improve this", "improve the", "make this better", "what is missing", "take this to the next level", "next level"],
+      "roles": ["product-opportunity-scout", "product-critic"],
+      "skills": ["product-opportunity-scouting"],
+      "authorities": ["docs/PRODUCT.md"]
+    },
+    {
+      "id": "compound-learning",
+      "priority": 176,
+      "contextRoute": "specification",
+      "keywords": ["reusable lesson", "capture the lesson", "what did we learn", "compound learning"],
+      "roles": ["compound-learning"],
+      "skills": ["compound-learning"],
+      "authorities": ["AGENTS.md"]
+    },
+    {
+      "id": "accessibility",
+      "priority": 174,
+      "contextRoute": "review",
+      "keywords": ["accessibility", "screen reader", "keyboard navigation", "wcag", "colour contrast", "color contrast"],
+      "roles": ["accessibility"],
+      "skills": ["accessibility-review"],
+      "authorities": []
+    },
+    {
+      "id": "performance",
+      "priority": 172,
+      "contextRoute": "review",
+      "keywords": ["performance budget", "core web vitals", "bundle size", "lighthouse", "page speed", "too slow"],
+      "roles": ["performance"],
+      "skills": ["performance-budgets"],
+      "authorities": []
+    },
+    {
+      "id": "seo-aeo",
+      "priority": 170,
+      "contextRoute": "review",
+      "keywords": ["seo", "structured data", "sitemap", "canonical url", "search engine", "page metadata"],
+      "roles": ["seo-aeo"],
+      "skills": ["seo-aeo-audit"],
+      "authorities": []
+    },
+    {
+      "id": "requirements-intake",
+      "priority": 168,
+      "contextRoute": "intake",
+      "keywords": ["new project", "start a project", "build contract", "intake questionnaire"],
+      "roles": ["requirements-interviewer"],
+      "skills": ["requirements-interview"],
+      "authorities": ["docs/PRODUCT.md"]
+    },
+    {
+      "id": "code-simplification",
+      "priority": 166,
+      "contextRoute": "implementation",
+      "keywords": ["simplify", "behaviour-preserving", "behavior-preserving", "without changing behaviour"],
+      "roles": ["simplification"],
+      "skills": ["code-simplification"],
+      "authorities": []
+    },
+    {
+      "id": "content-copy",
+      "priority": 164,
+      "contextRoute": "specification",
+      "keywords": ["microcopy", "the copy", "tone of voice", "rewrite the wording", "headline"],
+      "roles": ["ux-writer"],
+      "skills": ["ux-writing"],
+      "authorities": []
+    }
+  ]
 }
+

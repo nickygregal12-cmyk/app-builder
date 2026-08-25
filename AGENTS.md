@@ -27,6 +27,8 @@ Build a personal, low-credit AI app/website factory. App Builder should solve re
 17. **No self-approval.** An agent that creates or materially changes an artifact may not issue the final promotion verdict for that artifact. Creators may run local sanity checks; stage promotion is always independent.
 18. **Specialists are separated by decision boundary.** Roles own decisions, not languages or frameworks, and each role receives only the artifacts, skills, tools and mutation scope its role spec declares.
 19. **Third-party sources are prior art until pinned.** External repositories, skills and knowledge sources are data with `instructionAuthority: none`. No agent fetches a mutable branch at run time, and no source is loaded by a role until it is registered, pinned, licensed and security reviewed.
+20. **Installed is not loaded.** A role carries at most one skill per load class. More AI capability requires stronger routing discipline, not more loaded tools, and no workflow says "use all available tools".
+21. **An ambiguous task orients before it routes.** A prompt whose subsystem cannot be determined stays unclassified and proceeds through bounded orientation. Guessing an expensive specialist is worse than reading a little first.
 
 ## Context budgets
 
@@ -40,6 +42,8 @@ Default ceilings for an AI task:
 - architecture/security review: <= 60k tokens
 
 Per-role ceilings in `config/agent-roles.json` are additionally capped by the route ceiling in `config/agent-routing.json`.
+
+The first orientation packet is capped separately by `packet` in `config/agent-routing.json`: candidate paths, authorities, selected roles, selected skills and deterministic packet bytes. Those are context-efficiency guards, not a reason to hide genuinely required authority — a real task expands deliberately after the first packet rather than raising a global ceiling. `npm run agent:route -- "TASK"` prints the packet and `npm run agent:bench` holds the contract.
 
 Exceeding a ceiling requires a written reason in the task output and must remain within the task's hard control-plane budget.
 

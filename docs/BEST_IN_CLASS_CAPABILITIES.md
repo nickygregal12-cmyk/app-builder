@@ -425,6 +425,82 @@ Current registry state: 35 sources, of which seven are candidates (`vercel-labs/
 `GoogleChrome/lighthouse-ci`, `tldraw`, `quickdrawjs/quickdraw`) and the remainder are reference-only.
 Nothing is adopted or loadable by any role today.
 
+## 8.5 Internal prior-art audit: the development-agent operating system
+
+The Predictor repository is a separate, mature product built by the same owner. It carries no
+architecture App Builder should copy at the product level — its football domain logic is irrelevant
+here, and App Builder's factory/control-plane architecture is the stronger of the two. What it does
+have is a **more mature development-agent operating system**, built after that repository grew large
+enough for context pressure to become the dominant cost.
+
+The audit conclusion is one sentence: **more AI capability requires stronger routing discipline, not
+more loaded tools.** Everything below was assessed against that.
+
+### Where App Builder already leads — do not regress these
+
+Durable tasks/events/checkpoints/ChangeSets; provider-neutral runtime adapters; the bounded MCP
+facade; the deny-by-default service/tool capability model; generated-repository portability; the
+genuine-business evidence model; source/asset provenance and rights state; executed Supabase RLS
+acceptance; generated-app axe checks; the factory benchmark harness; canonical schemas with generated
+contracts; and the role/pipeline/gate/convergence model from Phase 3.8H. Where the prior art has an
+older equivalent, App Builder keeps its own.
+
+### Mechanisms adopted
+
+| Mechanism | Score | Status after this audit | Home |
+| --- | --- | --- | --- |
+| Deterministic routing acceptance benchmarks with positive **and** negative triggers | 10/10 | **Implemented** | `config/agent-routing-benchmarks.json`, `schemas/routing-benchmark-case.schema.json`, `npm run agent:bench` |
+| First-orientation context ceilings (paths, authorities, roles, skills, packet bytes) | 10/10 | **Implemented** | `packet` in `config/agent-routing.json` |
+| Skill role/load budget — installed is not loaded | 10/10 | **Implemented** | `loadClass` + `skillLoadBudget`, enforced by doctor and tests |
+| Immutable external skill-source registry (pin, licence, security review, allowed roles) | 10/10 | Already landed in 3.8H | `config/external-sources.json` |
+| Skill evaluation with baseline-vs-candidate comparison | 10/10 | Lifecycle landed in 3.8H; harness planned | `config/skill-registry.json`, Phase 5.5 |
+| Journey Closure specialist and gate | 10/10 | **Registered**; workflow planned | `journey-closure` role/gate, Phase 4B |
+| State Matrix specialist and gate | 9.8/10 | **Registered**; workflow planned | `state-matrix` role/gate, Phase 4B |
+| Genuinely independent second opinion (different model/runtime) | 9.8/10 | **Registered**; execution planned | `independent-second-opinion` role, Phase 5 |
+| Conditional differential review driven by risk classification | 9.8/10 | **Registered**; classifier planned | `differential-reviewer` role, `RiskClassification` |
+| Architecture dependency gate (evaluate `dependency-cruiser`) | 9.7/10 | **Newly planned** | Engineering programme stage Q1 |
+| Curated visual regression contracts | 9.7/10 | **Newly planned** | Stage Q2, Phase 4C/4D |
+| Compound learning closeout | 9.6/10 | **Registered**; process planned | `compound-learning` role, Phase 5 |
+| Graph-assisted repository navigation | 9.5/10 | **Newly planned, deliberately later** | Phase 5 |
+| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | **Registered**; card planned | `environment-guardian` role, Phase 4E |
+| Tool responsibility map — one question per tool | 9.4/10 | **Implemented** | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
+| Product Opportunity Scout for broad prompts | 9.4/10 | **Registered**; workflow planned | `product-opportunity-scout` role, Phase 4B |
+| Lighthouse-style performance and payload budgets | 9.3/10 | **Newly planned** | Stage Q4, Phase 4.2/6 |
+| Component/state preview surface (evaluate Storybook) | 9.2/10 | **Newly planned, conditional** | Stage Q3, Phase 4C |
+| Supply-chain and workflow hardening, staged | 9.2/10 | **Newly planned** | Stage Q9 |
+| Design-token enforcement beyond DesignLint | 9/10 | **Newly planned** | Stage Q5, Phase 4C |
+| Dead-code/unused-dependency analysis (`Knip`) | 8.8/10 | Already noted; now staged and non-blocking until baselined | Stage Q6, Phase 4.5 |
+| Property-based testing (`fast-check`) | 8.7/10 | Adopted for ChangeSet scope; scope widened for the rest | Stage Q7 |
+| Targeted mutation testing | 8.4/10 | **Newly planned** | Stage Q8, Phase 4.5/6 |
+| Bundle analysis | 8.4/10 | **Newly planned** | Stage Q4 |
+
+### Adaptations, not copies
+
+- The prior art routes prompts to **skills**; App Builder routes them to **roles** that then carry a
+  bounded skill packet, because App Builder's decision boundaries and reviewer independence already
+  live at role level.
+- Its skill-source registry uses `routed` / `conditional-review` / `catalogue-only` modes. App
+  Builder expresses the same distinction through `adoption` plus `allowedRoles`: a source with no
+  allowed roles is catalogue-only by construction, and conditional review is expressed by the role
+  being an `onDemandRole` rather than a pipeline stage.
+- Its graph/symbol/context-pack tool split assumes a large existing repository. App Builder plans the
+  same layer but deliberately later: adopting a graph tool now would add a dependency to answer a
+  question that bounded search still answers.
+
+### Deliberately rejected
+
+- **Copying any product-domain skill, prompt, workflow or authority.** The contamination guard exists
+  for this reason.
+- **A repository-wide "load every tool" workflow.** Tools are selected by the question at hand.
+- **Making a graph or index authoritative.** Graph output is navigation evidence; source, schemas and
+  tests remain truth.
+- **A parallel memory/lessons documentation tree.** Compound learning writes into an existing durable
+  home or writes nothing.
+- **Adopting a tool per capability wholesale.** Every engineering-gate item carries an evaluation step
+  and an explicit "adopt only if it beats the existing deterministic check" condition.
+- **Multi-persona review presented as independence.** Independence requires a different model or
+  runtime; when none is available the skip is reported.
+
 ## 9. Tooling decisions explicitly not made
 
 Do **not** adopt these by default merely because they appeared in research:
@@ -436,7 +512,11 @@ Do **not** adopt these by default merely because they appeared in research:
 - a screenshot-to-code generation architecture that bypasses PageSpec/SectionSpec identity;
 - a third-party master design document, workflow engine or agent registry as a second authority;
 - an infinite canvas dependency before the contracts it would compare exist;
-- loading every registered skill into every agent.
+- loading every registered skill into every agent;
+- a graph/index tool as a required dependency, CI gate or repository authority;
+- a second memory/lessons documentation tree;
+- multi-persona review on one model presented as an independent second opinion;
+- repository-wide mutation testing, or any blocking gate whose output has not been baselined.
 
 ## 10. Recommended implementation order
 

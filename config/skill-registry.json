@@ -9,6 +9,14 @@
     "proven",
     "deprecated"
   ],
+  "loadClasses": {
+    "navigation": "Repository/design orientation evidence. Never authority.",
+    "process": "How the work is sequenced and closed out.",
+    "domain": "The subject-matter craft the role owns.",
+    "specialist": "A narrow extra lens that composes with the domain skill rather than competing with it.",
+    "review": "Repository-specific acceptance review.",
+    "critic": "Independent pressure-test, deliberately separate from ordinary review."
+  },
   "promotionRules": [
     "Promotion moves one lifecycle state at a time and requires recorded evidence.",
     "A skill reaches evaluated only with benchmark cases, quality score, token, runtime and cost evidence.",
@@ -20,6 +28,7 @@
     "accessibility-review": {
       "id": "accessibility-review",
       "purpose": "Review semantics, keyboard operation, focus order, screen-reader logic, zoom/reflow and touch targets beyond automated checks.",
+      "loadClass": "review",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -45,6 +54,7 @@
     "api-and-interface-design": {
       "id": "api-and-interface-design",
       "purpose": "Design data models, API contracts, auth and tenancy boundaries.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -70,6 +80,7 @@
     "art-direction": {
       "id": "art-direction",
       "purpose": "Produce bounded, machine-readable art-direction candidates that avoid default and generic output.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -96,6 +107,7 @@
     "backend-implementation": {
       "id": "backend-implementation",
       "purpose": "Implement data, auth, API and migration work inside the approved architecture.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -121,6 +133,7 @@
     "brand-research": {
       "id": "brand-research",
       "purpose": "Derive palette, logo usage, typography intent, imagery language and tone with confidence and rights state.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -147,6 +160,7 @@
     "browser-functional-qa": {
       "id": "browser-functional-qa",
       "purpose": "Drive real journeys, forms, navigation and responsive layouts in a browser and capture evidence.",
+      "loadClass": "review",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -172,6 +186,7 @@
     "code-review": {
       "id": "code-review",
       "purpose": "Judge correctness, architecture, API design, maintainability and unintended scope.",
+      "loadClass": "review",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -198,6 +213,7 @@
     "code-simplification": {
       "id": "code-simplification",
       "purpose": "Remove accidental complexity while preserving exact behaviour, after correctness is established.",
+      "loadClass": "specialist",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -220,9 +236,36 @@
         "recordedAt": null
       }
     },
+    "compound-learning": {
+      "id": "compound-learning",
+      "purpose": "Decide after substantial completed work whether a non-obvious reusable lesson exists, and encode it in the narrowest existing durable home or record nothing.",
+      "loadClass": "process",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 3000,
+      "priorArt": [
+        "obra-superpowers"
+      ],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "design-critique": {
       "id": "design-critique",
       "purpose": "Score ship readiness with a capped, prioritised, evidence-grounded issue set.",
+      "loadClass": "critic",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -250,6 +293,7 @@
     "design-intelligence-retrieval": {
       "id": "design-intelligence-retrieval",
       "purpose": "Query the versioned design-knowledge catalogue for layout families, palettes, typography pairings and anti-patterns.",
+      "loadClass": "navigation",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -276,6 +320,7 @@
     "design-system-authoring": {
       "id": "design-system-authoring",
       "purpose": "Compile art direction into tokens, primitives, components, motion rules and runtime requirements.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -300,9 +345,34 @@
         "recordedAt": null
       }
     },
+    "differential-review": {
+      "id": "differential-review",
+      "purpose": "Adversarial blast-radius review of a risk-classified diff, focused on the surfaces the classifier flagged rather than the whole change.",
+      "loadClass": "review",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 8000,
+      "priorArt": [],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "doubt-driven-review": {
       "id": "doubt-driven-review",
       "purpose": "Fresh-context adversarial review: claim, extract, doubt, reconcile, stop.",
+      "loadClass": "critic",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -326,9 +396,34 @@
         "recordedAt": null
       }
     },
+    "environment-contract-guard": {
+      "id": "environment-contract-guard",
+      "purpose": "Establish an explicit development/preview/production identity card before an environment-sensitive mutation and fail closed when the target is ambiguous.",
+      "loadClass": "process",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 4000,
+      "priorArt": [],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "frontend-implementation": {
       "id": "frontend-implementation",
       "purpose": "Implement composed pages inside the design system and declared ChangeSet scope.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -354,6 +449,7 @@
     "incremental-implementation": {
       "id": "incremental-implementation",
       "purpose": "Work in small verified increments with verification before completion.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -377,9 +473,34 @@
         "recordedAt": null
       }
     },
+    "independent-second-opinion": {
+      "id": "independent-second-opinion",
+      "purpose": "Read-only, diff-bounded pressure-test of a high-stakes decision by a genuinely different model or runtime.",
+      "loadClass": "critic",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 8000,
+      "priorArt": [],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "information-architecture": {
       "id": "information-architecture",
       "purpose": "Model mental models, sitemap, taxonomy, labels and content hierarchy, and validate rather than guess.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -403,9 +524,34 @@
         "recordedAt": null
       }
     },
+    "journey-closure": {
+      "id": "journey-closure",
+      "purpose": "Prove an end-to-end user journey is complete across entry, action, write/read boundary, refusal, recovery, persistence, navigation, responsive and accessibility evidence rather than merely implemented.",
+      "loadClass": "process",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 6000,
+      "priorArt": [],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "marketing-copy-cro": {
       "id": "marketing-copy-cro",
       "purpose": "Write evidence-backed marketing copy, offers and conversion messaging.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -431,6 +577,7 @@
     "performance-budgets": {
       "id": "performance-budgets",
       "purpose": "Measure against declared budgets, separate lab from field evidence and name real bottlenecks.",
+      "loadClass": "review",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -457,6 +604,7 @@
     "product-discovery": {
       "id": "product-discovery",
       "purpose": "Frame opportunities, assumptions and value/usability/feasibility/viability risks.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -479,9 +627,34 @@
         "recordedAt": null
       }
     },
+    "product-opportunity-scouting": {
+      "id": "product-opportunity-scouting",
+      "purpose": "Turn a broad improvement prompt into at most three ranked, materially different opportunities grounded in the current implementation instead of defaulting to redesign.",
+      "loadClass": "process",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "release-readiness": {
       "id": "release-readiness",
       "purpose": "Collect release evidence and issue a PASS or BLOCKED decision without fixing anything.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -507,6 +680,7 @@
     "requirements-interview": {
       "id": "requirements-interview",
       "purpose": "Elicit missing high-impact requirements and surface contradictions before build spend.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -533,6 +707,7 @@
     "research-ops": {
       "id": "research-ops",
       "purpose": "Choose a research method, separate anecdote from recurring evidence and mark confidence explicitly.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -559,6 +734,7 @@
     "runtime-debugging": {
       "id": "runtime-debugging",
       "purpose": "Use console, network, runtime state and performance traces to explain browser behaviour.",
+      "loadClass": "specialist",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -584,6 +760,7 @@
     "section-composition": {
       "id": "section-composition",
       "purpose": "Compose pages and sections from registered presentation entries without inventing a second system.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -610,6 +787,7 @@
     "security-hardening": {
       "id": "security-hardening",
       "purpose": "Assess auth, authorization, tenancy, input handling, secrets, storage, policies and deployment boundaries.",
+      "loadClass": "review",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -635,6 +813,7 @@
     "seo-aeo-audit": {
       "id": "seo-aeo-audit",
       "purpose": "Interpret deterministic crawlability, metadata, structured-data and AI-search findings.",
+      "loadClass": "review",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -661,6 +840,7 @@
     "spec-authoring": {
       "id": "spec-authoring",
       "purpose": "Write a testable specification with acceptance criteria and explicit exclusions.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -684,9 +864,34 @@
         "recordedAt": null
       }
     },
+    "state-matrix-derivation": {
+      "id": "state-matrix-derivation",
+      "purpose": "Derive the real state axes a capability exposes, remove impossible combinations, rank by user risk and give the important states deterministic fixtures.",
+      "loadClass": "specialist",
+      "lifecycle": "planned",
+      "version": "0.1.0",
+      "path": null,
+      "contextTokensBudget": 5000,
+      "priorArt": [],
+      "supersedes": null,
+      "evaluation": {
+        "status": "not-evaluated",
+        "benchmarkCases": [],
+        "qualityScore": null,
+        "regressions": [],
+        "falsePositiveRate": null,
+        "medianTokens": null,
+        "medianRuntimeMs": null,
+        "medianCostGbp": null,
+        "failurePatterns": [],
+        "comparedAgainst": null,
+        "recordedAt": null
+      }
+    },
     "systematic-debugging": {
       "id": "systematic-debugging",
       "purpose": "Reproduce, localise, reduce, find the root cause, repair and guard with a regression test.",
+      "loadClass": "specialist",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -712,6 +917,7 @@
     "test-driven-development": {
       "id": "test-driven-development",
       "purpose": "Own test strategy, coverage gaps, regression cases and failure reproduction.",
+      "loadClass": "process",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -738,6 +944,7 @@
     "ux-interaction-design": {
       "id": "ux-interaction-design",
       "purpose": "Design task flows, state coverage, recovery and responsive interaction.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,
@@ -763,6 +970,7 @@
     "ux-writing": {
       "id": "ux-writing",
       "purpose": "Write labels, validation, onboarding, empty states and confirmations in a consistent product voice.",
+      "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
       "path": null,

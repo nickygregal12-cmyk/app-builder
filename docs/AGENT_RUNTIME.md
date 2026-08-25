@@ -184,6 +184,62 @@ The runtime must therefore:
 
 See `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
 
+## Genuine cross-model independence
+
+The runtime is the first place where "independent review" can be made real rather than rhetorical.
+
+A different persona on the same model is not an independent reviewer. For security, architecture,
+release-critical, cross-layer, irreversible and high-cost decisions the `independent-second-opinion`
+role should execute through a **different `AgentRuntimeAdapter` model or runtime** from the one that
+produced the work, with fresh context, read-only access, a bounded diff and only the relevant
+authority.
+
+Requirements:
+
+- the verdict records which model/runtime produced it, so independence is auditable rather than assumed;
+- if no genuinely different runtime is available, the runtime records the skip and relies on native
+  review and deterministic gates — it never relabels a same-model pass as independent;
+- disagreement between reviewers is preserved in the evidence rather than resolved into a synthetic
+  consensus;
+- trivial or reversible changes do not buy this pass.
+
+## Graph-assisted context discovery
+
+Deferred deliberately. Once the repository has grown through specialist agents, the presentation
+registry, design intelligence, multiple templates, recipes, runtime adapters, the Builder Console and
+deployment machinery, an optional bounded graph query may sit between the deterministic route and the
+file shortlist:
+
+```text
+task -> deterministic route -> optional bounded graph query -> shortlisted files
+     -> exact symbol search -> small context packet -> specialist agent
+```
+
+Rules that make it safe to add later:
+
+- a graph or index is **navigation evidence, never repository truth** — conclusions are verified in
+  source, schemas and tests;
+- the query stays inside the first-orientation token budget in `config/agent-routing.json`;
+- generated graph output is local and disposable, never committed and never an authority;
+- it never becomes a required dependency, a CI gate or a precondition for delivery. If it is
+  unavailable or stale, the packet says so and the agent falls back to bounded search.
+
+Do not adopt it while bounded search still answers the question.
+
+## Compound learning at closeout
+
+After substantial completed work the runtime may run the `compound-learning` role once. It asks
+whether the work revealed a non-obvious, likely-to-recur lesson that is supported by evidence and not
+already encoded, and whether recording it would reduce future work and context.
+
+If any answer is no, it records nothing. If yes, it names the **narrowest existing durable home** —
+a regression test or deterministic check first, then the governing architecture authority, then a
+skill adapter or its evaluation, then the operations/control-plane authority — and the owning creator
+role makes the change through the normal route. Temporary run facts stay in task/PR evidence.
+
+It never creates a lessons file, a memory store or a parallel knowledge base. The target is better
+future behaviour with **less** context, not accumulating prose.
+
 ## Context-loss recovery
 
 At the end of each attempt, persist a compact structured attempt summary containing:

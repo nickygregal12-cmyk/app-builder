@@ -72,6 +72,14 @@ export function getUnresolvedHighImpactQuestions(questions, answers) {
 export function createSourceReference(input = {}) {
   const kind = input.kind ?? 'other';
   const label = String(input.label ?? input.name ?? input.uri ?? 'Source').trim();
+  const rightsStatus = input.rightsStatus || undefined;
+  const assetStatus = input.assetStatus || undefined;
+  if (assetStatus === 'approved' && rightsStatus !== 'approved-for-use') {
+    throw new Error('Approved source assets require rightsStatus approved-for-use.');
+  }
+  if (input.publishUseAllowed === true && (rightsStatus !== 'approved-for-use' || assetStatus !== 'approved')) {
+    throw new Error('Publishable source assets require approved-for-use rights and approved asset status.');
+  }
   return {
     id: input.id ?? `${kind}-${slugify(label)}-${String(input.size ?? '').slice(-6)}`.replace(/-+$/g, ''),
     kind,
@@ -82,6 +90,12 @@ export function createSourceReference(input = {}) {
     size: Number.isFinite(input.size) ? input.size : undefined,
     provenance: input.provenance ?? 'user-supplied',
     purpose: input.purpose || undefined,
+    rightsStatus,
+    assetStatus,
+    sourceRole: input.sourceRole || undefined,
+    sourceChannel: input.sourceChannel || undefined,
+    instructionAuthority: 'none',
+    publishUseAllowed: rightsStatus === 'approved-for-use' && assetStatus === 'approved',
     recordedAt: input.recordedAt ?? new Date().toISOString()
   };
 }

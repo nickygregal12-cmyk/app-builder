@@ -13,7 +13,23 @@
     "size":{"type":"number","minimum":0},
     "provenance":{"enum":["user-supplied","existing-site","external-research","generated"]},
     "purpose":{"type":"string"},
+    "rightsStatus":{"enum":["approved-for-use","reference-only","unknown","restricted"]},
+    "assetStatus":{"enum":["approved","suggested","generated","rejected","do-not-use"]},
+    "sourceRole":{"enum":["primary-brand","brand-supporting","content","requirement","research"]},
+    "sourceChannel":{"enum":["upload","website","facebook","instagram","linkedin","other-public"]},
+    "instructionAuthority":{"const":"none"},
+    "publishUseAllowed":{"type":"boolean"},
     "recordedAt":{"type":"string"}
   },
+  "allOf":[
+    {
+      "if":{"properties":{"assetStatus":{"const":"approved"}},"required":["assetStatus"]},
+      "then":{"properties":{"rightsStatus":{"const":"approved-for-use"}},"required":["rightsStatus"]}
+    },
+    {
+      "if":{"properties":{"publishUseAllowed":{"const":true}},"required":["publishUseAllowed"]},
+      "then":{"properties":{"rightsStatus":{"const":"approved-for-use"},"assetStatus":{"const":"approved"}},"required":["rightsStatus","assetStatus"]}
+    }
+  ],
   "additionalProperties":false
 }

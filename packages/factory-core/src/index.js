@@ -1,4 +1,4 @@
-export const FACTORY_ENGINE_VERSION = 2;
+export const FACTORY_ENGINE_VERSION = 3;
 
 const DEPTH_RANK = { quick: 0, standard: 1, thorough: 2 };
 const AMBIGUOUS_VALUES = new Set(['unknown', 'decide-for-me', 'decide for me', 'both/depends']);
@@ -175,7 +175,6 @@ export function deriveEnabledModules(projectType, answers, projectTypesConfig) {
   if (answers.site_search === true) modules.add('search');
   if (answers.newsletter === true) { modules.add('email'); modules.add('lead-generation'); }
   if (answers.moderation === true) modules.add('admin');
-  if (projectType === 'ai-app') modules.add('ai');
   return [...modules].sort();
 }
 

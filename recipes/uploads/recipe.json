@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "uploads",
+  "module": "uploads",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": ["react-vite-neutral"],
+  "entry": "src/features/uploads/index.tsx",
+  "files": ["src/features/uploads/index.tsx"],
+  "requires": ["auth"],
+  "requiresAdapters": ["supabase"],
+  "conflicts": [],
+  "database": {"fragments":["database/storage.sql"]},
+  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+}

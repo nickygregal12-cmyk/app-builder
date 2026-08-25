@@ -8,18 +8,19 @@ import { buildGenerationPlan, generateProject, loadCatalog, reconcileProjectReci
 const marketingManifest = JSON.parse(fs.readFileSync('examples/generator-project-manifest.json', 'utf8'));
 const catalog = loadCatalog();
 
-test('generation plan keeps backend-less marketing apps adapter-free', () => {
+test('generation plan keeps backend-less marketing apps free of backend adapters', () => {
   const plan = buildGenerationPlan(marketingManifest, { catalog });
   assert.equal(plan.template.id, 'react-vite-neutral');
-  assert.deepEqual(plan.adapters, []);
-  assert.deepEqual(plan.recipes.map((recipe) => recipe.id), ['feature-flags', 'seo']);
+  assert.deepEqual(plan.adapters.map((adapter) => adapter.id), ['netlify']);
+  assert.equal(plan.adapters.some((adapter) => adapter.kind === 'backend'), false);
+  assert.deepEqual(plan.recipes.map((recipe) => recipe.id), ['analytics', 'feature-flags', 'lead-generation', 'observability', 'seo']);
 });
 
 test('supabase backend is selected as infrastructure rather than a user module', () => {
   const manifest = structuredClone(marketingManifest);
   manifest.infrastructure.backend = 'supabase';
   const plan = buildGenerationPlan(manifest, { catalog });
-  assert.deepEqual(plan.adapters.map((adapter) => adapter.id), ['supabase']);
+  assert.deepEqual(plan.adapters.map((adapter) => adapter.id), ['supabase', 'netlify']);
   assert.equal(plan.missingModules.length, 0);
 });
 
@@ -39,9 +40,10 @@ test('generated supabase project pins the SDK and writes public env contract', (
   const pkg = JSON.parse(fs.readFileSync(path.join(out, 'package.json'), 'utf8'));
   const adapters = JSON.parse(fs.readFileSync(path.join(out, '.app-builder/adapters.json'), 'utf8'));
   assert.equal(pkg.dependencies['@supabase/supabase-js'], '2.112.4');
-  assert.deepEqual(adapters.installed.map((entry) => entry.id), ['supabase']);
+  assert.deepEqual(adapters.installed.map((entry) => entry.id), ['supabase', 'netlify']);
   assert.match(fs.readFileSync(path.join(out, '.env.example'), 'utf8'), /VITE_SUPABASE_PUBLISHABLE_KEY/);
   assert.equal(fs.existsSync(path.join(out, 'src/platform/supabase/client.ts')), true);
+  assert.equal(fs.existsSync(path.join(out, 'netlify.toml')), true);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -49,7 +51,7 @@ test('recipe add/remove reconciles managed files and manifest safely', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-recipes-'));
   const out = path.join(tmp, 'project');
   const seoOnly = structuredClone(marketingManifest);
-  seoOnly.modules['feature-flags'] = false;
+  seoOnly.modules = { seo: true };
   generateProject(seoOnly, out, { catalog });
   let recipes = reconcileProjectRecipes(out, ['feature-flags', 'seo'], { catalog });
   assert.deepEqual(recipes.map((recipe) => recipe.id), ['feature-flags', 'seo']);

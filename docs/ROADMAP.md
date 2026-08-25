@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **Phase 2B — Backend foundation and core application recipes**.
+Current stage: **Phase 3 complete — Phase 4 is next**.
 
 The detailed delivery specification lives in `docs/MASTER_PLAN.md`. This file is the short progress view.
 
@@ -28,11 +28,9 @@ The detailed delivery specification lives in `docs/MASTER_PLAN.md`. This file is
 - contract, manifest and full intake-bundle export
 - Chromium end-to-end acceptance journey in CI
 
-Phase 1 intentionally records file references/metadata only. Deep file parsing, storage and image processing remain Phase 3 responsibilities.
+## Phase 2 — Deterministic Project Generator ✅ Complete
 
-## Phase 2 — Deterministic Project Generator 🚧 Active
-
-### Phase 2A — Generator core ✅ Complete
+### Phase 2A — Generator core
 
 - versioned template and recipe contracts/registries
 - neutral standalone React 19 / TypeScript / Vite template
@@ -42,43 +40,59 @@ Phase 1 intentionally records file references/metadata only. Deep file parsing, 
 - safe managed recipe add/remove reconciliation
 - generated provenance records without runtime lock-in
 - first ready recipes: feature flags and SEO defaults
-- generated-app CI acceptance: independent install, check and production build
 
-### Phase 2B — Backend foundation and core recipes 🚧 Active
+### Phase 2B — Backend foundation and core recipes
 
-Execution order:
+- Supabase infrastructure adapter with browser-safe environment contract
+- auth recipe
+- profiles recipe
+- organisations/membership/RBAC recipe with explicit RLS contracts
+- generic admin foundation
+- security regression tests for RLS, privileged helpers and trusted admin metadata
 
-1. define versioned environment/backend adapter contracts;
-2. add the Supabase client/environment adapter as infrastructure selected by the manifest;
-3. implement a real auth recipe;
-4. implement profiles;
-5. implement organisations, memberships and RBAC with explicit database/RLS contracts;
-6. implement the generic admin foundation;
-7. add uploads and email only after the shared backend contracts are stable;
-8. prove a B2B SaaS manifest generates and builds with the selected backend/core recipes and no AI.
+### Phase 2C — Project finishing system
 
-### Phase 2C — Project finishing system ⬜ Planned
+- Netlify deployment adapter, SPA fallback and baseline headers
+- deterministic deployment fail-closed behavior
+- six project-type layout patterns and neutral design-token system
+- project-aware seed/scenario framework
+- generated structured and human-readable handover documentation
+- uploads, analytics, observability and Netlify lead-generation recipes
+- ready-default invariant
+- byte-stable generation checks
+- six-project generation matrix
+- independently installed/checked/built marketing and B2B generated apps in CI
 
-- Netlify deployment adapter and environment handoff
-- design tokens and reusable layout-pattern catalogue
-- seed/scenario framework
-- generated architecture/handover documentation
-- multi-manifest acceptance across materially different project types
+Phase 2 exit gate is complete: a valid manifest can deterministically generate a runnable, tested repository containing only available selected capabilities and no domain-specific baggage.
 
-Phase 2 exit gate: a valid manifest deterministically generates a runnable, tested repository containing only selected capabilities and no domain-specific baggage.
+## Phase 3 — Content and Asset Intelligence ✅ Complete
 
-## Phase 3 — Content and Asset Intelligence ⬜ Planned
+- deterministic text, Markdown, JSON, HTML and CSV extraction
+- real PDF, DOCX and XLSX extraction
+- bounded same-origin existing-site crawl with redirect/size/time/network safety gates
+- content-addressed extraction cache keyed by bytes, MIME and extractor version
+- provenance/confidence/verification-aware facts
+- structured company profile with source-backed services, people, projects, testimonials, accreditations and service areas
+- generated-copy separation: extracted facts never become invented marketing claims
+- image/logo/screenshot inventory with dimensions, aspect ratio, alpha, dominant colour and low-resolution signals
+- exact and normalized-visual duplicate signals
+- responsive WebP/AVIF generation plus review-required hero/card/square crop candidates
+- observed brand colours/fonts/titles/logo/screenshot candidates
+- deterministic existing-site SEO snapshots and aggregate issue summary
+- local-SEO inputs that use only source-backed locations/contact data
+- lead-generation inputs from real contact methods, services and trust evidence
+- bounded content-addressed AI-context chunks that deduplicate identical text across sources
+- stable semantic knowledge-pack hash independent of warm/cold cache state
+- `npm run ingest` CLI producing normalized sources, trusted knowledge pack, AI-context index, source-cache index and asset variants
+- Phase 3 doctor enforcing exact extractor dependencies and preventing generated-app runtime coupling
+- full mixed business-pack acceptance covering URL crawl, approved company data, PDF, spreadsheet, logo and project image
 
-- document/spreadsheet extraction pipeline
-- asset classification and metadata
-- image optimisation/cropping/responsive variants
-- fact/content provenance
-- brand and design-reference intake
-- SEO/local SEO/lead-generation recipes
+Phase 3 exit gate is complete: messy business/source material can be normalized once into trusted structured inputs without repeatedly parsing or later needing to resend entire source files to AI.
 
 ## Phase 4 — Full Builder Console ⬜ Planned
 
 - chat/prompt panel
+- drag-and-drop source intake backed by Phase 3 normalization
 - live desktop/tablet/mobile preview
 - click-to-edit
 - asset manager
@@ -94,7 +108,7 @@ Phase 2 exit gate: a valid manifest deterministically generates a runnable, test
 - deterministic context router
 - model router by task/cost
 - specialist implementation/design/review agents
-- compact project knowledge packets
+- compact project knowledge packets using Phase 3 chunk/cache identities
 - bounded autonomous fix loops
 
 ## Phase 6 — Quality System ⬜ Planned

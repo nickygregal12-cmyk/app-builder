@@ -7,7 +7,28 @@ export interface QuestionnaireDefinition { version: string; id: string; question
 export interface ModuleRegistryEntry { description?: string; status?: 'draft' | 'ready' | 'planned' | 'deprecated' | string; defaultEnabled?: boolean; }
 export interface ProjectTypesConfig { projectTypes: Record<string, { label?: string; defaultModules: string[]; questionnaire?: string }>; moduleRegistry?: { modules: Record<string, ModuleRegistryEntry> }; }
 export type SourceKind = 'url' | 'logo' | 'image' | 'screenshot' | 'document' | 'spreadsheet' | 'database-api' | 'other';
-export interface SourceReference { id: string; kind: SourceKind; label: string; uri?: string; name?: string; mimeType?: string; size?: number; provenance: 'user-supplied' | 'existing-site' | 'external-research' | 'generated'; purpose?: string; recordedAt: string; }
+export type SourceRightsStatus = 'approved-for-use' | 'reference-only' | 'unknown' | 'restricted';
+export type SourceAssetStatus = 'approved' | 'suggested' | 'generated' | 'rejected' | 'do-not-use';
+export type SourceRole = 'primary-brand' | 'brand-supporting' | 'content' | 'requirement' | 'research';
+export type SourceChannel = 'upload' | 'website' | 'facebook' | 'instagram' | 'linkedin' | 'other-public';
+export interface SourceReference {
+  id: string;
+  kind: SourceKind;
+  label: string;
+  uri?: string;
+  name?: string;
+  mimeType?: string;
+  size?: number;
+  provenance: 'user-supplied' | 'existing-site' | 'external-research' | 'generated';
+  purpose?: string;
+  rightsStatus?: SourceRightsStatus;
+  assetStatus?: SourceAssetStatus;
+  sourceRole?: SourceRole;
+  sourceChannel?: SourceChannel;
+  instructionAuthority?: 'none';
+  publishUseAllowed?: boolean;
+  recordedAt: string;
+}
 export type FeedbackType = 'missing-requirement' | 'corrected-answer' | 'unnecessary-question' | 'accepted-default' | 'architecture-rework';
 export interface FeedbackEvent { id: string; type: FeedbackType; questionId?: string; detail?: string; previousValue?: AnswerValue; nextValue?: AnswerValue; createdAt: string; }
 export interface FollowUpCandidate { id: string; questionId: string; question: string; reason: string; impact: string; }

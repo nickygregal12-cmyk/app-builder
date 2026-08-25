@@ -3,8 +3,8 @@
   "scoreVersion": 1,
   "requiredProjectTypes": ["marketing-site", "b2b-saas", "consumer-app", "internal-tool", "content-site", "ai-app"],
   "profiles": {
-    "deterministicBuild": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 2},
-    "releaseQualityFuture": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 1, "browser": 1, "security": 2, "accessibility": 1, "performance": 1, "designContract": 1}
+    "deterministicBuild": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 2, "upgradeInventory": 1},
+    "releaseQualityFuture": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 1, "upgradeInventory": 1, "browser": 1, "security": 2, "accessibility": 1, "performance": 1, "designContract": 1}
   },
   "cases": [
     {"id":"marketing-basic","projectType":"marketing-site","canonical":true,"status":"ready","tags":["seo","leads"]},

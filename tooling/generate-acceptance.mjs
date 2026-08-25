@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { generateProject } from './lib/generator.mjs';
+import { recordRecipeInstallations } from './lib/recipe-upgrades.mjs';
 
 const projectTypes = JSON.parse(fs.readFileSync('config/project-types.json', 'utf8')).projectTypes;
 const orderedTypes = ['marketing-site', 'b2b-saas', 'consumer-app', 'internal-tool', 'content-site', 'ai-app'];
@@ -31,5 +32,7 @@ for (const type of orderedTypes) {
   const output = path.resolve(`.tmp/generated-acceptance-${type}`);
   fs.rmSync(output, { recursive: true, force: true });
   generateProject(manifestFor(type), output);
-  console.log(`${type} -> ${output}`);
+  const inventory = recordRecipeInstallations(output);
+  if (inventory.unresolved.length) throw new Error(`${type} generated with unresolved recipe installation inventory.`);
+  console.log(`${type} -> ${output} (${inventory.installed.length} recipe installation records)`);
 }

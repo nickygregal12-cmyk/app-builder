@@ -7,6 +7,7 @@
   "properties": {
     "schemaVersion": {"const": 1},
     "recipeId": {"type": "string", "minLength": 1},
+    "module": {"type": ["string", "null"]},
     "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
     "installedAtFactoryVersion": {"type": ["string", "null"]},
     "managedFiles": {

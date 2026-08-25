@@ -24,7 +24,8 @@ Current invariants include:
 - Autonomous work uses durable tasks, event ledger entries, ChangeSets and checkpoints rather than relying on one long chat context.
 - Agent capabilities are deny-by-default and sensitive actions require approval.
 - Canonical factory changes are measured against all six first-class project types before later AI/model routing is trusted.
-- Recipe upgrades fail closed when managed project files have diverged or compatibility has not been declared.
+- Newly generated projects record recipe-owned file hashes so later upgrades can detect project customisation and fail closed instead of overwriting it.
+- Recipe upgrades require explicit compatibility metadata and produce a plan before any future mutation is allowed.
 - The intake questionnaire is versioned and improved from evidence, never silently self-modified.
 - Generated projects remain normal repositories with no proprietary runtime lock-in.
 
@@ -38,6 +39,7 @@ npm run doctor
 npm test
 npm run generate:acceptance
 npm run benchmark:acceptance
+npm run upgrade:plan -- --project /path/to/generated-project
 npm run validate:example
 npm run create-app -- --manifest examples/project-manifest.example.json --out /tmp/app-builder-demo
 npm run dev
@@ -56,7 +58,7 @@ packages/control-plane/          Durable task/ledger/ChangeSet/checkpoint/policy
 recipes/                         Optional capability recipes installed into generated apps
 templates/                       Project-type templates
 questionnaires/                  Versioned adaptive intake questions
-tooling/                         create-app, validation, doctor, benchmark and control-plane tools
+tooling/                         create-app, validation, doctor, benchmark, upgrade-plan and control-plane tools
 docs/                            Small authoritative architecture/product/delivery docs
 examples/                        Known-good manifests/build contracts used by tests
 ```

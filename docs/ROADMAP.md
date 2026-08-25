@@ -114,24 +114,24 @@ Purpose: make later AI/runtime autonomy measurable, resumable, reversible and pe
 - runnable deterministic golden-build benchmark across all six first-class project types
 - all six canonical projects generated, independently installed, checked and production-built in CI
 - structured benchmark report with gate score, duration, AI cost and intervention count
+- benchmark verifies generated projects remain portable and contain a clean recipe-upgrade inventory
 - future release-quality benchmark profile reserved for browser/security/accessibility/performance/Design Contract gates
 - capability-intersection cases registered for later activation
 - recipe installation inventory contract with managed-file hashes
-- fail-closed recipe-upgrade proposal contract
-- managed-file divergence detection before upgrade
-- same-major upgrades require explicit declared `compatibleFrom`; major versions and ambiguous changes require review
-- recipe schema gains optional upgrade compatibility/migration metadata
+- newly generated projects persist installation-time recipe file hashes in `.app-builder/recipe-installations.json`
+- `upgrade:plan` factory command inspects an existing generated project without applying changes
+- fail-closed recipe-upgrade proposal contract and managed-file divergence detection
+- same-major upgrades require explicit declared `compatibleFrom`; major versions, missing files and user-modified managed files require review
+- recipe schema supports optional upgrade compatibility/migration metadata
 - standalone non-functional-requirements contract covering accessibility, performance, security, privacy, compatibility, localisation, operations and compliance
 - initial rich Design Contract covering personality, density, typography, hierarchy, colour, responsive composition, motion, imagery, interaction and reference adopt/avoid intent
 - NFR/Design contracts remain separate from live manifest v1 until deterministic generator/intake adoption is explicitly implemented and migration-tested
 
 Remaining within 3.5B:
 
-- integrate managed-file hashes into generated recipe installation records
-- add an explicit upgrade-proposal CLI/flow against a generated project
-- add safe three-way upgrade/reconciliation mechanics for user-modified managed files
+- add safe three-way upgrade/reconciliation mechanics for user-modified managed files rather than overwriting them
 - activate high-value capability-intersection benchmark manifests when the currently planned recipes they require are ready
-- define the reviewed migration path from Project Manifest / Build Contract v1 to v2 using the NFR and Design contracts
+- define and test the reviewed migration path from Project Manifest / Build Contract v1 to v2 using the NFR and Design contracts
 
 ### Phase 3.5C — Sandbox and trace adapters ⬜ Planned
 

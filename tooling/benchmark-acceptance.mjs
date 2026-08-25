@@ -7,7 +7,7 @@ import { scoreBenchmark } from '../packages/control-plane/src/index.js';
 
 const config = JSON.parse(fs.readFileSync('config/factory-benchmarks.json', 'utf8'));
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const weights = config.profiles?.deterministicBuild ?? { generate: 1, install: 1, check: 2, build: 2, portable: 2 };
+const weights = config.profiles?.deterministicBuild ?? { generate: 1, install: 1, check: 2, build: 2, portable: 2, upgradeInventory: 1 };
 const canonical = config.requiredProjectTypes.map((type) => {
   const item = config.cases.find((entry) => entry.projectType === type && entry.canonical !== false);
   if (!item) throw new Error(`No canonical benchmark case for ${type}.`);
@@ -39,6 +39,7 @@ for (const definition of canonical) {
     check: false,
     build: false,
     portable: false,
+    upgradeInventory: false,
   };
   let durationMs = 0;
 
@@ -47,6 +48,11 @@ for (const definition of canonical) {
     const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     const dependencyNames = [...Object.keys(pkg.dependencies ?? {}), ...Object.keys(pkg.devDependencies ?? {})];
     gates.portable = !dependencyNames.some((name) => name.startsWith('@app-builder/'));
+    const installationPath = path.join(directory, '.app-builder/recipe-installations.json');
+    if (fs.existsSync(installationPath)) {
+      const inventory = JSON.parse(fs.readFileSync(installationPath, 'utf8'));
+      gates.upgradeInventory = Array.isArray(inventory.installed) && Array.isArray(inventory.unresolved) && inventory.unresolved.length === 0;
+    }
 
     const install = runNpm(directory, ['install', '--no-audit', '--no-fund']);
     durationMs += install.durationMs;

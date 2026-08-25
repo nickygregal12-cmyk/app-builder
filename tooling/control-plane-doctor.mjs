@@ -25,6 +25,8 @@ const required = [
   'packages/control-plane/package.json',
   'packages/control-plane/src/index.js',
   'packages/control-plane/src/upgrades.js',
+  'tooling/lib/recipe-upgrades.mjs',
+  'tooling/plan-recipe-upgrades.mjs',
   'tooling/control-plane.test.mjs',
   'tooling/control-plane-upgrades.test.mjs',
   'tooling/benchmark-acceptance.mjs',
@@ -44,7 +46,7 @@ function readJson(relative) {
 try {
   const status = readJson('config/factory-status.json');
   if (status.currentPhase !== '3.5' || status.status !== 'active') {
-    console.error('Factory status must identify Phase 3.5 as active while the control-plane foundation is being built.');
+    console.error('Factory status must identify Phase 3.5 as active while the control plane is being built.');
     failed = true;
   }
   for (const doc of ['README.md', 'docs/ROADMAP.md']) {
@@ -104,6 +106,11 @@ try {
   for (const key of ['typography', 'hierarchy', 'responsive', 'motion', 'imagery', 'interaction']) {
     if (!design.properties?.[key]) { console.error(`Design contract is missing ${key}.`); failed = true; }
   }
+  const recipeSchema = readJson('schemas/recipe.schema.json');
+  if (!recipeSchema.properties?.upgrade?.properties?.compatibleFrom) {
+    console.error('Recipe schema must support explicit upgrade compatibility metadata.');
+    failed = true;
+  }
 
   const pkg = readJson('packages/control-plane/package.json');
   if (pkg.name !== '@app-builder/control-plane' || pkg.dependencies) {
@@ -120,8 +127,17 @@ try {
     console.error('Root doctor must run the Phase 3.5 control-plane doctor.');
     failed = true;
   }
-  if (!rootPackage.scripts?.['benchmark:acceptance']) {
-    console.error('Root scripts must expose the six-project acceptance benchmark.');
+  for (const script of ['benchmark:acceptance', 'upgrade:plan']) {
+    if (!rootPackage.scripts?.[script]) {
+      console.error(`Root scripts must expose ${script}.`);
+      failed = true;
+    }
+  }
+
+  const createApp = fs.readFileSync(path.join(root, 'tooling/create-app.mjs'), 'utf8');
+  const generateAcceptance = fs.readFileSync(path.join(root, 'tooling/generate-acceptance.mjs'), 'utf8');
+  if (!createApp.includes('recordRecipeInstallations') || !generateAcceptance.includes('recordRecipeInstallations')) {
+    console.error('Newly generated projects and canonical acceptance builds must record recipe installation hashes.');
     failed = true;
   }
 
@@ -150,4 +166,4 @@ try {
 }
 
 if (failed) process.exit(1);
-console.log('Phase 3.5 control-plane doctor: durable state, permissions, trust, benchmark coverage, upgrade/NFR/design contracts and portability are valid.');
+console.log('Phase 3.5 control-plane doctor: durable state, permissions, trust, six-project benchmarks, upgrade inventories/NFR/design contracts and portability are valid.');

@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { readJson, validateManifest } from './lib/manifest.mjs';
 import { buildGenerationPlan, generateProject } from './lib/generator.mjs';
+import { recordRecipeInstallations } from './lib/recipe-upgrades.mjs';
 
 function arg(name) {
   const index = process.argv.indexOf(name);
@@ -37,10 +38,12 @@ try {
   }
   const out = path.resolve(arg('--out') ?? path.join('generated', manifest.project.slug));
   generateProject(manifest, out);
+  const installationInventory = recordRecipeInstallations(out);
   console.log(`Generated standalone project: ${out}`);
   console.log(`Template: ${plan.template.id} ${plan.template.version}`);
   console.log(`Adapters: ${plan.adapters.map((adapter) => adapter.id).join(', ') || 'none'}`);
   console.log(`Recipes: ${plan.recipes.map((recipe) => recipe.id).join(', ') || 'none'}`);
+  console.log(`Recipe installation inventory: ${installationInventory.installed.length} recorded, ${installationInventory.unresolved.length} unresolved`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);

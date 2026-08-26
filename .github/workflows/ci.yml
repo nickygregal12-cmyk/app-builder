@@ -60,12 +60,27 @@ jobs:
       - name: Cross-browser visual portability smoke
         run: npm run test:e2e:portability
 
+      # Advisory, and deliberately so: §8 of docs/VISUAL_EXCELLENCE.md asks for
+      # real corpus evidence before any threshold exists. It reads the builds
+      # the steps above already produced and never regenerates one.
+      - name: Cross-build anti-template diagnostic
+        run: npm run diagnose:anti-template
+
       - name: Publish cross-browser portability evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cross-browser-portability-evidence
           path: .app-builder/portability
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Publish anti-template diagnostic
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: anti-template-diagnostic
+          path: .app-builder/anti-template
           if-no-files-found: warn
           retention-days: 14
 

@@ -1,5 +1,5 @@
 /**
- * Design Contract editing.
+ * Design Contract editing and Phase 4C DesignSystemSpec compilation.
  *
  * Structured controls over the design decisions the factory already makes, not
  * a stylesheet someone can type into. Every control has a declared set of
@@ -10,6 +10,13 @@
  * `maxWidth` and `radius` already become CSS custom properties that the
  * template uses widely; `density` did not, and is compiled here rather than
  * offered as a label that changes nothing.
+ *
+ * Phase 4C adds a compiler IR named DesignSystemSpec between those decisions
+ * and CSS. It is derived from the existing Design Contract rather than becoming
+ * another design authority. Existing generation and live Console edits already
+ * call `renderBrandCss`, so routing that function through the spec gives the
+ * declaration a real renderer consumer before any registry or extra UI is
+ * allowed to grow around it.
  */
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -124,7 +131,43 @@ export function compileDesignTokens(design) {
   };
 }
 
-export function renderBrandCss(design) {
-  const entries = Object.entries(compileDesignTokens(design)).map(([name, value]) => `  ${name}: ${value};`);
+/**
+ * Phase 4C compiler IR.
+ *
+ * This is intentionally derived from the existing Design Contract. It records
+ * both the decisions that produced the output and the exact token output a
+ * renderer consumes, so future persistence can be portable without inventing
+ * a second source of design truth.
+ */
+export function compileDesignSystemSpec(design) {
+  return {
+    schemaVersion: 1,
+    authority: 'design-contract',
+    layout: {
+      patternId: design.patternId,
+      label: design.label,
+      shellClass: design.shellClass,
+    },
+    controls: {
+      accentColor: design.accentColor,
+      maxWidth: design.maxWidth,
+      radius: design.radius,
+      density: design.density,
+    },
+    tokens: compileDesignTokens(design),
+  };
+}
+
+/** A real renderer consumer for DesignSystemSpec, not a decorative declaration. */
+export function renderDesignSystemCss(spec) {
+  if (!spec || spec.schemaVersion !== 1 || spec.authority !== 'design-contract' || !spec.tokens || typeof spec.tokens !== 'object') {
+    throw new Error('Invalid DesignSystemSpec: expected compiler output from the Design Contract.');
+  }
+  const entries = Object.entries(spec.tokens).map(([name, value]) => `  ${name}: ${value};`);
   return `:root {\n${entries.join('\n')}\n}\n`;
+}
+
+/** Existing product path: generation and live Console edits now compile through DesignSystemSpec. */
+export function renderBrandCss(design) {
+  return renderDesignSystemCss(compileDesignSystemSpec(design));
 }

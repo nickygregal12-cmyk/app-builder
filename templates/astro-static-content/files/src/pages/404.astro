@@ -1,0 +1,47 @@
+---
+/**
+ * The not-found surface, at the filename static hosts look for.
+ *
+ * The composer decides what a not-found page says, exactly as it does for every
+ * other surface; this only puts it where Netlify, GitHub Pages, S3 and every
+ * other static host will actually serve it. A project whose composition has no
+ * not-found page still gets a document rather than the host's own bare 404,
+ * because a visitor who mistypes a URL should still be able to reach the site.
+ */
+import type { PageSpec, ProjectComposition, SectionSpec } from '../lib/composition';
+import { composition } from '../generated/composition';
+import { project } from '../generated/project';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Section from '../components/Section.astro';
+
+const composed = composition as unknown as ProjectComposition;
+const NOT_FOUND = /(^|\/)(404|not-found)$/;
+const found = composed.pages.find((page) => NOT_FOUND.test(page.path));
+
+const page: PageSpec = found ?? {
+  id: 'not-found',
+  path: '/404',
+  title: `Page not found — ${project.name}`,
+  purpose: 'Tell a visitor the address does not exist and offer a way back.',
+  navigation: { label: 'Not found', order: 999, visible: false },
+  primaryAction: null,
+  sectionIds: [],
+};
+
+const sectionMap = new Map(composed.sections.map((section) => [section.id, section]));
+const sections = page.sectionIds
+  .map((id) => sectionMap.get(id))
+  .filter((section): section is SectionSpec => Boolean(section));
+---
+<SiteLayout page={page}>
+  {sections.map((section) => <Section section={section} />)}
+  {sections.length === 0 && (
+    <section class="page-section" data-element-key="section">
+      <div class="section-heading">
+        <h1>Page not found</h1>
+        <p class="section-copy">That address does not exist on this site.</p>
+      </div>
+      <div class="section-actions"><a class="button primary-action" href="/">Back to the home page</a></div>
+    </section>
+  )}
+</SiteLayout>

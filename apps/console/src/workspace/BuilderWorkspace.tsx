@@ -1110,6 +1110,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const rebuild = Boolean(snapshot?.project.workspacePath);
   const canVerify = snapshot?.project.state === 'generated';
   const canPreview = snapshot?.project.state === 'verified' && snapshot.preview.state === 'stopped';
+  const previewStarting = snapshot?.preview.state === 'starting';
   const previewRunning = snapshot?.preview.state === 'running' && Boolean(snapshot.preview.path);
   const pages = snapshot?.composition?.pages ?? [];
   const warnings = snapshot?.composition?.warnings ?? [];
@@ -1218,7 +1219,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
         <div className="preview-toolbar">
           <div><span className="builder-kicker">{stageView === 'compare' ? 'Visual directions' : 'Live preview'}</span><strong>{stageView === 'compare'
             ? snapshot.visualCandidates ? `${snapshot.visualCandidates.candidates.length} candidates over one frozen truth` : 'No candidate set yet'
-            : previewRunning ? snapshot.preview.path : 'Service-managed preview'}</strong></div>
+            : previewRunning ? snapshot.preview.path : previewStarting ? 'Starting…' : 'Service-managed preview'}</strong></div>
           <div className="stage-controls">
             <div className="device-switcher" role="group" aria-label="Builder stage">
               <button type="button" className={stageView === 'preview' ? 'active' : ''} onClick={() => setStageView('preview')}>preview</button>
@@ -1235,7 +1236,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
             onError={setError}
           /></div>
           : <div className={`preview-canvas preview-${device}`}>
-            {previewRunning ? <iframe key={previewNonce} title={`${snapshot.project.name} preview`} src={`${snapshot.preview.path}?__builder=1`} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
+            {previewRunning ? <iframe key={previewNonce} title={`${snapshot.project.name} preview`} src={`${snapshot.preview.path}?__builder=1`} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{previewStarting ? 'Starting the preview…' : snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
           </div>}
       </section>
 

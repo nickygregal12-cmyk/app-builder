@@ -98,10 +98,14 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByText('quality · build · succeeded')).toBeVisible();
   await expect(page.getByText('Dependencies installed')).toBeVisible();
 
-  // Every request the preview makes is recorded so the boundary can be proved,
-  // not assumed: a remote operator only ever reaches the Console origin.
+  // Every request the preview makes, and what came back, is recorded so the
+  // boundary can be proved rather than assumed: a remote operator only ever
+  // reaches the Console origin, and nothing the Console owns is ever served
+  // into a generated site.
   const previewRequests: string[] = [];
+  const previewAnswers: { url: string; status: number }[] = [];
   page.on('request', (request) => { if (request.frame() !== page.mainFrame()) previewRequests.push(request.url()); });
+  page.on('response', (response) => { if (response.frame() !== page.mainFrame()) previewAnswers.push({ url: response.url(), status: response.status() }); });
 
   await page.getByRole('button', { name: 'Start preview' }).click();
   await expect(page.getByRole('button', { name: 'Stop preview' })).toBeVisible({ timeout: 20_000 });
@@ -118,13 +122,33 @@ test('Builder Console drives governed sources, generation, verification and prev
   const previewOrigin = await preview.contentFrame().locator(':root').evaluate(() => window.location.origin);
   expect(previewOrigin).toBe(consoleOrigin);
 
-  // The generated app's own modules and assets travel the same path. If `--base`
-  // were not applied they would resolve at the Console root and 404.
-  const moduleRequests = previewRequests.filter((url) => url.endsWith('.tsx') || url.endsWith('.css') || url.includes('/@vite/'));
-  expect(moduleRequests.length).toBeGreaterThan(0);
+  // Nothing the preview asks for leaves this origin. That is the boundary the
+  // architecture exists to hold: a remote operator's browser is never handed a
+  // factory-host loopback address.
+  expect(previewRequests.length).toBeGreaterThan(0);
   for (const url of previewRequests) {
-    expect(url.startsWith(`${consoleOrigin}/preview/`)).toBe(true);
+    expect(new URL(url).origin).toBe(consoleOrigin);
   }
+
+  // And nothing outside the mount is ever *answered*. A dev server serves its
+  // own module graph from the server root rather than from the base it was
+  // given, so a preview asks this origin for paths like `/@vite/client` and
+  // `/src/styles.css`. Some of those names also exist in the Console, and
+  // before this was held the preview frame was loading the Console's own
+  // stylesheet and HMR client into a generated site. Every request outside
+  // `/preview/` must therefore come back empty-handed.
+  const served = previewAnswers.filter((answer) => answer.status >= 200 && answer.status < 300);
+  expect(served.length).toBeGreaterThan(0);
+  for (const answer of served) {
+    expect(answer.url.startsWith(`${consoleOrigin}/preview/`)).toBe(true);
+  }
+
+  // The generated site is complete from inside the mount alone: what it renders
+  // does not depend on any of those requests succeeding.
+  // A property the generated site's own stylesheet sets and the Console does
+  // not, chosen because it does not change with the frame's width.
+  const brandWeight = await preview.contentFrame().locator('.site-brand').evaluate((element) => getComputedStyle(element).fontWeight);
+  expect(brandWeight).toBe('800');
 
   await page.getByRole('button', { name: 'mobile' }).click();
   await expect(page.locator('.preview-canvas')).toHaveClass(/preview-mobile/);

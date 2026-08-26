@@ -1,0 +1,56 @@
+---
+/**
+ * An enquiry form that is a form.
+ *
+ * The application renderer's version is a React component: without JavaScript
+ * there is no form at all, because there is no page. Here the form is in the
+ * document, so a visitor whose script did not load — or did not run — can still
+ * post an enquiry. That is not a nicety on a lead-generation site; the form is
+ * the reason the site exists.
+ *
+ * The script below is enhancement, not the mechanism. It intercepts the submit
+ * so the visitor stays on the page and gets an answer in a live region instead
+ * of a host's own confirmation screen. When it does not run, the browser posts
+ * the form the ordinary way and the host answers.
+ */
+---
+<form class="enquiry-form" name="enquiry" method="POST" action="/__forms.html" data-netlify="true" data-netlify-honeypot="bot-field">
+  <input type="hidden" name="form-name" value="enquiry" />
+  <p hidden><label>Do not fill this in <input name="bot-field" /></label></p>
+  <label>Name <input name="name" autocomplete="name" required /></label>
+  <label>Email <input name="email" type="email" autocomplete="email" required /></label>
+  <label>Phone <input name="phone" type="tel" autocomplete="tel" /></label>
+  <label class="span-two">Message <textarea name="message" rows="5" required></textarea></label>
+  <div class="enquiry-actions">
+    <button class="button primary-action" type="submit">Send enquiry</button>
+    <p aria-live="polite"></p>
+  </div>
+</form>
+<script is:inline>
+  (function () {
+    var forms = document.querySelectorAll('form.enquiry-form');
+    for (var index = 0; index < forms.length; index += 1) {
+      (function (form) {
+        var status = form.querySelector('.enquiry-actions p');
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          if (status) status.textContent = 'Sending…';
+          var params = new URLSearchParams();
+          var data = new FormData(form);
+          data.forEach(function (value, key) { if (typeof value === 'string') params.append(key, value); });
+          fetch(form.getAttribute('action') || '/__forms.html', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+          }).then(function (response) {
+            if (!response.ok) throw new Error('Submission failed.');
+            form.reset();
+            if (status) status.textContent = 'Thanks — your enquiry has been sent.';
+          }).catch(function () {
+            if (status) status.textContent = 'We could not send your enquiry. Please try again.';
+          });
+        });
+      })(forms[index]);
+    }
+  })();
+</script>

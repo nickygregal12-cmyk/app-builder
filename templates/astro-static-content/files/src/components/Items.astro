@@ -1,0 +1,27 @@
+---
+import { itemDetail, itemShape, itemTitle } from '../lib/composition';
+
+interface Props { values: unknown; variant?: string }
+const { values, variant } = Astro.props;
+const list = Array.isArray(values) ? values : [];
+const shape = itemShape(list, variant);
+---
+{list.length > 0 && shape === 'list' && (
+  <ul class="plain-list">{list.map((item) => <li>{itemTitle(item)}</li>)}</ul>
+)}
+{list.length > 0 && shape === 'features' && (
+  <ul class="feature-list">{list.map((item) => (
+    <li>
+      <strong>{itemTitle(item)}</strong>
+      {itemDetail(item).map((detail) => <span>{detail}</span>)}
+    </li>
+  ))}</ul>
+)}
+{list.length > 0 && shape === 'cards' && (
+  <div class="item-grid">{list.map((item) => (
+    <article class="content-card">
+      <h3>{itemTitle(item)}</h3>
+      {itemDetail(item).map((detail) => <p>{detail}</p>)}
+    </article>
+  ))}</div>
+)}

@@ -1,0 +1,47 @@
+---
+/**
+ * Every composed route, as a real document.
+ *
+ * `getStaticPaths` enumerates the pages the composition declares, so the build
+ * emits one HTML file per route with its content already in it. Nothing is
+ * discovered by the browser and nothing is routed on the client: a visitor,
+ * a crawler and a screen reader all receive the same finished page.
+ *
+ * The not-found surface is excluded here and rendered by `404.astro`, because
+ * static hosts look for `404.html` at the root by convention and a route named
+ * `/404` would land at `/404/index.html` where nothing looks for it.
+ */
+import type { PageSpec, ProjectComposition, SectionSpec } from '../lib/composition';
+import { composition } from '../generated/composition';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Section from '../components/Section.astro';
+
+const composed = composition as unknown as ProjectComposition;
+
+export function getStaticPaths() {
+  // Everything this needs is declared inside it. Astro hoists `getStaticPaths`
+  // out of the component's own scope, so a constant shared with the frontmatter
+  // is not in scope by the time the build calls it.
+  const notFound = /(^|\/)(404|not-found)$/;
+  const pages = (composition as unknown as ProjectComposition).pages;
+  return pages
+    .filter((page) => !notFound.test(page.path))
+    .map((page) => ({
+      // Astro addresses the site root as `undefined` rather than as an empty
+      // string, so a leading and trailing slash are stripped and the home page
+      // becomes the catch-all's empty match.
+      params: { route: page.path.replace(/^\/+|\/+$/g, '') || undefined },
+      props: { page },
+    }));
+}
+
+interface Props { page: PageSpec }
+const { page } = Astro.props;
+const sectionMap = new Map(composed.sections.map((section) => [section.id, section]));
+const sections = page.sectionIds
+  .map((id) => sectionMap.get(id))
+  .filter((section): section is SectionSpec => Boolean(section));
+---
+<SiteLayout page={page}>
+  {sections.map((section) => <Section section={section} />)}
+</SiteLayout>

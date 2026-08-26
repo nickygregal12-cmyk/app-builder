@@ -2,6 +2,7 @@ import http from 'node:http';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFactoryHttpServer } from '../apps/service/src/http.js';
+import { FactoryService } from '../apps/service/src/factory-service.js';
 import { previewProxyRoute, resolvePreviewTarget } from '../apps/service/src/preview-proxy.js';
 
 async function listen(server) {
@@ -51,6 +52,39 @@ test('a destination comes only from factory-owned preview state', () => {
   // Defence in depth: the factory's own control surface is never a preview.
   assert.equal(resolvePreviewTarget(service, 'factory-port', { reservedPorts: [4310] }), null);
   assert.equal(resolvePreviewTarget(service, 'live', { reservedPorts: [4310] }).port, 45123);
+});
+
+test('a preview that has not finished booting is starting, not running', () => {
+  // These were the same statement while every generated project booted in a few
+  // hundred milliseconds. A prerendered project's dev server takes seconds, and
+  // in that window the Console's poll saw `running`, mounted the preview frame,
+  // and its one request reached a port nothing was listening on yet — leaving a
+  // proxy error in the frame until something else remounted it.
+  const service = new FactoryService({
+    store: { upsertProject: () => {}, recordEvent: async () => {} },
+    workspacesRoot: '/tmp/app-builder-preview-state',
+    stateRoot: '/tmp/app-builder-preview-state',
+    factoryRoot: process.cwd(),
+  });
+  service.requireProject = (id) => ({ id });
+  const booting = { process: { exitCode: null }, port: 45123, basePath: '/preview/booting/', url: 'http://127.0.0.1:45123/preview/booting/', ready: false, startedAt: '2026-08-26T00:00:00.000Z' };
+  service.previews.set('booting', booting);
+
+  assert.equal(service.previewStatus('booting').state, 'starting');
+  // No destination while it cannot serve, so the proxy says plainly that
+  // nothing is running there rather than reporting a connection failure.
+  assert.equal(service.previewStatus('booting').path, null);
+  assert.equal(service.previewTarget('booting'), null);
+  assert.equal(resolvePreviewTarget(service, 'booting'), null);
+
+  booting.ready = true;
+  assert.equal(service.previewStatus('booting').state, 'running');
+  assert.equal(service.previewStatus('booting').path, '/preview/booting/');
+  assert.equal(service.previewTarget('booting').port, 45123);
+
+  booting.process.exitCode = 0;
+  assert.equal(service.previewStatus('booting').state, 'stopped');
+  assert.equal(service.previewTarget('booting'), null);
 });
 
 test('the proxy serves a live preview and its assets through the factory boundary', async () => {

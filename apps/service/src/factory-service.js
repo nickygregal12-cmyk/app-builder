@@ -249,6 +249,21 @@ export class FactoryService {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
   }
 
+  /**
+   * The build record a generated workspace carries.
+   *
+   * One reader, so every caller that needs a fact about how this build was
+   * generated — its template, its renderer, what starting its dev server
+   * requires — reads it from the build itself rather than re-deriving it from
+   * the factory's current registries.
+   */
+  readProjectRecord(projectId) {
+    const project = this.requireProject(projectId);
+    const file = project.workspacePath ? path.join(project.workspacePath, '.app-builder', 'project.json') : null;
+    if (!file || !fs.existsSync(file)) return null;
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
   /** The design the live build compiled, with the controls offered over it. */
   designContract(projectId) {
     const project = this.requireProject(projectId);
@@ -1408,10 +1423,22 @@ export class FactoryService {
    * Console -> Factory boundary at this path, never at a factory-host loopback
    * address it could not resolve anyway.
    */
+  /**
+   * Whether a preview can actually serve, not whether a process exists.
+   *
+   * These were the same statement while every generated project booted a Vite
+   * dev server in a few hundred milliseconds. A prerendered project's dev
+   * server takes seconds, and in that window this reported `running`, the
+   * Console's poll mounted the preview frame, its one request reached a port
+   * nothing was listening on yet, and the frame kept that error until something
+   * else happened to remount it. `starting` is the honest third state: a
+   * preview exists and is not yet serving.
+   */
   previewStatus(projectId) {
     this.requireProject(projectId);
     const preview = this.previews.get(projectId);
     if (!preview || preview.process.exitCode !== null) return { state: 'stopped', path: null, startedAt: null };
+    if (!preview.ready) return { state: 'starting', path: null, startedAt: preview.startedAt };
     return { state: 'running', path: preview.basePath, startedAt: preview.startedAt };
   }
 
@@ -1424,13 +1451,17 @@ export class FactoryService {
     this.requireProject(projectId);
     const preview = this.previews.get(projectId);
     if (!preview || preview.process.exitCode !== null) return null;
+    // A preview that is still booting has no destination yet. Returning one
+    // would make the proxy answer a connection error rather than say plainly
+    // that nothing is running there.
+    if (!preview.ready) return null;
     return { port: preview.port, basePath: preview.basePath, url: preview.url };
   }
 
   async startPreview(projectId) {
     const { workspace } = this.requireWorkspace(projectId);
     const existing = this.previewStatus(projectId);
-    if (existing.state === 'running') return existing;
+    if (existing.state === 'running' || existing.state === 'starting') return existing;
     if (!fs.existsSync(path.join(workspace, 'node_modules'))) throw new Error('Project dependencies are not installed. Run verification before starting preview.');
     const port = await freeLocalPort();
     // The preview serves under the same path the operator's browser asks for,
@@ -1439,20 +1470,28 @@ export class FactoryService {
     // the generated repository stays an ordinary portable project.
     const basePath = previewBasePath(projectId);
     const url = `http://127.0.0.1:${port}${basePath}`;
+    // What this build's own template says its dev server needs to stay a
+    // supervised child. Astro's dev server, for instance, detaches itself when
+    // it believes it is being run by an agent, which would leave the factory
+    // holding a process that has already exited while a server it can no longer
+    // stop keeps serving a stale build on the port. The template declares the
+    // environment that prevents it; the service does not learn what Astro is.
+    const previewEnv = this.readProjectRecord(projectId)?.preview?.env ?? {};
     const child = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port), '--base', basePath], {
       cwd: workspace,
       stdio: 'ignore',
       shell: process.platform === 'win32',
       detached: process.platform !== 'win32',
-      env: { ...process.env, BROWSER: 'none' },
+      env: { ...process.env, ...previewEnv, BROWSER: 'none' },
     });
-    const preview = { process: child, port, url, basePath, startedAt: new Date().toISOString() };
+    const preview = { process: child, port, url, basePath, ready: false, startedAt: new Date().toISOString() };
     this.previews.set(projectId, preview);
     child.once('exit', () => {
       if (this.previews.get(projectId)?.process === child) this.previews.delete(projectId);
     });
     try {
       await waitForPreview(url, child);
+      preview.ready = true;
       await this.store.recordEvent(createEvent({ projectId, type: 'preview.started', actor: 'factory-service', payload: { path: basePath, port } }));
       return this.previewStatus(projectId);
     } catch (error) {

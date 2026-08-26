@@ -12,6 +12,7 @@ import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
+import { compileDesignLintReport } from '../../../tooling/lib/design-lint.mjs';
 import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { deriveOpportunities } from '../../../tooling/lib/product-opportunities.mjs';
 import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
@@ -287,6 +288,33 @@ export class FactoryService {
     // spec a person walks away with is never the one the last build left behind.
     writeDesignArtifacts(workspace, design);
     return design;
+  }
+
+  /**
+   * Lint a build from what it compiled and what it composed.
+   *
+   * Deliberately cheap and deliberately early: no browser, no model. Returns
+   * null where a build has no compiled design yet, rather than inventing a
+   * clean report for a project that has not been generated.
+   */
+  designLintReport(projectId, composition = null) {
+    const project = this.requireProject(projectId);
+    const workspace = project.workspacePath;
+    if (!workspace) return null;
+    const specFile = path.join(workspace, DESIGN_SYSTEM_SPEC_PATH);
+    if (!fs.existsSync(specFile)) return null;
+    const composed = composition ?? this.getComposition(projectId);
+    if (!composed) return null;
+    const template = this.workspaceTemplate(projectId);
+    const tokenSource = template?.presentation?.tokenSource
+      ? path.join(workspace, template.presentation.tokenSource)
+      : null;
+    return compileDesignLintReport({
+      spec: JSON.parse(fs.readFileSync(specFile, 'utf8')),
+      composition: composed,
+      tokenSourceCss: tokenSource && fs.existsSync(tokenSource) ? fs.readFileSync(tokenSource, 'utf8') : '',
+      compositionHash: composed.compositionHash ?? null,
+    });
   }
 
   sectionVariantsPath(projectId) {
@@ -653,6 +681,10 @@ export class FactoryService {
         compositionHash: composition.compositionHash,
         capturedAt: new Date().toISOString(),
         taskId: task.id,
+        // The rules travel with the pictures. A reviewer, or a later visual
+        // critic, should not re-derive from a screenshot what a rule already
+        // settled from the compiled design and the composition.
+        designLint: this.designLintReport(projectId, composition),
       }));
 
       const directory = this.evidenceDirectory(projectId, evidence.id);

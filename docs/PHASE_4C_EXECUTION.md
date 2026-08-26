@@ -221,20 +221,57 @@ already drives a real browser over real interaction states. Stories would be a s
 declaration of what each component renders, beside the template and the registry. Revisit
 only if Phase 4D's visual regression contracts prove they need per-component isolation.
 
-## 4C.5 — Deterministic DesignLint
+## 4C.5 — Deterministic DesignLint — done
 
-Add cheap deterministic checks before expensive AI visual review. Initial rules should focus on defects the current template/composer can actually produce and that can be tested without subjective judgement, for example:
+`tooling/lib/design-lint.mjs`, covered by `tooling/design-lint.test.mjs`. The report is
+part of `RenderedEvidence`.
 
-- token bypass;
-- arbitrary radii/spacing outside the active scale;
-- heading hierarchy violations;
-- legibility floors;
-- low-contrast muted text where deterministically measurable;
-- repeated section/CTA structures when composition data proves monotony;
-- excessive/conflicting motion relative to MotionContract;
-- mobile layout constraints the generated structure can deterministically expose.
+The point is cost and reliability, in that order. A visual critic asked to look at a page
+will spend tokens reporting that an accent is unreadable or that four sections in a row look
+the same — things a rule decides from the compiled design and the composition, for nothing,
+every time, with the same answer. No browser, no screenshot, no model: it runs before
+evidence capture is worth paying for.
 
-`DesignLintReport` then becomes part of rendered visual evidence and a prerequisite input to the visual gate.
+### Rules
+
+| rule | severity | what it decides |
+| --- | --- | --- |
+| `accent-contrast` | violation | the accent is unreadable on a ground the build actually prints it on |
+| `reduced-motion-required` | violation | the motion contract, or the template's reduced-motion block, stopped honouring `prefers-reduced-motion` |
+| `repetitive-section-presentation` | warning | three or more consecutive sections presented identically |
+| `competing-primary-actions` | warning | more than two sections on a page each rendering a primary action |
+| `uniform-page-rhythm` | recommendation | a long page that never changes ground |
+
+`accent-contrast` is the one worth explaining. The Design Contract already refuses an accent
+that cannot carry its own label, but that check measures against white, and neither ground
+the accent is printed on is white. The tinted one is 9% of the accent itself mixed into the
+page, which costs a real amount of contrast: **292 of the accents that pass the input gate
+fail on it**, and they are ordinary brand blues and teals — exactly what reading a company's
+own site now yields since 4C.3. A build that never puts the accent on that ground is not
+held to it.
+
+### Severity is not decoration
+
+- `violation` — a defect. Something is unreadable, or an invariant broke. `clean` is false.
+- `warning` — probably wrong, worth a person's attention.
+- `recommendation` — a suggestion, and being ignored is a legitimate outcome. A dense
+  internal tool is deliberately flat; `uniform-page-rhythm` must never fail it.
+
+All six canonical project types and the synthetic mixed-source build lint clean, which is
+the test that keeps a rule from crying wolf.
+
+### What the rules deliberately do not judge
+
+`aiReviewCandidates` names what still needs judgement — brand fit, visual hierarchy,
+distinctiveness, and imagery suitability where the build publishes photographs. This is the
+other half of the point: a critic handed "review this page" re-derives what the rules already
+settled, while a critic handed a scoped list spends its budget on the questions that need it.
+
+### Two rules written and removed
+
+A `missing-page-opening` rule was written and dropped: every composed page opens with a hero,
+so it could never fire. An `action-label-contrast` rule was dropped for restating the input
+gate. Neither belonged; a rule nothing can fail is not a rule.
 
 ## 4C.6 — Design-intelligence catalogue
 

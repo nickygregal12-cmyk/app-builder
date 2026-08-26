@@ -174,7 +174,7 @@ export function deriveEvidencePlan({ composition, stateMatrix, viewports = VIEWP
  * A planned capture with no bytes is not recorded. Evidence that names a file
  * nobody produced is worse than evidence that admits a gap.
  */
-export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, checkpointId = null, taskId = null } = {}) {
+export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, checkpointId = null, taskId = null, designLint = null } = {}) {
   if (!projectId || !buildRef || !compositionHash || !capturedAt) throw new Error('Rendered evidence needs a project, a build, a composition hash and a capture time.');
   const captured = new Map(list(results).map((result) => [result.id, result]));
   const captures = plan.captures
@@ -220,6 +220,10 @@ export function buildEvidenceSet({ plan, results, projectId, buildRef, compositi
     viewports: plan.viewports,
     captures,
     uncovered,
+    // What the rules already settled, travelling with the pictures. A reviewer
+    // — or a visual critic — should not have to re-derive a contrast failure
+    // from a screenshot when a rule decided it before the browser opened.
+    designLint,
   };
   return { ...base, setHash: hash(base) };
 }

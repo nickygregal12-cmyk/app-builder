@@ -17,24 +17,15 @@ for (const path of scripts) {
   });
 }
 
-test('read-only preflight contains no host mutation operations', () => {
+test('read-only preflight contains no host mutation commands', () => {
   const source = readFileSync('ops/hetzner/preflight-existing-host.sh', 'utf8');
-  for (const forbidden of [
-    'apt-get ',
-    'useradd ',
-    'usermod ',
-    'passwd ',
-    'systemctl start',
-    'systemctl enable',
-    'systemctl restart',
-    'ufw ',
-    'iptables ',
-    'nft ',
-    'rm -',
-    'mkdir ',
-    'install -d',
-  ]) {
-    assert.equal(source.includes(forbidden), false, `preflight must not contain ${forbidden}`);
+  const mutationPatterns = [
+    /(?:^|[;&|]\s*)(?:sudo\s+)?(?:apt|apt-get|useradd|usermod|passwd|ufw|iptables|nft|rm|mkdir|install)\b/m,
+    /(?:^|[;&|]\s*)(?:sudo\s+)?systemctl\s+(?:start|stop|restart|enable|disable|daemon-reload)\b/m,
+    /(?:^|[;&|]\s*)(?:sudo\s+)?(?:chown|chmod|chgrp|cp|mv|ln|touch|truncate|tee)\b/m,
+  ];
+  for (const pattern of mutationPatterns) {
+    assert.doesNotMatch(source, pattern, `preflight must remain read-only: ${pattern}`);
   }
 });
 

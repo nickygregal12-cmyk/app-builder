@@ -1,0 +1,159 @@
+#cloud-config
+# App Builder dedicated Hetzner runtime host bootstrap.
+# Infrastructure only: this does not enable autonomous agents or grant model/provider secrets.
+
+package_update: true
+package_upgrade: true
+ssh_pwauth: false
+timezone: UTC
+
+packages:
+  - build-essential
+  - ca-certificates
+  - curl
+  - fail2ban
+  - fuse-overlayfs
+  - git
+  - jq
+  - podman
+  - ripgrep
+  - slirp4netns
+  - sqlite3
+  - uidmap
+  - ufw
+  - unzip
+  - xz-utils
+
+users:
+  - default
+  - name: builderadmin
+    gecos: App Builder host administrator
+    groups:
+      - sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: true
+  - name: appbuilder
+    gecos: App Builder unprivileged runtime
+    shell: /bin/bash
+    lock_passwd: true
+
+write_files:
+  - path: /etc/sysctl.d/90-app-builder-runtime.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      fs.inotify.max_user_watches=524288
+      fs.inotify.max_user_instances=1024
+
+  - path: /usr/local/sbin/app-builder-host-bootstrap
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      NODE_VERSION="22.23.2"
+      NODE_ARCH="x64"
+      NODE_TARBALL="node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz"
+      NODE_BASE_URL="https://nodejs.org/dist/v${NODE_VERSION}"
+
+      # Hetzner must be created with an SSH key. Copy that key from root to the
+      # human-only administrator before root SSH is disabled.
+      if [[ ! -s /root/.ssh/authorized_keys ]]; then
+        echo "No root SSH authorized_keys found. Create the Hetzner server with an SSH key; leaving SSH policy unchanged." >&2
+        exit 1
+      fi
+
+      install -d -m 0700 -o builderadmin -g builderadmin /home/builderadmin/.ssh
+      install -m 0600 -o builderadmin -g builderadmin /root/.ssh/authorized_keys /home/builderadmin/.ssh/authorized_keys
+
+      # Install a pinned Node 22 build that satisfies the repository's >=22.13
+      # engine requirement. Verify it against the checksum published by nodejs.org.
+      tmpdir="$(mktemp -d)"
+      trap 'rm -rf "$tmpdir"' EXIT
+      cd "$tmpdir"
+      curl --fail --silent --show-error --location --remote-name "${NODE_BASE_URL}/${NODE_TARBALL}"
+      curl --fail --silent --show-error --location --remote-name "${NODE_BASE_URL}/SHASUMS256.txt"
+      grep " ${NODE_TARBALL}$" SHASUMS256.txt | sha256sum --check --strict -
+      install -d /opt/node
+      rm -rf "/opt/node/v${NODE_VERSION}"
+      tar -xJf "$NODE_TARBALL" -C /opt/node
+      mv "/opt/node/node-v${NODE_VERSION}-linux-${NODE_ARCH}" "/opt/node/v${NODE_VERSION}"
+      for binary in node npm npx corepack; do
+        ln -sfn "/opt/node/v${NODE_VERSION}/bin/${binary}" "/usr/local/bin/${binary}"
+      done
+
+      # Durable factory state is deliberately separate from disposable task
+      # workspaces. The runtime user owns both, but has no sudo rights.
+      install -d -m 0750 -o appbuilder -g appbuilder \
+        /srv/app-builder \
+        /srv/app-builder/runtime \
+        /srv/app-builder/workspaces \
+        /srv/app-builder/state \
+        /srv/app-builder/checkpoints \
+        /srv/app-builder/logs \
+        /srv/app-builder/artifacts
+
+      install -d -m 0750 -o appbuilder -g appbuilder /home/appbuilder/.local/bin
+      touch /home/appbuilder/.profile
+      if ! grep -q 'HOME/.local/bin' /home/appbuilder/.profile; then
+        printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> /home/appbuilder/.profile
+      fi
+      chown appbuilder:appbuilder /home/appbuilder/.profile
+
+      # Rootless container prerequisites for the future ExecutionEnvironmentAdapter.
+      if ! grep -q '^appbuilder:' /etc/subuid; then
+        usermod --add-subuids 100000-165535 appbuilder
+      fi
+      if ! grep -q '^appbuilder:' /etc/subgid; then
+        usermod --add-subgids 100000-165535 appbuilder
+      fi
+      loginctl enable-linger appbuilder || true
+
+      # Host firewall is defence in depth. Hetzner Cloud Firewall should also
+      # restrict SSH to the owner's public IP/CIDR. No Console/service/preview
+      # port is opened publicly here.
+      ufw --force reset
+      ufw default deny incoming
+      ufw default allow outgoing
+      ufw allow 22/tcp comment 'SSH only; restrict further with Hetzner Cloud Firewall'
+      ufw --force enable
+      systemctl enable --now fail2ban
+
+      # Only the human admin may log in over SSH. The unprivileged runtime user
+      # is entered through sudo from builderadmin or through future service-owned
+      # process supervision, never by exposing a second SSH identity.
+      cat > /etc/ssh/sshd_config.d/99-app-builder-runtime.conf <<'EOF'
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      PermitRootLogin no
+      AllowUsers builderadmin
+      AllowTcpForwarding local
+      GatewayPorts no
+      X11Forwarding no
+      PermitTunnel no
+      EOF
+      sshd -t
+      systemctl restart ssh
+
+      sysctl --system >/dev/null
+
+      cat > /etc/app-builder-host.json <<EOF
+      {
+        "schemaVersion": 1,
+        "role": "app-builder-runtime-host",
+        "nodeVersion": "${NODE_VERSION}",
+        "runtimeUser": "appbuilder",
+        "adminUser": "builderadmin",
+        "autonomousRuntimeEnabled": false,
+        "providerSecretsInstalled": false
+      }
+      EOF
+      chmod 0644 /etc/app-builder-host.json
+
+runcmd:
+  - [bash, -lc, /usr/local/sbin/app-builder-host-bootstrap]
+
+final_message: "App Builder Hetzner host baseline complete. SSH as builderadmin and run ops/hetzner/verify-host.sh after cloning the repository."

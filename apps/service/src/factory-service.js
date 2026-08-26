@@ -4,7 +4,7 @@ import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { assertContract, validateContract } from '@app-builder/contracts';
-import { applyContentOverrides, assertEditableElement, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides } from '@app-builder/composition';
+import { applyContentOverrides, assertEditableElement, assetDecisionsHash, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
@@ -165,6 +165,52 @@ export class FactoryService {
 
   overridesPath(projectId) {
     return path.join(this.ingestion.projectRoot(projectId), 'content-overrides.json');
+  }
+
+  assetDecisionsPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'asset-decisions.json');
+  }
+
+  readAssetDecisions(projectId) {
+    this.requireProject(projectId);
+    const file = this.assetDecisionsPath(projectId);
+    if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, decisions: [] };
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  /**
+   * Record what a person decided about individual assets.
+   *
+   * The decisions live beside the knowledge pack rather than inside it. The
+   * pack is derived truth about sources and every asset in it must agree with
+   * the source it came from; a human overriding one photograph is a different
+   * kind of statement and does not get to rewrite that derivation. Composition
+   * reads both.
+   */
+  // What the live build would have to be rebuilt to catch up with.
+  assetDecisionsHash(projectId) {
+    return assetDecisionsHash(this.readAssetDecisions(projectId).decisions);
+  }
+
+  async writeAssetDecisions(projectId, decisions, change = null) {
+    this.requireProject(projectId);
+    const document = assertContract('asset-decision', { schemaVersion: 1, projectId, decisions });
+    fs.mkdirSync(path.dirname(this.assetDecisionsPath(projectId)), { recursive: true });
+    fs.writeFileSync(this.assetDecisionsPath(projectId), `${JSON.stringify(document, null, 2)}\n`);
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'asset.governance.updated',
+      actor: 'console',
+      payload: {
+        assetId: change?.assetId ?? null,
+        decision: change?.decision ?? null,
+        rightsDeclaration: change?.rightsDeclaration ?? null,
+        cropReview: change?.cropReview ?? null,
+        publishUseAllowed: change?.effect?.publishUseAllowed ?? false,
+        decided: document.decisions.length,
+      },
+    }));
+    return document.decisions;
   }
 
   readOverrides(projectId) {
@@ -615,6 +661,7 @@ export class FactoryService {
         knowledgePack: project.knowledgePack,
         assetSourceDir: this.ingestion.assetDirectory(projectId),
         contentOverrides: this.readOverrides(projectId).overrides,
+        assetDecisions: this.readAssetDecisions(projectId).decisions,
         projectId,
       });
       await this.store.recordEvent(createEvent({

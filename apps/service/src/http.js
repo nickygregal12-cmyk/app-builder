@@ -2,6 +2,7 @@ import http from 'node:http';
 import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
 import { updateProjectSourceGovernance } from './source-governance.js';
+import { assetInventory, decideProjectAsset } from './asset-governance.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -68,6 +69,12 @@ export function createFactoryHttpServer({ service }) {
         const body = await readJson(request);
         return send(response, 200, service.resolveElement(route.projectId, body.ref ?? body));
       }
+      if (request.method === 'GET' && route.action === 'assets') return send(response, 200, { assets: assetInventory(service, route.projectId), assetDecisionsHash: service.assetDecisionsHash(route.projectId) });
+      const assetDecisionRoute = route.action?.match(/^assets\/([^/]+)\/decision$/);
+      if (request.method === 'POST' && assetDecisionRoute) {
+        const body = await readJson(request);
+        return send(response, 200, await decideProjectAsset(service, route.projectId, decodeURIComponent(assetDecisionRoute[1]), body));
+      }
       if (request.method === 'GET' && route.action === 'evidence') return send(response, 200, { evidence: service.listRenderedEvidence(route.projectId) });
       if (request.method === 'POST' && route.action === 'evidence/capture') {
         const result = await service.captureRenderedEvidence(route.projectId);
@@ -121,7 +128,7 @@ export function createFactoryHttpServer({ service }) {
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,
-        /source governance/i, /Unknown project source/, /Public URL references/, /Only user-supplied source material/,
+        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /Public URL references/, /Only user-supplied source material/,
       ].some((pattern) => pattern.test(message));
       const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });

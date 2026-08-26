@@ -26,17 +26,27 @@ function safeAssetFile(sourceDir, uri) {
  * Copy the variants of every placed asset into the generated repository and
  * describe them for the template. Assets the composition did not place are not
  * copied: an unplaced asset is not part of the product.
+ *
+ * A variant marked `reviewBeforePublish` is withheld until someone has approved
+ * it. Those are the smart crops, chosen by an attention heuristic that is right
+ * often enough to be trusted and wrong often enough to cut off a head. The full
+ * image still publishes: the template falls back to the widest responsive
+ * variant and the layout sets its own aspect ratio, so an unreviewed crop costs
+ * a considered framing rather than the picture.
  */
-function materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir }) {
+function materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir, assetDecisions = [] }) {
   const placed = new Set(composition.sections.flatMap((section) => section.assetIds));
   const assets = (knowledgePack?.assets ?? []).filter((asset) => placed.has(asset.id));
   if (!assets.length || !assetSourceDir) return {};
 
+  const cropReviews = new Map(assetDecisions.filter((entry) => entry?.assetId).map((entry) => [entry.assetId, entry.cropReview ?? 'pending']));
   const publicDir = path.join(outputDir, 'public/assets');
   const manifest = {};
   for (const asset of assets) {
+    const cropReview = cropReviews.get(asset.id) ?? 'pending';
     const variants = [];
     for (const variant of asset.variants ?? []) {
+      if (variant.reviewBeforePublish && cropReview !== 'approved') continue;
       const source = safeAssetFile(assetSourceDir, variant.uri);
       if (!source) continue;
       const filename = path.basename(source);
@@ -84,7 +94,7 @@ function writeElementIdentityIndex(outputDir, { composition, template, projectId
   return index;
 }
 
-export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
+export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
   const plan = generateProject(manifest, outputDir, { factoryRoot, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
@@ -92,9 +102,9 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   // the schema, because nothing validated the output.
   // Human edits are replayed over freshly composed output, so a rebuild picks
   // up new source material without discarding what someone wrote by hand.
-  const composition = assertContract('composition', applyContentOverrides(composeProject({ manifest, knowledgePack }), contentOverrides));
+  const composition = assertContract('composition', applyContentOverrides(composeProject({ manifest, knowledgePack, assetDecisions }), contentOverrides));
   const out = path.resolve(outputDir);
-  const assets = materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir: out });
+  const assets = materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir: out, assetDecisions });
   writeJson(path.join(out, '.app-builder/composition.json'), composition);
   fs.mkdirSync(path.join(out, 'src/generated'), { recursive: true });
   fs.writeFileSync(path.join(out, 'src/generated/composition.ts'), renderModule('composition', composition));

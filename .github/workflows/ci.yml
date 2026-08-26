@@ -9,6 +9,15 @@ on:
 permissions:
   contents: read
 
+# A PR only needs proof for its newest head. If another commit lands while the
+# previous head is still installing browsers or starting Supabase, cancel that
+# obsolete run rather than spending several more minutes proving code that can
+# no longer be merged. Pushes to main and manual runs keep unique groups so
+# release/history evidence is never cancelled by this optimisation.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest

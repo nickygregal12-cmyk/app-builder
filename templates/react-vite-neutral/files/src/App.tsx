@@ -107,6 +107,21 @@ function editable(section: SectionSpec, entry: Binding | undefined) {
 
 const BUILDER_MODE = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('__builder');
 
+// An ordinary deployment serves this site at the domain root, and Vite reports
+// BASE_URL as '/', so both helpers are the identity function. They only do
+// anything when the site is served under a sub-path — a staging mount, a docs
+// section of a larger site, a preview — where every in-site address the
+// composition declares is relative to that base rather than to the host root.
+const SITE_BASE = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+function siteHref(href: string) {
+  return SITE_BASE && href.startsWith('/') ? `${SITE_BASE}${href}` : href;
+}
+function siteRoute(pathname: string) {
+  if (!SITE_BASE || !pathname.startsWith(SITE_BASE)) return pathname || '/';
+  const route = pathname.slice(SITE_BASE.length);
+  return route.startsWith('/') ? route : `/${route}`;
+}
+
 function primitiveEntries(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
   return Object.entries(value).filter(([, item]) => ['string', 'number', 'boolean'].includes(typeof item) && String(item).trim());
@@ -181,7 +196,7 @@ function Actions({ actions, navigate }: { actions: readonly Action[]; navigate: 
     return <a
       className={index === 0 ? 'button primary-action' : 'button secondary-action'}
       data-element-key={`action:${index}`}
-      href={action.href}
+      href={siteHref(action.href)}
       onClick={(event) => navigate(event, action.href)}
       key={`${action.label}-${action.href}`}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -297,7 +312,7 @@ function SiteFooter({ navigation, navigate }: { navigation: readonly PageSpec[];
       {contact && <SocialLinks profiles={binding(contact, 'profiles')?.value} />}
     </div>
     <nav className="footer-nav" aria-label="Footer navigation">
-      {navigation.map((page) => <a href={page.path} onClick={(event) => navigate(event, page.path)} key={page.id}>{page.navigation.label}</a>)}
+      {navigation.map((page) => <a href={siteHref(page.path)} onClick={(event) => navigate(event, page.path)} key={page.id}>{page.navigation.label}</a>)}
     </nav>
     {import.meta.env.DEV && <div className="factory-meta" data-development-only="true">
       <span>{design.label}</span>
@@ -339,7 +354,7 @@ function useBuilderBridge(pathname: string, pageId: string) {
         origin: target.dataset.bindingOrigin,
         generated: target.dataset.generated === 'true',
         value: target.dataset.bindingKey ? target.textContent ?? '' : '',
-        path: window.location.pathname,
+        path: siteRoute(window.location.pathname),
       }, '*');
     }
     document.addEventListener('click', onClick, true);
@@ -353,7 +368,7 @@ function useBuilderBridge(pathname: string, pageId: string) {
 }
 
 export default function App() {
-  const [pathname, setPathname] = useState(() => window.location.pathname || '/');
+  const [pathname, setPathname] = useState(() => siteRoute(window.location.pathname));
   // An address that matches no page lands on the not-found surface. Falling
   // through to the home page showed the homepage under the wrong URL and told
   // neither the visitor nor a crawler that the page did not exist.
@@ -364,7 +379,7 @@ export default function App() {
   useEffect(() => { initializeRecipes(project); }, []);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
-    const onPopState = () => setPathname(window.location.pathname || '/');
+    const onPopState = () => setPathname(siteRoute(window.location.pathname));
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
@@ -376,7 +391,7 @@ export default function App() {
   const navigate = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!href.startsWith('/')) return;
     event.preventDefault();
-    window.history.pushState({}, '', href);
+    window.history.pushState({}, '', siteHref(href));
     setPathname(href);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -388,7 +403,7 @@ export default function App() {
   };
   return <div className={`site-frame ${design.shellClass}`} data-scenario={currentScenario}>
     <header className="site-header">
-      <a className="site-brand" href="/" onClick={(event) => followLink(event, '/')}>{project.name}</a>
+      <a className="site-brand" href={siteHref('/')} onClick={(event) => followLink(event, '/')}>{project.name}</a>
       {/* A site with more than a handful of surfaces wraps its navigation over
           three or four rows on a phone, which is collapsed rather than
           designed. The toggle is CSS-hidden above the breakpoint, so wide
@@ -400,7 +415,7 @@ export default function App() {
         aria-controls="primary-navigation"
         onClick={() => setMenuOpen((open) => !open)}
       >{menuOpen ? 'Close' : 'Menu'}</button>
-      <nav id="primary-navigation" aria-label="Primary navigation" data-open={menuOpen ? 'true' : 'false'}>{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={page.path} onClick={(event) => followLink(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
+      <nav id="primary-navigation" aria-label="Primary navigation" data-open={menuOpen ? 'true' : 'false'}>{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={siteHref(page.path)} onClick={(event) => followLink(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
     </header>
     <main className="app-shell" data-page-id={currentPage.id}>
       {currentPage.sectionIds.map((sectionId) => sectionMap.get(sectionId)).filter((section): section is SectionSpec => Boolean(section)).map((section) => <Section key={section.id} section={section} navigate={navigate} />)}

@@ -98,11 +98,33 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByText('quality · build · succeeded')).toBeVisible();
   await expect(page.getByText('Dependencies installed')).toBeVisible();
 
+  // Every request the preview makes is recorded so the boundary can be proved,
+  // not assumed: a remote operator only ever reaches the Console origin.
+  const previewRequests: string[] = [];
+  page.on('request', (request) => { if (request.frame() !== page.mainFrame()) previewRequests.push(request.url()); });
+
   await page.getByRole('button', { name: 'Start preview' }).click();
   await expect(page.getByRole('button', { name: 'Stop preview' })).toBeVisible({ timeout: 20_000 });
   const preview = page.getByTitle(`${projectName} preview`);
   await expect(preview).toBeVisible();
   await expect(preview.contentFrame().getByRole('heading', { name: 'Workspace E2E' })).toBeVisible({ timeout: 20_000 });
+
+  // The iframe address is a same-origin factory path, never a host-loopback
+  // preview port the operator's browser could not reach.
+  const previewSrc = await preview.getAttribute('src');
+  expect(previewSrc).not.toMatch(/https?:\/\//);
+  expect(previewSrc).toMatch(/^\/preview\/[^/]+\/\?__builder=1$/);
+  const consoleOrigin = new URL(page.url()).origin;
+  const previewOrigin = await preview.contentFrame().locator(':root').evaluate(() => window.location.origin);
+  expect(previewOrigin).toBe(consoleOrigin);
+
+  // The generated app's own modules and assets travel the same path. If `--base`
+  // were not applied they would resolve at the Console root and 404.
+  const moduleRequests = previewRequests.filter((url) => url.endsWith('.tsx') || url.endsWith('.css') || url.includes('/@vite/'));
+  expect(moduleRequests.length).toBeGreaterThan(0);
+  for (const url of previewRequests) {
+    expect(url.startsWith(`${consoleOrigin}/preview/`)).toBe(true);
+  }
 
   await page.getByRole('button', { name: 'mobile' }).click();
   await expect(page.locator('.preview-canvas')).toHaveClass(/preview-mobile/);

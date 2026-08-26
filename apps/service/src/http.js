@@ -5,6 +5,7 @@ import { factoryToolContract } from './tool-contract.js';
 import { updateProjectSourceGovernance } from './source-governance.js';
 import { assetInventory, decideProjectAsset, recropProjectAsset, replaceProjectAsset } from './asset-governance.js';
 import { chooseSectionVariant, sectionVariantOptions } from './section-variants.js';
+import { createPreviewProxy, previewProxyRoute } from './preview-proxy.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -53,10 +54,17 @@ export function classifyServiceError(message) {
   return CLIENT_ERROR_PATTERNS.some((pattern) => pattern.test(String(message))) ? 400 : 500;
 }
 
-export function createFactoryHttpServer({ service }) {
-  return http.createServer(async (request, response) => {
+export function createFactoryHttpServer({ service, servicePort = null }) {
+  // The service's own port is never a legitimate preview destination. Passing
+  // it in lets the proxy refuse to address the factory control surface even if
+  // preview state were ever corrupted.
+  const previewProxy = createPreviewProxy({ service, reservedPorts: [servicePort].filter((port) => Number.isInteger(port)) });
+  const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+      const previewRoute = previewProxyRoute(url.pathname);
+      if (previewRoute) return previewProxy.handleRequest(request, response, previewRoute, url);
+      if (url.pathname === '/preview' || url.pathname.startsWith('/preview/')) return send(response, 404, { error: 'preview-not-running' });
       if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { ok: true, service: 'app-builder', version: 2 });
       if (request.method === 'GET' && url.pathname === '/tools') return send(response, 200, factoryToolContract());
       if (request.method === 'GET' && url.pathname === '/integrations') return send(response, 200, { integrations: service.integrationStatus() });
@@ -183,4 +191,12 @@ export function createFactoryHttpServer({ service }) {
       return send(response, status, { error: 'request-failed', message });
     }
   });
+
+  // The generated app's dev client opens an HMR socket at the same origin and
+  // path as its assets. Anything that is not a live preview upgrade is closed.
+  server.on('upgrade', (request, socket, head) => {
+    if (!previewProxy.handleUpgrade(request, socket, head)) socket.destroy();
+  });
+
+  return server;
 }

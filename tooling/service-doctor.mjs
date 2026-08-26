@@ -54,6 +54,26 @@ try {
     failed = true;
   }
 
+  // A preview address the Console can render must be a same-origin path. If a
+  // loopback URL ever reappears in operator-facing preview state, a remote
+  // operator's preview silently points at the factory host's own machine.
+  const previewSurface = fs.readFileSync(path.join(root, 'apps/console/src/workspace/BuilderWorkspace.tsx'), 'utf8');
+  if (/preview\.(url|port)/.test(previewSurface)) {
+    console.error('Builder Console must render previews from the factory-issued path, never a preview host or port.');
+    failed = true;
+  }
+  const factoryService = fs.readFileSync(path.join(root, 'apps/service/src/factory-service.js'), 'utf8');
+  const previewStatusBody = factoryService.slice(factoryService.indexOf('  previewStatus(projectId) {'), factoryService.indexOf('  previewTarget(projectId) {'));
+  if (!previewStatusBody || /\burl\b|\bport\b/.test(previewStatusBody)) {
+    console.error('Operator-facing preview status must carry no preview host or port.');
+    failed = true;
+  }
+  const consoleProxy = fs.readFileSync(path.join(root, 'apps/console/vite.config.ts'), 'utf8');
+  if (!consoleProxy.includes("'/preview'")) {
+    console.error('Builder Console must route generated previews through the factory boundary.');
+    failed = true;
+  }
+
   const requiredTools = ['project.create', 'project.sources.ingest', 'project.sources.read', 'project.generate', 'project.verify', 'project.events.read', 'project.metrics.read', 'project.preview.start', 'project.preview.stop'];
   for (const name of requiredTools) {
     if (!FACTORY_TOOLS.some((tool) => tool.name === name)) {

@@ -71,10 +71,11 @@ export type Checkpoint = {
   createdAt: string;
 };
 
+// The Console never learns which loopback port a preview runs on. It receives a
+// same-origin path through the supported Console -> Factory boundary.
 export type PreviewState = {
   state: 'running' | 'stopped';
-  url: string | null;
-  port: number | null;
+  path: string | null;
   startedAt: string | null;
 };
 

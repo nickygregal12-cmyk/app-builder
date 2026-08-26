@@ -19,7 +19,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('APP_BU
 
 const store = new FactoryStore({ stateRoot });
 const service = new FactoryService({ store, workspacesRoot, stateRoot });
-const server = createFactoryHttpServer({ service });
+const server = createFactoryHttpServer({ service, servicePort: port });
 let shuttingDown = false;
 
 server.listen(port, host, () => {

@@ -418,14 +418,45 @@ that already exist, the second removes the compatibility a rollback would need.
 Prefer `expand -> deploy compatible code -> migrate/backfill -> verify -> contract later` over one
 destructive migration.
 
-**Outstanding — the evidence.** The contract refuses a change whose restore was never rehearsed. It
-cannot itself rehearse one, and a migration that succeeded on a disposable test database is still not
-backup, restore and rollback evidence for a real environment. Stage Q12 is not complete until an
-executable acceptance produces a real restore rehearsal against an isolated database — seed, snapshot,
-mutate destructively, restore, and prove the schema, the rows and the tenant-isolation invariants come
-back — behind a provider-neutral seam, so the contract is fed by a performed restore rather than by a
-hand-written fixture. Old-code/new-schema compatibility and partial-deployment behaviour remain
-declared fields awaiting a deployment coupling to enforce them against.
+**Delivered — the evidence.** The contract refuses a change whose restore was never rehearsed, so
+something has to perform one. `npm run acceptance:data-recovery` does, against a real disposable
+PostgreSQL cluster, in the `database-security` job.
+
+`packages/control-plane/src/data-recovery.js` owns what a rehearsal must prove and never opens a
+connection, writes SQL or knows what a dump file is; `tooling/lib/postgres-recovery-adapter.mjs` is
+the PostgreSQL implementation and `tooling/lib/disposable-postgres.mjs` the throwaway cluster. The
+stable App Builder concept is "capture, damage, restore, compare" — a second provider is a second
+adapter, not a second definition of recovery. Snapshot and restore go through `pg_dump`/`pg_restore`
+rather than a bespoke export, because a recovery test that exercises a hand-written export path
+proves the hand-written path works, which is not the question anybody has in an incident.
+
+The acceptance installs the real `profiles` and `organisations` recipe SQL, seeds it, snapshots,
+then destroys: truncates memberships, drops a column, drops a select policy and disables row-level
+security on organisations. It restores and compares a schema fingerprint (columns, types,
+constraints, indexes, the RLS flag, every policy expression) plus declared invariants — row counts,
+referential integrity, an md5 of the stored values, and isolation measured *as an `authenticated`
+caller with that user's claim*. A catalog row saying a policy exists is not the same fact as that
+policy still limiting what a caller can read, and the organisation invariant is the one that fails
+**open**: disabling RLS moves no row, so every count-based check is unmoved by it, and only that
+invariant goes from one organisation to two.
+
+Most of the design is refusing to be fooled by its own happy path, because that is the failure this
+stage is named after. Three scenarios run alongside the real one and are each required to fail: a
+destructive step that changes nothing (`damage-ineffective` — restoring it would prove nothing), an
+adapter that reports a restore it did not perform (`invariant-not-restored`), and a rehearsal against
+an empty database (`baseline-empty` — a restore of nothing is indistinguishable from a successful
+restore of everything). The verified rehearsal's evidence is then fed straight into
+`evaluateDataChangeSafety`, which must accept it and must refuse all three, so the two halves of this
+stage cannot drift into unrelated programmes sharing a number. An absent database is an exit code,
+never a skip.
+
+`tooling/data-recovery.test.mjs` covers the orchestration inside `npm run check` with fake adapters,
+including the ones that lie: a restore that returns the rows but not the isolation is not a restore.
+
+**Outstanding.** Old-code/new-schema compatibility and partial-deployment behaviour remain declared
+fields awaiting a deployment coupling to enforce them against, and no runtime dispatches a mutation
+through this contract yet — nothing autonomously mutates a database today, which is why that is a
+sequencing item rather than a gap. The contract and its evidence are what had to exist first.
 
 ## Explicit non-adoptions
 

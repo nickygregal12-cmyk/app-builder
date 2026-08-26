@@ -5,6 +5,8 @@ set -euo pipefail
 # This script intentionally makes no changes to users, packages, services,
 # firewall rules, files, cgroups, ports, or repositories.
 
+OPENCODE_PORT="${APP_BUILDER_OPENCODE_PORT:-4097}"
+
 printf 'App Builder existing-host preflight\n'
 printf '==================================\n\n'
 
@@ -13,7 +15,7 @@ warnings=0
 
 ok()   { printf 'OK    %s\n' "$1"; }
 warn() { printf 'WARN  %s\n' "$1"; warnings=$((warnings + 1)); }
-fail() { printf 'FAIL  %s\n' "$1"; failures=$((failures + 1)); }
+fail() { printf 'FAIL  %s\n' "$1" >&2; failures=$((failures + 1)); }
 
 if [[ -r /etc/os-release ]]; then
   # shellcheck disable=SC1091
@@ -100,13 +102,14 @@ else
 fi
 
 printf '\nNetwork observation (read-only)\n-------------------------------\n'
-for port in 4310 5173; do
-  if ss -H -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)$port$"; then
+for port in 4310 5173 "$OPENCODE_PORT"; do
+  if ss -H -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)${port}$"; then
     warn "port $port is already listening; inspect ownership before installing/running App Builder"
   else
     ok "port $port is currently unused"
   fi
 done
+printf 'Planned App Builder OpenCode port: %s (override with APP_BUILDER_OPENCODE_PORT)\n' "$OPENCODE_PORT"
 
 printf '\nExisting workload snapshot\n--------------------------\n'
 if command -v systemctl >/dev/null 2>&1; then
@@ -131,6 +134,14 @@ if command -v node >/dev/null 2>&1; then
 else
   printf 'Global Node: not installed (App Builder still installs its own isolated Node)\n'
 fi
+
+if [[ -r /etc/subuid ]]; then
+  printf 'Existing subordinate UID allocations: %s\n' "$(grep -c '^[^:][^:]*:[0-9]' /etc/subuid 2>/dev/null || echo 0)"
+fi
+if [[ -r /etc/subgid ]]; then
+  printf 'Existing subordinate GID allocations: %s\n' "$(grep -c '^[^:][^:]*:[0-9]' /etc/subgid 2>/dev/null || echo 0)"
+fi
+printf 'App Builder will allocate a non-overlapping subordinate-ID range after existing ranges if useradd does not allocate one automatically.\n'
 
 printf '\nRecommended initial App Builder limits\n--------------------------------------\n'
 if (( cpus <= 2 )); then

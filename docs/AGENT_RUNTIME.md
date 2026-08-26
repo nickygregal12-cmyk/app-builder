@@ -166,10 +166,108 @@ What is **not** proven, and must not be read into this milestone:
 
 - no provider credential exists, so no OpenCode *model session* has invoked a Factory tool. Only the
   transport, tool surface and adapter behaviour behind that connection are evidenced;
-- the OpenCode `permission` block is client configuration, not enforcement. A process on the host
-  still reaches `127.0.0.1:4310` directly, which is issue #55 and the exact prerequisite for broad
-  autonomous execution;
+- the OpenCode `permission` block is client configuration, not enforcement. It remains defence in
+  depth only; the capability broker below is the boundary;
 - no role is runtime-ready, no loop is scheduled and no phase claim advances.
+
+### Validated capability-boundary milestone — 2026-08-26
+
+The runtime-to-Factory capability boundary issue #55 describes is now enforced in
+code rather than described in metadata, and the route it was worried about is
+closed by task isolation. The enforced path is:
+
+```text
+task policy (config/agent-policies.json)
+  -> role capability projection (capabilitiesForRole)
+  -> signed attempt-scoped grant
+  -> trusted capability broker on a Unix socket
+  -> authorisation: capability, project, environment, approval, budget
+  -> Factory operation
+  -> durable allow-or-deny decision in the event ledger
+```
+
+What changed:
+
+- `config/agent-capabilities.json` is the operation-level agent surface. Every
+  Factory operation is either an agent capability or an explicitly declared
+  internal-only one, and the rich Console routes are recorded as internal-only
+  with the fragment of `apps/service/src/http.js` that serves each;
+- `packages/control-plane/src/capabilities.js` mints and verifies grants and
+  makes the single deny-by-default authorisation decision. `approvalRequired`
+  is evaluated there before dispatch;
+- `apps/service/src/agent-broker.js` is the trusted broker. It listens on a
+  Unix socket, serves one endpoint for one method, and takes an operation
+  *name* rather than a URL — so there is no path for a hostile caller to
+  respell, re-encode or traverse;
+- the coarse projection rule the #78 review recorded is gone. A role receives an
+  operation only when its policy allows every action that operation needs
+  outright and it owns every mutation scope the operation writes; a role that
+  owns no mutation scope receives no mutating operation at all.
+
+`tooling/agent-capability-boundary.test.mjs` is the acceptance. It proves, among
+other refusals: an internal-only operation is unreachable even under the most
+privileged grant the system can mint; a forged, tampered, expired, replayed,
+wrong-project or wrong-environment grant fails closed with a named reason; an
+approval-gated operation without an approval is refused before the mutation; a
+narrowly-scoped mutation succeeds while the adjacent one stays forbidden; and
+every decision lands in the durable ledger.
+
+### The task sandbox: removing the route, not just the authority
+
+The broker removes a task's *authority* to invoke an internal operation. It does
+not by itself remove the *route*: a process sharing the host network namespace
+can open a socket to `127.0.0.1:4310` whatever the broker thinks. The second
+half of #55 is therefore an isolation contract.
+
+`packages/control-plane/src/execution-environment.js` defines it, provider-
+neutrally. An attempt runs rootless, with its own network, PID, IPC, UTS and
+cgroup namespaces; no host namespace, no container control socket, no
+`/srv/app-builder`, no `/etc/app-builder`, no published port, no added
+capability, `no-new-privileges`, all capabilities dropped, a read-only root
+filesystem, a `noexec` tmpfs, and bounded CPU, memory, PIDs and wall clock. The
+only Factory reach is one bind-mounted Unix socket. `assertSpecIsolation` fails
+closed on every widening rather than warning about it, and each branch of it is
+a way a container has actually been escaped in the wild.
+
+Network profile follows policy, not preference: a role gets
+`public-egress-only` only when its policy allows `network.public` outright, and
+everything else gets `none`. Even the egress profile keeps its own namespace and
+the same forbidden destinations — the host control plane, private ranges and
+link-local metadata.
+
+`tooling/lib/sandbox-podman.mjs` is one runtime's spelling of that spec. Keeping
+the translation in tooling rather than the control plane is what stops Podman
+from becoming a stable requirement of the factory; a second runtime would be a
+second translation, not a second definition of the boundary. It refuses an
+unpinned image and refuses an argv carrying an isolation-breaking flag, whoever
+added it.
+
+`tooling/agent-sandbox.test.mjs` proves the property by connecting, not by
+asserting about configuration. It starts the real Factory HTTP server, confirms
+it answers on host loopback — without that the isolated failures would prove
+nothing but a dead listener — then, from inside a fresh empty network namespace,
+attempts `127.0.0.1:4310`, `localhost:4310`, `[::1]:4310` and every global
+address the host holds. All are refused; the namespace sees only loopback; and
+the broker still answers over the mounted socket, so the boundary is usable
+rather than merely closed.
+
+That namespace is the same kernel primitive rootless Podman's `--network=none`
+creates. It is a faithful proof of the property and it is **not** a proof that
+the hosted Podman installation is configured that way.
+`ops/hetzner/verify-agent-boundary.sh` is that proof, it runs a real
+`--network=none` container on the host, and it is the operator's to run.
+
+What this milestone does **not** yet prove, and must not be read as:
+
+- **the hosted proof has not been run.** Everything above was executed on a
+  development runtime. Issue #55 stays open until
+  `ops/hetzner/verify-agent-boundary.sh` has genuinely run on the Hetzner host
+  and its output is recorded;
+- nothing creates, runs, supervises or disposes of an attempt sandbox. The
+  isolation contract and its translation exist; the `ExecutionEnvironmentAdapter`
+  lifecycle, the pinned task image and the `app-builder-egress` network do not;
+- no provider credential, schedule or runtime-ready role is introduced here.
+  Every role remains `runtimeReady: false`.
 
 ### Materialising roles into a runtime, later
 
@@ -180,10 +278,13 @@ projected role carries `runtimeReady: false` with its blockers, and no role is p
 
 The projection is how the "two sources of truth" failure is avoided: registry roles become subagents
 mechanically — no primary is invented — tools are derived deny-by-default from the role's capability
-policy (an approval-gated action is not an enabled tool), and each role's Factory reach is the
-bounded MCP surface filtered by whether the role owns a mutation scope. When a runtime finally needs
-agent definitions, it should generate them from the registry through this projection rather than
-maintain a second hand-written taxonomy.
+policy (an approval-gated action is not an enabled tool), and each role's Factory reach is its
+operation-level capability set from `config/agent-capabilities.json`. That set comes from
+`capabilitiesForRole`, the same function the trusted broker's grant minting uses, so the projection
+cannot drift from what is actually enforced. Approval-gated capabilities are listed separately as
+`approvalGatedMcpTools` rather than as enabled tools. When a runtime finally needs agent definitions,
+it should generate them from the registry through this projection rather than maintain a second
+hand-written taxonomy.
 
 ### OpenCode 2 evaluation
 

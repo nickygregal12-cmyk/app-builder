@@ -30,6 +30,7 @@ A powerful agent is not a security boundary. File scope, environment identity, c
 | ChangeSet transaction contract | 9.8/10 | Phase 3.5, hardened 3.8 | Autonomous edits declare objective, allowed/forbidden scope and checks before mutation; scope escape stops the attempt. |
 | Recipe upgrade/migration mechanics | 9.7/10 | Design in Phase 3.5, implementation before Phase 7 scale | Installed versions, user modifications and upgrade compatibility are machine-readable before many generated apps exist. |
 | Agent capability permissions / approvals | 9.6/10 | Phase 3.5 | Read, write, process, browser, network, secrets, migrations and deploy actions are explicit; destructive/production actions require approval. |
+| Operation-level Factory capability boundary | 10/10 | Phase 4.5 before Phase 5 | An autonomous task gains an operation from its policy and grant, never from the existence of an internal Factory HTTP route; `approvalRequired` is enforced before dispatch and every decision is durable. |
 | MCP service adapter | 9.5/10 | Phase 3.8 interoperability | External coding clients call the same safe factory service/tool contract rather than reimplementing deterministic logic in prompts. |
 | Evaluation-driven model routing | 9.5/10 | Phase 5 + 5.5 | Route by measured task-class quality/cost rather than a simple cheap/expensive heuristic. |
 | Repo-local specialist Skills | 9.4/10 | Phase 4 groundwork, Phase 5 runtime | Small versioned skills have exact triggers, allowed tools, context requirements and acceptance checks; no load-all-skills behaviour. |
@@ -85,6 +86,60 @@ A powerful agent is not a security boundary. File scope, environment identity, c
 - no production deploy or production DB access from an ordinary implementation task.
 
 The first powerful hosted runtime remains deferred until Phase 5 so the factory proves product and safety boundaries before vendor/runtime coupling.
+
+## Phase 4.5 — the agent capability boundary
+
+`config/agent-capabilities.json` is the operation-level agent surface, and
+`packages/control-plane/src/capabilities.js` is the code that enforces it. The
+two exist because an internal Factory HTTP route existing was, until now, the
+only thing standing between a task and an operation (issue #55).
+
+The enforced path is:
+
+```text
+task policy (config/agent-policies.json)
+  -> role capability projection (capabilitiesForRole)
+  -> signed attempt-scoped grant
+  -> trusted broker: authoriseAgentOperation
+  -> approval / project / environment / budget check
+  -> Factory operation
+  -> durable allow-or-deny decision in the event ledger
+```
+
+Three properties make it a boundary rather than a convention.
+
+**One registry, two surfaces.** The service tool contract in
+`apps/service/src/tool-contract.js` stays the internal transport contract; the
+capability registry is the narrower agent projection of it. The registry may be
+stricter and never laxer, and every Factory operation must be either an agent
+capability or an explicitly declared internal-only one. The rich Console
+surface — element identity, asset decisions, design choices, section variants,
+rendered evidence, product review, intake bundles and source governance — is
+recorded as internal-only, each entry naming the fragment of
+`apps/service/src/http.js` that serves it so the declaration is checked against
+a real consumer rather than believed.
+
+**Capabilities are operation-level.** A role receives an operation only when its
+policy allows every action that operation needs *outright* — an approval-gated
+action is not an allowed one — and it owns every mutation scope the operation
+writes. A role scoped to `src/**` may write content overrides and may not run
+generation, which also rewrites `public/**`. A role that owns no mutation scope
+receives no mutating operation at all. `capabilitiesForRole` is the single
+implementation, used both by the dry-run OpenCode projection and by grant
+minting, so the projection cannot drift from the enforcement.
+
+**Grants are minted by trusted code only.** A grant is a canonical-JSON payload
+signed with HMAC-SHA256 by the control plane, carrying attempt, task, project,
+role, policy, capability set, mutation scopes, approvals, environment, operation
+budget, nonce and a bounded expiry. The worker holds a grant and never the key,
+so it can present authority and cannot produce, widen, retarget or extend it.
+Every refusal is one of the named `DENY_REASONS`; there is no default-allow
+branch. `approvalRequired` is evaluated here before dispatch, not described in
+descriptor metadata.
+
+Decisions — allows as well as denies — are appended to the project's durable
+event ledger as `agent.operation.allowed` / `agent.operation.denied`, so what an
+attempt asked for and what it was refused survives the session.
 
 ## Phase 3.8 correctness addendum
 

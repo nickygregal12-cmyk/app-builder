@@ -1,6 +1,23 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { FactoryServiceClient } from './factory-client.js';
+import { AgentBrokerClient } from './broker-client.js';
+
+/**
+ * Choose the transport the adapter should use.
+ *
+ * Two lanes, never both: the loopback Factory service on a trusted host, or
+ * the capability broker socket inside an untrusted task sandbox. The sandbox
+ * lane wins when its socket is configured, because inside a sandbox there is
+ * no loopback Factory to fall back to and a silent fallback would look like a
+ * working adapter while the boundary had quietly moved.
+ */
+export function createFactoryTransport(env = process.env) {
+  if (env.APP_BUILDER_AGENT_BROKER_SOCKET) {
+    return new AgentBrokerClient({ socketPath: env.APP_BUILDER_AGENT_BROKER_SOCKET, grant: env.APP_BUILDER_AGENT_GRANT });
+  }
+  return new FactoryServiceClient({ baseUrl: env.APP_BUILDER_SERVICE_URL ?? 'http://127.0.0.1:4310' });
+}
 
 const projectIdSchema = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/);
 const projectInput = z.object({ projectId: projectIdSchema });
@@ -60,7 +77,7 @@ function annotations(mutating) {
   };
 }
 
-export function createAppBuilderMcpServer({ client = new FactoryServiceClient() } = {}) {
+export function createAppBuilderMcpServer({ client = createFactoryTransport() } = {}) {
   const server = new McpServer({ name: 'app-builder', version: '0.1.0' });
 
   server.registerTool('project_list', {

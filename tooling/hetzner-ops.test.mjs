@@ -10,6 +10,7 @@ const scripts = [
   'ops/hetzner/install-service-units.sh',
   'ops/hetzner/observe-runtime.sh',
   'ops/hetzner/verify-host.sh',
+  'ops/hetzner/verify-agent-boundary.sh',
 ];
 
 const readOnlyMutationPatterns = [
@@ -111,4 +112,48 @@ test('shared-host verifier checks loopback exposure and subordinate-ID overlap',
   assert.match(source, /check_subid_non_overlap \/etc\/subgid/);
   assert.match(source, /opencodePort \/\/ 4097/);
   assert.equal(source.includes('127\\.0\\.0\\.1'), true);
+});
+
+test('the agent boundary acceptance is read-only and probes the exact bypasses #55 names', () => {
+  const source = readFileSync('ops/hetzner/verify-agent-boundary.sh', 'utf8');
+  for (const pattern of readOnlyMutationPatterns) {
+    assert.doesNotMatch(source, pattern, `hosted acceptance must remain read-only: ${pattern}`);
+  }
+  // A probe that never reached a live listener would pass by accident, so the
+  // script must establish the Factory is answering before it claims isolation.
+  assert.match(source, /curl -fsS --max-time 5 "http:\/\/127\.0\.0\.1:\$\{FACTORY_PORT\}\/health"/);
+  assert.match(source, /the isolation result below is therefore meaningful/);
+  for (const expected of [
+    '--network=none',
+    '--security-opt=no-new-privileges',
+    '--cap-drop=ALL',
+    '127.0.0.1|${FACTORY_PORT}',
+    'localhost|${FACTORY_PORT}',
+    '::1|${FACTORY_PORT}',
+    'host.containers.internal',
+    'host.docker.internal',
+    '/run/podman/podman.sock',
+    '/var/run/docker.sock',
+    '/srv/app-builder',
+    '/etc/app-builder',
+    'a task sandbox reached the Factory control plane',
+  ]) {
+    assert.equal(source.includes(expected), true, `hosted acceptance must probe ${expected}`);
+  }
+  // It must not start, stop or enable anything, and must not print the key.
+  assert.equal(/systemctl\s+(?:--\S+\s+)*(?:start|stop|enable|disable|restart)\b/.test(source), false);
+  assert.equal(source.includes('APP_BUILDER_AGENT_GRANT_SECRET='), false, 'the acceptance must never echo the signing key');
+});
+
+test('the agent broker is opt-in, socket-bound and never publishes a port', () => {
+  const source = readFileSync('ops/hetzner/install-service-units.sh', 'utf8');
+  assert.match(source, /APP_BUILDER_ENABLE_AGENT_BROKER:-0/);
+  assert.match(source, /BROKER_SOCKET="\/srv\/app-builder\/runtime\/agent-broker\.sock"/);
+  assert.match(source, /chmod 0640 "\$ETC_DIR\/agent-broker\.env"/);
+  // The signing key belongs to the factory process alone. It must never be
+  // written into the unit file, where `systemctl show` would print it.
+  assert.equal(source.includes('Environment=APP_BUILDER_AGENT_GRANT_SECRET='), false);
+  assert.match(source, /EnvironmentFile=\$\{ETC_DIR\}\/agent-broker\.env/);
+  // A socket is not a port. Nothing here may add a listener.
+  assert.equal(/APP_BUILDER_AGENT_BROKER_PORT/.test(source), false);
 });

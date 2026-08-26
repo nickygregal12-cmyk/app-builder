@@ -1,0 +1,480 @@
+{
+  "version": 1,
+  "description": "Operation-level agent capability registry. This file is the single machine-readable answer to one question: which Factory operations may an autonomous task ever reach, and under what policy. An internal Factory HTTP route existing is not an answer to that question. `apps/service/src/tool-contract.js` remains the service transport contract; this registry is the narrower agent-facing surface projected from it, and `packages/control-plane/src/capabilities.js` is the code that enforces it before dispatch.",
+  "rules": [
+    "Deny-by-default. An operation absent from `capabilities` is not agent-reachable, whatever HTTP route serves it.",
+    "A capability is granted to a role only when the role's policy allows every entry in `requiredPolicyActions` outright and the role's declared mutationScopes cover every entry in `requiredMutationScopes`. Owning some mutation scope never grants every mutating operation.",
+    "A role that owns no mutation scope at all receives no mutating operation, including one that writes no project file. Making the projection granular must only narrow it: a reviewer must not gain an operation the coarse mutating/non-mutating split withheld.",
+    "This registry may be stricter than the service tool contract and never laxer: an operation the contract marks approvalRequired must be approvalRequired here too, or absent.",
+    "`approvalRequired` is executable. The trusted broker refuses the operation unless the signed grant carries a matching, unexpired approval for the same operation and project.",
+    "`internalOnlyOperations` and `internalOnlyRoutes` are the explicit record of the rich internal surface that exists for the Builder Console and must never become an agent operation. `marker` is the literal fragment of `apps/service/src/http.js` that serves the route, so the declaration is tested against a real consumer rather than trusted as prose."
+  ],
+  "grant": {
+    "algorithm": "HMAC-SHA256",
+    "maxTtlSeconds": 3600,
+    "environments": [
+      "development",
+      "preview",
+      "production"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "project.list",
+      "operation": "project.list",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Enumerating durable projects is read-only Factory state."
+    },
+    {
+      "id": "project.read",
+      "operation": "project.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Reading one project's durable record is read-only Factory state."
+    },
+    {
+      "id": "project.manifest.read",
+      "operation": "project.manifest.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "The Project Manifest is task context every role may need."
+    },
+    {
+      "id": "project.knowledge.read",
+      "operation": "project.knowledge.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "The knowledge pack is trusted factory-owned data with instructionAuthority none."
+    },
+    {
+      "id": "project.sources.read",
+      "operation": "project.sources.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "The ingested-source inventory is provenance a role must be able to check."
+    },
+    {
+      "id": "project.composition.read",
+      "operation": "project.composition.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Composition output is deterministic factory state."
+    },
+    {
+      "id": "project.overrides.read",
+      "operation": "project.overrides.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Reading current content overrides is required before proposing a change to them."
+    },
+    {
+      "id": "project.tasks.read",
+      "operation": "project.tasks.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Durable task state is how a fresh session reconstructs its next action."
+    },
+    {
+      "id": "project.events.read",
+      "operation": "project.events.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "The event ledger is the durable record a resumed attempt reads."
+    },
+    {
+      "id": "project.metrics.read",
+      "operation": "project.metrics.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Metrics are aggregate factory state, not a control operation."
+    },
+    {
+      "id": "project.checkpoint.read",
+      "operation": "project.checkpoint.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Resuming from the latest checkpoint requires reading it."
+    },
+    {
+      "id": "project.checkpoints.read",
+      "operation": "project.checkpoints.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Checkpoint history is read-only recovery context."
+    },
+    {
+      "id": "project.preview.read",
+      "operation": "project.preview.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Preview status is a read of factory-owned runtime state."
+    },
+    {
+      "id": "integration.status.read",
+      "operation": "integration.status.read",
+      "mutating": false,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.read"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview",
+        "production"
+      ],
+      "reason": "Configured/not-configured status carries no secret value."
+    },
+    {
+      "id": "project.create",
+      "operation": "project.create",
+      "mutating": true,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.write"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development"
+      ],
+      "reason": "Creating a durable project is a write, so a read-only role must not reach it. It touches no existing project workspace, so it needs no file mutation scope."
+    },
+    {
+      "id": "project.overrides.write",
+      "operation": "project.overrides.write",
+      "mutating": true,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.write"
+      ],
+      "requiredMutationScopes": [
+        "src/**"
+      ],
+      "environments": [
+        "development",
+        "preview"
+      ],
+      "reason": "Content overrides change what the generated application renders from src/**. A role that does not own src/** may read them and may not write them."
+    },
+    {
+      "id": "project.generate",
+      "operation": "project.generate",
+      "mutating": true,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "repo.write",
+        "process.build"
+      ],
+      "requiredMutationScopes": [
+        "src/**",
+        "public/**"
+      ],
+      "environments": [
+        "development",
+        "preview"
+      ],
+      "reason": "Generation rewrites the project's source and public assets, so it needs both scopes and the ability to build."
+    },
+    {
+      "id": "project.verify",
+      "operation": "project.verify",
+      "mutating": true,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "process.test",
+        "process.build"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview"
+      ],
+      "reason": "Verification writes durable task and event state but no project source, so it is bounded by process policy rather than by file scope."
+    },
+    {
+      "id": "project.preview.start",
+      "operation": "project.preview.start",
+      "mutating": true,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "process.build"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview"
+      ],
+      "reason": "Starting a bounded preview process is a build-class operation, not a source mutation."
+    },
+    {
+      "id": "project.preview.stop",
+      "operation": "project.preview.stop",
+      "mutating": true,
+      "approvalRequired": false,
+      "requiredPolicyActions": [
+        "process.build"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development",
+        "preview"
+      ],
+      "reason": "Stopping a preview is the reverse of starting one and carries the same class."
+    },
+    {
+      "id": "project.sources.ingest",
+      "operation": "project.sources.ingest",
+      "mutating": true,
+      "approvalRequired": true,
+      "requiredPolicyActions": [
+        "repo.write",
+        "network.public"
+      ],
+      "requiredMutationScopes": [],
+      "environments": [
+        "development"
+      ],
+      "reason": "Ingestion is the one operation that causes outbound requests and admits new material into the durable knowledge pack. It is approval-gated for an agent even though the Console may run it directly."
+    }
+  ],
+  "internalOnlyOperations": [
+    {
+      "operation": "project.source.governance.update",
+      "reason": "Source governance decides whether crawled material may inform the knowledge pack. That is a human/Console trust decision about untrusted content, and an agent that could make it could launder its own instructions into factory-trusted state."
+    }
+  ],
+  "internalOnlyRoutes": [
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/sources/{sourceId}/governance",
+      "marker": "sources\\/([^/]+)\\/governance",
+      "reason": "Approval-gated source trust decision. Console only."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/element-identity",
+      "marker": "route.action === 'element-identity'",
+      "reason": "Element identity index backs direct Console editing."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/element-identity/resolve",
+      "marker": "route.action === 'element-identity/resolve'",
+      "reason": "Resolving a Console selection to an editable element."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/assets",
+      "marker": "route.action === 'assets'",
+      "reason": "Asset inventory for the Console asset governance screen."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/assets/{assetId}/preview",
+      "marker": "assets\\/([^/]+)\\/preview",
+      "reason": "Serves raw asset bytes to the Console."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/assets/{assetId}/decision",
+      "marker": "assets\\/([^/]+)\\/decision",
+      "reason": "Asset rights decisions are an operator judgement."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/assets/{assetId}/replace",
+      "marker": "assets\\/([^/]+)\\/replace",
+      "reason": "Replacing an asset admits new user-supplied material."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/assets/{assetId}/focal-point",
+      "marker": "assets\\/([^/]+)\\/focal-point",
+      "reason": "Crop review is a visual operator decision."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/design",
+      "marker": "route.action === 'design'",
+      "reason": "Design contract read for the Console design controls."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/design",
+      "marker": "route.action === 'design'",
+      "reason": "Design choices are an operator decision, not an agent mutation."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/section-variants",
+      "marker": "route.action === 'section-variants'",
+      "reason": "Section variant options for the Console."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/sections/{sectionId}/variant",
+      "marker": "sections\\/([^/]+)\\/variant",
+      "reason": "Choosing a section variant is an operator presentation decision."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/evidence",
+      "marker": "route.action === 'evidence'",
+      "reason": "Rendered evidence listing for the Console."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/evidence/capture",
+      "marker": "route.action === 'evidence/capture'",
+      "reason": "Evidence capture drives a real browser and is Console-initiated."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/evidence/{evidenceId}/captures/{captureId}",
+      "marker": "evidence\\/([^/]+)\\/captures\\/([^/]+)",
+      "reason": "Serves captured screenshot bytes to the Console."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/product-review",
+      "marker": "route.action === 'product-review'",
+      "reason": "The product review packet is assembled for a human reviewer."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/intake-bundle",
+      "marker": "route.action === 'intake-bundle'",
+      "reason": "Approved intake is operator-approved product truth."
+    },
+    {
+      "method": "POST",
+      "path": "/intake-bundles",
+      "marker": "url.pathname === '/intake-bundles'",
+      "reason": "Minting an approved intake bundle is the operator's approval act."
+    },
+    {
+      "method": "POST",
+      "path": "/intake-bundles/replay",
+      "marker": "url.pathname === '/intake-bundles/replay'",
+      "reason": "Replaying an approved intake starts a fresh operator-authorised run."
+    }
+  ]
+}

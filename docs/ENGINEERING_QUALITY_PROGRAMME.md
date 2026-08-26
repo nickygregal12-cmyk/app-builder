@@ -198,6 +198,33 @@ Priority order:
 
 Do not install every tool at once. Each addition must name the exposure it closes.
 
+### Stage Q10 — consumer assertions for behavioural declarations (Phase 4.5)
+
+A registry value that claims to change runtime or product behaviour must name, or be tested against,
+a real consumer. The failures this exists for are already on record: `reviewBeforePublish`,
+`SectionSpec.variant` and `density` were each declared before anything read them, and read as
+implemented until someone checked.
+
+The rule is deliberately narrow. Do **not** build a global test asserting that every JSON-schema
+property appears somewhere in source: many contracts are transport or evidence records, and many
+specialist skills are legitimately `planned` with `path: null` until Phase 5. A test that cannot tell
+those apart produces noise, and noise gets suppressed.
+
+Apply it where a declaration is a behavioural claim:
+
+- presentation and design registries (Phase 4C);
+- operation and capability registries (Phase 5);
+- policy, routing and permission matrices.
+
+The first executable instance is the agent capability boundary. `config/agent-capabilities.json`
+declares which internal Factory routes exist for the Console and are never agent operations, and each
+entry carries the literal fragment of `apps/service/src/http.js` that serves it;
+`tooling/agent-capability-boundary.test.mjs` checks every one against the source. The same test
+requires every declared capability to name a real operation in the service tool contract and a real
+handler in the broker, so a capability nobody can perform fails rather than reassures. Follow that
+shape — declaration names its consumer, test checks the consumer exists — rather than inventing a
+new mechanism per registry.
+
 ## Explicit non-adoptions
 
 - No blocking gate before its output has been baselined against real generated projects.

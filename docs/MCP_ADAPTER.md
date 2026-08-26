@@ -98,7 +98,9 @@ agent that has quietly lost the Factory lane rather than one that refuses to sta
 
 `permission` and `autoupdate` are client-side configuration, not a boundary. They keep this
 configuration from offering a second route to the Factory; they do not stop a process on the host
-from reaching `127.0.0.1:4310` directly. That gap is issue #55 and remains open.
+from reaching `127.0.0.1:4310` directly. Enforcement is the capability broker below, not this block.
+Keep the distinction explicit: `permission` is defence in depth, and removing it would widen what
+this configuration offers without changing what the Factory allows.
 
 ### Proving the lane
 
@@ -125,6 +127,43 @@ with the adapter (`opencode mcp list` reports `app-builder connected`, and `GET 
 OpenCode server reports `{"app-builder":{"status":"connected"}}`), and that the adapter behind that
 connection behaves as bounded above.
 
+## Two transports, one tool surface
+
+The adapter serves the same tool bindings over either of two transports, chosen
+by `createFactoryTransport` and never both at once:
+
+```text
+trusted host                        untrusted task sandbox
+  OpenCode / MCP client               OpenCode / MCP client
+  -> apps/mcp adapter                 -> apps/mcp adapter
+  -> HTTP 127.0.0.1:4310              -> Unix socket, capability grant
+  -> internal Factory service         -> trusted capability broker
+                                      -> authorisation + approval
+                                      -> internal Factory service
+```
+
+`APP_BUILDER_AGENT_BROKER_SOCKET` selects the sandbox lane, and
+`APP_BUILDER_AGENT_GRANT` carries the attempt's signed grant. The lane wins when
+its socket is configured, with no fallback to loopback HTTP: inside a sandbox
+there is no loopback Factory to fall back to, and a silent fallback would look
+like a working adapter while the boundary had quietly moved. The adapter refuses
+to start on that lane without a grant, because the broker refuses an
+unauthenticated caller anyway.
+
+Two things the broker lane deliberately does not give the adapter:
+
+- **a URL.** The broker takes an operation *name* and looks it up in
+  `config/agent-capabilities.json`. There is no path to spell differently,
+  double-encode or traverse, and one endpoint is served for one method;
+- **a broad credential.** The grant is attempt-scoped and carries only the
+  capabilities that attempt's role projects. A compromised adapter is bounded by
+  the same capability set as the task that launched it.
+
+The tool registry does not fork. `MCP_TOOL_BINDINGS` still names the service
+operation each tool delegates to, and every binding must resolve to a registered
+agent capability — `tooling/agent-capability-boundary.test.mjs` fails when one
+does not.
+
 ## Security model
 
 MCP is an interoperability adapter, not an authority layer. A tool call can only request an operation already represented by the factory service contract. Adding a powerful operation therefore requires, in order:
@@ -135,3 +174,9 @@ MCP is an interoperability adapter, not an authority layer. A tool call can only
 4. only then consider exposing it through MCP.
 
 This keeps future OpenCode/Hetzner agent loops, desktop MCP hosts and other clients on one deterministic control path rather than growing provider-specific backdoors.
+
+Adding an operation to the agent surface is a further step beyond those four: it
+must also be registered in `config/agent-capabilities.json` with the policy
+actions and mutation scopes it genuinely needs, and dispatched by the broker.
+An operation the service contract exposes but the registry does not is
+unreachable by an agent, whichever route serves it.

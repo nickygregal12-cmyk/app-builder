@@ -124,6 +124,7 @@ test('role materialisation projects the factory registry without becoming a seco
     roles: readConfig('config/agent-roles.json'),
     pipelines: readConfig('config/agent-pipelines.json'),
     policies: readConfig('config/agent-policies.json'),
+    capabilities: readConfig('config/agent-capabilities.json'),
     bindings: MCP_TOOL_BINDINGS,
   });
 
@@ -149,6 +150,7 @@ test('a projected role without a mutation scope receives only non-mutating facto
     roles,
     pipelines: readConfig('config/agent-pipelines.json'),
     policies: readConfig('config/agent-policies.json'),
+    capabilities: readConfig('config/agent-capabilities.json'),
     bindings: MCP_TOOL_BINDINGS,
   });
   const mutating = new Set(MCP_TOOL_BINDINGS.filter((binding) => binding.mutating).map((binding) => `${MCP_SERVER_NAME}_${binding.name}`));
@@ -170,6 +172,7 @@ test('a projected role never receives a tool for an approval-gated policy action
     roles: readConfig('config/agent-roles.json'),
     pipelines: readConfig('config/agent-pipelines.json'),
     policies,
+    capabilities: readConfig('config/agent-capabilities.json'),
     bindings: MCP_TOOL_BINDINGS,
   });
   const roles = readConfig('config/agent-roles.json').roles;
@@ -195,6 +198,7 @@ test('materialisation can be scoped to a registered pipeline and rejects an unkn
     roles: readConfig('config/agent-roles.json'),
     pipelines,
     policies: readConfig('config/agent-policies.json'),
+    capabilities: readConfig('config/agent-capabilities.json'),
     bindings: MCP_TOOL_BINDINGS,
   };
 

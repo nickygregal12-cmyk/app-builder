@@ -117,6 +117,15 @@ test('shared-host verifier checks loopback exposure and subordinate-ID overlap',
   assert.equal(source.includes('127\\.0\\.0\\.1'), true);
 });
 
+test('shared-host verifier checks the evidence browser as the service user, with the command that fixes it', () => {
+  const source = readFileSync('ops/hetzner/verify-host.sh', 'utf8');
+  // The 3.8E finding was that the browser existed for nobody the service ran
+  // as, so checking it as root would have passed and proved nothing.
+  assert.match(source, /runuser -u "\$RUNTIME_USER".*evidence-browser\.mjs/s);
+  assert.match(source, /rendered-evidence browser provisioned for \$RUNTIME_USER/);
+  assert.match(source, /npx playwright install chromium/);
+});
+
 test('the agent boundary acceptance is read-only and probes the exact bypasses #55 names', () => {
   const source = readFileSync('ops/hetzner/verify-agent-boundary.sh', 'utf8');
   for (const pattern of readOnlyMutationPatterns) {

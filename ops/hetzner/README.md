@@ -152,6 +152,30 @@ Do not place App Builder inside the Predictor repository or vice versa.
 
 Repository credentials should be App Builder-specific and minimal. Do not copy a broad personal or Predictor token into the `appbuilder` home directory.
 
+### The rendered-evidence browser
+
+Rendered evidence is part of the genuine-business acceptance path, and the browser it
+drives belongs to the `appbuilder` service user rather than to root. Install it once, in
+the checkout, as that user:
+
+```bash
+sudo -u appbuilder -H bash -lc '
+  cd /srv/app-builder/repository
+  npm install
+  npx playwright install chromium
+'
+```
+
+The `@playwright/test` package being installed is not the same thing as its browser being
+downloaded, and the difference is invisible until a run reaches capture. `verify-host.sh`
+now checks the browser as the service user, and `npm run service:doctor` reports it —
+failing rather than warning when the host declares
+`APP_BUILDER_EVIDENCE_CAPTURE=required`. Both print the exact command above.
+
+A host that already has a Chromium can point at it with
+`APP_BUILDER_BROWSER_EXECUTABLE` instead of downloading a second one; the check verifies
+that path exists rather than taking the variable's word for it.
+
 ## 5. OpenCode binary
 
 Installing OpenCode is safe as a local tool; enabling unrestricted autonomous work is not.

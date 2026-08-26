@@ -132,6 +132,21 @@ if [[ -f /etc/systemd/system/app-builder-opencode.service ]]; then
   fi
 fi
 
+# Rendered evidence is part of the genuine-business acceptance path this host
+# serves, and the browser it needs belongs to the isolated service user rather
+# than to root. The 3.8E run reached generation, verification and preview here
+# and only failed at capture, so the browser is checked with everything else
+# rather than discovered at the end of an expensive run.
+REPOSITORY="/srv/app-builder/repository"
+if [[ -d "$REPOSITORY" ]]; then
+  if runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" \
+    bash -lc "cd '$REPOSITORY' && node -e 'import(\"./tooling/lib/evidence-browser.mjs\").then(async (m) => process.exit((await m.evidenceBrowserStatus()).ready ? 0 : 1))'" >/dev/null 2>&1; then
+    pass "rendered-evidence browser provisioned for $RUNTIME_USER"
+  else
+    fail "rendered-evidence browser provisioned for $RUNTIME_USER — run: sudo -u $RUNTIME_USER -H bash -lc 'cd $REPOSITORY && npx playwright install chromium'"
+  fi
+fi
+
 if grep -q '"hostSshModified": false' /etc/app-builder-host.json && \
    grep -q '"hostFirewallModified": false' /etc/app-builder-host.json && \
    grep -q '"globalNodeModified": false' /etc/app-builder-host.json; then

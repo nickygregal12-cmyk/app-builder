@@ -1,4 +1,5 @@
 import { INTERACTIONS } from './rendered-evidence.mjs';
+import { describeEvidenceBrowser, evidenceBrowserStatus } from './evidence-browser.mjs';
 
 /**
  * Drive a real browser over a running preview and return the bytes.
@@ -68,6 +69,14 @@ export function evidenceUrl(route, baseUrl) {
 
 export async function captureEvidence({ plan, baseUrl, launch = null, onCapture = null, env = process.env } = {}) {
   if (!plan?.captures?.length) return { results: [], failures: [] };
+  if (!launch) {
+    // Say which browser is missing and how to install it, rather than letting
+    // Playwright's own "just installed or updated" notice stand in for a host
+    // that never provisioned one. The doctor reports the same sentence, so an
+    // operator who reaches this has already been told once.
+    const status = await evidenceBrowserStatus({ env });
+    if (!status.ready) throw new Error(describeEvidenceBrowser(status));
+  }
   const browser = await (launch ? launch() : (await chromium()).launch(launchOptions(env)));
   const results = [];
   const failures = [];

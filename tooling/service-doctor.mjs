@@ -4,6 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { FACTORY_TOOLS } from '../apps/service/src/tool-contract.js';
+import { claimsEvidenceCapability, describeEvidenceBrowser, evidenceBrowserStatus } from './lib/evidence-browser.mjs';
 
 const root = process.cwd();
 let failed = false;
@@ -122,5 +123,20 @@ try {
   failed = true;
 }
 
+// Rendered evidence is the one declared capability this doctor could not
+// previously speak for. A developer machine generates, verifies and previews
+// without ever capturing, so a missing browser there is reported and forgiven;
+// a host that claims the capability is told before a real run reaches capture
+// rather than after it.
+const evidenceBrowser = await evidenceBrowserStatus();
+if (evidenceBrowser.ready) {
+  console.log(describeEvidenceBrowser(evidenceBrowser));
+} else if (claimsEvidenceCapability()) {
+  console.error(describeEvidenceBrowser(evidenceBrowser));
+  failed = true;
+} else {
+  console.log(`${describeEvidenceBrowser(evidenceBrowser)} This host does not claim rendered-evidence capability, so it is not a failure here.`);
+}
+
 if (failed) process.exit(1);
-console.log('Factory service doctor: runtime imports, local boundary, safe tool surface and generated-app portability are valid.');
+console.log('Factory service doctor: runtime imports, local boundary, safe tool surface, rendered-evidence browser and generated-app portability are valid.');

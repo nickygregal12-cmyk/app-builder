@@ -4,6 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { validateContract } from '@app-builder/contracts';
+import { FactoryService } from '../apps/service/src/factory-service.js';
+import { FactoryStore } from '../apps/service/src/store.js';
 import { MINIMUM_TEXT_CONTRAST, aiReviewCandidates, compileDesignLintReport, mixHex, templateTokenDefaults } from './lib/design-lint.mjs';
 import { assertAccentColor, compileDesignSystemSpec, contrastRatio } from './lib/design-choices.mjs';
 import { generateComposedProject } from './lib/composed-generator.mjs';
@@ -177,4 +179,46 @@ test('a compiled design is required; there is no lint without one', () => {
   const empty = compileDesignLintReport({ spec: compileDesignSystemSpec({ patternId: 'public-marketing', accentColor: '#315b72', maxWidth: '72rem', radius: '1rem', density: 'comfortable' }), composition: { pages: [], sections: [] }, tokenSourceCss: TOKENS_CSS });
   assert.equal(empty.clean, true);
   assert.deepEqual(empty.findings, []);
+});
+
+
+test('the service lints a real build from its own workspace, without a browser', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-lint-service-'));
+  const store = new FactoryStore({ stateRoot: path.join(root, 'state') });
+  const service = new FactoryService({ store, workspacesRoot: path.join(root, 'workspaces'), stateRoot: path.join(root, 'state') });
+
+  try {
+    const project = service.createProject({ id: 'project-lint-service', manifest: projectManifest() });
+    // A project with nothing built says so, rather than reporting a clean build
+    // that does not exist.
+    assert.equal(service.designLintReport(project.id), null);
+
+    const generated = await service.generateProject(project.id);
+    const report = service.designLintReport(project.id);
+    assert.equal(report.authority, 'design-contract');
+    assert.equal(report.clean, true, JSON.stringify(report.findings));
+    assert.equal(report.compositionHash, generated.composition.compositionHash);
+    assert.ok(report.aiReviewCandidates.length > 0);
+
+    // This is the path evidence capture runs, so it must read the build's own
+    // compiled spec and the template's own token source rather than the
+    // factory's copies of either.
+    const spec = JSON.parse(fs.readFileSync(path.join(generated.workspace, '.product/design-system.json'), 'utf8'));
+    assert.deepEqual(report, compileDesignLintReport({
+      spec,
+      composition: generated.composition,
+      tokenSourceCss: fs.readFileSync(path.join(generated.workspace, 'src/design/tokens.css'), 'utf8'),
+      compositionHash: generated.composition.compositionHash,
+    }));
+
+    // A live design edit is linted against what the build now compiles.
+    await service.writeDesignChoices(project.id, { accentColor: '#0066ff' });
+    const afterEdit = service.designLintReport(project.id);
+    assert.equal(afterEdit.clean, false, 'an accent that fails on its own ground must be caught without a rebuild');
+    assert.equal(afterEdit.findings.find((entry) => entry.rule === 'accent-contrast').ground, '--color-accent-soft');
+  } finally {
+    await service.close();
+    store.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

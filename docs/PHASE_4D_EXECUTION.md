@@ -40,13 +40,13 @@ same approved product/content truth
 | slice | subject | state |
 | --- | --- | --- |
 | 4D.1 | Visual promotion contract, and DesignLint as a real promotion input | done |
-| 4D.2 | Visual reference analysis | **deferred** — no supplier |
+| 4D.2 | Visual reference analysis | done — the supplier arrived |
 | 4D.3 | MessagingPlan | **deferred** — no consumer |
 | 4D.4 | Visual asset readiness as an art-direction input | done |
 | 4D.5 | ResponsiveCompositionPlan | done |
 | 4D.6 | 2-4 real candidates over one frozen truth, with a diversity gate | done |
 | 4D.7 | Comparable rendered evidence per candidate | done |
-| 4D.8 | Independent visual critic | contract and packet done; **verdict outstanding** |
+| 4D.8 | Independent visual critic | contract, packet, scored bar and bounded rework loop done; **verdict outstanding** |
 | 4D.9 | Promotion into the ordinary generated repository | mechanism done; awaiting 4D.8 |
 | — | Visual comparison canvas | **deferred** — the Console does it |
 
@@ -67,6 +67,26 @@ comparable while they say the same thing. DesignLint severity now decides what a
 Exactly one candidate reaches `promoted`, every sibling is closed in the same operation, and where none
 has a passing review the answer is rework rather than the least bad one. AGENTS.md rule 17 is not
 softened because the artifact is a picture.
+
+## 4D.2 — visual reference analysis — done
+
+Deferred at the start of this stage for a good reason: nothing supplied a reference the factory did not
+already read, and inventing traits from a site nobody supplied would have been a fabricated observation.
+The reviving condition recorded in `config/factory-status.json` was a supplied screenshot, moodboard or
+approved reference URL *and* a direction-selection decision asset readiness and project type cannot make.
+Both now exist, and it shipped.
+
+`docs/DESIGN_INTELLIGENCE.md` §4 is the authority on the design. What matters for this stage record is
+the two decisions that keep it inside 4D's own rules:
+
+- a reference does not get a plan of its own. On a structural axis an avoided value refuses the
+  direction with a recorded reason (`reference-avoids-trait`, alongside `imagery-not-available` and
+  `no-distinctive-moment`); on a scaled one a preference overrides the registry's declared intent before
+  `compileArtDirectionPlan` runs, so `restraintLevel` still clamps it and still records the clamp;
+- a reference cannot reach a fact, a route, a binding, an asset's rights or a capability.
+  `assertPresentationOnly` still runs over the result, and asset readiness and the distinctive-moment
+  rule are evaluated *after* reference influence, so a reference can never argue a build into an
+  imagery-led direction it has no photographs for.
 
 ## 4D.4 — asset readiness as an art-direction input — done
 
@@ -148,10 +168,35 @@ clarity, imagery suitability, responsive quality, whether the distinctive moment
 them needs judgement; none can be settled from the compiled design and the composition, which is the
 test a criterion has to pass to be on the list at all.
 
+The packet now also carries the bar the answers are held to. `gates.visual.minimumScore` has been 8.5
+in `config/agent-pipelines.json` since the convergence contract was written and governed a code path
+nothing reached, because the candidate review produced no score. It does now: a verdict scores every
+criterion it was scoped, and three things follow.
+
+- **A below-bar verdict cannot be a pass.** A reviewer may score a candidate 7.2 and say so; what it
+  may not do is call 7.2 a pass, because a pass is what promotion reads. `minimumCriterionScore` stops
+  a strong average hiding one badly failing criterion.
+- **A set can be decided with no winner.** "Both candidates are competent; neither clears the bar" is
+  now recordable as `rework-required` or `rejected`, and neither is reachable until somebody has looked
+  at every candidate in the set. Promotion answering only "which of these" is how a system ends up
+  shipping the least bad one by default.
+- **A rework verdict produces a bounded, targeted plan.** `schemas/visual-rework-plan.schema.json`
+  carries the criteria that failed, the criteria that must survive, the specific axis changes that
+  answer the failure, the frozen truth that may not move, and the iteration it belongs to. A revision
+  keeps lineage back to the verdict and is refused if its composition hash moved. Where no axis the
+  factory can tune would answer the failure, the plan classifies a `customPresentation` requirement
+  instead — which is how the Presentation Registry stops being allowed to answer "the closest existing
+  component".
+
 **No genuinely independent model runtime is enabled in this repository.** Restarting the same model,
 changing its temperature or sending it a second prompt would not be independence, and none of those is
 done here. The contract is retained and the verdict is outstanding, recorded in
 `outstandingProductGates` rather than simulated.
+
+The review is also no longer local-only. `writeVisualReviewPacket` writes one directory — every capture
+copied in beside the record that explains it, the frozen truth, the plans, the lint, the verdicts, the
+criteria and the bar — with an index that opens from a `file://` URL with no script and no service. A
+review a second person cannot reach is not an independent review; it is a private one.
 
 ## 4D.9 — promotion — done
 

@@ -181,11 +181,17 @@ test('promotion makes one candidate the project, and leaves no forks behind', as
       })),
     });
     for (const candidate of set.candidates) {
+      const wins = candidate.candidateId === winner.candidateId;
+      const criteria = service.visualReviewPacket(project.id, candidate.candidateId).criteria;
       await service.recordVisualCandidateReview(project.id, candidate.candidateId, {
-        verdict: candidate.candidateId === winner.candidateId ? 'pass' : 'rework',
+        verdict: wins ? 'pass' : 'rework',
         reviewedBy: 'design-critic',
         addressedRules: [],
         rationale: 'Reviewed against the scoped criteria.',
+        // A verdict now carries a score against every criterion it was scoped,
+        // because the professional bar has to have something to read.
+        criterionScores: criteria.map((criterion) => ({ criterion: criterion.id, score: wins ? 9 : 7 })),
+        failingCriteria: wins ? [] : ['distinctiveness'],
       });
     }
 

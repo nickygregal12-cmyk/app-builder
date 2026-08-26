@@ -109,6 +109,14 @@ test('every spelling of a forbidden destination is refused', () => {
     // The same loopback address in every form a socket library accepts.
     ['127.1', 'loopback'], ['127.0.1', 'loopback'], ['0x7f.1', 'loopback'], ['0x7f000001', 'loopback'],
     ['2130706433', 'loopback'], ['0177.0.0.1', 'loopback'], ['::ffff:127.0.0.1', 'loopback'],
+    // The hex spelling of an IPv4-mapped address, which is the one that
+    // actually arrives: every URL parser normalises `::ffff:127.0.0.1` to
+    // `::ffff:7f00:1`, so the dotted form the filter knew was a form nothing
+    // ever presented. `[::ffff:a9fe:a9fe]` is the cloud metadata address.
+    ['::ffff:7f00:1', 'loopback'], ['[::ffff:7f00:1]', 'loopback'], ['::ffff:0:7f00:1', 'loopback'],
+    ['::ffff:a00:5', 'private'], ['::ffff:0a00:5', 'private'], ['::ffff:c0a8:101', 'private'],
+    ['::ffff:ac10:1', 'private'], ['::ffff:a9fe:a9fe', 'metadata'], ['::ffff:a9fe:1', 'link-local'],
+    ['::ffff:6440:1', 'carrier-grade-nat'], ['::ffff:0:0', 'unspecified'],
     // Private, link-local, metadata, ULA and carrier-grade NAT.
     ['10.0.0.1', 'private'], ['10.255.255.255', 'private'], ['172.16.0.1', 'private'], ['172.31.255.254', 'private'],
     ['192.168.1.1', 'private'], ['169.254.1.1', 'link-local'], ['169.254.169.254', 'metadata'],
@@ -134,6 +142,29 @@ test('the host\'s own global addresses are refused even though they are public a
   }
   // The same address is ordinary public internet when it is not this host's.
   assert.equal(classifyEgressDestination('203.0.113.10', { hostAddresses: [] }).allowed, true);
+
+  // And the host's own address wearing an IPv4-mapped IPv6 spelling is still
+  // the host. A mapped address is resolved to its IPv4 value before this rule
+  // runs, so there is no spelling of the factory host that walks past it.
+  const mapped = classifyEgressDestination('::ffff:cb00:710a', { hostAddresses });
+  assert.equal(mapped.classification, 'host-address');
+  assert.equal(mapped.allowed, false);
+  assert.equal(classifyEgressDestination('::ffff:cb00:710a', { hostAddresses: [] }).allowed, true);
+});
+
+test('a genuine IPv6 destination is not coerced into an IPv4 reading', () => {
+  // The mapped-address fix must not swallow ordinary IPv6. These are real
+  // addresses with real classifications and none of them is IPv4 in disguise.
+  for (const [destination, classification] of [
+    ['2001:4860:4860::8888', 'public'],
+    ['2606:4700:4700::1111', 'public'],
+    ['fe80::1', 'link-local'],
+    ['fd00::1', 'unique-local'],
+    ['ff02::1', 'multicast'],
+    ['::1', 'loopback'],
+  ]) {
+    assert.equal(classifyEgressDestination(destination).classification, classification, destination);
+  }
 });
 
 test('a name is never allowed on its own, and is refused when it resolves somewhere private', () => {

@@ -22,8 +22,10 @@ detail behind one of these steps. What "finished" means — the v1 core, the cla
 expansion that deliberately sits outside v1 — is defined once in `docs/MASTER_PLAN.md` §7.
 
 1. **Take the outstanding Phase 4D visual verdict** and promote or rework accordingly.
-2. **Close Phase 4D honestly** against the exit gate in `docs/PHASE_4D_EXECUTION.md`, leaving 4D.2, 4D.3
-   and the comparison canvas recorded as deferred rather than done.
+2. **Close Phase 4D honestly** against the exit gate in `docs/PHASE_4D_EXECUTION.md`, leaving 4D.3 and
+   the comparison canvas recorded as deferred rather than done. 4D.2 is no longer among them: design
+   references now have a real supplier and a real consumer, so its reviving condition was met and it
+   shipped.
 3. **Finish the documentation and product-proof alignment** so one authority owns each concern.
 4. **Phase 4.2 — prove the static/content renderer**, so the template contract is real rather than a
    single-renderer assumption.

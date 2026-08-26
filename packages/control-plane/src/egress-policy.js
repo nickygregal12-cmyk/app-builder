@@ -98,15 +98,36 @@ function normaliseIpv6(text) {
   return String(text).replace(/^\[/, '').replace(/\]$/, '').toLowerCase();
 }
 
+/**
+ * The 32-bit value behind an IPv4-mapped IPv6 address, in either spelling.
+ *
+ * `::ffff:127.0.0.1` and `::ffff:7f00:1` are the same destination, and the
+ * second is the one that actually arrives: every URL parser normalises the
+ * dotted tail into hex pairs, so a filter that only knew the dotted form was a
+ * filter nothing ever reached in the dotted form. `[::ffff:a9fe:a9fe]` is the
+ * cloud metadata address, and it classified as public until this existed.
+ *
+ * Returns null when the text is not an IPv4-mapped address, so a genuine IPv6
+ * destination falls through to the IPv6 rules below rather than being coerced.
+ */
+function ipv4MappedValue(text) {
+  const address = normaliseIpv6(text);
+  const mapped = /^::ffff:(?:0:)?([0-9a-f.:]+)$/.exec(address);
+  if (!mapped) return null;
+  const dotted = ipv4Value(mapped[1]);
+  if (dotted !== null) return dotted;
+  const groups = mapped[1].split(':');
+  if (groups.length > 2 || groups.some((group) => !/^[0-9a-f]{1,4}$/.test(group))) return null;
+  const [high, low] = groups.length === 2 ? groups : ['0', groups[0]];
+  return (((Number.parseInt(high, 16) * 65536) + Number.parseInt(low, 16)) >>> 0);
+}
+
 function classifyIpv6(text) {
   const address = normaliseIpv6(text);
   if (!address.includes(':')) return null;
   // An IPv4-mapped address is an IPv4 destination wearing an IPv6 spelling.
-  const mapped = /^::ffff:(?:0:)?([0-9a-fA-F.:]+)$/.exec(address);
-  if (mapped) {
-    const value = ipv4Value(mapped[1]);
-    if (value !== null) return classifyIpv4Value(value);
-  }
+  const mapped = ipv4MappedValue(address);
+  if (mapped !== null) return classifyIpv4Value(mapped);
   if (address === '::1') return 'loopback';
   if (address === '::') return 'unspecified';
   if (/^fe[89ab][0-9a-f]:/.test(address)) return 'link-local';
@@ -135,10 +156,14 @@ export function classifyEgressDestination(destination, { hostAddresses = [] } = 
   const raw = String(destination ?? '').trim();
   if (!raw) return { destination: raw, classification: 'unparseable', allowed: false };
 
-  const ipv6 = classifyIpv6(raw);
+  // An IPv4-mapped address is resolved to its IPv4 value first, so the
+  // host-address rule below applies to it as well. Without this,
+  // `[::ffff:<the host's own public address>]` would be the one spelling of the
+  // factory host that walked past its own boundary.
+  const ipv4 = ipv4MappedValue(raw) ?? ipv4Value(raw);
+  const ipv6 = ipv4 === null ? classifyIpv6(raw) : null;
   if (ipv6 !== null) return { destination: raw, classification: ipv6, allowed: ipv6 === 'public' };
 
-  const ipv4 = ipv4Value(raw);
   if (ipv4 !== null) {
     const classification = classifyIpv4Value(ipv4);
     // The host's own global addresses are public addresses, and still off

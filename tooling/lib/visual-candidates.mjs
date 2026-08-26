@@ -25,6 +25,8 @@
  * and `promote` says so rather than picking a winner.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { assessDiversity, MINIMUM_DIFFERING_PLANES } from './visual-direction.mjs';
 
@@ -122,6 +124,104 @@ export function evaluatePromotionGate(designLint) {
   };
 }
 
+
+export const VISUAL_QUALITY_GATE_ID = 'visual';
+export const AGENT_PIPELINES_PATH = 'config/agent-pipelines.json';
+
+/**
+ * The professional bar, read from where the repository already keeps it.
+ *
+ * `config/agent-pipelines.json` has carried `gates.visual.minimumScore` since
+ * the convergence contract was written, and `evaluateConvergence` already fails
+ * a gate whose score falls under it. What was missing was that the visual
+ * candidate review — the one place a person actually judges a rendered build —
+ * never produced a score, so the bar governed a code path nothing reached.
+ *
+ * This reads that gate rather than declaring a second one. Hard-coding 8.5 here
+ * would give the repository two numbers to disagree about, and the number is a
+ * programme target rather than a fact about visual quality.
+ *
+ * Two fields do the work together. `minimumScore` is the overall bar. But an
+ * average is exactly the wrong instrument on its own: eight competent criteria
+ * and one badly failing one is a site with an obvious visible flaw, and it can
+ * still average out above the bar. `minimumCriterionScore` is the floor no
+ * single criterion may fall through.
+ */
+export function loadVisualQualityGate(factoryRoot = process.cwd()) {
+  const registry = JSON.parse(fs.readFileSync(path.join(factoryRoot, AGENT_PIPELINES_PATH), 'utf8'));
+  const gate = registry.gates?.[VISUAL_QUALITY_GATE_ID];
+  if (!gate) throw new Error(`${AGENT_PIPELINES_PATH} declares no ${VISUAL_QUALITY_GATE_ID} gate, so there is no professional bar to hold a candidate to.`);
+  return Object.freeze({
+    gateId: VISUAL_QUALITY_GATE_ID,
+    minimumScore: gate.minimumScore ?? null,
+    minimumCriterionScore: gate.minimumCriterionScore ?? null,
+    reworkIterationBudget: Number.isInteger(gate.reworkIterationBudget) ? gate.reworkIterationBudget : 2,
+    reworkOwner: gate.defaultReworkRole ?? 'art-direction',
+    evaluatedBy: gate.evaluatedBy ?? null,
+  });
+}
+
+/**
+ * Turn a set of criterion scores into the two numbers the bar reads.
+ *
+ * A reviewer must score every criterion it was scoped, and only those. Scoring
+ * a criterion the candidate was never judged on inflates the average with an
+ * opinion about something nobody looked at; skipping one hides the weakness.
+ */
+export function scoreVisualReview(review, criteria = null) {
+  const scores = list(review?.criterionScores);
+  if (!scores.length) return null;
+  for (const entry of scores) {
+    const value = Number(entry?.score);
+    if (!Number.isFinite(value) || value < 0 || value > 10) {
+      throw new Error(`Visual review scores ${String(entry?.criterion)} as ${String(entry?.score)}. A criterion score is a number from 0 to 10.`);
+    }
+  }
+  const scored = new Set(scores.map((entry) => entry.criterion));
+  if (scored.size !== scores.length) throw new Error('A visual review scores each criterion once.');
+  if (criteria) {
+    const expected = criteria.map((criterion) => criterion.id);
+    const missing = expected.filter((id) => !scored.has(id));
+    const extra = [...scored].filter((id) => !expected.includes(id));
+    if (missing.length) throw new Error(`Visual review does not score every criterion it was given: ${missing.join(', ')}.`);
+    if (extra.length) throw new Error(`Visual review scores criteria this candidate was not judged on: ${extra.join(', ')}.`);
+  }
+  const values = scores.map((entry) => Number(entry.score));
+  const lowest = scores.reduce((worst, entry) => (Number(entry.score) < Number(worst.score) ? entry : worst));
+  return {
+    criterionScores: scores.map((entry) => ({ criterion: entry.criterion, score: Number(entry.score), note: entry.note ?? null })),
+    overallScore: Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2)),
+    lowestScore: Number(lowest.score),
+    lowestCriterion: lowest.criterion,
+  };
+}
+
+/**
+ * Whether a candidate clears the professional bar.
+ *
+ * Returned rather than thrown, because "this is competent and not good enough"
+ * is a legitimate, recordable state that the whole rework loop exists to
+ * handle. Only *promoting* something that does not clear it is refused.
+ */
+export function assessProfessionalThreshold(score, gate) {
+  if (!gate || (gate.minimumScore === null && gate.minimumCriterionScore === null)) {
+    return { met: null, detail: 'No professional bar is declared for this programme, so nothing is measured against one.' };
+  }
+  if (!score) {
+    return { met: false, detail: `This review carries no criterion scores, so it cannot be held to the ${gate.minimumScore} bar. A verdict without a score is an opinion the gate cannot read.` };
+  }
+  const failures = [];
+  if (gate.minimumScore !== null && score.overallScore < gate.minimumScore) {
+    failures.push(`overall ${score.overallScore} is below the ${gate.minimumScore} professional bar`);
+  }
+  if (gate.minimumCriterionScore !== null && score.lowestScore < gate.minimumCriterionScore) {
+    failures.push(`${score.lowestCriterion} scores ${score.lowestScore}, below the ${gate.minimumCriterionScore} floor no single criterion may fall through`);
+  }
+  return failures.length
+    ? { met: false, detail: `${failures.join('; ')}.` }
+    : { met: true, detail: `Overall ${score.overallScore} against a ${gate.minimumScore} bar, lowest criterion ${score.lowestScore}.` };
+}
+
 /**
  * Refuse a review that skipped what the rules asked it to look at.
  *
@@ -162,7 +262,7 @@ export function assertIndependentReview(candidate, review) {
  * and a verdict is refused outright for a candidate a rule already blocked:
  * there is nothing for judgement to add to "the accent is unreadable".
  */
-export function recordReview(candidate, review) {
+export function recordReview(candidate, review, { qualityGate = null, criteria = null } = {}) {
   if (!VISUAL_REVIEW_VERDICTS.includes(review?.verdict)) {
     throw new Error(`Unknown visual review verdict: ${String(review?.verdict)}. It offers: ${VISUAL_REVIEW_VERDICTS.join(', ')}.`);
   }
@@ -171,15 +271,38 @@ export function recordReview(candidate, review) {
   }
   assertIndependentReview(candidate, review);
   assertReviewAddressesGate(candidate.gate, review);
+
+  const score = scoreVisualReview(review, criteria);
+  const threshold = assessProfessionalThreshold(score, qualityGate);
+  // The one thing the bar forbids. A reviewer may score a candidate 6.2 and say
+  // so; what it may not do is call 6.2 a pass, because a pass is what promotion
+  // reads. "Competent and not good enough" has to stay expressible, and it is:
+  // it is a rework verdict with the scores attached.
+  if (review.verdict === 'pass' && threshold.met === false) {
+    throw new Error(`Candidate ${candidate.candidateId} cannot be passed: ${threshold.detail} Where nothing clears the bar the answer is rework or reject, never the least bad one.`);
+  }
+
   const state = review.verdict === 'reject' ? 'rejected' : 'reviewed';
   assertCandidateTransition(candidate.state, state);
   return {
     ...candidate,
     state,
-    review: { ...review },
+    review: {
+      ...review,
+      criterionScores: score?.criterionScores ?? [],
+      overallScore: score?.overallScore ?? null,
+      lowestScore: score?.lowestScore ?? null,
+      lowestCriterion: score?.lowestCriterion ?? null,
+      blockingConcerns: list(review.blockingConcerns),
+      failingCriteria: list(review.failingCriteria),
+      thresholdMet: threshold.met,
+      thresholdDetail: threshold.detail,
+      qualityGateId: qualityGate?.gateId ?? null,
+      minimumScore: qualityGate?.minimumScore ?? null,
+    },
     outcome: review.verdict === 'reject' ? 'rejected' : candidate.outcome,
     rationale: review.rationale ?? candidate.rationale ?? null,
-    reworkOwner: review.verdict === 'rework' ? (review.reworkOwner ?? 'visual-direction') : null,
+    reworkOwner: review.verdict === 'rework' ? (review.reworkOwner ?? qualityGate?.reworkOwner ?? 'art-direction') : null,
     provenance: { ...candidate.provenance, reviewedBy: review.reviewedBy, decidedAt: review.decidedAt ?? null },
   };
 }
@@ -198,6 +321,7 @@ export function promoteCandidate(set, candidateId, { promotedBy, rationale = nul
   if (set.promotedCandidateId) throw new Error(`This set already promoted ${set.promotedCandidateId}. Exactly one candidate is promoted; a second decision is a new set.`);
   if (target.gate?.status === 'blocked') throw new Error(`Candidate ${candidateId} carries a deterministic violation and cannot be promoted.`);
   if (target.review?.verdict !== 'pass') throw new Error(`Candidate ${candidateId} has no passing visual review. Where no candidate is good enough the answer is rework, not the least bad one.`);
+  if (target.review?.thresholdMet === false) throw new Error(`Candidate ${candidateId} did not clear the professional bar: ${target.review.thresholdDetail}`);
   assertIndependentReview(target, { reviewedBy: promotedBy });
   assertCandidateTransition(target.state, 'promoted');
 
@@ -214,7 +338,113 @@ export function promoteCandidate(set, candidateId, { promotedBy, rationale = nul
       provenance: { ...candidate.provenance, decidedAt },
     };
   });
-  return { ...set, candidates, promotedCandidateId: candidateId };
+  return { ...set, candidates, promotedCandidateId: candidateId, setOutcome: 'promoted', decision: { outcome: 'promoted', decidedBy: promotedBy, rationale, decidedAt } };
+}
+
+
+export const SET_OUTCOMES = Object.freeze(['undecided', 'promoted', 'rework-required', 'rejected']);
+
+/**
+ * The set-level decision, and the reason this file needed one.
+ *
+ * Promotion answered "which of these?". It could not answer "none of these",
+ * because the only outcome it could record was a winner. That is the shape of
+ * system that ends up shipping the least bad candidate: not because anybody
+ * decided to, but because no other button existed.
+ *
+ * Three outcomes, and the two new ones are the point:
+ *
+ *   promoted        — one candidate cleared the gate, the bar and an
+ *                     independent review. `promoteCandidate` still does it.
+ *   rework-required — every candidate was judged and none passed, and at least
+ *                     one is worth another bounded pass. The set stays open and
+ *                     `planVisualRework` says exactly what to change.
+ *   rejected        — every candidate was judged and none passed, and none is
+ *                     worth reworking. The set closes with no product change.
+ *                     This is a legitimate professional conclusion and the
+ *                     system has to be able to reach it.
+ *
+ * A set cannot be decided before every candidate has been judged or blocked.
+ * "None of these is good enough" is only true if somebody looked at all of them.
+ */
+export function decideCandidateSet(set, { outcome, decidedBy, rationale = null, decidedAt = null } = {}) {
+  if (!SET_OUTCOMES.includes(outcome) || outcome === 'undecided') {
+    throw new Error(`Unknown visual candidate set outcome: ${String(outcome)}. It offers: ${SET_OUTCOMES.filter((entry) => entry !== 'undecided').join(', ')}.`);
+  }
+  if (!decidedBy) throw new Error('Deciding a visual candidate set must record who decided it.');
+  if (set.promotedCandidateId) throw new Error(`This set already promoted ${set.promotedCandidateId}.`);
+  if (set.setOutcome && set.setOutcome !== 'undecided') throw new Error(`This set is already ${set.setOutcome}.`);
+
+  const candidates = list(set.candidates);
+  for (const candidate of candidates) {
+    const judged = candidate.review || candidate.gate?.status === 'blocked' || candidate.outcome === 'rejected';
+    if (!judged) {
+      throw new Error(`Candidate ${candidate.candidateId} has not been judged. A set cannot be rejected or sent back for rework until somebody has looked at every candidate in it.`);
+    }
+    // Rule 17 applies to the set-level decision too: whoever created these
+    // candidates does not get to close the book on them either.
+    assertIndependentReview(candidate, { reviewedBy: decidedBy });
+  }
+  if (candidates.some((candidate) => candidate.review?.verdict === 'pass')) {
+    const passing = candidates.filter((candidate) => candidate.review?.verdict === 'pass').map((candidate) => candidate.candidateId);
+    throw new Error(`${passing.join(', ')} passed review, so this set has a winner to promote rather than a set-level ${outcome}.`);
+  }
+  if (outcome === 'rework-required' && !candidates.some((candidate) => candidate.review?.verdict === 'rework')) {
+    throw new Error('No candidate was returned for rework, so there is nothing to rework. Reject the set instead.');
+  }
+
+  const closed = outcome === 'rejected'
+    ? candidates.map((candidate) => (candidate.outcome === 'rejected'
+      ? candidate
+      : {
+        ...candidate,
+        state: assertCandidateTransition(candidate.state, 'rejected'),
+        outcome: 'rejected',
+        rationale: candidate.rationale ?? 'The set was rejected: no candidate cleared the professional bar and none was worth reworking.',
+        provenance: { ...candidate.provenance, decidedAt },
+      }))
+    : candidates;
+
+  return {
+    ...set,
+    candidates: closed,
+    setOutcome: outcome,
+    decision: { outcome, decidedBy, rationale, decidedAt },
+  };
+}
+
+/**
+ * What the set currently says about itself, without deciding anything.
+ *
+ * The Console needs this to offer the right buttons, and a reviewer needs it to
+ * see whether "reject them all" is even available yet.
+ */
+export function summariseCandidateSet(set, gate = null) {
+  const candidates = list(set?.candidates);
+  const judged = candidates.filter((candidate) => candidate.review || candidate.gate?.status === 'blocked' || candidate.outcome === 'rejected');
+  const passing = candidates.filter((candidate) => candidate.review?.verdict === 'pass');
+  const reworkable = candidates.filter((candidate) => candidate.review?.verdict === 'rework');
+  const scores = candidates
+    .filter((candidate) => typeof candidate.review?.overallScore === 'number')
+    .map((candidate) => ({ candidateId: candidate.candidateId, overallScore: candidate.review.overallScore, thresholdMet: candidate.review.thresholdMet }));
+  return {
+    setOutcome: set?.setOutcome ?? 'undecided',
+    promotedCandidateId: set?.promotedCandidateId ?? null,
+    total: candidates.length,
+    judged: judged.length,
+    fullyJudged: judged.length === candidates.length && candidates.length > 0,
+    passing: passing.map((candidate) => candidate.candidateId),
+    reworkable: reworkable.map((candidate) => candidate.candidateId),
+    scores,
+    minimumScore: gate?.minimumScore ?? null,
+    minimumCriterionScore: gate?.minimumCriterionScore ?? null,
+    reworkIterationBudget: gate?.reworkIterationBudget ?? null,
+    // The two outcomes that were previously unreachable, stated as availability
+    // rather than left for a caller to infer.
+    canPromote: passing.length === 1,
+    canRework: judged.length === candidates.length && candidates.length > 0 && passing.length === 0 && reworkable.length > 0,
+    canReject: judged.length === candidates.length && candidates.length > 0 && passing.length === 0,
+  };
 }
 
 /**
@@ -279,6 +509,8 @@ export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetRead
     refusedDirections,
     candidates: prepared,
     promotedCandidateId: null,
+    setOutcome: 'undecided',
+    decision: null,
   };
 }
 

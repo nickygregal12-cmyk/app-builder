@@ -17,7 +17,12 @@
       "properties": {
         "projectType": {"type": "string", "minLength": 1},
         "manifestVersion": {"type": "integer", "minimum": 1},
-        "knowledgePackHash": {"type": ["string", "null"]},
+        "manifestHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "knowledgePackHash": {
+          "type": ["string", "null"],
+          "description": "Null is a fact rather than a gap: a project replayed from an approved intake bundle has an approved manifest and no ingested material. `knowledgeSource` says which case this is, so a reviewer never has to guess whether a hash went missing."
+        },
+        "knowledgeSource": {"enum": ["ingested-knowledge-pack", "approved-manifest-only"]},
         "baselineCompositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false
@@ -67,14 +72,34 @@
         "required": ["directionId", "reason", "detail"],
         "properties": {
           "directionId": {"type": "string", "minLength": 1},
-          "reason": {"enum": ["imagery-not-available", "no-distinctive-moment", "custom-presentation-required"]},
+          "reason": {"enum": ["imagery-not-available", "no-distinctive-moment", "custom-presentation-required", "reference-avoids-trait"]},
           "detail": {"type": "string", "minLength": 1}
         },
         "additionalProperties": false
       }
     },
     "candidates": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/candidate"}},
-    "promotedCandidateId": {"type": ["string", "null"]}
+    "promotedCandidateId": {"type": ["string", "null"]},
+    "setOutcome": {
+      "enum": ["undecided", "promoted", "rework-required", "rejected"],
+      "description": "What was decided about the set as a whole. Promotion answers 'which of these'; it cannot answer 'none of these', and a system whose only recordable outcome is a winner ships the least bad candidate by default. 'rework-required' keeps the set open for one bounded revision; 'rejected' closes it with no product change, which is a legitimate professional conclusion."
+    },
+    "decision": {
+      "type": ["object", "null"],
+      "required": ["outcome", "decidedBy"],
+      "properties": {
+        "outcome": {"enum": ["promoted", "rework-required", "rejected"]},
+        "decidedBy": {"type": "string", "minLength": 1},
+        "rationale": {"type": ["string", "null"]},
+        "decidedAt": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "reworkPlans": {
+      "type": "array",
+      "description": "The bounded revisions this set has asked for. Each names the candidate it revises, the criteria that failed, the axis changes requested and the iteration it belongs to, so a revised candidate can always be traced to the verdict that asked for it.",
+      "items": {"$ref": "visual-rework-plan.schema.json"}
+    }
   },
   "additionalProperties": false,
   "$defs": {
@@ -98,6 +123,26 @@
             "dimensions": {"type": "object"},
             "responsive": {"type": "object"},
             "clamped": {"type": "array", "description": "What restraintLevel cut from the declared plan, so a reviewer can tell a build that was asked to be quiet from one that was cut back."},
+            "referenceAdjustments": {
+              "type": "array",
+              "description": "What an approved design reference changed about the direction's declared intent, and whether it was a preference or a refusal. Recorded beside `clamped` for the same reason: a reviewer looking at an unusual plan must be able to tell what asked for it.",
+              "items": {
+                "type": "object",
+                "required": ["axis", "declared", "applied", "reason"],
+                "properties": {
+                  "axis": {"type": "string", "minLength": 1},
+                  "declared": {"type": "string", "minLength": 1},
+                  "applied": {"type": "string", "minLength": 1},
+                  "reason": {"enum": ["reference-prefers", "reference-refuses"]}
+                },
+                "additionalProperties": false
+              }
+            },
+            "referenceIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "reworkOverrides": {
+              "type": "object",
+              "description": "The axis values a bounded rework pass asked this revision to differ by, flattened from its plan. Present only on a revised candidate."
+            },
             "motion": {"type": "object"}
           },
           "additionalProperties": false
@@ -122,7 +167,44 @@
         "evidenceId": {"type": ["string", "null"]},
         "designLint": {"type": ["object", "null"]},
         "gate": {"$ref": "#/$defs/gate"},
-        "review": {"type": ["object", "null"]},
+        "review": {
+          "type": ["object", "null"],
+          "description": "The independent verdict, with its criterion scores and whether they cleared the declared professional bar. A verdict with no scores cannot clear the bar, which is what stops 'looks fine to me' promoting a build."
+        },
+        "iteration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0 for a candidate the set was generated with; 1 or more for a revision produced by a bounded rework pass."
+        },
+        "lineage": {
+          "type": ["object", "null"],
+          "description": "Where a revised candidate came from. A revision that cannot name its parent, the verdict that asked for it and the frozen truth it kept is not a revision; it is a second attempt pretending to be one.",
+          "required": ["parentCandidateId", "planId", "iteration", "frozenTruthHash", "failingCriteria", "requestedChanges"],
+          "properties": {
+            "parentCandidateId": {"type": "string", "minLength": 1},
+            "planId": {"type": "string", "minLength": 1},
+            "reviewVerdictId": {"type": ["string", "null"]},
+            "iteration": {"type": "integer", "minimum": 1},
+            "frozenTruthHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            "failingCriteria": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "preservedCriteria": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "requestedChanges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["axis", "from", "to", "because"],
+                "properties": {
+                  "axis": {"type": "string", "minLength": 1},
+                  "from": {"type": "string", "minLength": 1},
+                  "to": {"type": "string", "minLength": 1},
+                  "because": {"type": "string", "minLength": 1}
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
         "outcome": {"enum": ["pending", "promoted", "rejected"]},
         "rationale": {"type": ["string", "null"]},
         "reworkOwner": {"type": ["string", "null"], "description": "The role that owns fixing a failed candidate. Null unless the outcome is a rejection something can be done about."},

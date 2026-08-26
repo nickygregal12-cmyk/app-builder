@@ -33,7 +33,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { rehashComposition } from '../../packages/composition/src/index.js';
-import { compileArtDirectionPlan } from './art-direction.mjs';
+import { DEFAULT_ART_DIRECTION, LAYOUT_VARIANCE_ORDER, RESTRAINT_LEVELS, VISUAL_DISTINCTIVENESS_ORDER, compileArtDirectionPlan } from './art-direction.mjs';
+import { MOTION_INTENSITY_ORDER } from './motion-contract.mjs';
 
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
 export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows']);
@@ -102,6 +103,100 @@ export const DEFAULT_RESPONSIVE_PLAN = Object.freeze({
 
 export const VISUAL_DIRECTIONS_PATH = 'config/visual-directions.json';
 
+/**
+ * How an approved design reference reaches this authority.
+ *
+ * There is exactly one ArtDirectionPlan and this is still its compiler. A
+ * reference does not get a plan of its own; it gets two bounded verbs against
+ * the one that exists, and the axes it may name are split by what kind of
+ * decision they are.
+ *
+ *   TUNABLE   — a value on a scale the plan already clamps. A preference
+ *               overrides the registry's declared intent before the plan is
+ *               compiled, so `restraintLevel` still cuts it back and still
+ *               records the cut. A refusal moves the value to the nearest
+ *               allowed point on the scale rather than throwing the direction
+ *               away, because "less motion than that" is a request to turn a
+ *               dial, not to delete an option.
+ *
+ *   STRUCTURAL — what a direction is made of. There is no nearest value: an
+ *               immersive opening is not a quieter split opening. A refusal
+ *               therefore removes the direction from the candidate set with a
+ *               recorded reason, and a preference only ranks.
+ *
+ * Nothing here can reach a fact, a route, a binding, an asset's rights or a
+ * capability. `assertPresentationOnly` still runs over the result, and the
+ * refusals in `refusalReason` — asset readiness, the distinctive-moment rule —
+ * are evaluated after reference influence, so a reference can never argue a
+ * build into an imagery-led direction it has no photographs for.
+ */
+export const REFERENCE_TUNABLE_AXES = Object.freeze({
+  layoutVariance: LAYOUT_VARIANCE_ORDER,
+  motionIntensity: MOTION_INTENSITY_ORDER,
+  visualDistinctiveness: VISUAL_DISTINCTIVENESS_ORDER,
+  restraintLevel: RESTRAINT_LEVELS,
+  density: Object.freeze(['relaxed', 'comfortable', 'compact', 'dense']),
+  maxWidth: Object.freeze(['64rem', '68rem', '72rem', '90rem', '96rem']),
+});
+
+export const REFERENCE_STRUCTURAL_AXES = Object.freeze([
+  'heroStrategy',
+  'gridFamily',
+  'headingTreatment',
+  'ctaPlacement',
+  'distinctiveMoment',
+  'mobileHero',
+  'navigation',
+  'mobileSectionOrder',
+  'mobileDensity',
+  'mobileMotion',
+]);
+
+const DESIGN_AXES = Object.freeze(['density', 'maxWidth']);
+const PLAN_AXES = Object.freeze(['layoutVariance', 'motionIntensity', 'visualDistinctiveness', 'restraintLevel']);
+
+/** The nearest value on a scale that no reference refuses. */
+function nearestAllowed(scale, declared, refused) {
+  const forbidden = new Set(list(refused));
+  if (!forbidden.has(declared)) return declared;
+  const from = scale.indexOf(declared);
+  const allowed = scale.map((value, index) => ({ value, index })).filter((entry) => !forbidden.has(entry.value));
+  if (!allowed.length) return declared;
+  return allowed.sort((a, b) => Math.abs(a.index - from) - Math.abs(b.index - from) || a.index - b.index)[0].value;
+}
+
+/**
+ * Apply one influence to one axis and say what happened.
+ *
+ * A preference is applied only when the direction does not already carry it,
+ * so an unchanged axis never appears as an adjustment a reviewer has to read.
+ */
+function tune(axis, declared, influence) {
+  const scale = REFERENCE_TUNABLE_AXES[axis];
+  const refused = influence?.refuse?.[axis];
+  const preferred = influence?.prefer?.[axis];
+  if (preferred !== undefined && scale.includes(preferred) && preferred !== declared) {
+    return { value: preferred, adjustment: { axis, declared, applied: preferred, reason: 'reference-prefers' } };
+  }
+  const allowed = nearestAllowed(scale, declared, refused);
+  if (allowed !== declared) return { value: allowed, adjustment: { axis, declared, applied: allowed, reason: 'reference-refuses' } };
+  return { value: declared, adjustment: null };
+}
+
+/** Which structural values of a direction a reference forbids outright. */
+export function structuralRefusals(entry, influence) {
+  const refuse = influence?.refuse ?? {};
+  const declared = {
+    ...DEFAULT_COMPOSITION_DIMENSIONS,
+    ...entry?.composition,
+    ...DEFAULT_RESPONSIVE_PLAN,
+    ...entry?.responsive,
+  };
+  return REFERENCE_STRUCTURAL_AXES
+    .filter((axis) => list(refuse[axis]).includes(declared[axis]))
+    .map((axis) => ({ axis, value: declared[axis] }));
+}
+
 export function loadVisualDirections(factoryRoot = process.cwd()) {
   return JSON.parse(fs.readFileSync(path.join(factoryRoot, VISUAL_DIRECTIONS_PATH), 'utf8'));
 }
@@ -119,33 +214,69 @@ function assertOneOf(scale, value, field, directionId) {
  * dimensions ride alongside it in the same plan: a second plan would be a
  * second place a build's presentation could be decided.
  */
-export function compileVisualDirection(directionId, registry) {
+export function compileVisualDirection(directionId, registry, { referenceInfluence = null, overrides = null } = {}) {
   const entry = registry?.directions?.[directionId];
   if (!entry) throw new Error(`Unknown visual direction: ${String(directionId)}.`);
 
-  const composition = { ...DEFAULT_COMPOSITION_DIMENSIONS, ...entry.composition };
+  // A rework's overrides land with the registry's own values and are validated
+  // against exactly the same scales. A revision that could name a value the
+  // registry cannot express would be a second direction registry written by
+  // whoever wrote the verdict.
+  const composition = { ...DEFAULT_COMPOSITION_DIMENSIONS, ...entry.composition, ...overrides?.composition };
   for (const [field, scale] of Object.entries(ORDER)) assertOneOf(scale, composition[field], field, directionId);
-  const responsive = { ...DEFAULT_RESPONSIVE_PLAN, ...entry.responsive };
+  const responsive = { ...DEFAULT_RESPONSIVE_PLAN, ...entry.responsive, ...overrides?.responsive };
   for (const [field, scale] of Object.entries(RESPONSIVE_ORDER)) assertOneOf(scale, responsive[field], field, directionId);
   assertOneOf(ASSET_APPETITES, entry.assetAppetite ?? 'imagery-optional', 'assetAppetite', directionId);
 
   const sectionOrder = Array.isArray(entry.composition?.sectionOrder) ? [...entry.composition.sectionOrder] : [];
   if (sectionOrder.includes('hero')) throw new Error(`Visual direction ${directionId} orders the hero. A page opens with its hero in every direction.`);
 
-  const plan = compileArtDirectionPlan(entry.artDirection ?? {});
+  // Reference influence lands here — on the intent, before the plan compiles —
+  // rather than on the compiled plan. That is the difference between steering
+  // the one authority and overwriting what it decided: `restraintLevel` still
+  // clamps a reference's ambition and still records the clamp.
+  const declaredIntent = { ...DEFAULT_ART_DIRECTION, ...entry.artDirection, ...overrides?.artDirection };
+  const declaredDesign = { ...entry.design, ...overrides?.design };
+  const adjustments = [];
+  if (referenceInfluence) {
+    for (const axis of PLAN_AXES) {
+      const { value, adjustment } = tune(axis, declaredIntent[axis], referenceInfluence);
+      declaredIntent[axis] = value;
+      if (adjustment) adjustments.push(adjustment);
+    }
+    for (const axis of DESIGN_AXES) {
+      if (declaredDesign[axis] === undefined) continue;
+      const { value, adjustment } = tune(axis, declaredDesign[axis], referenceInfluence);
+      declaredDesign[axis] = value;
+      if (adjustment) adjustments.push(adjustment);
+    }
+  }
+
+  const plan = compileArtDirectionPlan(declaredIntent);
   return {
     schemaVersion: 1,
     id: directionId,
     label: entry.label ?? directionId,
     purpose: entry.purpose ?? '',
     assetAppetite: entry.assetAppetite ?? 'imagery-optional',
-    design: { ...entry.design },
+    design: declaredDesign,
     artDirection: {
       ...plan,
       dimensions: { ...plan.dimensions, ...composition },
       // Responsive behaviour is part of visual direction, and it is derived
       // from the direction rather than authored beside it.
       responsive: { schemaVersion: 1, authority: 'art-direction-plan', ...responsive },
+      // What an approved reference changed, beside what restraint cut. A
+      // reviewer looking at an unusual plan has to be able to tell "the project
+      // asked for this" from "a site somebody liked asked for this".
+      //
+      // Absent entirely when no reference informed the build, so a project that
+      // never supplied one compiles exactly the plan it compiled before design
+      // references existed rather than two empty arrays saying so.
+      ...(referenceInfluence
+        ? { referenceAdjustments: adjustments, referenceIds: [...(referenceInfluence.referenceIds ?? [])] }
+        : {}),
+      ...(overrides ? { reworkOverrides: { ...overrides.artDirection, ...overrides.design, ...overrides.composition, ...overrides.responsive } } : {}),
     },
     sectionOrder,
   };
@@ -502,12 +633,24 @@ const MOMENT_REQUIREMENTS = Object.freeze({
  * moment rule for public-facing types, and — where a composition is supplied —
  * whether that moment has anything to render.
  */
-export function selectVisualDirections({ projectType, registry, assetReadiness = null, composition = null, requested = null } = {}) {
+export function selectVisualDirections({ projectType, registry, assetReadiness = null, composition = null, requested = null, referenceInfluence = null } = {}) {
   const offered = requested ?? registry?.projectTypeCandidates?.[projectType] ?? [];
   const eligible = [];
   const refused = [];
   for (const id of offered) {
-    const direction = compileVisualDirection(id, registry);
+    // The structural refusal is read from the registry entry rather than from
+    // the compiled direction, because it is a statement about what the
+    // direction *is*. Tuning cannot rescue it and must not disguise it.
+    const structural = structuralRefusals(registry?.directions?.[id], referenceInfluence);
+    if (structural.length) {
+      refused.push({
+        directionId: id,
+        reason: 'reference-avoids-trait',
+        detail: `${id} presents ${structural.map((entry) => `${entry.axis} ${entry.value}`).join(' and ')}, which an approved design reference asks this project to avoid.`,
+      });
+      continue;
+    }
+    const direction = compileVisualDirection(id, registry, { referenceInfluence });
     const reason = refusalReason(direction, { projectType, assetReadiness, composition });
     if (reason) refused.push({ directionId: id, ...reason });
     else eligible.push(direction);

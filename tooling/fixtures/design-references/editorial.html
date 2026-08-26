@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editorial fixture</title>
+<!--
+  A synthetic page written for this repository, not a copy of anybody's site.
+  It exists so a real browser can be asked to measure a typography-led page and
+  the answer can be checked: 96px display type, 160px between sections, no lead
+  image, a rule above every heading, one ground, and nothing that moves.
+-->
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; background: #ffffff; color: #14140f; font: 18px/1.7 Georgia, serif; }
+  header nav { position: static; display: flex; gap: 24px; padding: 24px 48px; }
+  header nav a { color: #14140f; }
+  main { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+  main > section { margin-bottom: 160px; background: #ffffff; }
+  h1 { font-size: 96px; line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 32px; max-width: 14ch; }
+  h2 { font-size: 34px; margin: 0 0 24px; padding-top: 20px; border-top: 2px solid #14140f; }
+  p { max-width: 34em; margin: 0 0 20px; }
+  .items { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; }
+</style>
+</head>
+<body>
+  <header><nav><a href="#work">Work</a><a href="#practice">Practice</a><a href="#contact">Contact</a></nav></header>
+  <main>
+    <section id="lead">
+      <h1>A practice that writes before it draws.</h1>
+      <p>Every project begins with a document. The drawings follow from it, and so does everything anyone is asked to sign.</p>
+    </section>
+    <section id="work">
+      <h2>Selected work</h2>
+      <p>Twelve buildings, three of them still standing in the form they were drawn in, which is the number we are least embarrassed about.</p>
+      <div class="items">
+        <p>A house on a hill that is mostly roof.</p>
+        <p>A library nobody wanted until it opened.</p>
+        <p>A workshop with a floor you can hose down.</p>
+      </div>
+    </section>
+    <section id="practice">
+      <h2>The practice</h2>
+      <p>Four people, one room, and a rule that whoever draws a detail is the one who goes to site to watch it fail.</p>
+    </section>
+    <section id="contact">
+      <h2>Get in touch</h2>
+      <p>We answer letters. We answer email faster.</p>
+    </section>
+  </main>
+</body>
+</html>

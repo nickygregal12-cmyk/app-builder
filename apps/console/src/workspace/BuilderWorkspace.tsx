@@ -40,7 +40,12 @@ import {
   type SourceReference,
   type SourceRequest,
   type WorkspaceSnapshot,
+  type DesignReferenceState,
+  type VisualCandidateSetSummary,
+  decideVisualCandidateSet,
+  reworkVisualCandidate,
 } from '../service/client';
+import { DesignReferencePanel } from './DesignReferencePanel';
 import './workspace.css';
 
 type Device = 'desktop' | 'tablet' | 'mobile';
@@ -610,9 +615,10 @@ function scopedCriteria(packets: Record<string, VisualReviewPacket>) {
   return [...seen].map(([id, question]) => ({ id, question }));
 }
 
-function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
+function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
   projectId: string;
   set: VisualCandidateSet | null;
+  summary: VisualCandidateSetSummary | null;
   onChanged: (next: VisualCandidateSet) => void;
   onError: (message: string) => void;
 }) {
@@ -623,6 +629,8 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
   const [packets, setPackets] = useState<Record<string, VisualReviewPacket>>({});
   const [reviewer, setReviewer] = useState('');
   const [rationale, setRationale] = useState<Record<string, string>>({});
+  const [interaction, setInteraction] = useState('viewport');
+  const [criterionScores, setCriterionScores] = useState<Record<string, Record<string, number>>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -669,11 +677,47 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
   const responsiveFields = differingResponsive(candidates);
   const criteria = scopedCriteria(packets);
   const routes = [...new Set(Object.values(evidence).flatMap((entry) => entry.captures.map((capture) => capture.route)))];
+  // Every interaction state that was captured on this route, not only the
+  // resting one. The nbm review photographed a failed enquiry on both
+  // candidates and the switcher could not reach either picture, which made an
+  // evidence set that covered the state read as one that did not.
+  const states = [
+    { id: 'viewport', label: 'at rest' },
+    ...[...new Set(Object.values(evidence).flatMap((entry) => entry.captures
+      .filter((capture) => capture.route === route && capture.state.interaction)
+      .map((capture) => capture.state.interaction as string)))].map((interaction) => ({ id: interaction, label: label(interaction) })),
+  ];
+  const activeState = states.some((entry) => entry.id === interaction) ? interaction : 'viewport';
   const captureFor = (candidate: VisualCandidate) => {
     const entry = candidate.evidenceId ? evidence[candidate.evidenceId] : null;
-    return entry?.captures.find((capture) => capture.route === route && capture.viewport === viewport && capture.state.axis === 'viewport') ?? null;
+    return entry?.captures.find((capture) => capture.route === route
+      && capture.viewport === viewport
+      && (activeState === 'viewport' ? capture.state.axis === 'viewport' : capture.state.interaction === activeState)) ?? null;
   };
   const detailFor = (candidate: VisualCandidate, rule: string) => candidate.designLint?.findings.find((finding) => finding.rule === rule)?.detail ?? null;
+
+  // A verdict now carries a number against every criterion it was scoped. The
+  // bar is 8.5 for a reason nobody here invented: it is the programme target in
+  // the pipeline gate registry, and it travels with the packet so a reviewer can
+  // see what a 7 means before they type one.
+  const scoresFor = (candidateId: string) => criterionScores[candidateId] ?? {};
+  const criteriaFor = (candidateId: string) => packets[candidateId]?.criteria ?? criteria;
+  const scoredEverything = (candidateId: string) => criteriaFor(candidateId).every((criterion) => Number.isFinite(scoresFor(candidateId)[criterion.id]));
+  const failingFor = (candidateId: string) => criteriaFor(candidateId)
+    .filter((criterion) => (scoresFor(candidateId)[criterion.id] ?? 10) < (summary?.minimumScore ?? 8.5))
+    .map((criterion) => criterion.id);
+  const overallFor = (candidateId: string) => {
+    const values = criteriaFor(candidateId).map((criterion) => scoresFor(candidateId)[criterion.id]).filter((value): value is number => Number.isFinite(value));
+    return values.length ? Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2)) : null;
+  };
+  const reviewPayload = (candidate: VisualCandidate, verdict: string) => ({
+    verdict,
+    reviewedBy: reviewer.trim(),
+    addressedRules: candidate.gate.mustAddress,
+    rationale: rationale[candidate.candidateId] ?? '',
+    criterionScores: criteriaFor(candidate.candidateId).map((criterion) => ({ criterion: criterion.id, score: scoresFor(candidate.candidateId)[criterion.id] })),
+    failingCriteria: verdict === 'pass' ? [] : failingFor(candidate.candidateId),
+  });
 
   return <section className="builder-panel candidate-panel" aria-label="Visual directions">
     <div className="panel-title-row">
@@ -724,6 +768,9 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
         <div className="device-switcher" role="group" aria-label="Comparison route">
           {routes.map((name) => <button type="button" key={name} className={route === name ? 'active' : ''} onClick={() => setRoute(name)}>{name}</button>)}
         </div>
+        {states.length > 1 && <div className="device-switcher" role="group" aria-label="Comparison state">
+          {states.map((entry) => <button type="button" key={entry.id} className={activeState === entry.id ? 'active' : ''} onClick={() => setInteraction(entry.id)}>{entry.label}</button>)}
+        </div>}
       </div>}
 
       <div className="candidate-grid">{candidates.map((candidate) => {
@@ -746,11 +793,11 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
               // evidence.
               tabIndex={0}
               role="group"
-              aria-label={`${candidate.directionLabel} at ${route}, ${viewport} — scrollable full-page capture`}
+              aria-label={`${candidate.directionLabel} at ${route}, ${viewport}, ${activeState === 'viewport' ? 'at rest' : label(activeState)} — scrollable full-page capture`}
             >
-              <img src={renderedCaptureUrl(projectId, candidate.evidenceId, capture.id)} alt={`${candidate.directionLabel} at ${route}, ${viewport}`} loading="lazy" />
+              <img src={renderedCaptureUrl(projectId, candidate.evidenceId, capture.id)} alt={`${candidate.directionLabel} at ${route}, ${viewport}, ${activeState === 'viewport' ? 'at rest' : label(activeState)}`} loading="lazy" />
             </div>
-            : <p className="builder-empty">No capture yet at this route and width.</p>}
+            : <p className="builder-empty">No capture yet at this route, width and state.</p>}
           {axes.length > 0 && <dl className="builder-definition candidate-axes">
             {axes.map((axis) => <div key={axis}><dt>{AXIS_LABELS[axis]}</dt><dd>{label(String(candidate.signature.axes[axis] ?? '—'))}</dd></div>)}
           </dl>}
@@ -774,7 +821,18 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
               ? <span>No violation, warning or recommendation on this candidate.</span>
               : findings.map((finding) => <span key={`${finding.rule}-${finding.detail}`}><em>{SEVERITY_LABELS[finding.severity] ?? finding.severity}</em> {label(finding.rule)} — {finding.detail}</span>)}
           </div>
-          {candidate.review && <p className="builder-empty">{label(candidate.review.verdict)} by {candidate.review.reviewedBy}{candidate.review.rationale ? ` — ${candidate.review.rationale}` : ''}</p>}
+          {candidate.lineage && <div className="candidate-lineage">
+            <strong>Revision {candidate.lineage.iteration} of {candidate.lineage.parentCandidateId}</strong>
+            <span>Failed: {candidate.lineage.failingCriteria.map(label).join(', ')}</span>
+            {candidate.lineage.requestedChanges.map((change) => <span key={change.axis}>{label(change.axis)}: {label(change.from)} → {label(change.to)} — {change.because}</span>)}
+            <span>Same product truth: <code>{candidate.lineage.frozenTruthHash}</code></span>
+          </div>}
+          {candidate.review && <p className="builder-empty">
+            {label(candidate.review.verdict)} by {candidate.review.reviewedBy}
+            {typeof candidate.review.overallScore === 'number' ? ` · ${candidate.review.overallScore}/10` : ''}
+            {candidate.review.thresholdMet === false ? ` · ${candidate.review.thresholdDetail ?? 'below the bar'}` : ''}
+            {candidate.review.rationale ? ` — ${candidate.review.rationale}` : ''}
+          </p>}
           {!set.promotedCandidateId && candidate.gate.status !== 'blocked' && candidate.gate.status !== 'not-run' && <div className="candidate-actions">
             <textarea
               rows={2}
@@ -784,10 +842,41 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
               onChange={(event) => setRationale((current) => ({ ...current, [candidate.candidateId]: event.target.value }))}
             />
             {!candidate.review && <>
-              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim()} onClick={() => act(`pass-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, { verdict: 'pass', reviewedBy: reviewer.trim(), addressedRules: candidate.gate.mustAddress, rationale: rationale[candidate.candidateId] ?? '' }))}>Pass</button>
-              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim()} onClick={() => act(`rework-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, { verdict: 'rework', reviewedBy: reviewer.trim(), addressedRules: candidate.gate.mustAddress, rationale: rationale[candidate.candidateId] ?? '' }))}>Rework</button>
-              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim()} onClick={() => act(`reject-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, { verdict: 'reject', reviewedBy: reviewer.trim(), addressedRules: candidate.gate.mustAddress, rationale: rationale[candidate.candidateId] ?? '' }))}>Reject</button>
+              {/* Every criterion gets a number. A verdict with no score cannot
+                  be a pass, because the bar has to have something to read. */}
+              <div className="candidate-scores">
+                {criteriaFor(candidate.candidateId).map((criterion) => <label key={criterion.id}>
+                  <span>{label(criterion.id)}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.5}
+                    inputMode="decimal"
+                    aria-label={`${label(criterion.id)} — ${candidate.directionLabel}, out of 10`}
+                    value={scoresFor(candidate.candidateId)[criterion.id] ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value === '' ? Number.NaN : Number(event.target.value);
+                      setCriterionScores((current) => ({
+                        ...current,
+                        [candidate.candidateId]: { ...current[candidate.candidateId], [criterion.id]: value },
+                      }));
+                    }}
+                  />
+                </label>)}
+                <p className="builder-empty">
+                  {overallFor(candidate.candidateId) === null
+                    ? `Score every criterion out of 10. ${summary?.minimumScore ?? 8.5} or better is the professional bar; below it, the answer is rework or reject.`
+                    : `Overall ${overallFor(candidate.candidateId)} against a ${summary?.minimumScore ?? 8.5} bar.`}
+                </p>
+              </div>
+              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim() || !scoredEverything(candidate.candidateId)} onClick={() => act(`pass-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, reviewPayload(candidate, 'pass')))}>Pass</button>
+              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim() || !scoredEverything(candidate.candidateId)} onClick={() => act(`rework-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, reviewPayload(candidate, 'rework')))}>Rework</button>
+              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim() || !scoredEverything(candidate.candidateId)} onClick={() => act(`reject-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, reviewPayload(candidate, 'reject')))}>Reject</button>
             </>}
+            {candidate.review?.verdict === 'rework' && !summary?.exhausted && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act(`revise-${candidate.candidateId}`, async () => (await reworkVisualCandidate(projectId, candidate.candidateId, reviewer.trim())).set)}>
+              {busy === `revise-${candidate.candidateId}` ? 'Revising…' : `Make the revision (pass ${(candidate.iteration ?? 0) + 1} of ${summary?.budget ?? 2})`}
+            </button>}
             {candidate.review?.verdict === 'pass' && <button type="button" disabled={busy !== null || !reviewer.trim()} onClick={() => act(`promote-${candidate.candidateId}`, () => promoteVisualCandidate(projectId, candidate.candidateId, { promotedBy: reviewer.trim(), rationale: rationale[candidate.candidateId] ?? '' }))}>
               {busy === `promote-${candidate.candidateId}` ? 'Promoting…' : 'Promote this one'}
             </button>}
@@ -803,6 +892,33 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
         <strong>What only judgement can settle</strong>
         <ol>{criteria.map((criterion) => <li key={criterion.id}><span>{label(criterion.id)}</span>{criterion.question}</li>)}</ol>
       </div>}
+
+      {/* The two outcomes that are not a winner. A review that can only promote
+          ends up promoting the least bad candidate, so this is deliberately as
+          reachable as promotion is. */}
+      {summary && summary.setOutcome === 'undecided' && (summary.canRework || summary.canReject) && <div className="candidate-set-decision">
+        <strong>None of these is good enough</strong>
+        <p className="builder-empty">
+          Every candidate has been judged and none cleared the {summary.minimumScore ?? 8.5} bar. Send the set back for one bounded pass, or close it with nothing promoted.
+          {summary.exhausted ? ' The rework budget is spent, so rejecting is the remaining answer.' : ` ${summary.remaining} of ${summary.budget} rework pass(es) left.`}
+        </p>
+        <div className="candidate-actions">
+          {summary.canRework && !summary.exhausted && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act('set-rework', () => decideVisualCandidateSet(projectId, { outcome: 'rework-required', decidedBy: reviewer.trim(), rationale: rationale.set ?? '' }))}>Send the set back for rework</button>}
+          {summary.canReject && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act('set-reject', () => decideVisualCandidateSet(projectId, { outcome: 'rejected', decidedBy: reviewer.trim(), rationale: rationale.set ?? '' }))}>Reject all of them</button>}
+        </div>
+      </div>}
+
+      {set.decision && set.setOutcome !== 'promoted' && <div className="evidence-uncovered">
+        <strong>Set {label(set.setOutcome ?? 'decided')} by {set.decision.decidedBy}</strong>
+        {set.decision.rationale && <span>{set.decision.rationale}</span>}
+      </div>}
+
+      {(set.reworkPlans ?? []).filter((plan) => plan.customPresentation).map((plan) => <div key={plan.planId} className="evidence-uncovered">
+        <strong>A presentation the registry does not have</strong>
+        <span>{plan.customPresentation?.artDirectionNeed}</span>
+        <span>{plan.customPresentation?.registryInsufficientBecause}</span>
+        <span>Owner: {plan.customPresentation?.owner} · {plan.customPresentation?.sectionId}</span>
+      </div>)}
 
       {!set.promotedCandidateId && <label className="candidate-reviewer">
         <span>Who is deciding</span>
@@ -1192,6 +1308,14 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
         {snapshot.design && <DesignPanel contract={snapshot.design} onChoose={chooseDesign} busy={choosingDesign} />}
 
+        {snapshot.designReferences && <DesignReferencePanel
+          projectId={projectId}
+          state={snapshot.designReferences}
+          disabled={snapshot.project.state === 'generating'}
+          onChanged={(state: DesignReferenceState) => setSnapshot((current) => (current ? { ...current, designReferences: state } : current))}
+          onError={setError}
+        />}
+
         <AssetPanel
           projectId={projectId}
           assets={snapshot.assets}
@@ -1231,6 +1355,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           ? <div className="stage-compare"><VisualCandidatePanel
             projectId={projectId}
             set={snapshot.visualCandidates}
+            summary={snapshot.visualCandidateSummary}
             onChanged={(next) => setSnapshot((current) => (current ? { ...current, visualCandidates: next } : current))}
             onError={setError}
           /></div>

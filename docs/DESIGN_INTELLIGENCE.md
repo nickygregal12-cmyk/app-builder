@@ -95,24 +95,56 @@ merely because the factory could read it.
 As with every other 4C declaration, each executable TypographySpec field needs a real token/style/
 component consumer or must remain non-executable.
 
-## 4. Reference handling — Phase 4D
+## 4. Reference handling — Phase 4D.2, delivered
 
 A reference is evidence, not a template. "Linear-like density, Raycast-like polish, warmer and less
 technical" must become structured intent before it touches a component:
 
 ```text
-reference (screenshot / URL / moodboard / Figma export)
-  -> Visual Reference Analysis
-     -> normalized traits: layout, typography, spacing, motion, imagery, distinctive patterns
-        -> adopt[] / avoid[] with confidence
-           -> ArtDirectionPlan
+reference (public URL / screenshot / moodboard)
+  -> trusted factory-side capture behind assertPublicEgressDestination
+     -> observed measurements (numbers only; no markup, copy, imagery or stylesheet)
+        -> interpreted traits, each naming the measurements behind it
+           -> + what the person said, kept separate
+              -> adopt[] / avoid[] with confidence and source
+                 -> ArtDirectionPlan
 ```
 
-Different references may inform different dimensions — one for IA, another for typography, another
-for interaction, another for mood. Screenshot decomposition and asset-extraction techniques from
-`abi/screenshot-to-code` are useful here; its generation architecture is explicitly not adopted,
-because a screenshot must never become uncontrolled markup that bypasses PageSpec/SectionSpec
-identity.
+The pipeline is implemented in `tooling/lib/visual-reference.mjs` (analysis),
+`tooling/lib/visual-reference-capture.mjs` (capture and the URL boundary) and
+`apps/service/src/visual-references.js` (durable per-project state). The contract is
+`schemas/visual-reference-analysis.schema.json`.
+
+Five properties decide whether this is a design capability or a scraper, and each is enforced rather
+than intended:
+
+- **The vocabulary is closed.** `config/visual-reference-traits.json` is the only thing a reference may
+  say. Every trait names the axis it steers, or records why the factory cannot act on it — a person is
+  allowed to dislike something no build can change, and the honest answer is to say so.
+- **Three lanes stay apart.** `observed` is measurement, `interpreted` is conclusion with its
+  measurements named, `userIntent` is what the person said. A trait with no observation behind it
+  cannot be written, and the schema refuses one written elsewhere.
+- **Nothing is copied.** `assertReferenceIsNotContent` runs on every write and refuses markup, a style
+  rule, a source asset URI, or a free-text observation long enough to be source copy. A reference's
+  rights are fixed at `reference-only` with `publishUseAllowed: false` and there is no decision that
+  widens them.
+- **It is not company truth.** References live outside the source/ingestion path entirely, carry
+  `instructionAuthority: none`, and never reach the KnowledgePack, the manifest or the composition.
+- **There is one ArtDirectionPlan.** A reference does not get a plan of its own. On a structural axis
+  (`heroStrategy`, `gridFamily`, `headingTreatment`, `ctaPlacement`, `distinctiveMoment`, the responsive
+  fields) an avoided value refuses the direction with a recorded reason; on a scaled one
+  (`layoutVariance`, `motionIntensity`, `visualDistinctiveness`, `restraintLevel`, `density`,
+  `maxWidth`) a preference overrides the registry's declared intent *before* `compileArtDirectionPlan`
+  runs, so `restraintLevel` still clamps it and still records the clamp.
+
+Different references inform different dimensions, and `resolveReferenceInfluence` synthesises rather
+than averages: a refusal from any reference stands, a preference competes on declared influence then on
+confidence, and an even disagreement is surfaced for the person to settle rather than resolved into the
+mean of two design directions.
+
+Screenshot decomposition and asset-extraction techniques from `abi/screenshot-to-code` remain useful
+prior art; its generation architecture is explicitly not adopted, because a screenshot must never become
+uncontrolled markup that bypasses PageSpec/SectionSpec identity.
 
 ## 5. MessagingPlan as a bounded product input — Phase 4C/4D
 

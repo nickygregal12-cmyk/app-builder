@@ -109,10 +109,18 @@ test('Builder Console drives governed sources, generation, verification and prev
 
   // Builder edit mode: click a heading in the live preview, change it, and see
   // the preview update without a rebuild.
-  await expect(page.getByText('Click any heading or paragraph in the preview to edit it.')).toBeVisible();
+  await expect(page.getByText('Click anything in the preview to resolve its element identity')).toBeVisible();
   await preview.contentFrame().getByRole('heading', { level: 1 }).click();
   await expect(page.getByText('Edit content')).toBeVisible();
   await expect(page.getByText('from your Build Contract')).toBeVisible();
+
+  // The selected element resolves to a full identity through the service, not
+  // to a guess made from the DOM.
+  const identity = page.locator('.element-identity');
+  await expect(identity.getByText('hero-section v1.0.0')).toBeVisible();
+  await expect(identity.getByText('display', { exact: true })).toBeVisible();
+  await expect(identity.getByText('.app-builder/composition.json')).toBeVisible();
+
   await page.getByLabel('Content value').fill('Painters and decorators');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(preview.contentFrame().getByRole('heading', { name: 'Painters and decorators' })).toBeVisible({ timeout: 20_000 });
@@ -120,6 +128,14 @@ test('Builder Console drives governed sources, generation, verification and prev
 
   await page.getByRole('button', { name: 'Revert to generated' }).click();
   await expect(preview.contentFrame().getByRole('heading', { name: 'Workspace E2E', exact: true })).toBeVisible({ timeout: 20_000 });
+
+  // An element that resolves but exposes no editable property is inspectable
+  // and explicitly not editable: no textarea appears for it.
+  await preview.contentFrame().locator('.hero-section a.primary-action').click();
+  await expect(page.getByText('Selected element')).toBeVisible();
+  await expect(page.getByText('This element resolves, but the template declares no editable property for it yet.')).toBeVisible();
+  await expect(page.getByLabel('Content value')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close' }).click();
 
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertContract } from '@app-builder/contracts';
-import { applyContentOverrides, composeProject } from '../../packages/composition/src/index.js';
+import { applyContentOverrides, composeProject, deriveElementIdentities, stripContentOverrides } from '../../packages/composition/src/index.js';
 import { generateProject } from './generator.mjs';
 
 function writeJson(file, value) {
@@ -58,7 +58,33 @@ function materializeAssets(composition, knowledgePack, { assetSourceDir, outputD
   return manifest;
 }
 
-export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], factoryRoot = process.cwd(), catalog } = {}) {
+/**
+ * Derive and record Builder Element Identity for a build.
+ *
+ * The index is builder metadata beside the composition rather than a module the
+ * app imports, so direct manipulation never becomes a runtime requirement of
+ * the repository someone deploys.
+ *
+ * It is derived from the deterministic baseline rather than from the edited
+ * composition. Identity is a property of what the factory built; a human
+ * sentence replaces a value without moving the element it lives in, so writing
+ * a paragraph must not invalidate every address in the build.
+ */
+function writeElementIdentityIndex(outputDir, { composition, template, projectId, assets = {} }) {
+  if (!template?.presentation) return null;
+  const index = assertContract('element-identity', deriveElementIdentities({
+    composition: stripContentOverrides(composition),
+    presentation: template.presentation,
+    projectId,
+    templateId: template.id,
+    templateVersion: template.version,
+    assets,
+  }));
+  writeJson(path.join(path.resolve(outputDir), '.app-builder/element-identity.json'), index);
+  return index;
+}
+
+export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
   const plan = generateProject(manifest, outputDir, { factoryRoot, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
@@ -73,5 +99,10 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   fs.mkdirSync(path.join(out, 'src/generated'), { recursive: true });
   fs.writeFileSync(path.join(out, 'src/generated/composition.ts'), renderModule('composition', composition));
   fs.writeFileSync(path.join(out, 'src/generated/assets.ts'), renderModule('assets', assets));
-  return { plan, composition, assets };
+  // Identity is derived from what was actually composed for this build, so a
+  // rendered element either appears here or cannot be edited at all.
+  const elementIdentity = projectId
+    ? writeElementIdentityIndex(out, { composition, template: plan.template, projectId, assets })
+    : null;
+  return { plan, composition, assets, elementIdentity };
 }

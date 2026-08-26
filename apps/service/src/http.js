@@ -63,6 +63,11 @@ export function createFactoryHttpServer({ service }) {
         return send(response, 200, result);
       }
       if (request.method === 'GET' && route.action === 'composition') return send(response, 200, { composition: service.getComposition(route.projectId) });
+      if (request.method === 'GET' && route.action === 'element-identity') return send(response, 200, { index: service.elementIdentityIndex(route.projectId) });
+      if (request.method === 'POST' && route.action === 'element-identity/resolve') {
+        const body = await readJson(request);
+        return send(response, 200, service.resolveElement(route.projectId, body.ref ?? body));
+      }
       if (request.method === 'GET' && route.action === 'overrides') return send(response, 200, service.readOverrides(route.projectId));
       if (request.method === 'PUT' && route.action === 'overrides') {
         const body = await readJson(request);
@@ -100,7 +105,7 @@ export function createFactoryHttpServer({ service }) {
       // "source" would also match internal failures and hide a real 500.
       const clientError = [
         /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
-        /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /Sources cannot reference/, /Only http\(s\) source URLs/,
+        /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Sources cannot reference/, /Only http\(s\) source URLs/,
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,

@@ -428,9 +428,15 @@ possible to produce and check against a real build.
 ### Phase 4B — Direct manipulation, brand sources and assets 🚧 In progress
 
 Delivered:
+- **Builder Element Identity**: a rendered element resolves deterministically to
+  project, page, section, presentation component, component instance, content
+  binding, provenance references, artifact location, editable properties and
+  design tokens, and anything that does not resolve fails closed;
 - click-to-select through PageSpec/SectionSpec identity: every rendered binding
   carries its section id, binding key and provenance, and a preview opened by
   the Console reports selections to it;
+- Console selection inspection: the resolved identity of whatever was clicked,
+  with editing offered only where the template declares an editable property;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -447,18 +453,37 @@ Composition stays a pure function of manifest and knowledge. Edits live beside
 it rather than inside it, which is what keeps generation deterministic while
 still allowing a person to write the words.
 
-**Builder Element Identity is only partly satisfied.** Shipped click-to-edit
-resolves a rendered element to section id, binding key and provenance, and
-refuses to act on an element carrying none. It does not yet resolve component
-or instance identity, source location, the full editable-property set or design
-tokens, and it has no RenderedEvidence capture. Editing is therefore currently
-bounded to text bindings; extending it to components and assets requires the
-fuller identity model below first.
+**Builder Element Identity is in place (4B.1).** The template declares how it
+renders each composed section — presentation component id/version, the element
+role each binding plays, which structural elements exist, and the design tokens
+each role consumes — and `deriveElementIdentities` turns that plus the
+composition into `.app-builder/element-identity.json`. Every rendered element
+resolves to page, page path, section, section type/variant, presentation
+component, component instance, binding key, provenance references, artifact
+location and design tokens.
+
+The chain is DOM -> ElementIdentity -> PageSpec -> SectionSpec -> component
+instance -> binding -> durable edit. The preview reports coordinates only —
+page id, section id, element key — and the service resolves them against the
+durable index, so component ids, file locations, fact ids and source ids never
+reach published HTML and the index is not a module the generated app imports.
+Resolution has four outcomes and only one of them permits an edit: `resolved`,
+`unknown`, `stale` and `malformed`. `saveOverrides` refuses any new or changed
+edit whose target does not resolve to an element whose template-declared
+editable properties include `text`; removals and unchanged entries still apply,
+so a rebuild that drops a section cannot wedge the whole edit record.
+
+Identity is derived from the deterministic baseline rather than the edited
+composition, so writing a sentence does not move any address; live provenance
+(`human`, `overridden`) is overlaid at resolve time from the composition the
+preview is actually rendering.
+
+`editableProperties` is deliberately narrow: only text bindings declare one
+today, because text editing is the only durable mutation the factory can
+currently perform. Component, asset and design edits widen those declarations
+in 4B.3–4B.5 rather than being inferred.
 
 Remaining:
-- **Builder Element Identity** completed to component/instance level, with
-  source location, editable properties and design tokens, refusing any visual
-  edit that cannot resolve to one;
 - **RenderedEvidence** as a first-class artifact: desktop/tablet/mobile
   captures plus critical interaction states, because a compiling build is not
   evidence that a visual change is correct;

@@ -10,7 +10,48 @@
     "status": {"enum":["draft","ready","deprecated"]},
     "projectTypes": {"type":"array","minItems":1,"items":{"enum":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]}},
     "filesRoot": {"type":"string","minLength":1},
-    "managedFiles": {"type":"array","items":{"type":"string"}}
+    "managedFiles": {"type":"array","items":{"type":"string"}},
+    "presentation": {
+      "type": "object",
+      "description": "How this template renders a composed section, declared by the template that owns the rendering rather than inferred from its DOM. Builder Element Identity is derived from this plus the composition, so a template without it can be generated but cannot be edited by direct manipulation.",
+      "required": ["version","renderer","elementRoles","components"],
+      "properties": {
+        "version": {"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"},
+        "renderer": {"type":"string","minLength":1},
+        "tokenSource": {"type":"string","minLength":1},
+        "elementRoles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["editableProperties","designTokens"],
+            "properties": {
+              "editableProperties": {"type":"array","items":{"enum":["text"]},"uniqueItems":true},
+              "designTokens": {"type":"array","items":{"type":"string","pattern":"^--[a-z0-9-]+$"},"uniqueItems":true}
+            },
+            "additionalProperties": false
+          }
+        },
+        "components": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["id","version","bindingRoles","defaultBindingRole","actions","assets"],
+            "properties": {
+              "id": {"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+              "version": {"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"},
+              "bindingRoles": {"type":"object","additionalProperties":{"type":"string","minLength":1}},
+              "defaultBindingRole": {"type":"string","minLength":1},
+              "actions": {"type":"boolean"},
+              "assets": {"type":"boolean"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }

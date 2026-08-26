@@ -3,12 +3,14 @@ import {
   generateProject,
   ingestSources,
   loadWorkspace,
+  resolveElement,
   saveOverrides,
   startPreview,
   stopPreview,
   updateSourceGovernance,
   verifyProject,
   type ContentOverride,
+  type ElementResolution,
   type KnowledgeSummary,
   type ProjectSummary,
   type SourceGovernanceDecision,
@@ -159,7 +161,7 @@ function SourcePanel({ knowledge, declaredSources, disabled, busy, onIngest }: {
   </section>;
 }
 
-type Selection = { sectionId: string; bindingKey: string; origin: string; value: string };
+type Selection = { pageId: string; sectionId: string; elementKey: string; bindingKey: string | null; origin: string; value: string };
 
 const ORIGIN_LABEL: Record<string, string> = {
   'knowledge-fact': 'from a source you supplied',
@@ -169,8 +171,24 @@ const ORIGIN_LABEL: Record<string, string> = {
   human: 'edited by you',
 };
 
-function ContentEditor({ selection, override, onSave, onRevert, onClose, busy }: {
+const RESOLUTION_REFUSAL: Record<string, string> = {
+  unknown: 'This element is not part of the build the factory recorded, so it cannot be edited.',
+  stale: 'The build has moved on since this preview rendered. Refresh the preview before editing.',
+  malformed: 'The preview reported an element address the factory does not recognise.',
+};
+
+/**
+ * Selection inspector.
+ *
+ * Everything shown here is resolved by the service from the durable element
+ * identity index. Editing is offered only for a property the template declares
+ * editable for that element; anything else is inspectable and explicitly not
+ * editable, rather than quietly doing nothing.
+ */
+function ElementInspector({ selection, resolution, resolving, override, onSave, onRevert, onClose, busy }: {
   selection: Selection;
+  resolution: ElementResolution | null;
+  resolving: boolean;
   override: ContentOverride | null;
   onSave: (value: string) => Promise<void>;
   onRevert: () => Promise<void>;
@@ -178,17 +196,40 @@ function ContentEditor({ selection, override, onSave, onRevert, onClose, busy }:
   busy: boolean;
 }) {
   const [draft, setDraft] = useState(selection.value);
-  useEffect(() => { setDraft(selection.value); }, [selection.sectionId, selection.bindingKey, selection.value]);
+  useEffect(() => { setDraft(selection.value); }, [selection.sectionId, selection.elementKey, selection.value]);
+
+  const identity = resolution?.status === 'resolved' ? resolution.identity : null;
+  const editable = Boolean(identity?.editableProperties.includes('text') && selection.bindingKey);
+  const origin = identity?.provenance.origin ?? selection.origin;
 
   return <section className="builder-panel editor-panel">
-    <div className="panel-title-row"><span className="builder-kicker">Edit content</span><button type="button" className="text-button" onClick={onClose}>Close</button></div>
-    <p className="editor-target">{selection.sectionId.replace(/^page-/, '').replaceAll('-', ' ')} · {selection.bindingKey}</p>
-    <p className="editor-provenance">{ORIGIN_LABEL[selection.origin] ?? selection.origin}</p>
-    <textarea aria-label="Content value" rows={4} value={draft} onChange={(event) => setDraft(event.target.value)} disabled={busy} />
-    <div className="editor-actions">
-      <button type="button" className="primary compact" onClick={() => onSave(draft)} disabled={busy || draft === selection.value}>{busy ? 'Saving…' : 'Save'}</button>
-      {override && <button type="button" className="secondary compact" onClick={onRevert} disabled={busy}>Revert to generated</button>}
-    </div>
+    <div className="panel-title-row"><span className="builder-kicker">{editable ? 'Edit content' : 'Selected element'}</span><button type="button" className="text-button" onClick={onClose}>Close</button></div>
+    <p className="editor-target">{selection.sectionId.replace(/^page-/, '').replaceAll('-', ' ')} · {selection.elementKey.replace('binding:', '')}</p>
+    <p className="editor-provenance">{ORIGIN_LABEL[origin] ?? origin}</p>
+
+    {resolving && <p className="builder-empty">Resolving element identity…</p>}
+
+    {!resolving && !identity && <p className="identity-refusal" role="status">{RESOLUTION_REFUSAL[resolution?.status ?? 'unknown']}</p>}
+
+    {identity && <dl className="builder-definition element-identity">
+      <div><dt>Page</dt><dd>{identity.pageId} <small>{identity.pagePath}</small></dd></div>
+      <div><dt>Component</dt><dd>{identity.componentId} v{identity.componentVersion}</dd></div>
+      <div><dt>Instance</dt><dd>{identity.componentInstanceId}</dd></div>
+      <div><dt>Role</dt><dd>{label(identity.elementRole)}</dd></div>
+      <div><dt>Editable</dt><dd>{identity.editableProperties.length ? identity.editableProperties.join(', ') : 'nothing yet'}</dd></div>
+      <div><dt>Tokens</dt><dd>{identity.designTokens.join(' · ')}</dd></div>
+      <div><dt>Location</dt><dd>{identity.sourceLocation.artifact}<small>{identity.sourceLocation.pointer}</small></dd></div>
+      {identity.provenance.sourceIds.length > 0 && <div><dt>Sources</dt><dd>{identity.provenance.sourceIds.length} referenced</dd></div>}
+      {identity.assetBinding && <div><dt>Asset</dt><dd>{identity.assetBinding.assetId}<small>{label(identity.assetBinding.assetStatus ?? 'unknown')} · {label(identity.assetBinding.rightsStatus ?? 'unknown')}</small></dd></div>}
+    </dl>}
+
+    {editable ? <>
+      <textarea aria-label="Content value" rows={4} value={draft} onChange={(event) => setDraft(event.target.value)} disabled={busy} />
+      <div className="editor-actions">
+        <button type="button" className="primary compact" onClick={() => onSave(draft)} disabled={busy || draft === selection.value}>{busy ? 'Saving…' : 'Save'}</button>
+        {override && <button type="button" className="secondary compact" onClick={onRevert} disabled={busy}>Revert to generated</button>}
+      </div>
+    </> : identity && <p className="builder-empty">This element resolves, but the template declares no editable property for it yet. Component, asset and design edits arrive with the later Phase 4B stages.</p>}
   </section>;
 }
 
@@ -199,6 +240,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const [sourceOperation, setSourceOperation] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [selection, setSelection] = useState<Selection | null>(null);
+  const [resolution, setResolution] = useState<ElementResolution | null>(null);
+  const [resolving, setResolving] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [previewNonce, setPreviewNonce] = useState(0);
 
@@ -267,13 +310,34 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   useEffect(() => {
     function onMessage(event: MessageEvent) {
       const data = event.data as Record<string, unknown> | null;
-      if (!data || data.source !== 'app-builder-preview' || data.type !== 'binding-selected') return;
-      if (typeof data.sectionId !== 'string' || typeof data.bindingKey !== 'string') return;
-      setSelection({ sectionId: data.sectionId, bindingKey: data.bindingKey, origin: String(data.origin ?? 'unknown'), value: String(data.value ?? '') });
+      if (!data || data.source !== 'app-builder-preview' || data.type !== 'element-selected') return;
+      if (typeof data.pageId !== 'string' || typeof data.sectionId !== 'string' || typeof data.elementKey !== 'string') return;
+      setSelection({
+        pageId: data.pageId,
+        sectionId: data.sectionId,
+        elementKey: data.elementKey,
+        bindingKey: typeof data.bindingKey === 'string' ? data.bindingKey : null,
+        origin: String(data.origin ?? 'unknown'),
+        value: String(data.value ?? ''),
+      });
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
   }, []);
+
+  // Identity is resolved by the service against the index the build recorded.
+  // The preview reported coordinates; nothing about component, provenance,
+  // tokens or file location is taken from the frame's word for it.
+  useEffect(() => {
+    if (!selection) { setResolution(null); return; }
+    let active = true;
+    setResolving(true);
+    resolveElement(projectId, { pageId: selection.pageId, sectionId: selection.sectionId, elementKey: selection.elementKey })
+      .then((next) => { if (active) setResolution(next); })
+      .catch(() => { if (active) setResolution({ status: 'unknown', ref: null, identity: null, projectId }); })
+      .finally(() => { if (active) setResolving(false); });
+    return () => { active = false; };
+  }, [projectId, selection]);
 
   const writeOverrides = useCallback(async (next: ContentOverride[]) => {
     setSavingEdit(true);
@@ -293,20 +357,22 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   }, [projectId, refresh]);
 
   const overrides = snapshot?.overrides ?? [];
-  const activeOverride = selection
+  const activeOverride = selection?.bindingKey
     ? overrides.find((entry) => entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey) ?? null
     : null;
 
   const saveEdit = useCallback(async (value: string) => {
-    if (!selection) return;
-    const others = overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey));
-    await writeOverrides([...others, { sectionId: selection.sectionId, bindingKey: selection.bindingKey, value, editedAt: new Date().toISOString() }]);
+    if (!selection?.bindingKey) return;
+    const bindingKey = selection.bindingKey;
+    const others = overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === bindingKey));
+    await writeOverrides([...others, { sectionId: selection.sectionId, bindingKey, value, editedAt: new Date().toISOString() }]);
     setSelection({ ...selection, value, origin: 'human' });
   }, [overrides, selection, writeOverrides]);
 
   const revertEdit = useCallback(async () => {
-    if (!selection) return;
-    await writeOverrides(overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey)));
+    if (!selection?.bindingKey) return;
+    const bindingKey = selection.bindingKey;
+    await writeOverrides(overrides.filter((entry) => !(entry.sectionId === selection.sectionId && entry.bindingKey === bindingKey)));
     setSelection(null);
   }, [overrides, selection, writeOverrides]);
 
@@ -427,8 +493,10 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       </section>
 
       <aside className="activity-sidebar">
-        {selection && <ContentEditor
+        {selection && <ElementInspector
           selection={selection}
+          resolution={resolution}
+          resolving={resolving}
           override={activeOverride}
           onSave={saveEdit}
           onRevert={revertEdit}
@@ -438,7 +506,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
         {previewRunning && !selection && <section className="builder-panel">
           <span className="builder-kicker">Editing</span>
-          <p className="builder-empty">Click any heading or paragraph in the preview to edit it. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
+          <p className="builder-empty">Click anything in the preview to resolve its element identity; headings and paragraphs can be edited from there. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
         </section>}
 
         <section className="builder-panel checkpoint-panel">

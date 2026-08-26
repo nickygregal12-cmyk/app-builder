@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/element-identity.schema.json",
+  "title": "App Builder Element Identity Index",
+  "description": "Every editable element a generated build renders, resolved deterministically to its page, section, presentation component, component instance, content binding, provenance, artifact location, editable properties and design tokens. The index is derived at generation time from the composition and the template's presentation declaration. A rendered element that does not resolve to an entry here cannot be edited: the Builder fails closed rather than guessing which file to patch from the DOM.",
+  "type": "object",
+  "required": ["schemaVersion", "projectId", "templateId", "templateVersion", "presentationVersion", "compositionHash", "elements", "indexHash"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "templateId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "templateVersion": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "presentationVersion": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "compositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "elements": {"type": "array", "items": {"$ref": "#/$defs/elementIdentity"}},
+    "indexHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "elementIdentity": {
+      "type": "object",
+      "required": [
+        "ref", "pageId", "pagePath", "sectionId", "sectionType", "sectionVariant",
+        "componentId", "componentVersion", "componentInstanceId",
+        "elementKey", "elementRole", "bindingKey", "editableProperties", "designTokens",
+        "provenance", "sourceLocation", "assetBinding"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*/(?:section|binding:[A-Za-z0-9_-]+|action:[0-9]+|asset:[A-Za-z0-9_-]+)$",
+          "description": "Stable address of one rendered element: pageId/sectionId/elementKey."
+        },
+        "pageId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "pagePath": {"type": "string", "pattern": "^/"},
+        "sectionId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "sectionType": {"type": "string", "minLength": 1},
+        "sectionVariant": {"type": "string", "minLength": 1},
+        "componentId": {"type": "string", "minLength": 1},
+        "componentVersion": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "componentInstanceId": {"type": "string", "minLength": 1},
+        "elementKey": {"type": "string", "pattern": "^(?:section|binding:[A-Za-z0-9_-]+|action:[0-9]+|asset:[A-Za-z0-9_-]+)$"},
+        "elementRole": {"type": "string", "minLength": 1},
+        "bindingKey": {"type": ["string", "null"]},
+        "editableProperties": {
+          "type": "array",
+          "items": {"enum": ["text"]},
+          "uniqueItems": true,
+          "description": "Properties the factory can currently change durably for this element. Empty means the element is selectable and inspectable but not yet editable; later Phase 4B stages widen this deliberately rather than by inference."
+        },
+        "designTokens": {"type": "array", "items": {"type": "string", "pattern": "^--[a-z0-9-]+$"}, "uniqueItems": true},
+        "provenance": {
+          "type": "object",
+          "required": ["origin", "generated", "overridden", "sourceIds", "factIds", "entityIds"],
+          "properties": {
+            "origin": {"type": "string", "minLength": 1},
+            "generated": {"type": "boolean"},
+            "overridden": {"type": "boolean"},
+            "overriddenFromOrigin": {"type": ["string", "null"]},
+            "sourceIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+            "factIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+            "entityIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          },
+          "additionalProperties": false
+        },
+        "sourceLocation": {
+          "type": "object",
+          "required": ["artifact", "pointer", "generatedModule", "renderer"],
+          "properties": {
+            "artifact": {"type": "string", "minLength": 1},
+            "pointer": {"type": "string", "pattern": "^/"},
+            "generatedModule": {"type": "string", "minLength": 1},
+            "renderer": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "assetBinding": {
+          "type": ["object", "null"],
+          "required": ["assetId"],
+          "properties": {
+            "assetId": {"type": "string", "minLength": 1},
+            "kind": {"type": ["string", "null"]},
+            "provenance": {"type": ["string", "null"]},
+            "assetStatus": {"type": ["string", "null"]},
+            "rightsStatus": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

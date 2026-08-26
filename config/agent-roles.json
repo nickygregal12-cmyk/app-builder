@@ -127,10 +127,10 @@
       "status": "available"
     },
     "ElementIdentityMap": {
-      "description": "Rendered element to page/section/component/binding/provenance identity map.",
+      "description": "Rendered element to page/section/component/instance/binding/provenance identity, with the artifact location, editable properties and design tokens for each. Derived deterministically at generation time from the composition and the template's presentation contract.",
       "deterministic": true,
-      "schema": null,
-      "status": "planned"
+      "schema": "schemas/element-identity.schema.json",
+      "status": "available"
     },
     "ChangeSet": {
       "description": "Declared bounded repository mutation.",

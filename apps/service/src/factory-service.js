@@ -10,8 +10,9 @@ import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { applyDesignChoices, assertDesignChoices, designControls, renderBrandCss } from '../../../tooling/lib/design-choices.mjs';
-import { deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
-import { buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
+import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
+import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
+import { deriveOpportunities } from '../../../tooling/lib/product-opportunities.mjs';
 import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
@@ -674,6 +675,39 @@ export class FactoryService {
     const target = path.resolve(base, String(widest.uri).replace(/^assets\//, ''));
     if (!target.startsWith(`${base}${path.sep}`) || !fs.existsSync(target)) return null;
     return { file: target, mimeType: 'image/webp' };
+  }
+
+  launchReadinessRules() {
+    const file = path.resolve(process.cwd(), 'config/launch-readiness-rules.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  /**
+   * What the live build needs, and what is worth proving about it.
+   *
+   * The state matrix and journey ledger are Phase 3.8K's derivations, read
+   * here rather than derived again. Rendered evidence raises the states a
+   * capture settles; everything else keeps waiting for evidence a picture
+   * cannot give.
+   */
+  productReview(projectId) {
+    const composition = this.getComposition(projectId);
+    const rules = this.launchReadinessRules();
+    if (!composition || !rules) return null;
+
+    const audit = auditLaunchReadiness({ composition, rules, manifest: this.getManifest(projectId) });
+    const evidence = this.listRenderedEvidence(projectId).at(-1) ?? null;
+    const stateMatrix = evidence ? applyEvidenceToStateMatrix(audit.stateMatrix, evidence) : audit.stateMatrix;
+
+    return {
+      launchable: audit.launchable,
+      predictedManualEdits: audit.predictedManualEdits,
+      summary: audit.summary,
+      ...deriveOpportunities({ audit, rules }),
+      stateMatrix,
+      journeys: audit.journeys,
+      evidenceId: evidence?.id ?? null,
+    };
   }
 
   integrationStatus() {

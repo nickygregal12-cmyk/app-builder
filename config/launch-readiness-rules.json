@@ -140,5 +140,80 @@
       "title": "A journey step is not proven by composed output",
       "guidance": "A component existing is not journey completion. This step needs an executable proof."
     }
+  },
+  "opportunityRules": {
+    "description": "How findings become at most three ranked improvement opportunities. A broad prompt such as \"improve this page\" must resolve to things the current build actually needs, not to a redesign. Every opportunity is grounded in findings that already exist, so nothing here invents work.",
+    "maximum": 3,
+    "rules": [
+      "An opportunity groups findings by the role that owns the fix. That is what makes three opportunities three different things rather than one thing three times.",
+      "Value comes from severity: leaving a blocker costs more than leaving a minor.",
+      "Frequency counts the distinct places a group touches. The same defect on four pages is worth more than on one.",
+      "Readiness says who is blocked. Where the factory has what it needs it can act; where it needs material only the business has, saying so is the useful half of the answer.",
+      "Cost and risk are declared per owning role rather than guessed per finding.",
+      "Evidence gaps are opportunities to prove something, never defects to fix. They are ranked separately and never counted as predicted edits."
+    ],
+    "severityValue": {
+      "blocker": 5,
+      "major": 3,
+      "minor": 1
+    },
+    "weights": {
+      "value": 3,
+      "frequency": 1,
+      "readiness": 2,
+      "cost": -1,
+      "risk": 2
+    },
+    "roleEffort": {
+      "ux-writer": {
+        "cost": 1,
+        "risk": 1,
+        "readiness": "factory"
+      },
+      "marketing-content": {
+        "cost": 2,
+        "risk": 1,
+        "readiness": "factory"
+      },
+      "information-architect": {
+        "cost": 2,
+        "risk": 2,
+        "readiness": "factory"
+      },
+      "frontend-implementation": {
+        "cost": 2,
+        "risk": 2,
+        "readiness": "factory"
+      },
+      "product-specification": {
+        "cost": 3,
+        "risk": 3,
+        "readiness": "owner"
+      },
+      "art-direction": {
+        "cost": 3,
+        "risk": 2,
+        "readiness": "owner"
+      },
+      "research-agent": {
+        "cost": 2,
+        "risk": 2,
+        "readiness": "owner"
+      },
+      "state-matrix": {
+        "cost": 2,
+        "risk": 2,
+        "readiness": "factory"
+      },
+      "journey-closure": {
+        "cost": 3,
+        "risk": 3,
+        "readiness": "factory"
+      }
+    },
+    "readinessValue": {
+      "factory": 2,
+      "owner": 0
+    }
   }
 }

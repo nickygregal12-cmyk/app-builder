@@ -451,6 +451,9 @@ Delivered:
 - **Design Contract editing**: accent, measure, corners and section rhythm as
   structured controls that compile into the tokens the template reads, with an
   accent refused when it cannot carry its own label;
+- **Product Opportunity Scout**: a broad improvement prompt resolves to at most
+  three ranked, owned opportunities grounded in findings the build actually has,
+  with proving kept separate from fixing;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -633,19 +636,49 @@ would have quietly reset a chosen accent whenever a capability was added or
 removed; and the hero's own padding overrode the section rhythm, so density
 would have had no effect on the most visible part of the page.
 
-Remaining:
+**Opportunity, state and journey workflow (4B.6).** Phase 3.8K already derives
+`StateMatrixSpec` and `JourneyClosureEvidence`; this turns them into workflow
+rather than deriving anything again.
+
+"Improve this page" is the prompt most likely to produce a redesign nobody asked
+for. It now resolves to at most three ranked opportunities grouped from
+launch-readiness findings that already exist, so the answer is what the build
+actually needs. Grouping is by the role that owns the fix, which is what makes
+three opportunities three different things rather than one thing three times,
+and it also means every opportunity is actionable — one nobody owns is a
+complaint. Ranking weights live in `config/launch-readiness-rules.json` beside
+the severities they read, and a test holds that every role a check can name has
+declared effort and that none is declared for a role no check names.
+
+The scout is deterministic. The registered `product-opportunity-scout` role will
+bring judgement to this once a runtime dispatches roles, but ranking findings the
+factory already has is not judgement, and doing it with a model would make the
+answer less reproducible rather than more useful.
+
+`readiness` is the dimension worth having: it says whether the factory can act
+or whether only the business can supply what is missing. An imagery gap with no
+approved assets is blocked on a person, and saying so is the useful half of the
+answer — which is also what makes this feed Phase 3.8E rather than compete with
+it.
+
+Proving and fixing stay apart. A high-risk state with no fixture and a journey
+step needing executable evidence are opportunities to prove something, ranked
+separately, never offered as defects and never counted as predicted edits — the
+distinction Phase 3.8K established to keep the manual-edit prediction
+trustworthy.
+
+Remaining in 4B:
 - asset replacement (swapping the bytes behind an approved asset);
 - comparing supplied and generated alternatives (needs generation first);
-- project asset policy modes;
-- **Product Opportunity Scout** for existing-app improvement: a broad prompt such as "improve this
-  page" resolves to at most three ranked, materially different opportunities grounded in the current
-  implementation, not to a default redesign;
-- **State Matrix foundation**: derive the real state axes a capability exposes, remove impossible
-  combinations, rank by user risk and give the important states deterministic fixtures;
-- **Journey Closure workflow**: prove entry, prerequisites, primary action, validation, authoritative
-  write/read, observable success, refusal, retry/recovery, persistence, deep links, back/return,
-  mobile/desktop, keyboard/accessibility, reduced motion, rollout state and executable acceptance
-  evidence. A component existing is not journey-completion evidence.
+- project asset policy modes.
+
+**State Matrix and Journey Closure are surfaced, not finished.** The axes are
+derived and ranked by user risk, and rendered evidence raises the viewport axis.
+What is still missing is deterministic *fixtures* for the important states, and
+executable journey evidence for the steps that need it — both of which need
+generated projects to carry test fixtures, which is Phase 6 quality work rather
+than Console work. The Console now says which states and steps lack proof; it
+does not yet produce that proof.
 
 Original scope for reference:
 - **Builder Element Identity** before any click-to-edit is enabled: resolve a rendered element to

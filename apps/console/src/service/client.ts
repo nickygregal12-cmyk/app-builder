@@ -270,6 +270,37 @@ export type DesignContract = {
   accentContrastMinimum: number;
 };
 
+/** What the live build needs, and what is worth proving about it. Every
+ * opportunity is grounded in a launch-readiness finding that already exists. */
+export type ProductOpportunity = {
+  id: string;
+  kind: 'improvement' | 'evidence';
+  owningRole: string;
+  title: string;
+  summary: string[];
+  where: string[];
+  findingCount: number;
+  categories: string[];
+  severities: string[];
+  guidance: string;
+  blockedOn: 'factory' | 'owner';
+  ranking: { total: number; value: number; frequency: number; readiness: string; cost: number; risk: number };
+};
+
+export type ProductReview = {
+  launchable: boolean;
+  predictedManualEdits: number;
+  summary: { blocker: number; major: number; minor: number; byCategory: Record<string, number>; evidenceGaps: number };
+  compositionHash: string | null;
+  opportunities: ProductOpportunity[];
+  consideredCount: number;
+  evidenceOpportunities: ProductOpportunity[];
+  evidenceConsideredCount: number;
+  stateMatrix: Array<{ page: string; axes: string[]; states: Array<{ axis: string; state: string; risk: string; evidence: string }> }>;
+  journeys: Array<{ id: string; entry: string; steps: Array<{ step: string; status: string; detail: string }> }>;
+  evidenceId: string | null;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
   input?: { manifestVersion: number; knowledgePackHash: string | null; assetDecisionsHash: string | null };
@@ -296,6 +327,7 @@ export type WorkspaceSnapshot = {
   assetDecisionsHash: string | null;
   sectionVariants: SectionVariantOption[];
   design: DesignContract | null;
+  review: ProductReview | null;
 };
 
 const API_ROOT = '/api';
@@ -368,6 +400,10 @@ export function assetPreviewUrl(projectId: string, assetId: string) {
   return `${API_ROOT}/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/preview`;
 }
 
+export async function loadProductReview(projectId: string) {
+  return (await request<{ review: ProductReview | null }>(`/projects/${encodeURIComponent(projectId)}/product-review`)).review;
+}
+
 export async function updateDesignContract(projectId: string, choices: Record<string, string | null>) {
   return (await request<{ design: DesignContract | null }>(
     `/projects/${encodeURIComponent(projectId)}/design`,
@@ -427,7 +463,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult, designResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult, designResult, reviewResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
@@ -444,6 +480,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ assets: ProjectAsset[]; assetDecisionsHash: string | null }>(`/projects/${id}/assets`),
     request<{ sections: SectionVariantOption[] }>(`/projects/${id}/section-variants`),
     request<{ design: DesignContract | null }>(`/projects/${id}/design`),
+    request<{ review: ProductReview | null }>(`/projects/${id}/product-review`),
   ]);
   const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
@@ -464,5 +501,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     assetDecisionsHash: assetsResult.assetDecisionsHash,
     sectionVariants: variantsResult.sections,
     design: designResult.design,
+    review: reviewResult.review,
   };
 }

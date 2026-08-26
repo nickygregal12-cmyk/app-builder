@@ -13,11 +13,14 @@
  *
  * Phase 4C adds a compiler IR named DesignSystemSpec between those decisions
  * and CSS. It is derived from the existing Design Contract rather than becoming
- * another design authority. Existing generation and live Console edits already
- * call `renderBrandCss`, so routing that function through the spec gives the
- * declaration a real renderer consumer before any registry or extra UI is
- * allowed to grow around it.
+ * another design authority. Generation and live Console edits both reach the
+ * stylesheet through that compiler, so the declaration has a real renderer
+ * consumer before any registry or extra UI is allowed to grow around it, and
+ * `writeDesignArtifacts` is the one place a build's design becomes files.
  */
+
+import fs from 'node:fs';
+import path from 'node:path';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -167,7 +170,27 @@ export function renderDesignSystemCss(spec) {
   return `:root {\n${entries.join('\n')}\n}\n`;
 }
 
-/** Existing product path: generation and live Console edits now compile through DesignSystemSpec. */
-export function renderBrandCss(design) {
-  return renderDesignSystemCss(compileDesignSystemSpec(design));
+/** Where the compiled design travels inside the ordinary generated repository. */
+export const DESIGN_SYSTEM_SPEC_PATH = '.product/design-system.json';
+
+const renderDesignModule = (design) => `export const design = ${JSON.stringify(design, null, 2)} as const;\n`;
+
+/**
+ * Write everything a build derives from one design, from one compilation.
+ *
+ * Generation and a live Console edit are two paths to the same three files, and
+ * they drifted before: the service rendered `design.ts` from its own copy of the
+ * template string. Compiling once here is what keeps the portable spec, the
+ * stylesheet and the module describing the same design rather than three
+ * artifacts that merely tend to agree.
+ */
+export function writeDesignArtifacts(projectDir, design) {
+  const root = path.resolve(projectDir);
+  const spec = compileDesignSystemSpec(design);
+  fs.mkdirSync(path.join(root, 'src/generated'), { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(root, DESIGN_SYSTEM_SPEC_PATH)), { recursive: true });
+  fs.writeFileSync(path.join(root, DESIGN_SYSTEM_SPEC_PATH), `${JSON.stringify(spec, null, 2)}\n`);
+  fs.writeFileSync(path.join(root, 'src/generated/brand.css'), renderDesignSystemCss(spec));
+  fs.writeFileSync(path.join(root, 'src/generated/design.ts'), renderDesignModule(design));
+  return spec;
 }

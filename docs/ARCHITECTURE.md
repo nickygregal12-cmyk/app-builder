@@ -75,18 +75,24 @@ messy input
 
 ## Project knowledge snapshot
 
-Every generated app should eventually maintain a compact `.product/` directory:
+Build provenance a generated repository needs in order to be rebuilt or reconciled
+lives in `.app-builder/` (manifest, project record, adapters, recipes, composition,
+element identity, handover). That directory is the factory's own record of the build.
+
+`.product/` is the compact, product-facing summary a person or an agent reads before
+exploring source code. It is not aspirational any more, but it is small: it contains
+what has a real producer and a real consumer today.
 
 ```text
 .product/
-  manifest.json
-  entities.json
-  routes.json
-  modules.json
-  brand.json
-  integrations.json
-  decisions.json
-  provenance.json
+  design-system.json   # compiled DesignSystemSpec: layout family, active controls, CSS tokens
 ```
 
-Agents read these summaries before exploring source code.
+`design-system.json` is the exact compiler output that `src/generated/brand.css` was
+rendered from, written by the same call in both initial generation and a live Console
+design edit. It is plain JSON with no App Builder import, so the repository stays an
+ordinary one.
+
+Further summaries (entities, routes, modules, integrations, decisions, provenance)
+are named in the roadmap and are added when something produces and consumes them,
+not before.

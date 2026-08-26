@@ -13,8 +13,12 @@
  *
  *   supplied URL
  *     -> scheme, then destination classification, then DNS resolution
- *     -> every redirect hop re-classified, because the safe URL is the one that
- *        was finally loaded, not the one that was typed
+ *     -> EVERY request the page makes re-classified — documents, redirects,
+ *        images, scripts, stylesheets, fonts, fetch and XHR alike — because the
+ *        boundary is about where the browser connects, not about which kind of
+ *        request asked it to
+ *     -> service workers blocked, WebSockets refused, so there is no second
+ *        request path with no filter on it
  *     -> a trusted Chromium at two widths
  *     -> measurements
  *
@@ -277,6 +281,79 @@ export function observationsFrom({ desktop, mobile }) {
   return observed;
 }
 
+/**
+ * Schemes that never leave the browser.
+ *
+ * A `data:` or `blob:` subresource is bytes the page already has, and `about:`
+ * is the browser's own. Refusing them would break ordinary pages and would
+ * refuse nothing, because none of them opens a socket. Everything else must be
+ * http(s) and must be a public destination — `file:`, `ftp:` and every other
+ * scheme fall through to `assertSafeReferenceUrl`, which refuses them.
+ */
+const NON_NETWORK_SCHEMES = Object.freeze(new Set(['data:', 'blob:', 'about:', 'javascript:']));
+
+/**
+ * The destination policy, applied to one request.
+ *
+ * Split out from the route handler and exported so the adversarial cases can be
+ * asserted directly, resource type by resource type, without a browser. The
+ * first version of this file checked only `document` requests, which left the
+ * boundary open in the way that matters most: the top-level page was public, so
+ * it loaded, and then anything it chose to `fetch` — an image, a script, an XHR
+ * — went out from inside the factory unchecked. A trusted browser that will
+ * fetch `http://169.254.169.254/` on a page's instruction is an internal-network
+ * fetcher with a screenshot feature, whatever its navigation policy says.
+ *
+ * `cache` is per capture and keyed by host, so a page with fifty subresources
+ * across five origins costs five resolutions rather than fifty. A verdict is
+ * never cached across captures.
+ */
+export async function referenceRequestVerdict(requestUrl, { lookup = dns.lookup, hostAddresses = [], cache = null } = {}) {
+  let parsed;
+  try {
+    parsed = new URL(String(requestUrl));
+  } catch {
+    // Unparseable is refused, not waved through. This is the fail-closed edge.
+    return { allowed: false, reason: 'unparseable', host: null };
+  }
+  if (NON_NETWORK_SCHEMES.has(parsed.protocol)) return { allowed: true, reason: 'non-network-scheme', host: null };
+
+  const host = parsed.hostname.replace(/^\[/, '').replace(/\]$/, '').toLowerCase();
+  const key = `${parsed.protocol}//${host}`;
+  if (cache?.has(key)) return cache.get(key);
+
+  let verdict;
+  try {
+    await assertSafeReferenceUrl(parsed.href, { lookup, hostAddresses });
+    verdict = { allowed: true, reason: 'public', host };
+  } catch (error) {
+    verdict = { allowed: false, reason: error instanceof Error ? error.message : String(error), host };
+  }
+  cache?.set(key, verdict);
+  return verdict;
+}
+
+/**
+ * Route every request through the policy, and record what was turned away.
+ *
+ * Recording matters: a refusal nobody can see is a refusal nobody can test, and
+ * a reference page that tried to reach an internal address is something a
+ * reviewer should be told about rather than something that silently failed to
+ * load.
+ */
+export function guardReferenceRequests(context, { lookup = dns.lookup, hostAddresses = [], blocked = [] } = {}) {
+  const cache = new Map();
+  return context.route('**/*', async (route, request) => {
+    const verdict = await referenceRequestVerdict(request.url(), { lookup, hostAddresses, cache });
+    if (verdict.allowed) return route.continue();
+    const entry = { host: verdict.host, resourceType: request.resourceType(), reason: verdict.reason };
+    // Deduplicated: one page can attempt the same forbidden host hundreds of
+    // times, and a hundred identical lines is not a hundred findings.
+    if (!blocked.some((seen) => seen.host === entry.host && seen.resourceType === entry.resourceType)) blocked.push(entry);
+    return route.abort('blockedbyclient');
+  });
+}
+
 async function chromium() {
   const playwright = await import('@playwright/test');
   return playwright.chromium;
@@ -310,7 +387,7 @@ export async function captureReference(requestedUrl, {
   if (!launch) {
     const status = await evidenceBrowserStatus({ env });
     if (!status.ready) {
-      return { status: 'unavailable', capturedAt: now(), unavailableReason: describeEvidenceBrowser(status), canonicalUrl: null, viewports: [], observed: null, screenshots: [] };
+      return { status: 'unavailable', capturedAt: now(), unavailableReason: describeEvidenceBrowser(status), canonicalUrl: null, viewports: [], observed: null, screenshots: [], blockedRequests: [] };
     }
   }
 
@@ -318,6 +395,7 @@ export async function captureReference(requestedUrl, {
   const measurements = {};
   const screenshots = [];
   const viewports = [];
+  const blocked = [];
   let canonicalUrl = url.href;
   try {
     for (const viewport of REFERENCE_VIEWPORTS) {
@@ -328,18 +406,26 @@ export async function captureReference(requestedUrl, {
         // reducing it costs no observation and makes the picture reproducible.
         reducedMotion: 'reduce',
         javaScriptEnabled: true,
+        // A service worker's own requests do not reach `context.route`, which
+        // would make it the one way a page could still fetch what it likes.
+        // Nothing measured here needs one, so the answer is to refuse them
+        // rather than to build a second filter for a second request path.
+        serviceWorkers: 'block',
       });
-      // Every hop, not just the first. A redirect is a destination.
-      await context.route('**/*', async (route, request) => {
-        if (request.resourceType() !== 'document') return route.continue();
-        try {
-          await assertSafeReferenceUrl(request.url(), { lookup, hostAddresses });
-          return route.continue();
-        } catch {
-          return route.abort('blockedbyclient');
-        }
-      });
+      // Every request, every hop. A redirect is a destination and so is an
+      // image: the boundary is about where the browser connects, not about
+      // which kind of request asked it to.
+      await guardReferenceRequests(context, { lookup, hostAddresses, blocked });
       const page = await context.newPage();
+      // WebSockets are not covered by `context.route`, and a capture has no use
+      // for one. Refusing them closes the channel rather than leaving a second
+      // destination policy to keep true. Deliberately not guarded against a
+      // browser that cannot do this: silently losing a boundary because an API
+      // was missing is the failure this whole change exists to close.
+      await page.routeWebSocket('**/*', (ws) => {
+        if (!blocked.some((seen) => seen.resourceType === 'websocket')) blocked.push({ host: null, resourceType: 'websocket', reason: 'websockets are refused during reference capture' });
+        ws.close();
+      });
       try {
         const response = await page.goto(url.href, { waitUntil: 'load', timeout: CAPTURE_TIMEOUT_MS });
         if (!response) throw new Error(`The browser loaded nothing from ${url.href}.`);
@@ -374,6 +460,7 @@ export async function captureReference(requestedUrl, {
     canonicalUrl,
     viewports,
     screenshots,
+    blockedRequests: blocked,
     observed: observationsFrom({ desktop: measurements.desktop, mobile: measurements.mobile ?? null }),
   };
 }

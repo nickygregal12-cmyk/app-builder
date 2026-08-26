@@ -183,6 +183,9 @@ export async function addDesignReference(service, projectId, request = {}, optio
       capturedAt: result.capturedAt,
       status: result.status,
       unavailableReason: result.unavailableReason,
+      // What the page asked the trusted browser to reach and the boundary
+      // refused. Empty is the ordinary case; anything in it is worth a look.
+      blockedRequests: list(result.blockedRequests),
       viewports: result.viewports,
     };
     files = list(result.screenshots).map((shot) => ({ name: `${shot.viewport}.png`, bytes: shot.bytes }));
@@ -224,6 +227,7 @@ export async function addDesignReference(service, projectId, request = {}, optio
     referenceId: stored.referenceId,
     kind: stored.sourceRef.kind,
     captureStatus: stored.capture?.status ?? 'not-applicable',
+    blockedRequests: list(stored.capture?.blockedRequests).map((entry) => `${entry.resourceType}:${entry.host ?? 'n/a'}`),
     createdFromEvidence: stored.createdFromEvidence,
     adopt: stored.adopt.map((trait) => trait.trait),
     avoid: stored.avoid.map((trait) => trait.trait),

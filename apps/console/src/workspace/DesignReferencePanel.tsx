@@ -121,6 +121,13 @@ function ReferenceCard({ projectId, reference, useForOptions, disabled, onChange
       </div>
       : <p className="builder-empty">No capture. {reference.capture?.unavailableReason ?? 'This reference rests on what you wrote about it.'}</p>}
 
+    {(reference.capture?.blockedRequests ?? []).length > 0 && <div className="evidence-uncovered">
+      <strong>This page tried to reach {reference.capture?.blockedRequests?.length} destination(s) the factory refuses</strong>
+      {(reference.capture?.blockedRequests ?? []).map((entry) => <span key={`${entry.resourceType}-${entry.host}`}>
+        {entry.resourceType} → {entry.host ?? 'a non-public destination'}. Refused; nothing was fetched.
+      </span>)}
+    </div>}
+
     {!reference.createdFromEvidence && <p className="builder-empty">
       Nothing here was measured. Every trait below came from what you said, which is a legitimate input and is not the same as an observation.
     </p>}

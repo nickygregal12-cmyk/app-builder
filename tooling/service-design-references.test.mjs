@@ -153,6 +153,7 @@ function browserStub(measurements = {}) {
     newContext: async () => ({
       route: async () => {},
       newPage: async () => ({
+        routeWebSocket: async () => {},
         goto: async () => ({ ok: () => true }),
         url: () => 'https://reference.example/studio',
         waitForTimeout: async () => {},
@@ -402,5 +403,70 @@ test('observations survive a round trip through the durable record unchanged', a
     assert.deepEqual(reread.observed, reference.observed);
     assert.deepEqual(reread.adopt, reference.adopt);
     assert.deepEqual(reread.avoid, reference.avoid);
+  });
+});
+
+test('a reference page that tries to reach an internal address is refused, and the attempt is recorded', async () => {
+  await withService('reference-egress', async ({ service, project }) => {
+    // A public page whose subresources point at the factory's own network. The
+    // guard runs inside the capture, so this exercises the real route handler
+    // rather than a description of it.
+    const attempted = [
+      { url: 'http://169.254.169.254/latest/meta-data/', resourceType: 'fetch' },
+      { url: 'http://127.0.0.1:4310/projects', resourceType: 'xhr' },
+      { url: 'http://10.0.0.5/internal.png', resourceType: 'image' },
+      { url: 'https://cdn.reference.example/hero.jpg', resourceType: 'image' },
+    ];
+    const outcomes = [];
+    const launch = async () => ({
+      newContext: async () => {
+        let route = null;
+        return {
+          route: async (_pattern, handler) => { route = handler; },
+          newPage: async () => ({
+            routeWebSocket: async () => {},
+            goto: async () => {
+              for (const request of attempted) {
+                await route(
+                  { continue: async () => outcomes.push(`allow ${request.url}`), abort: async () => outcomes.push(`block ${request.url}`) },
+                  { url: () => request.url, resourceType: () => request.resourceType },
+                );
+              }
+              return { ok: () => true };
+            },
+            url: () => 'https://reference.example/studio',
+            waitForTimeout: async () => {},
+            screenshot: async () => Buffer.from('89504e470d0a1a0a', 'hex'),
+            evaluate: async () => measurement(),
+          }),
+          close: async () => {},
+        };
+      },
+      close: async () => {},
+    });
+
+    const reference = await addDesignReference(service, project.id, {
+      url: 'https://reference.example/studio',
+      preference: 'like',
+      influence: 'medium',
+    }, { capture: { lookup: async () => [{ address: '93.184.216.34' }], launch } });
+
+    // The three internal destinations were refused; the ordinary public one was
+    // not. A boundary that blocked everything would be indistinguishable from a
+    // browser with no network.
+    assert.equal(outcomes.filter((entry) => entry.startsWith('block')).length, 6);
+    assert.equal(outcomes.filter((entry) => entry === 'allow https://cdn.reference.example/hero.jpg').length, 2);
+
+    const blocked = reference.capture.blockedRequests;
+    assert.equal(blocked.length, 3, 'each refused host and resource type is recorded once');
+    assert.deepEqual(blocked.map((entry) => entry.host).sort(), ['10.0.0.5', '127.0.0.1', '169.254.169.254']);
+    assert.deepEqual(blocked.map((entry) => entry.resourceType).sort(), ['fetch', 'image', 'xhr']);
+
+    // And the durable record carries it, so the refusal is reviewable rather
+    // than a line in a log nobody kept.
+    const stored = listDesignReferences(service, project.id)[0];
+    assert.deepEqual(stored.capture.blockedRequests, blocked);
+    const event = service.listEvents(project.id).find((entry) => entry.type === 'design.reference.added');
+    assert.ok(event.payload.blockedRequests.includes('fetch:169.254.169.254'));
   });
 });

@@ -143,8 +143,8 @@
       "schema": "visual-reference-analysis.schema.json",
       "typeName": "AppBuilderVisualReferenceAnalysis",
       "boundary": "Design references a person supplied, analysed into adopt/avoid traits; written by the factory service, read by the Console and by visual-direction selection.",
-      "schemaHash": "69d0c5722e34a5f96a5497d82fee04e2c3316c54062e1446440f779840b0e034",
-      "typesHash": "c92330df921ecede2c91667c29d9166fb081fdb3a0178c21f56d2ab7e443b8c2"
+      "schemaHash": "38428d61af093e5b295ad0398838d4e3277aa03ec24d6230124bbbb1c8a97f90",
+      "typesHash": "216fe7963ab37f39989c546a50c21b59a4c6c7f57be4cb47493770bce1e75f1d"
     },
     {
       "id": "visual-rework-plan",

@@ -40,6 +40,20 @@
         "capturedAt": {"type": "string", "minLength": 1},
         "status": {"enum": ["captured", "unavailable"]},
         "unavailableReason": {"type": ["string", "null"]},
+        "blockedRequests": {
+          "type": "array",
+          "description": "Destinations the reference page asked the trusted browser to reach and the egress boundary refused, deduplicated by host and resource type. A page that tried to fetch an internal address is something a reviewer should be shown rather than something that silently failed to load.",
+          "items": {
+            "type": "object",
+            "required": ["resourceType", "reason"],
+            "properties": {
+              "host": {"type": ["string", "null"]},
+              "resourceType": {"type": "string", "minLength": 1},
+              "reason": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
         "viewports": {
           "type": "array",
           "items": {

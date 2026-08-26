@@ -66,6 +66,7 @@ function browserStub(measurements) {
         const viewport = call === 0 ? 'desktop' : 'mobile';
         call += 1;
         return {
+          routeWebSocket: async () => {},
           goto: async () => ({ ok: () => true }),
           url: () => 'https://reference.example/liked',
           waitForTimeout: async () => {},

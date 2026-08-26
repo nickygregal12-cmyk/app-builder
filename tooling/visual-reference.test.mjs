@@ -9,7 +9,7 @@ import {
   referenceTraitCatalogue,
   resolveReferenceInfluence,
 } from './lib/visual-reference.mjs';
-import { assertSafeReferenceUrl, observationsFrom } from './lib/visual-reference-capture.mjs';
+import { assertSafeReferenceUrl, guardReferenceRequests, observationsFrom, referenceRequestVerdict } from './lib/visual-reference-capture.mjs';
 
 const traits = loadReferenceTraits(process.cwd());
 
@@ -353,4 +353,161 @@ test('a genuinely public reference URL is accepted', async () => {
   const lookup = async () => [{ address: '93.184.216.34' }];
   const url = await assertSafeReferenceUrl('https://reference.example/work', { lookup });
   assert.equal(url.href, 'https://reference.example/work');
+});
+
+/**
+ * The trusted browser is not an internal-network fetcher.
+ *
+ * The first version of this capture checked only `document` requests. The
+ * top-level page was public, so it loaded — and then anything it chose to fetch
+ * went out from inside the factory unchecked. A page that can make the factory's
+ * own browser request `http://169.254.169.254/latest/meta-data/` has defeated
+ * the egress boundary whatever the navigation policy says, so the policy now
+ * applies to every request and these hold it there.
+ */
+const PUBLIC = async () => [{ address: '93.184.216.34' }];
+
+const FORBIDDEN = [
+  'http://localhost:4310/projects',
+  'http://127.0.0.1/',
+  'http://127.1/',
+  'http://0x7f.1/',
+  'http://2130706433/',
+  'http://[::1]/',
+  'http://[::ffff:127.0.0.1]/',
+  'http://10.0.0.5/internal',
+  'http://172.16.4.4/',
+  'http://192.168.1.1/',
+  'http://169.254.169.254/latest/meta-data/iam/security-credentials/',
+  'http://100.100.100.100/',
+  'http://metadata.google.internal/computeMetadata/v1/',
+  'http://host.docker.internal:4310/',
+  'file:///etc/passwd',
+  'ftp://internal.example/secret',
+];
+
+// Every resource type a page can reach the network with. The bug was that the
+// policy was keyed on this value, so it is exactly what has to be swept.
+const RESOURCE_TYPES = ['document', 'stylesheet', 'image', 'media', 'font', 'script', 'texttrack', 'xhr', 'fetch', 'eventsource', 'websocket', 'manifest', 'other'];
+
+test('no forbidden destination is reachable, whatever kind of request asks', async () => {
+  for (const url of FORBIDDEN) {
+    const verdict = await referenceRequestVerdict(url, { lookup: PUBLIC });
+    assert.equal(verdict.allowed, false, `${url} was allowed`);
+  }
+});
+
+test('a public page cannot fetch an internal address through any resource type', async () => {
+  const handlers = [];
+  const blocked = [];
+  const context = { route: async (_pattern, handler) => { handlers.push(handler); } };
+  await guardReferenceRequests(context, { lookup: PUBLIC, blocked });
+  const handler = handlers[0];
+  assert.ok(handler, 'the guard must install a route over every request');
+
+  const outcomes = [];
+  for (const resourceType of RESOURCE_TYPES) {
+    for (const url of ['http://169.254.169.254/latest/meta-data/', 'http://10.0.0.5/internal', 'http://127.0.0.1:4310/projects']) {
+      let outcome = null;
+      await handler(
+        { continue: async () => { outcome = 'continue'; }, abort: async (reason) => { outcome = `abort:${reason}`; } },
+        { url: () => url, resourceType: () => resourceType },
+      );
+      outcomes.push(`${resourceType} ${url} -> ${outcome}`);
+      assert.equal(outcome, 'abort:blockedbyclient', `${resourceType} to ${url} was not blocked`);
+    }
+  }
+  assert.equal(outcomes.length, RESOURCE_TYPES.length * 3);
+  // What was turned away is recorded rather than silently failing to load.
+  assert.ok(blocked.length > 0);
+  assert.ok(blocked.some((entry) => entry.host === '169.254.169.254'));
+  assert.ok(blocked.some((entry) => entry.resourceType === 'fetch'));
+});
+
+test('ordinary public subresources still load, and in-page schemes are not refused', async () => {
+  const handlers = [];
+  const context = { route: async (_pattern, handler) => { handlers.push(handler); } };
+  await guardReferenceRequests(context, { lookup: PUBLIC });
+  const handler = handlers[0];
+
+  for (const [url, resourceType] of [
+    ['https://reference.example/styles.css', 'stylesheet'],
+    ['https://cdn.reference.example/hero.jpg', 'image'],
+    ['https://reference.example/app.js', 'script'],
+    ['data:image/gif;base64,R0lGODlhAQABAAAAACw=', 'image'],
+    ['blob:https://reference.example/9f2c', 'fetch'],
+    ['about:blank', 'document'],
+  ]) {
+    let outcome = null;
+    await handler(
+      { continue: async () => { outcome = 'continue'; }, abort: async (reason) => { outcome = `abort:${reason}`; } },
+      { url: () => url, resourceType: () => resourceType },
+    );
+    assert.equal(outcome, 'continue', `${resourceType} to ${url} should have been allowed`);
+  }
+});
+
+test('a subresource host that resolves somewhere private is refused at the resolution', async () => {
+  const lookup = async (host) => (host === 'internal.reference.example' ? [{ address: '10.1.2.3' }] : [{ address: '93.184.216.34' }]);
+  const rebound = await referenceRequestVerdict('https://internal.reference.example/probe', { lookup });
+  assert.equal(rebound.allowed, false);
+  assert.match(rebound.reason, /resolves to 10\.1\.2\.3/);
+  const ordinary = await referenceRequestVerdict('https://reference.example/probe', { lookup });
+  assert.equal(ordinary.allowed, true);
+});
+
+test('an unparseable request URL fails closed', async () => {
+  const verdict = await referenceRequestVerdict('http://[::', { lookup: PUBLIC });
+  assert.equal(verdict.allowed, false);
+  assert.equal(verdict.reason, 'unparseable');
+});
+
+test('one host is resolved once per capture, and the verdict is not cached across captures', async () => {
+  let lookups = 0;
+  const lookup = async () => { lookups += 1; return [{ address: '93.184.216.34' }]; };
+  const cache = new Map();
+  for (let index = 0; index < 25; index += 1) {
+    await referenceRequestVerdict(`https://reference.example/asset-${index}.png`, { lookup, cache });
+  }
+  assert.equal(lookups, 1);
+  await referenceRequestVerdict('https://reference.example/asset-0.png', { lookup, cache: new Map() });
+  assert.equal(lookups, 2);
+});
+
+test('the capture context blocks service workers and refuses websockets', async () => {
+  const { captureReference } = await import('./lib/visual-reference-capture.mjs');
+  const contexts = [];
+  const websocketRoutes = [];
+  const launch = async () => ({
+    newContext: async (options) => {
+      contexts.push(options);
+      return {
+        route: async () => {},
+        newPage: async () => ({
+          routeWebSocket: async (pattern, handler) => { websocketRoutes.push({ pattern, handler }); },
+          goto: async () => ({ ok: () => true }),
+          url: () => 'https://reference.example/',
+          waitForTimeout: async () => {},
+          screenshot: async () => Buffer.from('89504e470d0a1a0a', 'hex'),
+          evaluate: async () => measurement(),
+        }),
+        close: async () => {},
+      };
+    },
+    close: async () => {},
+  });
+
+  const result = await captureReference('https://reference.example/', { launch, lookup: PUBLIC });
+  assert.equal(result.status, 'captured');
+  // A service worker's requests never reach context.route, so the only safe
+  // answer is not to have one.
+  assert.ok(contexts.length > 0);
+  for (const options of contexts) assert.equal(options.serviceWorkers, 'block');
+
+  // WebSockets are not routed by context.route either, and are closed on sight.
+  assert.ok(websocketRoutes.length > 0);
+  let closed = false;
+  await websocketRoutes[0].handler({ close: () => { closed = true; } });
+  assert.equal(closed, true);
+  assert.ok(result.blockedRequests.some((entry) => entry.resourceType === 'websocket'));
 });

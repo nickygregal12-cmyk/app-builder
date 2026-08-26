@@ -484,7 +484,13 @@ export type ReferenceTrait = {
 export type DesignReference = {
   referenceId: string;
   sourceRef: { kind: 'url' | 'screenshot'; label: string; requestedUrl: string | null; canonicalUrl: string | null; fileName: string | null };
-  capture: { capturedAt: string; status: 'captured' | 'unavailable'; unavailableReason: string | null; viewports: Array<{ name: string; width: number; height: number; file: string }> } | null;
+  capture: {
+    capturedAt: string;
+    status: 'captured' | 'unavailable';
+    unavailableReason: string | null;
+    blockedRequests?: Array<{ host: string | null; resourceType: string; reason: string }>;
+    viewports: Array<{ name: string; width: number; height: number; file: string }>;
+  } | null;
   observed: Record<string, Array<{ id: string; measure: string; value: string | number | boolean | null; unit: string | null; viewport: string | null }>>;
   interpreted: Array<{ trait: string; confidence: string; fromObservations: string[]; detail: string | null }>;
   userIntent: {

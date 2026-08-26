@@ -36,6 +36,14 @@ The following work closes those gaps without weakening the existing architecture
 
 # 1. Phase 1 / Phase 4D extension — first-class research and inspiration input
 
+**§1.1 and §1.2 are delivered (4D.2).** The Builder Console's "Design inspiration" panel takes public
+URLs, screenshots and a sentence; capture is a factory-side Chromium behind
+`assertPublicEgressDestination` with every redirect hop re-classified; the analysis contract is
+`schemas/visual-reference-analysis.schema.json`; and approved adopt/avoid traits steer the existing
+ArtDirectionPlan. `docs/DESIGN_INTELLIGENCE.md` §4 owns the design of it and is the authority; what
+remains below is the discovery half — §1.3, which needs a runtime-proven public-egress research role and
+is deliberately not part of it. Figma references remain unimplemented and have no supplier.
+
 ## 1.1 “Sites/designs I like” intake
 
 The Builder Console should make inspiration input easy enough for a non-designer to use.
@@ -498,7 +506,7 @@ Do not prioritize this before the core build/edit/deploy/integration experience 
 
 | Capability | Intended stage |
 | --- | --- |
-| Inspiration URLs/screenshots + VisualReferenceAnalysis | Phase 1 extension / 4D |
+| Inspiration URLs/screenshots + VisualReferenceAnalysis | **Delivered (4D.2).** See `docs/DESIGN_INTELLIGENCE.md` §4. |
 | Research-agent public-web execution | Phase 5 after public-egress proof |
 | Drag/reorder/component swap/responsive visual editing | Phase 4B/4D |
 | CMS editing surface + content operations | Phase 4.3 |

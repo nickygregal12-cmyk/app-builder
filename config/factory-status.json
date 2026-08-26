@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "currentPhase": "4D",
   "currentStage": "Phase 4D — Visual direction, responsive composition and candidate promotion",
-  "activeStage": "Phase 4D.8/4D.9 — the visual review verdict on the genuine-business candidate set. The machinery is built and the evidence is captured; what is outstanding is a decision by someone who did not create the candidates.",
+  "activeStage": "Phase 4D.8/4D.9 — the visual review verdict on the genuine-business candidate set. The machinery is built and the evidence is captured; what is outstanding is a decision by someone who did not create the candidates. 4D.2 revived and landed beside it: a person can now supply the design references that decision is partly about.",
   "status": "active",
   "completedPhases": [
     "0",
@@ -43,6 +43,7 @@
     "4C.5",
     "4C",
     "4D.1",
+    "4D.2",
     "4D.4",
     "4D.5",
     "4D.6",
@@ -51,25 +52,20 @@
   "activeWork": [
     "phase-4d-visual-direction",
     "visual-candidate-promotion",
-    "behavioural-consumer-invariants"
+    "behavioural-consumer-invariants",
+    "design-reference-input"
   ],
   "outstandingProductGates": [
-    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. The factory created them, so the factory cannot promote one. The evidence is now reviewer-reachable rather than buried in build output: `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review, `npm run review:visual-candidates` opens the ordinary Builder Console over exactly that state, and the stage's compare view shows both candidates at three widths over six routes with the differing axes, the responsive plan, every DesignLint finding, the frozen truth, the refused direction and the scoped critic criteria. A reviewer who did not create them still has to pass, rework or reject each candidate against those criteria before Phase 4D closes."
+    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. The factory created them, so the factory cannot promote one. The evidence is now reviewer-reachable rather than buried in build output: `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review, `npm run review:visual-candidates` opens the ordinary Builder Console over exactly that state, and the stage's compare view shows both candidates at three widths over six routes with the differing axes, the responsive plan, every DesignLint finding, the frozen truth, the refused direction and the scoped critic criteria. A reviewer who did not create them still has to pass, rework or reject each candidate against those criteria before Phase 4D closes.",
+    "bespoke-presentation-fulfilment: a failed visual review whose criterion no art-direction axis can answer now classifies a customPresentation requirement — the section, the art-direction need, why the registry is insufficient, the required responsive and motion behaviour, and the owner. Nothing fulfils one yet. The Presentation Registry has stopped being allowed to answer 'the closest existing component', and until an implementation lane exists a classified requirement is a recorded gap rather than a build. docs/VISUAL_EXCELLENCE.md §9 carries it as the row it blocks."
   ],
-  "nextStage": "Phase 4D.8/4D.9. The Factory can now produce several genuinely different presentations of one frozen product truth and decide between them. 4D.1 made promotion a recorded decision with a deterministic gate: a DesignLint violation blocks promotion outright, a warning reaches review but the reviewer must speak to it by rule, a recommendation never blocks, exactly one candidate is promoted and the creator cannot promote its own. 4D.4 made asset readiness an art-direction input, so an imagery-led direction is refused before it becomes a page of grey rectangles. 4D.5 added a ResponsiveCompositionPlan subordinate to the ArtDirectionPlan, with mobile content order, navigation treatment, hero stacking, density and motion all read by the template. 4D.6 added four visual directions differing structurally rather than thematically, with a diversity check over three planes that refuses a theme swap before it costs an evidence capture. 4D.7 captures comparable evidence per candidate from its own built output. The nbm genuine-business run generated two candidates over one truth, refused the imagery-led direction with a recorded reason, built and photographed both at three widths across six routes, and both lint clean. What remains is a verdict from someone who did not create them, and then promotion. 4D.2, 4D.3 and the comparison canvas are recorded in deferredCapabilities. Automated cross-provider visual judgement remains unexecuted and is recorded as such rather than simulated.",
+  "nextStage": "Phase 4D.8/4D.9. The Factory can now produce several genuinely different presentations of one frozen product truth and decide between them. 4D.1 made promotion a recorded decision with a deterministic gate: a DesignLint violation blocks promotion outright, a warning reaches review but the reviewer must speak to it by rule, a recommendation never blocks, exactly one candidate is promoted and the creator cannot promote its own. 4D.4 made asset readiness an art-direction input, so an imagery-led direction is refused before it becomes a page of grey rectangles. 4D.5 added a ResponsiveCompositionPlan subordinate to the ArtDirectionPlan, with mobile content order, navigation treatment, hero stacking, density and motion all read by the template. 4D.6 added four visual directions differing structurally rather than thematically, with a diversity check over three planes that refuses a theme swap before it costs an evidence capture. 4D.7 captures comparable evidence per candidate from its own built output. The nbm genuine-business run generated two candidates over one truth, refused the imagery-led direction with a recorded reason, built and photographed both at three widths across six routes, and both lint clean. What remains is a verdict from someone who did not create them, and then promotion. 4D.2, 4D.3 and the comparison canvas are recorded in deferredCapabilities. Automated cross-provider visual judgement remains unexecuted and is recorded as such rather than simulated. 4D.2 is no longer deferred: a project can supply design references, so the condition that deferred it — a supplied screenshot, moodboard or approved reference URL AND a direction-selection decision asset readiness and project type cannot make — is met by a real supplier and a real consumer. Approved adopt/avoid traits refuse a direction on a structural axis and tune the ArtDirectionPlan's intent on a scaled one, before compileArtDirectionPlan runs, so restraint still clamps them. The visual review now scores every criterion against gates.visual in config/agent-pipelines.json, a below-bar verdict cannot be recorded as a pass, and a set with no winner can be sent back for one bounded, targeted rework pass with lineage or rejected outright. What remains outstanding is unchanged: who issues the verdict.",
   "deferredCapabilities": [
     {
       "stage": "4C.6",
       "title": "Deterministic design-intelligence catalogue",
       "reason": "No component asks \"which reviewed design patterns fit this project?\". BrandSpec reads the knowledge pack's own brand observations, ArtDirectionPlan reads config/layout-patterns.json, and the Presentation Registry is compiled from what the template renders. A catalogue built now would have one producer and no reader.",
       "revivesWhen": "A real 4D consumer cannot answer a project/industry/intent pattern question from deterministic config. Then document that consumer first, and implement only the smallest lexical (BM25/keyword) catalogue it needs — no vector store, no embeddings, no generic design corpus.",
-      "recordedAt": "2026-08-26"
-    },
-    {
-      "stage": "4D.2",
-      "title": "Visual reference analysis",
-      "reason": "No project supplies a design reference the factory does not already read. The half of reference handling that has a supplier shipped at 4C.3: BrandSpec resolves the accent and the typographic voice from the colours and font families Phase 3 observed in a company's own pages, with sources. What 4D.2 would add — layout, density, hero treatment and spacing rhythm decomposed from a screenshot or moodboard — has no input today, and inventing traits from a site nobody supplied would be a fabricated observation.",
-      "revivesWhen": "A project supplies a screenshot, moodboard or approved reference URL AND a direction-selection decision exists that asset readiness and project type cannot make. Traits must then become adopt[]/avoid[] with confidence and source ids, never markup, and never bypass PageSpec/SectionSpec/ElementIdentity.",
       "recordedAt": "2026-08-26"
     },
     {

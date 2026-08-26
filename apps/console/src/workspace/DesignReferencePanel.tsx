@@ -49,8 +49,11 @@ const SOURCE_LABELS: Record<string, string> = {
   'observed-and-user-stated': 'measured, and you said so',
 };
 
+// Axis names arrive as the code calls them — `visualDistinctiveness`,
+// `section-rhythm` — and the person reading this panel is not a designer, let
+// alone one who has read the registry. Both spellings become ordinary words.
 function words(value: string) {
-  return value.replaceAll('-', ' ');
+  return value.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replaceAll('-', ' ').toLowerCase();
 }
 
 async function fileToBase64(file: File) {

@@ -47,6 +47,59 @@
         "additionalProperties": false
       }
     },
+    "designLint": {
+      "type": ["object", "null"],
+      "description": "The deterministic DesignLint report for the build these captures came from, so a reviewer sees what rules already settled before judging a picture. Null where the evidence was captured before any lint ran, which is not the same as clean.",
+      "required": ["schemaVersion", "authority", "findings", "counts", "clean"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "authority": {"const": "design-contract"},
+        "compositionHash": {"type": ["string", "null"]},
+        "clean": {"type": "boolean", "description": "No violation. Warnings and recommendations do not make a build unclean."},
+        "counts": {
+          "type": "object",
+          "required": ["violation", "warning", "recommendation"],
+          "properties": {
+            "violation": {"type": "integer", "minimum": 0},
+            "warning": {"type": "integer", "minimum": 0},
+            "recommendation": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "severity", "detail"],
+            "properties": {
+              "rule": {"type": "string", "minLength": 1},
+              "severity": {"enum": ["violation", "warning", "recommendation"]},
+              "detail": {"type": "string", "minLength": 1},
+              "pageId": {"type": "string"},
+              "sectionIds": {"type": "array", "items": {"type": "string"}},
+              "token": {"type": "string"},
+              "ground": {"type": "string"},
+              "ratio": {"type": "number"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "aiReviewCandidates": {
+          "type": "array",
+          "description": "What the rules deliberately do not judge, so a visual critic spends its budget on questions that need judgement rather than re-deriving what a rule settled.",
+          "items": {
+            "type": "object",
+            "required": ["id", "question"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "question": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "setHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
   },
   "additionalProperties": false,

@@ -1,6 +1,6 @@
 # App Builder on the Existing Hetzner Host
 
-Status: **co-located host bootstrap only**. This prepares an isolated App Builder runtime area on the existing Hetzner server without buying another VM and without enabling broad autonomous work.
+Status: **co-located host infrastructure validated; autonomous runtime disabled**. The isolated App Builder runtime area now exists on the existing Hetzner server without buying another VM. The Factory and authenticated OpenCode endpoints have been exercised successfully on loopback, but broad autonomous work remains deliberately disabled.
 
 `docs/AGENT_RUNTIME.md`, the control plane and the future `AgentRuntimeAdapter` remain authoritative for runtime behaviour.
 
@@ -13,7 +13,7 @@ existing Hetzner server
 |
 +-- existing Predictor services/users/data   (left alone)
 |
-+-- appbuilder Linux user                    (non-sudo, no SSH key)
++-- appbuilder Linux user                    (non-sudo, no inbound SSH key)
     +-- /srv/app-builder/repository
     +-- /srv/app-builder/runtime
     +-- /srv/app-builder/workspaces
@@ -23,7 +23,9 @@ existing Hetzner server
     +-- isolated Node 22 toolchain
     +-- rootless Podman
     +-- app-builder-runtime.slice resource cap
-    +-- future AgentRuntimeAdapter/OpenCode workers
+    +-- Factory service on 127.0.0.1:4310
+    +-- OpenCode 1.18.14 on 127.0.0.1:4097 + Basic Auth
+    +-- future AgentRuntimeAdapter / bounded workers
 ```
 
 A second server is **not** required. Move to a separate host later only if measured App Builder CPU, memory or browser/database workloads materially interfere with the existing application.
@@ -140,7 +142,7 @@ It deliberately does not judge or rewrite unrelated host firewall/SSH configurat
 
 ## 4. Repository placement
 
-Keep the App Builder checkout separate from the existing project's checkout. The intended eventual location is:
+Keep the App Builder checkout separate from the existing project's checkout. The intended location is:
 
 ```text
 /srv/app-builder/repository
@@ -152,7 +154,7 @@ Repository credentials should be App Builder-specific and minimal. Do not copy a
 
 ## 5. OpenCode binary
 
-Installing OpenCode is safe as a dormant tool; enabling unrestricted autonomous work is not.
+Installing OpenCode is safe as a local tool; enabling unrestricted autonomous work is not.
 
 After the host baseline:
 
@@ -165,14 +167,13 @@ This installs the pinned CLI only into `/home/appbuilder/.local` using App Build
 It does not:
 
 - configure OpenAI/Anthropic/other provider credentials;
-- start a daemon or public OpenCode endpoint;
 - create autonomous loops;
 - grant sudo;
 - bypass ChangeSets, budgets, independent review or approvals.
 
 Provider credentials should eventually be injected by a scoped secret broker for a named task/role/environment, not stored in repository files or shell profiles.
 
-## 6. Install dormant service units
+## 6. Install and validate local service units
 
 Once the App Builder repository is at `/srv/app-builder/repository`, dependencies are installed, and OpenCode is installed, prepare the two local services:
 
@@ -182,7 +183,7 @@ sudo bash ops/hetzner/install-service-units.sh
 
 This installs but does **not** enable or start:
 
-- `app-builder-factory.service` — the existing factory service, expected to bind on loopback port `4310`;
+- `app-builder-factory.service` — the existing factory service, bound explicitly to `127.0.0.1:4310` with state under `/srv/app-builder/state/service` and workspaces under `/srv/app-builder/workspaces`;
 - `app-builder-opencode.service` — `opencode serve` bound explicitly to `127.0.0.1:4097` by default.
 
 OpenCode itself normally defaults to port `4096`; App Builder intentionally uses `4097` so it does not compete with the existing Predictor OpenCode runtime. Override with `APP_BUILDER_OPENCODE_PORT` only if the preflight shows `4097` is unavailable.
@@ -191,7 +192,7 @@ Both units run as `appbuilder`, inherit `app-builder-runtime.slice`, use restric
 
 The OpenCode server exists only as a local runtime endpoint for the future `AgentRuntimeAdapter`. Starting it does not grant autonomous permissions or production authority.
 
-When the checkout is ready, the services can be exercised explicitly rather than auto-starting them during host setup:
+The services can be exercised explicitly rather than auto-starting them during host setup:
 
 ```bash
 sudo systemctl start app-builder-factory.service
@@ -199,7 +200,45 @@ sudo systemctl start app-builder-opencode.service
 sudo systemctl status app-builder-factory.service app-builder-opencode.service
 ```
 
-Do not enable them at boot until their normal restart/recovery behaviour has been observed on the shared host.
+Factory health:
+
+```bash
+curl --fail --silent --show-error http://127.0.0.1:4310/health
+```
+
+Authenticated OpenCode health without printing the generated password:
+
+```bash
+sudo bash -c '
+  set -a
+  source /etc/app-builder/opencode-server.env
+  set +a
+  curl --fail --silent --show-error \
+    -u "$OPENCODE_SERVER_USERNAME:$OPENCODE_SERVER_PASSWORD" \
+    http://127.0.0.1:4097/global/health
+'
+```
+
+An unauthenticated request to the OpenCode health route should return `401`, proving the local HTTP auth boundary is active.
+
+Do not enable either service at boot until runtime recovery/ownership is intentionally promoted from manual host validation to an accepted operations contract.
+
+### Validated live-host result — 2026-08-26
+
+The real co-located host has passed the infrastructure acceptance intended by this runbook:
+
+- `verify-host.sh` passes all shared-host/isolation checks;
+- the Factory is stable on `127.0.0.1:4310`, reports service version `2`, and has zero observed restarts after dependency repair;
+- Factory state/workspaces resolve under `/srv/app-builder`, not the repository;
+- OpenCode `1.18.14` is stable on `127.0.0.1:4097` with zero observed restarts;
+- authenticated OpenCode health returns `200` with `{"healthy":true,"version":"1.18.14"}`;
+- unauthenticated OpenCode health returns `401`;
+- the existing project-specific OpenCode endpoint remains independently on its existing loopback port;
+- `5173` is not running;
+- no App Builder service is publicly bound;
+- autonomous runtime and provider credentials remain disabled.
+
+This is **infrastructure evidence, not a Phase 5 runtime promotion**. `config/factory-status.json` and the product-proof gate remain authoritative for sequencing.
 
 ## 7. Running bounded one-off commands
 
@@ -245,7 +284,7 @@ Because durable App Builder state lives under its own `/srv/app-builder` tree an
 
 ## 10. Still deliberately deferred
 
-This setup prepares the host boundary only. These remain later runtime work:
+The host boundary is now proven, but these remain later runtime work:
 
 - `ExecutionEnvironmentAdapter` per-task sandbox lifecycle;
 - `AgentRuntimeAdapter` around OpenCode;

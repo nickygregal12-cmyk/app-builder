@@ -1,18 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { assertContract, validateContract } from '@app-builder/contracts';
-import { applyContentOverrides, applySectionVariants, assertEditableElement, assetDecisionsHash, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides, stripSectionVariants } from '@app-builder/composition';
+import { applyContentOverrides, applySectionVariants, assertEditableElement, assetDecisionsHash, bindingElementKey, composeProject, elementRef, resolveElementIdentity, stripContentOverrides, stripSectionVariants } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
+import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, serveCandidateBuild, verifyCandidate } from './visual-candidates.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
 import { compileDesignLintReport } from '../../../tooling/lib/design-lint.mjs';
+import { compileAssetReadiness } from '../../../tooling/lib/asset-readiness.mjs';
+import { applyVisualDirection, loadVisualDirections, selectVisualDirections, structuralSignature } from '../../../tooling/lib/visual-direction.mjs';
+import { buildCandidateSet, promoteCandidate, recordCandidateEvidence, recordReview, reviewCriteriaFor } from '../../../tooling/lib/visual-candidates.mjs';
 import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { deriveOpportunities } from '../../../tooling/lib/product-opportunities.mjs';
 import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
@@ -132,10 +136,19 @@ async function terminatePreview(child) {
   }
 }
 
+/** The identity of a compiled artifact, so a candidate can be told apart from its sibling. */
+function hashOf(value) {
+  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
 export class FactoryService {
-  constructor({ store, workspacesRoot, stateRoot, env = process.env }) {
+  constructor({ store, workspacesRoot, stateRoot, factoryRoot = process.cwd(), env = process.env }) {
     this.store = store;
     this.workspacesRoot = path.resolve(workspacesRoot);
+    // Where the factory's own registries live. Generation already resolves them
+    // from the working directory; naming it here lets a candidate run resolve
+    // the same registries without depending on where the process was started.
+    this.factoryRoot = path.resolve(factoryRoot);
     this.env = env;
     this.previews = new Map();
     this.ingestion = new SourceIngestion({ stateRoot: stateRoot ?? store.stateRoot });
@@ -1058,6 +1071,334 @@ export class FactoryService {
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'quality.failed', actor: 'factory-service', payload: { message: error instanceof Error ? error.message : String(error) }, usage: { durationMs: Date.now() - started } }));
       throw error;
     }
+  }
+
+  // Visual candidates — Phase 4D -------------------------------------------
+
+  visualCandidateSetPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'visual-candidates.json');
+  }
+
+  readVisualCandidateSet(projectId) {
+    this.requireProject(projectId);
+    const file = this.visualCandidateSetPath(projectId);
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  writeVisualCandidateSet(projectId, set) {
+    const document = assertContract('visual-candidate-set', set);
+    const file = this.visualCandidateSetPath(projectId);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, `${JSON.stringify(document, null, 2)}\n`);
+    return document;
+  }
+
+  /**
+   * What every candidate in a set has to share.
+   *
+   * Composed once, here, from the manifest and knowledge pack as they stand.
+   * A candidate is a presentation of this; nothing downstream may recompose it,
+   * because candidates are comparable only while they say the same thing.
+   */
+  frozenProductTruth(projectId) {
+    const project = this.requireProject(projectId);
+    const composition = composeProject({
+      manifest: project.manifest,
+      knowledgePack: project.knowledgePack,
+      assetDecisions: this.readAssetDecisions(projectId).decisions,
+    });
+    return {
+      composition,
+      frozenTruth: {
+        projectType: project.manifest.project.type,
+        manifestVersion: project.manifest.schemaVersion ?? 1,
+        knowledgePackHash: project.knowledgePack?.packHash ?? null,
+        baselineCompositionHash: composition.compositionHash,
+      },
+    };
+  }
+
+  /**
+   * Generate two to four genuinely different presentations of one product truth.
+   *
+   * Each becomes a real repository — generated, installed and built — because a
+   * screenshot of something never built is evidence of nothing. The diversity
+   * check runs on the compiled signatures before any of that happens, so a set
+   * that is one build in several colours costs a compile rather than three
+   * installs and a browser run.
+   */
+  async generateVisualCandidates(projectId, { directions = null, createdBy = 'visual-direction', now = new Date().toISOString() } = {}) {
+    const project = this.requireProject(projectId);
+    const existing = this.readVisualCandidateSet(projectId);
+    if (existing && !existing.promotedCandidateId) {
+      throw new Error(`Project ${projectId} already has an undecided candidate set (${existing.setId}). Promote or abandon it before generating another.`);
+    }
+    const { composition, frozenTruth } = this.frozenProductTruth(projectId);
+    const assetDecisions = this.readAssetDecisions(projectId).decisions;
+    const assetReadiness = compileAssetReadiness({ knowledgePack: project.knowledgePack, assetDecisions });
+    const registry = loadVisualDirections(this.factoryRoot);
+    // The layout family is a property of the project type rather than of the
+    // direction, and it belongs in the signature so a candidate set generated
+    // across different shells is still comparable.
+    const layoutPatternId = JSON.parse(fs.readFileSync(path.join(this.factoryRoot, 'config/layout-patterns.json'), 'utf8')).projectTypeDefaults?.[frozenTruth.projectType] ?? null;
+    const { eligible, refused } = selectVisualDirections({
+      projectType: frozenTruth.projectType,
+      registry,
+      assetReadiness,
+      // The frozen composition, so a direction whose distinctive moment has
+      // nothing to render here is refused rather than generated as a decision
+      // that shows nothing.
+      composition,
+      requested: directions,
+    });
+    if (eligible.length < 2) {
+      throw new Error(`Only ${eligible.length} visual direction is available for a ${frozenTruth.projectType}: ${refused.map((entry) => `${entry.directionId} (${entry.reason})`).join(', ') || 'the registry offers no others'}. One candidate is not a choice.`);
+    }
+
+    const setId = buildCandidateSet({
+      projectId,
+      createdAt: now,
+      frozenTruth,
+      assetReadiness,
+      refusedDirections: refused,
+      createdBy,
+      candidates: eligible.map((direction) => this.draftCandidate(direction, composition, layoutPatternId)),
+    });
+
+    const root = candidateRoot(this.workspacesRoot, project.slug, setId.setId);
+    fs.mkdirSync(root, { recursive: true });
+    const candidates = setId.candidates.map((candidate) => {
+      const workspace = path.join(root, candidate.directionId);
+      const build = generateComposedProject(project.manifest, workspace, {
+        knowledgePack: project.knowledgePack,
+        assetSourceDir: this.ingestion.assetDirectory(projectId),
+        contentOverrides: this.readOverrides(projectId).overrides,
+        assetDecisions,
+        sectionVariants: this.readSectionVariants(projectId).choices,
+        // The direction is the only thing that differs between candidates. Every
+        // other input is the project's own.
+        designChoices: { ...this.readDesignChoices(projectId).choices, visualDirection: candidate.directionId },
+        projectId,
+        factoryRoot: this.factoryRoot,
+      });
+      const spec = JSON.parse(fs.readFileSync(path.join(workspace, DESIGN_SYSTEM_SPEC_PATH), 'utf8'));
+      return {
+        ...candidate,
+        workspace,
+        compositionHash: build.composition.compositionHash,
+        designSystemSpecHash: hashOf(spec),
+      };
+    });
+
+    const set = this.writeVisualCandidateSet(projectId, { ...setId, candidates });
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'visual.candidates.generated',
+      actor: createdBy,
+      payload: {
+        setId: set.setId,
+        candidates: set.candidates.map((candidate) => candidate.directionId),
+        refused: refused.map((entry) => `${entry.directionId}:${entry.reason}`),
+        assetStrategy: assetReadiness.strategy,
+        baselineCompositionHash: frozenTruth.baselineCompositionHash,
+      },
+    }));
+    return set;
+  }
+
+  /** One candidate, before it has been built or photographed. */
+  draftCandidate(direction, baseline, patternId) {
+    const composition = applyVisualDirection(baseline, direction);
+    return {
+      candidateId: `candidate-${direction.id}`,
+      directionId: direction.id,
+      directionLabel: direction.label,
+      state: 'draft',
+      artDirection: direction.artDirection,
+      signature: structuralSignature({ direction, composition, design: { density: direction.design.density, patternId } }),
+      compositionHash: composition.compositionHash,
+      // No reference informed these unless one was supplied; an empty list is
+      // the honest answer rather than an omitted field.
+      referenceAnalysisIds: [],
+    };
+  }
+
+  /**
+   * Install, verify, build and photograph every candidate in the set.
+   *
+   * Like for like, deliberately: the same routes, the same three viewports, the
+   * same interaction states and the same DesignLint pass over every candidate.
+   * A comparison between a candidate photographed at three widths and one
+   * photographed at one is not a comparison.
+   */
+  async captureVisualCandidateEvidence(projectId, { capturedAt = new Date().toISOString() } = {}) {
+    const set = this.readVisualCandidateSet(projectId);
+    if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
+    if (set.promotedCandidateId) throw new Error(`This set already promoted ${set.promotedCandidateId}.`);
+
+    installSharedDependencies(set.candidates.map((candidate) => candidate.workspace));
+    const captured = [];
+    for (const candidate of set.candidates) {
+      const dist = verifyCandidate(candidate.workspace);
+      const server = await serveCandidateBuild(dist);
+      try {
+        const composition = JSON.parse(fs.readFileSync(path.join(candidate.workspace, '.app-builder/composition.json'), 'utf8'));
+        const designLint = this.lintWorkspace(candidate.workspace, composition);
+        const plan = deriveEvidencePlan({
+          composition,
+          stateMatrix: deriveStateMatrix(composition, this.launchReadinessRules()),
+          elementIdentity: this.readWorkspaceElementIdentity(candidate.workspace),
+        });
+        const { results, failures } = await captureEvidence({ plan, baseUrl: server.url });
+        if (!results.length) throw new Error(`No evidence could be captured for ${candidate.candidateId}: ${failures[0]?.message ?? 'the browser produced nothing'}`);
+        const evidence = assertContract('rendered-evidence', buildEvidenceSet({
+          plan,
+          results,
+          projectId,
+          buildRef: candidate.workspace,
+          compositionHash: composition.compositionHash,
+          capturedAt,
+          designLint,
+        }));
+        const directory = this.evidenceDirectory(projectId, evidence.id);
+        fs.mkdirSync(path.join(directory, 'captures'), { recursive: true });
+        for (const result of results) {
+          if (!evidence.captures.some((entry) => entry.id === result.id)) continue;
+          fs.writeFileSync(path.join(directory, captureFile(result.id)), result.bytes);
+        }
+        fs.writeFileSync(path.join(directory, 'evidence.json'), `${JSON.stringify(evidence, null, 2)}\n`);
+        captured.push(recordCandidateEvidence(candidate, { evidenceId: evidence.id, designLint }));
+      } finally {
+        await server.close();
+      }
+    }
+
+    const updated = this.writeVisualCandidateSet(projectId, { ...set, candidates: captured });
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'visual.candidates.captured',
+      actor: 'factory-service',
+      payload: {
+        setId: updated.setId,
+        blocked: updated.candidates.filter((candidate) => candidate.gate.status === 'blocked').map((candidate) => candidate.candidateId),
+        reviewRequired: updated.candidates.filter((candidate) => candidate.gate.status === 'review-required').map((candidate) => candidate.candidateId),
+      },
+    }));
+    return updated;
+  }
+
+  /** Lint a workspace from its own compiled spec, composition and token source. */
+  lintWorkspace(workspace, composition) {
+    const specFile = path.join(workspace, DESIGN_SYSTEM_SPEC_PATH);
+    if (!fs.existsSync(specFile)) return null;
+    const tokenSource = path.join(workspace, 'src/design/tokens.css');
+    return compileDesignLintReport({
+      spec: JSON.parse(fs.readFileSync(specFile, 'utf8')),
+      composition,
+      tokenSourceCss: fs.existsSync(tokenSource) ? fs.readFileSync(tokenSource, 'utf8') : '',
+      compositionHash: composition.compositionHash ?? null,
+    });
+  }
+
+  readWorkspaceElementIdentity(workspace) {
+    const file = path.join(workspace, '.app-builder/element-identity.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  /**
+   * What an independent visual critic is given, and what it is not asked.
+   *
+   * The deterministic findings travel separately from the questions. A critic
+   * handed "review this page" re-derives what a rule already settled; a critic
+   * handed the settled list, the warnings it must speak to, and a scoped set of
+   * genuinely subjective criteria spends its budget on the questions that need
+   * it.
+   */
+  visualReviewPacket(projectId, candidateId) {
+    const project = this.requireProject(projectId);
+    const set = this.readVisualCandidateSet(projectId);
+    const candidate = (set?.candidates ?? []).find((entry) => entry.candidateId === candidateId);
+    if (!candidate) return null;
+    const publishesImagery = Object.keys(this.readAssetDecisions(projectId).decisions).length > 0
+      || (project.knowledgePack?.assets ?? []).some((asset) => asset.publishUseAllowed);
+    return {
+      setId: set.setId,
+      candidateId,
+      directionId: candidate.directionId,
+      directionLabel: candidate.directionLabel,
+      purpose: loadVisualDirections(this.factoryRoot).directions?.[candidate.directionId]?.purpose ?? null,
+      projectType: set.frozenTruth.projectType,
+      brand: this.designContract(projectId)?.design?.brand ?? null,
+      artDirection: candidate.artDirection,
+      assetStrategy: candidate.assetStrategy,
+      evidenceId: candidate.evidenceId,
+      // Already decided. Not a question.
+      settledByRules: candidate.designLint?.findings ?? [],
+      mustAddress: candidate.gate.mustAddress,
+      gateStatus: candidate.gate.status,
+      // The questions.
+      criteria: reviewCriteriaFor({ projectType: set.frozenTruth.projectType, publishesImagery }),
+      siblings: set.candidates.filter((entry) => entry.candidateId !== candidateId).map((entry) => ({ candidateId: entry.candidateId, directionLabel: entry.directionLabel, evidenceId: entry.evidenceId })),
+    };
+  }
+
+  async recordVisualCandidateReview(projectId, candidateId, review) {
+    const set = this.readVisualCandidateSet(projectId);
+    if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
+    const candidate = set.candidates.find((entry) => entry.candidateId === candidateId);
+    if (!candidate) throw new Error(`No visual candidate ${candidateId} in set ${set.setId}.`);
+    const reviewed = recordReview(candidate, { decidedAt: new Date().toISOString(), ...review });
+    const updated = this.writeVisualCandidateSet(projectId, {
+      ...set,
+      candidates: set.candidates.map((entry) => (entry.candidateId === candidateId ? reviewed : entry)),
+    });
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'visual.candidate.reviewed',
+      actor: review.reviewedBy,
+      payload: { setId: set.setId, candidateId, verdict: review.verdict, addressedRules: review.addressedRules ?? [] },
+    }));
+    return updated;
+  }
+
+  /**
+   * Promote one candidate into the project.
+   *
+   * Promotion is an ordinary durable design choice plus a rebuild. That is the
+   * whole mechanism, and it is deliberately small: the generated repository
+   * that results is the project's own next build, not a candidate workspace
+   * renamed. Every candidate workspace is removed afterwards — the promoted one
+   * included — so a project never ends up with four forks of itself and no
+   * record of which is the product.
+   */
+  async promoteVisualCandidate(projectId, candidateId, { promotedBy, rationale = null } = {}) {
+    const project = this.requireProject(projectId);
+    const set = this.readVisualCandidateSet(projectId);
+    if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
+    const promoted = promoteCandidate(set, candidateId, { promotedBy, rationale, decidedAt: new Date().toISOString() });
+    const winner = promoted.candidates.find((entry) => entry.candidateId === candidateId);
+
+    await this.writeDesignChoices(projectId, { visualDirection: winner.directionId });
+    const stored = this.writeVisualCandidateSet(projectId, {
+      ...promoted,
+      // The workspaces go; the evidence and the reasons stay.
+      candidates: promoted.candidates.map((entry) => ({ ...entry, workspace: null })),
+    });
+    removeCandidateWorkspaces(candidateRoot(this.workspacesRoot, project.slug, set.setId));
+
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'visual.candidate.promoted',
+      actor: promotedBy,
+      payload: {
+        setId: set.setId,
+        candidateId,
+        directionId: winner.directionId,
+        rejected: stored.candidates.filter((entry) => entry.outcome === 'rejected').map((entry) => entry.candidateId),
+        rationale,
+      },
+    }));
+    return stored;
   }
 
   /**

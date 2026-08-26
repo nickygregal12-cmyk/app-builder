@@ -1,6 +1,6 @@
 # Design Intelligence, Element Identity and Rendered Evidence
 
-Status: **planned for Phase 4B–4D**. This document specifies the design-side machinery the specialist
+Status: **Phase 4C delivered; Phase 4D delivered except the visual verdict**. What was actually built, and what was deferred and why, is recorded in `docs/PHASE_4C_EXECUTION.md` and `docs/PHASE_4D_EXECUTION.md` — those are the implementation authority and this remains the specification. Three items specified below are deferred rather than built: the design-intelligence catalogue (section 1, no consumer), reference handling (section 4, no supplier) and MessagingPlan (section 5, no consumer). `config/factory-status.json` carries the reviving condition for each. This document specifies the design-side machinery the specialist
 roles exchange. It is a detail document under `docs/VISUAL_EXCELLENCE.md` and
 `docs/BEST_IN_CLASS_CAPABILITIES.md`.
 

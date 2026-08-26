@@ -139,7 +139,7 @@ export function compileVisualDirection(directionId, registry) {
     label: entry.label ?? directionId,
     purpose: entry.purpose ?? '',
     assetAppetite: entry.assetAppetite ?? 'imagery-optional',
-    design: { ...(entry.design ?? {}) },
+    design: { ...entry.design },
     artDirection: {
       ...plan,
       dimensions: { ...plan.dimensions, ...composition },
@@ -465,32 +465,67 @@ export function assessDiversity(signatures) {
 }
 
 /**
+ * What each distinctive moment needs in order to be visible.
+ *
+ * A declared moment that renders nothing is the same failure as a registry
+ * entry for a component the template does not have: it reads as a considered
+ * decision and is an empty one. The nbm acceptance found exactly that — a
+ * practice with no photography was offered a direction whose memorable idea was
+ * a numbered index of its work, and there was no work to index.
+ *
+ * `none` requires nothing and is refused for public-facing types separately.
+ */
+const MOMENT_REQUIREMENTS = Object.freeze({
+  'lead-statement': Object.freeze({
+    describe: 'a page opening that carries a sentence, not only a name',
+    // The lead statement sets the hero's own body copy apart. A hero with a
+    // title and nothing else has nothing to set apart.
+    satisfiedBy: (composition) => list(composition?.sections).some((section) => section.type === 'hero' && list(section.bindings).some((binding) => binding.key === 'body')),
+  }),
+  'full-bleed-lead': Object.freeze({
+    describe: 'a gallery of published work to run edge to edge',
+    satisfiedBy: (composition) => list(composition?.sections).some((section) => section.type === 'gallery' && list(section.assetIds).length > 0),
+  }),
+  'figure-index': Object.freeze({
+    describe: 'a set of things worth numbering — published work, or the services the practice offers',
+    satisfiedBy: (composition) => list(composition?.sections).some((section) => (section.type === 'gallery' && list(section.assetIds).length > 0) || section.type === 'item-grid'),
+  }),
+  none: Object.freeze({ describe: 'nothing', satisfiedBy: () => true }),
+});
+
+/**
  * Which directions a project may generate candidates from.
  *
- * Three inputs, and each one can refuse: the registry's own project-type list,
+ * Four inputs, and each one can refuse: the registry's own project-type list,
  * asset readiness (an imagery-led direction with no publishable photograph is
- * refused before it becomes a candidate that looks broken), and the distinctive
- * moment rule for public-facing types.
+ * refused before it becomes a candidate that looks broken), the distinctive
+ * moment rule for public-facing types, and — where a composition is supplied —
+ * whether that moment has anything to render.
  */
-export function selectVisualDirections({ projectType, registry, assetReadiness = null, requested = null } = {}) {
+export function selectVisualDirections({ projectType, registry, assetReadiness = null, composition = null, requested = null } = {}) {
   const offered = requested ?? registry?.projectTypeCandidates?.[projectType] ?? [];
   const eligible = [];
   const refused = [];
   for (const id of offered) {
     const direction = compileVisualDirection(id, registry);
-    const reason = refusalReason(direction, { projectType, assetReadiness });
+    const reason = refusalReason(direction, { projectType, assetReadiness, composition });
     if (reason) refused.push({ directionId: id, ...reason });
     else eligible.push(direction);
   }
   return { eligible, refused };
 }
 
-function refusalReason(direction, { projectType, assetReadiness }) {
-  if (PUBLIC_PROJECT_TYPES.includes(projectType) && direction.artDirection.dimensions.distinctiveMoment === 'none') {
+function refusalReason(direction, { projectType, assetReadiness, composition }) {
+  const moment = direction.artDirection.dimensions.distinctiveMoment;
+  if (PUBLIC_PROJECT_TYPES.includes(projectType) && moment === 'none') {
     return { reason: 'no-distinctive-moment', detail: `${direction.id} declares no distinctive moment, which a ${projectType} candidate has to carry.` };
   }
   if (direction.assetAppetite === 'imagery-required' && assetReadiness && !assetReadiness.supportsImageryLed) {
     return { reason: 'imagery-not-available', detail: `${direction.id} leads with photography and the approved inventory cannot support it: ${assetReadiness.strategyReason}` };
+  }
+  const requirement = MOMENT_REQUIREMENTS[moment];
+  if (composition && requirement && !requirement.satisfiedBy(composition)) {
+    return { reason: 'distinctive-moment-not-renderable', detail: `${direction.id}'s distinctive moment is ${moment}, which needs ${requirement.describe}. This build has none, so the moment would be a decision that renders nothing.` };
   }
   return null;
 }

@@ -238,6 +238,35 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .moment-full-bleed-lead .gallery-item { border-radius: 0 }
 .moment-full-bleed-lead .gallery-item img { aspect-ratio: 3 / 2 }
 
+/* An index over what the practice has done, or over what it offers. A business
+   with no photography still has services, and numbering them is the same idea:
+   a considered set rather than a list that happened to be that long. */
+.moment-figure-index .section-item-grid .plain-list { counter-reset: plate }
+.moment-figure-index .section-item-grid .plain-list li { counter-increment: plate; padding-left: 62px }
+.moment-figure-index .section-item-grid .plain-list li::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.moment-figure-index .section-item-grid .item-grid { counter-reset: plate }
+.moment-figure-index .section-item-grid .content-card { position: relative; counter-increment: plate }
+.moment-figure-index .section-item-grid .content-card::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
 .moment-figure-index .gallery-grid { counter-reset: plate }
 .moment-figure-index .gallery-item { position: relative; counter-increment: plate }
 .moment-figure-index .gallery-item::after {

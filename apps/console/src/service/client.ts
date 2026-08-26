@@ -351,6 +351,7 @@ export type WorkspaceSnapshot = {
   checkpoints: Checkpoint[];
   overrides: ContentOverride[];
   evidence: RenderedEvidence[];
+  visualCandidates: VisualCandidateSet | null;
   assets: ProjectAsset[];
   assetDecisionsHash: string | null;
   sectionVariants: SectionVariantOption[];
@@ -459,6 +460,80 @@ export async function chooseSectionVariant(projectId: string, sectionId: string,
   )).sections;
 }
 
+/**
+ * Mirrors schemas/visual-candidate-set.schema.json. Several presentations of
+ * one frozen truth, and the record of which one was promoted.
+ */
+export type VisualCandidate = {
+  candidateId: string;
+  directionId: string;
+  directionLabel: string;
+  state: 'draft' | 'rendered' | 'deterministic-pass' | 'deterministic-blocked' | 'reviewed' | 'promoted' | 'rejected';
+  artDirection: { dimensions: Record<string, string>; responsive: Record<string, string> };
+  signature: { axes: Record<string, string | null>; sequence: Array<{ pageId: string; presentation: string[] }> };
+  compositionHash: string;
+  assetStrategy: string;
+  evidenceId: string | null;
+  designLint: { counts: Record<string, number>; findings: Array<{ rule: string; severity: string; detail: string }> } | null;
+  gate: { status: 'blocked' | 'review-required' | 'clear' | 'not-run'; blocking: Array<{ rule: string; detail: string }>; mustAddress: string[] };
+  review: { verdict: string; reviewedBy: string; rationale?: string | null; addressedRules?: string[] } | null;
+  outcome: 'pending' | 'promoted' | 'rejected';
+  rationale: string | null;
+};
+
+export type VisualCandidateSet = {
+  setId: string;
+  projectId: string;
+  createdAt: string;
+  frozenTruth: { projectType: string; manifestVersion: number; knowledgePackHash: string | null; baselineCompositionHash: string };
+  assetReadiness: { strategy: string; supportsImageryLed: boolean; strategyReason: string };
+  diversity: { distinct: boolean; minimumDifferingPlanes: number; duplicates: Array<{ a: string; b: string; reason: string; detail: string }> };
+  refusedDirections: Array<{ directionId: string; reason: string; detail: string }>;
+  candidates: VisualCandidate[];
+  promotedCandidateId: string | null;
+};
+
+export type VisualReviewPacket = {
+  candidateId: string;
+  directionLabel: string;
+  purpose: string | null;
+  gateStatus: string;
+  settledByRules: Array<{ rule: string; severity: string; detail: string }>;
+  mustAddress: string[];
+  criteria: Array<{ id: string; question: string }>;
+  siblings: Array<{ candidateId: string; directionLabel: string; evidenceId: string | null }>;
+};
+
+export async function readVisualCandidates(projectId: string) {
+  return (await request<{ set: VisualCandidateSet | null }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates`)).set;
+}
+
+export async function generateVisualCandidates(projectId: string) {
+  return (await request<{ set: VisualCandidateSet }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates`, { method: 'POST', body: JSON.stringify({}) })).set;
+}
+
+export async function captureVisualCandidateEvidence(projectId: string) {
+  return (await request<{ set: VisualCandidateSet }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates/capture`, { method: 'POST' })).set;
+}
+
+export async function readVisualReviewPacket(projectId: string, candidateId: string) {
+  return (await request<{ packet: VisualReviewPacket }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates/${encodeURIComponent(candidateId)}/packet`)).packet;
+}
+
+export async function recordVisualReview(projectId: string, candidateId: string, review: { verdict: string; reviewedBy: string; addressedRules: string[]; rationale: string }) {
+  return (await request<{ set: VisualCandidateSet }>(
+    `/projects/${encodeURIComponent(projectId)}/visual-candidates/${encodeURIComponent(candidateId)}/review`,
+    { method: 'POST', body: JSON.stringify(review) },
+  )).set;
+}
+
+export async function promoteVisualCandidate(projectId: string, candidateId: string, decision: { promotedBy: string; rationale: string }) {
+  return (await request<{ set: VisualCandidateSet }>(
+    `/projects/${encodeURIComponent(projectId)}/visual-candidates/${encodeURIComponent(candidateId)}/promote`,
+    { method: 'POST', body: JSON.stringify(decision) },
+  )).set;
+}
+
 export async function listRenderedEvidence(projectId: string) {
   return (await request<{ evidence: RenderedEvidence[] }>(`/projects/${encodeURIComponent(projectId)}/evidence`)).evidence;
 }
@@ -526,7 +601,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult, designResult, reviewResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult, designResult, reviewResult, candidatesResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
@@ -544,6 +619,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ sections: SectionVariantOption[] }>(`/projects/${id}/section-variants`),
     request<{ design: DesignContract | null }>(`/projects/${id}/design`),
     request<{ review: ProductReview | null }>(`/projects/${id}/product-review`),
+    request<{ set: VisualCandidateSet | null }>(`/projects/${id}/visual-candidates`),
   ]);
   const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
@@ -560,6 +636,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     checkpoints: checkpointsResult.checkpoints,
     overrides: overridesResult.overrides,
     evidence: evidenceResult.evidence,
+    visualCandidates: candidatesResult.set,
     assets: assetsResult.assets,
     assetDecisionsHash: assetsResult.assetDecisionsHash,
     sectionVariants: variantsResult.sections,

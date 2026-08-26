@@ -3,7 +3,7 @@ import path from 'node:path';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, writeDesignArtifacts } from './design-choices.mjs';
 import { artDirectionIntent, compileArtDirectionPlan } from './art-direction.mjs';
 import { compileBrandSpec } from './brand-spec.mjs';
-import { compileVisualDirection, loadVisualDirections, selectVisualDirections } from './visual-direction.mjs';
+import { compileVisualDirection } from './visual-direction.mjs';
 
 export function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 export function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
@@ -152,7 +152,7 @@ function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = nul
   const composed = {
     patternId,
     ...patternDesign,
-    ...(direction?.design ?? {}),
+    ...direction?.design,
     visualDirectionId: direction?.id ?? null,
     accentColor: brand.accent.value,
     brand,

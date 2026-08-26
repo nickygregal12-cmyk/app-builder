@@ -283,6 +283,33 @@ test('a public-facing candidate must carry a distinctive moment', () => {
   assert.equal(internal.eligible.length, 1);
 });
 
+test('a distinctive moment with nothing to render is refused rather than generated', () => {
+  const manifest = projectManifest();
+  // A practice with no photography and no gallery. The nbm acceptance is
+  // exactly this shape, and it is what found the rule missing: a direction
+  // whose memorable idea was a numbered index of the work was offered to a
+  // business with no work to index.
+  const withoutWork = composeProject({ manifest, knowledgePack: null });
+  const bare = compileAssetReadiness({});
+  const refusedRun = selectVisualDirections({ projectType: 'marketing-site', registry: REGISTRY, assetReadiness: bare, composition: withoutWork });
+  const fullBleed = refusedRun.refused.find((entry) => entry.directionId === 'immersive-lead');
+  assert.ok(fullBleed, 'an imagery-led direction is refused where there is no imagery');
+
+  // With services to number, the same moment has something to render, and the
+  // direction is eligible again.
+  const withServices = composeProject({ manifest, knowledgePack: knowledgePackWithPhotographs(0) });
+  const allowed = selectVisualDirections({ projectType: 'marketing-site', registry: REGISTRY, assetReadiness: bare, composition: withServices, requested: ['structured-practice'] });
+  assert.equal(allowed.eligible.length, 1, JSON.stringify(allowed.refused));
+  assert.ok(STYLES_CSS.includes('.moment-figure-index .section-item-grid'), 'a figure index has to render over services where there is no gallery');
+
+  // And a composition with neither refuses it, with a reason that says what is missing.
+  const nothing = { pages: [{ id: 'page-home', sectionIds: ['s1'] }], sections: [{ id: 's1', type: 'rich-text', variant: 'default', bindings: [], actions: [], assetIds: [] }] };
+  const impossible = selectVisualDirections({ projectType: 'marketing-site', registry: REGISTRY, assetReadiness: bare, composition: nothing, requested: ['structured-practice'] });
+  assert.equal(impossible.eligible.length, 0);
+  assert.equal(impossible.refused[0].reason, 'distinctive-moment-not-renderable');
+  assert.match(impossible.refused[0].detail, /renders nothing/);
+});
+
 test('a DesignLint violation blocks promotion and is not a matter for review', () => {
   const gate = evaluatePromotionGate({ findings: [{ rule: 'accent-contrast', severity: 'violation', detail: 'unreadable' }], counts: { violation: 1, warning: 0, recommendation: 0 } });
   assert.equal(gate.status, 'blocked');

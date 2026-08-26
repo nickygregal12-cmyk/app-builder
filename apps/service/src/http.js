@@ -47,6 +47,14 @@ const CLIENT_ERROR_PATTERNS = [
       /^Remote source exceeds/, /^Source exceeds/,
       /Every source must be/, /exceeds the .* limit/,
       /dependencies are not installed/, /no generated workspace/,
+      // Phase 4D. Every one of these is a decision the operator got wrong —
+      // promoting an unreviewed candidate, naming a direction that does not
+      // exist, opening a second choice while one is still open — rather than
+      // the factory failing.
+      /^Unknown visual (direction|candidate)/, /^No visual candidate/, /already has an undecided candidate set/, /already promoted/,
+      /^Only \d+ visual direction is available/, /not genuinely different/, /no passing visual review/, /^A visual review must record/,
+      /Visual review does not address/, /cannot also promote it/, /not a matter for review/, /A visual candidate cannot move/,
+      /has no visual candidate set/, /at least two candidates/, /^Promoting a visual candidate/, /^Unsupported visual direction/,
       /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Replacing an asset needs/, /^The replacement (is the same|file produced)/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
 ];
 
@@ -159,6 +167,34 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
         const body = await readJson(request);
         await chooseSectionVariant(service, route.projectId, decodeURIComponent(variantRoute[1]), body.variant ?? null);
         return send(response, 200, { sections: sectionVariantOptions(service, route.projectId) });
+      }
+      // Visual candidates — Phase 4D. The Console compares and decides through
+      // these; nothing here lets a caller name a workspace or a file.
+      if (request.method === 'GET' && route.action === 'visual-candidates') {
+        return send(response, 200, { set: service.readVisualCandidateSet(route.projectId) });
+      }
+      if (request.method === 'POST' && route.action === 'visual-candidates') {
+        const body = await readJson(request);
+        return send(response, 200, { set: await service.generateVisualCandidates(route.projectId, { directions: Array.isArray(body.directions) ? body.directions : null }) });
+      }
+      if (request.method === 'POST' && route.action === 'visual-candidates/capture') {
+        return send(response, 200, { set: await service.captureVisualCandidateEvidence(route.projectId) });
+      }
+      const reviewPacketRoute = route.action?.match(/^visual-candidates\/([^/]+)\/packet$/);
+      if (request.method === 'GET' && reviewPacketRoute) {
+        const packet = service.visualReviewPacket(route.projectId, decodeURIComponent(reviewPacketRoute[1]));
+        if (!packet) return send(response, 404, { error: 'unknown-candidate' });
+        return send(response, 200, { packet });
+      }
+      const reviewRoute = route.action?.match(/^visual-candidates\/([^/]+)\/review$/);
+      if (request.method === 'POST' && reviewRoute) {
+        const body = await readJson(request);
+        return send(response, 200, { set: await service.recordVisualCandidateReview(route.projectId, decodeURIComponent(reviewRoute[1]), body) });
+      }
+      const promoteRoute = route.action?.match(/^visual-candidates\/([^/]+)\/promote$/);
+      if (request.method === 'POST' && promoteRoute) {
+        const body = await readJson(request);
+        return send(response, 200, { set: await service.promoteVisualCandidate(route.projectId, decodeURIComponent(promoteRoute[1]), body) });
       }
       if (request.method === 'GET' && route.action === 'evidence') return send(response, 200, { evidence: service.listRenderedEvidence(route.projectId) });
       if (request.method === 'POST' && route.action === 'evidence/capture') {

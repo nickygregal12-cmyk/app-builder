@@ -803,7 +803,11 @@ The stage was previously named for its last and most conditional deliverable, th
 
 Differences between candidates must be structural — hero strategy, section grouping and sequence, grid family, responsive composition, proof placement, motion language. A candidate that differs only in palette, radius or token values is a theme swap and is refused before it costs an evidence capture.
 
-`docs/PHASE_4D_EXECUTION.md` holds the implementation order. The original plan for the stage follows.
+`docs/PHASE_4D_EXECUTION.md` holds the implementation order and which slices are done, deferred or
+outstanding. Three things are recorded as deferred rather than built: reference analysis (no project
+supplies a reference the factory does not already read), a MessagingPlan (the composition already
+carries the narrative, with provenance) and the comparison canvas (the ordinary Console does the
+comparison). The original plan for the stage follows.
 
 - produce 2–4 genuinely different bounded candidate art directions/layouts from the same product/content truth;
 - ingest moodboards, screenshots, existing sites and design references into normalized traits and

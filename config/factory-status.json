@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "currentPhase": "4D",
   "currentStage": "Phase 4D — Visual direction, responsive composition and candidate promotion",
-  "activeStage": "Phase 4D.1 — the visual promotion contract: make candidate promotion and rejection a recorded decision with deterministic gate status rather than an ad hoc choice",
+  "activeStage": "Phase 4D.8/4D.9 — the visual review verdict on the genuine-business candidate set. The machinery is built and the evidence is captured; what is outstanding is a decision by someone who did not create the candidates.",
   "status": "active",
   "completedPhases": [
     "0",
@@ -41,21 +41,49 @@
     "4C.3",
     "4C.4",
     "4C.5",
-    "4C"
+    "4C",
+    "4D.1",
+    "4D.4",
+    "4D.5",
+    "4D.6",
+    "4D.7"
   ],
   "activeWork": [
     "phase-4d-visual-direction",
     "visual-candidate-promotion",
     "behavioural-consumer-invariants"
   ],
-  "outstandingProductGates": [],
-  "nextStage": "Phase 4D.1. Phase 4C closed on 2026-08-26 against its own completion gate: the design declarations the product uses have real deterministic consumers (4C.1 DesignSystemSpec compiler, 4C.2 portable .product/design-system.json, 4C.3 BrandSpec/ArtDirectionPlan/MotionContract, 4C.4 compiled Presentation Registry, 4C.5 deterministic DesignLint inside RenderedEvidence), the portable design contract survives generated-repo handoff, presentation selection is registry-backed with no fictional entries, and focused tests hold each behaviour. 4C.6 is recorded in deferredCapabilities as conditionally deferred rather than completed, because no consumer is ready to query a design-intelligence catalogue. Storybook was evaluated at 4C.4 and not adopted. Phase 4D moves the factory from one deterministic visual answer to several genuinely different art directions over the same frozen product truth, compared on deterministic evidence plus independent judgement, with exactly one promoted. Broad autonomous runtime work remains separately gated by the runtime-to-factory capability boundary.",
+  "outstandingProductGates": [
+    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. The factory created them, so the factory cannot promote one. A reviewer who did not create them has to pass, rework or reject each candidate against the scoped criteria before Phase 4D closes."
+  ],
+  "nextStage": "Phase 4D.8/4D.9. The Factory can now produce several genuinely different presentations of one frozen product truth and decide between them. 4D.1 made promotion a recorded decision with a deterministic gate: a DesignLint violation blocks promotion outright, a warning reaches review but the reviewer must speak to it by rule, a recommendation never blocks, exactly one candidate is promoted and the creator cannot promote its own. 4D.4 made asset readiness an art-direction input, so an imagery-led direction is refused before it becomes a page of grey rectangles. 4D.5 added a ResponsiveCompositionPlan subordinate to the ArtDirectionPlan, with mobile content order, navigation treatment, hero stacking, density and motion all read by the template. 4D.6 added four visual directions differing structurally rather than thematically, with a diversity check over three planes that refuses a theme swap before it costs an evidence capture. 4D.7 captures comparable evidence per candidate from its own built output. The nbm genuine-business run generated two candidates over one truth, refused the imagery-led direction with a recorded reason, built and photographed both at three widths across six routes, and both lint clean. What remains is a verdict from someone who did not create them, and then promotion. 4D.2, 4D.3 and the comparison canvas are recorded in deferredCapabilities. Automated cross-provider visual judgement remains unexecuted and is recorded as such rather than simulated.",
   "deferredCapabilities": [
     {
       "stage": "4C.6",
       "title": "Deterministic design-intelligence catalogue",
       "reason": "No component asks \"which reviewed design patterns fit this project?\". BrandSpec reads the knowledge pack's own brand observations, ArtDirectionPlan reads config/layout-patterns.json, and the Presentation Registry is compiled from what the template renders. A catalogue built now would have one producer and no reader.",
       "revivesWhen": "A real 4D consumer cannot answer a project/industry/intent pattern question from deterministic config. Then document that consumer first, and implement only the smallest lexical (BM25/keyword) catalogue it needs — no vector store, no embeddings, no generic design corpus.",
+      "recordedAt": "2026-08-26"
+    },
+    {
+      "stage": "4D.2",
+      "title": "Visual reference analysis",
+      "reason": "No project supplies a design reference the factory does not already read. The half of reference handling that has a supplier shipped at 4C.3: BrandSpec resolves the accent and the typographic voice from the colours and font families Phase 3 observed in a company's own pages, with sources. What 4D.2 would add — layout, density, hero treatment and spacing rhythm decomposed from a screenshot or moodboard — has no input today, and inventing traits from a site nobody supplied would be a fabricated observation.",
+      "revivesWhen": "A project supplies a screenshot, moodboard or approved reference URL AND a direction-selection decision exists that asset readiness and project type cannot make. Traits must then become adopt[]/avoid[] with confidence and source ids, never markup, and never bypass PageSpec/SectionSpec/ElementIdentity.",
+      "recordedAt": "2026-08-26"
+    },
+    {
+      "stage": "4D.3",
+      "title": "MessagingPlan",
+      "reason": "The composition already carries what a MessagingPlan would organise, with provenance. Page narrative is the section sequence; CTA strategy is derived from the declared conversion goals; proof requirements and their gaps are `declaredProofGap`; audience is on the manifest; forbidden claims are the existing source/provenance boundary. A second narrative authority would have fields nothing reads and a second place the same decision could be made.",
+      "revivesWhen": "An art-direction or composition decision needs narrative information the composition cannot express — a proof sequence that does not follow from what is available, or an objection-handling order. Implement only the fields that decision reads.",
+      "recordedAt": "2026-08-26"
+    },
+    {
+      "stage": "4D-canvas",
+      "title": "Visual comparison canvas",
+      "reason": "The ordinary Builder Console does the comparison. Its candidate panel shows every candidate side by side, switches route and viewport over the captured evidence, names the axes that actually differ rather than leaving them to be spotted, shows what the deterministic checks settled and what the reviewer must speak to, and promotes exactly one. No usability problem remains that a canvas would solve, and tldraw or an equivalent would be a dependency bought against a problem nobody has.",
+      "revivesWhen": "A concrete comparison task proves the Console cannot do it — spatial arrangement of many more candidates, or freehand annotation a reviewer genuinely needs to hand back. Record the task first.",
       "recordedAt": "2026-08-26"
     }
   ]

@@ -1,147 +1,211 @@
-# Dedicated Hetzner App Builder Host
+# App Builder on the Existing Hetzner Host
 
-Status: **host bootstrap only**. This prepares the dedicated App Builder machine without enabling broad autonomous work. `docs/AGENT_RUNTIME.md`, the control plane and the future `AgentRuntimeAdapter` remain authoritative for runtime behaviour.
+Status: **co-located host bootstrap only**. This prepares an isolated App Builder runtime area on the existing Hetzner server without buying another VM and without enabling broad autonomous work.
 
-The host must be separate from the Euro Predictor runtime and must not inherit its prompts, credentials, repositories or permissions.
+`docs/AGENT_RUNTIME.md`, the control plane and the future `AgentRuntimeAdapter` remain authoritative for runtime behaviour.
 
-## Recommended initial Hetzner shape
+The App Builder runtime may share the physical/virtual host with the Euro Predictor, but it must not share project state, repositories, prompts, credentials, process identity or unrestricted resources.
 
-Create a dedicated Hetzner Cloud project named `App Builder` and place this host in it.
+## Co-location model
 
-Initial server choice:
-
-- server name: `app-builder-runtime`;
-- location: `nbg1` (Nuremberg) unless another EU location is operationally preferable;
-- architecture: x86;
-- initial type: `CX43`;
-- image: Ubuntu 24.04;
-- public IPv4: enabled for straightforward administration;
-- IPv6: enabled;
-- backups: optional during bootstrap; enable before the machine becomes the only copy of durable runtime state;
-- labels: `project=app-builder`, `role=agent-runtime`, `env=development`.
-
-`CX43` is intentionally a bootstrap size, not a permanent capacity decision. Before multiple workers run concurrently, benchmark real build/browser/Supabase workloads and rescale within the x86 family if CPU or memory contention is measurable. Prefer a dedicated-CPU `CCX` class when predictable concurrent worker performance becomes more valuable than the shared-instance saving.
-
-## 1. Add an SSH key first
-
-In Hetzner Console, add the administrator's SSH public key under the dedicated project's security settings and select that key when creating the server.
-
-The cloud-init bootstrap depends on `/root/.ssh/authorized_keys` being present. It copies that key to the human-only `builderadmin` account and only then disables root SSH.
-
-Do not create the server using password-only SSH.
-
-## 2. Create a Hetzner Cloud Firewall
-
-Create a firewall such as `app-builder-runtime` and attach it to the server or to the `project=app-builder,role=agent-runtime` label selector.
-
-Inbound:
-
-- TCP 22 from the administrator's current public IPv4 `/32`;
-- optionally TCP 22 from the administrator's IPv6 `/128`.
-
-No other inbound rule is required for the bootstrap host.
-
-Do **not** expose:
-
-- factory service `4310`;
-- Builder Console `5173`;
-- arbitrary Vite/preview ports;
-- OpenCode/server ports;
-- database ports.
-
-Outbound may remain unrestricted during bootstrap because repository access, package installation and approved public-network research require it. The future ExecutionEnvironmentAdapter owns per-task network restrictions.
-
-## 3. Paste the cloud-init
-
-When creating the server, paste the complete contents of `ops/hetzner/cloud-init.yaml` into Hetzner's cloud-init/user-data field.
-
-The bootstrap:
-
-- creates `builderadmin` as the SSH/sudo administrator;
-- creates `appbuilder` as a non-sudo runtime identity that cannot log in over SSH;
-- disables password and root SSH after the admin key is copied;
-- installs a pinned Node 22 version satisfying the repository's `>=22.13` requirement and verifies the Node-published checksum;
-- installs Git, ripgrep, SQLite and general build tools;
-- installs rootless-container prerequisites and Podman for the later `ExecutionEnvironmentAdapter`;
-- creates separate durable state/checkpoint/artifact and disposable workspace directories under `/srv/app-builder`;
-- enables UFW and Fail2ban;
-- opens only SSH on the host firewall;
-- does not clone a private repository, install provider credentials, expose a service, or start autonomous agents.
-
-## 4. Verify the host
-
-After cloud-init completes:
-
-```bash
-ssh builderadmin@SERVER_IP
+```text
+existing Hetzner server
+|
++-- existing Predictor services/users/data   (left alone)
+|
++-- appbuilder Linux user                    (non-sudo, no SSH key)
+    +-- /srv/app-builder/repository
+    +-- /srv/app-builder/runtime
+    +-- /srv/app-builder/workspaces
+    +-- /srv/app-builder/state
+    +-- /srv/app-builder/checkpoints
+    +-- /srv/app-builder/artifacts
+    +-- isolated Node 22 toolchain
+    +-- rootless Podman
+    +-- app-builder-runtime.slice resource cap
+    +-- future AgentRuntimeAdapter/OpenCode workers
 ```
 
-Once the repository has been cloned through an approved GitHub credential/deploy-key path, run:
+A second server is **not** required. Move to a separate host later only if measured App Builder CPU, memory or browser/database workloads materially interfere with the existing application.
+
+## Safety rule for an existing server
+
+Do not apply a new-host cloud-init or reset machine-wide security settings just to install App Builder.
+
+The co-located installer deliberately does **not**:
+
+- change `sshd_config`;
+- add/remove SSH users used by existing projects;
+- reset or replace UFW/iptables/nftables/Hetzner firewall rules;
+- replace the host's global Node/npm version;
+- stop, restart or reconfigure existing Predictor services;
+- reuse Predictor directories, repositories, prompts or secrets;
+- expose new public ports;
+- start App Builder or OpenCode automatically.
+
+## 1. Check available capacity
+
+Before installing, record the current server shape and load:
 
 ```bash
-cd /path/to/app-builder
+nproc
+free -h
+df -h /
+systemctl --failed
+```
+
+The default App Builder slice is intentionally conservative:
+
+- CPU quota: `150%` (up to 1.5 CPU cores worth of sustained time);
+- memory high watermark: `25%` of host RAM;
+- hard memory maximum: `35%` of host RAM;
+- task/process cap: `1024`.
+
+These are protection defaults, not performance targets. Override them during installation only when the existing server has enough spare capacity, for example:
+
+```bash
+sudo \
+  APP_BUILDER_CPU_QUOTA=250% \
+  APP_BUILDER_MEMORY_HIGH=35% \
+  APP_BUILDER_MEMORY_MAX=45% \
+  bash ops/hetzner/install-existing-host.sh
+```
+
+## 2. Install the isolated host baseline
+
+From a checkout of this branch/repository on the existing server:
+
+```bash
+sudo bash ops/hetzner/install-existing-host.sh
+```
+
+The installer:
+
+- creates `appbuilder` if it does not exist;
+- locks its password and removes any `authorized_keys`;
+- does not add it to sudo;
+- creates App Builder-owned directories under `/srv/app-builder`;
+- installs Node 22 under `/opt/app-builder/node`, then exposes it only through the `appbuilder` account's `~/.local/bin`;
+- does not replace the server's existing `/usr/bin/node` or `/usr/local/bin/node`;
+- installs rootless Podman prerequisites for future disposable workspaces;
+- creates `app-builder-runtime.slice` with CPU/memory/task limits;
+- creates `app-builder-run`, the bounded launcher future service/runtime commands can use;
+- writes `/etc/app-builder-host.json` recording that SSH, firewall and global Node were not taken over;
+- starts no new service and installs no model/provider secret.
+
+## 3. Verify isolation
+
+Run:
+
+```bash
 sudo bash ops/hetzner/verify-host.sh
 ```
 
-The verification fails if the runtime user gained sudo, SSH is not hardened, required runtime directories are missing, Node is too old, or factory ports are already listening unexpectedly.
+The check verifies that:
 
-## 5. OpenCode binary: safe to install, not safe to unleash
+- the `appbuilder` account exists and has no sudo authority;
+- it has no SSH authorized key;
+- App Builder directories are owned by that account;
+- its own Node satisfies the repository's `>=22.13` requirement;
+- rootless-container tooling is callable;
+- the resource slice is syntactically valid;
+- the bounded launcher exists;
+- factory/Console ports `4310` and `5173` are not bound publicly;
+- the installation record says host SSH, firewall and global Node were left untouched.
 
-OpenCode is the intended first runtime adapter implementation. Installing its CLI on the host does not make it the factory runtime.
+It deliberately does not judge or rewrite unrelated host firewall/SSH configuration because another application already lives on the machine.
 
-To install the reviewed/pinned CLI for the unprivileged runtime user:
+## 4. Repository placement
+
+Keep the App Builder checkout separate from the existing project's checkout. The intended eventual location is:
+
+```text
+/srv/app-builder/repository
+```
+
+Do not place App Builder inside the Predictor repository or vice versa.
+
+Repository credentials should be App Builder-specific and minimal. Do not copy a broad personal or Predictor token into the `appbuilder` home directory.
+
+## 5. OpenCode binary
+
+Installing OpenCode is safe as a dormant tool; enabling unrestricted autonomous work is not.
+
+After the host baseline:
 
 ```bash
-cd /path/to/app-builder
 sudo bash ops/hetzner/install-opencode.sh
 ```
 
-That script deliberately does **not**:
+This installs the pinned CLI only into `/home/appbuilder/.local` using App Builder's isolated Node/npm toolchain.
 
-- configure OpenAI/Anthropic/other provider secrets;
-- start a public OpenCode service;
-- clone arbitrary repositories;
-- give the `appbuilder` user sudo;
-- enable autonomous loops;
-- bypass factory budgets, ChangeSets, review independence or approval policy.
+It does not:
 
-Provider credentials should eventually be injected by the scoped secret broker for a named task/role/environment. Do not place broad API keys in shell profiles, repository files, Dockerfiles, images or globally readable environment files.
+- configure OpenAI/Anthropic/other provider credentials;
+- start a daemon or public OpenCode endpoint;
+- create autonomous loops;
+- grant sudo;
+- bypass ChangeSets, budgets, independent review or approvals.
 
-## 6. Private access to the current factory stack
+Provider credentials should eventually be injected by a scoped secret broker for a named task/role/environment, not stored in repository files or shell profiles.
 
-The factory service already binds to loopback by design. When it is intentionally run on the host, reach it over SSH forwarding rather than opening its ports publicly:
+## 6. Running App Builder processes without affecting the host
+
+Future service/runtime processes should be launched through the resource slice rather than as unrestricted background processes.
+
+For a simple bounded command:
+
+```bash
+sudo app-builder-run /home/appbuilder/.local/bin/node --version
+```
+
+The future systemd units/AgentRuntimeAdapter should explicitly use `app-builder-runtime.slice` too.
+
+Do not run long-lived OpenCode workers directly as root or as the existing Predictor service account.
+
+## 7. Network exposure
+
+The current factory service/Console should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173` or arbitrary preview ports.
+
+When intentionally running the stack later, access it through the server's existing secure administration path, for example SSH local forwarding:
 
 ```bash
 ssh \
   -L 4310:127.0.0.1:4310 \
   -L 5173:127.0.0.1:5173 \
-  builderadmin@SERVER_IP
+  YOUR_EXISTING_ADMIN_USER@SERVER_IP
 ```
 
-Then local browser access can use `127.0.0.1:4310` and `127.0.0.1:5173` through the tunnel.
+Use the existing server's known-good SSH identity; this setup does not create a replacement administrator account.
 
-A later private API/proxy may replace this operationally, but it must preserve the control-plane authorization boundary rather than turning the development service into a public unauthenticated endpoint.
+## 8. When a second server becomes justified
 
-## 7. Repository access
+Do not pay for another VM pre-emptively. Measure first.
 
-Do not reuse a personal GitHub token from another project on this host.
+A separate App Builder server becomes worthwhile if one or more of these persist despite resource limits:
 
-The preferred host bootstrap path is a dedicated App Builder GitHub credential with the minimum repository permissions needed. Runtime task identities should eventually receive narrower repository/worktree scope through the runtime adapter rather than inheriting the host administrator's GitHub identity.
+- App Builder builds noticeably slow or destabilise the Predictor;
+- Chromium/browser evidence regularly causes memory pressure or OOM kills;
+- local Supabase/Postgres testing creates unacceptable I/O contention;
+- multiple concurrent workers need more CPU than the shared slice can safely grant;
+- operational/security requirements eventually demand a machine boundary rather than a user/container boundary.
 
-## 8. What remains deliberately deferred
+Because durable App Builder state lives under its own `/srv/app-builder` tree and runtime providers are adapters, migration to another server later should be an infrastructure move rather than an application redesign.
 
-This host can exist now while Phase 4 work continues, but these pieces remain Phase 3.5C/5 runtime work:
+## 9. Still deliberately deferred
 
-- `ExecutionEnvironmentAdapter` implementation and per-task disposable sandbox lifecycle;
-- `AgentRuntimeAdapter` implementation around OpenCode;
-- bounded worker pool and scheduling;
+This setup prepares the host boundary only. These remain later runtime work:
+
+- `ExecutionEnvironmentAdapter` per-task sandbox lifecycle;
+- `AgentRuntimeAdapter` around OpenCode;
+- bounded worker scheduling;
 - scoped secret broker;
-- environment identity enforcement for development/preview/production;
+- development/preview/production environment identity enforcement;
 - model/cost routing;
-- per-role fresh-session launch and context packet delivery;
+- per-role fresh-session/context packet delivery;
 - checkpoint/resume orchestration;
-- structured OpenCode progress/usage ingestion into the Event Ledger;
+- structured progress/usage ingestion into the Event Ledger;
 - independent cross-model reviewer execution;
 - production deploy/database approval integration.
 
-The important result of this bootstrap is that none of those later features need unrestricted root access or a rebuild of the basic host security model.
+The important result is that we can build those capabilities on the server you already pay for without giving App Builder root access or coupling it to the Predictor runtime.

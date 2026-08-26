@@ -122,6 +122,31 @@ export function assertPinnedImage(image, label = 'Attempt image') {
 }
 
 /**
+ * Resolve a declared task image to a pinned identity.
+ *
+ * The registry is the only place an image identity is declared, so an attempt
+ * cannot end up running whatever a tag happened to point at. An image that has
+ * not been built and its digest recorded resolves to a refusal carrying the
+ * build command, rather than to something plausible.
+ */
+export function resolveTaskImage(registry, imageId) {
+  const id = text(imageId, 'Task image id');
+  const entry = registry?.images?.[id];
+  if (!entry) {
+    const known = Object.keys(registry?.images ?? {}).join(', ') || 'none';
+    throw new Error(`No task image ${id} is declared. Declared images: ${known}.`);
+  }
+  if (!entry.digest) {
+    throw new Error(
+      `Task image ${id} has no recorded digest, so nothing is pinned to run. `
+      + `Build it with \`${entry.buildCommand ?? 'ops/hetzner/build-task-image.sh'}\` and record the digest in config/task-images.json. `
+      + 'Refusing rather than resolving a floating tag.',
+    );
+  }
+  return assertPinnedImage({ id, reference: entry.reference, digest: entry.digest }, `Task image ${id}`);
+}
+
+/**
  * Bind everything an attempt runs with, once, explicitly.
  *
  * The grant is minted here — inside trusted control-plane code, with the

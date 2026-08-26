@@ -19,6 +19,7 @@ import process from 'node:process';
 import { EXECUTION_DRIVER_METHODS, assertExecutionDriver } from '@app-builder/control-plane/execution-adapter';
 import { ATTEMPT_EXIT_REASONS, ATTEMPT_STATES } from '@app-builder/control-plane/attempts';
 import { evaluateRuntimeReadiness, indexRuntimeReadinessGate, unearnedRuntimeReadyRoles } from '@app-builder/control-plane/runtime-readiness';
+import { resolveTaskImage } from '@app-builder/control-plane/attempts';
 
 import { createLocalExecutionDriver } from './lib/execution-driver-local.mjs';
 import { createPodmanExecutionDriver } from './lib/execution-driver-podman.mjs';
@@ -40,6 +41,10 @@ for (const relative of [
   'tooling/runtime-canary.mjs',
   'tooling/runtime-lifecycle.test.mjs',
   'config/runtime-readiness.json',
+  'config/task-images.json',
+  'packages/control-plane/src/egress-policy.js',
+  'ops/images/app-builder-task/Containerfile',
+  'tooling/task-image-egress.test.mjs',
 ]) {
   if (!fs.existsSync(path.join(root, relative))) fail(`Missing runtime file: ${relative}`);
 }
@@ -114,6 +119,71 @@ try {
   fail(error instanceof Error ? error.message : String(error));
 }
 
+// --- The pinned task image ---------------------------------------------------
+try {
+  const images = readJson('config/task-images.json');
+  const declared = Object.entries(images.images ?? {});
+  if (declared.length === 0) fail('config/task-images.json declares no task image, so no attempt can name one.');
+  for (const [id, image] of declared) {
+    if (String(image.reference ?? '').includes(':')) fail(`Task image ${id} carries a tag in its reference. The digest is the identity.`);
+    if (image.digest !== null && !/^sha256:[0-9a-f]{64}$/.test(String(image.digest))) {
+      fail(`Task image ${id} has a digest that is not a sha256 content digest: ${image.digest}`);
+    }
+    const containerfile = path.join(root, String(image.containerfile ?? ''));
+    if (!image.containerfile || !fs.existsSync(containerfile)) {
+      fail(`Task image ${id} names a Containerfile that does not exist: ${image.containerfile}`);
+      continue;
+    }
+    const source = fs.readFileSync(containerfile, 'utf8');
+    for (const line of source.split('\n').filter((entry) => entry.startsWith('FROM'))) {
+      if (!line.includes('@sha256:')) fail(`${image.containerfile} has a FROM without a digest: a floating base makes the built digest meaningless.`);
+    }
+    if (image.base?.digest && !source.includes(image.base.digest)) {
+      fail(`${image.containerfile} does not pin the base digest config/task-images.json records for ${id}.`);
+    }
+    if (!source.includes('USER 1000:1000')) fail(`${image.containerfile} must run as the unprivileged uid the execution spec assigns.`);
+
+    // Resolve it the way an attempt would. An image whose digest has not been
+    // recorded is a known-pending state, not a doctor failure — but it must
+    // fail closed with the build command rather than resolve to something
+    // plausible, and that is what this checks.
+    try {
+      const resolved = resolveTaskImage(images, id);
+      console.log(`Runtime doctor: task image ${id} is pinned at ${resolved.pinned}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (image.digest === null && /no recorded digest/.test(message)) {
+        console.log(`Runtime doctor: task image ${id} is not built on this host yet; attempts naming it fail closed with \`${image.buildCommand}\`.`);
+      } else {
+        fail(`Task image ${id} does not resolve: ${message}`);
+      }
+    }
+  }
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
+}
+
+// --- The egress profile ------------------------------------------------------
+try {
+  for (const script of ['ops/hetzner/build-task-image.sh', 'ops/hetzner/install-egress-network.sh', 'ops/hetzner/verify-egress-profile.sh']) {
+    if (!fs.existsSync(path.join(root, script))) fail(`Missing ops script: ${script}`);
+  }
+  const verifier = fs.readFileSync(path.join(root, 'ops/hetzner/verify-egress-profile.sh'), 'utf8');
+  const driver = fs.readFileSync(path.join(root, 'tooling/lib/execution-driver-podman.mjs'), 'utf8');
+  // The hosted proof and the code that requires it must name the same file, or
+  // the profile can be "verified" into a place nothing reads.
+  if (!verifier.includes('/etc/app-builder/egress-profile.json') || !driver.includes('/etc/app-builder/egress-profile.json')) {
+    fail('The egress verifier and the execution driver must name the same attestation path.');
+  }
+  // The verifier must derive its forbidden destinations from the policy rather
+  // than restate them, or the hosted proof drifts from what CI checks.
+  if (!verifier.includes('forbiddenEgressProbeTargets')) {
+    fail('The egress verifier must generate its probe list from packages/control-plane/src/egress-policy.js, not from a hand-written list.');
+  }
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
+}
+
 try {
   const scripts = readJson('package.json').scripts ?? {};
   if (!String(scripts.doctor ?? '').includes('runtime-doctor.mjs')) fail('Root doctor must include the runtime execution check.');
@@ -124,4 +194,4 @@ try {
 }
 
 if (failed) process.exit(1);
-console.log('Runtime doctor: attempt lifecycle, neutral driver contract and the runtime-ready promotion gate are intact; no role is promoted.');
+console.log('Runtime doctor: attempt lifecycle, neutral driver contract, pinned task image, fail-closed egress profile and the runtime-ready promotion gate are intact; no role is promoted.');

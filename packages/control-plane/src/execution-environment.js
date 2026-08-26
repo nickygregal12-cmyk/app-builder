@@ -164,7 +164,7 @@ export function createExecutionEnvironmentSpec(input) {
       // puts an attempt's bearer authority into the host process table, where
       // every other user of a shared host can read it; a 0600 file the
       // sandbox mounts is authority the sandbox holds and nobody else does.
-      grantFile: grantFile === null ? null : grantFile,
+      grantFile,
       containerGrantPath: '/run/app-builder/grant',
       grantFileEnvironmentVariable: 'APP_BUILDER_AGENT_GRANT_FILE',
       socketEnvironmentVariable: 'APP_BUILDER_AGENT_BROKER_SOCKET',

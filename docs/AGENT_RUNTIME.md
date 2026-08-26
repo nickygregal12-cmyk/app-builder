@@ -359,6 +359,76 @@ proof under a green tick has already cost this repository one false pass.
 Neither mode is a hosted proof. `ops/hetzner/verify-agent-boundary.sh` remains
 the operator's proof that the host's rootless Podman is configured this way.
 
+#### The pinned task image
+
+`config/task-images.json` is the only place a task image identity is declared.
+An attempt records the image it ran **by content digest**, and three separate
+places refuse a floating tag: `podmanRunArgs` (which already did),
+`assertPinnedImage` in the attempt record, and `resolveTaskImage`, which
+refuses an image whose digest has not been recorded and returns the build
+command instead of something plausible.
+
+`ops/images/app-builder-task/Containerfile` is the first one. It is minimal by
+intent — Node, npm, git, CA certificates — because everything in a task sandbox
+is reachable by an untrusted task, and a tool added speculatively is a tool an
+attempt can be steered into using. It runs as uid 1000, strips every setuid and
+setgid bit so a future base-image change cannot quietly reintroduce an
+escalation route, carries no container client and no `sudo`, works with a
+read-only root and a `noexec` /tmp, and declares no `ENTRYPOINT` — the command
+an attempt runs is the adapter's to supply. Its base is pinned by a digest
+resolved from the registry and recorded in the manifest, where a doctor checks
+the two agree.
+
+`ops/hetzner/build-task-image.sh` builds it as `appbuilder`, runs the
+image-boundary checks against the built image, and prints the digest with the
+exact edit to make. Recording the digest is a reviewed change on purpose:
+repointing a tag underneath a proven boundary is what the pin exists to prevent.
+
+The manifest's digest is currently `null`. Nothing has been built on a host
+yet, so every attempt naming `task-baseline` fails closed with the build
+command — which is the correct state, not an omission.
+
+#### The public-egress network profile
+
+`network=none` is the default and the profile #55's acceptance proved. A few
+roles — research, brand research, source ingestion — have policies that allow
+`network.public` outright, and this is the only way they get it. **Public
+egress must not mean host-network access.**
+
+`packages/control-plane/src/egress-policy.js` is the executable definition of
+the difference. It classifies a destination and refuses everything that is not
+the public internet: the Factory control plane, host loopback, RFC1918,
+link-local, cloud metadata, unique-local IPv6, carrier-grade NAT (where
+Tailscale addresses live), and the host's own global addresses. It is code
+rather than a list in a shell script because `127.0.0.1`, `127.1`, `0x7f.1`,
+`2130706433`, `::ffff:127.0.0.1` and `[::1]` are the same destination, and a
+filter that knows only the first spelling is a filter a task can walk around.
+A DNS name is never allowed on its own: it classifies as `dns-name` and must be
+resolved before it can be permitted, because reporting an unresolved name as
+public is what makes DNS rebinding work.
+
+Hosted enforcement is `ops/hetzner/install-egress-network.sh` — a bounded
+`app-builder-egress` bridge with `isolate=true`, an nftables ruleset, and an
+anchor unit whose only job is to keep the rootless network namespace (and
+therefore the ruleset) from being torn down when the last container exits.
+
+`ops/hetzner/verify-egress-profile.sh` is the gate. It generates its
+forbidden-destination list from the control-plane policy rather than restating
+it, proves the refusals from inside a real `--network=app-builder-egress`
+container against a Factory confirmed live, and **also** proves public DNS and
+HTTPS still work — a profile that reaches nothing has silently become `none`.
+
+It fails closed twice over. The Podman driver refuses `public-egress-only` when
+the named network is absent, and again when
+`/etc/app-builder/egress-profile.json` is missing, covers a different network,
+records a failure or has lapsed. An untested, failed or stale filter is not a
+filter, and the driver never falls back to an unfiltered network.
+
+**None of this is proved on the host yet.** The CI tests prove the declaration,
+the resolver, the argv translation, the whole destination policy and the
+fail-closed behaviour. They do not prove the hosted filter, and the two must
+not be read as one.
+
 #### What this milestone does not do
 
 - **it promotes no role.** All 38 stay `runtimeReady: false`.
@@ -370,6 +440,62 @@ the operator's proof that the host's rootless Podman is configured this way.
   infrastructure evidence alone still refuses promotion;
 - **no provider credential, schedule or autonomous loop is introduced.**
   `config/factory-status.json` is unchanged.
+
+### Recommended next bounded milestone: one low-risk real model canary
+
+Everything above is deliberately provider-free. The next milestone is the
+smallest thing that stops being: **one bounded, real, model-powered agent
+attempt**, run once, reviewed by a person.
+
+Its shape should be as narrow as it sounds:
+
+- **one credential**, for one provider, readable only by the broker-side
+  process and never present in the sandbox's environment or argv;
+- **one role** — `frontend-implementation` is the right first choice: it is a
+  creator with a genuinely bounded mutation scope, an independent reviewer
+  already registered, and a `none` network profile, so the canary does not
+  depend on the egress profile being hosted-proved first;
+- **one task**, on a throwaway project, with acceptance criteria a
+  deterministic check can settle;
+- **one sandbox**, the pinned `task-baseline` image, `network=none`;
+- **a hard budget** — a small token and cost ceiling, a single iteration, and
+  the existing loop guards authoritative over anything the model reports.
+
+What must exist before it is worth running:
+
+1. the pinned image built and its digest recorded on the host (§6c);
+2. `ops/hetzner/verify-agent-boundary.sh` re-run after that image exists;
+3. a scoped secret path that gives the runtime a provider key **outside** the
+   sandbox — the adapter seam below, not an environment variable on the attempt;
+4. an explicit kill switch and a recorded decision to enable it once.
+
+What it is **not**: a schedule, a loop, a second attempt, a promotion. Its only
+output is evidence for the `model-attempt-evidence` requirement in
+`config/runtime-readiness.json`, for exactly one role, reviewed by a person
+before that flag moves. Nothing in this lane enables it, and nothing should
+enable it automatically.
+
+### The OpenCode adapter seam
+
+OpenCode is the first runtime implementation, not the architecture. The seam it
+will sit behind already exists and is deliberately small: `ExecutionDriver` is
+seven verbs, and an `AgentRuntimeAdapter` for a model session belongs *inside*
+an attempt, not beside it — the attempt is what is bounded, budgeted and
+disposed of, and a model session that outlived its attempt would be outside
+every guard in this document.
+
+Two rules for when that adapter is written:
+
+- **no runtime identifier reaches a stable contract.** An OpenCode session id
+  belongs in an attempt's transient runtime state, never in a generated
+  application, a project contract, a ChangeSet or a checkpoint. A future
+  runtime must be substitutable without a migration;
+- **no provider credential reaches a sandbox.** The same rule the capability
+  grant already follows: the trusted side holds the key and the sandbox holds
+  scoped authority. A provider key delivered into an attempt would undo the
+  boundary #55 closed, by a different route.
+
+No provider credential is introduced anywhere in this lane.
 
 ### Materialising roles into a runtime, later
 

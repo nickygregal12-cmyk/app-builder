@@ -11,6 +11,9 @@ const scripts = [
   'ops/hetzner/observe-runtime.sh',
   'ops/hetzner/verify-host.sh',
   'ops/hetzner/verify-agent-boundary.sh',
+  'ops/hetzner/build-task-image.sh',
+  'ops/hetzner/install-egress-network.sh',
+  'ops/hetzner/verify-egress-profile.sh',
 ];
 
 const readOnlyMutationPatterns = [
@@ -177,4 +180,57 @@ test('the agent broker is opt-in, socket-bound and never publishes a port', () =
   assert.match(source, /EnvironmentFile=\$\{ETC_DIR\}\/agent-broker\.env/);
   // A socket is not a port. Nothing here may add a listener.
   assert.equal(/APP_BUILDER_AGENT_BROKER_PORT/.test(source), false);
+});
+test('the task image build runs as the runtime user and refuses to record an unverified digest', () => {
+  const source = readFileSync('ops/hetzner/build-task-image.sh', 'utf8');
+  // Building as root would produce an image the isolated service user cannot
+  // run, and would put a root-owned layer store on a shared host.
+  assert.match(source, /runuser -u "\$RUNTIME_USER"/);
+  assert.equal(/podman build[^\n]*--network=host/.test(source), false);
+  // A floating base makes the built digest meaningless.
+  assert.match(source, /has a FROM without a digest/);
+  assert.match(source, /does not pin the base digest recorded in config\/task-images\.json/);
+  // The image-boundary checks, each one a property the sandbox spec assumes.
+  for (const property of ['non-root user', 'no container or podman client', 'no privilege-escalation helper', 'no setuid binary', 'read-only root filesystem']) {
+    assert.ok(source.includes(property), `the build must check for a ${property}`);
+  }
+  assert.match(source, /Do not record this digest/);
+  // Recording the digest stays a reviewed change; the script prints the edit.
+  assert.equal(/jq[^\n]*>\s*"?\$manifest/.test(source), false, 'the build script must not rewrite config/task-images.json itself');
+  assert.equal(/systemctl\s+(?:--\S+\s+)*(?:start|enable)\b/.test(source), false);
+});
+
+test('the egress network installer creates the bounded network and starts nothing', () => {
+  const source = readFileSync('ops/hetzner/install-egress-network.sh', 'utf8');
+  assert.match(source, /podman network create/);
+  assert.match(source, /--opt isolate=true/);
+  // Public egress must not become host networking by another name.
+  assert.equal(/--network=host|--net=host/.test(source), false);
+  assert.equal(/--privileged/.test(source), false);
+  // It installs; it does not enable. The operator does that after reading it.
+  assert.equal(/^\s*(?:sudo\s+)?systemctl\s+(?:--\S+\s+)*(?:start|enable|restart)\b/m.test(source), false);
+  // Every class the control-plane egress policy forbids has a rule.
+  for (const range of ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '169.254.0.0/16', '127.0.0.0/8', '100.64.0.0/10', 'fc00::/7', 'fe80::/10', '::1/128']) {
+    assert.ok(source.includes(range), `the ruleset must drop ${range}`);
+  }
+  // The rootless network namespace is torn down when the last container exits,
+  // taking the ruleset with it. The anchor is what stops that.
+  assert.match(source, /app-builder-egress-anchor/);
+  assert.match(source, /rootless-netns/);
+});
+
+test('the egress verifier proves both halves and writes the attestation only on a pass', () => {
+  const source = readFileSync('ops/hetzner/verify-egress-profile.sh', 'utf8');
+  // Generated from the policy, never restated: a hand-written list drifts.
+  assert.match(source, /forbiddenEgressProbeTargets/);
+  assert.match(source, /Refusing to fall back to a hand-written list/);
+  // A dead listener would make every "unreachable" result meaningless.
+  assert.match(source, /the refusals below are therefore meaningful/);
+  // A profile that reaches nothing has silently become `none`.
+  assert.match(source, /public DNS resolves/);
+  assert.match(source, /public HTTPS is reachable/);
+  // The attestation is written only after a pass and removed on a failure.
+  assert.match(source, /rm -f "\$ATTESTATION"/);
+  assert.match(source, /The attestation was not written/);
+  assert.equal(/systemctl\s+(?:--\S+\s+)*(?:start|stop|enable|disable|restart)\b/.test(source), false);
 });

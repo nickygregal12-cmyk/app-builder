@@ -4,11 +4,43 @@
   "module": "seo",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
-  "files": ["src/features/seo/index.ts","public/robots.txt","tooling/generate-sitemap.mjs"],
+  "compatibleTemplates": [
+    "react-vite-neutral",
+    "astro-static-content"
+  ],
+  "files": [
+    "src/features/seo/index.ts",
+    "public/robots.txt",
+    "tooling/generate-sitemap.mjs"
+  ],
   "requires": [],
   "requiresAdapters": [],
   "conflicts": [],
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{"prebuild":"node tooling/generate-sitemap.mjs"}},
-  "entry": "src/features/seo/index.ts"
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {
+      "prebuild": "node tooling/generate-sitemap.mjs"
+    }
+  },
+  "entry": "src/features/seo/index.ts",
+  "renderers": {
+    "static-content": {
+      "filesRoot": "renderers/static-content/files",
+      "entry": "src/features/seo/index.ts",
+      "files": [
+        "src/features/seo/index.ts",
+        "src/features/seo/Head.astro",
+        "public/robots.txt",
+        "tooling/generate-sitemap.mjs"
+      ],
+      "package": {
+        "dependencies": {},
+        "devDependencies": {},
+        "scripts": {
+          "prebuild": "node tooling/generate-sitemap.mjs"
+        }
+      }
+    }
+  }
 }

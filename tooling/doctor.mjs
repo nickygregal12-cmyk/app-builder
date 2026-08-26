@@ -2,15 +2,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
 const required = [
   'AGENTS.md', 'docs/ARCHITECTURE.md', 'docs/PRODUCT.md', 'docs/CREDIT-EFFICIENCY.md', 'docs/ROADMAP.md', 'docs/MASTER_PLAN.md',
-  'config/modules.json', 'config/project-types.json', 'config/agent-routing.json', 'config/templates.json', 'config/recipes.json', 'config/adapters.json', 'config/layout-patterns.json', 'config/scenarios.json',
+  'config/modules.json', 'config/project-types.json', 'config/agent-routing.json', 'config/templates.json', 'config/renderers.json', 'config/recipes.json', 'config/adapters.json', 'config/layout-patterns.json', 'config/scenarios.json',
   'schemas/project-manifest.schema.json', 'schemas/build-contract.schema.json', 'schemas/company-profile.schema.json', 'schemas/intake-session.schema.json',
   'schemas/source-reference.schema.json', 'schemas/intake-feedback.schema.json', 'schemas/ambiguity-followup.schema.json', 'schemas/template.schema.json', 'schemas/recipe.schema.json', 'schemas/adapter.schema.json',
   'questionnaires/v1/base.json', 'tooling/create-app.mjs', 'tooling/recipe.mjs', 'tooling/generate-acceptance.mjs', 'tooling/supabase-security.test.mjs', 'tooling/phase2-complete.test.mjs',
-  'templates/react-vite-neutral/template.json', 'templates/react-vite-neutral/files/src/design/tokens.css', 'templates/react-vite-neutral/files/src/scenarios/index.ts',
+  'templates/react-vite-neutral/template.json', 'templates/astro-static-content/template.json',
+  'templates/shared/presentation/tokens.css', 'templates/shared/presentation/styles.css', 'templates/react-vite-neutral/files/src/scenarios/index.ts',
   'adapters/supabase/adapter.json', 'adapters/netlify/adapter.json',
   'recipes/seo/recipe.json', 'recipes/feature-flags/recipe.json', 'recipes/auth/recipe.json', 'recipes/profiles/recipe.json', 'recipes/organisations/recipe.json', 'recipes/admin/recipe.json',
   'recipes/uploads/recipe.json', 'recipes/analytics/recipe.json', 'recipes/observability/recipe.json', 'recipes/lead-generation/recipe.json',
@@ -44,6 +46,7 @@ try {
   const modules = JSON.parse(fs.readFileSync(path.join(root, 'config/modules.json'), 'utf8')).modules ?? {};
   const projectTypes = JSON.parse(fs.readFileSync(path.join(root, 'config/project-types.json'), 'utf8')).projectTypes ?? {};
   const templates = JSON.parse(fs.readFileSync(path.join(root, 'config/templates.json'), 'utf8'));
+  const renderers = JSON.parse(fs.readFileSync(path.join(root, 'config/renderers.json'), 'utf8'));
   const recipes = JSON.parse(fs.readFileSync(path.join(root, 'config/recipes.json'), 'utf8'));
   const adapters = JSON.parse(fs.readFileSync(path.join(root, 'config/adapters.json'), 'utf8'));
   const layouts = JSON.parse(fs.readFileSync(path.join(root, 'config/layout-patterns.json'), 'utf8'));
@@ -56,12 +59,71 @@ try {
     }
     const layoutId = layouts.projectTypeDefaults?.[projectType];
     if (!layouts.patterns?.[layoutId]) { console.error(`Project type ${projectType} has no valid layout pattern.`); failed = true; }
-    const templateId = templates.projectTypeDefaults?.[projectType];
+    // Phase 4.2: a project type selects a renderer, and the renderer names the
+    // template. Both hops are checked, because a project type whose renderer
+    // names a template that does not support it would be a build that fails at
+    // generation rather than a registry that says so here.
+    const rendererId = renderers.projectTypeDefaults?.[projectType];
+    const renderer = renderers.renderers?.[rendererId];
+    if (!renderer) { console.error(`Project type ${projectType} selects renderer ${String(rendererId)}, which the renderer registry does not declare.`); failed = true; continue; }
+    const templateId = renderer.template;
     const entry = templates.templates?.[templateId];
-    if (!entry || entry.status !== 'ready') { console.error(`Project type ${projectType} has no ready default template.`); failed = true; continue; }
+    if (!entry || entry.status !== 'ready') { console.error(`Renderer ${rendererId} (project type ${projectType}) names template ${String(templateId)}, which is not ready.`); failed = true; continue; }
     const definition = JSON.parse(fs.readFileSync(path.join(root, entry.path, 'template.json'), 'utf8'));
     if (definition.id !== templateId || definition.version !== entry.version || !definition.projectTypes?.includes(projectType)) {
       console.error(`Template registry mismatch for ${templateId} / ${projectType}.`); failed = true;
+    }
+  }
+
+  // Every renderer is implemented by exactly one ready template, and that
+  // template agrees which renderer it implements. Two templates claiming one
+  // renderer, or a template selected by a renderer it does not implement, is a
+  // registry that can pick either.
+  const rendererIds = new Set(Object.keys(renderers.renderers ?? {}));
+  for (const [rendererId, renderer] of Object.entries(renderers.renderers ?? {})) {
+    const entry = templates.templates?.[renderer.template];
+    if (!entry || entry.status !== 'ready') { console.error(`Renderer ${rendererId} names template ${String(renderer.template)}, which is not a ready template.`); failed = true; continue; }
+    if (entry.renderer !== rendererId) { console.error(`Renderer ${rendererId} names template ${renderer.template}, which declares it implements ${String(entry.renderer)}.`); failed = true; }
+  }
+  for (const [templateId, entry] of Object.entries(templates.templates ?? {})) {
+    if (entry.renderer && !rendererIds.has(entry.renderer)) { console.error(`Template ${templateId} implements unknown renderer ${entry.renderer}.`); failed = true; }
+    const definition = JSON.parse(fs.readFileSync(path.join(root, entry.path, 'template.json'), 'utf8'));
+    if (definition.renderer !== entry.renderer) { console.error(`Template ${templateId} declares renderer ${String(definition.renderer)} but the registry records ${String(entry.renderer)}.`); failed = true; }
+    for (const shared of definition.sharedFiles ?? []) {
+      if (!fs.existsSync(path.join(root, 'templates/shared', shared.from))) { console.error(`Template ${templateId} declares missing shared presentation file: ${shared.from}`); failed = true; }
+    }
+  }
+  for (const override of renderers.capabilityOverrides ?? []) {
+    if (!rendererIds.has(override.renderer)) { console.error(`Renderer capability override targets unknown renderer ${String(override.renderer)}.`); failed = true; }
+    for (const moduleName of override.modules ?? []) {
+      if (!modules[moduleName]) { console.error(`Renderer capability override names unknown module ${moduleName}.`); failed = true; }
+    }
+  }
+
+  /**
+   * Every implementation a contributor declares actually exists.
+   *
+   * A recipe or adapter declares a base file set and may declare one per
+   * renderer. Both are checked from the same walk, so a renderer variant whose
+   * files were never written is a doctor failure rather than a build that
+   * copies nothing and reports success.
+   */
+  function checkContributorFiles(kind, id, contributorPath, definition) {
+    const sets = [{ label: 'base', filesRoot: definition.filesRoot ?? 'files', files: definition.files ?? [] }];
+    for (const [rendererId, variant] of Object.entries(definition.renderers ?? {})) {
+      if (!rendererIds.has(rendererId)) { console.error(`${kind} ${id} declares an implementation for unknown renderer ${rendererId}.`); failed = true; continue; }
+      const template = renderers.renderers[rendererId].template;
+      if (!(definition.compatibleTemplates ?? []).includes(template)) {
+        console.error(`${kind} ${id} implements renderer ${rendererId} but does not list its template ${template} as compatible, so it could never be selected.`); failed = true;
+      }
+      sets.push({ label: rendererId, filesRoot: variant.filesRoot ?? definition.filesRoot ?? 'files', files: variant.files ?? definition.files ?? [] });
+    }
+    for (const set of sets) {
+      for (const relative of set.files) {
+        if (!fs.existsSync(path.join(root, contributorPath, set.filesRoot, relative))) {
+          console.error(`${kind} ${id} (${set.label}) declares missing managed file: ${relative}`); failed = true;
+        }
+      }
     }
   }
 
@@ -72,9 +134,7 @@ try {
     if (definition.id !== adapterId || definition.version !== entry.version || definition.kind !== entry.kind || definition.status !== entry.status) {
       console.error(`Adapter registry mismatch for ${adapterId}.`); failed = true;
     }
-    for (const relative of definition.files ?? []) {
-      if (!fs.existsSync(path.join(root, entry.path, 'files', relative))) { console.error(`Adapter ${adapterId} declares missing file: ${relative}`); failed = true; }
-    }
+    checkContributorFiles('Adapter', adapterId, entry.path, definition);
   }
 
   for (const [recipeId, entry] of Object.entries(recipes.recipes ?? {})) {
@@ -92,9 +152,7 @@ try {
     for (const adapterId of definition.requiresAdapters ?? []) {
       if (adapters.adapters?.[adapterId]?.status !== 'ready') { console.error(`Recipe ${recipeId} requires unavailable adapter ${adapterId}.`); failed = true; }
     }
-    for (const relative of definition.files ?? []) {
-      if (!fs.existsSync(path.join(root, entry.path, 'files', relative))) { console.error(`Recipe ${recipeId} declares missing managed file: ${relative}`); failed = true; }
-    }
+    checkContributorFiles('Recipe', recipeId, entry.path, definition);
     for (const relative of definition.database?.fragments ?? []) {
       if (!fs.existsSync(path.join(root, entry.path, relative))) { console.error(`Recipe ${recipeId} declares missing database fragment: ${relative}`); failed = true; }
     }
@@ -102,6 +160,27 @@ try {
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   failed = true;
+}
+
+/**
+ * Nothing the factory generates from may be invisible to a fresh clone.
+ *
+ * `.gitignore` carries rules aimed at generated output — `generated/`, `dist/`,
+ * `.tmp/` — and a template ships its own placeholder module at one of those
+ * paths. An ignored file is still there for whoever wrote it and simply absent
+ * in CI, so the failure arrives as a missing file in a checkout rather than as
+ * a mistake at the point it was made.
+ */
+try {
+  const ignored = spawnSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', 'templates', 'recipes', 'adapters'], { cwd: root, encoding: 'utf8' });
+  if (ignored.status === 0) {
+    for (const file of ignored.stdout.split('\n').map((line) => line.trim()).filter(Boolean)) {
+      console.error(`Factory source is git-ignored and would be missing from a fresh clone: ${file}`);
+      failed = true;
+    }
+  }
+} catch {
+  // A checkout without git still runs every other check.
 }
 
 const scanRoots = ['apps', 'packages', 'config', 'schemas', 'questionnaires', 'tooling', 'templates', 'recipes', 'adapters', 'tests'];
@@ -117,4 +196,4 @@ for (const base of scanRoots) {
 }
 
 if (failed) process.exit(1);
-console.log('App Builder doctor: intake, templates, adapters, ready defaults, layouts, scenarios, recipes, database fragments, browser acceptance and contamination guard are valid.');
+console.log('App Builder doctor: intake, renderers, templates, adapters, ready defaults, layouts, scenarios, recipes, renderer implementations, database fragments, browser acceptance and contamination guard are valid.');

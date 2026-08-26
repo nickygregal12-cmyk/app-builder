@@ -1,0 +1,75 @@
+---
+import type { PageSpec, ProjectComposition, SectionSpec } from '../../lib/composition';
+import { binding, text } from '../../lib/composition';
+import { composition } from '../../generated/composition';
+import { project } from '../../generated/project';
+
+interface Props { page: PageSpec }
+const { page } = Astro.props;
+
+const composed = composition as unknown as ProjectComposition;
+const sectionMap = new Map(composed.sections.map((section) => [section.id, section]));
+const sections = page.sectionIds.map((id) => sectionMap.get(id)).filter((section): section is SectionSpec => Boolean(section));
+
+/**
+ * A description of *this* page, not of the project.
+ *
+ * The application renderer gives every route the same sentence, because it only
+ * ever has one document to describe. Here the page's own opening copy is
+ * available, and it is real business copy the composer already placed with
+ * provenance — using it is reporting what the page says rather than inventing a
+ * claim about it. Where a page has no copy of its own the project's primary
+ * goal still stands, which is exactly what shipped before.
+ */
+const DESCRIPTION_LIMIT = 160;
+
+function describe(): string {
+  const hero = sections.find((section) => section.type === 'hero');
+  const candidates = [
+    hero ? text(binding(hero, 'body')?.value) : '',
+    ...sections.map((section) => text(binding(section, 'body')?.value)),
+    project.primaryGoal,
+  ];
+  const chosen = candidates.find((value) => value.trim().length > 0) ?? '';
+  const collapsed = chosen.replace(/\s+/g, ' ').trim();
+  if (collapsed.length <= DESCRIPTION_LIMIT) return collapsed;
+  // Truncate on a word boundary rather than mid-word. A description is cut
+  // short by every consumer anyway; being cut short mid-syllable is ours.
+  const cut = collapsed.slice(0, DESCRIPTION_LIMIT);
+  const boundary = cut.lastIndexOf(' ');
+  return `${(boundary > 80 ? cut.slice(0, boundary) : cut).replace(/[,;:.\s]+$/, '')}…`;
+}
+
+const description = describe();
+const title = page.title?.trim() ? page.title : project.name;
+
+/**
+ * Absolute addresses need the site's own origin, and nothing here invents one.
+ *
+ * With no `PUBLIC_SITE_URL` the build emits no canonical, no `og:url` and no
+ * structured data, because every one of those is a claim about where this site
+ * lives. The same rule the application renderer already follows.
+ */
+const siteUrl = (import.meta.env.PUBLIC_SITE_URL ?? '').replace(/\/$/, '');
+const canonical = siteUrl ? new URL(page.path.replace(/^\/+/, ''), `${siteUrl}/`).toString() : null;
+
+// Only what the factory can support from what it knows. Richer typed entities —
+// Organization, LocalBusiness, Service, FAQPage — are Phase 4.2D and need
+// trusted knowledge behind every field, so nothing beyond the site itself is
+// asserted here.
+const structuredData = siteUrl
+  ? { '@context': 'https://schema.org', '@type': 'WebSite', name: project.name, url: `${siteUrl}/` }
+  : null;
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={project.name} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{canonical && <link rel="canonical" href={canonical} />}
+{canonical && <meta property="og:url" content={canonical} />}
+{structuredData && <script type="application/ld+json" data-app-builder-seo="website" set:html={JSON.stringify(structuredData)} />}

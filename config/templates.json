@@ -1,10 +1,12 @@
 {
   "version": 1,
+  "description": "Project templates. Which template a project type uses is not decided here: config/renderers.json selects a renderer and each renderer names its template, so a project type has one renderer and a renderer has one template rather than two registries that can disagree.",
   "templates": {
     "react-vite-neutral": {
       "path": "templates/react-vite-neutral",
       "version": "1.0.0",
       "status": "ready",
+      "renderer": "application",
       "projectTypes": [
         "marketing-site",
         "b2b-saas",
@@ -13,14 +15,16 @@
         "content-site",
         "ai-app"
       ]
+    },
+    "astro-static-content": {
+      "path": "templates/astro-static-content",
+      "version": "1.0.0",
+      "status": "ready",
+      "renderer": "static-content",
+      "projectTypes": [
+        "marketing-site",
+        "content-site"
+      ]
     }
-  },
-  "projectTypeDefaults": {
-    "marketing-site": "react-vite-neutral",
-    "b2b-saas": "react-vite-neutral",
-    "consumer-app": "react-vite-neutral",
-    "internal-tool": "react-vite-neutral",
-    "content-site": "react-vite-neutral",
-    "ai-app": "react-vite-neutral"
   }
 }

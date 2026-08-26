@@ -1,0 +1,14 @@
+---
+---
+<script is:inline>
+  (function () {
+    function report(error, source) {
+      var normalized = error instanceof Error ? error : new Error(String(error));
+      window.dispatchEvent(new CustomEvent('app:error', {
+        detail: { message: normalized.message, stack: normalized.stack, source: source },
+      }));
+    }
+    window.addEventListener('error', function (event) { report(event.error || event.message, 'window-error'); });
+    window.addEventListener('unhandledrejection', function (event) { report(event.reason, 'unhandled-rejection'); });
+  })();
+</script>

@@ -4,11 +4,35 @@
   "module": "observability",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
+  "compatibleTemplates": [
+    "react-vite-neutral",
+    "astro-static-content"
+  ],
   "entry": "src/features/observability/index.tsx",
-  "files": ["src/features/observability/index.tsx"],
+  "files": [
+    "src/features/observability/index.tsx"
+  ],
   "requires": [],
   "requiresAdapters": [],
   "conflicts": [],
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  },
+  "renderers": {
+    "static-content": {
+      "filesRoot": "renderers/static-content/files",
+      "entry": "src/features/observability/index.ts",
+      "files": [
+        "src/features/observability/index.ts",
+        "src/features/observability/BodyEnd.astro"
+      ],
+      "package": {
+        "dependencies": {},
+        "devDependencies": {},
+        "scripts": {}
+      }
+    }
+  }
 }

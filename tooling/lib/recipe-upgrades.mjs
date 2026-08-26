@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRecipeInstallation, planRecipeUpgrade } from '../../packages/control-plane/src/upgrades.js';
+import { resolveRendererVariant } from './renderer-selection.mjs';
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -27,9 +28,25 @@ function loadRecipeRegistry(factoryRoot) {
   return readJson(path.join(factoryRoot, 'config/recipes.json')).recipes ?? {};
 }
 
-function loadRecipeDefinition(factoryRoot, entry) {
+/**
+ * A recipe as the project actually installed it.
+ *
+ * The inventory hashes the files that were copied in, and which files those
+ * were depends on the renderer the project was built by. Reading the base
+ * declaration for a project built on another renderer would hash files that are
+ * not there and report the installation unresolved.
+ */
+function loadRecipeDefinition(factoryRoot, entry, rendererId = null) {
   const recipeRoot = safeResolve(factoryRoot, entry.path);
-  return { ...readJson(path.join(recipeRoot, 'recipe.json')), root: recipeRoot };
+  return resolveRendererVariant({ ...readJson(path.join(recipeRoot, 'recipe.json')), root: recipeRoot }, rendererId);
+}
+
+function projectRendererId(projectRoot) {
+  try {
+    return readJson(path.join(projectRoot, '.app-builder/project.json')).renderer?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function projectRecipeRecord(projectRoot) {
@@ -40,6 +57,7 @@ export function recordRecipeInstallations(projectDir, { factoryRoot = process.cw
   const projectRoot = path.resolve(projectDir);
   const installed = projectRecipeRecord(projectRoot).installed ?? [];
   const registry = loadRecipeRegistry(factoryRoot);
+  const rendererId = projectRendererId(projectRoot);
   const factoryVersion = readJson(path.join(factoryRoot, 'package.json')).version ?? null;
   const records = [];
   const unresolved = [];
@@ -50,7 +68,7 @@ export function recordRecipeInstallations(projectDir, { factoryRoot = process.cw
       unresolved.push({ recipeId: recipe.id, version: recipe.version, reason: 'Recipe is no longer present in the factory registry.' });
       continue;
     }
-    const definition = loadRecipeDefinition(factoryRoot, entry);
+    const definition = loadRecipeDefinition(factoryRoot, entry, rendererId);
     if (definition.version !== recipe.version) {
       unresolved.push({
         recipeId: recipe.id,
@@ -61,7 +79,7 @@ export function recordRecipeInstallations(projectDir, { factoryRoot = process.cw
     }
     const fileHashes = {};
     for (const relative of definition.files ?? []) {
-      const source = safeResolve(path.join(definition.root, 'files'), relative);
+      const source = safeResolve(path.join(definition.root, definition.filesRoot ?? 'files'), relative);
       const target = safeResolve(projectRoot, relative);
       if (!fs.existsSync(source) || !fs.existsSync(target)) {
         unresolved.push({ recipeId: recipe.id, version: recipe.version, reason: `Managed file missing while recording installation: ${relative}` });
@@ -103,6 +121,7 @@ export function planProjectRecipeUpgrades(projectDir, { factoryRoot = process.cw
   }
   const inventory = readJson(inventoryPath);
   const registry = loadRecipeRegistry(factoryRoot);
+  const rendererId = projectRendererId(projectRoot);
   const proposals = [];
 
   for (const installation of inventory.installed ?? []) {
@@ -122,7 +141,7 @@ export function planProjectRecipeUpgrades(projectDir, { factoryRoot = process.cw
       });
       continue;
     }
-    const definition = loadRecipeDefinition(factoryRoot, entry);
+    const definition = loadRecipeDefinition(factoryRoot, entry, rendererId);
     let proposal = planRecipeUpgrade({
       installation,
       targetVersion: definition.version,

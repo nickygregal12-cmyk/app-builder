@@ -20,8 +20,8 @@ import {
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 
-const TOKENS = fs.readFileSync('templates/react-vite-neutral/files/src/design/tokens.css', 'utf8');
-const STYLES = fs.readFileSync('templates/react-vite-neutral/files/src/styles.css', 'utf8');
+const TOKENS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
+const STYLES = fs.readFileSync('templates/shared/presentation/styles.css', 'utf8');
 
 function manifest(slug) {
   return {

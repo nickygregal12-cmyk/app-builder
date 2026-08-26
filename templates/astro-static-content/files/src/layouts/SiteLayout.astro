@@ -1,0 +1,177 @@
+---
+/**
+ * The frame every route is served in.
+ *
+ * This is the difference the static renderer exists to make. The application
+ * renderer ships one document with an empty root and lets the browser discover
+ * the site; here every route is its own document, with its own title, its own
+ * description and its own content already in the bytes the server sent.
+ *
+ * The design is not re-decided. `design.shellClasses` is compiled by the
+ * factory from the promoted ArtDirectionPlan and its ResponsiveCompositionPlan,
+ * and it is the same class list the application renderer carries — which is why
+ * the same stylesheet, the same tokens and the same promoted visual direction
+ * apply without a second design system underneath them.
+ */
+import type { PageSpec, VisualDirection } from '../lib/composition';
+import { siteHref, binding, itemTitle, text } from '../lib/composition';
+import { composition } from '../generated/composition';
+import { design } from '../generated/design';
+import { project } from '../generated/project';
+import { recipeBodyEnd, recipeHead, installedRecipes } from '../generated/recipes';
+import SocialLinks from '../components/SocialLinks.astro';
+import { currentScenario } from '../scenarios';
+import type { ProjectComposition } from '../lib/composition';
+import '../design/tokens.css';
+import '../generated/brand.css';
+import '../styles.css';
+
+interface Props { page: PageSpec }
+const { page } = Astro.props;
+
+const composed = composition as unknown as ProjectComposition;
+const directed = design as unknown as VisualDirection;
+const NAVIGATION_TREATMENT = directed.artDirection?.responsive?.navigation ?? 'disclosure';
+const MOBILE_HERO = directed.artDirection?.responsive?.mobileHero ?? 'copy-first';
+const SHELL_CLASSES = directed.shellClasses ?? directed.shellClass ?? '';
+
+const navigation = [...composed.pages].filter((entry) => entry.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order);
+
+// Two navigation treatments, because a phone is where a direction's decision
+// about navigation actually shows. The toggle is not rendered at all under
+// `inline-scroll` rather than hidden: a control that is present, focusable and
+// does nothing is worse than absent.
+const disclosureNav = NAVIGATION_TREATMENT !== 'inline-scroll';
+
+// Everything in the footer is business information. Factory diagnostics stay
+// development-only: publishing them put build metadata in front of customers.
+const contact = composed.sections.find((item) => item.type === 'contact-panel');
+const footerEmail = contact ? binding(contact, 'email') : undefined;
+const footerPhone = contact ? binding(contact, 'phone') : undefined;
+const areas = composed.sections.find((item) => item.type === 'location-list');
+const areaItems = areas ? binding(areas, 'items')?.value : null;
+const areaNames = Array.isArray(areaItems) ? areaItems.map(itemTitle).filter(Boolean) : [];
+const year = new Date().getFullYear();
+const socialProfilesValue = contact ? binding(contact, 'profiles')?.value : null;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f5f2" />
+    {/* The base the site is served under, so the Builder bridge can resolve a
+        route inside a Console preview mount without the composition knowing
+        anything about where it is hosted. */}
+    <meta name="app-builder-base" content={import.meta.env.BASE_URL} />
+    {/* A capability recipe owns page metadata. The template owns the document. */}
+    {recipeHead.map((Head) => <Head page={page} />)}
+    {recipeHead.length === 0 && <title>{page.title}</title>}
+  </head>
+  <body>
+    <div class={`site-frame ${SHELL_CLASSES}`.trim()} data-scenario={currentScenario}>
+      <header class={`site-header nav-${NAVIGATION_TREATMENT}`}>
+        <a class="site-brand" href={siteHref('/')}>{project.name}</a>
+        {/* Rendered open, then collapsed by the progressive-enhancement script
+            below. A visitor with no JavaScript keeps every destination; the
+            alternative — shipping it closed and depending on a script to open
+            it — is a navigation that does not exist without JavaScript. */}
+        {disclosureNav && (
+          <button type="button" class="nav-toggle" aria-expanded="true" aria-controls="primary-navigation" hidden>Menu</button>
+        )}
+        <nav id="primary-navigation" aria-label="Primary navigation" data-open="true">
+          {navigation.map((entry) => (
+            <a class={entry.id === page.id ? 'active' : ''} href={siteHref(entry.path)} aria-current={entry.id === page.id ? 'page' : undefined}>{entry.navigation.label}</a>
+          ))}
+        </nav>
+      </header>
+      <main class="app-shell" data-page-id={page.id} data-mobile-hero={MOBILE_HERO}>
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <div class="footer-identity">
+          <strong>{project.name}</strong>
+          {areaNames.length > 0 && <span>{areaNames.join(' · ')}</span>}
+          <small>© {year} {project.name}</small>
+        </div>
+        <div class="footer-contact">
+          {footerEmail && <a href={`mailto:${text(footerEmail.value)}`}>{text(footerEmail.value)}</a>}
+          {footerPhone && <a href={`tel:${text(footerPhone.value).replace(/\s+/g, '')}`}>{text(footerPhone.value)}</a>}
+          {contact && <SocialLinks profiles={socialProfilesValue} />}
+        </div>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          {navigation.map((entry) => <a href={siteHref(entry.path)}>{entry.navigation.label}</a>)}
+        </nav>
+        {import.meta.env.DEV && (
+          <div class="factory-meta" data-development-only="true">
+            <span>{design.label}</span>
+            <span>{installedRecipes.length} deterministic capabilities</span>
+            <span>{composed.warnings.length ? `${composed.warnings.length} composition warnings` : 'Composition complete'}</span>
+          </div>
+        )}
+      </footer>
+    </div>
+
+    {/* Progressive enhancement, inline and tiny, in that order.
+        `is:inline` keeps it out of the bundle, so a marketing page still ships
+        no module graph. Everything below degrades to a usable page when it does
+        not run: the navigation is already open, and edit mode is a Console
+        concern that a deployed visitor never triggers. */}
+    <script is:inline>
+      (function () {
+        var toggle = document.querySelector('.site-header .nav-toggle');
+        var nav = document.getElementById('primary-navigation');
+        if (toggle && nav) {
+          toggle.hidden = false;
+          nav.dataset.open = 'false';
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.addEventListener('click', function () {
+            var open = nav.dataset.open === 'true';
+            nav.dataset.open = open ? 'false' : 'true';
+            toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+            toggle.textContent = open ? 'Menu' : 'Close';
+          });
+        }
+
+        // Builder edit mode. Off unless the page is opened with `?__builder=1`,
+        // so a deployed site never carries selection behaviour. The frame
+        // reports coordinates only — page, section, element key — and the
+        // Console resolves them to a full identity through the service.
+        if (!new URLSearchParams(window.location.search).has('__builder')) return;
+        var pageId = document.querySelector('main')?.dataset.pageId || '';
+        var base = (document.querySelector('meta[name="app-builder-base"]')?.content || '/').replace(/\/+$/, '');
+        function route() {
+          var pathname = window.location.pathname;
+          if (!base || !pathname.startsWith(base)) return pathname || '/';
+          var rest = pathname.slice(base.length);
+          return rest.startsWith('/') ? rest : '/' + rest;
+        }
+        document.documentElement.classList.add('builder-mode');
+        document.addEventListener('click', function (event) {
+          var target = event.target && event.target.closest ? event.target.closest('[data-element-key]') : null;
+          if (!target) return;
+          event.preventDefault();
+          event.stopPropagation();
+          var marked = document.querySelectorAll('.builder-selected');
+          for (var i = 0; i < marked.length; i += 1) marked[i].classList.remove('builder-selected');
+          target.classList.add('builder-selected');
+          var section = target.closest('[data-section-id]');
+          window.parent.postMessage({
+            source: 'app-builder-preview',
+            type: 'element-selected',
+            pageId: pageId,
+            sectionId: target.dataset.sectionId || (section ? section.dataset.sectionId : undefined),
+            elementKey: target.dataset.elementKey,
+            bindingKey: target.dataset.bindingKey || null,
+            origin: target.dataset.bindingOrigin,
+            generated: target.dataset.generated === 'true',
+            value: target.dataset.bindingKey ? target.textContent || '' : '',
+            path: route(),
+          }, '*');
+        }, true);
+        window.parent.postMessage({ source: 'app-builder-preview', type: 'ready', path: route() }, '*');
+      })();
+    </script>
+    {recipeBodyEnd.map((BodyEnd) => <BodyEnd />)}
+  </body>
+</html>

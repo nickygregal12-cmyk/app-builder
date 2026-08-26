@@ -2,32 +2,106 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "App Builder Project Template",
   "type": "object",
-  "required": ["schemaVersion","id","version","status","projectTypes","filesRoot"],
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "status",
+    "projectTypes",
+    "filesRoot"
+  ],
   "properties": {
-    "schemaVersion": {"const":1},
-    "id": {"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-    "version": {"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"},
-    "status": {"enum":["draft","ready","deprecated"]},
-    "projectTypes": {"type":"array","minItems":1,"items":{"enum":["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"]}},
-    "filesRoot": {"type":"string","minLength":1},
-    "managedFiles": {"type":"array","items":{"type":"string"}},
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "ready",
+        "deprecated"
+      ]
+    },
+    "projectTypes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "marketing-site",
+          "b2b-saas",
+          "consumer-app",
+          "internal-tool",
+          "content-site",
+          "ai-app"
+        ]
+      }
+    },
+    "filesRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "managedFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "presentation": {
       "type": "object",
       "description": "How this template renders a composed section, declared by the template that owns the rendering rather than inferred from its DOM. Builder Element Identity is derived from this plus the composition, so a template without it can be generated but cannot be edited by direct manipulation.",
-      "required": ["version","renderer","elementRoles","components"],
+      "required": [
+        "version",
+        "renderer",
+        "elementRoles",
+        "components"
+      ],
       "properties": {
-        "version": {"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"},
-        "renderer": {"type":"string","minLength":1},
-        "tokenSource": {"type":"string","minLength":1},
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "renderer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tokenSource": {
+          "type": "string",
+          "minLength": 1
+        },
         "elementRoles": {
           "type": "object",
           "minProperties": 1,
           "additionalProperties": {
             "type": "object",
-            "required": ["editableProperties","designTokens"],
+            "required": [
+              "editableProperties",
+              "designTokens"
+            ],
             "properties": {
-              "editableProperties": {"type":"array","items":{"enum":["text"]},"uniqueItems":true},
-              "designTokens": {"type":"array","items":{"type":"string","pattern":"^--[a-z0-9-]+$"},"uniqueItems":true}
+              "editableProperties": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "text"
+                  ]
+                },
+                "uniqueItems": true
+              },
+              "designTokens": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^--[a-z0-9-]+$"
+                },
+                "uniqueItems": true
+              }
             },
             "additionalProperties": false
           }
@@ -37,25 +111,64 @@
           "minProperties": 1,
           "additionalProperties": {
             "type": "object",
-            "required": ["id","version","bindingRoles","defaultBindingRole","actions","assets"],
+            "required": [
+              "id",
+              "version",
+              "bindingRoles",
+              "defaultBindingRole",
+              "actions",
+              "assets"
+            ],
             "properties": {
-              "id": {"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-              "version": {"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+$"},
-              "bindingRoles": {"type":"object","additionalProperties":{"type":"string","minLength":1}},
-              "defaultBindingRole": {"type":"string","minLength":1},
-              "actions": {"type":"boolean"},
-              "assets": {"type":"boolean"},
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^\\d+\\.\\d+\\.\\d+$"
+              },
+              "bindingRoles": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "defaultBindingRole": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actions": {
+                "type": "boolean"
+              },
+              "assets": {
+                "type": "boolean"
+              },
               "variants": {
                 "type": "array",
                 "uniqueItems": true,
                 "description": "Presentations this component genuinely renders differently. Only what the template actually implements belongs here: a declared variant that changes nothing is a control that does nothing. An empty list means the component has one presentation and offers no choice.",
                 "items": {
                   "type": "object",
-                  "required": ["id","label","purpose"],
+                  "required": [
+                    "id",
+                    "label",
+                    "purpose"
+                  ],
                   "properties": {
-                    "id": {"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-                    "label": {"type":"string","minLength":1},
-                    "purpose": {"type":"string","minLength":1}
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "purpose": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   },
                   "additionalProperties": false
                 }
@@ -66,6 +179,80 @@
         }
       },
       "additionalProperties": false
+    },
+    "renderer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The renderer this template implements. config/renderers.json names exactly one template per renderer; declaring it here is what lets generation refuse a template that was selected by a renderer it does not implement."
+    },
+    "scenarioEnvVar": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "description": "The environment variable this template's scenario switch reads. Build tools disagree about which prefix reaches the browser, so the handover states the one this template actually uses rather than assuming Vite's."
+    },
+    "sharedFiles": {
+      "type": "array",
+      "description": "Presentation shared with every other renderer, copied from templates/shared at generation. The design tokens and the stylesheet are not owned by a renderer: every Phase 4C/4D decision arrives as a custom property and a class name, and both templates read the same ones. One source is what stops two renderers becoming two design systems.",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "generated": {
+      "type": "object",
+      "description": "Where generated project state is written, and in which form. A recipe registry is the one generated artifact whose shape depends on what the renderer can execute.",
+      "required": [
+        "root",
+        "recipeRegistry"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipeRegistry": {
+          "type": "object",
+          "required": [
+            "file",
+            "format"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "enum": [
+                "react",
+                "static"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "previewEnv": {
+      "type": "object",
+      "description": "Environment this template's dev server needs in order to behave as a supervised child process. The factory starts a preview by spawning the project's own `dev` script and owns its lifecycle, so a dev server that daemonises itself would leave an unstoppable server holding a port and serving a stale build. A template states what it needs here rather than the service learning which framework it is starting.",
+      "additionalProperties": {
+        "type": "string"
+      }
     }
   },
   "additionalProperties": false

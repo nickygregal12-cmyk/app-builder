@@ -18,7 +18,7 @@ import { componentVariants } from '../apps/service/src/section-variants.js';
 
 const TEMPLATE = JSON.parse(fs.readFileSync('templates/react-vite-neutral/template.json', 'utf8'));
 const MANIFEST = loadPresentationManifest();
-const TOKENS_CSS = fs.readFileSync('templates/react-vite-neutral/files/src/design/tokens.css', 'utf8');
+const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
 const REGISTRY = compilePresentationRegistry({ template: TEMPLATE, manifest: MANIFEST });
 
 function projectManifest() {

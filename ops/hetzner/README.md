@@ -360,6 +360,70 @@ It requires the factory service to be running; without a live listener the
 isolation result would prove nothing, so the script fails rather than passing
 quietly. Record its output — the issue is not closed on repository tests alone.
 
+## 6c. Build the pinned task sandbox image
+
+An attempt records the image it ran **by content digest**, and both the runtime
+translation and the attempt record refuse a floating tag. `config/task-images.json`
+is the only place an image identity is declared; nothing resolves one from
+whatever `latest` happens to point at today.
+
+```bash
+sudo bash ops/hetzner/build-task-image.sh
+```
+
+It builds as `appbuilder`, never as root, and enables nothing. Before recording
+anything it runs the image-boundary checks: the image must run as uid 1000,
+carry no Podman or Docker client, no `sudo`/`su`, no setuid binary, start with a
+read-only root filesystem, and still be able to write a mounted workspace. A
+failure there means the digest is **not** recorded.
+
+On success it prints the content digest and the exact edit to make:
+
+```text
+    .images["task-baseline"].digest = "sha256:…"
+```
+
+Record it in `config/task-images.json` as a reviewed change. Repointing a tag
+underneath a proven boundary is exactly what the digest pin exists to prevent,
+so this is deliberately not automatic. Until the digest is recorded, every
+attempt naming `task-baseline` fails closed with this command.
+
+## 6d. Enable the public-egress profile (only when a role needs it)
+
+`network=none` is the default and the profile #55's acceptance proved. A few
+roles — research, brand research, source ingestion — have policies that allow
+`network.public`, and this is the only way they get it. **Public egress must not
+mean host-network access.**
+
+```bash
+sudo bash ops/hetzner/install-egress-network.sh
+sudo systemctl daemon-reload
+sudo systemctl enable --now app-builder-egress-anchor.service
+sudo bash ops/hetzner/verify-egress-profile.sh
+```
+
+The install creates the bounded `app-builder-egress` bridge with
+`isolate=true`, writes the nftables ruleset to `/etc/app-builder/egress.nft`,
+and installs an anchor unit. The anchor exists for a rootless-specific reason:
+the rootless network namespace — where the ruleset lives — is torn down when
+the last container using a netavark network exits, taking the rules with it.
+One idle container keeps it alive.
+
+The verifier is the gate, and it is read-only apart from its attestation. It
+generates its forbidden-destination list from
+`packages/control-plane/src/egress-policy.js` rather than restating it, then
+proves from inside a real `--network=app-builder-egress` container that the
+Factory control plane, host loopback, the host's own addresses, RFC1918,
+link-local, cloud metadata and the carrier-grade-NAT range where Tailscale
+addresses live are all unreachable — **and** that public DNS and HTTPS still
+work, because a profile that reaches nothing has silently become `none`.
+
+On a pass it writes `/etc/app-builder/egress-profile.json`. The Podman
+execution driver requires that attestation and refuses `public-egress-only`
+without a recent one, so an untested, failed or lapsed filter fails closed
+rather than becoming an unfiltered network. Re-run the verifier after any
+change to the network, the ruleset or the host's addresses.
+
 ## 7. Running bounded one-off commands
 
 For a simple bounded command outside a long-lived unit:
@@ -404,17 +468,9 @@ Because durable App Builder state lives under its own `/srv/app-builder` tree an
 
 ## 10. Still deliberately deferred
 
-The host boundary is now proven, but these remain later runtime work:
+The host boundary is proven and the attempt lifecycle, the pinned image and the
+egress profile now exist (sections 6b–6d). These remain later runtime work:
 
-- `ExecutionEnvironmentAdapter` per-task sandbox **lifecycle** — the isolation
-  contract and its rootless Podman translation now exist
-  (`packages/control-plane/src/execution-environment.js`,
-  `tooling/lib/sandbox-podman.mjs`), but nothing creates, runs, supervises or
-  disposes of an attempt sandbox yet;
-- a pinned task sandbox image — `podmanRunArgs` refuses a floating tag, and no
-  image is built or pinned here;
-- the `app-builder-egress` Podman network for the roles whose policy allows
-  public internet, with its egress filter;
 - `AgentRuntimeAdapter` around OpenCode;
 - bounded worker scheduling;
 - scoped secret broker;

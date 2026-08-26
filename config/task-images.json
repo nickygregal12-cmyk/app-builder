@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "description": "Pinned task sandbox images. An attempt records the image it ran by content digest, and both the runtime translation and the attempt record refuse a floating tag. This file is the only place an image identity is declared; nothing resolves an image from ambient host state or from whatever `latest` happens to point at today.",
+  "rules": [
+    "Digest-pinned or refused. `digest` must be a sha256 content digest. A null digest means the image has not been built and attested on a host yet, and every attempt naming it fails closed with the build command rather than running something unknown.",
+    "A tag is a convenience for humans and never an identity. The tag recorded here is what `ops/hetzner/build-task-image.sh` applies locally; the digest is what runs.",
+    "Minimal by intent. An image gains a tool when a role's declared work needs it, not because the tool might be useful eventually. Every binary in a task sandbox is reachable by an untrusted task.",
+    "Rebuilding produces a new digest. Update this file from the build script's output and let the change be reviewed; do not repoint a tag underneath a proven boundary."
+  ],
+  "images": {
+    "task-baseline": {
+      "id": "task-baseline",
+      "reference": "localhost/app-builder-task",
+      "tag": "baseline-1",
+      "digest": null,
+      "containerfile": "ops/images/app-builder-task/Containerfile",
+      "buildCommand": "sudo bash ops/hetzner/build-task-image.sh",
+      "purpose": "The first reproducible task sandbox: enough to read a bounded workspace, run Node, run the repository's tests, and talk to the capability broker. Nothing else.",
+      "user": "nonroot (uid 1000)",
+      "includes": [
+        "node",
+        "npm",
+        "git",
+        "ca-certificates"
+      ],
+      "excludes": [
+        "any container or Podman client",
+        "sudo or any privilege-escalation helper",
+        "ssh clients and keys",
+        "cloud provider CLIs",
+        "package managers reaching outside npm",
+        "editors, shells beyond the base, and general-purpose network tools"
+      ],
+      "readOnlyRoot": true,
+      "writablePaths": [
+        "/workspace",
+        "/scratch",
+        "/tmp"
+      ],
+      "base": {
+        "reference": "docker.io/library/node",
+        "tag": "22.14.0-bookworm-slim",
+        "digest": "sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b",
+        "resolvedAt": "2026-08-26",
+        "resolvedBy": "registry-1.docker.io manifest request for the named tag"
+      }
+    }
+  }
+}

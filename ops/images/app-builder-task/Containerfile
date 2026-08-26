@@ -1,0 +1,62 @@
+# The first reproducible App Builder task sandbox.
+#
+# Everything in here is reachable by an untrusted task, so the rule is not
+# "what might be useful" but "what a bounded coding attempt cannot proceed
+# without". A tool added speculatively is a tool an attempt can be made to use.
+#
+# The isolation itself is not configured here — no image can grant or remove a
+# namespace. `packages/control-plane/src/execution-environment.js` decides the
+# boundary and `tooling/lib/sandbox-podman.mjs` spells it. This file only has
+# to be compatible with it: non-root, no setuid escalation path, and content
+# that works with a read-only root filesystem and a noexec /tmp.
+#
+# Base pinned by digest. A floating tag here would make the produced image's
+# own digest meaningless: it would change under a boundary that was proved
+# against something else.
+#
+# Resolved from the registry, not typed from memory:
+#   curl -H "Authorization: Bearer $TOKEN" -I \
+#     https://registry-1.docker.io/v2/library/node/manifests/22.14.0-bookworm-slim
+# and recorded in config/task-images.json as `base.digest`, where a doctor
+# checks the two agree.
+FROM docker.io/library/node:22.14.0-bookworm-slim@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b AS base
+
+# git is here for one reason: an attempt produces a ChangeSet against a
+# workspace, and the factory reads the diff. ca-certificates is here so the
+# public-egress profile can validate TLS; a role on the `none` profile never
+# reaches a certificate at all.
+RUN set -eux; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y git ca-certificates; \
+    rm -rf /var/lib/apt/lists/*; \
+    # No path from an unprivileged task to a privileged one. Dropping every
+    # setuid and setgid bit means a future base-image change that ships one
+    # cannot quietly reintroduce an escalation route.
+    find / -xdev -perm /6000 -type f -exec chmod a-s {} + || true; \
+    # A task never installs a package. npm's own network reach is one more
+    # thing an attempt could be steered into using.
+    npm config --global set audit false; \
+    npm config --global set fund false; \
+    npm config --global set update-notifier false
+
+# The workspace and scratch directories are bind mounts at run time; creating
+# them here means the container starts correctly even when a mount is absent,
+# rather than failing on a missing path and looking like an isolation fault.
+RUN set -eux; \
+    mkdir -p /workspace /scratch /run/app-builder; \
+    chown -R 1000:1000 /workspace /scratch
+
+# node:22 already ships uid/gid 1000 as `node`. Reusing it keeps the image
+# compatible with the spec's `--user 1000:1000` without inventing a second
+# unprivileged identity.
+USER 1000:1000
+WORKDIR /workspace
+
+ENV NODE_ENV=production \
+    NPM_CONFIG_UPDATE_NOTIFIER=false \
+    HOME=/scratch
+
+# No ENTRYPOINT. The command an attempt runs is the adapter's to supply, and an
+# entrypoint baked in here would be a second place that decides what a task
+# does.
+CMD ["node", "--version"]

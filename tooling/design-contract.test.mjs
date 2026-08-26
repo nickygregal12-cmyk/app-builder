@@ -12,9 +12,11 @@ import {
   applyDesignChoices,
   assertAccentColor,
   assertDesignChoices,
+  compileDesignSystemSpec,
   compileDesignTokens,
   contrastRatio,
   renderBrandCss,
+  renderDesignSystemCss,
 } from './lib/design-choices.mjs';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
@@ -49,19 +51,53 @@ function roots(prefix) {
 const baseDesign = { patternId: 'public-marketing', label: 'Public marketing', shellClass: 'layout-public', maxWidth: '72rem', density: 'comfortable', radius: '1rem', accentColor: '#315b72' };
 
 test('every compiled property is one the template actually reads', () => {
-  const tokens = compileDesignTokens(baseDesign);
+  const spec = compileDesignSystemSpec(baseDesign);
+  const tokens = spec.tokens;
+  assert.equal(spec.authority, 'design-contract', 'DesignSystemSpec must remain derived from the existing design authority');
+  assert.deepEqual(spec.controls, {
+    accentColor: '#315b72',
+    maxWidth: '72rem',
+    radius: '1rem',
+    density: 'comfortable',
+  });
+  assert.deepEqual(tokens, compileDesignTokens(baseDesign));
+
   for (const name of Object.keys(tokens)) {
     const used = STYLES.includes(`var(${name})`) || TOKENS.includes(`var(${name})`) || STYLES.includes(`calc(var(${name})`);
     assert.ok(used, `${name} is compiled but the template never reads it`);
     assert.ok(TOKENS.includes(`${name}:`), `${name} has no default in the token file`);
   }
-  // A design contract that does not compile is a prompt.
-  assert.match(renderBrandCss(baseDesign), /--section-space: clamp\(56px, 7vw, 104px\);/);
+  // A design contract that does not compile is a prompt. The product renderer
+  // now consumes DesignSystemSpec rather than bypassing that compiler stage.
+  assert.equal(renderBrandCss(baseDesign), renderDesignSystemCss(spec));
+  assert.match(renderDesignSystemCss(spec), /--section-space: clamp\(56px, 7vw, 104px\);/);
   assert.match(renderBrandCss({ ...baseDesign, density: 'dense' }), /--section-space: clamp\(28px, 3\.5vw, 52px\);/);
 });
 
+test('every active DesignSystemSpec control changes output the renderer consumes', () => {
+  const baseline = compileDesignSystemSpec(baseDesign);
+  const cases = [
+    { control: 'accentColor', value: '#7a1f3d', token: '--color-accent' },
+    { control: 'maxWidth', value: '90rem', token: '--layout-max-width' },
+    { control: 'radius', value: '0.625rem', token: '--layout-radius' },
+    { control: 'density', value: 'dense', token: '--section-space' },
+  ];
+
+  for (const entry of cases) {
+    const next = compileDesignSystemSpec({ ...baseDesign, [entry.control]: entry.value });
+    assert.notEqual(next.tokens[entry.token], baseline.tokens[entry.token], `${entry.control} is declared but does not change its compiled token`);
+    assert.notEqual(renderDesignSystemCss(next), renderDesignSystemCss(baseline), `${entry.control} is declared but does not change rendered CSS`);
+  }
+});
+
+test('DesignSystemSpec renderer fails closed for non-compiler declarations', () => {
+  assert.throws(() => renderDesignSystemCss(null), /Invalid DesignSystemSpec/);
+  assert.throws(() => renderDesignSystemCss({ schemaVersion: 1, authority: 'another-design-system', tokens: {} }), /Invalid DesignSystemSpec/);
+  assert.throws(() => renderDesignSystemCss({ schemaVersion: 2, authority: 'design-contract', tokens: {} }), /Invalid DesignSystemSpec/);
+});
+
 test('each density compiles to a different rhythm', () => {
-  const spaces = Object.keys(DENSITIES).map((density) => compileDesignTokens({ ...baseDesign, density })['--section-space']);
+  const spaces = Object.keys(DENSITIES).map((density) => compileDesignSystemSpec({ ...baseDesign, density }).tokens['--section-space']);
   assert.equal(new Set(spaces).size, spaces.length, 'a density that compiles to the same value as another is not a choice');
 });
 
@@ -113,6 +149,7 @@ test('a design choice compiles into the build, survives a rebuild and is recover
     assert.deepEqual(contract.controls.map((entry) => entry.control), ['density', 'maxWidth', 'radius']);
 
     const brandFile = path.join(generated.workspace, 'src/generated/brand.css');
+    assert.equal(fs.readFileSync(brandFile, 'utf8'), renderDesignSystemCss(compileDesignSystemSpec(contract.design)), 'the generated stylesheet must be the DesignSystemSpec renderer output');
     assert.match(fs.readFileSync(brandFile, 'utf8'), /--section-space: clamp\(56px, 7vw, 104px\);/);
 
     await assert.rejects(() => service.writeDesignChoices(project.id, { accentColor: '#ffe600' }), /below the 4\.5:1 needed/);
@@ -126,6 +163,7 @@ test('a design choice compiles into the build, survives a rebuild and is recover
     // The brand stylesheet is generated, so the change reaches the running
     // preview without a rebuild.
     const compiled = fs.readFileSync(brandFile, 'utf8');
+    assert.equal(compiled, renderDesignSystemCss(compileDesignSystemSpec(updated.design)), 'live design edits must pass through the same DesignSystemSpec renderer');
     assert.match(compiled, /--section-space: clamp\(28px, 3\.5vw, 52px\);/);
     assert.match(compiled, /--color-accent: #7a1f3d;/);
     assert.match(fs.readFileSync(path.join(generated.workspace, 'src/generated/design.ts'), 'utf8'), /"density": "dense"/);

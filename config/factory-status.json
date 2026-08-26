@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "currentPhase": "3.8",
-  "currentStage": "Phase 3.8 \u2014 Product proof and correctness hardening",
+  "currentStage": "Phase 3.8 — Product proof and correctness hardening",
   "activeStage": "Phase 3.8E genuine-business trial 2 (nbm Construction Cost Consultants) has run end to end. The live-operator Console defects (#62/#63) are fixed and the approved intake is now durably replayable (#70); the gate remains blocked by public-web egress for website ingestion and the required human product review",
   "status": "active",
   "completedPhases": [
@@ -43,9 +43,9 @@
     "awaiting-human-product-review"
   ],
   "outstandingProductGates": [
-    "Phase 3.6C / 3.8E \u2014 genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits",
-    "Phase 3.8E \u2014 the nbm website could not be ingested: the original trial environment denied every public host, so no website source can yet be hashed or cross-checked against the knowledge pack",
-    "Phase 3.8E \u2014 the human product review the schema requires has not been issued"
+    "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits",
+    "Phase 3.8E — the nbm website could not be ingested: the original trial environment denied every public host, so no website source can yet be hashed or cross-checked against the knowledge pack",
+    "Phase 3.8E — the human product review the schema requires has not been issued"
   ],
-  "nextStage": "Phase 3.8E. Trial 2 (nbm Construction Cost Consultants) has run the intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview -> rendered-evidence journey. docs/TRIAL_FINDINGS.md records F15-F30. The three live-operator blockers are closed: issue #62 (list-question typing) and issue #63 (previews now travel through the supported Console/Factory boundary with no host-loopback URL and no per-build tunnel) are fixed, and issue #70 is fixed \u2014 an approved intake is a durable versioned artifact that replays into a fresh run, with examples/genuine-business/nbm-approved-intake.v1.json as the nbm baseline. That baseline is an explicitly versioned replacement: the original approved nbm intake was never persisted and is unrecoverable (F30). What remains: run the website ingestion in an environment that can reach https://www.nbm.bz/ as the Factory runtime user, replay the nbm intake for a fresh run, then issue the required human product review and validate the evidence. 4C stays gated behind this."
+  "nextStage": "Phase 3.8E. Trial 2 (nbm Construction Cost Consultants) has run the intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview -> rendered-evidence journey. docs/TRIAL_FINDINGS.md records F15-F30. The three live-operator blockers are closed: issue #62 (list-question typing) and issue #63 (previews now travel through the supported Console/Factory boundary with no host-loopback URL and no per-build tunnel) are fixed, and issue #70 is fixed — an approved intake is a durable versioned artifact that replays into a fresh run, with examples/genuine-business/nbm-approved-intake.v1.json as the nbm baseline. That baseline is an explicitly versioned replacement: the original approved nbm intake was never persisted and is unrecoverable (F30). What remains: run the website ingestion in an environment that can reach https://www.nbm.bz/ as the Factory runtime user, replay the nbm intake for a fresh run, then issue the required human product review and validate the evidence. 4C stays gated behind this. Once 3.8E is honestly closed, the evidence-led sequence is minimum 4C BrandSpec/DesignSystemSpec/ArtDirectionPlan -> minimum 4D controlled visual directions -> Phase 4.2 static/content renderer proof -> deliberate ten-real-business product-proof freeze from docs/PRODUCT_PROOF_PROGRAMME.md."
 }

@@ -10,6 +10,11 @@ RenderedEvidence contract and the portable design contract — is specified in `
 The specialists that own each of those decisions, and the reviewers that must independently approve them,
 are defined in `docs/AGENT_SPECIALIST_ARCHITECTURE.md`.
 
+The evidence programme that decides whether this machinery actually works across real businesses lives in
+`docs/PRODUCT_PROOF_PROGRAMME.md`. Visual architecture is not considered mature because its contracts are
+well-designed; it is mature when repeated real projects show that the output is distinctive, appropriate,
+launchable and low-intervention.
+
 ## Goal
 
 For supported website classes, App Builder should aim for boutique-agency / strong senior product-team quality on the first build, with measurable evidence rather than subjective claims.
@@ -29,6 +34,8 @@ The long-run Gold Standard is:
 - AI/model/tool cost remains inside the declared project budget.
 
 Initial milestones remain deliberately looser (for example the existing <20 meaningful-edit real-business gate) and should tighten only when evidence supports it.
+
+A further quality requirement is now explicit: **unrelated businesses must not converge on the same polished template.** Determinism should remove accidental inconsistency, not erase art direction.
 
 ## 1. Brand-source intelligence
 
@@ -71,6 +78,8 @@ Suggested image/asset modes:
 2. **Supplied + optimise** — crop, resize, compress and create responsive variants, but do not generate new imagery.
 3. **Supplied + generate gaps** — prefer real company assets and generate only clearly missing supporting imagery.
 4. **Generation-forward** — generate a coherent on-brand image set where the project is appropriate for synthetic imagery.
+
+Do not expose modes before the factory has a real consumer for them. A contract field that claims behaviour while nothing reads it is a defect, not future-proofing.
 
 The policy should separately control:
 
@@ -116,6 +125,8 @@ Art direction sits above individual SectionSpecs and describes the visual/story 
 - conversion emphasis without turning every site into the same SaaS template.
 
 The factory should be able to produce 2–4 genuinely different bounded art directions from the same product/content truth and let the user promote one into durable project state.
+
+Three palette/radius changes are not three art directions. Candidate directions must differ materially in composition, hierarchy, rhythm, imagery emphasis and/or interaction language while preserving the same factual/product truth.
 
 ### MotionContract
 
@@ -209,21 +220,25 @@ scope, so they issue a scored `ReviewVerdict` and route rework to `art-direction
 `composition` rather than editing the product themselves. Deterministic DesignLint runs first, so the
 vision model spends its context on judgement rather than on defects a rule could have caught.
 
-## 7. Real-world benchmark corpus
+A same-model persona is not a genuinely independent second opinion. Release-critical cross-model visual review is recorded as independent only when the runtime actually uses a different eligible model/runtime with fresh bounded context.
+
+## 7. Product-proof freeze and real-world benchmark corpus
 
 The six canonical project classes remain engineering regression cases. They are not enough to prove design quality.
 
-Build a separate real-world benchmark corpus that grows toward roughly 30–50 varied projects, for example:
+After Phase 3.8E and the **minimum** 4C/4D/4.2 visual/output foundation, enter the product-proof freeze defined in `docs/PRODUCT_PROOF_PROGRAMME.md` rather than continuing to add visual architecture.
+
+The first checkpoint is at least **10 deliberately varied real businesses**. Grow that toward roughly **30–50 varied projects** over time, including:
 
 - trades/local services;
 - architect/design practice;
 - hotel/hospitality;
 - restaurant;
 - accountant/professional services;
-- dentist/clinic;
-- legal;
+- dentist/clinic or another trust-heavy service;
+- legal/professional services;
 - property/construction;
-- charity;
+- charity/community;
 - gym/wellness;
 - recruitment;
 - SaaS/B2B software;
@@ -232,13 +247,21 @@ Build a separate real-world benchmark corpus that grows toward roughly 30–50 v
 - ecommerce/brand;
 - internal application/dashboard.
 
+The initial ten should be deliberately adversarial rather than ten brochure sites. Include local trade/project photography, restrained professional consultancy, hospitality, text-heavy authority, high-imagery work, catalogue/content structures and at least one premium brand that challenges the default rhythm.
+
+Freeze/replay the approved source/intake inputs for accepted benchmark projects so later factory versions can be compared against the same truth.
+
 Track per project:
 
 - first-build success;
-- meaningful manual edits required;
+- launchable on first output;
+- predicted vs actual meaningful manual edits;
+- edit categories;
 - visual/product score;
 - mobile score;
 - content accuracy/unsupported claims;
+- imagery/crop failures;
+- generic/repetitive sections;
 - accessibility;
 - performance;
 - SEO/AEO;
@@ -248,22 +271,73 @@ Track per project:
 - AI/model/tool cost;
 - user/developer interventions;
 - accepted/rejected design variants;
-- asset problems and generated-image acceptance rate.
+- asset problems and generated-image acceptance rate;
+- owner/stakeholder reaction.
 
-## 8. Supported-vs-custom boundary
+During the freeze, a visual architecture change should normally be justified by a repeatable corpus failure rather than by preference.
+
+## 8. Anti-template similarity diagnostic
+
+Deterministic presentation registries can eliminate bad randomness while accidentally producing many beautiful but structurally identical websites. Measure that risk directly.
+
+Across unrelated corpus projects, compare signals such as:
+- section-family sequence;
+- hero treatment;
+- component-family sequence;
+- information density;
+- repeated typography combinations;
+- CTA structure;
+- layout family;
+- motion pattern;
+- repeated visual motif;
+- visual/structural embedding similarity where justified.
+
+Flag unrelated builds that are suspiciously similar.
+
+This begins as a diagnostic, not a hard CI gate. Baseline the corpus first. Use the evidence to retire generic patterns or widen proven art-direction options; do not solve similarity by injecting uncontrolled randomness.
+
+## 9. Project-class maturity and supported-vs-custom boundary
 
 A 10/10 builder should know when a request is outside its proven factory envelope.
 
-The Build Contract should classify work as:
+Project classes/capability families should move through machine-readable maturity tiers:
 
-- factory-supported;
-- supported with custom implementation;
-- specialist/novel engineering required;
-- unsupported or approval-required.
+- **Proven** — material real-project evidence shows the class routinely performs at the declared quality/intervention target;
+- **Supported** — known renderer/architecture/recipes and representative acceptance, but not enough corpus proof for a "normally excellent" claim;
+- **Assisted engineering** — factory support exists but substantial specialist/human judgement is expected;
+- **Experimental** — novel or insufficiently proven, requiring explicit custom engineering/approval.
 
-That classification should influence model/skill routing, budgets, verification depth and user expectations rather than pretending that a brochure site and a WebGPU multiplayer CAD system have the same first-pass reliability.
+This maturity should influence:
+- autonomy level;
+- model/tool budget;
+- verification depth;
+- human review requirements;
+- launch confidence shown in the Console;
+- whether one-prompt quality claims are allowed.
 
-## 9. Evidence-driven promotion
+A canonical generated app passing build/tests does not by itself promote a project class to Proven.
+
+## 10. Competitive visual/product bake-off
+
+Once the internal ten-project corpus is stable enough to make the comparison meaningful, periodically run the same frozen brief/source material through relevant current builders and blind-review where practical.
+
+Score at least:
+- first-output visual/product quality;
+- distinctiveness;
+- factual accuracy;
+- mobile quality;
+- functionality/journeys;
+- accessibility;
+- performance;
+- meaningful edits;
+- elapsed time;
+- cost;
+- portability;
+- provenance/rights discipline where competitors expose comparable evidence.
+
+The purpose is to verify best-in-class claims, not copy every competitor feature.
+
+## 11. Evidence-driven promotion
 
 Patterns should become reusable factory capability only after repeated evidence:
 
@@ -274,3 +348,7 @@ Patterns should become reusable factory capability only after repeated evidence:
 - skills and design-knowledge entries are promoted only through the lifecycle in `config/skill-registry.json`;
 - model/image-provider choices should be benchmarked by task class and cost;
 - all promotions remain reviewed, versioned and regression-tested.
+
+The desired feedback loop is:
+
+`real project -> observed failure/success -> structured evidence -> narrow reusable change -> rerun same frozen input -> compare -> promote or reject`.

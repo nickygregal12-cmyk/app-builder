@@ -10,22 +10,36 @@ The target end-state is:
 2. answer an adaptive set of questions;
 3. review a concise Build Contract before expensive build work starts;
 4. normalize source material into trusted structured knowledge with provenance;
-5. deterministically compose real routes/pages/screens, content bindings and content collections from approved requirements and trusted knowledge;
+5. deterministically compose real routes/pages/screens, content bindings and collections from approved requirements and trusted knowledge;
 6. let templates, capability recipes, presentation registries and deterministic tools create everything already solved by the factory;
 7. use AI only for genuinely novel product, design, content or engineering work;
 8. run deterministic correctness/security/accessibility/quality gates first, then targeted AI review where useful;
 9. preview, visually compare, directly edit, version and deploy from the Builder Console;
 10. keep generated applications as ordinary repositories with no App Builder, MCP or agent-runtime lock-in;
 11. expose deterministic factory operations through provider-neutral service/tool contracts so multiple coding clients can use the same factory;
-12. feed evidence from completed projects back into reviewed, versioned improvements to questionnaires, composition, recipes, design-system rules and routing.
+12. let durable tasks/checkpoints survive model/session/browser interruption;
+13. feed evidence from completed real projects back into reviewed, versioned improvements to questionnaires, composition, recipes, presentation, design systems, routing and model choice.
 
 Core rule: **never spend AI tokens solving a problem the factory already knows how to solve deterministically.**
 
-A second rule is equally important: **do not build more infrastructure while existing subsystems are not joined into a useful end-to-end product.**
+Second rule: **do not build more infrastructure while existing subsystems are not joined into a useful end-to-end product.**
 
-A third rule now follows from the latest audit: **do not scale autonomous or visual-builder surface area on top of unproven contract/security boundaries. Correctness gates move earlier when they are cheap and deterministic.**
+Third rule: **do not scale autonomous or visual-builder surface area on top of unproven contract/security boundaries.**
 
-Detailed capability findings and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The deterministic engineering-gate programme lives in `docs/ENGINEERING_QUALITY_PROGRAMME.md`.
+Fourth rule, added after the August 2026 clean-room audit: **once the minimum visual/output foundation is in place, stop expanding the architecture and force it through real projects until evidence proves what actually needs to change.**
+
+That fourth rule corrects a real delivery risk: architecture/control-plane maturity is now ahead of the amount of real-world product proof. The response is not to discard the architecture; it is to make architecture earn its next extension through output evidence.
+
+Supporting authorities:
+- sequencing: `docs/ROADMAP.md`;
+- product-proof freeze/maturity/corpus: `docs/PRODUCT_PROOF_PROGRAMME.md`;
+- deterministic engineering gates: `docs/ENGINEERING_QUALITY_PROGRAMME.md`;
+- premium visual programme: `docs/VISUAL_EXCELLENCE.md`;
+- design intelligence: `docs/DESIGN_INTELLIGENCE.md`;
+- professional completeness: `docs/PRODUCTION_COMPLETENESS.md`;
+- control plane: `docs/FACTORY_CONTROL_PLANE.md`;
+- agent runtime: `docs/AGENT_RUNTIME.md`;
+- machine-readable delivery truth: `config/factory-status.json`.
 
 ---
 
@@ -33,67 +47,73 @@ Detailed capability findings and adoption rules live in `docs/BEST_IN_CLASS_CAPA
 
 ### Deterministic first
 
-Schemas, generated types, validators, templates, registries, recipes, composers, generators, database tests, static analysis, accessibility tests, image tooling and deployment scripts should do repeatable work. AI is a fallback for ambiguity, novelty and judgement.
+Schemas, generated types, validators, templates, registries, recipes, composers, generators, database tests, static analysis, accessibility tests, image tooling and deployment scripts do repeatable work. AI handles ambiguity, novelty and judgement.
 
 ### One machine-readable contract authority
 
-Where a stable JSON Schema exists, it should become the canonical machine-readable contract. Shared TypeScript types and runtime boundary validation should be generated/derived from it rather than independently re-encoding the same enums and rules.
+Where a stable JSON Schema exists, it is canonical. Shared TypeScript types and runtime validation derive from it rather than re-encoding enums/rules independently.
 
-Structural validity and buildability remain separate concepts: a request can be valid product intent while its selected adapter/capability is not yet ready.
+Structural validity and buildability remain separate: valid intent may request a capability the current factory cannot yet implement deterministically.
 
 ### Requirements before code
 
-No substantial build starts while high-impact requirements or capability-buildability decisions remain unresolved. Intake produces a reviewed Build Contract first.
+No substantial build starts while high-impact requirements or capability-readiness decisions remain unresolved. Intake produces a reviewed Build Contract first.
 
-### Preserve requirements; do not confuse them with recipes
+### Preserve requirements; recipes are implementations
 
-A requested capability is product intent. A ready recipe is one deterministic implementation. Manifest/Build Contract must retain requirements even when no ready recipe exists, while generated modules remain fail-closed.
+A requested capability is product intent. A ready recipe is one implementation. Manifest/Build Contract preserve intent even when no ready recipe exists, while generated modules fail closed.
 
 ### Trusted facts stay facts
 
-Source material may be normalized and bound into pages, structured data and collections, but source-backed facts retain provenance. Generated copy is separate and may not silently invent or strengthen factual claims.
+Source-backed facts retain provenance. Generated copy is separate and may not silently invent or strengthen factual claims.
 
-### Capability and presentation reuse are distinct
+### Capability reuse and presentation reuse are separate
 
-Reusable capabilities such as auth, organisations, uploads, email, admin, billing and analytics belong in versioned capability recipes.
+Auth, organisations, uploads, email, billing, analytics etc. belong in capability recipes.
 
-Reusable visual/product presentation belongs in versioned presentation primitives/components/sections governed by Design Contract/DesignSystemSpec. Avoid regenerating solved components from scratch.
+Visual/product presentation belongs in versioned presentation components/sections governed by Design Contract/DesignSystemSpec/BrandSpec/ArtDirectionPlan.
 
 ### Small context packets
 
-Agents receive only the product authority, manifest, relevant knowledge chunks, files, contracts, design-system records and tests needed for the task. Whole-repository reads are exceptional.
+Agents receive only the authority, artifacts, files, skills and evidence their task/role needs. Whole-repository reads are exceptional.
 
 ### Routing discipline scales with capability
 
-More AI capability requires **stronger routing discipline**, not more loaded tools. The intended shape is:
+More AI requires **stronger routing discipline**, not more loaded tools.
 
-`task -> smallest deterministic route -> minimal authorities -> minimal complementary skills -> specialist agent -> structured artifact -> independent review -> executable evidence -> typed rework if needed -> convergence -> release`
+Target:
 
-and never:
+`task -> deterministic route -> minimal authorities -> minimal complementary skills -> specialist -> structured artifact -> independent review when required -> executable evidence -> typed rework -> convergence`.
 
-`task -> load every tool and skill -> one giant agent -> huge context -> self-review -> declare done`.
+Never:
 
-Installed is not loaded. A specialist carries at most one skill per load class, an ambiguous prompt orients rather than guessing a subsystem, and deterministic routing benchmarks with **positive and negative** triggers hold that contract in CI.
+`load everything -> giant context -> one general agent -> self-review -> declare done`.
 
 ### Sessions are disposable; project state is durable
 
-A chat/session is never the source of truth. Tasks, events, ChangeSets, checkpoints, repository state and summaries must let a clean session continue later.
+A chat/model session is never project truth. Tasks, events, ChangeSets, git/worktree state, checkpoints, attempt summaries, evidence and budgets must let a clean session continue later.
+
+Provider exhaustion, server restart and browser closure are expected conditions, not catastrophic failure modes.
 
 ### Portable outputs
 
-Generated apps remain ordinary repositories that can be maintained without the Builder Console, MCP facade, App Builder runtime or OpenCode.
+Generated apps remain ordinary repositories maintainable without Builder Console, MCP, App Builder runtime or OpenCode.
 
 ### Evidence-driven improvement
 
-The factory may propose improvements to questionnaires, recipes, sections/components, composition rules, templates, skills and defaults from real project evidence. It must not silently self-modify.
+The factory may propose improvements from project evidence. It never silently self-modifies.
 
 ### Cost and intervention are product requirements
 
-Track AI spend, elapsed work and user intervention. For deterministic site-building progress, **meaningful manual edits required before launch** is a primary outcome metric.
+Track AI/tool spend, elapsed work, retries and human intervention. Meaningful manual edits before launch are a primary product metric.
 
 ### Environment identity is explicit
 
-Development, preview and production must become explicit environment identities before powerful deployment/database controls are exposed. A preview build or agent must not reach production data because environment state was implicit.
+Development, preview and production must have explicit identities before powerful deploy/database controls exist. Never infer environment from context.
+
+### Product maturity is evidence-based
+
+Synthetic canonical apps prove regression stability, not customer-ready maturity. Project classes advance through maturity only from real project evidence.
 
 ---
 
@@ -104,688 +124,641 @@ Development, preview and production must become explicit environment identities 
 Delivered:
 - root engineering authority;
 - App Factory Engine / Builder Console boundary;
-- project-type and optional-module registries;
-- Project Manifest and Build Contract schemas;
-- adaptive questionnaire definitions;
-- deterministic `create-app` skeleton;
+- project-type/module registries;
+- Project Manifest and Build Contract foundations;
+- adaptive questionnaires;
+- deterministic skeleton;
 - credit/context rules;
 - contamination guard;
-- CI, doctor, tests, typecheck and lint;
-- minimal Builder Console shell.
+- CI/doctor/tests/typecheck/lint;
+- initial Console shell.
 
----
-
-## Phase 1 — Adaptive Intake and Build Contract ✅ Complete, extended by later contracts
+## Phase 1 — Adaptive Intake and Build Contract ✅ Complete
 
 Delivered:
 - Quick / Standard / Thorough modes;
-- conditional/versioned questionnaires for six project types;
+- conditional/versioned questionnaires;
 - company/business intake;
 - source-reference inventory;
-- deterministic blocker and ambiguity-follow-up model;
-- review/approval flow;
-- local save/resume and portable export bundle;
+- blocker/ambiguity follow-up;
+- reviewed Build Contract;
+- local save/resume/export;
 - feedback/evidence records;
-- Chromium end-to-end intake acceptance.
-
-Later contract migrations preserve richer requirements without replacing the intake principle.
-
----
+- browser acceptance.
 
 ## Phase 2 — Deterministic Project Generator and Recipes ✅ Complete
 
 Delivered:
-- versioned template/recipe/adapter contracts;
+- template/recipe/adapter contracts;
 - neutral standalone React/TypeScript/Vite application template;
-- deterministic generation and planning;
-- fail-closed missing-capability handling;
+- deterministic planning/materialisation;
+- fail-closed capability readiness;
 - dependency/conflict resolution;
-- recipe add/remove reconciliation;
-- Supabase and Netlify adapters;
-- auth/profiles/organisations/admin/uploads/analytics/observability/lead-generation/SEO and feature-flag foundations;
-- layouts/design tokens/scenarios;
-- generated handover/provenance state;
-- byte-stability and standalone generated-app checks.
+- recipe reconciliation;
+- Supabase/Netlify foundations;
+- core auth/profile/org/admin/upload/analytics/observability/lead/SEO foundations;
+- design-token/scenario groundwork;
+- handover/provenance;
+- standalone/byte-stability checks.
 
-Continuing rule: a planned/unavailable module never becomes enabled merely because intake requested it.
-
----
+The original React/Vite template is an engineering baseline, not a claim that every website/application should use the same renderer/presentation system.
 
 ## Phase 3 — Company, Content and Asset Intelligence ✅ Complete
 
 Delivered:
-- URL/existing-site intake and bounded crawl;
-- PDF/DOCX/XLSX/text/HTML/CSV extraction;
-- structured company knowledge pack;
-- fact provenance/confidence/verification;
+- bounded URL/existing-site intake;
+- document/spreadsheet/text extraction;
+- trusted knowledge pack;
+- provenance/confidence/verification;
 - generated-copy separation;
 - image/logo/screenshot inventory;
-- metadata, optimisation and responsive variants;
+- optimisation/responsive variants;
 - duplicate/low-resolution signals;
-- brand/reference observations;
-- SEO/local-SEO and lead-generation inputs;
-- content-addressed source/extraction caching;
+- observed brand/reference inputs;
+- SEO/local-business inputs;
+- content-addressed caching;
 - bounded AI-context chunks;
-- deterministic mixed business-pack acceptance.
+- synthetic mixed-source acceptance.
 
----
+Existing brand observations feed later `BrandSpec`; do not create a parallel brand extraction system.
 
-## Phase 3.5 — Factory Control Plane ✅ Foundation Complete
+## Phase 3.5 — Factory Control Plane ✅ Foundation complete
 
-### 3.5A — Durable control primitives ✅
-
-- durable tasks and bounded loop guards;
+Delivered:
+- durable tasks/loop guards;
 - append-only JSONL Build/Event Ledger primitive;
-- ChangeSets and file-scope validation;
+- ChangeSet scope validation;
 - checkpoints/resume packets;
 - source trust/instruction-authority boundary;
 - deny-by-default capability policies;
 - provider-neutral control-plane package;
-- documented future Hetzner/OpenCode runtime behind `AgentRuntimeAdapter`.
+- benchmark/upgrade foundations;
+- machine-readable factory status;
+- specialist-role/handoff/convergence foundations.
 
-### 3.5B — Evaluation and upgrade foundations ✅
-
-- six canonical first-class generated applications independently install/check/build;
-- structured deterministic benchmark reporting;
-- recipe installation hash inventory;
-- read-only upgrade planning;
-- explicit upgrade compatibility metadata;
-- fail-closed divergence detection;
-- non-functional-requirements contract;
-- richer Design Contract groundwork;
-- machine-readable factory status and doc-drift checking.
-
-### 3.5C — Sandbox/trace implementation ⏸ Deferred
-
-Resume immediately before powerful autonomous execution in Phase 5.
-
-Deferred:
+Deferred to Phase 4.5 immediately before real autonomous workers:
 - `ExecutionEnvironmentAdapter`;
-- first rootless/disposable sandbox;
-- resource/network/secret limits;
-- preview/artifact interface;
-- OTel-compatible trace export mapping;
-- hard production write/deploy approval boundary.
+- rootless/disposable task sandbox;
+- network/resource/secret enforcement;
+- trace/export mapping;
+- production action enforcement.
 
----
-
-## Phase 3.6 — Requirements-to-Product Composition ✅ Core complete, product proof still open
-
-### Phase 3.6A — Manifest and Build Contract v2 ✅ Complete
-
-Manifest v2 preserves:
-- audience/target users and roles;
-- journeys/must-have actions;
-- major pages/surfaces;
-- core entities/data concepts;
-- company identity, services, locations, contact and trust inputs;
-- conversion goals;
-- tenancy/integrations/upload/data-migration requirements;
-- hard constraints, scale and sensitivity;
-- source references and explicit exclusions.
-
-Build Contract v2 additionally records capability readiness/custom-work/exclusions, infrastructure, design direction, AI/cost mode, blockers and acceptance criteria.
-
-Approval rules remain fail-closed for unresolved high-impact/capability decisions.
-
-### Phase 3.6B — Deterministic composition ✅ Complete
+## Phase 3.6 — Requirements-to-Product Composition ✅ Core complete
 
 Delivered:
-- stable `PageSpec`/`SectionSpec`/content-binding contracts;
-- deterministic information architecture and section composition;
-- Phase 3 knowledge-pack consumption;
-- provenance/source/entity retention;
-- explicit generated/default fallbacks;
-- generated multi-page navigation/rendering;
-- independent generated-app install/check/build acceptance.
+- Manifest/Build Contract v2 intent preservation;
+- PageSpec/SectionSpec/content-binding contracts;
+- deterministic information architecture/composition;
+- trusted knowledge consumption;
+- source/entity provenance;
+- explicit fallback/generated content;
+- multi-page navigation/rendering;
+- independent generated-app build acceptance.
 
-The section renderer remains replaceable so later visual systems can improve presentation without rewriting product structure.
+### Phase 3.6C / 3.8E — genuine real-business acceptance ⚠️ Active product gate
 
-### Phase 3.6C — Real-business acceptance ⚠️ Synthetic regression exists; genuine gate outstanding
+Synthetic fixtures remain regressions only.
 
-Keep the current Acme mixed-source fixture as a deterministic regression case.
-
-Still required:
-- genuine existing business URL;
-- genuine PDF/document material;
-- genuine logo/photographs/assets;
-- real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/deploy;
-- visual/product quality review;
-- meaningful manual edits counted and categorized;
-- AI calls/tokens/cost, elapsed work, retries/interventions and quality failures recorded.
+Required real evidence:
+- real public company website;
+- approved genuine supplied material;
+- replayable approved intake;
+- intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/evidence;
+- source/artifact hashes that match what the Factory really used;
+- launch-readiness prediction;
+- genuine human product review;
+- meaningful manual edits counted/categorized;
+- cost/time/retries/interventions recorded.
 
 Initial target: **fewer than 20 meaningful manual edits before launchable quality**.
 
-This remains an honest product gate even though later service infrastructure has already been built.
+Mature mainstream-site target later: median **<=5** meaningful edits and a growing untouched-launch share.
 
----
-
-## Phase 3.7 — Factory Service and Real Ledger Integration ✅ Core exit complete
+## Phase 3.7 — Factory Service and Real Ledger Integration ✅ Core complete
 
 Delivered:
-- `apps/service` private/local service workspace;
-- bounded server-owned project workspaces;
-- durable generation tasks/events/checkpoints;
-- JSONL evidence plus SQLite read projection;
-- project/task/event/checkpoint/metrics API;
+- private/local service workspace;
+- durable projects/tasks/events/checkpoints;
+- server-owned workspaces;
 - Manifest/knowledge/composition reads;
-- independent install/check/build verification;
-- service-owned preview lifecycle;
-- integration configuration status without secret values;
+- generate/verify/preview lifecycle;
+- integration status without secret values;
 - provider-neutral tool descriptor;
-- service doctor and generated-app portability checks.
+- JSONL event evidence + SQLite read projection;
+- portability checks.
 
-Continuing boundary: add service endpoints because a real Console/runtime workflow needs them, not because a large API looks comprehensive.
-
----
+Follow-up before broad concurrency: make ledger -> projection recovery explicit through sequence, reconciliation and rebuild evidence.
 
 ## Phase 3.8 — Product Proof and Correctness Hardening 🚧 Active
 
-This phase captures newly identified work that is cheaper and safer to solve before the Builder Console and autonomous tool surface expand.
+Delivered/substantially delivered:
+- 3.8A ChangeSet file-scope correctness;
+- 3.8B schema/type/runtime contract unification;
+- 3.8C executed Supabase/RLS acceptance;
+- 3.8D accessibility baseline;
+- 3.8F bounded MCP adapter;
+- 3.8H specialist-agent architecture foundation;
+- 3.8I routing/context discipline;
+- 3.8J executable architecture/risk classification;
+- 3.8K launch-readiness/state/journey product checks.
 
-### 3.8A — ChangeSet file-scope correctness — P0
+### 3.8E — genuine business acceptance
 
-The control-plane path matcher guards an autonomous security boundary. Prefix-style semantics must not allow sibling paths such as `src2/...` to satisfy `src/**`.
+Complete the NBM run through the real product and prioritize reusable defects it exposes over speculative infrastructure.
 
-Implement:
-- repository-relative path normalization;
-- rejection of traversal/absolute/ambiguous forms;
-- segment-correct glob matching, preferring the Node 22 native matcher if suitable;
-- explicit sibling-prefix/Windows/separator/allow-deny collision tests;
-- `fast-check` property tests.
+The approved NBM baseline is replayable. The original historical intake was never persisted and is unrecoverable; the versioned replacement baseline is the comparison authority for later reruns, not a reconstructed claim about the lost original.
 
-Exit gate: no textual-prefix scope escape.
+The gate stays open until the real crawl/source evidence and human product review are complete.
 
-### 3.8B — Canonical contract generation/validation — P0
+### 3.8F / issue #71 — bounded OpenCode/MCP lane ✅ Readiness proof complete
 
-Target architecture:
+The supported OpenCode -> MCP -> Factory path has been exercised on the real Hetzner host. OpenCode 1.18.14 reports `app-builder connected`; the hosted smoke passed and durable evidence was written under `/srv/app-builder/artifacts/`.
 
-`/schemas -> generated packages/contracts TypeScript -> Ajv boundary validation`
-
-Implement:
-- JSON Schema as canonical machine-readable authority where available;
-- generated shared TS types;
-- Ajv at external/service/file boundaries;
-- migration away from duplicated handwritten enums/runtime validators;
-- `contracts:generate` and drift-check CI;
-- structural validity separate from registry buildability/readiness.
-
-Candidate tools:
-- `ajv`;
-- `json-schema-to-typescript` or a proven equivalent.
-
-### 3.8C — Executed Supabase RLS acceptance — P0
-
-Static SQL checks stay as fast smoke tests, but recipe correctness must also be executed.
-
-Implement:
-- local Supabase/Postgres generated-recipe test environment;
-- `supabase test db`/pgTAP;
-- Basejump test helpers where they reduce setup;
-- actual authenticated test users;
-- owner/admin/editor/member/viewer/anonymous matrices;
-- cross-org read/write/update checks;
-- executed RLS results as recipe readiness/release evidence.
-
-### 3.8D — Accessibility baseline — P0/P1
-
-Move deterministic accessibility earlier:
-- `@axe-core/playwright` in canonical generated-app browser acceptance;
-- serious/critical fail gates first;
-- representative desktop/mobile acceptance;
-- later AI/manual review only for judgement axe cannot make.
-
-### 3.8E — Genuine business acceptance — P0/P1
-
-Complete Phase 3.6C with real material. Prioritize fixes exposed by the generated result over speculative factory infrastructure.
-
-### 3.8F — MCP v2 service adapter — P1
-
-Expose safe deterministic operations through MCP:
-
-`Codex / ChatGPT / Claude Code / OpenCode -> MCP adapter -> apps/service -> factory/control-plane`
-
-Initial tools:
-- project create/read;
-- Manifest/knowledge/composition reads;
-- generate/recompose/verify;
-- preview lifecycle;
-- task/event/checkpoint/metric reads.
-
-Do not initially expose:
-- production deploy;
-- production database writes;
-- raw secrets;
-- arbitrary paths;
-- unrestricted shell execution.
-
-MCP is an adapter, not project truth. Use the current MCP TypeScript v2 server package when implemented.
-
-### 3.8H — Specialist agent architecture foundation ✅ Complete
-
-Delivered as a bounded architecture/contract foundation, not as a running agent system:
-
-- `AgentRoleSpec` contract and a registry of specialist roles separated by decision boundary;
-- project-class routing so a marketing site, a SaaS build and an internal tool run different specialists;
-- deterministic **no-self-approval** enforcement: creators cannot promote their own artifacts and reviewers own no mutation scope;
-- `HandoffContract` semantics — a stage advances on artifacts, evidence, passed deterministic checks and an independent verdict, never on an agent declaring itself finished;
-- typed `ReviewVerdict` rework with a named owning role, severity and failing criteria;
-- a deterministic convergence engine that assesses every required gate, routes each failure to the creator role that owns it and stops only on convergence, a hard budget or a genuine block;
-- bounded per-role context packets and per-role capability/route ceilings;
-- a skill registry with an evidence-driven promotion lifecycle;
-- an external-source registry where registration is explicitly not adoption.
-
-Architecture: `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
-Design-side artifacts: `docs/DESIGN_INTELLIGENCE.md`.
-
-This stage adds no new orchestration framework. It is a tighter expression of the existing control plane, and it does not
-close the outstanding Phase 3.8E genuine-business product gate.
-
-### 3.8I — Routing discipline and agent operating-system hardening ✅ Complete
-
-An audit against internal prior art found that App Builder had the stronger factory/control-plane architecture but the weaker **development-agent operating system**. Routing discipline is far cheaper to establish before the specialist system grows large.
-
-Delivered:
-
-- `RoutingBenchmarkCase` contract plus a deterministic benchmark of representative prompts with **positive and negative triggers**, run by `npm run agent:bench`;
-- deterministic task routes mapping bounded natural-language intent to roles, authorities and a small skill set, with `npm run agent:route -- "TASK"` printing the first-orientation packet;
-- first-orientation ceilings for candidate paths, authorities, selected roles, selected skills and packet bytes;
-- skill **load classes and budgets** so complementary lenses compose instead of competing;
-- ambiguous prompts stay unclassified so the next step is bounded orientation rather than an expensive guess;
-- seven new specialist roles — state matrix, journey closure, product opportunity scout, differential reviewer, independent second opinion, environment guardian and compound-learning closeout — with the artifact kinds they exchange;
-- `state-completeness` and `journey-closure` as required convergence gates in every project pipeline;
-- conditional review routing driven by a deterministic `RiskClassification`, so ordinary presentation work never pays for adversarial security review.
-
-Roles remain `planned`. This stage defines decision boundaries, routing and budgets; authoring the skill packets and executing the roles is Phase 4 groundwork and Phase 5 runtime work.
-
-
-### 3.8J — Executable architecture and deterministic risk classification ✅ Complete
-
-Turns two Phase 3.8I planning items into enforced behaviour:
-
-- `npm run architecture` makes the dependency direction in `AGENTS.md` a blocking CI gate across eleven zones and seven rules, with a cycle check. It parses module specifiers and declared dependencies, so prose mentioning a package is not a violation and a deep relative path cannot dodge a package-name rule. `dependency-cruiser` was evaluated and deliberately not adopted.
-- `config/risk-surfaces.json` plus `packages/control-plane/src/risk.js` classify a declared ChangeSet deterministically and return the conditional reviewers it must buy. An ordinary presentation change buys none; an auth, RLS, secrets, billing, capability-policy or production-deploy change buys the differential reviewer, the security reviewer, the environment guardian or an independent second opinion as the surface requires.
-
-Neither displaces the outstanding 3.8E genuine-business product proof.
-
-
-### 3.8K — Launch readiness: making the new tooling serve the product ✅ Complete
-
-3.8H–3.8J improved how agents work on the factory. This points that machinery at what the factory produces, which is what Phase 3.8E is actually judged on.
-
-- `npm run audit:launch` audits composed output before a human reviews it, predicting meaningful manual edits in the same category vocabulary 3.8E records, each naming the specialist role that owns the fix;
-- `StateMatrixSpec` and `JourneyClosureEvidence` are derived deterministically from composed output, ranked by user risk rather than enumerated combinatorially;
-- missing evidence is counted separately from defects, so the prediction stays trustworthy;
-- `config/factory-benchmarks.json` records a measured predicted-edit ceiling per canonical project type and `generate:acceptance` fails when generated product gets worse;
-- the 3.8E evidence records the audit taken at handover and the validator reports it against the real edit count, including how far the prediction was off. It is recorded, not enforced: while the factory is still being built a genuine run is expected to start from a build that still has known findings, and refusing it would make the proof unrunnable.
+This proves transport/surface, not broad autonomy. Issue #55 remains the security boundary before workers with shell/network authority become runtime-ready.
 
 ---
 
-## Phase 4 — Full Builder Console ⬜ Planned
+# Phase 4 — Builder Console and Product Presentation
 
-Begins after Phase 3.8 P0 correctness gates are closed or explicitly dispositioned.
+Phase 4A/4B were built alongside 3.8E because the genuine proof must run through the product, not a side CLI.
 
-### Phase 4A — Real service-backed vertical slice
+## Phase 4A — service-backed vertical slice ✅ Complete
 
-Build a complete useful loop before adding every editor feature:
-- project create/open;
-- adaptive intake;
-- real source/file ingestion through the service;
-- reviewed Build Contract;
-- deterministic build trigger;
-- real task/event progress;
-- service-managed live preview;
-- desktop/tablet/mobile preview;
-- checkpoint/version visibility.
+Delivered:
+- create/open project;
+- adaptive intake/Build Contract;
+- service-owned source ingestion;
+- source governance;
+- deterministic build;
+- durable progress/events;
+- service preview;
+- desktop/tablet/mobile switching;
+- checkpoint/version history.
 
-### Phase 4B — Direct editing and assets
+## Phase 4B — direct editing and assets ✅ Core delivered
 
-- **Builder Element Identity** — resolve a rendered element to page/section/component/instance,
-  content bindings, source location, editable properties, provenance and design tokens before any
-  visual editing is enabled; a visual edit that cannot resolve to an ElementIdentity is refused;
-- click-to-select through stable PageSpec/SectionSpec identity;
-- click-to-edit content/assets/components through the resolved binding, not through DOM guesswork;
-- preserve source-vs-generated provenance;
-- **RenderedEvidence foundation** — screenshots, interaction states and responsive captures become a
-  first-class artifact, because a compiling build is not evidence that a visual change is correct;
-- asset manager and replacement/crop choices;
-- section/component variant selection;
+Delivered across slices:
+- Builder Element Identity;
+- click-to-select;
+- provenance-aware text editing/durable overrides;
+- RenderedEvidence;
+- asset rights/governance;
+- crop/focal-point/review;
+- asset replacement lineage;
+- section presentation variants;
 - Design Contract editing;
-- versions/checkpoint restore.
+- Product Opportunity Scout;
+- source/asset state visibility.
 
-### Phase 4C — Design System Registry
+Deferred until real generation consumers exist:
+- generated-vs-supplied image alternatives;
+- generation-forward asset modes;
+- image-generation adapter.
 
-Use shadcn's registry architecture as prior art, not as mandatory generated-app infrastructure.
+## Phase 4C — Design System Registry, BrandSpec and Art Direction ⬜ First post-3.8E visible-quality stage
 
-Maintain separate but related registries:
+Use shadcn-style registry architecture as prior art, not mandatory generated-app infrastructure.
 
-**Capability Registry** — auth, organisations, uploads, billing, analytics, search, etc.
+Maintain separate registries:
+- **Capability Registry** — auth, orgs, uploads, billing, analytics, search, integrations etc.;
+- **Presentation Registry** — primitives/components/sections/patterns/states.
 
-**Presentation Registry** — buttons, forms, cards, navigation, hero, pricing, FAQ, proof/testimonials, tables, dashboards, empty/loading/error states and section patterns.
+### `DesignSystemSpec`
 
-A presentation item should declare stable version, files/targets, dependencies, tokens, content-binding contract, accessibility, responsive behavior, interaction states, variants, template compatibility, managed ownership and acceptance examples.
-
-Introduce `DesignSystemSpec` covering:
-- typography/color/spacing/radius/shadow tokens;
-- icon system;
+Cover and compile into actual output:
+- typography/colour/spacing/radius/shadow;
+- icons;
 - allowed primitives/components;
 - section families/variants;
 - responsive/interaction states;
-- motion and imagery rules;
-- accessibility constraints;
-- reference adopt/avoid intent.
+- imagery/motion rules;
+- accessibility constraints.
 
-Add deterministic design-system linting before AI visual review.
+### `BrandSpec`
 
-Phase 4C also introduces the design-intelligence layer specified in `docs/DESIGN_INTELLIGENCE.md`:
+Ground in supplied/observed evidence:
+- palette/logo;
+- typography intent;
+- imagery/icon language;
+- tone/voice;
+- brand adjectives/anti-adjectives;
+- source/confidence;
+- source-vs-generated asset policy.
 
-- a versioned, deterministically queryable design-knowledge catalogue feeding BrandSpec and ArtDirectionPlan;
-- a **Component Manifest Protocol** so agents retrieve a small relevant component set instead of a whole library;
-- runtime-aware component contracts, so a correct import cannot produce a broken render;
-- **DesignLint** — deterministic visual-defect rules that run before expensive AI critique;
-- `DesignSystemSpec` that **compiles** to tokens, CSS variables, theme config and component parameters
-  rather than merely instructing a model;
-- machine-readable `ArtDirectionPlan` dimensions (layout variance, motion intensity, information
-  density, visual distinctiveness, restraint) instead of prompt adjectives.
+### `ArtDirectionPlan`
 
-### Phase 4D — Visual canvas and controlled variants
+Sit above SectionSpec and represent:
+- layout variance;
+- motion intensity;
+- information density;
+- visual distinctiveness;
+- restraint;
+- narrative/attention sequence;
+- page tempo;
+- hero strategy;
+- imagery/editorial/product/UI emphasis;
+- distinctive moments;
+- desktop/mobile intent;
+- conversion emphasis.
 
-Best-in-class visual workflow:
-- structured reference analysis: screenshots, moodboards, existing sites and design references become
-  adopt/avoid observations feeding ArtDirectionPlan, never uncontrolled generated markup;
-- bounded candidate design/layout variants from the same product/content truth;
-- visual comparison canvas/workspace;
-- desktop/tablet/mobile and hover/active states;
-- explicit promote/reject into durable Design Contract/SectionSpec state;
-- acceptance/rejection evidence retained;
-- no hidden unofficial project forks.
+### `MotionContract`
 
-### Phase 4E — Environments and release controls
+Define entrance/scroll/transition/interaction motion, limits, mobile reductions, reduced-motion behaviour and no-motion zones.
 
-Introduce first-class `development`, `preview`, `production` environment identity before powerful release controls.
+### Design intelligence and component manifests
 
-Each environment records/references:
-- deployment target;
-- backend/database identity and migration state;
-- integration/secret configuration status;
-- allowed operations;
-- preview/release URLs;
-- release/checkpoint identity.
+- versioned deterministically queryable design catalogue;
+- Component Manifest Protocol for small relevant retrieval;
+- runtime-aware component contracts;
+- DesignLint before model critique;
+- no declaration without a real consumer.
 
-Then add:
-- integrations/secrets status and approval UI;
-- tests/health/database/log views where safe;
-- cost/trace view;
-- preview/production deployment controls with approval gates.
+Minimum exit proof before the product-proof freeze: at least one real generated site is materially driven by these contracts rather than the neutral default alone.
 
-### Transport framework decision
+## Phase 4D — visual comparison and controlled directions ⬜ Immediately after minimum 4C
 
-Evaluate Hono only if real Console/service work demonstrates meaningful route/request/response duplication. Even if adopted, `packages/contracts` remains authoritative.
+Required minimum:
+- 2–4 genuinely different candidate art directions from the same truth;
+- not colour/radius swaps;
+- responsive comparison;
+- explicit promote/reject;
+- promoted direction becomes durable design state;
+- rejected variants do not remain unofficial forks;
+- at least one appropriate distinctive visual moment for premium marketing work;
+- curated visual regressions over a small approved set;
+- genuine independent visual review only when a different eligible model/runtime actually runs.
 
----
+## Phase 4.2 — generated-product/static renderer proof ⬜ Before the product-proof freeze
 
-## Phase 4.2 — Generated-Product Quality Expansion ⬜ Planned
-
-### Static/content-oriented second template — 10/10
-
-The initial React/Vite template proves the application-template contract but should not become the only architectural output.
-
-Evaluate Astro first for a static/content-first renderer.
+Prove the renderer abstraction with a genuinely different static/content output. Evaluate Astro first.
 
 Default direction:
-- marketing/content sites -> static/content-first template;
-- SaaS/consumer/internal/AI apps -> application-oriented React template.
+- marketing/content -> static/content-first;
+- SaaS/consumer/internal/AI -> application-oriented React renderer.
 
-Requirements:
-- same Manifest/PageSpec/SectionSpec inputs;
-- output remains portable;
-- independent check/build/browser acceptance;
-- host adapters remain separate.
+Priority additions:
+- pinned static Lucide SVG pipeline, not `lucide-react` by default;
+- Pagefind for compatible content-heavy builds;
+- evidence-backed typed JSON-LD;
+- deterministic OG/social images;
+- page metadata/canonical/sitemap/robots;
+- deterministic asset suitability/duplicate/undersized/bad-crop detection.
 
-### Static semantic icons — 8/10
-
-Use pinned Lucide static SVG assets at factory/build time:
-- semantic reviewed mappings for common intents;
-- copy/inline only selected SVGs;
-- no `lucide-react` dependency by default;
-- allow project DesignSystemSpec to override icon sources/mappings.
-
-### Static search — 8.5/10
-
-Use Pagefind for compatible marketing/content projects:
-- build-time indexing;
-- no backend requirement;
-- PageSpec/CollectionSpec-aware records where useful;
-- dynamic application search remains a separate recipe/adapter path.
-
-### Rich structured data — 8.5/10
-
-Upgrade the existing shallow `WebSite` JSON-LD baseline using trusted knowledge and typed structures.
-
-Derive only when evidence supports:
-- Organization;
-- LocalBusiness;
-- Service;
-- Person;
-- FAQPage;
-- Article;
-- BreadcrumbList;
-- WebSite.
-
-Use `schema-dts` or equivalent typed schema support and prefer build-time HTML output for static projects.
-
-### Deterministic OG/social imagery — 8/10
-
-Use:
-
-`DesignSystemSpec + page metadata + brand assets -> Satori SVG -> existing Sharp -> social image`
-
-Do not add a second SVG rasterizer unless Sharp proves inadequate.
+Do not wait for every mature website feature before beginning the corpus.
 
 ---
 
-## Phase 4.3 — Mature Website-Builder Capabilities ⬜ Planned
+# Product-Proof Freeze — first 10 real businesses ⬜ Required evidence checkpoint
 
-### CMS/content collections — 9.5/10
+After minimum 4C + 4D + 4.2, temporarily freeze speculative architecture and execute `docs/PRODUCT_PROOF_PROGRAMME.md`.
 
-Introduce provider-neutral `CollectionSpec`:
-- collection id/type;
-- fields/validation;
-- references/relationships;
-- slug strategy;
-- draft/published state;
-- SEO mapping;
-- locale support;
-- editor/author metadata where required.
+The first corpus should deliberately include very different businesses, not ten brochure-site variations. Suggested coverage:
 
-Storage may be local/static, Supabase or a future CMS adapter.
+1. local trade/project photography/quote conversion — MGB Decor is the planned first example;
+2. professional consultancy/restrained credibility — NBM is the first example;
+3. restaurant/hospitality conversion;
+4. trust-heavy professional service;
+5. hotel/high-imagery project;
+6. text-heavy professional services;
+7. charity/community;
+8. catalogue/ecommerce-adjacent;
+9. editorial/content-heavy;
+10. unusual premium brand that challenges default visual patterns.
 
-### Localization — 9/10
+Freeze/replay approved inputs for benchmark projects.
 
-Introduce `LocaleSpec`:
-- primary/fallback locales;
-- localized routes/slugs;
-- localized content/bindings;
-- localized assets;
-- metadata/OpenGraph/hreflang;
-- translation/review state.
+Track:
+- first-build success;
+- launchability;
+- predicted vs actual edits;
+- edit categories;
+- unsupported/incorrect claims;
+- missing source-backed content;
+- imagery/crop failures;
+- generic/repetitive sections;
+- mobile/visual quality;
+- journey failures;
+- accessibility/performance/SEO/security where relevant;
+- cost/time/retries/interventions;
+- art-direction acceptance;
+- owner/stakeholder reaction.
 
-AI translation is optional implementation, never the architecture.
+During the freeze, normally implement only:
+- reusable defects exposed by the corpus;
+- deterministic checks for real repeated failures;
+- security/data-loss/durability blockers;
+- measured cost/latency/intervention improvements.
 
-### Figma/design-system mapping — 9/10
+The corpus later grows toward 30–50 real projects in Phase 8.
 
-- import relevant design/token/component references;
-- map known design components onto registered production components;
-- unmatched elements become explicit novel/custom work;
-- preserve ordinary repo diffs/PR ownership.
+## Project-class maturity tiers
 
-### Existing-repository adoption — 9/10
+Introduce machine-readable maturity rather than treating six project labels as equally proven:
 
-Support improving existing repos:
-- read project authorities/framework/design system/components/backend/deployment;
-- build an adoption inventory;
-- map compatible factory gates/capabilities rather than regenerating;
-- manage only explicitly adopted files;
-- preserve Git history/project conventions.
+- **Proven** — material real-project evidence shows routine high-quality/low-intervention performance;
+- **Supported** — known renderer/architecture/recipes and representative acceptance;
+- **Assisted engineering** — substantial specialist/human judgement expected;
+- **Experimental** — novel or insufficiently proven.
 
-### Deterministic SEO/AEO scanner — 8.5/10
+Maturity affects autonomy, model/tool budget, verification depth, human gates, Console confidence and one-prompt claims.
 
-Before public deployment audit:
-- title/description/canonical;
-- sitemap/robots/indexability;
-- heading hierarchy;
-- alt text;
-- structured data;
-- internal links;
-- OpenGraph/social assets;
-- local-business/service evidence where relevant.
+Synthetic canonical success cannot promote a class to Proven.
 
-AI SEO advice remains optional after deterministic findings.
+## Anti-template diversity diagnostic
+
+Measure similarity between unrelated builds using section/component sequence, hero family, density, typography, CTA structure, motion and other useful structural/visual signals.
+
+Start advisory. Baseline before setting thresholds. Retire generic patterns rather than injecting uncontrolled randomness.
+
+## Competitive bake-off
+
+After the internal corpus stabilises, compare identical frozen inputs with relevant current builders and blind-score where practical:
+- first output;
+- visual distinctiveness;
+- factual accuracy;
+- mobile/functionality;
+- accessibility/performance;
+- manual edits;
+- elapsed time/cost;
+- portability;
+- provenance/rights discipline where comparable.
+
+Benchmark claims; do not chase every competitor feature.
 
 ---
 
-## Phase 4.5 — Pre-Agent Hardening ⬜ Planned
+## Phase 4E — environments, integrations and release controls ⬜ Planned
 
-Before broad autonomous tools:
-- complete deferred Phase 3.5C sandbox abstraction;
-- rootless sandbox implementation;
-- fail-closed network/resource/secret policies;
-- production action approvals;
-- dead/orphan integration detection;
-- CSP baseline in deployment adapters;
-- safe three-way recipe/presentation upgrades;
-- re-run ChangeSet/contract/RLS/accessibility properties under the real execution environment.
+Introduce explicit development/preview/production identity before powerful release controls.
 
-Candidate tooling where justified:
-- `Knip`;
-- `git merge-file`;
-- rootless Podman behind `ExecutionEnvironmentAdapter`;
-- other security tooling only when it beats existing deterministic checks.
+Each environment records/references:
+- deploy target;
+- backend/database identity/migration state;
+- integration/secret configuration status;
+- allowed operations;
+- preview/release URL;
+- repository/deployed revision;
+- rollback target.
+
+Then add integrations/secrets status, health/log views, cost/trace and preview/production controls with approvals.
+
+### First-class `IntegrationSpec`
+
+For serious applications, represent where applicable:
+- provider/capabilities;
+- auth type/OAuth scopes;
+- webhook events/verification;
+- sandbox/production credential identity without secret values;
+- rate limits;
+- retry/idempotency;
+- data classes accessed;
+- secret requirements;
+- health check;
+- test fixture;
+- environment availability.
+
+Build a small proven adapter set before a marketplace/catalogue.
+
+Provider-neutrality is proven by real second implementations, not interface names alone. The static renderer is the first such proof; later backend/deployment alternatives should be added only when they validate a real abstraction or meet a real project need.
+
+## Phase 4.3 — mature website-builder capabilities ⬜ Planned from evidence
+
+Candidate capabilities:
+- provider-neutral `CollectionSpec` / CMS structures;
+- `LocaleSpec` localization;
+- Figma/design-system mapping;
+- existing-repository adoption preserving Git history;
+- deterministic SEO/AEO scanner;
+- streamed/resumable source upload transport when measured file sizes justify it.
+
+Do not complete this whole list before the ten-project proof merely because it is planned.
+
+## Phase 4.5 — Pre-Agent Hardening ⬜ Required before real autonomous workers
+
+Before a worker gets shell/network authority, close issue #55 and deferred 3.5C.
+
+Required invariant:
+
+`task policy -> scoped operation capability -> trusted runtime/broker -> approved Factory operation`
+
+not:
+
+`agent shell -> curl 127.0.0.1:4310 -> richer internal Factory route`.
+
+Required:
+- rootless/disposable task sandbox;
+- host/private-network isolation;
+- scoped task/attempt identity/capability grants;
+- operation-level capability mapping;
+- `approvalRequired` enforced before dispatch;
+- resource/secret restrictions;
+- adversarial bypass tests;
+- no public service exposure;
+- re-run ChangeSet/contract/RLS/accessibility/security properties under the real runtime.
+
+OpenCode client permission settings are defence-in-depth, not the boundary.
 
 ---
 
 ## Phase 5 — Low-Credit AI Orchestration + Dedicated Runtime ⬜ Planned
 
-Purpose: add AI orchestration after the deterministic factory is demonstrably useful and safety boundaries are proven.
+Purpose: add AI execution after deterministic product/safety boundaries are useful and enforced.
 
 Build:
-- deterministic task/context router driven by `config/agent-roles.json` and `config/agent-pipelines.json`;
-- measured model router by task class/quality/cost, selected per role;
-- compact trusted context packets built by `buildRoleContextPacket`;
-- versioned `SKILL.md` specialist skills authored against `config/skill-registry.json` and promoted only on evidence;
-- specialist roles executed in **disposable per-role sessions** rather than one long general-purpose session;
-- durable stage handoffs, typed rework routing and convergence-driven stopping;
+- deterministic task/context router driven by existing role/pipeline registries;
+- measured model router by task class/quality/effective cost;
+- compact trusted context packets;
+- versioned skills promoted only on evidence;
+- disposable per-role sessions;
+- durable stage handoffs/rework/convergence;
 - machine-readable outputs/ChangeSets;
-- bounded fix/work loops;
+- bounded loops;
 - provider-neutral `AgentRuntimeAdapter`;
-- dedicated App Builder runtime on Hetzner separate from project-specific automation;
-- OpenCode as initial runtime implementation, not product dependency;
-- clean-session/context-loss recovery;
-- isolated project/task workspaces and scoped secrets;
+- OpenCode as initial implementation, not product dependency;
+- isolated project/task workspaces;
 - browser/visual workflows;
 - structured usage/cost traces.
 
-MCP provides earlier interoperability but does not replace runtime scheduling, sandboxing, specialist routing, recovery or hard-budget enforcement.
+### Durable worker execution
 
----
+Long build/verify/model work must survive an HTTP/client/browser disconnect:
+
+`Factory API -> durable job scheduler -> ExecutionEnvironmentAdapter -> isolated worker -> durable progress/events/result`.
+
+Start with a small worker/process layer. Do not adopt Temporal/LangGraph without measured need.
+
+### Provider Capacity / Entitlement Broker
+
+Represent per provider/runtime where observable:
+- subscription/free/included-credit/API/local entitlement;
+- availability;
+- quota/reset signal;
+- cash cost;
+- quota scarcity/shadow cost;
+- task-class quality;
+- context/tool capability;
+- independence family;
+- fallback eligibility;
+- paid-overage permission.
+
+Required durable states include equivalents of:
+- waiting-for-capacity;
+- provider-exhausted;
+- fallback-selected;
+- paused-by-budget;
+- waiting-for-human-approval;
+- retryable/interrupted.
+
+Routing target:
+
+`deterministic -> proven free/cheap model -> premium model when needed -> genuinely independent reviewer when valuable -> paid API only when authorised`.
+
+A provider limit must checkpoint/handoff/wait; it must not freeze or lose the page/task.
+
+### Git-native task history
+
+Move generated-project evolution toward:
+
+`main -> factory/task-<id> -> bounded change -> tests -> review -> checkpoint -> promote/merge`.
+
+Git records **what changed**. Factory events/checkpoints record **why/how/under which task/policy/evidence/model/budget**.
+
+### Ledger/projection reconciliation
+
+If JSONL remains authoritative and SQLite a read projection, add monotonic sequence, idempotent projection, startup catch-up and rebuild proof (`npm run ledger:rebuild` or equivalent). A crash between append and projection insert must not leave permanent dual truth.
+
+### Production data-change safety
+
+Before autonomous live database mutation introduce a machine-readable safety contract covering:
+- additive/destructive/backfill/contract classification;
+- compatibility;
+- row impact;
+- backup/restore evidence;
+- deployment ordering;
+- app/schema/data rollback or forward-repair;
+- partial-deploy behaviour;
+- `EnvironmentIdentity`;
+- approval.
+
+Prefer `expand -> migrate/backfill -> verify -> contract` for high-risk changes.
+
+MCP provides interoperability but does not replace scheduler, sandbox, capability enforcement, specialist routing, recovery or hard budgets.
 
 ## Phase 5.5 — AI Evaluation and Red Team ⬜ Planned
 
 - model/task benchmark scoreboard;
-- cheapest model that clears quality threshold, escalating only on failure;
-- prompt/skill/model regression cases;
+- cheapest model that clears quality threshold;
+- free-model candidates benchmarked before use on production task classes;
+- prompt/skill/model regressions;
 - hostile-source/prompt-injection suites;
-- tool/permission-bypass cases;
+- tool/permission bypass cases;
 - context leakage tests;
 - second-opinion agreement/disagreement metrics;
-- evaluate Promptfoo mainly where it improves adversarial coverage.
-
----
+- controlled skill comparison before promotion;
+- image-provider quality/cost/rights benchmarking where applicable.
 
 ## Phase 6 — Quality and Autonomous Verification ⬜ Planned
 
-Expand the earlier deterministic gates into the full release-quality system:
+Expand deterministic gates into full release quality:
 - unit/integration/E2E;
 - accessibility;
 - security/dependency/secret checks;
 - performance budgets;
-- visual regression against Design Contract/DesignSystemSpec;
+- visual regression against BrandSpec/ArtDirectionPlan/DesignSystemSpec/MotionContract;
 - mobile/tablet/desktop;
-- empty/loading/error/large-data;
-- slow/offline/failing-API;
+- relevant empty/loading/error/large-data/offline/provider-failure states;
 - AI review only after deterministic checks;
-- bounded autonomous corrections;
+- bounded corrections;
 - deployment smoke tests.
 
-Candidate tools when justified:
-- Lighthouse CI;
-- Semgrep;
-- Gitleaks;
-- targeted browser/visual review.
-
----
+Professional completeness is conditional: implement/prove every **relevant** state/journey, not a universal checklist of skeletons/toasts/modals.
 
 ## Phase 7 — Launch, Operations and Upgrade Propagation ⬜ Planned
 
-- domain/DNS/SSL checklist;
+- domain/DNS/TLS;
 - redirects/canonical/sitemap/robots;
-- analytics/observability activation;
-- feedback intake;
-- launch readiness report;
-- production smoke checks;
-- post-launch audits;
-- handover/architecture documentation;
-- module/recipe/presentation-registry version inventory;
+- analytics/observability;
+- feedback;
+- launch readiness;
+- production smoke/health;
+- post-launch audit;
+- handover;
+- recipe/presentation version inventory;
 - reviewed upgrade propagation;
-- three-way managed-file reconciliation;
-- reusable pattern promotion workflow.
-
----
+- three-way reconciliation;
+- approved asset/rights report;
+- small proven integration set.
 
 ## Phase 7.5 — Experiments and Controlled Personalization ⬜ Later
 
-After analytics, privacy and deployment identity are mature:
+After analytics/privacy/deployment identity are mature:
 - versioned experiment contracts;
-- controlled A/B traffic allocation;
-- attribution and sample-boundary integrity;
+- controlled traffic allocation;
+- attribution/sample integrity;
 - reviewed winner promotion;
-- conversion evidence persisted into factory improvement state;
-- personalization only when explicit, measurable, privacy-compliant and reversible.
+- conversion evidence;
+- reversible privacy-compliant personalization.
+
+## Phase 8 — Evidence-Driven Factory Improvement and Gold Standard ⬜ Planned
+
+The initial ten-business freeze grows toward roughly **30–50 varied real-world projects** spanning mainstream websites and later complex applications.
+
+Track:
+- first-build success;
+- meaningful edits and edit cause;
+- untouched-launch share;
+- factual/source accuracy;
+- visual/mobile quality;
+- accessibility/performance/SEO/security;
+- journey completion;
+- time/cost/interventions;
+- art-direction acceptance;
+- asset/image failures;
+- model/skill/router version outcomes.
+
+Use the corpus to:
+- improve questionnaires/composer/recipes/presentation;
+- promote project classes through maturity tiers;
+- retire generic/weak visual patterns;
+- calibrate diversity diagnostics;
+- decide which integrations/backends/deployment alternatives are worth proving;
+- compare model/skill/provider versions against accepted baselines.
+
+No silent self-modification. Evidence produces a proposed, versioned, regression-tested change.
+
+The Football Predictor / Euro Predictor benchmark remains the long-run complex-app pressure test; it is not a football template.
 
 ---
 
-## Phase 8 — Evidence-Driven Factory Improvement ⬜ Planned
+# 4. First-class project modes and maturity
 
-- manual-edit/rework cause analysis;
-- question usefulness/default acceptance metrics;
-- capability/presentation/section reuse metrics;
-- token/cost/time/intervention metrics;
-- design-variant selection evidence;
-- experiment results where enabled;
-- questionnaire/composer/recipe/template/design-system proposals;
-- model/skill/router comparisons against accepted baselines;
-- one-prompt scorecard only after the deterministic pipeline is genuinely useful.
+Current project intent classes:
 
-No silent self-modification. Evidence creates a proposed, versioned, regression-tested change.
-
----
-
-# 4. First-class project modes
-
-1. **Marketing/business website** — public pages, company content, local SEO, leads, assets; future static-first default.
+1. **Marketing/business website** — public pages, company content, local SEO, leads, assets; static/content-first target renderer.
 2. **B2B SaaS** — organisations, roles, data, admin, uploads, integrations, optional billing/custom work.
-3. **Consumer app** — accounts, profiles, engagement, notifications and optional PWA/custom work.
+3. **Consumer web app** — accounts, profiles, engagement, notifications and optional PWA/custom work.
 4. **Internal tool** — authenticated workflow/data interfaces with minimal public surface.
-5. **Content site** — publishing/CollectionSpec structures, static search, SEO, analytics and localization where requested.
+5. **Content site** — publishing/CollectionSpec structures, static search, SEO, analytics/localization where requested.
 6. **AI-first app** — structured AI capability with budgets, evaluations and fallbacks.
 
-Additional project types are added only when requirement/composition/architecture defaults are materially different.
+Additional project classes are added only when requirements/composition/architecture defaults are materially different.
+
+Each class/capability family should also carry evidence-based maturity:
+
+- **Proven**;
+- **Supported**;
+- **Assisted engineering**;
+- **Experimental**.
+
+Do not imply equal maturity simply because the questionnaire lists six classes.
+
+Native mobile is a future distinct class, not an implied capability of today's consumer web app.
 
 ---
 
 # 5. Target build lifecycle
 
-`Input -> Intake -> Build Contract -> Approval -> Manifest -> Ingest/Knowledge Pack -> Deterministic Composition -> Template/Recipe/Presentation Resolution -> Deterministic Generation -> Novel AI Work -> Deterministic QA -> Targeted AI Review -> Preview/Direct Edit/Variant Selection -> Approval -> Production -> Monitor/Experiment -> Improve Factory`
+`Input -> Intake -> Build Contract -> Approval -> Manifest -> Ingest/Knowledge Pack -> Deterministic Composition -> Brand/ArtDirection/DesignSystem where relevant -> Template/Recipe/Presentation Resolution -> Deterministic Generation -> Novel AI Work -> Deterministic QA -> Targeted Independent Review -> Preview/Direct Edit/Variant Selection -> Approval -> Production -> Monitor -> Evidence -> Improve Factory`
 
 Structured state is persisted at every material transition.
 
@@ -798,14 +771,17 @@ For ordinary business websites, directionally target **~90% deterministic/reusab
 For custom SaaS applications, directionally target **~60–75% deterministic/reusable and ~25–40% generative**.
 
 Do not optimize percentages at the expense of quality. Stronger metrics are:
-- meaningful manual edits before acceptable launch;
+- meaningful manual edits before launch;
+- first-build/untouched-launch success;
 - deterministic gates passed without intervention;
 - reusable recipe/component/template coverage;
 - AI cost/tokens per accepted outcome;
+- provider quota scarcity/effective cost;
 - elapsed work;
-- number and cause of retries/interventions.
+- retries/interventions;
+- owner/stakeholder quality reaction.
 
-The first genuine real-business acceptance target remains fewer than **20 meaningful manual edits**.
+The first genuine business target remains <20 edits. Mainstream Proven website maturity later targets median <=5.
 
 ---
 
@@ -813,38 +789,42 @@ The first genuine real-business acceptance target remains fewer than **20 meanin
 
 App Builder v1 is successful when:
 - a real project starts from an idea plus optional company/source material;
-- adaptive intake catches high-impact requirements before coding;
-- approved contracts preserve the real product intent;
+- adaptive intake catches high-impact requirements;
+- approved contracts preserve product intent;
 - buildability decisions are known before generation;
 - source material becomes a trusted knowledge pack;
-- deterministic composition creates sensible routes/pages/screens and binds trusted content;
-- an appropriate template is selected rather than forcing every project through one shell;
+- deterministic composition creates sensible real routes/pages/screens;
+- an appropriate renderer/template is selected rather than forcing every project through one shell;
+- presentation follows grounded BrandSpec/ArtDirectionPlan/DesignSystemSpec where relevant;
 - a portable repository is generated;
-- generic capabilities come from proven recipes;
-- presentation follows a coherent design-system contract;
-- the result can be previewed, edited, versioned and deployed through service/Console;
+- common capabilities come from proven recipes;
+- the result can be previewed/edited/versioned through the Console;
 - automated correctness/security/accessibility/quality gates run before release;
-- multiple coding clients can call safe deterministic factory operations through an interoperable adapter without becoming project truth;
-- one genuine business build reaches acceptable launch quality with fewer than 20 meaningful manual edits;
+- multiple clients can call safe deterministic Factory operations through adapters without becoming project truth;
+- one genuine business run passes the Phase 3.8E acceptance contract;
+- the post-4C/4D/4.2 ten-business corpus begins producing repeatable evidence;
 - project evidence feeds reviewed/versioned improvements.
 
-Best-in-class capabilities such as CMS, localization, Figma mapping, existing-repo adoption and experiments may mature after the first useful v1 vertical slice, but their architecture is now planned so Phase 4 does not paint the system into a corner.
+Best-in-class is not claimed because the architecture is complete. It is earned when the corpus and competitive benchmarks show the output consistently deserves the claim.
 
 ---
 
 # 8. Immediate execution order
 
-1. **Close ChangeSet path-scope correctness** and add property tests.
-2. **Unify schema/types/runtime validation** around canonical schemas + generated contracts + Ajv.
-3. **Add executed Supabase RLS acceptance** using local Supabase/pgTAP test users.
-4. **Add the axe accessibility baseline** to generated-app browser acceptance.
-5. **Run the genuine Phase 3.6C business build** and record meaningful edits/cost/time/interventions.
-6. **Add the MCP v2 adapter** over the existing service tool boundary.
-7. Begin **Phase 4A service-backed Console vertical slice**.
-8. In parallel only where it directly improves generated output, prove the **static/content second template** and its Pagefind/structured-data/social-image path.
-9. Build the **Design System Registry + DesignSystemSpec + Component Manifest + DesignLint** before scaling AI-generated visual variation, and land **Builder Element Identity** before enabling direct manipulation.
-10. Complete environments/direct editing/visual variants, then mature CMS/localization/Figma/existing-repo adoption.
-11. Complete sandbox/security hardening before broad autonomous agents, and stage the deterministic engineering gates in `docs/ENGINEERING_QUALITY_PROGRAMME.md` — architecture dependency gates first, then curated visual contracts, performance/payload budgets, design-token enforcement, dead-code analysis, property tests, targeted mutation testing and supply-chain hardening.
-12. Add the Hetzner/OpenCode runtime and low-credit AI orchestration only after deterministic product/safety boundaries prove useful.
+1. **Finish Phase 3.8E/NBM honestly** — real Factory crawl, replayed approved intake, review packet/evidence, genuine human product review, actual meaningful edits.
+2. **Close reusable 3.8E defects** rather than hand-editing generated output to make the number look good.
+3. In parallel only where it removes a real Phase 5 prerequisite, **complete issue #55 runtime-to-Factory capability enforcement**; do not enable agents yet.
+4. **Minimum Phase 4C** — BrandSpec, DesignSystemSpec, ArtDirectionPlan, MotionContract, Presentation Registry/Component Manifest, DesignLint, all with real consumers.
+5. **Minimum Phase 4D** — 2–4 genuinely different visual directions, responsive comparison, promote/reject, bounded distinctive moments.
+6. **Phase 4.2 static/content renderer MVP** — prove a genuinely different renderer and core web-output path.
+7. Enter the **ten-real-business product-proof freeze** in `docs/PRODUCT_PROOF_PROGRAMME.md`.
+8. Add project maturity and anti-template diagnostics from real corpus evidence; fix reusable defects the corpus exposes.
+9. Rerun the same frozen inputs after meaningful factory changes.
+10. Run the first blind competitive bake-off only after the internal corpus has a stable baseline.
+11. Before broad autonomous execution, finish **Phase 4.5** sandbox/capability enforcement, durable worker execution, interruption/provider-capacity recovery and ledger/projection reconciliation.
+12. Before live SaaS/database autonomy, add **production data-change safety** and first-class environment/integration contracts.
+13. Let the corpus determine which mature website capabilities, backend/deployment alternatives, stakeholder workflow or later project classes are actually worth prioritising.
 
-`AGENTS.md` remains the root engineering authority. `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`, `docs/DESIGN_INTELLIGENCE.md` and `docs/ENGINEERING_QUALITY_PROGRAMME.md` are detail documents under these authorities and never override them. Schemas/config are machine-readable authorities for their contracts; `config/factory-status.json` is the machine-readable delivery status. `docs/BEST_IN_CLASS_CAPABILITIES.md` records the reviewed capability recommendations and explicit non-adoptions.
+Security/data-loss blockers can interrupt this order. Speculative architecture cannot.
+
+`AGENTS.md` remains the root engineering authority. `docs/ROADMAP.md` owns sequencing, `docs/PRODUCT_PROOF_PROGRAMME.md` owns the post-visual product-proof discipline, specialist/design/engineering/runtime documents own their domains, schemas/config are machine-readable contract authorities and `config/factory-status.json` is the machine-readable delivery status.

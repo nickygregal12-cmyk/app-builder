@@ -6,9 +6,10 @@ output.
 
 `AGENTS.md` remains the root engineering authority. `docs/ROADMAP.md` owns stage sequencing,
 `docs/BEST_IN_CLASS_CAPABILITIES.md` owns the capability register, `docs/VISUAL_EXCELLENCE.md` owns
-the premium-visual programme and `docs/AGENT_SPECIALIST_ARCHITECTURE.md` owns the specialist-role
-model. This document owns one question: **which deterministic checks the factory and its generated
-projects should run, in what order, and what each of them proves.**
+the premium-visual programme, `docs/PRODUCT_PROOF_PROGRAMME.md` owns the post-visual real-project
+proof/freeze discipline and `docs/AGENT_SPECIALIST_ARCHITECTURE.md` owns the specialist-role model.
+This document owns one question: **which deterministic checks the factory and its generated projects
+should run, in what order, and what each of them proves.**
 
 Two rules govern everything below.
 
@@ -16,6 +17,12 @@ Two rules govern everything below.
    can perform must not be paid for with model tokens.
 2. **A gate earns its place by catching something.** Adopt a tool when it removes repeated work or
    closes a correctness/security gap. Noisy heuristic output stays advisory until it is baselined.
+
+A third rule now follows from the product-proof audit:
+
+3. **Synthetic regression is not product maturity.** A project class, visual pattern or quality
+   threshold earns stronger claims only from repeated real-project evidence. The ten-project proof
+   checkpoint and later 30–50-project corpus are where thresholds become credible.
 
 ## Tool responsibility map
 
@@ -43,6 +50,9 @@ budgets and credit disappear.
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
 | Is the generated product worth launching? | `npm run audit:launch` | generated-product quality |
+| Is durable state projection caught up/rebuildable? | ledger reconciliation/rebuild check | durability |
+| Are unrelated generated sites suspiciously similar? | corpus diversity diagnostic | advisory product-quality evidence |
+| Is a production data change safe to stage? | data-change safety contract/check | deployment/database safety |
 
 Playwright and DevTools are deliberately different tools: Playwright proves **what a user can do**,
 DevTools explains **why the browser behaves as it does**. A trace is not a passing journey, and a
@@ -52,7 +62,8 @@ acceptance dimensions separate.
 ## Programme stages
 
 Sequencing follows the roadmap rather than tool enthusiasm. Nothing here displaces the outstanding
-Phase 3.8E genuine-business product gate or the active Phase 4 source-ingestion and Console work.
+Phase 3.8E genuine-business product gate, the minimum 4C/4D/4.2 visual/output sequence or the
+subsequent ten-real-business proof freeze.
 
 ### Stage Q1 — architecture made executable ✅ Delivered
 
@@ -162,7 +173,8 @@ Extend it only where the input space is broad and an invariant is precise:
 - composition and recipe resolution;
 - id/path normalization;
 - budget enforcement;
-- permission matrices.
+- permission matrices;
+- scoped task/operation capability grants once Phase 4.5 implements them.
 
 Do not use property tests where a handful of examples is clearer — ordinary UI components do not
 need generated input.
@@ -177,6 +189,7 @@ stay targeted at logic whose failure is severe:
 - rights/provenance logic;
 - environment mutation guards;
 - routing predicates;
+- operation-level capability enforcement;
 - deployment safety checks;
 - security-sensitive validation.
 
@@ -198,13 +211,96 @@ Priority order:
 
 Do not install every tool at once. Each addition must name the exposure it closes.
 
+### Stage Q10 — ledger/projection reconciliation and rebuild (before broad Phase 5 concurrency)
+
+The current durability model describes JSONL as authoritative evidence and SQLite as a read projection. Make that recoverable rather than relying on two writes always succeeding together.
+
+If JSONL remains authoritative, add:
+
+- monotonic ledger/event sequence;
+- idempotent SQLite projection;
+- stored last-projected sequence;
+- startup reconciliation/catch-up;
+- a rebuild command such as `npm run ledger:rebuild`;
+- an acceptance test that deletes/recreates the projection and reconstructs the expected durable read state from the ledger.
+
+A crash after ledger append but before projection insert must not create permanent divergence.
+
+If the project later chooses SQLite as the authoritative event store instead, record that as an explicit architecture decision/migration rather than allowing authority to drift silently.
+
+### Stage Q11 — real-corpus quality and diversity baseline (after minimum 4C/4D/4.2)
+
+The ten-project product-proof freeze is where visual/product thresholds get credible baselines.
+
+Record per frozen project input:
+
+- first-build success;
+- launchability;
+- predicted vs actual meaningful edits;
+- edit categories;
+- factual/source failures;
+- imagery/crop failures;
+- mobile/visual scores;
+- journey closure;
+- accessibility/performance/SEO/security where relevant;
+- time/cost/retries/interventions;
+- art-direction acceptance;
+- owner/stakeholder reaction.
+
+Add an **anti-template similarity diagnostic** over unrelated generated sites using section/component sequence, hero family, density, typography, CTA structure, motion and other useful structural signals. Baseline it as advisory evidence before setting any blocking threshold.
+
+Synthetic canonical apps remain regression fixtures. They cannot promote a project class to `Proven`.
+
+### Stage Q12 — competitive bake-off evidence (after the internal corpus stabilises)
+
+Periodically generate the same frozen brief/source pack in relevant current builders and blind-score where practical.
+
+Compare:
+- first-output quality/distinctiveness;
+- factual accuracy;
+- mobile/functionality;
+- accessibility/performance;
+- manual edits;
+- elapsed time/cost;
+- portability;
+- provenance/rights discipline where comparable.
+
+This is product evidence, not a permanent CI gate and not permission to copy every competitor feature.
+
+### Stage Q13 — production data-change safety (before autonomous live database mutation)
+
+RLS correctness does not prove a production migration is safe.
+
+Introduce a machine-readable data-change safety contract/check for material schema/data mutations covering:
+
+- additive/destructive/backfill/contract classification;
+- old-code/new-schema compatibility;
+- new-code/old-schema compatibility where relevant;
+- row-impact estimate;
+- backup requirement/evidence;
+- restore test/evidence;
+- deployment ordering;
+- application rollback;
+- schema/data rollback or forward-repair;
+- partial-deployment behaviour;
+- target `EnvironmentIdentity`;
+- required approvals.
+
+For high-risk work prefer:
+
+`expand -> deploy compatible code -> migrate/backfill -> verify -> contract later`.
+
+Do not let a successful migration on a disposable test database stand in for backup/restore/rollback evidence on a real environment.
+
 ## Explicit non-adoptions
 
 - No blocking gate before its output has been baselined against real generated projects.
 - No screenshot-everything visual suite.
 - No repository-wide mutation testing on every pull request.
 - No second design-system linter once `DesignSystemSpec` can be read directly.
-- No security tool adopted because it is well known rather than because it outperforms an existing
-  deterministic check.
+- No security tool adopted because it is well known rather than because it outperforms an existing deterministic check.
+- No diversity metric made blocking before the real corpus gives it a useful baseline.
+- No competitive benchmark treated as a reason to chase every rival capability.
+- No production data mutation approved solely because schema/RLS tests pass.
 - No developer tool becomes a runtime dependency of a generated application. Generated repositories
   remain ordinary repositories.

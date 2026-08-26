@@ -12,15 +12,44 @@ The long-term goal is a private builder that can accept an idea, company details
 
 **Active product gate: Phase 3.8E — Genuine business product proof.**
 
-Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition and the core Phase 3.7 factory service/tool boundary are implemented. Phase 3.8A–D correctness hardening is landed: the ChangeSet path policy is property-checked, and `/schemas` is now the runtime authority for ten contract families with a drift gate in `npm run check`. Phase 3.8F provides a bounded MCP v2 facade over the loopback factory service without giving MCP direct deploy, production-database, secret, filesystem or shell powers. Phase 3.8G has also landed the brand-source and asset-provenance foundation on top of the existing content-intelligence pipeline. Phase 3.8H has landed the specialist-agent architecture foundation: roles separated by decision boundary, deterministic no-self-approval, handoff promotion, typed rework routing, a convergence engine, an evidence-driven skill lifecycle and an external-source governance registry.
+Machine-readable truth lives in `config/factory-status.json`; this README is orientation, not a competing status source.
 
-The Phase 4A Console vertical slice is delivered, because the 3.8E proof has to run through the product rather than beside it: real company material is ingested by the factory service — declared URLs crawled, uploaded files normalised, never from a client-supplied filesystem path — as a durable task with events and a checkpoint, and each build materialises its own workspace version so later material reaches the product through a rebuild instead of overwriting the repository under review. Phase 4B has begun: content bindings carry editing identity and provenance, and a person can edit generated copy from the Console without composition ceasing to be deterministic.
+Phases 0–3, the control-plane foundation, deterministic composition and the core Factory service/tool boundary are implemented. The correctness/routing/evaluation work through 3.8K is substantially landed, and the Builder Console has already delivered the 4A vertical slice plus the core 4B direct-manipulation/asset capabilities needed to run real acceptance through the product.
 
-The one outstanding Phase 3.8 product gate is deliberately real-world: prove the factory against genuine business material rather than another synthetic fixture. A passing Phase 3.8E evidence pack must use a real public company website plus approved user-supplied company material, record the real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/deploy journey, pass launchability review, retain artifact hashes and finish with fewer than 20 meaningful manual edits.
+Current 4B-era capabilities include:
 
-Brand/source governance is now explicit. Public company sites and exact public company profile URLs may inform brand/reference understanding, but publicly visible material is never assumed reusable: rights/use state, approval state, source role/channel and instruction authority are recorded, and only approved-for-use assets can become publishable factory assets. This foundation is ready to flow into the later Builder Console asset manager and direct-editing experience.
+- Builder Element Identity and click-to-select;
+- provenance-aware text editing with durable overrides;
+- RenderedEvidence at desktop/tablet/mobile;
+- asset-level publication governance;
+- focal-point crop/review;
+- asset replacement lineage;
+- real section presentation variants;
+- structured Design Contract editing;
+- Product Opportunity Scout;
+- source confidence/provenance/rights visibility.
 
-The Acme mixed-source scenario remains valuable deterministic CI regression coverage, but it is explicitly synthetic and cannot satisfy Phase 3.8E.
+The Phase 3.8E gate remains deliberately real-world. A passing run must use genuine business material, real public-site ingestion through the Factory path, approved supplied material, replayable intake, the real intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview/evidence journey, genuine human product review, artifact/source hashes and fewer than 20 meaningful manual edits before launchable quality.
+
+The original NBM intake was not persisted and is unrecoverable; a versioned replacement baseline is now the durable replay input for subsequent NBM runs. The real product review remains a human judgement and is never filled in by an agent.
+
+Brand/source governance is explicit. Public company sites and exact public profile URLs may inform understanding, but publicly visible material is never assumed reusable: rights/use state, approval state, source role/channel and instruction authority are recorded, and only approved-for-use assets can become publishable factory assets.
+
+The Acme mixed-source scenario and six canonical project classes remain valuable deterministic regression coverage. They are explicitly **not** evidence that a project class is mature or that real customers would launch the output.
+
+## Current delivery discipline
+
+A clean-room audit identified a new risk: the architecture/control plane is becoming more mature than the amount of real product evidence.
+
+The corrective sequence is now explicit:
+
+`finish 3.8E -> minimum 4C visual intelligence -> minimum 4D art-direction variants -> 4.2 static/content renderer -> product-proof freeze -> 10 real businesses -> rerun the corpus -> competitive bake-off -> evidence-led expansion`.
+
+See `docs/PRODUCT_PROOF_PROGRAMME.md`.
+
+After the minimum 4C/4D/4.2 foundation, speculative architecture pauses. Real-project failures become the priority. The first corpus is deliberately varied rather than ten brochure sites, and later grows toward 30–50 real projects.
+
+Project classes will eventually carry evidence-based maturity such as **Proven / Supported / Assisted engineering / Experimental** rather than six labels implying equal reliability.
 
 Current invariants include:
 
@@ -35,17 +64,48 @@ Current invariants include:
 - Autonomous work uses durable tasks, event ledger entries, ChangeSets and checkpoints rather than relying on one long chat context.
 - Specialist agents are separated by decision boundary and receive only the artifacts, skills, tools and mutation scope their role spec declares.
 - No agent approves its own work: a stage advances on artifacts, evidence, passed deterministic checks and an independent reviewer's verdict.
-- Failed gates route back to the creator role that owns them, and the loop stops only on convergence, a hard budget or a genuine block.
+- Failed gates route back to the creator role that owns them, and the loop stops only on convergence, a hard budget, provider-capacity block or genuine external block.
 - Third-party repositories are prior art with no instruction authority until they are pinned, licensed, security reviewed and granted to a named role.
 - ChangeSet/path policies are security boundaries and must fail closed.
 - Agent capabilities are deny-by-default and sensitive actions require approval.
-- Canonical factory changes are measured against all six first-class project types.
-- Generated projects record recipe-owned file hashes so later upgrades can detect project customisation instead of overwriting it.
+- Project-class maturity comes from real evidence, not synthetic build success.
+- Generated projects record managed-file/provenance information so upgrades can detect customisation rather than overwriting it.
 - The intake questionnaire is versioned and improved from evidence, never silently self-modified.
 - Generated projects remain normal repositories with no proprietary runtime lock-in.
-- MCP, OpenCode, the Builder Console and the Hetzner runtime are development/control adapters, never production requirements of generated apps.
+- MCP, OpenCode, the Builder Console and Hetzner are development/control infrastructure, never production requirements of generated apps.
 
-Machine-readable progress lives in `config/factory-status.json`. See `docs/MASTER_PLAN.md` for the full delivery plan, `docs/ROADMAP.md` for the staged roadmap, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts, `docs/ENGINEERING_QUALITY_PROGRAMME.md` for the deterministic engineering gates and tool responsibility map, and `docs/AGENT_RUNTIME.md` for the future Hetzner/OpenCode runtime architecture.
+## Agent runtime status
+
+The hosted App Builder runtime is real but broad autonomy is still deliberately disabled.
+
+Validated on the existing Hetzner host:
+
+- Factory service under the isolated `appbuilder` Linux identity;
+- OpenCode `1.18.14` on its own loopback endpoint;
+- resource isolation and rootless Podman groundwork;
+- bounded OpenCode -> MCP -> Factory lane;
+- OpenCode itself reports `app-builder connected`;
+- real-host MCP smoke passed 44 checks / 30 operations and wrote evidence under `/srv/app-builder/artifacts/`.
+
+This proves the supported bounded lane, not the final security boundary. Issue #55 remains the pre-agent hardening requirement: a future worker with shell/network authority must be physically unable to bypass scoped capabilities by calling the richer internal Factory HTTP surface directly.
+
+The planned runtime also treats provider exhaustion/interruption as durable scheduler state rather than losing work. Sessions are disposable; project/task state is durable. A future provider-capacity router will use deterministic/free/cheap models first where benchmarked quality permits, premium models where they materially improve the task, independent model families for valuable second opinions, and paid overage only when explicitly authorised.
+
+## Authorities
+
+- machine-readable progress: `config/factory-status.json`;
+- staged sequencing: `docs/ROADMAP.md`;
+- detailed delivery plan: `docs/MASTER_PLAN.md`;
+- product-proof freeze/maturity/corpus: `docs/PRODUCT_PROOF_PROGRAMME.md`;
+- premium visual programme: `docs/VISUAL_EXCELLENCE.md`;
+- design-side contracts/intelligence: `docs/DESIGN_INTELLIGENCE.md`;
+- professional completeness: `docs/PRODUCTION_COMPLETENESS.md`;
+- deterministic engineering gates: `docs/ENGINEERING_QUALITY_PROGRAMME.md`;
+- control plane: `docs/FACTORY_CONTROL_PLANE.md`;
+- specialist roles/handoffs: `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`;
+- agent runtime: `docs/AGENT_RUNTIME.md`;
+- genuine-business gate: `docs/GENUINE_BUSINESS_ACCEPTANCE.md`;
+- long-run complex-app benchmark: `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
 
 ## Run it yourself
 
@@ -54,30 +114,30 @@ npm install
 npm run dev
 ```
 
-That starts the factory service on `127.0.0.1:4310` and the Builder Console on
-`127.0.0.1:5173`. Node 22.13 or newer is the only prerequisite; no accounts,
-tokens or cloud services are needed to build and preview a site.
+That starts the factory service on `127.0.0.1:4310` and the Builder Console on `127.0.0.1:5173`. Node 22.13 or newer is the only prerequisite for local deterministic build/preview work; provider/model credentials remain optional and broad autonomous execution is not enabled by default.
 
-In the Console you can today:
+In the Console you can already:
 
 - work through the adaptive intake questionnaire and approve a Build Contract;
-- create a durable project from the resulting Manifest;
-- ingest real source material — company URLs to crawl, or logos, photos,
-  documents and spreadsheets uploaded from your machine — declaring what the
-  business has approved for republication;
-- generate the project, verify that it installs, checks and builds on its own,
-  and open a live preview at desktop, tablet and mobile widths;
-- watch durable tasks, the event ledger, cost and build history;
-- add more material later and rebuild — each build gets its own workspace, so
-  the previous one stays intact for comparison.
+- create/open durable projects;
+- ingest real source material — company URLs to crawl, or logos, photos, documents and spreadsheets uploaded from your machine — with explicit publication/reference rights state;
+- generate the project, verify that it installs/checks/builds independently, and open live responsive previews;
+- watch durable tasks/events/cost/build/checkpoint history;
+- click rendered content through Element Identity and make provenance-aware durable text edits;
+- inspect/manage source and asset governance;
+- adjust supported section presentation/design controls;
+- capture/review RenderedEvidence.
 
-Generated projects are ordinary repositories. `.app-builder/workspaces/`
-holds them; copy one anywhere, `npm install && npm run dev`, and it runs with no
-dependency on the factory.
+Generated projects are ordinary repositories. Factory-managed workspaces hold generated builds/checkpoints, but the output itself must remain independently installable/buildable with no App Builder runtime dependency.
 
-Not in the Console yet: editing content or swapping images by clicking them
-(Phase 4B), choosing a design direction (4C/4D), and deploying (4E). Until then
-a finished site is deployed by hand from its own repository.
+Still planned/not mature enough to claim:
+
+- full BrandSpec/DesignSystemSpec/ArtDirectionPlan-driven generation (4C);
+- controlled 2–4 direction comparison/promotion (4D);
+- static/content renderer proof (4.2);
+- production environment/deploy controls (4E);
+- real autonomous specialist execution (4.5/5 gate first);
+- native mobile generation.
 
 ## Commands
 
@@ -96,6 +156,9 @@ npm run validate:example
 npm run create-app -- --manifest examples/project-manifest.example.json --out /tmp/app-builder-demo
 npm run service
 npm run mcp
+npm run opencode:doctor
+npm run opencode:smoke
+npm run agents:materialise
 npm run dev
 ```
 
@@ -104,19 +167,19 @@ npm run dev
 ```text
 apps/console/                    Private Builder Console UI
 apps/service/                    Private factory service and durable read/API boundary
-apps/mcp/                        Private MCP v2 adapter over the loopback factory service
+apps/mcp/                        Private MCP adapter over the loopback factory service
 config/                          Module, project, routing, policy, role, pipeline, skill, source, benchmark and status registries
 schemas/                         Stable intake/build/control-plane/product-quality contracts
 packages/contracts/              Shared/generated contracts target
 packages/factory-core/           Deterministic factory engine
 packages/content-intelligence/   Deterministic source/content normalization and asset governance
-packages/control-plane/          Durable task/ledger/ChangeSet/checkpoint/policy/upgrade primitives and specialist role/handoff/review/convergence primitives
+packages/control-plane/          Durable task/ledger/ChangeSet/checkpoint/policy/upgrade/role/handoff/review/convergence primitives
 recipes/                         Optional capability recipes installed into generated apps
-templates/                       Project-type templates
+templates/                       Generated-project template families
 questionnaires/                  Versioned adaptive intake questions
-tooling/                         create-app, validation, doctor, benchmark, upgrade-plan and control-plane tools
-docs/                            Small authoritative architecture/product/delivery docs
-examples/                        Known-good manifests/build contracts used by tests
+tooling/                         Generation, validation, doctor, benchmark, acceptance, runtime and control-plane tools
+docs/                            Authoritative architecture/product/delivery/evidence programmes
+examples/                        Known-good manifests/build contracts and acceptance baselines
 ```
 
-See `AGENTS.md` before making architecture changes and `docs/ROADMAP.md` for planned stages.
+See `AGENTS.md` before making architecture changes and `docs/ROADMAP.md` for the current staged sequence.

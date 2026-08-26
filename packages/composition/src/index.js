@@ -524,6 +524,34 @@ function warningsFor(manifest, pack, assetDecisions) {
   return unique(warnings);
 }
 
+/**
+ * The recovery surface.
+ *
+ * Deliberately says nothing about the business: it is reached by accident, and
+ * anything it claimed would be a claim nobody asked a source to back. It is out
+ * of navigation by design, which is why the orphan-page and content-less-page
+ * checks exempt it.
+ */
+function notFoundPage(order) {
+  const action = { label: 'Back to home', href: '/' };
+  const hero = section('page-not-found-hero', 'hero', 'Tell the visitor the page does not exist and offer a way back', [
+    defaultBinding('title', 'Page not found'),
+    defaultBinding('body', 'That address does not match a page on this site. It may have moved, or the link may be wrong.'),
+  ], [action], [], 'compact');
+  return {
+    sections: [hero],
+    page: {
+      id: 'page-not-found',
+      path: '/404',
+      title: 'Page not found',
+      purpose: 'Recover from a link that does not resolve.',
+      navigation: { label: 'Not found', order, visible: false },
+      primaryAction: action,
+      sectionIds: [hero.id],
+    },
+  };
+}
+
 export function composeProject({ manifest, knowledgePack = null, assetDecisions = [] } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
   const surfaces = surfacesFor(manifest);
@@ -557,6 +585,14 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       sectionIds: pageSections.map((item) => item.id),
     });
   });
+  // Every generated site needs somewhere for a bad link to land. Without one
+  // the router fell through to the home page, so a mistyped or retired URL
+  // showed the homepage under the wrong address with nothing to tell the
+  // visitor — or a search engine — that the page did not exist.
+  const notFound = notFoundPage(pages.length);
+  sections.push(...notFound.sections);
+  pages.push(notFound.page);
+
   const base = {
     schemaVersion: 1,
     compositionVersion: COMPOSITION_VERSION,

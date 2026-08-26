@@ -139,12 +139,12 @@
     "description": "Predicted meaningful manual edits per canonical project type, measured by tooling/lib/launch-readiness.mjs. These are ceilings, not targets: they exist so a change that makes generated product worse fails immediately. Lower them as the factory improves; never raise one to make a regression pass.",
     "targetMaximum": 20,
     "ceilings": {
-      "marketing-site": 8,
-      "b2b-saas": 6,
-      "consumer-app": 7,
-      "internal-tool": 7,
-      "content-site": 5,
-      "ai-app": 7
+      "marketing-site": 7,
+      "b2b-saas": 4,
+      "consumer-app": 5,
+      "internal-tool": 5,
+      "content-site": 3,
+      "ai-app": 5
     }
   }
 }

@@ -89,7 +89,8 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.locator('.state-pill')).toHaveText('generated', { timeout: 30_000 });
   await expect(page.getByRole('button', { name: 'Verify build' })).toBeVisible();
   await expect(page.getByText('composition · materialised')).toBeVisible();
-  await expect(page.getByText('3 routes')).toBeVisible();
+  // Two declared surfaces plus the not-found route every site now composes.
+  await expect(page.getByText('4 routes')).toBeVisible();
   await expect(sourcePanel.getByText(/Rights are locked after knowledge ingestion or generation/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Verify build' }).click();
@@ -186,14 +187,15 @@ test('Builder Console drives governed sources, generation, verification and prev
   const evidencePanel = page.getByLabel('Rendered evidence');
   await evidencePanel.getByRole('button', { name: 'Capture evidence' }).click();
   await expect(page.getByText('evidence · captured')).toBeVisible({ timeout: 90_000 });
-  await expect(evidencePanel.getByText('9 captures')).toBeVisible();
+  // Three routes plus the not-found route, at three viewports.
+  await expect(evidencePanel.getByText('12 captures')).toBeVisible();
   await expect(evidencePanel.getByRole('img').first()).toBeVisible();
 
   // Every viewport is captured, and the panel says what these pictures are not
   // evidence of rather than implying full coverage.
   for (const viewportName of ['desktop', 'tablet', 'mobile']) {
     await evidencePanel.getByRole('group', { name: 'Evidence viewport' }).getByRole('button', { name: viewportName }).click();
-    await expect(evidencePanel.getByRole('img')).toHaveCount(3);
+    await expect(evidencePanel.getByRole('img')).toHaveCount(4);
   }
   await expect(evidencePanel.getByText(/state\(s\) these captures do not claim/)).toBeVisible();
 

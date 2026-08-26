@@ -46,7 +46,7 @@ test('supported generator writes portable composition state and rendered templat
   fs.rmSync(out, { recursive: true, force: true });
   const result = generateComposedProject(manifest, out, { knowledgePack: pack });
   assert.equal(result.composition.input.knowledgePackHash, 'knowledge-pack-test');
-  assert.equal(result.composition.pages.length, 4);
+  assert.equal(result.composition.pages.length, 5, 'four surfaces plus the not-found route');
   const stored = JSON.parse(fs.readFileSync(path.join(out, '.app-builder/composition.json'), 'utf8'));
   assert.equal(stored.compositionHash, result.composition.compositionHash);
   const generatedModule = fs.readFileSync(path.join(out, 'src/generated/composition.ts'), 'utf8');

@@ -550,3 +550,36 @@ Genuine business acceptance failed:
 ```
 
 Which is the correct answer. Phase 3.8E is not passed.
+
+### F29 — No generated site had anywhere for a bad link to land — P1 ✅ Fixed
+
+`missing-not-found-route` fired on the nbm build and on all six canonical
+project types, and it had done since the check was written. Worse than the
+missing page was what happened instead: the template's router fell through to
+`composed.pages[0]`, so a mistyped or retired URL rendered the **homepage under
+the wrong address**, telling neither the visitor nor a crawler that the page did
+not exist.
+
+Every composition now carries a `/404` surface: out of navigation, with a
+deterministic-default heading and a way back. It claims nothing about the
+business — it is reached by accident, and anything it asserted would be a claim
+no source was asked to back. A test enforces that every binding on it is
+`deterministic-default`.
+
+Two audit rules follow it: a recovery surface is not a journey entry, and it
+does not need a photograph.
+
+Predicted edits per canonical type, after F15–F29:
+
+| project type | before the trial | now |
+| --- | --- | --- |
+| marketing-site | 10 | 7 |
+| b2b-saas | 13 | 4 |
+| consumer-app | 15 | 5 |
+| internal-tool | 15 | 5 |
+| content-site | 8 | 3 |
+| ai-app | 15 | 5 |
+
+Part of that is the audit telling the truth (F15–F17); the rest is output that
+genuinely improved (F18, F23, F24, F26, F29). Ceilings are lowered to the new
+measurements.

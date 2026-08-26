@@ -643,3 +643,86 @@ This future programme is not permission to:
 The sequencing rule is simple:
 
 > **First prove App Builder can repeatedly create exceptional real-business websites with low intervention. Only then use that proven factory to automate customer acquisition.**
+
+---
+
+## 22. Mandatory opportunity-evidence and outreach-preview pack
+
+A prospect must not receive a generic AI-style message containing only a preview link. Before a speculative build is approved, the commercial engine should be able to answer a concrete question with auditable evidence:
+
+> **Why does this particular business appear likely to benefit from a new or replacement website?**
+
+### Opportunity Evidence Pack
+
+Introduce a future structured `OpportunityEvidencePack` owned by the Prospect-to-Customer Engine, not by `factory-core`.
+
+It should preserve the evidence behind the prospect decision, including where available and permitted:
+- business identity and evidence that the company is active;
+- review strength, recency and other evidence of real customer activity;
+- current website/no-website classification and confidence;
+- current digital-presence gaps, such as reliance on social/directory pages rather than an owned site;
+- deterministic findings from an existing site: mobile, performance, accessibility, SEO, broken links/forms, weak conversion path, missing service/location pages and other material defects;
+- competitor evidence relevant to the same geography/category, without inventing conclusions the evidence does not support;
+- useful features or journeys competitors commonly provide that the prospect lacks;
+- evidence-backed search/local visibility opportunities where trustworthy data is available;
+- a concise set of the strongest reasons the prospect was selected;
+- confidence and source/provenance for every material claim;
+- explicit unknowns and claims that must not be made.
+
+The system must never invent a financial-loss number merely to make the pitch stronger. Statements such as "you are losing £25,000 per year" are prohibited unless supported by evidence strong enough for that specific claim. Prefer concrete observations such as a strong local review profile paired with no owned website, or materially weaker online conversion journeys than nearby competitors.
+
+A speculative build should normally require multiple independent evidence-backed reasons rather than a single weak signal. If the engine cannot articulate why the business is a good prospect, it should not spend the build budget.
+
+### Domain-candidate research
+
+For businesses with no suitable owned domain, the evidence stage should generate a small number of sensible domain candidates from trusted identity inputs such as:
+- trading/company name;
+- principal service/category;
+- location where genuinely useful;
+- natural abbreviations.
+
+Availability must be checked live through an approved provider immediately before it is shown to the prospect, and the result must carry a checked-at timestamp because availability can change at any moment.
+
+Rules:
+- show only a small curated set of credible names;
+- avoid spammy keyword-stuffed domains;
+- never imply the domain is reserved or guaranteed merely because it was available at check time;
+- do not buy speculative domains by default;
+- purchase/configure only after agreement unless a later explicitly approved commercial experiment proves otherwise.
+
+### Outreach Preview Pack
+
+After the speculative site has passed the normal App Builder QA/review/convergence gates, generate an `OutreachPreviewPack` from the **exact reviewed preview revision**.
+
+The pack should make the proposal understandable even when the recipient does not click a link or their email client blocks remote images. At minimum it should contain:
+- a strong desktop above-the-fold screenshot from the real rendered site;
+- a representative mobile screenshot from the same reviewed revision;
+- one polished combined preview image suitable for email, for example a desktop-browser presentation paired with a phone view;
+- a concise evidence panel containing the strongest two-to-four prospect-specific reasons the site was built;
+- live-checked suggested domain candidate(s) when relevant, clearly labelled with availability timestamp/limitations;
+- the canonical preview URL;
+- optional QR code for cross-device viewing where useful;
+- exact build/preview revision identity so the screenshots cannot drift from the link being sold.
+
+Screenshots must come from browser-rendered evidence of the real generated website. Do **not** use image generation to fabricate a prettier mock-up that the preview does not actually match.
+
+The default outreach should therefore communicate, without requiring a click:
+
+`why this business -> evidence -> what was built -> visual proof -> optional full preview`
+
+rather than:
+
+`generic compliment -> unexplained link`.
+
+The email/message must still be coherent when images are blocked. Screenshots are persuasive collateral, not the only place where the offer or evidence is communicated.
+
+### Integration with existing gates and stages
+
+This requirement extends, rather than replaces, the existing programme:
+- **PTC-2** should ultimately produce the inspectable opportunity evidence and domain-candidate decision as part of qualification;
+- **PTC-4** should produce approved rendered evidence from the exact converged preview revision;
+- **PTC-6** should generate the first human-approved Outreach Preview Packs and measure whether screenshot/evidence-led outreach improves reply and conversion rates;
+- **PTC-7** may automate sending only after the pack format, evidence rules and compliance behaviour are proven;
+- the **quality gate before outreach** remains authoritative: no screenshots or persuasive collateral may be generated from an unreviewed or superseded build and represented as the current product.
+
+Track which evidence types, screenshot formats and domain signals correlate with replies and purchases. These correlations may later inform prospect scoring, but they remain evidence for reviewed model/rule changes rather than permission for silent self-modification.

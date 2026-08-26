@@ -38,7 +38,7 @@ budgets and credit disappear.
 | Is deterministic behaviour correct? | `node --test` unit/contract tests | CI |
 | Do invariants survive a broad input space? | property tests | domain verification |
 | Would a plausible mutation escape the tests? | mutation testing | test-strength verification |
-| Is anything unused or orphaned? | dead-code/unused-dependency analysis | hygiene |
+| Is anything unused or orphaned? | `npm run orphans` (Stage Q6 ✅) | blocking hygiene CI |
 | Is the supply chain and workflow estate sound? | dependency review, secret scanning, SBOM, static analysis | security CI |
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
@@ -174,13 +174,65 @@ Use the tooling appropriate to the generated stack. Stylelint is one candidate; 
 DesignSystemLint over the compiled token set may be a better fit because it can read the spec
 directly. Decide by which mechanism can see the token contract, not by convention.
 
-### Stage Q6 — dead code and orphan detection (Phase 4.5)
+### Stage Q6 — dead code and orphan detection ✅ delivered (module reachability)
 
 Unused exports, unused dependencies, stale generated modules, abandoned recipes/components and dead
-registry entries all cost context and credit.
+registry entries all cost context and credit. The plan named `Knip`. Baselining came first, and the
+baseline changed the answer.
 
-Evaluate `Knip` for the factory itself and, where cheap, for generated-project verification. Keep it
-**non-blocking until baselined** — a noisy first run that blocks CI teaches the team to ignore it.
+**What the measurement found.** A read-only reachability pass over the whole repository, plus a
+dependency-reference pass over every workspace manifest, plus a path-integrity pass over
+`config/*.json`:
+
+| question | finding |
+| --- | --- |
+| factory modules nothing can reach | **0** (`npm run orphans` prints the current module and entry-point counts) |
+| workspace dependencies nothing references | **0** (the only hits were `@types/react` and `@types/react-dom`, which TypeScript resolves implicitly) |
+| registry paths naming a file that does not exist | **1**, `recipes/billing/` in `config/risk-surfaces.json` — a deliberate forward-looking security pattern, not drift |
+
+There was no dead code to clean up. What the pass produced instead was a precise account of how this
+repository reaches a module, which is the part a tool has to get right:
+
+1. `import` / `export … from`;
+2. `import()`;
+3. a **path literal** — `tooling/lib/canary-worker.mjs` and `tooling/lib/model-canary-worker.mjs` are
+   spawned as subprocesses and imported by nothing;
+4. a **tool's own entry** — `vite.config.ts` is read by Vite, `apps/console/index.html` names the
+   Console's real entry module in a script tag.
+
+A naive checker reports (3) and (4) as dead, plus every `.d.ts` — 23 false positives against zero
+true ones when the baseline was taken.
+
+**`Knip` was evaluated and not adopted.** It handles most of this, but reaching the same answer here
+needs workspace entries, a production/test split, and configured exceptions for the path-spawned
+workers — configuration that encodes the same four rules the check below encodes directly, with a
+dependency and a config file on top. `AGENTS.md` principle 6 asks that a new package solve a problem
+the platform does not, and the measured problem was zero findings and four reference kinds.
+
+**Adopted instead:** `npm run orphans` (`tooling/orphan-modules.mjs` over
+`tooling/lib/module-graph.mjs`), inside `npm run check`. It is a pure function of a directory tree,
+so it can be run against planted fixtures rather than only against a clean repository.
+
+It is **blocking from the first day**, which is a deliberate departure from "non-blocking until
+baselined": the reason that rule exists is that a noisy first run teaches everyone to ignore the
+gate, and the first run was not noisy — it was empty. A gate that starts at zero has nothing to
+absorb.
+
+`recipes/`, `templates/` and `adapters/` are out of scope. Those files are copied into someone
+else's repository and are reachable from there; `npm run doctor` already validates their manifests,
+and reporting them here would report that the factory does not import the code it ships.
+
+`tooling/orphan-modules.test.mjs` plants an orphan and requires it to be reported, plants an orphan
+that *imports a live module* (the case a reference count gets wrong), and plants each of the four
+reference kinds and each false-positive class and requires them not to be reported. The repository's
+own zero is asserted alongside a floor on how many modules and entry points the walk found, because
+a checker that discovered nothing would also report no orphans.
+
+**Not covered, deliberately:** unused *exports within* a reachable module, and unused dependencies.
+The first needs real symbol resolution to avoid noise; the second measured clean and its only
+findings were implicit type packages, so a gate for it would be noise with no signal behind it.
+Neither is worth a tool today; both become worth revisiting if the reachability answer ever stops
+being zero.
 
 ### Stage Q7 — property-based testing (started; continue selectively)
 
@@ -461,6 +513,8 @@ sequencing item rather than a gap. The contract and its evidence are what had to
 ## Explicit non-adoptions
 
 - No blocking gate before its output has been baselined against real generated projects.
+- No `Knip`: the reachability baseline is zero and the four reference kinds this repository uses fit
+  in a dependency-free check (Stage Q6).
 - No screenshot-everything visual suite.
 - No repository-wide mutation testing on every pull request.
 - No second design-system linter once `DesignSystemSpec` can be read directly.

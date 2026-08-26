@@ -119,6 +119,36 @@ Evaluate Storybook against a lighter repo-native preview route. Adopt it only if
 the Component Manifest/Presentation Registry architecture — not because it is the conventional
 answer. A preview surface that duplicates the registry becomes a second source of truth.
 
+#### Storybook evaluation — 2026-08-26, not adopted
+
+Evaluated once the Presentation Registry existed, as this stage required. **Not adopted**, and
+this is a recorded decision rather than a deferral.
+
+What Storybook would give this factory:
+
+- a component/state matrix surface — but the registry already enumerates the twelve components
+  and their variants, and the service-managed preview already renders a real generated app with
+  real composed content;
+- isolated interaction states — but rendered evidence already drives a real browser over the real
+  build and captures the interaction states the state matrix names, including the failure states,
+  which a story would have to reimplement as a fixture;
+- visual regression fixtures — genuinely useful, and the part worth revisiting. It is not worth a
+  Storybook installation on its own: the same fixtures can come from the registry plus the
+  evidence capture that already exists.
+
+What it would cost:
+
+- a build, config and dependency surface in the factory that has to stay in step with the
+  template's own Vite build;
+- stories per component per variant, which is a **second declaration of what a component renders**
+  beside the template and the registry — the exact duplication this stage warns against;
+- a preview surface showing components against fixture content, next to a preview surface showing
+  the real build against real source-backed content. Two answers to "what does this look like",
+  and the fixture one is the less true.
+
+Revisit only if curated visual regression contracts (Phase 4D) prove they need per-component
+isolation that rendered evidence over a real build cannot provide.
+
 ### Stage Q4 — performance and payload budgets (alongside Phase 4.2/Phase 6)
 
 Measure before optimising; no speculative performance work.

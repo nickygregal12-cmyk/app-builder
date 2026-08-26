@@ -286,7 +286,11 @@ function proofSection(pageId, pack) {
     manifestBinding('title', 'Proof and trust'),
     testimonials,
     accreditations,
-  ], [], [], 'evidence');
+    // No variant: `evidence` named a presentation the template never rendered,
+    // so it fell through to the renderer's own content-driven choice anyway.
+    // `default` says that plainly, and lets each binding keep being shown the
+    // way its own items deserve.
+  ]);
 }
 
 /** Proof kinds the operator declared that no ingested source can back. */
@@ -328,9 +332,12 @@ function locationsSection(pageId, pack, manifest) {
 
 function enquiryFormSection(pageId, manifest) {
   if (manifest?.modules?.['lead-generation'] !== true) return null;
+  // No variant: the component renders one way, and naming a presentation the
+  // template does not implement put `variant-panel` into the composition, the
+  // generated module and element identity, styling nothing.
   return section(`${pageId}-enquiry`, 'enquiry-form', 'Capture enquiries where the capability is installed', [
     manifestBinding('title', 'Send an enquiry'),
-  ], [], [], 'panel');
+  ]);
 }
 
 function contactSection(pageId, pack, manifest) {
@@ -340,7 +347,7 @@ function contactSection(pageId, pack, manifest) {
   // A panel holding only social profiles is not "Contact" — naming it for what
   // it holds also keeps it from being deduped against a page called Contact.
   const title = bindings.length ? 'Contact' : 'Find us online';
-  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', title), ...bindings, profiles], [], [], 'panel');
+  return section(`${pageId}-contact`, 'contact-panel', 'Present confirmed public contact methods', [manifestBinding('title', title), ...bindings, profiles]);
 }
 
 function entitiesSection(pageId, manifest) {
@@ -371,7 +378,7 @@ function gallerySection(pageId, pack, manifest, assetDecisions) {
   return section(`${pageId}-gallery`, 'gallery', 'Show approved work and point to where the rest of it lives', [
     manifestBinding('title', manifest?.project?.type === 'marketing-site' ? 'Recent work' : 'Gallery'),
     assets.length ? null : defaultBinding('body', 'Recent projects are posted to our social profiles.'),
-  ], actions, assets.map((asset) => asset.id), 'grid');
+  ], actions, assets.map((asset) => asset.id));
 }
 
 // Journeys describe what a product lets a user do, which is real content for an
@@ -413,7 +420,7 @@ function ctaSection(pageId, pack, manifest, action, index) {
   return section(`${pageId}-cta`, 'cta', 'Provide the primary next action', [
     defaultBinding('title', title),
     index === 0 ? summaryFromDeclaredFacts(pack, manifest) : null,
-  ], [action], [], 'accent');
+  ], [action]);
 }
 
 function sectionsForPage({ surface, pageId, index, manifest, pack, action, assetDecisions }) {
@@ -434,7 +441,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action, asset
     output.push(servicesSection(pageId, pack, manifest));
     output.push(projectsSection(pageId, pack));
   } else if (/about|team|people/.test(lower)) {
-    output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)], [], [], 'prose'));
+    output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)]));
     output.push(peopleSection(pageId, pack));
     output.push(proofSection(pageId, pack));
   } else if (/work|gallery|portfolio|project/.test(lower)) {

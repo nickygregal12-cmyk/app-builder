@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "description": "Component Manifest data for the presentation components the factory actually renders. This is not a second declaration of what a component is: the template owns each component's id, version, binding roles and variants, and this records only what the template cannot express \u2014 how a component is rendered, what a build must have wired for it to render correctly, and which design tokens its own appearance depends on. Entries exist only for components that render today; a component that does not yet exist belongs here as `planned` or not at all.",
+  "components": {
+    "hero-section": {
+      "sectionType": "hero",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "The opening of a surface. Carries the name, the claim and the first action.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--hero-scale",
+        "--display-measure",
+        "--font-display",
+        "--text-4xl",
+        "--color-accent",
+        "--layout-radius",
+        "--shadow-lifted"
+      ]
+    },
+    "rich-text-section": {
+      "sectionType": "rich-text",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "A passage of prose at reading width.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--font-display",
+        "--text-3xl",
+        "--text-xl",
+        "--color-text-muted"
+      ]
+    },
+    "item-grid-section": {
+      "sectionType": "item-grid",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "A set of items, shown as cards, a list or feature columns depending on how much each has to say.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-accent",
+        "--color-accent-line"
+      ]
+    },
+    "proof-grid-section": {
+      "sectionType": "proof-grid",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "Evidence a visitor is meant to weigh: accreditations, results, testimonials.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-accent",
+        "--color-accent-line"
+      ]
+    },
+    "people-grid-section": {
+      "sectionType": "people-grid",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "The people behind the business.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-accent",
+        "--color-accent-line"
+      ]
+    },
+    "location-list-section": {
+      "sectionType": "location-list",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "Where the business works or can be found.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-accent",
+        "--color-accent-line"
+      ]
+    },
+    "entity-list-section": {
+      "sectionType": "entity-list",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "The records an application surface is about.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-accent",
+        "--color-accent-line"
+      ]
+    },
+    "content-list-section": {
+      "sectionType": "content-list",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "Published pieces on a content surface.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--section-alt-ground",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-accent",
+        "--color-accent-line"
+      ]
+    },
+    "gallery-section": {
+      "sectionType": "gallery",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "Photographs the build is allowed to publish, or a pointer to where the rest of the work lives.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-radius",
+        "--shadow-soft",
+        "--motion-duration-slow",
+        "--motion-ease",
+        "--motion-decorative-scale"
+      ]
+    },
+    "cta-section": {
+      "sectionType": "cta",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "The closing ask, on its own ground so it does not read as one more section.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--layout-max-width",
+        "--layout-radius",
+        "--color-surface-inverse",
+        "--color-text-inverse",
+        "--radius-pill"
+      ]
+    },
+    "contact-panel-section": {
+      "sectionType": "contact-panel",
+      "lifecycle": "ready",
+      "renderer": "template",
+      "purpose": "How to reach the business, as addressable links rather than typed-out text.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--layout-radius",
+        "--shadow-soft",
+        "--color-border",
+        "--color-accent",
+        "--radius-pill"
+      ]
+    },
+    "enquiry-form-section": {
+      "sectionType": "enquiry-form",
+      "lifecycle": "ready",
+      "renderer": "recipe",
+      "purpose": "An enquiry a visitor can send. The capability recipe owns how it behaves and how it reports failure.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens",
+        "recipe:lead-generation"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--radius-sm",
+        "--color-border-strong",
+        "--color-accent",
+        "--color-ink"
+      ]
+    }
+  }
+}

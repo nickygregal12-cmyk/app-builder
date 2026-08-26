@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   captureRenderedEvidence,
+  decideProjectAsset,
   generateProject,
   ingestSources,
   loadWorkspace,
@@ -13,7 +14,9 @@ import {
   verifyProject,
   type ContentOverride,
   type ElementResolution,
+  type AssetDecisionRequest,
   type KnowledgeSummary,
+  type ProjectAsset,
   type ProjectSummary,
   type RenderedEvidence,
   type SourceGovernanceDecision,
@@ -48,6 +51,7 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'quality.check.succeeded') return `Checks passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.build.succeeded') return `Production build passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'source.governance.updated') return `${String(payload.sourceId ?? 'Source')} · ${label(String(payload.decision ?? 'updated'))}`;
+  if (event.type === 'asset.governance.updated') return `${label(String(payload.decision ?? 'updated'))}${payload.cropReview ? ` · crop ${label(String(payload.cropReview))}` : ''} · ${String(payload.decided ?? 0)} decided`;
   if (event.type === 'evidence.capture.started') return `Capturing ${String(payload.planned ?? 0)} view(s) across ${((payload.viewports as string[] | undefined) ?? []).join(', ')}`;
   if (event.type === 'evidence.captured') return `${String(payload.captures ?? 0)} capture(s) · ${String(payload.uncovered ?? 0)} state(s) uncovered`;
   if (event.type === 'preview.started') return 'Local preview available';
@@ -238,6 +242,73 @@ function ElementInspector({ selection, resolution, resolving, override, onSave, 
   </section>;
 }
 
+
+function dimensions(asset: ProjectAsset) {
+  if (!asset.width || !asset.height) return 'dimensions unknown';
+  return `${asset.width}×${asset.height}${asset.lowResolution ? ' · low resolution' : ''}`;
+}
+
+/**
+ * Asset manager.
+ *
+ * Approving a source is not approving every asset derived from it, so each
+ * image carries its own decision. What it inherited from its source and what a
+ * person decided are shown separately: an asset nobody has looked at must not
+ * read as one that was approved.
+ */
+function AssetPanel({ assets, onDecide, busyAssetId, disabled }: {
+  assets: ProjectAsset[];
+  onDecide: (assetId: string, decision: AssetDecisionRequest) => Promise<void>;
+  busyAssetId: string | null;
+  disabled: boolean;
+}) {
+  const publishable = assets.filter((asset) => asset.publishUseAllowed).length;
+  const undecided = assets.filter((asset) => !asset.decision && !asset.duplicateOf).length;
+
+  return <section className="builder-panel asset-panel" aria-label="Assets and publication rights">
+    <div className="panel-title-row"><span className="builder-kicker">Assets</span><span>{publishable}/{assets.length} publishable</span></div>
+    {assets.length === 0
+      ? <p className="builder-empty">Ingest company images to decide what may be published.</p>
+      : <>
+        <p className="builder-empty">
+          A public page can be read without its photographs becoming republishable. Each image is decided on its own.
+          {undecided > 0 ? ` ${undecided} still undecided.` : ''}
+        </p>
+        <div className="asset-list">{assets.map((asset) => {
+          const busy = busyAssetId === asset.id;
+          const blocked = disabled || busy || Boolean(asset.duplicateOf);
+          return <article className="asset-item" key={asset.id}>
+            <div className="asset-heading">
+              <strong>{asset.sourceLabel ?? asset.id}</strong>
+              <span className={asset.publishUseAllowed ? 'rights-pill publishable' : 'rights-pill'}>{label(asset.assetStatus)}</span>
+            </div>
+            <span className="asset-meta">{label(asset.kind)} · {label(asset.provenance)} · {label(asset.sourceChannel)}</span>
+            <span className="asset-meta">{dimensions(asset)} · {asset.variantCount} variant{asset.variantCount === 1 ? '' : 's'}</span>
+            {asset.duplicateOf && <span className="asset-note">Exact duplicate of another asset — decide that one instead.</span>}
+            {asset.visualDuplicateOf && !asset.duplicateOf && <span className="asset-note">Looks like another ingested image.</span>}
+            <span className="asset-meta">
+              Inherited: {label(asset.inherited.rightsStatus)} · {asset.decision ? `decided ${label(asset.decision.decision)}` : 'no decision yet'}
+            </span>
+            {asset.cropCount > 0 && <span className="asset-meta">
+              {asset.cropCount} generated crop{asset.cropCount === 1 ? '' : 's'} · {asset.cropReview === 'approved' ? 'approved, will publish' : 'withheld until reviewed'}
+            </span>}
+            {!asset.duplicateOf && <div className="asset-actions">
+              <button type="button" onClick={() => onDecide(asset.id, { decision: 'approve', rightsDeclaration: asset.rightsDeclarationRequired ? 'owned-by-the-business' : null, cropReview: asset.cropReview === 'approved' ? 'approved' : 'pending' })} disabled={blocked}>
+                {asset.rightsDeclarationRequired ? 'Approve — we own this' : 'Approve'}
+              </button>
+              {asset.cropCount > 0 && asset.publishUseAllowed && <button type="button" onClick={() => onDecide(asset.id, { decision: 'approve', rightsDeclaration: asset.decision?.rightsDeclaration as AssetDecisionRequest['rightsDeclaration'], cropReview: asset.cropReview === 'approved' ? 'pending' : 'approved' })} disabled={blocked}>
+                {asset.cropReview === 'approved' ? 'Withhold crops' : 'Approve crops'}
+              </button>}
+              <button type="button" onClick={() => onDecide(asset.id, { decision: 'reject' })} disabled={blocked}>Reject</button>
+              <button type="button" onClick={() => onDecide(asset.id, { decision: 'do-not-use' })} disabled={blocked}>Do not use</button>
+              {asset.decision && <button type="button" onClick={() => onDecide(asset.id, { decision: 'clear' })} disabled={blocked}>Clear</button>}
+            </div>}
+          </article>;
+        })}</div>
+      </>}
+  </section>;
+}
+
 const UNCOVERED_REASON: Record<string, string> = {
   'not-visually-provable': 'a picture cannot show this',
   'needs-a-deterministic-fixture': 'needs a fixture build',
@@ -291,6 +362,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const [device, setDevice] = useState<Device>('desktop');
   const [operation, setOperation] = useState<Operation>(null);
   const [sourceOperation, setSourceOperation] = useState<string | null>(null);
+  const [assetOperation, setAssetOperation] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [selection, setSelection] = useState<Selection | null>(null);
   const [resolution, setResolution] = useState<ElementResolution | null>(null);
@@ -430,6 +502,20 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     setSelection(null);
   }, [overrides, selection, writeOverrides]);
 
+  const decideAsset = useCallback(async (assetId: string, decision: AssetDecisionRequest) => {
+    setAssetOperation(assetId);
+    setError('');
+    try {
+      await decideProjectAsset(projectId, assetId, decision);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      await refresh().catch(() => undefined);
+    } finally {
+      setAssetOperation(null);
+    }
+  }, [projectId, refresh]);
+
   const decideSource = useCallback(async (sourceId: string, decision: SourceGovernanceDecision) => {
     setSourceOperation(sourceId);
     setError('');
@@ -448,7 +534,13 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   // Ingested material only reaches the product through a build, so a knowledge
   // pack newer than the live composition is a call to rebuild, not a warning.
   const builtKnowledgeHash = snapshot?.composition?.input?.knowledgePackHash ?? null;
-  const knowledgeIsNewerThanBuild = Boolean(snapshot?.project.workspacePath) && (snapshot?.project.knowledgePackHash ?? null) !== builtKnowledgeHash;
+  const builtDecisionsHash = snapshot?.composition?.input?.assetDecisionsHash ?? null;
+  const built = Boolean(snapshot?.project.workspacePath);
+  const knowledgeIsNewerThanBuild = built && (snapshot?.project.knowledgePackHash ?? null) !== builtKnowledgeHash;
+  // An asset decision changes what the build would publish, so it makes the
+  // live repository stale in exactly the way new source material does.
+  const decisionsAreNewerThanBuild = built && (snapshot?.assetDecisionsHash ?? null) !== builtDecisionsHash;
+  const buildIsBehind = knowledgeIsNewerThanBuild || decisionsAreNewerThanBuild;
   const canGenerate = snapshot ? snapshot.project.state !== 'generating' : false;
   const rebuild = Boolean(snapshot?.project.workspacePath);
   const canVerify = snapshot?.project.state === 'generated';
@@ -468,7 +560,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       <div className="builder-project-meta"><span className={`state-pill state-${snapshot.project.state}`}>{snapshot.project.state}</span><strong>{snapshot.project.name}</strong><span>{snapshot.project.type.replaceAll('-', ' ')}</span></div>
       <div className="builder-actions">
         <button type="button" className="secondary compact" onClick={() => refresh()} disabled={Boolean(operation) || Boolean(sourceOperation)}>Refresh</button>
-        {canGenerate && <button type="button" className={knowledgeIsNewerThanBuild || !rebuild ? 'primary compact' : 'secondary compact'} onClick={() => run('generate')} disabled={Boolean(operation) || Boolean(sourceOperation)}>{operation === 'generate' ? (rebuild ? 'Rebuilding…' : 'Generating…') : (rebuild ? 'Rebuild project' : 'Generate project')}</button>}
+        {canGenerate && <button type="button" className={buildIsBehind || !rebuild ? 'primary compact' : 'secondary compact'} onClick={() => run('generate')} disabled={Boolean(operation) || Boolean(sourceOperation)}>{operation === 'generate' ? (rebuild ? 'Rebuilding…' : 'Generating…') : (rebuild ? 'Rebuild project' : 'Generate project')}</button>}
         {canVerify && <button type="button" className="primary compact" onClick={() => run('verify')} disabled={Boolean(operation)}>{operation === 'verify' ? 'Verifying…' : 'Verify build'}</button>}
         {canPreview && <button type="button" className="primary compact" onClick={() => run('start-preview')} disabled={Boolean(operation)}>{operation === 'start-preview' ? 'Starting…' : 'Start preview'}</button>}
         {previewRunning && <button type="button" className="secondary compact" onClick={() => run('stop-preview')} disabled={Boolean(operation)}>{operation === 'stop-preview' ? 'Stopping…' : 'Stop preview'}</button>}
@@ -477,7 +569,10 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
     {error && <div className="builder-alert" role="alert"><strong>Factory operation failed</strong><span>{error}</span></div>}
 
-    {knowledgeIsNewerThanBuild && !error && <div className="builder-notice"><strong>Source material has changed since the last build.</strong><span>Rebuild the project so the new knowledge reaches the generated repository. The current build stays on disk.</span></div>}
+    {buildIsBehind && !error && <div className="builder-notice">
+      <strong>{knowledgeIsNewerThanBuild ? 'Source material has changed since the last build.' : 'Asset decisions have changed since the last build.'}</strong>
+      <span>Rebuild the project so {knowledgeIsNewerThanBuild ? 'the new knowledge' : 'the new decisions'} reach the generated repository. The current build stays on disk.</span>
+    </div>}
 
     <section className="builder-layout">
       <aside className="builder-sidebar">
@@ -522,6 +617,13 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           disabled={snapshot.project.state === 'generating'}
           busy={operation === 'ingest'}
           onIngest={ingest}
+        />
+
+        <AssetPanel
+          assets={snapshot.assets}
+          onDecide={decideAsset}
+          busyAssetId={assetOperation}
+          disabled={snapshot.project.state === 'generating'}
         />
 
         <section className="builder-panel">

@@ -85,6 +85,35 @@ composition. A human sentence replaces a value without moving the element it
 lives in, so writing copy leaves every address intact; whether a binding has
 been overridden is read live from the composition at resolve time.
 
+## Asset decisions
+
+Composition places an asset only when someone has said it may be published.
+That permission is per asset, not per source.
+
+Source governance settles what the factory may read, before ingestion.
+Approving a company's website as a source says nothing about whether its
+photographs may be republished — those are usually a photographer's, not the
+company's. So each ingested image carries its own decision, made after
+ingestion and still changeable after a build, and an approval that outruns its
+source's rights requires an explicit rights declaration for that asset alone.
+Narrowing never does: refusing to publish something is always allowed.
+
+Decisions live in a durable `asset-decisions.json` beside the knowledge pack
+rather than inside it. The pack is derived truth about sources, and
+`validateKnowledgePack` requires every asset's governance to match the source it
+came from; a person overriding one photograph must not be able to rewrite that
+derivation. `composeProject({ manifest, knowledgePack, assetDecisions })` reads
+both and stays a pure function of its inputs, and the composition records
+`input.assetDecisionsHash` so a decision made after a build reads as newer than
+the build instead of being silently ignored.
+
+Smart crops are withheld until reviewed. Sharp derives `hero-16x9`, `card-4x3`
+and `square-1x1` with an attention heuristic and marks each
+`reviewBeforePublish`. Those crops are copied into the generated repository only
+once someone has approved them. The picture itself still publishes: the template
+falls back to the widest responsive variant and the layout sets its own aspect
+ratio, so an unreviewed crop costs a considered framing rather than the image.
+
 ## Rendered evidence
 
 The launch-readiness audit reads composed output and says so plainly: it cannot

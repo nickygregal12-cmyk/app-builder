@@ -94,19 +94,51 @@ function entityBinding(key, pack, field, manifestItems = []) {
   return null;
 }
 
-// Only assets the business has approved for publication can be placed. An asset
-// that is reference-only, rejected or awaiting approval stays out of the
-// generated site regardless of how good it looks.
-function publishableAssets(pack) {
-  return list(pack?.assets).filter((asset) => asset.publishUseAllowed && !asset.duplicateOf);
+// The composition records which decisions produced it, so a decision made
+// after a build is visibly newer than the build rather than silently ignored.
+export function assetDecisionsHash(assetDecisions) {
+  const entries = list(assetDecisions)
+    .filter((entry) => entry?.assetId && entry?.effect)
+    .map((entry) => [entry.assetId, entry.effect, entry.cropReview ?? 'pending'])
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  return entries.length ? hash(entries) : null;
+}
+
+function decisionsById(assetDecisions) {
+  return new Map(list(assetDecisions).filter((entry) => entry?.assetId && entry?.effect).map((entry) => [entry.assetId, entry]));
+}
+
+function decidedAssets(pack, assetDecisions) {
+  const decisions = decisionsById(assetDecisions);
+  if (!decisions.size) return list(pack?.assets);
+  return list(pack?.assets).map((asset) => {
+    const decision = decisions.get(asset.id);
+    return decision ? { ...asset, ...decision.effect } : asset;
+  });
+}
+
+/**
+ * Only assets the business has approved for publication can be placed. An asset
+ * that is reference-only, rejected or awaiting approval stays out of the
+ * generated site regardless of how good it looks.
+ *
+ * A per-asset decision overrides what the asset inherited from its source, in
+ * both directions: a photograph on an approved source can be turned down, and
+ * one on a reference-only source can be published once someone has declared the
+ * rights for that asset specifically. The rules that decide whether a decision
+ * is allowed live with source governance; what arrives here is the resolved
+ * effect, so composition stays a pure function of its inputs.
+ */
+function publishableAssets(pack, assetDecisions) {
+  return decidedAssets(pack, assetDecisions).filter((asset) => asset.publishUseAllowed && !asset.duplicateOf);
 }
 
 function assetCrop(asset, role) {
   return list(asset.variants).find((variant) => variant.role === role) ?? null;
 }
 
-function leadAsset(pack) {
-  const assets = publishableAssets(pack);
+function leadAsset(pack, assetDecisions) {
+  const assets = publishableAssets(pack, assetDecisions);
   return assets.find((asset) => assetCrop(asset, 'hero-16x9')) ?? assets[0] ?? null;
 }
 
@@ -206,7 +238,7 @@ function section(id, type, purpose, bindings, actions = [], assetIds = [], varia
   return { id, type, purpose, bindings: bindings.filter(Boolean), actions, assetIds: unique(assetIds), variant };
 }
 
-function hero(pageId, surface, index, manifest, pack, action) {
+function hero(pageId, surface, index, manifest, pack, action, assetDecisions) {
   const title = index === 0 ? companyNameBinding(pack, manifest) : manifestBinding('title', surface);
   // A secondary page says what it is in its heading. "Work for MGB Decor."
   // adds nothing and reads as unfinished.
@@ -214,7 +246,7 @@ function hero(pageId, surface, index, manifest, pack, action) {
   // No eyebrow. It previously carried the project type, which published a
   // Build Contract field — "marketing site" — as a caption above the business
   // name on every page.
-  const lead = index === 0 ? leadAsset(pack) : null;
+  const lead = index === 0 ? leadAsset(pack, assetDecisions) : null;
   return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], action ? [action] : [], lead ? [lead.id] : [], index === 0 ? 'primary' : 'compact');
 }
 
@@ -296,9 +328,9 @@ function socialWorkActions(pack, manifest) {
     .map((profile) => ({ label: `More work on ${String(profile.platform).replace(/^./, (letter) => letter.toUpperCase())}`, href: profile.url }));
 }
 
-function gallerySection(pageId, pack, manifest) {
-  const lead = leadAsset(pack);
-  const assets = publishableAssets(pack).filter((asset) => asset.id !== lead?.id);
+function gallerySection(pageId, pack, manifest, assetDecisions) {
+  const lead = leadAsset(pack, assetDecisions);
+  const assets = publishableAssets(pack, assetDecisions).filter((asset) => asset.id !== lead?.id);
   const actions = socialWorkActions(pack, manifest);
   if (!assets.length && !actions.length) return null;
   return section(`${pageId}-gallery`, 'gallery', 'Show approved work and point to where the rest of it lives', [
@@ -347,16 +379,16 @@ function ctaSection(pageId, pack, manifest, action) {
   ], [action], [], 'accent');
 }
 
-function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
+function sectionsForPage({ surface, pageId, index, manifest, pack, action, assetDecisions }) {
   const lower = surface.toLowerCase();
-  const output = [hero(pageId, surface, index, manifest, pack, action)];
+  const output = [hero(pageId, surface, index, manifest, pack, action, assetDecisions)];
   const isHome = index === 0 || lower === 'home';
 
   if (isHome) {
     output.push(servicesSection(pageId, pack, manifest));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
-    output.push(gallerySection(pageId, pack, manifest));
+    output.push(gallerySection(pageId, pack, manifest, assetDecisions));
     output.push(projectsSection(pageId, pack));
     output.push(proofSection(pageId, pack, manifest));
     output.push(locationsSection(pageId, pack, manifest));
@@ -369,7 +401,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action }) {
     output.push(peopleSection(pageId, pack));
     output.push(proofSection(pageId, pack, manifest));
   } else if (/work|gallery|portfolio|project/.test(lower)) {
-    output.push(gallerySection(pageId, pack, manifest));
+    output.push(gallerySection(pageId, pack, manifest, assetDecisions));
     output.push(projectsSection(pageId, pack));
   } else if (/location|area/.test(lower)) {
     output.push(locationsSection(pageId, pack, manifest));
@@ -410,7 +442,7 @@ function surfacesFor(manifest) {
   return explicit.length ? explicit : [...(DEFAULT_SURFACES[manifest?.project?.type] ?? ['Home'])];
 }
 
-function warningsFor(manifest, pack) {
+function warningsFor(manifest, pack, assetDecisions) {
   const warnings = [];
   if (manifest?.schemaVersion !== 2) warnings.push('manifest-v2-not-provided');
   if (!pack) warnings.push('knowledge-pack-not-provided');
@@ -420,14 +452,14 @@ function warningsFor(manifest, pack) {
     if (!contacts.length && !socialProfileBinding(pack, manifest)) warnings.push('missing-contact-details');
     // A marketing site with no imagery is not launchable for most business
     // classes, so silence here would be misleading.
-    if (!publishableAssets(pack).length) warnings.push('no-publishable-imagery');
+    if (!publishableAssets(pack, assetDecisions).length) warnings.push('no-publishable-imagery');
   }
   for (const capability of list(manifest?.constraints?.customCapabilities)) warnings.push(`custom-capability:${capability}`);
   for (const capability of list(manifest?.constraints?.unresolvedCapabilities)) warnings.push(`unresolved-capability:${capability}`);
   return unique(warnings);
 }
 
-export function composeProject({ manifest, knowledgePack = null } = {}) {
+export function composeProject({ manifest, knowledgePack = null, assetDecisions = [] } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
   const surfaces = surfacesFor(manifest);
   const projectAction = primaryAction(manifest, surfaces, knowledgePack);
@@ -439,7 +471,7 @@ export function composeProject({ manifest, knowledgePack = null } = {}) {
     // A call to action that links to the page the visitor is already on is a
     // dead end, so it is dropped for that page rather than rendered.
     const action = projectAction && projectAction.href === path ? null : projectAction;
-    const pageSections = sectionsForPage({ surface, pageId, index, manifest, pack: knowledgePack, action });
+    const pageSections = sectionsForPage({ surface, pageId, index, manifest, pack: knowledgePack, action, assetDecisions });
     sections.push(...pageSections);
     return {
       id: pageId,
@@ -455,10 +487,10 @@ export function composeProject({ manifest, knowledgePack = null } = {}) {
     schemaVersion: 1,
     compositionVersion: COMPOSITION_VERSION,
     projectType: manifest.project.type,
-    input: { manifestVersion: manifest.schemaVersion ?? 1, knowledgePackHash: knowledgePack?.packHash ?? null },
+    input: { manifestVersion: manifest.schemaVersion ?? 1, knowledgePackHash: knowledgePack?.packHash ?? null, assetDecisionsHash: assetDecisionsHash(assetDecisions) },
     pages,
     sections,
-    warnings: warningsFor(manifest, knowledgePack),
+    warnings: warningsFor(manifest, knowledgePack, assetDecisions),
   };
   return { ...base, compositionHash: hash(base) };
 }

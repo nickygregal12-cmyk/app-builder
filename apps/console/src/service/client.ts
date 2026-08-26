@@ -206,9 +206,45 @@ export type RenderedEvidence = {
   setHash: string;
 };
 
+export type AssetDecisionRequest = {
+  decision: 'approve' | 'reject' | 'do-not-use' | 'clear';
+  rightsDeclaration?: 'owned-by-the-business' | 'licensed-for-publication' | null;
+  cropReview?: 'pending' | 'approved' | 'rejected';
+  note?: string;
+};
+
+/** One ingested image, what it inherited from its source, and what a person
+ * decided about it. The two are kept apart: collapsing them would hide whether
+ * anyone has actually looked at the asset. */
+export type ProjectAsset = {
+  id: string;
+  sourceId: string;
+  sourceLabel: string | null;
+  sourceChannel: string;
+  kind: string;
+  provenance: string;
+  mimeType: string | null;
+  width: number | null;
+  height: number | null;
+  aspectRatio: number | null;
+  dominantColor: string | null;
+  lowResolution: boolean;
+  variantCount: number;
+  cropCount: number;
+  duplicateOf: string | null;
+  visualDuplicateOf: string | null;
+  inherited: { rightsStatus: string; assetStatus: string; publishUseAllowed: boolean };
+  decision: { decision: string; rightsDeclaration: string | null; cropReview: string; decidedAt: string; note: string | null } | null;
+  cropReview: string;
+  rightsStatus: string;
+  assetStatus: string;
+  publishUseAllowed: boolean;
+  rightsDeclarationRequired: boolean;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
-  input?: { manifestVersion: number; knowledgePackHash: string | null };
+  input?: { manifestVersion: number; knowledgePackHash: string | null; assetDecisionsHash: string | null };
   pages: Array<{ id: string; path: string; title: string; sectionIds: string[] }>;
   sections: Array<{ id: string; type: string; purpose: string }>;
   warnings: string[];
@@ -228,6 +264,8 @@ export type WorkspaceSnapshot = {
   checkpoints: Checkpoint[];
   overrides: ContentOverride[];
   evidence: RenderedEvidence[];
+  assets: ProjectAsset[];
+  assetDecisionsHash: string | null;
 };
 
 const API_ROOT = '/api';
@@ -277,6 +315,17 @@ export async function resolveElement(projectId: string, target: { pageId: string
   );
 }
 
+export async function listProjectAssets(projectId: string) {
+  return await request<{ assets: ProjectAsset[]; assetDecisionsHash: string | null }>(`/projects/${encodeURIComponent(projectId)}/assets`);
+}
+
+export async function decideProjectAsset(projectId: string, assetId: string, decision: AssetDecisionRequest) {
+  return await request<{ asset: ProjectAsset | null }>(
+    `/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/decision`,
+    { method: 'POST', body: JSON.stringify(decision) },
+  );
+}
+
 export async function listRenderedEvidence(projectId: string) {
   return (await request<{ evidence: RenderedEvidence[] }>(`/projects/${encodeURIComponent(projectId)}/evidence`)).evidence;
 }
@@ -318,7 +367,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
@@ -332,6 +381,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ checkpoints: Checkpoint[] }>(`/projects/${id}/checkpoints`),
     request<{ overrides: ContentOverride[] }>(`/projects/${id}/overrides`),
     request<{ evidence: RenderedEvidence[] }>(`/projects/${id}/evidence`),
+    request<{ assets: ProjectAsset[]; assetDecisionsHash: string | null }>(`/projects/${id}/assets`),
   ]);
   const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
@@ -348,5 +398,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     checkpoints: checkpointsResult.checkpoints,
     overrides: overridesResult.overrides,
     evidence: evidenceResult.evidence,
+    assets: assetsResult.assets,
+    assetDecisionsHash: assetsResult.assetDecisionsHash,
   };
 }

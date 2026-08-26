@@ -61,3 +61,40 @@ export function deriveSourceGovernance(source, kind) {
     publishUseAllowed: rights === 'approved-for-use' && status === 'approved',
   };
 }
+
+export const ASSET_DECISIONS = Object.freeze(['approve', 'reject', 'do-not-use']);
+export const CROP_REVIEWS = Object.freeze(['pending', 'approved', 'rejected']);
+export const RIGHTS_DECLARATIONS = Object.freeze(['owned-by-the-business', 'licensed-for-publication']);
+
+/**
+ * Resolve one per-asset decision.
+ *
+ * Approving a source is not approving every asset derived from it. A company
+ * page can be read for what it says without its photographs becoming
+ * republishable, so an approval that outruns the source's own rights needs a
+ * declaration about this asset specifically. That declaration is made once, per
+ * asset, by a person; it is never inferred from the asset being publicly
+ * visible, which is what stops one click on a public site turning it into a
+ * republishable bucket.
+ *
+ * Narrowing never needs a declaration. Refusing to publish something is always
+ * allowed.
+ */
+export function decideAssetGovernance(asset, source, { decision, rightsDeclaration = null, cropReview = 'pending' } = {}) {
+  if (!ASSET_DECISIONS.includes(decision)) throw new Error(`Unsupported asset decision: ${decision}`);
+  if (!CROP_REVIEWS.includes(cropReview)) throw new Error(`Unsupported crop review state: ${cropReview}`);
+  if (rightsDeclaration !== null && !RIGHTS_DECLARATIONS.includes(rightsDeclaration)) {
+    throw new Error(`Unsupported rights declaration: ${rightsDeclaration}`);
+  }
+
+  if (decision === 'approve') {
+    const sourceApproved = source?.rightsStatus === 'approved-for-use';
+    if (!sourceApproved && !rightsDeclaration) {
+      throw new Error(`Asset ${asset.id} comes from a source that is not approved for use, so approving it needs an explicit rights declaration for this asset.`);
+    }
+    if (asset.duplicateOf) throw new Error(`Asset ${asset.id} is an exact duplicate of ${asset.duplicateOf}; approve that one instead.`);
+    return { rightsStatus: 'approved-for-use', assetStatus: 'approved', publishUseAllowed: true };
+  }
+  if (decision === 'reject') return { rightsStatus: asset.rightsStatus, assetStatus: 'rejected', publishUseAllowed: false };
+  return { rightsStatus: asset.rightsStatus, assetStatus: 'do-not-use', publishUseAllowed: false };
+}

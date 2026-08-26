@@ -39,8 +39,8 @@
       "schema": "composition.schema.json",
       "typeName": "DeterministicProjectComposition",
       "boundary": "Composer output and generated .app-builder/composition.json reads.",
-      "typesHash": "a2fcf2d55500ab2b23d96bd79d51112cfce9a29861f18e8c4e9d772e01b1dfc7",
-      "schemaHash": "13bc15d2497c00cdbf7ddca6a247a253310b94638228806b7a6c94976b3ed854"
+      "typesHash": "ead9aa75bb95defc85dc16ed458aaca69370f3ac5460ab993894c0981ea959ec",
+      "schemaHash": "beb9db5a816da43549906f853a8e0697377a0e60eba2a63f4de3723c44c4b282"
     },
     {
       "id": "control-task",
@@ -97,6 +97,14 @@
       "boundary": "Browser captures of what a build renders, written by the service and read by the Console.",
       "schemaHash": "e0e2694b969db73b985d7b1094db58b003ad58d9c8df180ed864121ee6202524",
       "typesHash": "351462ef6e6b09b9aec0dc93b92d6c66135aba99e863037e66b9ec4c9dd896ef"
+    },
+    {
+      "id": "asset-decision",
+      "schema": "asset-decision.schema.json",
+      "typeName": "AppBuilderAssetDecisions",
+      "boundary": "Per-asset publication decisions recorded by the service and replayed into composition.",
+      "schemaHash": "5cd6e7e96bd79191243449ae0e0445e819aad994bf2cac28bc7d720e0b667fa4",
+      "typesHash": "f489e71977d7c396772c6b03591c2a973371dd46e9af63d003bf85c79a5b17db"
     }
   ],
   "pending": [

@@ -440,6 +440,9 @@ Delivered:
 - **RenderedEvidence**: browser captures of every route at desktop, tablet and
   mobile plus the critical interaction states a build has, with the states a
   capture cannot establish recorded as uncovered rather than omitted;
+- **asset-level governance**: each ingested image carries its own publication
+  decision, an approval beyond its source's rights needs a declaration about
+  that asset, and unreviewed smart crops are withheld;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -512,11 +515,44 @@ portable output stays a product rather than a product plus its review history.
 `APP_BUILDER_BROWSER_EXECUTABLE` points capture at an existing Chromium where a
 host has one.
 
+**Asset-level governance is in place (4B.3a).** Source governance answers "may
+we read this?" and is settled before ingestion. Assets carry their own question
+— "may we publish this particular picture?" — which can only be asked once the
+assets exist, and stays askable afterwards, including after a build, because
+that is when someone looking at the site notices the photograph that should not
+be on it.
+
+Approving a source is not approving every asset derived from it. An approval
+that outruns its source's rights needs an explicit rights declaration for that
+asset alone, made once, by a person, and never inferred from the asset being
+publicly visible. That is what stops one click on a public site turning it into
+a republishable bucket, and it is the asset-level flow `source-governance.js`
+has been deferring to. Narrowing — reject, do not use — never needs a
+declaration.
+
+Decisions live in a durable `asset-decisions.json` beside the knowledge pack
+rather than inside it. The pack is derived truth about sources and every asset
+in it must still agree with the source it came from; a person overriding one
+photograph is a different kind of statement and does not get to rewrite that
+derivation. Composition reads both, records which decisions produced it in
+`input.assetDecisionsHash`, and the Console says when a decision has left the
+live build behind.
+
+**Smart crops now mean something.** Every attention-derived crop has always
+carried `reviewBeforePublish: true` and nothing read it. Unreviewed crops are
+now withheld from the generated repository: the full image still publishes,
+because the template falls back to the widest responsive variant and the layout
+sets its own aspect ratio, so an unreviewed crop costs a considered framing
+rather than the picture.
+
+The Console shows the inventory — provenance, source, channel, dimensions, low
+resolution, variant and crop counts, exact and visual duplicates — with what
+each asset inherited and what a person decided kept apart, so an asset nobody
+has looked at cannot read as one that was approved.
+
 Remaining:
-- asset manager: replacement, crop and focal-point selection;
-- marking assets approved, suggested, generated, rejected or "do not use" from
-  the Console rather than at ingestion;
-- comparing supplied and generated alternatives;
+- asset manager: replacement, crop and focal-point selection (4B.3b);
+- comparing supplied and generated alternatives (needs generation first);
 - section/component variant selection;
 - project asset policy modes;
 - Design Contract editing;

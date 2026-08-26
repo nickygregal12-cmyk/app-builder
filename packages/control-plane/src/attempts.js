@@ -190,6 +190,9 @@ export function createAttemptPlan(input, secret, now = new Date()) {
     scratchPath: input?.scratchPath,
     brokerSocketPath: input?.brokerSocketPath,
     grantPath: input?.grantPath,
+    // Absent unless a caller explicitly asks for it. An attempt gets the model
+    // lane the same way it gets everything else here: named, or not present.
+    modelSocketPath: input?.modelSocketPath ?? null,
     limits: input?.limits ?? null,
   });
 
@@ -243,6 +246,10 @@ export function createAttemptPlan(input, secret, now = new Date()) {
     image,
     networkProfile: spec.network.profile,
     brokerSocket: spec.factoryAccess.brokerSocket,
+    // Durable, because "was this attempt able to reach a model at all?" is a
+    // question a reviewer must be able to answer from the ledger months later
+    // rather than from the command that started it.
+    modelLane: spec.modelAccess === null ? null : { transport: spec.modelAccess.transport, gatewaySocket: spec.modelAccess.gatewaySocket },
     workspace: { host: input?.workspacePath, scratch: input?.scratchPath, container: spec.workspace.containerPath },
     limits: { ...spec.limits },
     budget: {
@@ -329,6 +336,7 @@ export function attemptEventPayload(attempt, extra = {}) {
     exitCode: attempt.exitCode,
     image: attempt.image,
     networkProfile: attempt.networkProfile,
+    modelLane: attempt.modelLane ?? null,
     capabilities: attempt.capabilities,
     mutationScopes: attempt.mutationScopes,
     grant: attempt.grant,

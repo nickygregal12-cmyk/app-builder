@@ -101,6 +101,12 @@ export function podmanContainerArgs(spec, { image, command = [], name = null, ve
   if (spec.factoryAccess.grantFile !== null && spec.factoryAccess.grantFile !== undefined) {
     args.push('--env', `${spec.factoryAccess.grantFileEnvironmentVariable}=${spec.factoryAccess.containerGrantPath}`);
   }
+  // The model lane, when the spec has one, is exactly as much co-ordinate as
+  // the Factory lane: the in-container socket path. No endpoint, no model name
+  // and no credential has a representation here either.
+  if (spec.modelAccess !== null && spec.modelAccess !== undefined) {
+    args.push('--env', `${spec.modelAccess.socketEnvironmentVariable}=${spec.modelAccess.containerSocketPath}`);
+  }
   const allowed = new Set(spec.environment?.allowed ?? []);
   for (const [key, value] of Object.entries(environment)) {
     // Deny-by-default, and the spec's own forbidden patterns are re-checked

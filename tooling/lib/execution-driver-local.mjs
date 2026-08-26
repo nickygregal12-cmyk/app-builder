@@ -124,6 +124,11 @@ function sandboxEnvironment(spec, attempt, { workspace, scratch, grantFile, resu
     APP_BUILDER_SCRATCH: scratch,
     APP_BUILDER_RESULT_FILE: resultFile,
     APP_BUILDER_AGENT_BROKER_SOCKET: hostPath(spec, spec.factoryAccess.containerSocketPath),
+    // Only when the spec carries a model lane. A socket path and nothing else:
+    // the provider endpoint, model name and credential all stay on the trusted
+    // side of this socket, and the allow-list below refuses this variable
+    // outright for a spec that declared no lane.
+    ...(spec.modelAccess ? { APP_BUILDER_MODEL_SOCKET: hostPath(spec, spec.modelAccess.containerSocketPath) } : {}),
     ...(grantFile ? { APP_BUILDER_AGENT_GRANT_FILE: grantFile } : {}),
     ...extra,
   };
@@ -210,7 +215,13 @@ export function createLocalExecutionDriver({ nodeExecutable = process.execPath, 
       const inner = runner?.privileged
         ? ['env', ...Object.entries(entry.environment).map(([key, value]) => `${key}=${value}`), binary, ...rest]
         : [binary, ...rest];
-      const argv = runner ? [...runner.prefix, ...inner] : [binary, ...rest];
+      // `spawn(file, args)` does not take argv[0] in `args`. Repeating the
+      // binary here made the unisolated path run the Node executable as its own
+      // script — "SyntaxError: Invalid or unexpected token \x7fELF" — so the
+      // `isolationMode: 'none'` the canary documents could never actually run
+      // an attempt. It reads as a failed task rather than as a broken runner,
+      // which is the worst way for this to be wrong.
+      const argv = runner ? [...runner.prefix, ...inner] : [...rest];
       const executable = runner ? runner.binary : binary;
       // `detached` makes the attempt a process-group leader, so a cancel can
       // signal the whole group rather than only whatever the supervisor

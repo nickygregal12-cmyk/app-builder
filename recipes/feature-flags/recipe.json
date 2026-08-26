@@ -4,11 +4,34 @@
   "module": "feature-flags",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
-  "files": ["src/features/feature-flags/index.ts"],
+  "compatibleTemplates": [
+    "react-vite-neutral",
+    "astro-static-content"
+  ],
+  "files": [
+    "src/features/feature-flags/index.ts"
+  ],
   "requires": [],
   "requiresAdapters": [],
   "conflicts": [],
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{}},
-  "entry": "src/features/feature-flags/index.ts"
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  },
+  "entry": "src/features/feature-flags/index.ts",
+  "renderers": {
+    "static-content": {
+      "filesRoot": "renderers/static-content/files",
+      "entry": "src/features/feature-flags/index.ts",
+      "files": [
+        "src/features/feature-flags/index.ts"
+      ],
+      "package": {
+        "dependencies": {},
+        "devDependencies": {},
+        "scripts": {}
+      }
+    }
+  }
 }

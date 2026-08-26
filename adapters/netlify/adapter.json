@@ -4,11 +4,31 @@
   "kind": "deployment",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
-  "files": ["netlify.toml", "docs/DEPLOYMENT.md"],
+  "compatibleTemplates": [
+    "react-vite-neutral",
+    "astro-static-content"
+  ],
+  "files": [
+    "netlify.toml",
+    "docs/DEPLOYMENT.md"
+  ],
   "package": {
     "dependencies": {},
     "devDependencies": {},
     "scripts": {}
+  },
+  "renderers": {
+    "static-content": {
+      "filesRoot": "renderers/static-content/files",
+      "files": [
+        "netlify.toml",
+        "docs/DEPLOYMENT.md"
+      ],
+      "package": {
+        "dependencies": {},
+        "devDependencies": {},
+        "scripts": {}
+      }
+    }
   }
 }

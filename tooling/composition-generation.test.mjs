@@ -52,8 +52,14 @@ test('supported generator writes portable composition state and rendered templat
   const generatedModule = fs.readFileSync(path.join(out, 'src/generated/composition.ts'), 'utf8');
   assert.match(generatedModule, /North Star Roofing Ltd/);
   assert.match(generatedModule, /fact-name/);
-  const app = fs.readFileSync(path.join(out, 'src/App.tsx'), 'utf8');
-  assert.match(app, /generated\/composition/);
+  // The renderer is read from the template's own presentation declaration
+  // rather than named here. Which file renders a composed section is a property
+  // of the renderer that was selected, and this project type is now rendered
+  // statically — asserting `src/App.tsx` would only ever be asserting which
+  // renderer the factory happened to pick.
+  const renderer = fs.readFileSync(path.join(out, result.plan.template.presentation.renderer), 'utf8');
+  assert.match(renderer, /generated\/composition|lib\/composition/);
+  assert.equal(result.plan.renderer.rendererId, 'static-content', 'a marketing site is rendered statically');
   assert.ok(fs.existsSync(path.join(out, 'package.json')));
   fs.rmSync(out, { recursive: true, force: true });
 });

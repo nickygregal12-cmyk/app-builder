@@ -11,7 +11,7 @@ import { chooseSectionVariant, sectionVariantOptions } from '../apps/service/src
 import { readJson } from './lib/manifest.mjs';
 
 const template = readJson('templates/react-vite-neutral/template.json');
-const STYLES = fs.readFileSync('templates/react-vite-neutral/files/src/styles.css', 'utf8');
+const STYLES = fs.readFileSync('templates/shared/presentation/styles.css', 'utf8');
 const APP = fs.readFileSync('templates/react-vite-neutral/files/src/App.tsx', 'utf8');
 
 function manifest(slug) {

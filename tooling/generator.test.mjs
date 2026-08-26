@@ -10,16 +10,24 @@ const catalog = loadCatalog();
 
 test('generation plan keeps backend-less marketing apps free of backend adapters', () => {
   const plan = buildGenerationPlan(marketingManifest, { catalog });
-  assert.equal(plan.template.id, 'react-vite-neutral');
+  // Phase 4.2: a marketing site is rendered statically. The rest of the plan is
+  // unchanged by that, which is the point of the seam — the renderer decides
+  // how the truth is rendered, not what is installed.
+  assert.equal(plan.renderer.rendererId, 'static-content');
+  assert.equal(plan.template.id, 'astro-static-content');
   assert.deepEqual(plan.adapters.map((adapter) => adapter.id), ['netlify']);
   assert.equal(plan.adapters.some((adapter) => adapter.kind === 'backend'), false);
   assert.deepEqual(plan.recipes.map((recipe) => recipe.id), ['analytics', 'feature-flags', 'lead-generation', 'observability', 'seo']);
 });
 
 test('supabase backend is selected as infrastructure rather than a user module', () => {
+  // A backend is infrastructure, so it is chosen on a project that is rendered
+  // as an application: the Supabase adapter is a React client and says so.
   const manifest = structuredClone(marketingManifest);
+  manifest.project.type = 'b2b-saas';
   manifest.infrastructure.backend = 'supabase';
   const plan = buildGenerationPlan(manifest, { catalog });
+  assert.equal(plan.renderer.rendererId, 'application');
   assert.deepEqual(plan.adapters.map((adapter) => adapter.id), ['supabase', 'netlify']);
   assert.equal(plan.missingModules.length, 0);
 });
@@ -35,6 +43,7 @@ test('generated supabase project pins the SDK and writes public env contract', (
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-supabase-'));
   const out = path.join(tmp, 'project');
   const manifest = structuredClone(marketingManifest);
+  manifest.project.type = 'b2b-saas';
   manifest.infrastructure.backend = 'supabase';
   generateProject(manifest, out, { catalog });
   const pkg = JSON.parse(fs.readFileSync(path.join(out, 'package.json'), 'utf8'));

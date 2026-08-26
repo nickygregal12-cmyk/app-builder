@@ -12,6 +12,14 @@ body { background: var(--color-page); color: var(--color-text); font-family: var
 .site-header nav a:hover { background: var(--color-surface-muted); color: var(--color-ink) }
 .site-header nav a.active { background: var(--color-ink); color: var(--color-text-inverse) }
 .app-shell { flex: 1 }
+/* A disclosure control that has not been enhanced is hidden rather than left
+   present and inert. The static renderer ships its navigation open and lets a
+   script collapse it, so with no JavaScript there is nothing to toggle.
+   Both selectors are needed: the mobile rule that shows the toggle is
+   `.site-header.nav-disclosure .nav-toggle`, which ties on specificity and
+   wins on source order, so the compound form has to out-rank it explicitly. */
+.site-header .nav-toggle[hidden],
+.site-header.nav-disclosure .nav-toggle[hidden] { display: none }
 
 /* Section rhythm. Alternating ground replaces the hairline rule that used to
    sit under every section and flattened the whole page. ------------------ */
@@ -99,7 +107,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .cta-section .primary-action { background: var(--color-text-inverse); color: var(--color-ink) }
 
 /* Footer ---------------------------------------------------------------- */
-.site-footer { display: flex; justify-content: space-between; gap: 32px; padding: 40px max(20px, calc((100vw - var(--layout-max-width)) / 2)) 56px; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: .86rem }
+.site-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 32px; padding: 40px max(20px, calc((100vw - var(--layout-max-width)) / 2)) 56px; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: .86rem }
 .site-footer strong { color: var(--color-ink); font-size: 1rem }
 .footer-identity { display: flex; flex-direction: column; gap: 6px }
 .footer-identity small { font-size: .78rem }
@@ -110,6 +118,10 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .footer-nav { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start }
 .footer-nav a { text-decoration: none }
 .footer-nav a:hover { color: var(--color-accent) }
+/* Development-only, and the reason the footer wraps: this block is full-width,
+   so without a wrap it competes with the three real columns and squeezes
+   them. Rendered evidence is captured from the dev preview, so a footer that
+   only looks like that in development would be photographed as the product. */
 .factory-meta { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 16px; border-top: 1px dashed var(--color-border); font-size: .74rem }
 
 /* Rich text and evidence ------------------------------------------------ */

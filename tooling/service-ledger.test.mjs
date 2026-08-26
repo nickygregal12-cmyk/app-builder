@@ -81,7 +81,14 @@ test('real service lifecycle persists generation verification preview and metric
     const previewResponse = await fetch(target.url);
     assert.equal(previewResponse.ok, true);
     const previewHtml = await previewResponse.text();
-    assert.match(previewHtml, new RegExp(`src="${preview.path}src/main.tsx"`));
+    // The preview must genuinely be this build served under the Console's base
+    // path. Which entry point that involves is the renderer's business — this
+    // project type is rendered statically, so there is no module to boot — so
+    // what is asserted is what is true of any renderer: a real document, and
+    // every in-site address resolved inside the mount.
+    assert.match(previewHtml, /<main[^>]*class="app-shell"/);
+    assert.match(previewHtml, new RegExp(`href="${preview.path}"`));
+    assert.equal(previewHtml.includes('href="/"'), false, 'an address outside the mount would break a remote preview');
     assert.equal(service.previewStatus(project.id).state, 'running');
 
     const stopped = await service.stopPreview(project.id);

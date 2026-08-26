@@ -4,11 +4,36 @@
   "module": "analytics",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
+  "compatibleTemplates": [
+    "react-vite-neutral",
+    "astro-static-content"
+  ],
   "entry": "src/features/analytics/index.ts",
-  "files": ["src/features/analytics/index.ts"],
+  "files": [
+    "src/features/analytics/index.ts"
+  ],
   "requires": [],
   "requiresAdapters": [],
   "conflicts": [],
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  },
+  "renderers": {
+    "static-content": {
+      "filesRoot": "renderers/static-content/files",
+      "entry": "src/features/analytics/index.ts",
+      "files": [
+        "src/features/analytics/index.ts",
+        "src/features/analytics/analytics.ts",
+        "src/features/analytics/BodyEnd.astro"
+      ],
+      "package": {
+        "dependencies": {},
+        "devDependencies": {},
+        "scripts": {}
+      }
+    }
+  }
 }

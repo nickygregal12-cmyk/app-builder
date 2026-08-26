@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "description": "Renderer selection. A renderer decides how approved product truth is turned into a repository; it never decides what the product is. Every renderer consumes the same Manifest, KnowledgePack, Composition, PageSpec/SectionSpec, DesignSystemSpec, BrandSpec, ArtDirectionPlan, ResponsiveCompositionPlan, MotionContract and Presentation Registry. Selection is a pure function of the project type and the capabilities the manifest enables, so the same approved truth always reaches the same renderer.",
+  "renderers": {
+    "static-content": {
+      "label": "Static / content",
+      "purpose": "Public websites whose value is the content, not the session. Every route is a real document generated at build time; client code exists only where a component genuinely needs it.",
+      "outputMode": "prerendered",
+      "template": "astro-static-content",
+      "routeOutput": "per-route-html",
+      "clientRuntime": "islands"
+    },
+    "application": {
+      "label": "Application",
+      "purpose": "Products that are worked in rather than read. State, session and interaction are the product, so the client runtime is the point rather than a cost.",
+      "outputMode": "client-application",
+      "template": "react-vite-neutral",
+      "routeOutput": "single-document",
+      "clientRuntime": "full"
+    }
+  },
+  "projectTypeDefaults": {
+    "marketing-site": "static-content",
+    "content-site": "static-content",
+    "b2b-saas": "application",
+    "consumer-app": "application",
+    "internal-tool": "application",
+    "ai-app": "application"
+  },
+  "capabilityOverrides": [
+    {
+      "modules": [
+        "auth",
+        "profiles",
+        "organisations",
+        "admin",
+        "uploads"
+      ],
+      "renderer": "application",
+      "reason": "The manifest enables a capability that is an authenticated or stateful application area rather than a page. A public site with a real application inside it is an application, and rendering it statically would ship a login as a document."
+    }
+  ],
+  "rules": [
+    "A renderer renders decisions. It introduces no composer, product schema, content model, Design Contract, brand system, art-direction system, presentation authority or source/provenance model of its own.",
+    "Project type selects the default renderer. A capability override may only move a project to a renderer that can carry the capability; it never moves one away from a renderer that already can.",
+    "An override is recorded on the generated project, with its reason, so a build that did not use its project type's default can say why.",
+    "A combination no renderer supports fails closed. A recipe, adapter or presentation with no implementation for the selected renderer is an error, never a silent substitution.",
+    "Selection never reads a prompt, a model or free text. Only the project type and the enabled modules decide."
+  ]
+}

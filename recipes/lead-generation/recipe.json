@@ -4,11 +4,41 @@
   "module": "lead-generation",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
+  "compatibleTemplates": [
+    "react-vite-neutral",
+    "astro-static-content"
+  ],
   "entry": "src/features/lead-generation/index.tsx",
-  "files": ["src/features/lead-generation/index.tsx", "public/__forms.html", "docs/LEAD-GENERATION.md"],
+  "files": [
+    "src/features/lead-generation/index.tsx",
+    "public/__forms.html",
+    "docs/LEAD-GENERATION.md"
+  ],
   "requires": [],
-  "requiresAdapters": ["netlify"],
+  "requiresAdapters": [
+    "netlify"
+  ],
   "conflicts": [],
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  },
+  "renderers": {
+    "static-content": {
+      "filesRoot": "renderers/static-content/files",
+      "entry": "src/features/lead-generation/index.ts",
+      "files": [
+        "src/features/lead-generation/index.ts",
+        "src/features/lead-generation/EnquiryForm.astro",
+        "public/__forms.html",
+        "docs/LEAD-GENERATION.md"
+      ],
+      "package": {
+        "dependencies": {},
+        "devDependencies": {},
+        "scripts": {}
+      }
+    }
+  }
 }

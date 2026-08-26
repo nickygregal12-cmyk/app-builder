@@ -541,9 +541,58 @@ A future `AgentRuntimeAdapter` should support operations conceptually equivalent
 - return tool/model/patch summaries;
 - request another specialist or escalation;
 - compact/end a session and persist an attempt summary;
-- start a clean session from the latest durable checkpoint.
+- start a clean session from the latest durable checkpoint;
+- report provider capacity exhaustion as structured state rather than losing the task.
 
 It should not own project truth, permissions, budget rules, environment authority or deploy approval. Those remain control-plane/service responsibilities.
+
+## Provider capacity and interruption recovery
+
+One invariant governs this whole area: **provider quota exhaustion, model failure, a closed browser
+and a dead model session are scheduling events, not project-loss events.** A task that cannot
+continue right now is a task that waits, not a task that failed.
+
+The durable shape is:
+
+`running -> checkpoint durable state -> waiting-for-capacity -> approved fallback only if it clears the task's quality threshold -> otherwise resume later in a fresh session`
+
+When capacity disappears mid-attempt:
+
+1. persist the attempt summary, checkpoint, diff and test state;
+2. record the attempt outcome honestly rather than as a failure of the work;
+3. select another provider only when its measured capability clears the task's threshold and policy
+   permits it — a cheaper model finishing a task it cannot do well is a worse outcome than waiting;
+4. otherwise leave the durable task waiting for capacity;
+5. resume later in a fresh session from Factory state.
+
+The states this needs are ordinary durable task states, not a second lifecycle: waiting-for-capacity,
+provider-exhausted, fallback-selected, paused-by-budget, waiting-for-human-approval and
+interrupted/retryable. The Console stays usable while a task waits, and closing a browser tab never
+kills a job.
+
+### Capacity and entitlement in the model router
+
+The model router therefore needs to know more than a price per token. Where observable, represent per
+provider or runtime:
+
+- authentication/entitlement type: subscription, free, included credit, paid API or local;
+- current availability;
+- quota or capacity signal, and any known reset;
+- cash cost;
+- quota scarcity — the shadow cost of spending a scarce included allowance;
+- measured quality by task class;
+- context and tool capabilities;
+- independence family, so a second opinion is genuinely independent;
+- fallback eligibility, and whether paid overage is authorised at all.
+
+A subscription call can have zero incremental cash cost while still being expensive when the
+remaining allowance is scarce, so the routing target is:
+
+`deterministic -> proven free or cheap model -> premium model when task quality requires it -> genuinely independent reviewer where valuable -> paid overage only when explicitly authorised`.
+
+Model choice follows task class and measured evidence. Do not permanently assign one vendor to one
+role. Paid API spend remains separately budgeted and hard-disableable, per the budget rules the
+control plane already enforces.
 
 ## Autonomous loop
 

@@ -1,0 +1,219 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { validateContract } from '@app-builder/contracts';
+import { composeProject } from '../packages/composition/src/index.js';
+import { deriveJourneys, deriveStateMatrix } from './lib/launch-readiness.mjs';
+import { INTERACTIONS, VIEWPORTS, applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from './lib/rendered-evidence.mjs';
+import { captureEvidence } from './lib/rendered-evidence-capture.mjs';
+import { FactoryStore } from '../apps/service/src/store.js';
+import { FactoryService } from '../apps/service/src/factory-service.js';
+import { readJson } from './lib/manifest.mjs';
+
+function roots(prefix) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  return { root, stateRoot: path.join(root, 'state'), workspacesRoot: path.join(root, 'workspaces') };
+}
+
+function manifest(slug, modules = {}) {
+  return {
+    schemaVersion: 2,
+    project: { name: 'Evidence Test', slug, type: 'marketing-site', primaryGoal: 'Prove what the build actually renders.' },
+    audience: { summary: 'Test users', roles: [] },
+    journeys: ['Read the site'],
+    majorSurfaces: ['Home', 'Contact'],
+    entities: [],
+    company: { identity: { name: 'Evidence Test' }, services: ['Painting'], locations: ['Glasgow'], contactDetails: { email: 'hello@example.com' }, trustSignals: [], conversionGoals: ['email'] },
+    modules,
+    infrastructure: { backend: 'none', deployment: 'netlify' },
+    aiBudget: { mode: 'economy', maxBuildCostGbp: 0 },
+    brand: { designControl: 'sensible-defaults' },
+    inputs: { inventory: [], sources: [] },
+    constraints: { hard: [], expectedScale: 'under-1000', sensitivity: 'normal-business-data', tenantModel: '', integrations: [], existingData: [], uploadTypes: [], customCapabilities: [], excludedCapabilities: [], unresolvedCapabilities: [] },
+    outOfScope: [],
+  };
+}
+
+function planFor(projectManifest = readJson('examples/project-manifest.example.json')) {
+  const composition = composeProject({ manifest: projectManifest });
+  return { composition, plan: deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition) }) };
+}
+
+function fakeResults(plan) {
+  return plan.captures.map((capture, index) => ({ id: capture.id, bytes: Buffer.from(`png-${capture.id}-${index}`) }));
+}
+
+test('every route is planned at every viewport', () => {
+  const { composition, plan } = planFor();
+  assert.deepEqual(plan.viewports.map((viewport) => viewport.name), ['desktop', 'tablet', 'mobile']);
+  for (const page of composition.pages) {
+    for (const viewport of VIEWPORTS) {
+      const capture = plan.captures.find((entry) => entry.route === page.path && entry.viewport === viewport.name && entry.state.axis === 'viewport');
+      assert.ok(capture, `no ${viewport.name} capture planned for ${page.path}`);
+      assert.equal(capture.pageId, page.id);
+      assert.match(capture.state.proves, /not evidence that anything on the page works/);
+    }
+  }
+  assert.equal(new Set(plan.captures.map((entry) => entry.id)).size, plan.captures.length, 'capture ids must be unique');
+});
+
+test('planning is deterministic', () => {
+  assert.deepEqual(planFor().plan, planFor().plan);
+});
+
+test('a write state is never planned as a capture and says why', () => {
+  const { plan } = planFor(manifest('write-states', { 'lead-generation': true }));
+  const writes = plan.uncovered.filter((entry) => entry.axis === 'write');
+  assert.ok(writes.length > 0, 'the marketing example has a conversion surface, so write states exist');
+  for (const entry of writes.filter((item) => item.state !== 'failed')) {
+    assert.equal(entry.reason, 'not-visually-provable');
+    assert.match(entry.detail, /executable journey evidence/);
+  }
+  assert.equal(plan.captures.some((capture) => capture.state.axis === 'write' && capture.state.state === 'succeeded'), false, 'a picture must never claim a write succeeded');
+});
+
+test('data and content states are recorded as needing a fixture rather than omitted', () => {
+  const { composition, plan } = planFor(manifest('fixture-states', { 'lead-generation': true }));
+  const matrix = deriveStateMatrix(composition);
+  const declared = matrix.flatMap((surface) => surface.states
+    .filter((entry) => entry.axis !== 'viewport')
+    .map((entry) => `${surface.page}::${entry.axis}::${entry.state}`));
+  const accounted = new Set([
+    ...plan.uncovered.map((entry) => `${entry.route}::${entry.axis}::${entry.state}`),
+    ...plan.captures.map((capture) => `${capture.route}::${capture.state.axis}::${capture.state.state}`),
+  ]);
+  for (const entry of declared) assert.ok(accounted.has(entry), `state ${entry} is neither captured nor declared uncovered`);
+  for (const entry of plan.uncovered.filter((item) => ['data', 'content'].includes(item.axis))) {
+    assert.equal(entry.reason, 'needs-a-deterministic-fixture');
+  }
+});
+
+test('an interaction state is planned only where the build has the section for it', () => {
+  const withoutForm = deriveEvidencePlan({
+    composition: composeProject({ manifest: manifest('no-form') }),
+    stateMatrix: deriveStateMatrix(composeProject({ manifest: manifest('no-form') })),
+  });
+  assert.equal(withoutForm.captures.some((capture) => capture.state.interaction), false);
+
+  const composition = composeProject({ manifest: manifest('with-form', { 'lead-generation': true }) });
+  const withForm = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition) });
+  const interactions = withForm.captures.filter((capture) => capture.state.interaction === 'enquiry-submit-failed');
+  assert.equal(interactions.length, VIEWPORTS.length, 'the failure state is worth seeing at every viewport');
+  assert.match(interactions[0].state.proves, /not evidence that a successful submission works/);
+  assert.equal(INTERACTIONS['enquiry-submit-failed'].requiresSectionType, 'enquiry-form');
+});
+
+test('an evidence set validates, hashes what was captured and drops what was not', () => {
+  const { composition, plan } = planFor();
+  const results = fakeResults(plan).slice(0, plan.captures.length - 2);
+  const evidence = buildEvidenceSet({
+    plan,
+    results,
+    projectId: 'project-evidence',
+    buildRef: '/workspaces/evidence',
+    compositionHash: composition.compositionHash,
+    capturedAt: '2026-08-26T00:00:00.000Z',
+  });
+
+  assert.deepEqual(validateContract('rendered-evidence', evidence), []);
+  assert.equal(evidence.captures.length, results.length, 'a planned capture with no bytes is not recorded');
+  assert.equal(evidence.captures.every((capture) => capture.evidenceKind === 'visual'), true);
+  for (const capture of evidence.captures) assert.equal(capture.file, captureFile(capture.id));
+  const dropped = plan.captures.slice(-2);
+  for (const capture of dropped) {
+    assert.ok(
+      evidence.uncovered.some((entry) => entry.route === capture.route && entry.state === capture.state.state && entry.detail === 'Planned but not captured in this run.'),
+      'a capture that did not happen is declared, not silently missing',
+    );
+  }
+});
+
+test('identical captures hash identically and different bytes do not', () => {
+  const { composition, plan } = planFor();
+  const args = { plan, projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' };
+  const first = buildEvidenceSet({ ...args, results: fakeResults(plan) });
+  const second = buildEvidenceSet({ ...args, results: fakeResults(plan) });
+  assert.equal(first.setHash, second.setHash);
+  const changed = buildEvidenceSet({ ...args, results: fakeResults(plan).map((result, index) => (index ? result : { ...result, bytes: Buffer.from('different') })) });
+  assert.notEqual(changed.setHash, first.setHash);
+});
+
+test('rendered evidence raises only the states a picture settles', () => {
+  const { composition, plan } = planFor();
+  const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' });
+  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition), evidence);
+  const states = matrix.flatMap((surface) => surface.states);
+
+  assert.ok(states.some((entry) => entry.axis === 'viewport' && entry.evidence === 'rendered'), 'a capture at that width is the evidence for that viewport state');
+  for (const entry of states.filter((item) => item.axis !== 'viewport')) {
+    assert.equal(entry.evidence, 'none', `a screenshot must not raise the ${entry.axis} ${entry.state} state`);
+  }
+});
+
+test('rendered evidence never answers a journey step', () => {
+  const composition = composeProject({ manifest: manifest('journeys', { 'lead-generation': true }) });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition) });
+  const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' });
+
+  // The build has an enquiry form and evidence of how it fails. That is a
+  // picture of a state, not proof the enquiry arrives.
+  assert.ok(evidence.captures.some((capture) => capture.state.interaction === 'enquiry-submit-failed'));
+  const unproven = deriveJourneys(composition).flatMap((journey) => journey.steps).filter((step) => step.status === 'needs-executable-evidence');
+  assert.ok(unproven.length > 0);
+  for (const step of unproven) {
+    assert.equal(evidence.captures.some((capture) => capture.state.state === step.step), false, `a capture must not stand in for the ${step.step} step`);
+  }
+});
+
+test('capture refuses an interaction that is not in the closed registry', async () => {
+  const plan = {
+    viewports: [{ ...VIEWPORTS[0] }],
+    captures: [{ id: 'x', pageId: 'page-home', route: '/', viewport: 'desktop', state: { axis: 'write', state: 'failed', risk: 'high', interaction: 'run-anything', proves: 'nothing' }, elementRefs: [] }],
+    uncovered: [],
+  };
+  const pageStub = {
+    goto: async () => undefined,
+    locator: () => ({ waitFor: async () => undefined }),
+    screenshot: async () => Buffer.from('png'),
+  };
+  const browserStub = {
+    newContext: async () => ({ newPage: async () => pageStub, close: async () => undefined }),
+    close: async () => undefined,
+  };
+  const { results, failures } = await captureEvidence({ plan, baseUrl: 'http://127.0.0.1:1/', launch: async () => browserStub });
+  assert.deepEqual(results, []);
+  assert.match(failures[0].message, /Unknown evidence interaction: run-anything/);
+});
+
+test('the service refuses to capture without a running preview and keeps evidence outside the repository', async () => {
+  const dirs = roots('app-builder-evidence-');
+  const store = new FactoryStore({ stateRoot: dirs.stateRoot });
+  const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
+  try {
+    const project = service.createProject({ id: 'project-evidence', manifest: manifest('evidence-test') });
+    const generated = await service.generateProject(project.id);
+
+    await assert.rejects(() => service.captureRenderedEvidence(project.id), /captured from the running preview/);
+    assert.deepEqual(service.listRenderedEvidence(project.id), []);
+    assert.equal(service.getRenderedEvidence(project.id, 'evidence-0000000000000000'), null);
+
+    // The plan is readable without a browser, so a reviewer can see what would
+    // be captured before anything is launched.
+    const plan = service.renderedEvidencePlan(project.id);
+    assert.ok(plan.captures.length >= generated.composition.pages.length * 3);
+    assert.ok(plan.captures[0].elementRefs.length > 0, 'captures address the same elements the Builder does');
+
+    for (const unsafe of ['..', '../escape', '.']) {
+      assert.throws(() => service.evidenceDirectory(project.id, unsafe), /Unsafe evidence directory/);
+    }
+    assert.throws(() => service.evidenceDirectory('../escape'), /Unsafe evidence directory/);
+
+    assert.equal(fs.existsSync(path.join(generated.workspace, 'evidence')), false, 'evidence must not land inside the portable repository');
+  } finally {
+    await service.close();
+    store.close();
+    fs.rmSync(dirs.root, { recursive: true, force: true });
+  }
+});

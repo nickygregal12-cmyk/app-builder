@@ -85,6 +85,52 @@ composition. A human sentence replaces a value without moving the element it
 lives in, so writing copy leaves every address intact; whether a binding has
 been overridden is read live from the composition at resolve time.
 
+## Rendered evidence
+
+The launch-readiness audit reads composed output and says so plainly: it cannot
+see rendered pixels. Rendered evidence is the other half.
+
+`npm run check` passing and a production build succeeding say a project
+compiles. They say nothing about what it looks like at 390px, or what an error
+state shows a visitor. So capturing evidence points a real browser at the
+service-managed preview — the same rendering a person reviews, not a separately
+started server that might be serving something else — and records the result
+under the `rendered-evidence` contract in service state, never inside the
+generated repository.
+
+The plan is deterministic and reuses Phase 3.8K's `deriveStateMatrix` rather
+than deriving states again. It decides only which of those states a browser can
+be pointed at:
+
+- every route at desktop (1280), tablet (768) and mobile (390) — the same
+  widths the Console previews at, so evidence and review are the same
+  rendering;
+- the critical interaction states the build actually has, reached through a
+  closed registry of interactions rather than arbitrary scripting.
+
+Everything else is recorded in `uncovered` with a reason, because a screenshot
+set that quietly omits what it could not reach reads as complete coverage:
+
+- `not-visually-provable` — a capture cannot establish that a write succeeds;
+- `needs-a-deterministic-fixture` — an empty or long-content state needs a
+  fixture composition the build does not carry;
+- `capability-not-installed` — the section that state belongs to is not on that
+  route.
+
+`applyEvidenceToStateMatrix` raises only the viewport axis, where rendering at
+that width *is* the proof. Every other state keeps `evidence: 'none'` and waits
+for executable evidence, which is a different artifact produced by a different
+role. Nothing lets a capture answer a journey step that `deriveJourneys` marks
+`needs-executable-evidence`: a picture of an enquiry form is not proof that an
+enquiry arrives.
+
+Captures carry the element identity refs they show, so visual evidence and
+Builder Element Identity address the same things.
+
+Capture uses Chromium, loaded lazily so the service starts, generates, verifies
+and previews on a host with no browser. `APP_BUILDER_BROWSER_EXECUTABLE` points
+it at an existing Chromium where a host has one.
+
 ## Compatibility
 
 The low-level legacy generator remains available for recipe reconciliation and existing tests. The template includes an empty composition fallback, so direct low-level generation remains buildable. New official generation and all six canonical acceptance builds use the composed generator.

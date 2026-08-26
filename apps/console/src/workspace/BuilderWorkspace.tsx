@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  captureRenderedEvidence,
   generateProject,
   ingestSources,
   loadWorkspace,
+  renderedCaptureUrl,
   resolveElement,
   saveOverrides,
   startPreview,
@@ -13,6 +15,7 @@ import {
   type ElementResolution,
   type KnowledgeSummary,
   type ProjectSummary,
+  type RenderedEvidence,
   type SourceGovernanceDecision,
   type SourceReference,
   type SourceRequest,
@@ -21,7 +24,7 @@ import {
 import './workspace.css';
 
 type Device = 'desktop' | 'tablet' | 'mobile';
-type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | null;
+type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | 'capture-evidence' | null;
 
 const deviceWidth: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
 
@@ -45,6 +48,8 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'quality.check.succeeded') return `Checks passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.build.succeeded') return `Production build passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'source.governance.updated') return `${String(payload.sourceId ?? 'Source')} · ${label(String(payload.decision ?? 'updated'))}`;
+  if (event.type === 'evidence.capture.started') return `Capturing ${String(payload.planned ?? 0)} view(s) across ${((payload.viewports as string[] | undefined) ?? []).join(', ')}`;
+  if (event.type === 'evidence.captured') return `${String(payload.captures ?? 0)} capture(s) · ${String(payload.uncovered ?? 0)} state(s) uncovered`;
   if (event.type === 'preview.started') return 'Local preview available';
   if (event.type === 'preview.stopped') return 'Preview stopped';
   if (event.type.endsWith('.failed')) return String(payload.message ?? 'Operation failed');
@@ -233,6 +238,54 @@ function ElementInspector({ selection, resolution, resolving, override, onSave, 
   </section>;
 }
 
+const UNCOVERED_REASON: Record<string, string> = {
+  'not-visually-provable': 'a picture cannot show this',
+  'needs-a-deterministic-fixture': 'needs a fixture build',
+  'capability-not-installed': 'not present in this build',
+};
+
+/**
+ * Rendered evidence.
+ *
+ * Shows what the build actually rendered, and — just as importantly — what
+ * these pictures are not evidence of. A screenshot set that only showed the
+ * captures would read as complete coverage of states it never reached.
+ */
+function EvidencePanel({ projectId, evidence, onCapture, busy, canCapture }: {
+  projectId: string;
+  evidence: RenderedEvidence[];
+  onCapture: () => Promise<void>;
+  busy: boolean;
+  canCapture: boolean;
+}) {
+  const latest = evidence.at(-1) ?? null;
+  const [viewport, setViewport] = useState<string>('desktop');
+  const shown = latest?.captures.filter((capture) => capture.viewport === viewport) ?? [];
+
+  return <section className="builder-panel evidence-panel" aria-label="Rendered evidence">
+    <div className="panel-title-row"><span className="builder-kicker">Rendered evidence</span><span>{latest ? `${latest.captures.length} captures` : 'none yet'}</span></div>
+    <p className="builder-empty">A build that compiles is not evidence that it looks right. These are captures of what it actually rendered.</p>
+    <button type="button" className="secondary compact" onClick={onCapture} disabled={busy || !canCapture}>
+      {busy ? 'Capturing…' : latest ? 'Capture again' : 'Capture evidence'}
+    </button>
+    {!canCapture && !busy && <p className="builder-empty">Start the preview first — evidence is captured from the same rendering you review.</p>}
+
+    {latest && <>
+      <div className="device-switcher evidence-viewports" role="group" aria-label="Evidence viewport">
+        {latest.viewports.map((entry) => <button type="button" key={entry.name} className={viewport === entry.name ? 'active' : ''} onClick={() => setViewport(entry.name)}>{entry.name}</button>)}
+      </div>
+      <div className="evidence-grid">{shown.map((capture) => <figure key={capture.id}>
+        <img src={renderedCaptureUrl(projectId, latest.id, capture.id)} alt={`${capture.route} at ${capture.viewport}: ${capture.state.proves}`} loading="lazy" />
+        <figcaption><strong>{capture.route}</strong><span>{label(capture.state.axis)} · {label(capture.state.state)}</span><small>{capture.state.proves}</small></figcaption>
+      </figure>)}</div>
+      {latest.uncovered.length > 0 && <div className="evidence-uncovered">
+        <strong>{latest.uncovered.length} state(s) these captures do not claim</strong>
+        {latest.uncovered.slice(0, 8).map((entry) => <span key={`${entry.route}-${entry.axis}-${entry.state}`}>{entry.route} · {label(entry.axis)} {label(entry.state)} — {UNCOVERED_REASON[entry.reason] ?? entry.reason}</span>)}
+      </div>}
+    </>}
+  </section>;
+}
+
 export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onExit: () => void }) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
@@ -277,6 +330,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       if (nextOperation === 'verify') updatedProject = await verifyProject(projectId);
       if (nextOperation === 'start-preview') await startPreview(projectId);
       if (nextOperation === 'stop-preview') await stopPreview(projectId);
+      if (nextOperation === 'capture-evidence') await captureRenderedEvidence(projectId);
 
       // Mutation responses are the authoritative state transition. Apply them
       // immediately so a secondary read cannot hide a successful operation;
@@ -508,6 +562,14 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <span className="builder-kicker">Editing</span>
           <p className="builder-empty">Click anything in the preview to resolve its element identity; headings and paragraphs can be edited from there. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
         </section>}
+
+        <EvidencePanel
+          projectId={projectId}
+          evidence={snapshot.evidence}
+          onCapture={() => run('capture-evidence')}
+          busy={operation === 'capture-evidence'}
+          canCapture={previewRunning}
+        />
 
         <section className="builder-panel checkpoint-panel">
           <span className="builder-kicker">Latest checkpoint</span>

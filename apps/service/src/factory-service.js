@@ -8,6 +8,9 @@ import { applyContentOverrides, assertEditableElement, bindingElementKey, elemen
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
+import { deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
+import { buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
+import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
 
@@ -122,6 +125,9 @@ export class FactoryService {
     this.env = env;
     this.previews = new Map();
     this.ingestion = new SourceIngestion({ stateRoot: stateRoot ?? store.stateRoot });
+    // Evidence is a record of what a build rendered, not part of the product,
+    // so it lives in service state rather than inside the portable repository.
+    this.evidenceRoot = path.resolve(stateRoot ?? store.stateRoot, 'evidence');
     fs.mkdirSync(this.workspacesRoot, { recursive: true });
   }
 
@@ -313,6 +319,160 @@ export class FactoryService {
       const match = index.elements.find((element) => element.sectionId === entry.sectionId && element.elementKey === elementKey);
       if (!match) throw new Error(`Unresolved element identity: ${entry.sectionId}/${elementKey} does not resolve to an element this build renders.`);
       assertEditableElement(index, match.ref, 'text', { compositionHash: this.baselineCompositionHash(composition) });
+    }
+  }
+
+  evidenceDirectory(projectId, evidenceId = null) {
+    // Both segments reach this code from an HTTP path, so each is resolved and
+    // re-checked rather than trusted to stay inside the evidence root.
+    const base = path.resolve(this.evidenceRoot);
+    const project = path.resolve(base, projectId);
+    if (project === base || !project.startsWith(`${base}${path.sep}`)) throw new Error(`Unsafe evidence directory: ${projectId}`);
+    if (!evidenceId) return project;
+    const target = path.resolve(project, evidenceId);
+    if (target === project || !target.startsWith(`${project}${path.sep}`)) throw new Error(`Unsafe evidence directory: ${evidenceId}`);
+    return target;
+  }
+
+  listRenderedEvidence(projectId) {
+    this.requireProject(projectId);
+    const directory = this.evidenceDirectory(projectId);
+    if (!fs.existsSync(directory)) return [];
+    return fs.readdirSync(directory)
+      .map((entry) => path.join(directory, entry, 'evidence.json'))
+      .filter((file) => fs.existsSync(file))
+      .map((file) => JSON.parse(fs.readFileSync(file, 'utf8')))
+      .sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
+  }
+
+  getRenderedEvidence(projectId, evidenceId) {
+    this.requireProject(projectId);
+    const file = path.join(this.evidenceDirectory(projectId, evidenceId), 'evidence.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  /**
+   * Read one capture's bytes.
+   *
+   * The filename is taken from the recorded evidence rather than from the
+   * request, so a caller cannot name a path the evidence does not contain.
+   */
+  readRenderedCapture(projectId, evidenceId, captureId) {
+    const evidence = this.getRenderedEvidence(projectId, evidenceId);
+    const capture = evidence?.captures.find((entry) => entry.id === captureId);
+    if (!capture) return null;
+    const file = path.join(this.evidenceDirectory(projectId, evidenceId), capture.file);
+    return fs.existsSync(file) ? { capture, bytes: fs.readFileSync(file) } : null;
+  }
+
+  /** What a browser would be pointed at for this build, without pointing one at it. */
+  renderedEvidencePlan(projectId) {
+    const composition = this.getComposition(projectId);
+    if (!composition) return null;
+    return deriveEvidencePlan({
+      composition,
+      stateMatrix: deriveStateMatrix(composition),
+      elementIdentity: this.elementIdentityIndex(projectId),
+    });
+  }
+
+  /**
+   * Capture what this build actually renders.
+   *
+   * It runs against the service-managed preview, which is the same rendering a
+   * person reviews, rather than against a separately started server that might
+   * not be serving the same workspace.
+   */
+  async captureRenderedEvidence(projectId) {
+    const { project, workspace } = this.requireWorkspace(projectId);
+    const preview = this.previewStatus(projectId);
+    if (preview.state !== 'running' || !preview.url) throw new Error('Rendered evidence is captured from the running preview. Start the preview first.');
+    const composition = this.getComposition(projectId);
+    if (!composition) return null;
+
+    let task = createTask({
+      projectId,
+      objective: `Capture rendered evidence for ${project.name}`,
+      acceptanceCriteria: [
+        'Every route is captured at desktop, tablet and mobile',
+        'Critical interaction states the build actually has are captured',
+        'States a capture cannot establish are recorded as uncovered with a reason',
+        'Evidence references files that exist and hash to what was captured',
+      ],
+      policyId: 'verification',
+      budget: { maxIterations: 1, maxRuntimeMs: 10 * 60 * 1000, maxCostGbp: 0, maxTokens: 0, maxNoProgressAttempts: 1 },
+    });
+    this.store.upsertTask(task);
+    task = transitionTask(task, 'running', { incrementAttempt: true });
+    this.store.upsertTask(task);
+
+    const started = Date.now();
+    const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition), elementIdentity: this.elementIdentityIndex(projectId) });
+    await this.store.recordEvent(createEvent({
+      projectId,
+      taskId: task.id,
+      type: 'evidence.capture.started',
+      actor: 'factory-service',
+      payload: { planned: plan.captures.length, uncovered: plan.uncovered.length, viewports: plan.viewports.map((viewport) => viewport.name) },
+    }));
+
+    try {
+      const { results, failures } = await captureEvidence({ plan, baseUrl: preview.url });
+      if (!results.length) throw new Error(`No rendered evidence could be captured: ${failures[0]?.message ?? 'the browser produced nothing'}`);
+
+      const evidence = assertContract('rendered-evidence', buildEvidenceSet({
+        plan,
+        results,
+        projectId,
+        buildRef: workspace,
+        compositionHash: composition.compositionHash,
+        capturedAt: new Date().toISOString(),
+        taskId: task.id,
+      }));
+
+      const directory = this.evidenceDirectory(projectId, evidence.id);
+      fs.mkdirSync(path.join(directory, 'captures'), { recursive: true });
+      for (const result of results) {
+        if (!evidence.captures.some((capture) => capture.id === result.id)) continue;
+        fs.writeFileSync(path.join(directory, captureFile(result.id)), result.bytes);
+      }
+      fs.writeFileSync(path.join(directory, 'evidence.json'), `${JSON.stringify(evidence, null, 2)}\n`);
+
+      const checkpoint = createCheckpoint({
+        projectId,
+        taskId: task.id,
+        repoRef: workspace,
+        summary: `Captured ${evidence.captures.length} rendered capture(s) across ${evidence.viewports.length} viewport(s); ${evidence.uncovered.length} state(s) recorded as uncovered.`,
+        filesChanged: [],
+        failures: failures.map((failure) => `${failure.id}: ${failure.message}`),
+        artifacts: ['rendered-evidence'],
+        nextAction: 'Review the captures, then rebuild or edit what they show.',
+      });
+      this.store.recordCheckpoint(checkpoint);
+      task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
+      this.store.upsertTask(task);
+
+      await this.store.recordEvent(createEvent({
+        projectId,
+        taskId: task.id,
+        type: 'evidence.captured',
+        actor: 'factory-service',
+        payload: {
+          evidenceId: evidence.id,
+          setHash: evidence.setHash,
+          captures: evidence.captures.length,
+          uncovered: evidence.uncovered.length,
+          failed: failures.length,
+        },
+        usage: { durationMs: Date.now() - started },
+      }));
+      return { project: summary(project), task, checkpoint, evidence, failures };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      task = transitionTask(task, 'failed', { stopReason: message });
+      this.store.upsertTask(task);
+      await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'evidence.capture.failed', actor: 'factory-service', payload: { message }, usage: { durationMs: Date.now() - started } }));
+      throw error;
     }
   }
 

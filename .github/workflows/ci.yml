@@ -51,6 +51,24 @@ jobs:
       - name: Verify synthetic mixed-source generated app in Chromium
         run: npm run test:e2e:synthetic-mixed-source
 
+      # Targeted cross-engine portability, and only here: the other browsers are
+      # installed for one bounded lane rather than for the whole suite, because
+      # a layout that breaks in Safari is a factory defect and finding it once
+      # is cheaper than finding it per project.
+      - run: npx playwright install --with-deps firefox webkit
+
+      - name: Cross-browser visual portability smoke
+        run: npm run test:e2e:portability
+
+      - name: Publish cross-browser portability evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cross-browser-portability-evidence
+          path: .app-builder/portability
+          if-no-files-found: warn
+          retention-days: 14
+
   database-security:
     runs-on: ubuntu-latest
     timeout-minutes: 20

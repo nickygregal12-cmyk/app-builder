@@ -407,14 +407,14 @@ Three consequences, stated so they cannot be argued away later:
 | Deterministic DesignLint | **Satisfied.** 4C.5, carried inside RenderedEvidence so a critic is never paid to re-derive a rule. |
 | Rendered responsive evidence | **Satisfied.** 4B.2 and 4D.7: every candidate photographed at the same three viewports over the same routes. |
 | Independent visual critic and bounded correction loop | **The correction loop is closed; the independent critic is still the blocking gate.** The loop is real: a review scores every criterion it was scoped against the declared bar in `config/agent-pipelines.json` (`gates.visual`), a below-bar verdict cannot be recorded as a pass, a set can be sent back or rejected outright with nothing promoted, and a rework verdict produces a bounded, targeted plan with lineage and an iteration ceiling. What remains outstanding is who issues the verdict: no genuinely independent model runtime is enabled, so no verdict has been issued. Restarting the same model is not independence and is not done. |
-| Targeted Chromium/WebKit/Firefox visual portability smoke | **Outstanding.** Capture runs on Chromium only. A layout that breaks in Safari is exactly the defect a corpus is supposed to catch, and catching it per project rather than once is the expensive way. |
+| Targeted Chromium/WebKit/Firefox visual portability smoke | **Satisfied.** `npm run test:e2e:portability` runs two critical routes and the states that differ across Chromium, Firefox, WebKit and an iPhone WebKit composition. It is assertions about defects rather than pixel baselines — three engines rasterise text differently and a diff that always fails teaches nobody anything — and each check names a defect a real engine produces: `100vw` including a classic scrollbar, a sticky header whose containing block a backdrop filter moves, `100vh` exceeding the viewport a phone visitor actually has, `object-fit`/`aspect-ratio` losing an image's box, a sub-16px control zooming iOS on focus and never zooming back, a transition surviving `prefers-reduced-motion`, and navigation that must be a disclosure on a phone. Full RenderedEvidence stays on the primary browser; the other engines produce targeted measurements and one capture per route. `tooling/portability-evidence.mjs` separates three states rather than two: a check that held, a check that failed, and a check that had nothing to measure — the imagery check on a build with no photographs is the third, and it is never reported as the first. An engine that did not run makes the lane incomplete rather than green. |
 | Anti-template diversity diagnostics across unrelated builds | **Outstanding.** Diversity is enforced *within* a candidate set (`assessDiversity` over three planes). Across unrelated businesses — the signal that the factory is not making every business the same beautiful template — nothing measures it yet. §8 defines the signals. |
 
 ### What this means for the freeze
 
 The freeze opens once the outstanding rows are closed: the independent visual verdict, a lane that
-fulfils a classified bespoke-presentation requirement, cross-browser visual smoke, and the cross-build
-anti-template diagnostic.
+fulfils a classified bespoke-presentation requirement, and the cross-build anti-template diagnostic.
+Cross-browser visual smoke is closed.
 The conditional rows do not gate it, and closing them early would mean building a contract with no reader.
 
 This gate is about **creative-production completeness**, not adding another authority. Where a listed

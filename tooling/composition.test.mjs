@@ -1,6 +1,8 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { composeProject } from '../packages/composition/src/index.js';
+import { auditLaunchReadiness } from './lib/launch-readiness.mjs';
 
 function marketingManifest(overrides = {}) {
   return {
@@ -42,7 +44,7 @@ function knowledgePack() {
 
 test('marketing composition creates real pages and binds knowledge-pack provenance', () => {
   const composition = composeProject({ manifest:marketingManifest(), knowledgePack:knowledgePack() });
-  assert.deepEqual(composition.pages.map((page) => page.path), ['/', '/services', '/about', '/contact']);
+  assert.deepEqual(composition.pages.map((page) => page.path), ['/', '/services', '/about', '/contact', '/404']);
   assert.ok(composition.pages.every((page) => page.sectionIds.length >= 1));
   const hero = composition.sections.find((section) => section.id === 'page-home-hero');
   const title = hero.bindings.find((entry) => entry.key === 'title');
@@ -131,7 +133,7 @@ test('a surface the factory proposed and cannot fill is withheld, not shipped as
 
 test('a surface the operator declared is published even when the factory cannot fill it', () => {
   const composition = composeProject({ manifest:{schemaVersion:2,project:{name:'Declared Co',slug:'declared',type:'marketing-site',primaryGoal:'Win work'},majorSurfaces:['Home','Projects','Careers'],modules:{}} });
-  assert.deepEqual(composition.pages.map((page) => page.path), ['/','/projects','/careers'],
+  assert.deepEqual(composition.pages.map((page) => page.path), ['/','/projects','/careers','/404'],
     'operator intent outranks the factory’s own judgement about what it can fill');
   assert.deepEqual(composition.warnings.filter((item) => item.startsWith('unfillable-surface:')), []);
 });
@@ -191,4 +193,34 @@ test('the closing call to action does not repeat the same sentence on every page
   assert.equal(bodies.length, 1, 'only the entry page carries the summary sentence');
   assert.ok(composition.sections.filter((section) => section.type === 'cta').length > 1,
     'secondary pages still offer the action');
+});
+
+test('every generated site has somewhere for a bad link to land', () => {
+  for (const type of ['marketing-site','b2b-saas','consumer-app','internal-tool','content-site','ai-app']) {
+    const composition = composeProject({ manifest:{schemaVersion:2,project:{name:`Test ${type}`,slug:`test-${type}`,type,primaryGoal:'Ship V1'},modules:{}} });
+    const notFound = composition.pages.find((page) => page.path === '/404');
+    assert.ok(notFound, `${type} composes no not-found route`);
+    assert.equal(notFound.navigation.visible, false, 'a recovery surface is not a navigation item');
+    assert.deepEqual(notFound.primaryAction, { label: 'Back to home', href: '/' });
+    const sections = composition.sections.filter((section) => notFound.sectionIds.includes(section.id));
+    assert.ok(sections.length > 0);
+    // It is reached by accident, so it must claim nothing about the business.
+    for (const section of sections) {
+      for (const binding of section.bindings) {
+        assert.equal(binding.origin, 'deterministic-default',
+          'the recovery surface must not assert anything a source has to back');
+      }
+    }
+  }
+});
+
+test('the not-found route is not audited as a journey entry or a missing photograph', () => {
+  const rules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
+  const composition = composeProject({ manifest: marketingManifest(), knowledgePack: knowledgePack() });
+  const report = auditLaunchReadiness({ composition, rules });
+  assert.ok(!report.findings.some((item) => item.check === 'missing-not-found-route'));
+  assert.ok(!report.findings.some((item) => item.where === 'page-not-found-hero'),
+    'a recovery surface does not need a photograph');
+  assert.ok(!report.journeys.some((journey) => journey.entry === '/404'),
+    'a 404 is where a journey goes wrong, not where one starts');
 });

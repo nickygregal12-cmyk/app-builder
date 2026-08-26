@@ -354,7 +354,12 @@ function useBuilderBridge(pathname: string, pageId: string) {
 
 export default function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname || '/');
-  const activePage = composed.pages.find((page) => page.path === pathname) ?? composed.pages[0];
+  // An address that matches no page lands on the not-found surface. Falling
+  // through to the home page showed the homepage under the wrong URL and told
+  // neither the visitor nor a crawler that the page did not exist.
+  const activePage = composed.pages.find((page) => page.path === pathname)
+    ?? composed.pages.find((page) => /(^|\/)(404|not-found)$/.test(page.path))
+    ?? composed.pages[0];
   useBuilderBridge(pathname, activePage?.id ?? '');
   useEffect(() => { initializeRecipes(project); }, []);
   const [menuOpen, setMenuOpen] = useState(false);

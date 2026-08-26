@@ -69,3 +69,14 @@ test.describe('on a wide screen', () => {
     await expect(page.getByRole('button', { name: 'Menu' })).toBeHidden();
   });
 });
+
+test('a link that resolves to nothing lands on a not-found page, not the homepage', async ({ page }) => {
+  await page.goto('/a-page-that-does-not-exist');
+  await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+  // The old behaviour rendered the homepage under the wrong URL, which told
+  // neither the visitor nor a crawler that the page did not exist.
+  await expect(page.getByRole('heading', { level: 1, name: 'Acme Ltd' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Back to home' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Acme Ltd' })).toBeVisible();
+});

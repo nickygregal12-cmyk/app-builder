@@ -133,7 +133,10 @@ function auditContent(composition, rules, roles, findings) {
           `Generated content sits in a ${section.type} section with no source or fact behind it.`));
       }
     }
-    if (roles.visual.has(section.type) && list(section.assetIds).length === 0) {
+    // A recovery surface is reached by accident and claims nothing; it does not
+    // need a photograph.
+    const onNotFound = list(composition.pages).some((page) => NOT_FOUND.test(page.path) && list(page.sectionIds).includes(section.id));
+    if (!onNotFound && roles.visual.has(section.type) && list(section.assetIds).length === 0) {
       findings.push(finding(rules, 'section-expects-imagery', section.id,
         `A ${section.type} section has no asset bound to it.`));
     }
@@ -338,6 +341,8 @@ export function deriveJourneys(composition, rules) {
   for (const page of pages) {
     const action = page.primaryAction;
     if (!action) continue;
+    // A not-found page is where a journey goes wrong, not where one starts.
+    if (NOT_FOUND.test(page.path)) continue;
     const href = text(action.href);
     const kind = actionTargetKind(href);
     const targetPath = href.split(/[?#]/)[0].replace(/\/$/, '') || '/';

@@ -34,3 +34,29 @@ republication right.
 Project and case-study names are deliberately absent. They could not be
 re-verified through source ingestion during the trial, and an unverified claim
 about a client's project is exactly what this gate exists to prevent.
+
+## The approved intake bundle
+
+`nbm-approved-intake.v1.json` is the canonical approved intake for this trial.
+Replaying it starts a fresh nbm run from the same decisions without re-keying
+the questionnaire. `build-nbm-intake-bundle.mjs` regenerates it byte-for-byte,
+and a test asserts that it does:
+
+```bash
+node examples/genuine-business/build-nbm-intake-bundle.mjs
+```
+
+**Read this before treating it as the original trial input.** The intake that
+produced the original nbm Build Contract and Manifest was never persisted. It
+was searched for — every branch and every commit here, and the durable service
+state — and it is not recoverable. This file is therefore an explicitly
+versioned **replacement baseline**, authored from the approved workbook above,
+`docs/GENUINE_BUSINESS_ACCEPTANCE.md` and `docs/TRIAL_FINDINGS.md`. It is not a
+byte-identical reconstruction of the lost original and must never be described
+as one. Reruns are measured against it, not against the first trial's inputs.
+
+Where the workbook is silent the answer is left at the questionnaire default and
+recorded as an accepted default rather than as something the operator said.
+`trust` is deliberately unanswered: the workbook forbids unsupported proof and
+withholds case studies, and finding F23 records intake trust answers being
+published as the company's own evidence.

@@ -25,6 +25,7 @@ export class FactoryStore {
         workspace_path TEXT,
         manifest_json TEXT NOT NULL,
         knowledge_pack_json TEXT,
+        intake_bundle_json TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -64,12 +65,17 @@ export class FactoryStore {
         FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
       );
     `);
+    // A store created before approved intake became durable has no column for
+    // it. Adding it here keeps an existing local factory usable rather than
+    // asking an operator to discard their projects.
+    const columns = this.db.prepare('PRAGMA table_info(projects)').all().map((column) => column.name);
+    if (!columns.includes('intake_bundle_json')) this.db.exec('ALTER TABLE projects ADD COLUMN intake_bundle_json TEXT');
   }
 
   upsertProject(project) {
     this.db.prepare(`
-      INSERT INTO projects (id,name,type,slug,state,workspace_path,manifest_json,knowledge_pack_json,created_at,updated_at)
-      VALUES (?,?,?,?,?,?,?,?,?,?)
+      INSERT INTO projects (id,name,type,slug,state,workspace_path,manifest_json,knowledge_pack_json,intake_bundle_json,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)
       ON CONFLICT(id) DO UPDATE SET
         name=excluded.name,
         type=excluded.type,
@@ -78,8 +84,9 @@ export class FactoryStore {
         workspace_path=excluded.workspace_path,
         manifest_json=excluded.manifest_json,
         knowledge_pack_json=excluded.knowledge_pack_json,
+        intake_bundle_json=COALESCE(excluded.intake_bundle_json, projects.intake_bundle_json),
         updated_at=excluded.updated_at
-    `).run(project.id, project.name, project.type, project.slug, project.state, project.workspacePath ?? null, json(project.manifest), project.knowledgePack ? json(project.knowledgePack) : null, project.createdAt, project.updatedAt);
+    `).run(project.id, project.name, project.type, project.slug, project.state, project.workspacePath ?? null, json(project.manifest), project.knowledgePack ? json(project.knowledgePack) : null, project.intakeBundle ? json(project.intakeBundle) : null, project.createdAt, project.updatedAt);
     return this.getProject(project.id);
   }
 
@@ -95,6 +102,7 @@ export class FactoryStore {
       workspacePath: row.workspace_path,
       manifest: parse(row.manifest_json),
       knowledgePack: parse(row.knowledge_pack_json),
+      intakeBundle: parse(row.intake_bundle_json),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

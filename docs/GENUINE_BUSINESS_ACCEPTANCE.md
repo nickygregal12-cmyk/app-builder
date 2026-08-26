@@ -76,6 +76,24 @@ loopback-only.
 **2. Create the project from real intake.** Answer the questionnaire as the
 business, not as a test. The approved Build Contract becomes the Manifest.
 
+Approving records a durable **approved intake bundle**: the questionnaire
+version, project type, intake mode, normalised answers, accepted defaults,
+source references, capability decisions, and the approved Build Contract and
+Manifest with a hash of each. A rerun replays that bundle instead of asking
+anyone to remember what they answered — *Rerun an approved intake* on the
+projects page, or `POST /intake-bundles/replay`. Replay rebuilds through the
+same contract builders normal intake uses, shows what is being reused before
+anything is spent, refuses a bundle whose questionnaire or schema has moved
+rather than coercing it, and starts a genuinely fresh run: new task, new build,
+new evidence, new checkpoints. Approved intent is reused; generated output never
+is.
+
+The nbm baseline is committed at
+`examples/genuine-business/nbm-approved-intake.v1.json`. Read
+`examples/genuine-business/README.md` before treating it as the original trial
+input — it is an explicitly versioned replacement for an intake that was never
+persisted, not a reconstruction of it.
+
 **3. Add the real sources.** In the workspace's *Company sources* panel: the
 company's own website URL, and the files the business has supplied. The
 "business owns this material and approves republishing it" checkbox is a

@@ -103,6 +103,25 @@ export function createExecutionEnvironmentSpec(input) {
   const grantFile = input?.grantPath === undefined || input?.grantPath === null
     ? null
     : absolutePath(input.grantPath, 'grantPath');
+
+  // The model lane, and its absence.
+  //
+  // A model-powered attempt needs one more trusted socket than a deterministic
+  // one: the gateway that holds the provider credential and makes the call on
+  // the attempt's behalf. It is *not* the capability broker — the broker is the
+  // Factory boundary, and every entry in config/agent-capabilities.json names a
+  // real Factory operation — so putting model invocation there would place it
+  // on the Factory's own surface.
+  //
+  // It is optional and absent by default, and that absence is the property
+  // worth stating: with no `modelSocketPath`, this spec is identical to the one
+  // it produced before the lane existed, mount for mount and variable for
+  // variable. An attempt that was not explicitly given the lane cannot reach a
+  // model at all, because there is nothing in its sandbox to reach.
+  const modelSocket = input?.modelSocketPath === undefined || input?.modelSocketPath === null
+    ? null
+    : absolutePath(input.modelSocketPath, 'modelSocketPath');
+
   const spec = {
     schemaVersion: 1,
     attemptId: text(input?.attemptId, 'attemptId'),
@@ -170,11 +189,24 @@ export function createExecutionEnvironmentSpec(input) {
       socketEnvironmentVariable: 'APP_BUILDER_AGENT_BROKER_SOCKET',
     },
 
+    // The model lane, when there is one. It carries a socket and nothing else:
+    // no key, no key path, no provider endpoint, no model name the sandbox
+    // could substitute. The attempt presents the grant it already holds and
+    // the trusted gateway decides — the same shape as the Factory lane, for
+    // the same reason.
+    modelAccess: modelSocket === null ? null : {
+      transport: 'unix-socket',
+      gatewaySocket: modelSocket,
+      containerSocketPath: '/run/app-builder/model.sock',
+      socketEnvironmentVariable: 'APP_BUILDER_MODEL_SOCKET',
+    },
+
     mounts: [
       { source: absolutePath(input?.workspacePath, 'workspacePath'), target: '/workspace', mode: 'rw' },
       { source: absolutePath(input?.scratchPath, 'scratchPath'), target: '/scratch', mode: 'rw' },
       { source: absolutePath(input?.brokerSocketPath, 'brokerSocketPath'), target: '/run/app-builder/broker.sock', mode: 'rw' },
       ...(grantFile === null ? [] : [{ source: grantFile, target: '/run/app-builder/grant', mode: 'ro' }]),
+      ...(modelSocket === null ? [] : [{ source: modelSocket, target: '/run/app-builder/model.sock', mode: 'rw' }]),
     ],
     tmpfs: [{ target: '/tmp', sizeMb: positive(limits.tmpfsMb, DEFAULT_LIMITS.tmpfsMb, 'tmpfsMb') }],
 
@@ -192,6 +224,9 @@ export function createExecutionEnvironmentSpec(input) {
         'APP_BUILDER_AGENT_GRANT',
         'APP_BUILDER_AGENT_GRANT_FILE',
         'APP_BUILDER_AGENT_BROKER_SOCKET',
+        // Present only when the lane is, and a socket path either way — never
+        // a credential, an endpoint or a provider name.
+        ...(modelSocket === null ? [] : ['APP_BUILDER_MODEL_SOCKET']),
         'APP_BUILDER_ATTEMPT_ID',
         'APP_BUILDER_WORKSPACE',
         'APP_BUILDER_SCRATCH',
@@ -241,14 +276,18 @@ export function assertSpecIsolation(spec) {
     const source = String(mount.source ?? '');
     if (!source.startsWith('/')) fail(`mount source ${source} is not an absolute path.`);
     if (source.includes('..')) fail(`mount source ${source} contains a parent-directory segment.`);
-    // The broker socket and the attempt's own grant file live under host
-    // runtime directories and are the two deliberate handles. The exemption is
-    // matched on the *pair*: a mount is exempt only when it carries the exact
-    // source the spec named for that target, so a hostile edit cannot smuggle
-    // `/etc/shadow` through by borrowing the grant target's name.
+    // The broker socket, the attempt's own grant file and — when the lane is
+    // enabled at all — the model gateway socket are the deliberate handles. The
+    // exemption is matched on the *pair*: a mount is exempt only when it
+    // carries the exact source the spec named for that target, so a hostile
+    // edit cannot smuggle `/etc/shadow` through by borrowing the grant
+    // target's name. A spec with no `modelAccess` exempts no model target, so
+    // the lane cannot be reopened by naming its path.
     const exempt =
       (mount.target === spec.factoryAccess?.containerSocketPath && source === spec.factoryAccess?.brokerSocket) ||
-      (mount.target === spec.factoryAccess?.containerGrantPath && spec.factoryAccess?.grantFile !== null && source === spec.factoryAccess?.grantFile);
+      (mount.target === spec.factoryAccess?.containerGrantPath && spec.factoryAccess?.grantFile !== null && source === spec.factoryAccess?.grantFile) ||
+      (spec.modelAccess !== null && spec.modelAccess !== undefined
+        && mount.target === spec.modelAccess.containerSocketPath && source === spec.modelAccess.gatewaySocket);
     if (exempt) {
       if (mount.target === spec.factoryAccess?.containerGrantPath && mount.mode !== 'ro') {
         fail('the attempt grant must be mounted read-only.');

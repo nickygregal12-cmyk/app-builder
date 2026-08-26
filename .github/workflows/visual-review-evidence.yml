@@ -11,6 +11,7 @@ on:
       - 'templates/react-vite-neutral/**'
       - 'config/visual-directions.json'
       - 'examples/genuine-business/nbm-approved-intake.v1.json'
+      - 'examples/genuine-business/nbm-visual-review-verdict.v1.json'
 
 permissions:
   contents: read
@@ -30,8 +31,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
 
-      - name: Generate genuine-business visual review evidence
-        run: npm run acceptance:visual-candidates
+      - name: Generate genuine-business visual review evidence and apply recorded verdict
+        run: npm run acceptance:visual-candidates -- --verdicts examples/genuine-business/nbm-visual-review-verdict.v1.json
 
       - name: Upload detached review evidence only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

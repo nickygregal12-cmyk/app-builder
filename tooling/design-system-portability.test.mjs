@@ -6,6 +6,7 @@ import test from 'node:test';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { compileDesignSystemSpec, renderDesignSystemCss } from './lib/design-choices.mjs';
+import { generateProject, loadCatalog, reconcileProjectRecipes } from './lib/generator.mjs';
 
 function manifest(slug) {
   return {
@@ -129,5 +130,60 @@ test('DesignSystemSpec is portable, live-synchronised and reproducible across re
     await service.close();
     store.close();
     fs.rmSync(dirs.root, { recursive: true, force: true });
+  }
+});
+
+test('clearing a human design override returns the portable spec to the factory-composed value', async () => {
+  const dirs = roots('app-builder-portable-design-clear-');
+  const store = new FactoryStore({ stateRoot: dirs.stateRoot });
+  const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
+
+  try {
+    const project = service.createProject({ id: 'project-portable-design-clear', manifest: manifest('portable-design-clear') });
+    const build = await service.generateProject(project.id);
+    const composedSpec = assertPortableDesign(build.workspace, service.designContract(project.id).design);
+
+    await service.writeDesignChoices(project.id, { density: 'dense', radius: '0rem' });
+    const overridden = assertPortableDesign(build.workspace, service.designContract(project.id).design);
+    assert.equal(overridden.controls.density, 'dense');
+    assert.equal(overridden.controls.radius, '0rem');
+
+    // Clearing one control must return that control alone, and the whole
+    // artifact must be recompiled rather than left carrying the old token.
+    const cleared = await service.writeDesignChoices(project.id, { radius: null });
+    assert.equal(Object.hasOwn(cleared.chosen, 'radius'), false, 'a cleared control must stop being a durable human choice');
+    const clearedSpec = assertPortableDesign(build.workspace, cleared.design);
+    assert.equal(clearedSpec.controls.radius, composedSpec.controls.radius, 'a cleared control must return to the factory-composed value');
+    assert.equal(clearedSpec.tokens['--layout-radius'], composedSpec.tokens['--layout-radius']);
+    assert.equal(clearedSpec.controls.density, 'dense', 'clearing one control must not discard the others');
+  } finally {
+    await service.close();
+    store.close();
+    fs.rmSync(dirs.root, { recursive: true, force: true });
+  }
+});
+
+test('recipe reconciliation preserves the portable design system artifact', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-portable-design-recipes-'));
+  const out = path.join(tmp, 'project');
+
+  try {
+    const catalog = loadCatalog();
+    const projectManifest = JSON.parse(fs.readFileSync('examples/generator-project-manifest.json', 'utf8'));
+    generateProject(projectManifest, out, { catalog, designChoices: { density: 'dense', accentColor: '#7a1f3d' } });
+    const before = designSpec(out);
+    assert.equal(before.controls.density, 'dense');
+    assert.equal(before.controls.accentColor, '#7a1f3d');
+
+    // Adding and removing a capability is not a design decision. The compiled
+    // artifact and the stylesheet must both survive it unchanged.
+    reconcileProjectRecipes(out, ['feature-flags', 'seo'], { catalog });
+    assert.deepEqual(designSpec(out), before, 'installing a recipe must not reset the compiled design system');
+    reconcileProjectRecipes(out, ['seo'], { catalog });
+    const after = designSpec(out);
+    assert.deepEqual(after, before, 'removing a recipe must not reset the compiled design system');
+    assert.equal(fs.readFileSync(path.join(out, 'src/generated/brand.css'), 'utf8'), renderDesignSystemCss(after));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
   }
 });

@@ -37,9 +37,31 @@ This is intentionally an intermediate step rather than a new schema/registry exp
 - invalid/non-authoritative compiler output fails closed;
 - no new runtime dependency is added to generated repositories.
 
-## 4C.2 — Persist the portable design artifact
+## 4C.2 — Persist the portable design artifact — done
 
-Once 4C.1 is green, persist the compiled design system into the ordinary generated repository, preferably under the existing `.product/` provenance area rather than inventing a second metadata root.
+The compiled design system is persisted into the ordinary generated repository at
+`.product/design-system.json`, the product-facing summary area described in
+`docs/ARCHITECTURE.md`. `.app-builder/` remains the factory's build record; the two are
+not duplicated, because `project.json` and `handover.json` name the portable artifact by
+path rather than repeating it.
+
+`writeDesignArtifacts` in `tooling/lib/design-choices.mjs` is the single writer: it
+compiles the DesignSystemSpec once and writes `.product/design-system.json`,
+`src/generated/brand.css` and `src/generated/design.ts` from that one compilation.
+Initial generation (`tooling/lib/generator.mjs`) and a live Console design edit
+(`FactoryService.rewriteWorkspaceDesign`) both call it, so the stylesheet cannot describe
+a design the portable artifact does not.
+
+`tooling/design-system-portability.test.mjs` proves the artifact equals the compiler
+output for the live design, that the stylesheet renders from the persisted spec, that a
+live edit rewrites both, that clearing a human override returns that control to the
+factory-composed value, that a rebuild reproduces the artifact from durable choices
+without rewriting the previous workspace, that recipe reconciliation does not reset it,
+and that no `@app-builder/*` dependency reaches the generated package.
+
+The shape is not yet a contract family. It has one producer and one renderer inside the
+factory; promoting it to a schema is worth doing when a second consumer needs to validate
+it at a boundary.
 
 Target shape should include at least:
 

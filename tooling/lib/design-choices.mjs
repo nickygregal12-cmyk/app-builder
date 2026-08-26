@@ -19,6 +19,9 @@
  * allowed to grow around it.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 /** What each density means in section rhythm. This is what makes it real. */
@@ -170,4 +173,31 @@ export function renderDesignSystemCss(spec) {
 /** Existing product path: generation and live Console edits now compile through DesignSystemSpec. */
 export function renderBrandCss(design) {
   return renderDesignSystemCss(compileDesignSystemSpec(design));
+}
+
+/** Where the compiled design travels inside the ordinary generated repository. */
+export const DESIGN_SYSTEM_SPEC_PATH = '.product/design-system.json';
+
+export function renderDesignModule(design) {
+  return `export const design = ${JSON.stringify(design, null, 2)} as const;\n`;
+}
+
+/**
+ * Write everything a build derives from one design, from one compilation.
+ *
+ * Generation and a live Console edit are two paths to the same three files, and
+ * they drifted before: the service rendered `design.ts` from its own copy of the
+ * template string. Compiling once here is what keeps the portable spec, the
+ * stylesheet and the module describing the same design rather than three
+ * artifacts that merely tend to agree.
+ */
+export function writeDesignArtifacts(projectDir, design) {
+  const root = path.resolve(projectDir);
+  const spec = compileDesignSystemSpec(design);
+  fs.mkdirSync(path.join(root, 'src/generated'), { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(root, DESIGN_SYSTEM_SPEC_PATH)), { recursive: true });
+  fs.writeFileSync(path.join(root, DESIGN_SYSTEM_SPEC_PATH), `${JSON.stringify(spec, null, 2)}\n`);
+  fs.writeFileSync(path.join(root, 'src/generated/brand.css'), renderDesignSystemCss(spec));
+  fs.writeFileSync(path.join(root, 'src/generated/design.ts'), renderDesignModule(design));
+  return spec;
 }

@@ -10,7 +10,7 @@ import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
-import { applyDesignChoices, assertDesignChoices, compileDesignSystemSpec, designControls, renderDesignSystemCss } from '../../../tooling/lib/design-choices.mjs';
+import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
 import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { deriveOpportunities } from '../../../tooling/lib/product-opportunities.mjs';
@@ -282,12 +282,10 @@ export class FactoryService {
     // Apply over what the factory selected, never over the last thing written,
     // so clearing a control returns it rather than leaving the previous value.
     const design = applyDesignChoices(record.composedDesign ?? record.design, choices);
-    const designSystemSpec = compileDesignSystemSpec(design);
-    fs.writeFileSync(file, `${JSON.stringify({ ...record, design, designSystemSpec: '.product/design-system.json' }, null, 2)}\n`);
-    fs.mkdirSync(path.join(workspace, '.product'), { recursive: true });
-    fs.writeFileSync(path.join(workspace, '.product/design-system.json'), `${JSON.stringify(designSystemSpec, null, 2)}\n`);
-    fs.writeFileSync(path.join(workspace, 'src/generated/brand.css'), renderDesignSystemCss(designSystemSpec));
-    fs.writeFileSync(path.join(workspace, 'src/generated/design.ts'), `export const design = ${JSON.stringify(design, null, 2)} as const;\n`);
+    fs.writeFileSync(file, `${JSON.stringify({ ...record, design, designSystemSpec: DESIGN_SYSTEM_SPEC_PATH }, null, 2)}\n`);
+    // A live edit goes through the same writer generation uses, so the portable
+    // spec a person walks away with is never the one the last build left behind.
+    writeDesignArtifacts(workspace, design);
     return design;
   }
 
@@ -956,7 +954,7 @@ export class FactoryService {
         summary: `Build v${version}: generated ${project.name} from Manifest v${project.manifest.schemaVersion ?? 1}${project.knowledgePack ? ' and trusted knowledge pack' : ''}.`,
         filesChanged: [],
         failures: [],
-        artifacts: ['.app-builder/manifest.json', '.app-builder/composition.json', '.app-builder/recipe-installations.json', '.product/design-system.json'],
+        artifacts: ['.app-builder/manifest.json', '.app-builder/composition.json', '.app-builder/recipe-installations.json', DESIGN_SYSTEM_SPEC_PATH],
         nextAction: 'Run generated project verification and start a preview.',
       });
       this.store.recordCheckpoint(checkpoint);

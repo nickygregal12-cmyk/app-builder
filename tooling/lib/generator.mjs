@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { applyDesignChoices, assertAccentColor, compileDesignSystemSpec, renderDesignSystemCss } from './design-choices.mjs';
+import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertAccentColor, writeDesignArtifacts } from './design-choices.mjs';
 
 export function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 export function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
@@ -175,7 +175,6 @@ function renderRecipeRegistry(recipes) {
 }
 
 const renderProject = (project) => `export const project = ${JSON.stringify({ name: project.name, slug: project.slug, type: project.type, primaryGoal: project.primaryGoal }, null, 2)} as const;\n`;
-const renderDesign = (design) => `export const design = ${JSON.stringify(design, null, 2)} as const;\n`;
 function renderScenarios(scenarios) {
   const values = JSON.stringify(scenarios);
   return `export const supportedScenarios = ${values} as const;\nexport type AppScenario = (typeof supportedScenarios)[number];\n`;
@@ -242,20 +241,20 @@ function clearDatabaseFragments(projectDir) { const directory = path.join(projec
 
 function writeGeneratedState(projectDir, manifest, plan, templatePackage, packageManaged, databaseFragments) {
   const generated = path.join(projectDir, 'src/generated');
-  const designSystemSpec = compileDesignSystemSpec(plan.design);
   fs.mkdirSync(generated, { recursive: true });
   fs.writeFileSync(path.join(generated, 'project.ts'), renderProject(manifest.project));
   fs.writeFileSync(path.join(generated, 'recipes.tsx'), renderRecipeRegistry(plan.recipes));
-  fs.writeFileSync(path.join(generated, 'design.ts'), renderDesign(plan.design));
-  fs.writeFileSync(path.join(generated, 'brand.css'), renderDesignSystemCss(designSystemSpec));
   fs.writeFileSync(path.join(generated, 'scenarios.ts'), renderScenarios(plan.scenarios));
-  writeJson(path.join(projectDir, '.product/design-system.json'), designSystemSpec);
+  // The portable spec, the stylesheet and the design module come from one
+  // compilation, so a generated repository cannot carry three descriptions of
+  // its own design that disagree.
+  writeDesignArtifacts(projectDir, plan.design);
   writeJson(path.join(projectDir, '.app-builder/manifest.json'), manifest);
-  writeJson(path.join(projectDir, '.app-builder/project.json'), { schemaVersion: 1, template: { id: plan.template.id, version: plan.template.version }, projectType: manifest.project.type, design: plan.design, composedDesign: plan.composed ?? plan.design, designSystemSpec: '.product/design-system.json', scenarios: plan.scenarios });
+  writeJson(path.join(projectDir, '.app-builder/project.json'), { schemaVersion: 1, template: { id: plan.template.id, version: plan.template.version }, projectType: manifest.project.type, design: plan.design, composedDesign: plan.composed ?? plan.design, designSystemSpec: DESIGN_SYSTEM_SPEC_PATH, scenarios: plan.scenarios });
   writeJson(path.join(projectDir, '.app-builder/adapters.json'), { schemaVersion: 1, installed: plan.adapters.map((adapter) => ({ id: adapter.id, kind: adapter.kind, version: adapter.version })) });
   writeJson(path.join(projectDir, '.app-builder/recipes.json'), { schemaVersion: 1, installed: plan.recipes.map((recipe) => ({ id: recipe.id, module: recipe.module, version: recipe.version })), packageManaged, databaseFragments });
   writeJson(path.join(projectDir, '.app-builder/template-package.json'), templatePackage);
-  writeJson(path.join(projectDir, '.app-builder/handover.json'), { schemaVersion: 1, project: manifest.project, template: { id: plan.template.id, version: plan.template.version }, adapters: plan.adapters.map(({ id, kind, version }) => ({ id, kind, version })), recipes: plan.recipes.map(({ id, module, version }) => ({ id, module, version })), design: plan.design, designSystemSpec: '.product/design-system.json', scenarios: plan.scenarios, aiBudget: manifest.aiBudget, databaseFragments });
+  writeJson(path.join(projectDir, '.app-builder/handover.json'), { schemaVersion: 1, project: manifest.project, template: { id: plan.template.id, version: plan.template.version }, adapters: plan.adapters.map(({ id, kind, version }) => ({ id, kind, version })), recipes: plan.recipes.map(({ id, module, version }) => ({ id, module, version })), design: plan.design, designSystemSpec: DESIGN_SYSTEM_SPEC_PATH, scenarios: plan.scenarios, aiBudget: manifest.aiBudget, databaseFragments });
 }
 
 function writeHandover(projectDir, manifest, plan, databaseFragments) {

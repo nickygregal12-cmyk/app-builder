@@ -217,11 +217,23 @@ test('a public-egress attempt runs on the bounded named network, never the host 
 // The real thing: connection attempts from inside real network isolation.
 // ---------------------------------------------------------------------------
 
-/** Find a way to run a command in a fresh, empty network namespace. */
+/**
+ * Find a way to run a command in a fresh, empty network namespace.
+ *
+ * Ordered by how closely each resembles the rootless sandbox this proves, but
+ * the privileged fallback is not a weaker proof — it is a stronger one. The
+ * probe only opens sockets, so a probe running as root that still cannot reach
+ * the Factory says more than an unprivileged one that cannot.
+ *
+ * The fallback exists because GitHub's Ubuntu runners restrict unprivileged
+ * user namespaces, and without it this file's central claim would quietly skip
+ * on every pull request while the run went green.
+ */
 function isolationRunner() {
   const candidates = [
     ['unshare', ['--net', '--']],
     ['unshare', ['--user', '--map-root-user', '--net', '--']],
+    ['sudo', ['-n', 'unshare', '--net', '--']],
   ];
   for (const [binary, prefix] of candidates) {
     const probe = spawnSync(binary, [...prefix, 'true'], { stdio: 'ignore' });

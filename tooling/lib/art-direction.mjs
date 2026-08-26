@@ -112,7 +112,7 @@ export function compileArtDirectionPlan(intent = {}) {
  * give the build two places to disagree about the same rhythm.
  */
 export function artDirectionIntent(pattern = {}) {
-  return { ...DEFAULT_ART_DIRECTION, ...(pattern.artDirection ?? {}) };
+  return { ...DEFAULT_ART_DIRECTION, ...pattern.artDirection };
 }
 
 /** The custom properties the template stylesheet reads for composition and rhythm. */

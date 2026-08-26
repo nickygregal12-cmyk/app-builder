@@ -183,6 +183,27 @@ was worked around in an acceptance output.
    nothing under `src/` knows what a host is beyond the one address an enquiry
    is posted to.
 
+6. **A generated-project harness ignored the project's own preview contract.**
+   `generateProject` writes a template's declared `previewEnv` into every
+   generated repository and the factory service reads it before supervising a
+   preview, but `playwright.real-business.config.ts` started
+   `.tmp/real-business-acceptance/workspaces/acme-retrofit` with no environment
+   at all. That project is a marketing site, so it is now Astro, and `astro dev`
+   backgrounds itself where it detects an agentic environment: the harness saw
+   its own dev server exit immediately (`Process from config.webServer exited
+   early`), and an orphan daemon kept port 4273 for every later run. The
+   accessibility harness had been given the fix inline; the real-business one
+   had not. Both now read the contract through one helper,
+   `tooling/lib/generated-preview.mjs`, and
+   `tooling/generated-preview.test.mjs` fails when a harness that starts a
+   generated project does not.
+
+   Worth recording precisely, because it is the case a green pipeline does not
+   catch: GitHub Actions is not an environment Astro backgrounds itself in, so
+   hosted CI passed this configuration and the defect was only reachable on a
+   developer or agent machine. A harness that works on the one host that never
+   runs it is not covered by the run that proves it.
+
 ## Known limitation
 
 Astro's dev server serves Vite's module graph from the server root regardless of

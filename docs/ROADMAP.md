@@ -9,11 +9,21 @@ restate that state, and where the two disagree the status file wins.
 
 Current stage: **Phase 4D — Visual direction, responsive composition and candidate promotion**.
 
-**The one gate blocking advancement today** is `phase-4d-visual-review-verdict`: the nbm candidate set is
-generated, built and photographed, both candidates lint clean, and no candidate is promoted, because the
-factory created them and rule 17 forbids it promoting its own work. A reviewer who did not create them
-must pass, rework or reject each candidate. `npm run acceptance:visual-candidates` produces the evidence
-and `npm run review:visual-candidates` opens the Console over it.
+**One thing blocks advancement today, and it is not a capability.** Three product gates are open and all
+three are the same gate: a visual verdict from someone who did not produce the work.
+
+- `phase-4d-visual-review-verdict` — the nbm candidate set is generated, built and photographed, both
+  candidates lint clean, and nothing is promoted. `npm run acceptance:visual-candidates` produces the
+  evidence and `npm run review:visual-candidates` opens the Console over it.
+- `phase-4-2a-static-visual-review` — the same business rendered statically, with its own evidence at
+  `.app-builder/static-renderer` from `npm run acceptance:static-renderer`.
+- `professional-output-independent-verdict` — the one remaining row in `docs/VISUAL_EXCELLENCE.md` §9,
+  which is the same requirement stated for the gate as a whole.
+
+Rule 17 forbids the factory promoting its own work, no genuinely independent model runtime is enabled
+here, and restarting the same model is not independence. So this is a person or a provider rather than a
+piece of engineering: **no amount of building closes it**, and the useful question is only ever which
+work is genuinely independent of it. Everything in steps 3–5 below was, and is done.
 
 ## The path to a finished core product
 
@@ -21,17 +31,21 @@ The ordered top-level route from today to a finished core product. Everything be
 detail behind one of these steps. What "finished" means — the v1 core, the class-maturity tiers and the
 expansion that deliberately sits outside v1 — is defined once in `docs/MASTER_PLAN.md` §7.
 
-1. **Take the outstanding Phase 4D visual verdict** and promote or rework accordingly.
+1. **Take the outstanding Phase 4D visual verdict** and promote or rework accordingly. ← *blocked on a
+   person or a provider; see above*
 2. **Close Phase 4D honestly** against the exit gate in `docs/PHASE_4D_EXECUTION.md`, leaving 4D.3 and
    the comparison canvas recorded as deferred rather than done. 4D.2 is no longer among them: design
    references now have a real supplier and a real consumer, so its reviving condition was met and it
-   shipped.
-3. **Finish the documentation and product-proof alignment** so one authority owns each concern.
+   shipped. ← *blocked on 1*
+3. **Finish the documentation and product-proof alignment** so one authority owns each concern. ✅
 4. **Phase 4.2 — prove the static/content renderer**, so the template contract is real rather than a
-   single-renderer assumption.
+   single-renderer assumption. ✅ *implemented and evidenced; its own visual review is gate 1*
 5. **Close the genuinely missing professional-output capabilities** — and only those; the rule that
-   separates a missing capability from a correctly deferred one is `docs/VISUAL_EXCELLENCE.md` §9.
+   separates a missing capability from a correctly deferred one is `docs/VISUAL_EXCELLENCE.md` §9. ✅
+   *cross-browser portability, the cross-build anti-template diagnostic and the bespoke-presentation
+   lane are closed; the one remaining row is gate 1*
 6. **Enter the product-proof freeze** (below): stop extending output machinery and start proving it.
+   ← *the next step, and it opens when gate 1 does*
 7. **Run the varied real-business corpus**, including MGB Decor, under the contract in
    `docs/GENUINE_BUSINESS_ACCEPTANCE.md`.
 8. **Fix only the reusable defects the corpus exposes** and rerun the same frozen inputs to compare.

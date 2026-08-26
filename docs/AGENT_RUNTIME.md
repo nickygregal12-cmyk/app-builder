@@ -1,18 +1,18 @@
 # Dedicated App Builder Agent Runtime
 
-Status: **future architecture**. This document defines the target boundary; it does not make OpenCode or a Hetzner server a current runtime dependency.
+Status: **host infrastructure validated; autonomous runtime still deferred**. The isolated App Builder services now exist on the owner's existing Hetzner host, but this document still defines a future `AgentRuntimeAdapter`/sandbox/orchestration boundary. A live OpenCode endpoint is infrastructure, not permission to run broad autonomous loops.
 
 ## Goal
 
-App Builder should eventually have its own dedicated long-running agent environment for website/application work, separate from any existing project-specific agent server.
+App Builder should eventually have its own dedicated long-running agent environment for website/application work. **Dedicated means logically and operationally isolated, not necessarily a second paid VM.** The initial deployment is co-located on the existing Hetzner host with a separate Linux identity, repository, state, resource slice, credentials and loopback services; it must remain separate from existing project-specific runtime state and authority.
 
-The first intended deployment is a private service on the owner's Hetzner server using OpenCode as the initial agent-runtime implementation. The architecture must remain provider-neutral so OpenCode can be upgraded, replaced or complemented without changing generated applications or core factory contracts.
+OpenCode is the initial agent-runtime implementation endpoint. The architecture must remain provider-neutral so OpenCode can be upgraded, replaced or complemented without changing generated applications or core factory contracts.
 
 The runtime should let specialist agents work in bounded loops for long periods, hand work to other specialists, lose/compact conversation context safely, resume after interruption, run tests and browser checks, create checkpoints and continue until a clear success/stop condition is reached.
 
 ## Important sequencing: MCP before full runtime
 
-The Phase 3.7 factory service/tool contract makes a smaller interoperability step useful before this hosted runtime exists.
+The Phase 3.7 factory service/tool contract makes a smaller interoperability step useful before broad autonomous runtime execution is enabled.
 
 A Phase 3.8 MCP v2 adapter may expose safe deterministic factory operations to Codex/ChatGPT, Claude Code, OpenCode and other compatible clients:
 
@@ -89,28 +89,47 @@ AgentRuntimeAdapter
 Isolated project workspace / sandbox
 ```
 
-## Dedicated Hetzner service
+## Hetzner deployment boundary
 
-The intended hosted shape is separate from the Euro Predictor runtime:
+The first hosted shape is **co-located on the existing Hetzner host but isolated from existing project-specific runtimes**:
 
 ```text
-Hetzner
+existing Hetzner host
 |
 +-- existing project-specific runtime(s)
+|   +-- their own users/repos/state/services/credentials
 |
-+-- app-builder-runtime
-    +-- private API/control service
-    +-- OpenCode runtime adapter
-    +-- bounded worker pool
-    +-- isolated project/task workspaces
-    +-- preview proxy/ports
-    +-- task/event/checkpoint persistence
-    +-- scoped secret broker
-    +-- environment/project identity map
-    +-- logs/traces/usage accounting
++-- appbuilder runtime boundary
+    +-- Linux user: appbuilder (non-sudo, no inbound SSH key)
+    +-- /srv/app-builder/repository
+    +-- /srv/app-builder/state + workspaces + checkpoints + artifacts
+    +-- app-builder-runtime.slice CPU/memory/task limits
+    +-- Factory service: 127.0.0.1:4310
+    +-- OpenCode 1.18.14: 127.0.0.1:4097 + HTTP Basic Auth
+    +-- rootless Podman groundwork for future task sandboxes
+    +-- future AgentRuntimeAdapter / bounded worker pool
 ```
 
-The App Builder service may reuse proven operational patterns from other servers but must not inherit project-specific product logic, prompts, authorities or unrestricted permissions.
+A second server is not a prerequisite. Move to a separate host only when measured CPU, memory, browser/database contention or a stronger security/operations requirement justifies a machine boundary.
+
+The App Builder service may reuse proven operational patterns from other runtimes but must not inherit project-specific product logic, prompts, authorities, credentials or unrestricted permissions.
+
+### Validated infrastructure milestone — 2026-08-26
+
+The co-located infrastructure has been exercised on the real host and passed the intended boundary checks:
+
+- the factory runs as `appbuilder` and answers `/health` on `127.0.0.1:4310`;
+- factory durable state and workspaces resolve under `/srv/app-builder`, not inside the Git checkout;
+- OpenCode `1.18.14` runs as `appbuilder` on `127.0.0.1:4097`;
+- authenticated `/global/health` returns `200` and an unauthenticated request returns `401`;
+- the existing project-specific OpenCode endpoint remains independently bound to its own loopback port;
+- neither App Builder endpoint is publicly bound;
+- the App Builder account has no sudo authority or inbound SSH key;
+- rootless Podman and non-overlapping subordinate UID/GID ranges are available;
+- both App Builder services run inside the App Builder resource slice;
+- provider/model credentials, autonomous scheduling and boot enablement remain deliberately absent.
+
+This milestone proves the **host boundary only**. It does not satisfy the autonomous-runtime success criteria below and does not advance the machine-readable product phase past its current genuine-business acceptance gate.
 
 ## Runtime adapter responsibilities
 

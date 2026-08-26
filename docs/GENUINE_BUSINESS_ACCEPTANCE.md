@@ -53,6 +53,71 @@ run-root/
 
 All local paths in `evidence.json` are relative to the evidence file. Absolute paths and traversal outside that directory fail closed.
 
+## Running the trial
+
+Phase 4A and 4B built the path this gate has to run through. The proof goes
+through the product, not through a CLI beside it.
+
+**1. Start the factory.**
+
+```bash
+npm run dev
+```
+
+Console on `http://127.0.0.1:5173`, service on `http://127.0.0.1:4310`. Both are
+loopback-only.
+
+**2. Create the project from real intake.** Answer the questionnaire as the
+business, not as a test. The approved Build Contract becomes the Manifest.
+
+**3. Add the real sources.** In the workspace's *Company sources* panel: the
+company's own website URL, and the files the business has supplied. The
+"business owns this material and approves republishing it" checkbox is a
+statement about what you were given — leave it unticked for anything you were
+not explicitly granted, including the company's own public site, whose
+photographs are usually a photographer's.
+
+**4. Settle source governance before ingesting.** *Sources & rights* offers
+approve / reference-only / do-not-use per source. It locks once knowledge is
+attached, which is deliberate: durable source truth must not diverge from what
+was ingested.
+
+**5. Decide the assets.** *Assets* lists every ingested image with what it
+inherited and what a person decided, kept apart. Approving an asset whose source
+is not approved needs a rights declaration about that asset alone. Smart crops
+are withheld until reviewed; click a picture to set its focal point, then
+approve the recomputed crops. Replace anything wrong — a replacement is a new
+photograph and carries its own declaration.
+
+**6. Generate, verify, preview.** Each is a durable task with events and a
+checkpoint. The preview is the same rendering everything else reads.
+
+**7. Capture rendered evidence.** *Rendered evidence* captures every route at
+desktop, tablet and mobile plus the interaction states the build has, and lists
+the states these pictures do not claim.
+
+**8. Read the product review.** *What this build needs* ranks at most three
+opportunities and says which are blocked on you rather than on the factory. Fix
+what the factory can fix before counting edits against the budget.
+
+**9. Record launch readiness at handover.**
+
+```bash
+npm run audit:launch -- --project <generated-workspace> --json
+```
+
+The workspace path is the one the Console shows and the checkpoint records.
+Put `predictedManualEdits` and any remaining blockers into `launchReadiness` on
+the evidence, so the prediction can be compared against what a person actually
+had to change.
+
+**10. Review it as a person, and count.** This is the part no script does.
+Judge factual accuracy, brand fit, visual quality, responsive quality and
+accessibility, and record every meaningful manual edit with its category. The
+schema requires all five checks to be `passed` and every recorded edit to be
+`meaningful: true` — an edit you would not defend to the business does not
+belong in the count, and neither does one you made to avoid recording it.
+
 ## Validate
 
 ```bash

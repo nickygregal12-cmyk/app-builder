@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRecipeInstallation, planRecipeUpgrade } from '../../packages/control-plane/src/upgrades.js';
 import { resolveRendererVariant } from './renderer-selection.mjs';
+import { mergeManagedFile } from './managed-file-merge.mjs';
+
+export const MANAGED_BASELINE_ROOT = '.app-builder/managed-baselines';
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -86,6 +89,13 @@ export function recordRecipeInstallations(projectDir, { factoryRoot = process.cw
         continue;
       }
       fileHashes[relative] = sha256File(source);
+      // The bytes this recipe version installed, kept so a later upgrade can do
+      // a real three-way merge rather than only detecting that something moved.
+      // A hash answers "did this change?"; a merge needs to know *from what*,
+      // and once the factory's recipe has moved on there is nowhere else to ask.
+      const baseline = safeResolve(path.join(projectRoot, MANAGED_BASELINE_ROOT, recipe.id), relative);
+      fs.mkdirSync(path.dirname(baseline), { recursive: true });
+      fs.copyFileSync(source, baseline);
     }
     records.push({
       module: recipe.module,
@@ -111,6 +121,65 @@ export function currentManagedHashes(projectDir, installation) {
     if (fs.existsSync(target)) hashes[item.path] = sha256File(target);
   }
   return hashes;
+}
+
+/**
+ * What a three-way merge says about each managed file this upgrade would touch.
+ *
+ * Only asked when the plan already says `review-required` *because* files were
+ * modified. An upgrade whose files are untouched needs no merge, and a plan
+ * blocked for a different reason — a downgrade, a missing recipe — is not made
+ * less blocked by one.
+ *
+ * The reconciliation is a proposal, never an application. Planning an upgrade
+ * must not edit the project it is planning for, so the merged text is returned
+ * for review and nothing is written.
+ */
+export function reconcileManagedFiles({ projectDir, installation, definition }) {
+  const projectRoot = path.resolve(projectDir);
+  const baselineRoot = path.join(projectRoot, MANAGED_BASELINE_ROOT, installation.recipeId);
+  const targetRoot = path.join(definition.root, definition.filesRoot ?? 'files');
+  const files = [];
+
+  for (const item of installation.managedFiles ?? []) {
+    const baselinePath = safeResolve(baselineRoot, item.path);
+    const currentPath = safeResolve(projectRoot, item.path);
+    const targetPath = safeResolve(targetRoot, item.path);
+
+    if (!fs.existsSync(baselinePath)) {
+      files.push({ path: item.path, result: 'unavailable', conflicts: 0, detail: 'No installed baseline was recorded for this file, so there is nothing to merge from. A project generated before baselines were kept reconciles by hand once, and by merge after its next install.' });
+      continue;
+    }
+    if (!fs.existsSync(targetPath)) {
+      files.push({ path: item.path, result: 'unavailable', conflicts: 0, detail: 'The target recipe version no longer ships this file. Removing a managed file someone edited is a decision, not a merge.' });
+      continue;
+    }
+    const current = fs.existsSync(currentPath) ? fs.readFileSync(currentPath, 'utf8') : null;
+    if (current === null) {
+      files.push({ path: item.path, result: 'unavailable', conflicts: 0, detail: 'The project no longer has this file. Restoring one someone deleted is a decision, not a merge.' });
+      continue;
+    }
+    const merge = mergeManagedFile({
+      base: fs.readFileSync(baselinePath, 'utf8'),
+      ours: current,
+      theirs: fs.readFileSync(targetPath, 'utf8'),
+      label: `${installation.recipeId} ${definition.version}`,
+    });
+    files.push({ path: item.path, result: merge.result, conflicts: merge.conflicts, detail: merge.detail, merged: merge.result === 'clean' ? merge.merged : null, conflicted: merge.result === 'conflicted' ? merge.merged : null });
+  }
+
+  const conflicted = files.filter((file) => file.result === 'conflicted');
+  const unavailable = files.filter((file) => file.result === 'unavailable');
+  return {
+    files,
+    // `mergeable` means every modified file merged without a conflict. It is
+    // deliberately not the same as `ready`: a clean merge still has to pass the
+    // required checks, and the person applying it still sees what changed.
+    mergeable: conflicted.length === 0 && unavailable.length === 0,
+    conflicts: conflicted.reduce((total, file) => total + file.conflicts, 0),
+    conflictedFiles: conflicted.map((file) => file.path),
+    unmergeableFiles: unavailable.map((file) => file.path),
+  };
 }
 
 export function planProjectRecipeUpgrades(projectDir, { factoryRoot = process.cwd() } = {}) {
@@ -151,6 +220,19 @@ export function planProjectRecipeUpgrades(projectDir, { factoryRoot = process.cw
     });
     if (definition.upgrade?.alwaysReview && proposal.status === 'ready') {
       proposal = { ...proposal, status: 'review-required', reason: 'Target recipe explicitly requires review for upgrades.' };
+    }
+    // A modified managed file used to end the conversation. It now starts a
+    // merge: the recipe system's point is that a project keeps taking fixes,
+    // and losing that to one edited file is losing most of it.
+    if (proposal.status === 'review-required' && proposal.modifiedManagedFiles.length) {
+      const reconciliation = reconcileManagedFiles({ projectDir: projectRoot, installation, definition });
+      proposal = {
+        ...proposal,
+        reconciliation,
+        reason: reconciliation.mergeable
+          ? `${proposal.reason} A three-way merge against the installed baseline reconciles every modified file without conflict; review the merged result and apply it.`
+          : `${proposal.reason} A three-way merge leaves ${reconciliation.conflictedFiles.length} file(s) conflicted and ${reconciliation.unmergeableFiles.length} that cannot be merged; a person decides those.`,
+      };
     }
     proposals.push(proposal);
   }

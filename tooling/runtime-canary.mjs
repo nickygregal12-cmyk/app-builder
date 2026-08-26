@@ -32,6 +32,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -71,6 +72,34 @@ function readJson(relative) {
 function canaryImage() {
   const digest = createHash('sha256').update(fs.readFileSync(WORKER)).digest('hex');
   return { id: 'canary-local-process', reference: 'local-process/app-builder-canary-worker', digest: `sha256:${digest}` };
+}
+
+/**
+ * Remove the canary's scratch tree, including anything the attempt created
+ * with more privilege than this process has.
+ *
+ * Where the runner is `sudo`, the attempt runs as root and the directories it
+ * creates inside its workspace are root-owned. Removing a file needs write
+ * permission on its *parent*, so an unprivileged harness gets EACCES on those
+ * subdirectories — and `force: true` only forgives ENOENT. Left unhandled,
+ * the canary would fail in its cleanup after every check had passed, which
+ * reports as a broken canary rather than as a tidy-up problem.
+ */
+function removeCanaryRoot(root, { privileged }) {
+  try {
+    fs.rmSync(root, { recursive: true, force: true });
+    return { removed: true, detail: null };
+  } catch (error) {
+    if (!privileged) return { removed: false, detail: error instanceof Error ? error.message : String(error) };
+    // Same privilege that created them, and only ever the temporary directory
+    // this run made: never a path from anywhere else.
+    const resolved = path.resolve(root);
+    if (!resolved.startsWith(path.join(os.tmpdir(), 'app-builder-canary-'))) {
+      return { removed: false, detail: `refusing to remove ${resolved} with elevated privilege` };
+    }
+    const result = spawnSync('sudo', ['-n', 'rm', '-rf', '--', resolved], { stdio: 'ignore' });
+    return { removed: result.status === 0, detail: result.status === 0 ? null : 'privileged cleanup failed' };
+  }
 }
 
 function listen(server, port, host) {
@@ -205,7 +234,7 @@ function operationExpectations({ role, policy, registry }) {
   return expectations;
 }
 
-export async function runRuntimeCanary({ root = null } = {}) {
+export async function runRuntimeCanary({ root = null, isolation = undefined } = {}) {
   const registry = readJson('config/agent-capabilities.json');
   const roles = readJson('config/agent-roles.json').roles;
   const policies = readJson('config/agent-policies.json').policies;
@@ -219,7 +248,11 @@ export async function runRuntimeCanary({ root = null } = {}) {
   const service = new FactoryService({ store, workspacesRoot: path.join(workRoot, 'workspaces') });
   const factory = createFactoryHttpServer({ service, servicePort: FACTORY_PORT });
   const broker = createAgentBroker({ service, registry, secret: CANARY_SECRET });
-  const driver = createLocalExecutionDriver();
+  // `isolation` is an override so the exact runner a CI machine will pick —
+  // including the privileged `sudo` fallback, where the attempt runs as root
+  // and must be stopped and cleaned up with that same privilege — can be
+  // exercised deliberately rather than only encountered on a runner.
+  const driver = createLocalExecutionDriver({ isolation });
   const isolationProves = driver.isolationMode === 'network-namespace';
 
   const report = {
@@ -373,6 +406,19 @@ export async function runRuntimeCanary({ root = null } = {}) {
       scenario.expectedExitReason = expect;
       scenario.exitReasonMatches = collected.exitReason === expect;
 
+      if (grade) {
+        // An attempt that produced no structured result ran no boundary check,
+        // and a scenario with no boundary checks would otherwise report as a
+        // clean pass. That is the exact shape this canary exists to refuse, so
+        // it is a named failure rather than an absence.
+        report.checks.push({
+          id: 'attempt-produced-a-structured-result',
+          status: collected.result ? 'pass' : 'fail',
+          detail: collected.result
+            ? `${role.id}: ${Object.keys(collected.result).length} observation(s)`
+            : `${role.id}: the attempt wrote no result, so none of its boundary checks ran (exit ${collected.exitCode}, ${collected.stderr.slice(0, 300) || 'no stderr'})`,
+        });
+      }
       if (grade && collected.result) {
         report.checks.push(...gradeBoundary(collected.result, {
           isolationProves,
@@ -482,7 +528,13 @@ export async function runRuntimeCanary({ root = null } = {}) {
     await new Promise((resolve) => factory.close(resolve));
     await service.close();
     store.close();
-    if (root === null) fs.rmSync(workRoot, { recursive: true, force: true });
+    if (root === null) {
+      const cleanup = removeCanaryRoot(workRoot, { privileged: Boolean(driver.isolationRunner?.privileged) });
+      // Reported, never thrown: a cleanup problem after every check has passed
+      // is not a failed canary, and hiding it entirely would leave a root-owned
+      // directory on the runner with nothing saying so.
+      if (!cleanup.removed) console.warn(`[runtime-canary] could not remove ${workRoot}: ${cleanup.detail}`);
+    }
   }
 }
 

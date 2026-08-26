@@ -194,7 +194,23 @@ export function createLocalExecutionDriver({ nodeExecutable = process.execPath, 
       const entry = containers.get(handle);
       if (!entry) throw new Error(`Unknown attempt handle: ${handle}`);
       const [binary, ...rest] = entry.command;
-      const argv = runner ? [...runner.prefix, binary, ...rest] : [binary, ...rest];
+      // `sudo` resets the environment. Everything the attempt is told about
+      // itself — its broker socket, its grant *path*, its workspace, where to
+      // write its result — arrives as environment, so under the privileged
+      // runner the attempt would start knowing nothing and exit 0 having done
+      // nothing. That reads as a completed attempt while every boundary check
+      // silently did not run.
+      //
+      // So under a sanitising runner the environment is re-established inside
+      // the elevated process with `env`, which depends on no sudoers
+      // configuration. These values do land on the command line, which is why
+      // the allow-list in `sandboxEnvironment` is a hard refusal rather than a
+      // filter: only non-secret co-ordinates can ever be here, and the grant
+      // itself is a mounted file, never one of them.
+      const inner = runner?.privileged
+        ? ['env', ...Object.entries(entry.environment).map(([key, value]) => `${key}=${value}`), binary, ...rest]
+        : [binary, ...rest];
+      const argv = runner ? [...runner.prefix, ...inner] : [binary, ...rest];
       const executable = runner ? runner.binary : binary;
       // `detached` makes the attempt a process-group leader, so a cancel can
       // signal the whole group rather than only whatever the supervisor

@@ -513,3 +513,56 @@ test('the isolation runner reports whether stopping it needs the privilege that 
   // driver deliver its stop signal with the same privilege.
   assert.equal(detected.privileged, detected.binary === 'sudo');
 });
+
+
+/**
+ * The other half of the privileged-runner problem, and the more dangerous one.
+ *
+ * `sudo` resets the environment. Everything an attempt is told about itself —
+ * its broker socket, its grant path, where to write its result — arrives as
+ * environment, so under the privileged runner the attempt started knowing
+ * nothing, did nothing, and exited 0. That reads as a completed attempt. Every
+ * boundary check silently did not run, under a passing scenario: the exact
+ * shape this canary exists to refuse, in the canary's own harness.
+ *
+ * `env -i` clears the environment the same way `sudo` does, so the fix is
+ * provable without needing a privileged runner or a real `sudo` on the machine.
+ */
+test('an attempt behind an environment-sanitising runner still receives its own co-ordinates', async () => {
+  const worker = fileURLToPath(new URL('./lib/canary-worker.mjs', import.meta.url));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-sanitised-'));
+  const driver = createLocalExecutionDriver({
+    isolation: { binary: 'env', prefix: ['-i'], privileged: true },
+  });
+  const { journal } = recorder();
+  const adapter = new ExecutionEnvironmentAdapter({ driver, journal, stopGraceMs: 200 });
+  const attemptPlan = plan({
+    attemptId: 'attempt-sanitised-1',
+    workspacePath: path.join(root, 'workspace'),
+    scratchPath: path.join(root, 'scratch'),
+    grantPath: path.join(root, 'grant'),
+    brokerSocketPath: path.join(root, 'broker.sock'),
+    limits: { wallClockMs: 60_000 },
+  });
+
+  try {
+    await adapter.createAttempt(attemptPlan, {
+      command: [process.execPath, worker, JSON.stringify({ mode: 'boundary', workspaceWrites: ['src/proof.txt'] })],
+    });
+    await adapter.start('attempt-sanitised-1');
+    const collected = await adapter.collect('attempt-sanitised-1');
+
+    assert.equal(collected.exitReason, 'completed', collected.stderr.slice(0, 400));
+    // Without the fix this is null, the attempt looks like a clean pass, and
+    // nothing about the boundary was actually checked.
+    assert.ok(collected.result, 'the attempt must have produced a structured result, not merely exited 0');
+    assert.equal(collected.result.grantPresent, true, 'the attempt must have found its mounted grant');
+    assert.equal(collected.result.grantFromEnvironment, false, 'the grant is never an environment value');
+    assert.deepEqual(collected.result.secretShapedVariables, [], 'no credential-shaped variable may reach the attempt');
+    assert.deepEqual(collected.result.workspaceWrites.map((entry) => entry.written), [true]);
+
+    await adapter.dispose('attempt-sanitised-1');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

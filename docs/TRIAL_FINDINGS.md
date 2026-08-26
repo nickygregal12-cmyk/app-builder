@@ -378,3 +378,55 @@ register and to out-of-band fetch tooling.
 No website source was fabricated and no hash was invented. Phase 3.8E requires a
 real public company website as an input source, so the gate stays open until the
 crawl can run.
+
+### F21 — The one source format businesses actually supply was nearly opaque — P0 ✅ Fixed
+
+Phase 3.8E asks for "a genuine user-supplied company document, logo, image or
+spreadsheet". The trial supplied an owner-approved workbook carrying the legal
+name, company number, registered office, principal activity, website, telephone,
+both offices, the four service lines and the owner's acceptance brief.
+
+The knowledge pack extracted **one fact** from it: a phone number, found by a
+regex sweeping the flattened text, recorded at confidence 0.82 as a `candidate`.
+`companyProfile.identity.name` was `null`.
+
+The only structured company path was `structuredCompany`, which reads a JSON
+document shaped like `{ company: { name, legalName, services, ... } }`. No
+business has ever handed anyone that file. Spreadsheets were read by a single
+rule that looked for a column headed `service`, `services`, `product` or
+`offering` and took the name out of it — nothing else in a workbook could reach
+the site.
+
+So every identity and contact fact on the generated site came from the intake
+answers as unsourced `manifest`-origin bindings, and a real handover would have
+meant retyping them.
+
+Spreadsheets and CSVs are now read properly:
+
+- a two-column fact sheet (`Field`/`Value` and their synonyms) contributes
+  company identity, description and contact facts;
+- tables of services, projects, people, accreditations and testimonials become
+  entities, with their descriptions, locations, sectors, roles and issuers;
+- office and location tables contribute service areas, and the address or phone
+  an office row carries;
+- what an operator wrote down is `user-provided` at confidence 1, not a regex
+  candidate. The same sheet found on a crawled site stays a `candidate`.
+
+Everything is a closed allowlist. An unrecognised row label or column heading
+contributes nothing: guessing that a column headed "Notes" is the company
+description would put unverified text on a client's website. The workbook's
+"Item / Intent" acceptance brief yields no facts at all, which is the point —
+the owner's brief for the factory is not copy for the site.
+
+The nbm workbook now yields 7 facts, all `user-provided`. The hero title,
+locations, phone, address and website moved from `manifest` origin to
+`knowledge-fact`.
+
+### F22 — An unreachable source was reported as an internal factory failure — P1 ✅ Fixed
+
+`POST /projects/:id/sources` returned `500 request-failed` when the crawler
+could not reach the site. A source the operator named that the network cannot
+reach is a condition they have to see and act on, not a fault to hide behind an
+internal error. Every remote-source failure the crawler can raise is now a `400`
+carrying the reason, and the classifier is exported and tested rather than being
+an inline list nobody could check.

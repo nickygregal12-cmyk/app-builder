@@ -63,21 +63,123 @@ function structuredCompany(source, factMap, entities) {
   for (const [kind, values] of entityFields) for (const value of Array.isArray(values) ? values : []) addEntity(entities, kind, value, source, verification);
 }
 
-function spreadsheetEntities(source, entities) {
+/**
+ * Spreadsheets are what businesses actually hand over.
+ *
+ * Before the Phase 3.8E nbm trial the only structured company path was a JSON
+ * document shaped like `{ company: { name, services, ... } }` — a shape no real
+ * business has ever supplied. A workbook carrying the company's legal name,
+ * number, registered office, offices and service lines produced exactly one
+ * fact, scraped out of the flattened text by a phone-number regex, and the
+ * generated site had to be told who the company was by hand.
+ *
+ * Everything below is a closed allowlist. An unrecognised column heading or row
+ * label contributes nothing: guessing that a column called "Notes" is the
+ * company description would put unverified text on a client's website, which is
+ * exactly what `instructionAuthority: none` exists to prevent.
+ */
+
+/** Row labels a fact sheet may use, and the fact path each one means. */
+const FACT_SHEET_LABELS = new Map(Object.entries({
+  'business name': 'identity.name',
+  'company name': 'identity.name',
+  'trading name': 'identity.name',
+  name: 'identity.name',
+  'legal name': 'identity.legalName',
+  'registered name': 'identity.legalName',
+  description: 'identity.description',
+  about: 'identity.description',
+  'what we do': 'identity.description',
+  email: 'contact.email',
+  'email address': 'contact.email',
+  phone: 'contact.phone',
+  telephone: 'contact.phone',
+  'phone number': 'contact.phone',
+  website: 'contact.website',
+  url: 'contact.website',
+  address: 'contact.address',
+  'registered office': 'contact.address',
+  'registered address': 'contact.address',
+}));
+
+const LABEL_COLUMNS = ['field', 'item', 'attribute', 'property', 'key', 'label'];
+const VALUE_COLUMNS = ['value', 'answer', 'content', 'response', 'detail', 'details'];
+
+const ENTITY_TABLES = [
+  { kind: 'services', names: ['service', 'services', 'product', 'offering'], extra: { description: ['description', 'summary', 'detail', 'details'], price: ['price', 'cost', 'rate'] } },
+  { kind: 'projects', names: ['project', 'projects', 'case study', 'case studies', 'scheme'], extra: { description: ['description', 'summary', 'detail', 'details'], location: ['location', 'place', 'where'], sector: ['sector', 'type', 'category'] } },
+  { kind: 'people', names: ['person', 'people', 'team member', 'staff'], extra: { role: ['role', 'title', 'position', 'job title'] } },
+  { kind: 'accreditations', names: ['accreditation', 'accreditations', 'certification', 'membership'], extra: { issuer: ['issuer', 'body', 'awarded by'] } },
+  { kind: 'testimonials', names: ['testimonial', 'testimonials', 'quote'], extra: { customer: ['customer', 'client', 'author', 'attribution'] } },
+];
+
+/** Office/location tables name places the company serves, which are facts rather than entities. */
+const LOCATION_COLUMNS = ['location', 'locations', 'office', 'offices', 'area', 'areas', 'region', 'branch'];
+
+const normalize = (value) => String(value ?? '').trim();
+const headerKey = (value) => normalize(value).toLowerCase();
+
+function columnIndex(header, names) {
+  return header.findIndex((value) => names.includes(value));
+}
+
+function spreadsheetFacts(source, factMap, entities) {
   if (!['csv', 'xlsx'].includes(source.extraction.type)) return;
+  // Only an operator hands the factory a workbook. Content extracted from a
+  // downloaded file keeps the weaker verification the crawler earned.
+  const verification = source.provenance === 'user-supplied' ? 'user-provided' : 'candidate';
+  const confidence = verification === 'user-provided' ? 1 : 0.85;
+
   for (const table of source.extraction.tables ?? []) {
-    const [header, ...rows] = table.rows ?? [];
-    if (!header) continue;
-    const normalizedHeader = header.map((value) => String(value).trim().toLowerCase());
-    const nameIndex = normalizedHeader.findIndex((value) => ['service', 'services', 'product', 'offering'].includes(value));
-    if (nameIndex < 0) continue;
-    const priceIndex = normalizedHeader.findIndex((value) => ['price', 'cost', 'rate'].includes(value));
-    for (const row of rows) {
-      const name = String(row[nameIndex] ?? '').trim();
-      if (!name) continue;
-      const value = { name };
-      if (priceIndex >= 0 && String(row[priceIndex] ?? '').trim()) value.price = String(row[priceIndex]).trim();
-      addEntity(entities, 'services', value, source, source.provenance === 'user-supplied' ? 'user-provided' : 'candidate');
+    const [rawHeader, ...rows] = table.rows ?? [];
+    if (!rawHeader) continue;
+    const header = rawHeader.map(headerKey);
+
+    // 1. A two-column fact sheet: one column names the field, another holds it.
+    const labelIndex = columnIndex(header, LABEL_COLUMNS);
+    const valueIndex = columnIndex(header, VALUE_COLUMNS);
+    if (labelIndex >= 0 && valueIndex >= 0) {
+      for (const row of rows) {
+        const path = FACT_SHEET_LABELS.get(headerKey(row[labelIndex]));
+        const value = normalize(row[valueIndex]);
+        if (!path || !value) continue;
+        addFact(factMap, { path, value, sourceId: source.id, provenance: source.provenance, confidence, verification });
+      }
+    }
+
+    // 2. A table of things the company offers, did, or is.
+    for (const definition of ENTITY_TABLES) {
+      const nameIndex = columnIndex(header, definition.names);
+      if (nameIndex < 0) continue;
+      for (const row of rows) {
+        const name = normalize(row[nameIndex]);
+        if (!name) continue;
+        const value = { name };
+        for (const [field, candidates] of Object.entries(definition.extra)) {
+          const index = columnIndex(header, candidates);
+          if (index >= 0 && normalize(row[index])) value[field] = normalize(row[index]);
+        }
+        addEntity(entities, definition.kind, value, source, verification);
+      }
+    }
+
+    // 3. Where the company works. An office row may also carry the only address
+    //    or phone number the operator supplied.
+    const locationIndex = columnIndex(header, LOCATION_COLUMNS);
+    if (locationIndex >= 0) {
+      const addressIndex = columnIndex(header, ['address', 'street address', 'postal address']);
+      const phoneIndex = columnIndex(header, ['phone', 'telephone', 'phone number']);
+      for (const row of rows) {
+        const area = normalize(row[locationIndex]);
+        if (!area) continue;
+        addFact(factMap, { path: 'serviceAreas', value: area, sourceId: source.id, provenance: source.provenance, confidence, verification });
+        if (addressIndex >= 0 && normalize(row[addressIndex])) {
+          addFact(factMap, { path: 'contact.address', value: normalize(row[addressIndex]), sourceId: source.id, provenance: source.provenance, confidence, verification });
+        }
+        if (phoneIndex >= 0 && normalize(row[phoneIndex])) {
+          addFact(factMap, { path: 'contact.phone', value: normalize(row[phoneIndex]), sourceId: source.id, provenance: source.provenance, confidence, verification });
+        }
+      }
     }
   }
 }
@@ -267,7 +369,7 @@ export function buildKnowledgePack(normalizedSources, options = {}) {
   const pageSnapshots = [];
   for (const source of normalizedSources) {
     structuredCompany(source, factMap, entities);
-    spreadsheetEntities(source, entities);
+    spreadsheetFacts(source, factMap, entities);
     contactFacts(source, factMap);
     socialProfileFacts(source, factMap);
     const extraction = source.extraction;

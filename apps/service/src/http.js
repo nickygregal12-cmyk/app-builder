@@ -28,6 +28,31 @@ function projectRoute(pathname) {
   return match ? { projectId: decodeURIComponent(match[1]), action: match[2] ?? null } : null;
 }
 
+// Only messages that name a caller mistake become 4xx. A bare word like
+// "source" would also match internal failures and hide a real 500.
+//
+// Exported so the list is testable. An unreachable source used to fall through
+// to a 500, which told the Console the factory had broken when in fact the
+// operator had named a site the network could not reach.
+const CLIENT_ERROR_PATTERNS = [
+      /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
+      /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Rendered evidence (needs|is captured)/, /Sources cannot reference/, /Only http\(s\) source URLs/,
+      /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
+      // A source the operator named that cannot be reached is their problem to
+      // see and act on — a different URL, a different network — not an
+      // internal factory failure to hide behind a 500.
+      /^Failed to fetch https?:/, /^Refusing to (fetch|resolve)/, /^Unsupported remote protocol:/,
+      /^No address records for/, /redirects while fetching/, /^Redirect from .* did not include/,
+      /^Remote source exceeds/, /^Source exceeds/,
+      /Every source must be/, /exceeds the .* limit/,
+      /dependencies are not installed/, /no generated workspace/,
+      /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Replacing an asset needs/, /^The replacement (is the same|file produced)/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
+];
+
+export function classifyServiceError(message) {
+  return CLIENT_ERROR_PATTERNS.some((pattern) => pattern.test(String(message))) ? 400 : 500;
+}
+
 export function createFactoryHttpServer({ service }) {
   return http.createServer(async (request, response) => {
     try {
@@ -154,17 +179,7 @@ export function createFactoryHttpServer({ service }) {
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      // Only messages that name a caller mistake become 4xx. A bare word like
-      // "source" would also match internal failures and hide a real 500.
-      const clientError = [
-        /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
-        /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Rendered evidence (needs|is captured)/, /Sources cannot reference/, /Only http\(s\) source URLs/,
-        /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
-        /Every source must be/, /exceeds the .* limit/,
-        /dependencies are not installed/, /no generated workspace/,
-        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Replacing an asset needs/, /^The replacement (is the same|file produced)/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
-      ].some((pattern) => pattern.test(message));
-      const status = clientError ? 400 : 500;
+      const status = classifyServiceError(message);
       return send(response, status, { error: 'request-failed', message });
     }
   });

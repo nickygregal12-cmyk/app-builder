@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
-import { createFactoryHttpServer } from '../apps/service/src/http.js';
+import { classifyServiceError, createFactoryHttpServer } from '../apps/service/src/http.js';
 import { parseSourceRequests } from '../apps/service/src/ingestion.js';
 import { deriveSourceGovernance } from '../packages/content-intelligence/src/index.js';
 
@@ -239,4 +239,70 @@ test('a public web page is reference-only until the operator declares reuse righ
   assert.equal(declared.rightsStatus, 'approved-for-use');
   assert.equal(declared.publishUseAllowed, true);
   assert.equal(declared.instructionAuthority, 'none');
+});
+
+test('a source the operator named but the network cannot reach is their error, not a 500', async () => {
+  // The Phase 3.8E nbm run hit this: the crawler could not reach the company's
+  // own website, and the Console was told "request-failed" with a 500. An
+  // unreachable source is a condition the operator has to see and act on — a
+  // different URL, a different network — not an internal factory fault.
+  const dirs = roots('app-builder-ingest-unreachable-');
+  const store = new FactoryStore({ stateRoot: dirs.stateRoot });
+  const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
+  const server = createFactoryHttpServer({ service });
+  const site = http.createServer((request, response) => {
+    response.writeHead(403, { 'content-type': 'text/plain' });
+    response.end('Forbidden');
+  });
+  try {
+    await new Promise((resolve) => site.listen(0, '127.0.0.1', resolve));
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const origin = `http://127.0.0.1:${server.address().port}`;
+    await fetch(`${origin}/projects`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: 'project-unreachable', manifest: manifest('unreachable') }),
+    });
+
+    // The guard that refuses private addresses runs before the fetch, so the
+    // rejection is asserted directly against the classifier the facade uses.
+    const rejected = await fetch(`${origin}/projects/project-unreachable/sources`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sources: [{ uri: `http://127.0.0.1:${site.address().port}/` }] }),
+    });
+    assert.equal(rejected.status, 400);
+    const body = await rejected.json();
+    assert.match(body.message, /Refusing to fetch local\/private URL/);
+  } finally {
+    await new Promise((resolve) => site.close(resolve));
+    await new Promise((resolve) => server.close(resolve));
+    await service.close();
+    store.close();
+    fs.rmSync(dirs.root, { recursive: true, force: true });
+  }
+});
+
+test('every remote-source failure the crawler can raise is classified as a client error', () => {
+  // These are the exact messages `packages/content-intelligence/src/shared.js`
+  // throws for a source the operator named. Each one must reach the Console as
+  // an actionable 400 rather than being hidden behind an internal error.
+  const messages = [
+    'Failed to fetch https://www.example-business.test/: HTTP 403',
+    'Failed to fetch http://www.example-business.test/about: HTTP 500',
+    'Refusing to fetch local/private URL: http://127.0.0.1/',
+    'Refusing to resolve local/private address: localhost',
+    'Refusing to resolve intranet.example to a local/private address.',
+    'Unsupported remote protocol: ftp:',
+    'No address records for nowhere.example.',
+    'Too many redirects while fetching https://www.example-business.test/',
+    'Redirect from https://www.example-business.test/ did not include a Location header.',
+    'Remote source exceeds 12582912 bytes.',
+    'Source exceeds 12582912 bytes: /tmp/large.pdf',
+  ];
+  for (const message of messages) {
+    assert.equal(classifyServiceError(message), 400, `"${message}" must be an actionable client error`);
+  }
+  assert.equal(classifyServiceError('Cannot read properties of undefined (reading "pages")'), 500,
+    'a genuine internal fault must still be a 500');
 });

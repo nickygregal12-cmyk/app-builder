@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "reviewContext": {
+    "business": "nbm Construction Cost Consultants",
+    "setId": "candidates-5a9ac80b2fba354b",
+    "evidenceArtifactId": 9618182847,
+    "evidenceArtifactSha256": "b3ce286a41977cba1e49fe5f7d93a31a08bc6741e481b364f4d7621e4557298d",
+    "reviewer": "chatgpt-independent-visual-review",
+    "reviewerRelationship": "Independent reviewer: did not create or materially modify either candidate."
+  },
+  "reviews": [
+    {
+      "candidateId": "candidate-structured-practice",
+      "verdict": "pass",
+      "reviewedBy": "chatgpt-independent-visual-review",
+      "addressedRules": [],
+      "rationale": "PASS for the Phase 4D visual-direction gate. The direction reads as a credible professional consultancy: hierarchy is immediate, the ruled headings and numbered service treatment form one coherent visual language, contact actions are clear, and the mobile composition makes an intentional conversion-first change by bringing contact ahead of the service list. The figure-index distinctive moment is restrained but appropriate to a quantity-surveying practice rather than decorative. This verdict does not claim boutique-agency or corpus-level 9/10 proof; it says this candidate is the stronger complete visual answer in this bounded NBM set.",
+      "decidedAt": "2026-08-26T18:36:00Z"
+    },
+    {
+      "candidateId": "candidate-editorial-authority",
+      "verdict": "rework",
+      "reviewedBy": "chatgpt-independent-visual-review",
+      "addressedRules": [],
+      "rationale": "REWORK. The desktop direction is coherent and more editorially distinctive, but the mobile composition does not clear the responsive-quality criterion. The inline-scroll navigation and stacked company name make the header cramped and visually unfinished at 390px, and the direction largely preserves desktop ordering instead of making a stronger mobile conversion decision. Keep the editorial-row and lead-statement strengths, but redesign the mobile header/navigation and re-evaluate mobile hierarchy before this direction is considered promotable.",
+      "reworkOwner": "visual-direction",
+      "decidedAt": "2026-08-26T18:36:00Z"
+    }
+  ],
+  "promote": {
+    "candidateId": "candidate-structured-practice",
+    "promotedBy": "chatgpt-independent-visual-review",
+    "rationale": "Promoted because it is the only candidate in this set with a passing independent visual verdict. It provides the stronger combination of professional credibility, coherent hierarchy, clear conversion path and deliberate mobile composition while preserving the same frozen NBM product truth.",
+    "decidedAt": "2026-08-26T18:36:00Z"
+  }
+}

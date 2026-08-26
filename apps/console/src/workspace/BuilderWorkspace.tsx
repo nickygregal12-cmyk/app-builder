@@ -2,11 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   assetPreviewUrl,
   captureRenderedEvidence,
+  captureVisualCandidateEvidence,
+  generateVisualCandidates,
+  promoteVisualCandidate,
+  recordVisualReview,
   chooseSectionVariant,
   decideProjectAsset,
   generateProject,
   ingestSources,
   loadWorkspace,
+  listRenderedEvidence,
   renderedCaptureUrl,
   replaceProjectAsset,
   resolveElement,
@@ -26,6 +31,8 @@ import {
   type ProductReview,
   type ProjectSummary,
   type RenderedEvidence,
+  type VisualCandidate,
+  type VisualCandidateSet,
   type SectionVariantOption,
   type SourceGovernanceDecision,
   type SourceReference,
@@ -516,6 +523,175 @@ const UNCOVERED_REASON: Record<string, string> = {
 };
 
 /**
+ * Visual candidate comparison — Phase 4D.
+ *
+ * The ordinary Console, deliberately, rather than an infinite canvas. What a
+ * comparison actually needs is: the candidates side by side at a chosen width,
+ * the differences named rather than left to be spotted, what the deterministic
+ * checks already settled, and a way to promote exactly one. All of that is a
+ * two-column grid and a viewport switch. A canvas is adopted only when this
+ * proves it cannot do the job, and it has not.
+ *
+ * The differences are computed and shown rather than implied. "These two look
+ * different" is what a reviewer should be checking, not deducing.
+ */
+const AXIS_LABELS: Record<string, string> = {
+  heroStrategy: 'Opening',
+  gridFamily: 'Grid',
+  headingTreatment: 'Headings',
+  ctaPlacement: 'Closing action',
+  distinctiveMoment: 'Distinctive moment',
+  layoutVariance: 'Ground changes',
+  visualDistinctiveness: 'Opening scale',
+  motionIntensity: 'Motion',
+  informationDensity: 'Rhythm',
+  responsiveStrategy: 'On a phone',
+};
+
+const GATE_LABELS: Record<string, string> = {
+  blocked: 'Blocked by a rule',
+  'review-required': 'Needs your judgement on a warning',
+  clear: 'Deterministic checks clear',
+  'not-run': 'Not yet checked',
+};
+
+/** Which axes actually differ across the set, so the table shows differences rather than a dump. */
+function differingAxes(candidates: VisualCandidate[]) {
+  return Object.keys(AXIS_LABELS).filter((axis) => new Set(candidates.map((candidate) => String(candidate.signature.axes[axis] ?? ''))).size > 1);
+}
+
+function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
+  projectId: string;
+  set: VisualCandidateSet | null;
+  onChanged: (next: VisualCandidateSet) => void;
+  onError: (message: string) => void;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [viewport, setViewport] = useState('desktop');
+  const [route, setRoute] = useState('/');
+  const [evidence, setEvidence] = useState<Record<string, RenderedEvidence>>({});
+  const [reviewer, setReviewer] = useState('');
+  const [rationale, setRationale] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const ids = (set?.candidates ?? []).map((candidate) => candidate.evidenceId).filter((id): id is string => Boolean(id));
+    if (!ids.length) return undefined;
+    listRenderedEvidence(projectId).then((all) => {
+      if (cancelled) return;
+      setEvidence(Object.fromEntries(all.filter((entry) => ids.includes(entry.id)).map((entry) => [entry.id, entry])));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [projectId, set]);
+
+  async function act(key: string, work: () => Promise<VisualCandidateSet>) {
+    setBusy(key);
+    onError('');
+    try {
+      onChanged(await work());
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const candidates = set?.candidates ?? [];
+  const axes = differingAxes(candidates);
+  const routes = [...new Set(Object.values(evidence).flatMap((entry) => entry.captures.map((capture) => capture.route)))];
+  const captureFor = (candidate: VisualCandidate) => {
+    const entry = candidate.evidenceId ? evidence[candidate.evidenceId] : null;
+    return entry?.captures.find((capture) => capture.route === route && capture.viewport === viewport && capture.state.axis === 'viewport') ?? null;
+  };
+
+  return <section className="builder-panel candidate-panel" aria-label="Visual directions">
+    <div className="panel-title-row">
+      <span className="builder-kicker">Visual directions</span>
+      <span>{set ? `${candidates.length} candidates${set.promotedCandidateId ? ' · decided' : ''}` : 'none yet'}</span>
+    </div>
+    <p className="builder-empty">Several genuinely different presentations of the same facts. They say the same thing; they are not the same site.</p>
+
+    {!set && <button type="button" className="secondary compact" disabled={busy !== null} onClick={() => act('generate', () => generateVisualCandidates(projectId))}>
+      {busy === 'generate' ? 'Generating…' : 'Generate candidates'}
+    </button>}
+
+    {set && <>
+      <dl className="builder-definition">
+        <div><dt>Imagery</dt><dd>{set.assetReadiness.strategyReason}</dd></div>
+        <div><dt>Distinct</dt><dd>{set.diversity.distinct ? `Differ in at least ${set.diversity.minimumDifferingPlanes} of sequence, composition and responsive behaviour` : 'Not distinct'}</dd></div>
+      </dl>
+      {set.refusedDirections.length > 0 && <div className="evidence-uncovered">
+        <strong>{set.refusedDirections.length} direction(s) this project cannot present by</strong>
+        {set.refusedDirections.map((entry) => <span key={entry.directionId}>{entry.directionId} — {entry.detail}</span>)}
+      </div>}
+
+      {!candidates.some((candidate) => candidate.evidenceId) && <button type="button" className="secondary compact" disabled={busy !== null} onClick={() => act('capture', () => captureVisualCandidateEvidence(projectId))}>
+        {busy === 'capture' ? 'Building and capturing…' : 'Build and capture every candidate'}
+      </button>}
+
+      {routes.length > 0 && <div className="candidate-controls">
+        <div className="device-switcher" role="group" aria-label="Comparison viewport">
+          {['desktop', 'tablet', 'mobile'].map((name) => <button type="button" key={name} className={viewport === name ? 'active' : ''} onClick={() => setViewport(name)}>{name}</button>)}
+        </div>
+        <div className="device-switcher" role="group" aria-label="Comparison route">
+          {routes.map((name) => <button type="button" key={name} className={route === name ? 'active' : ''} onClick={() => setRoute(name)}>{name}</button>)}
+        </div>
+      </div>}
+
+      <div className="candidate-grid">{candidates.map((candidate) => {
+        const capture = captureFor(candidate);
+        return <article key={candidate.candidateId} className={`candidate-card outcome-${candidate.outcome}`}>
+          <header>
+            <strong>{candidate.directionLabel}</strong>
+            <span className={`candidate-gate gate-${candidate.gate.status}`}>{GATE_LABELS[candidate.gate.status] ?? candidate.gate.status}</span>
+          </header>
+          {capture && candidate.evidenceId
+            ? <img src={renderedCaptureUrl(projectId, candidate.evidenceId, capture.id)} alt={`${candidate.directionLabel} at ${route}, ${viewport}`} loading="lazy" />
+            : <p className="builder-empty">No capture yet at this route and width.</p>}
+          <dl className="builder-definition candidate-axes">
+            {axes.map((axis) => <div key={axis}><dt>{AXIS_LABELS[axis]}</dt><dd>{label(String(candidate.signature.axes[axis] ?? '—'))}</dd></div>)}
+          </dl>
+          {candidate.gate.blocking.length > 0 && <div className="evidence-uncovered">
+            <strong>Cannot be promoted</strong>
+            {candidate.gate.blocking.map((entry) => <span key={entry.rule}>{entry.detail}</span>)}
+          </div>}
+          {candidate.gate.mustAddress.length > 0 && <div className="evidence-uncovered">
+            <strong>Say what you think about {candidate.gate.mustAddress.length === 1 ? 'this' : 'these'}</strong>
+            {candidate.gate.mustAddress.map((rule) => <span key={rule}>{label(rule)}</span>)}
+          </div>}
+          {candidate.review && <p className="builder-empty">{label(candidate.review.verdict)} by {candidate.review.reviewedBy}{candidate.review.rationale ? ` — ${candidate.review.rationale}` : ''}</p>}
+          {!set.promotedCandidateId && candidate.gate.status !== 'blocked' && candidate.gate.status !== 'not-run' && <div className="candidate-actions">
+            <textarea
+              rows={2}
+              placeholder="Why. A verdict with no reason is not a review."
+              value={rationale[candidate.candidateId] ?? ''}
+              onChange={(event) => setRationale((current) => ({ ...current, [candidate.candidateId]: event.target.value }))}
+            />
+            {!candidate.review && <>
+              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim()} onClick={() => act(`pass-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, { verdict: 'pass', reviewedBy: reviewer.trim(), addressedRules: candidate.gate.mustAddress, rationale: rationale[candidate.candidateId] ?? '' }))}>Pass</button>
+              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim()} onClick={() => act(`rework-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, { verdict: 'rework', reviewedBy: reviewer.trim(), addressedRules: candidate.gate.mustAddress, rationale: rationale[candidate.candidateId] ?? '' }))}>Rework</button>
+              <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim() || !(rationale[candidate.candidateId] ?? '').trim()} onClick={() => act(`reject-${candidate.candidateId}`, () => recordVisualReview(projectId, candidate.candidateId, { verdict: 'reject', reviewedBy: reviewer.trim(), addressedRules: candidate.gate.mustAddress, rationale: rationale[candidate.candidateId] ?? '' }))}>Reject</button>
+            </>}
+            {candidate.review?.verdict === 'pass' && <button type="button" disabled={busy !== null || !reviewer.trim()} onClick={() => act(`promote-${candidate.candidateId}`, () => promoteVisualCandidate(projectId, candidate.candidateId, { promotedBy: reviewer.trim(), rationale: rationale[candidate.candidateId] ?? '' }))}>
+              {busy === `promote-${candidate.candidateId}` ? 'Promoting…' : 'Promote this one'}
+            </button>}
+          </div>}
+        </article>;
+      })}</div>
+
+      {!set.promotedCandidateId && <label className="candidate-reviewer">
+        <span>Who is deciding</span>
+        <input value={reviewer} onChange={(event) => setReviewer(event.target.value)} placeholder="Your name or role" />
+        <small>The factory created these, so the factory cannot promote one. A decision needs someone to have made it.</small>
+      </label>}
+      {set.promotedCandidateId && <p className="builder-empty">
+        Promoted {candidates.find((candidate) => candidate.candidateId === set.promotedCandidateId)?.directionLabel}. The next build renders it; the candidate workspaces are gone and their evidence is kept.
+      </p>}
+    </>}
+  </section>;
+}
+
+/**
  * Rendered evidence.
  *
  * Shows what the build actually rendered, and — just as importantly — what
@@ -935,6 +1111,12 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <p className="builder-empty">Click anything in the preview to resolve its element identity; headings and paragraphs can be edited from there. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
         </section>}
 
+        <VisualCandidatePanel
+          projectId={projectId}
+          set={snapshot.visualCandidates}
+          onChanged={(next) => setSnapshot((current) => (current ? { ...current, visualCandidates: next } : current))}
+          onError={setError}
+        />
         <EvidencePanel
           projectId={projectId}
           evidence={snapshot.evidence}

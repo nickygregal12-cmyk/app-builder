@@ -3,6 +3,7 @@ import path from 'node:path';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, writeDesignArtifacts } from './design-choices.mjs';
 import { artDirectionIntent, compileArtDirectionPlan } from './art-direction.mjs';
 import { compileBrandSpec } from './brand-spec.mjs';
+import { compileVisualDirection } from './visual-direction.mjs';
 
 export function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 export function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
@@ -46,6 +47,7 @@ export function loadCatalog(factoryRoot = process.cwd()) {
     recipes: readJson(path.join(factoryRoot, 'config/recipes.json')),
     adapters: readJson(path.join(factoryRoot, 'config/adapters.json')),
     layouts: readJson(path.join(factoryRoot, 'config/layout-patterns.json')),
+    visualDirections: readJson(path.join(factoryRoot, 'config/visual-directions.json')),
     scenarios: readJson(path.join(factoryRoot, 'config/scenarios.json')),
   };
 }
@@ -114,7 +116,24 @@ function resolveRecipeClosure(recipeIds, templateId, catalog, factoryRoot, selec
  * selection, and that is only recoverable if the selection was recorded rather
  * than overwritten.
  */
-function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null) {
+/**
+ * Which visual direction a build presents by.
+ *
+ * Only a promoted one. A build with nothing promoted keeps the layout pattern's
+ * own art-direction intent, which is exactly what every build did before Phase
+ * 4D — the stage exists to give a project a *choice* of visual answers, not to
+ * change the answer every existing project already had.
+ *
+ * A promoted direction is an ordinary durable design choice, so a rebuild
+ * replays it the way it replays a chosen density, and a rejected candidate
+ * leaves nothing behind for a rebuild to pick up.
+ */
+function selectVisualDirection(catalog, designChoices) {
+  const chosen = designChoices?.visualDirection;
+  return chosen ? compileVisualDirection(chosen, catalog.visualDirections) : null;
+}
+
+function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null, factoryRoot = process.cwd()) {
   const patternId = catalog.layouts.projectTypeDefaults?.[manifest.project.type];
   const pattern = catalog.layouts.patterns?.[patternId];
   if (!pattern) throw new Error(`No layout pattern for project type ${manifest.project.type}.`);
@@ -124,9 +143,22 @@ function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = nul
   // on the design as raw config nobody compiled.
   const { artDirection: _intent, ...patternDesign } = pattern;
   const brand = compileBrandSpec({ manifest, knowledgePack });
-  const artDirection = compileArtDirectionPlan(artDirectionIntent(pattern));
-  const composed = { patternId, ...patternDesign, accentColor: brand.accent.value, brand, artDirection };
-  return { composed, design: applyDesignChoices(composed, designChoices) };
+  // A visual direction supersedes the layout pattern's own art-direction intent
+  // and brings its own rhythm, measure and corner with it: a direction whose
+  // grid contradicted its spacing would not be a direction. The pattern still
+  // owns the shell, because the shell is what kind of application this is.
+  const direction = selectVisualDirection(catalog, designChoices);
+  const artDirection = direction ? direction.artDirection : compileArtDirectionPlan(artDirectionIntent(pattern));
+  const composed = {
+    patternId,
+    ...patternDesign,
+    ...direction?.design,
+    visualDirectionId: direction?.id ?? null,
+    accentColor: brand.accent.value,
+    brand,
+    artDirection,
+  };
+  return { composed, design: applyDesignChoices(composed, designChoices, { factoryRoot }), direction };
 }
 
 function selectScenarios(manifest, catalog) {
@@ -158,7 +190,7 @@ export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), cat
     recipes: resolveRecipeClosure(recipeIds, template.id, catalog, factoryRoot, adapterIds),
     enabledModules,
     missingModules,
-    ...selectDesign(manifest, catalog, designChoices, knowledgePack),
+    ...selectDesign(manifest, catalog, designChoices, knowledgePack, factoryRoot),
     scenarios: selectScenarios(manifest, catalog),
   };
 }

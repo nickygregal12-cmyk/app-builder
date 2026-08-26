@@ -125,23 +125,240 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .layout-app-dense .page-section { padding-top: clamp(36px, 4vw, 56px); padding-bottom: clamp(36px, 4vw, 56px) }
 .layout-editorial .hero-copy { font-size: var(--text-xl) }
 
+/* Visual direction ------------------------------------------------------- */
+/* Phase 4D. Everything below is driven by classes the factory compiles onto the
+   shell from the promoted ArtDirectionPlan and its ResponsiveCompositionPlan.
+   A build with no direction carries none of these classes and renders exactly
+   what it rendered before. */
+
+/* Hero strategies. The opening is where a direction is most visible. --------- */
+.hero-section.hero-editorial { align-items: stretch }
+.hero-section.hero-editorial h1 { max-width: var(--display-measure) }
+/* The editorial opening keeps its picture out of the headline's way and gives
+   it the full measure underneath, so the type leads and the photograph
+   supports rather than competing for the same eye. */
+.hero-section.hero-editorial .hero-band { display: block; width: 100%; margin-top: clamp(32px, 4vw, 56px) }
+.hero-section.hero-editorial .hero-band img { display: block; width: 100%; height: auto; aspect-ratio: 21 / 9; object-fit: cover; border-radius: var(--layout-radius) }
+
+.hero-section.hero-immersive { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--layout-radius); margin: 0 max(20px, calc((100vw - var(--layout-max-width)) / 2)); padding-left: clamp(24px, 4vw, 56px); padding-right: clamp(24px, 4vw, 56px) }
+.hero-section.hero-immersive.has-backdrop { min-height: clamp(380px, 52vh, 620px); justify-content: flex-end; color: var(--color-text-inverse) }
+.hero-section.hero-immersive .hero-backdrop { position: absolute; inset: 0; z-index: -2; display: block }
+.hero-section.hero-immersive .hero-backdrop img { width: 100%; height: 100%; object-fit: cover }
+/* A scrim rather than a lighter photograph: the contrast the headline needs
+   cannot depend on which picture the business happened to supply. */
+.hero-section.hero-immersive.has-backdrop::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(10 12 14 / 24%) 0%, rgb(10 12 14 / 72%) 100%) }
+.hero-section.hero-immersive.has-backdrop h1, .hero-section.hero-immersive.has-backdrop .hero-copy { color: var(--color-text-inverse) }
+.hero-section.hero-immersive.has-backdrop .eyebrow { color: var(--color-text-inverse); opacity: .84 }
+.hero-section.hero-immersive.has-backdrop .secondary-action { background: transparent; border-color: var(--color-text-inverse); color: var(--color-text-inverse) }
+
+/* A surface that is worked in opens on one line and gets out of the way. */
+.hero-section.hero-utility { padding-top: calc(var(--section-space) * 0.55); padding-bottom: calc(var(--section-space) * 0.55) }
+.hero-section.hero-utility .hero-copy-column { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100% }
+.hero-section.hero-utility h1 { font-size: var(--text-3xl); max-width: none; grid-column: 1 }
+.hero-section.hero-utility .hero-copy { grid-column: 1; margin-top: 8px }
+.hero-section.hero-utility .section-actions { grid-column: 2; grid-row: 1 / span 2; margin-top: 0 }
+
+/* Grid families. How a set of items is laid out, not how it is coloured. ----- */
+.grid-asymmetric .item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: dense }
+/* The first item is the one the page is arguing with, so it is given the room
+   to be read rather than the same card as everything after it.
+   Deliberately scoped to the section that leads — services or projects. A
+   testimonial is not more true for being twice the size, and a service area is
+   not more of a place. */
+.grid-asymmetric .section-item-grid .item-grid > :first-child { grid-column: span 2; display: flex; flex-direction: column; justify-content: center; padding: clamp(30px, 3vw, 44px); background: var(--color-accent-soft); border-color: var(--color-accent-line) }
+.grid-asymmetric .section-item-grid .item-grid > :first-child h3 { font-size: var(--text-2xl) }
+/* Only where there is a grid to be asymmetric within. With two pictures a
+   spanning first item leaves a hole rather than a composition, so the span
+   waits until there are at least three. */
+.grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2; grid-row: span 2 }
+.grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) img { height: 100%; aspect-ratio: auto; min-height: 100% }
+
+/* Rows with an index, not cards in a grid. A document, read downwards. */
+/* The counter is reset on the section rather than on each list. A proof
+   section renders testimonials and accreditations as two lists, and resetting
+   per list numbered both of them 01. */
+.grid-editorial-rows .page-section { counter-reset: figure }
+.grid-editorial-rows .item-grid, .grid-editorial-rows .plain-list { display: block }
+.grid-editorial-rows .feature-list { display: block; margin-top: 0 }
+.grid-editorial-rows .feature-list li, .grid-editorial-rows .item-grid > *, .grid-editorial-rows .plain-list li {
+  counter-increment: figure;
+  display: grid;
+  /* Proportional rather than a fixed measure: a testimonial's own sentence is
+     the title, and 22ch turned one into a narrow tall column. */
+  grid-template-columns: 3.5rem minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 8px 28px;
+  align-items: baseline;
+  padding: clamp(20px, 2vw, 30px) 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.grid-editorial-rows .feature-list li::before, .grid-editorial-rows .item-grid > *::before, .grid-editorial-rows .plain-list li::before {
+  content: counter(figure, decimal-leading-zero);
+  position: static;
+  width: auto;
+  inset: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.grid-editorial-rows .feature-list strong, .grid-editorial-rows .item-grid h3 { grid-column: 2; font-size: var(--text-xl) }
+.grid-editorial-rows .feature-list span, .grid-editorial-rows .item-grid p { grid-column: 3; margin: 0 }
+.grid-editorial-rows .plain-list li { grid-template-columns: 3.5rem minmax(0, 1fr) }
+
+/* Heading treatment. A detail, and the kind of detail a restrained site is
+   distinctive through. ------------------------------------------------------ */
+.headings-ruled .section-heading > h2::before, .headings-ruled .contact-section > h2::before {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  margin-bottom: 18px;
+  background: var(--color-accent);
+}
+
+/* Distinctive moments. Declared by the direction, rendered here. ------------- */
+.moment-lead-statement .hero-section .hero-copy {
+  max-width: 44ch;
+  padding-left: 20px;
+  border-left: 2px solid var(--color-accent);
+  color: var(--color-ink);
+  font-size: var(--text-xl);
+}
+/* The work breaks the measure and runs the width of the screen. The one place
+   an imagery-led direction is allowed to stop behaving like a document. */
+.moment-full-bleed-lead .gallery-section { padding-left: 0; padding-right: 0 }
+.moment-full-bleed-lead .gallery-section > h2, .moment-full-bleed-lead .gallery-section > .section-copy, .moment-full-bleed-lead .gallery-section > .section-actions { margin-left: max(20px, calc((100vw - var(--layout-max-width)) / 2)); margin-right: max(20px, calc((100vw - var(--layout-max-width)) / 2)) }
+.moment-full-bleed-lead .gallery-grid { gap: 4px; border-radius: 0 }
+.moment-full-bleed-lead .gallery-item { border-radius: 0 }
+.moment-full-bleed-lead .gallery-item img { aspect-ratio: 3 / 2 }
+
+/* An index over what the practice has done, or over what it offers. A business
+   with no photography still has services, and numbering them is the same idea:
+   a considered set rather than a list that happened to be that long. */
+.moment-figure-index .section-item-grid .plain-list { counter-reset: plate }
+.moment-figure-index .section-item-grid .plain-list li { counter-increment: plate; padding-left: 62px }
+.moment-figure-index .section-item-grid .plain-list li::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.moment-figure-index .section-item-grid .item-grid { counter-reset: plate }
+.moment-figure-index .section-item-grid .content-card { position: relative; counter-increment: plate }
+.moment-figure-index .section-item-grid .content-card::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.moment-figure-index .gallery-grid { counter-reset: plate }
+.moment-figure-index .gallery-item { position: relative; counter-increment: plate }
+.moment-figure-index .gallery-item::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-inverse) 78%, transparent);
+  color: var(--color-text-inverse);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+}
+
 @media (max-width: 880px) {
   .hero-section.has-image { grid-template-columns: 1fr; gap: 32px }
+  .grid-asymmetric .item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .grid-asymmetric .section-item-grid .item-grid > :first-child, .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2 }
+  .hero-section.hero-immersive { margin-left: 20px; margin-right: 20px }
   .item-grid, .gallery-grid, .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .enquiry-form { grid-template-columns: 1fr }
   .cta-section { flex-direction: column; align-items: flex-start; gap: 28px }
 }
 
 @media (max-width: 720px) {
-  .site-header { position: relative; align-items: center; flex-direction: row; gap: 12px }
-  .site-header .nav-toggle { display: inline-flex }
-  .site-header nav { position: absolute; top: 100%; right: 0; left: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px; border-bottom: 1px solid var(--color-border); background: var(--color-page); box-shadow: var(--shadow-raised, 0 12px 32px rgb(15 23 42 / 12%)) }
-  .site-header nav[data-open="false"] { display: none }
-  .site-header nav a { padding: 12px 14px; border-radius: var(--radius-md, 10px); font-size: 1rem }
+  .site-header.nav-disclosure { position: relative; align-items: center; flex-direction: row; gap: 12px }
+  .site-header.nav-disclosure .nav-toggle { display: inline-flex }
+  .site-header.nav-disclosure nav { position: absolute; top: 100%; right: 0; left: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px; border-bottom: 1px solid var(--color-border); background: var(--color-page); box-shadow: var(--shadow-raised, 0 12px 32px rgb(15 23 42 / 12%)) }
+  .site-header.nav-disclosure nav[data-open="false"] { display: none }
+  .site-header.nav-disclosure nav a { padding: 12px 14px; border-radius: var(--radius-md, 10px); font-size: 1rem }
   h1 { max-width: none }
   .item-grid, .gallery-grid, .contact-grid, .section-location-list .item-grid, .section-entity-list .item-grid, .section-content-list .item-grid { grid-template-columns: 1fr }
   .site-footer { flex-direction: column; gap: 26px }
   .legacy-status { flex-direction: column }
+
+  /* ResponsiveCompositionPlan ------------------------------------------- */
+  /* Mobile is where a direction makes its own decisions rather than
+     inheriting desktop with fewer columns. Every rule below is driven by a
+     class the factory compiled from the plan. */
+
+  /* Navigation. Every destination stays visible in one scrolling row, which
+     works where a site has few surfaces and reads badly where it has many —
+     which is exactly why it is a direction's decision and not a default. */
+  .site-header.nav-inline-scroll { gap: 16px }
+  .site-header.nav-inline-scroll nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; justify-content: flex-start; margin: 0 -4px; padding: 0 4px }
+  .site-header.nav-inline-scroll nav::-webkit-scrollbar { display: none }
+  .site-header.nav-inline-scroll nav a { flex: 0 0 auto }
+
+  /* Content order. A trade business is found on a phone by someone who wants
+     to call it, so a conversion-first direction puts contact directly under
+     the opening instead of eight sections down. */
+  .mobile-order-conversion-first .app-shell { display: flex; flex-direction: column }
+  .mobile-order-conversion-first .page-section { order: 2 }
+  .mobile-order-conversion-first .hero-section { order: 0 }
+  .mobile-order-conversion-first .contact-section,
+  .mobile-order-conversion-first .section-enquiry-form,
+  .mobile-order-conversion-first .cta-section { order: 1 }
+
+  /* Hero composition. The picture goes first, last, or not at all. */
+  .mobile-hero-image-first .hero-section.has-image { display: flex; flex-direction: column-reverse }
+  .mobile-hero-image-first .hero-section.has-image .hero-image { margin-bottom: 28px; width: 100% }
+  .mobile-hero-copy-only .hero-section .hero-image,
+  .mobile-hero-copy-only .hero-section .hero-band { display: none }
+  .mobile-hero-copy-only .hero-section.hero-immersive.has-backdrop { min-height: auto }
+
+  /* Density. The one decision of the plan that is a value, so the token does
+     the work and no class is needed: a build that asked for the same rhythm
+     compiles a scale of 1 and this rule changes nothing. */
+  .page-section { padding-top: calc(var(--section-space) * var(--mobile-section-space-scale)); padding-bottom: calc(var(--section-space) * var(--mobile-section-space-scale)) }
+
+  /* Motion. A redeclaration of two motion properties rather than a third
+     token, because what changes here is which values the existing ones take. */
+  .mobile-motion-reduced { --motion-hover-lift: 0px; --motion-decorative-scale: 1 }
+
+  /* A utility opening cannot keep its action on the same line at 390px. */
+  .hero-section.hero-utility .hero-copy-column { grid-template-columns: minmax(0, 1fr) }
+  .hero-section.hero-utility .section-actions { grid-column: 1; grid-row: auto; margin-top: 24px }
+
+  /* Indexed rows lose the third column before they lose the index. */
+  .grid-editorial-rows .feature-list li, .grid-editorial-rows .item-grid > *, .grid-editorial-rows .plain-list li { grid-template-columns: 2.5rem minmax(0, 1fr) }
+  .grid-editorial-rows .feature-list span, .grid-editorial-rows .item-grid p { grid-column: 2 }
+
+  /* The asymmetric lead item stops spanning a grid that is one column wide.
+     The single-column rule needs this specificity to win: the 880px rule that
+     holds the asymmetric grid at two columns is more specific than the plain
+     `.item-grid` reset, and left alone it cramped three service cards into two
+     columns at 390px. */
+  .grid-asymmetric .item-grid, .grid-asymmetric .gallery-grid { grid-template-columns: 1fr }
+  .grid-asymmetric .section-item-grid .item-grid > :first-child, .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: auto; grid-row: auto }
+  .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) img { aspect-ratio: 4 / 3; min-height: 0; height: auto }
 }
 
 /* Builder edit mode. Present only when the preview is opened by the Console. */

@@ -46,6 +46,28 @@ type GeneratedAsset = { id: string; kind: string; provenance: string; assetStatu
 const composed = composition as unknown as ProjectComposition;
 const assetMap = assets as unknown as Record<string, GeneratedAsset>;
 
+/**
+ * The visual direction this build presents by.
+ *
+ * The factory compiles it; nothing is decided here. Reading it through a widened
+ * type is deliberate: the generated design module is `as const`, so every field
+ * is a literal, and comparing a literal against another string is a type error
+ * rather than a check. A build generated before Phase 4D carries none of this
+ * and falls back to exactly what it rendered before.
+ */
+type VisualDirection = {
+  shellClasses?: string;
+  artDirection?: {
+    dimensions?: { heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
+    responsive?: { mobileHero?: string; navigation?: string; mobileSectionOrder?: string; mobileDensity?: string; mobileMotion?: string };
+  };
+};
+const directed = design as unknown as VisualDirection;
+const HERO_STRATEGY = directed.artDirection?.dimensions?.heroStrategy ?? 'split';
+const NAVIGATION_TREATMENT = directed.artDirection?.responsive?.navigation ?? 'disclosure';
+const MOBILE_HERO = directed.artDirection?.responsive?.mobileHero ?? 'copy-first';
+const SHELL_CLASSES = directed.shellClasses ?? design.shellClass;
+
 function assetsFor(section: SectionSpec) {
   return section.assetIds.map((id) => assetMap[id]).filter(Boolean);
 }
@@ -223,16 +245,29 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
   const body = binding(section, 'body');
   const eyebrow = binding(section, 'eyebrow');
 
+  // The opening is where a visual direction is most visible, so it is the one
+  // place the strategy changes the DOM rather than only the CSS. A direction
+  // that wants no picture in its opening must not render one and hide it: a
+  // hidden hero image is bytes a visitor downloads to see nothing.
   if (section.type === 'hero') {
     const [lead] = assetsFor(section);
-    return <section className={`page-section hero-section variant-${section.variant}${lead ? ' has-image' : ''}`} id={section.id} data-section-id={section.id} data-element-key="section">
+    const beside = HERO_STRATEGY === 'split' && Boolean(lead);
+    const behind = HERO_STRATEGY === 'immersive' && Boolean(lead);
+    const below = HERO_STRATEGY === 'editorial' && Boolean(lead);
+    const classes = ['page-section', 'hero-section', `variant-${section.variant}`, `hero-${HERO_STRATEGY}`];
+    if (beside) classes.push('has-image');
+    if (behind) classes.push('has-backdrop');
+    if (below) classes.push('has-band');
+    return <section className={classes.join(' ')} id={section.id} data-section-id={section.id} data-element-key="section" data-hero-strategy={HERO_STRATEGY}>
+      {behind && <Picture asset={lead} role="hero-16x9" className="hero-backdrop" sizes="100vw" />}
       <div className="hero-copy-column">
         {eyebrow && <p className="eyebrow" {...editable(section, eyebrow)}>{text(eyebrow.value)}</p>}
         {title && <h1 {...editable(section, title)}>{text(title.value)}</h1>}
         {body && <p className="hero-copy" {...editable(section, body)}>{text(body.value)}</p>}
         <Actions actions={section.actions} navigate={navigate} />
       </div>
-      {lead && <Picture asset={lead} role="hero-16x9" className="hero-image" sizes="(max-width: 880px) 100vw, 50vw" />}
+      {beside && <Picture asset={lead} role="hero-16x9" className="hero-image" sizes="(max-width: 880px) 100vw, 50vw" />}
+      {below && <Picture asset={lead} role="hero-16x9" className="hero-band" sizes="100vw" />}
     </section>;
   }
 
@@ -401,23 +436,30 @@ export default function App() {
     setMenuOpen(false);
     navigate(event, href);
   };
-  return <div className={`site-frame ${design.shellClass}`} data-scenario={currentScenario}>
-    <header className="site-header">
+  // Two navigation treatments, because a phone is where a direction's decision
+  // about navigation actually shows. `disclosure` collapses behind a toggle;
+  // `inline-scroll` keeps every destination visible in one scrolling row, which
+  // suits a site whose surfaces are few and whose register is editorial. The
+  // toggle is not rendered at all under `inline-scroll` rather than hidden: a
+  // control that is present, focusable and does nothing is worse than absent.
+  const disclosureNav = NAVIGATION_TREATMENT !== 'inline-scroll';
+  return <div className={`site-frame ${SHELL_CLASSES}`} data-scenario={currentScenario}>
+    <header className={`site-header nav-${NAVIGATION_TREATMENT}`}>
       <a className="site-brand" href={siteHref('/')} onClick={(event) => followLink(event, '/')}>{project.name}</a>
       {/* A site with more than a handful of surfaces wraps its navigation over
           three or four rows on a phone, which is collapsed rather than
           designed. The toggle is CSS-hidden above the breakpoint, so wide
           screens keep the single row they already had. */}
-      <button
+      {disclosureNav && <button
         type="button"
         className="nav-toggle"
         aria-expanded={menuOpen}
         aria-controls="primary-navigation"
         onClick={() => setMenuOpen((open) => !open)}
-      >{menuOpen ? 'Close' : 'Menu'}</button>
-      <nav id="primary-navigation" aria-label="Primary navigation" data-open={menuOpen ? 'true' : 'false'}>{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={siteHref(page.path)} onClick={(event) => followLink(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
+      >{menuOpen ? 'Close' : 'Menu'}</button>}
+      <nav id="primary-navigation" aria-label="Primary navigation" data-open={disclosureNav ? (menuOpen ? 'true' : 'false') : 'true'}>{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={siteHref(page.path)} onClick={(event) => followLink(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
     </header>
-    <main className="app-shell" data-page-id={currentPage.id}>
+    <main className="app-shell" data-page-id={currentPage.id} data-mobile-hero={MOBILE_HERO}>
       {currentPage.sectionIds.map((sectionId) => sectionMap.get(sectionId)).filter((section): section is SectionSpec => Boolean(section)).map((section) => <Section key={section.id} section={section} navigate={navigate} />)}
     </main>
     <SiteFooter navigation={navigation} navigate={navigate} />

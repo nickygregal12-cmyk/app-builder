@@ -18,7 +18,12 @@
         },
         "maxWidth": {"type": "string", "minLength": 1},
         "radius": {"type": "string", "minLength": 1},
-        "density": {"enum": ["relaxed", "comfortable", "compact", "dense"]}
+        "density": {"enum": ["relaxed", "comfortable", "compact", "dense"]},
+        "visualDirection": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The promoted visual direction, by id from config/visual-directions.json. Not a token: it decides the art-direction plan, the section sequence and the responsive plan, so it is resolved before a design is composed rather than applied over one. Promotion writes it here so a rebuild replays the chosen direction the way it replays a chosen density, and a rejected candidate leaves nothing behind."
+        }
       },
       "additionalProperties": false
     },

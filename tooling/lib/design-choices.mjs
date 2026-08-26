@@ -24,6 +24,7 @@ import path from 'node:path';
 import { DEFAULT_ART_DIRECTION, artDirectionTokens, compileArtDirectionPlan } from './art-direction.mjs';
 import { brandTokens, compileBrandSpec } from './brand-spec.mjs';
 import { motionTokens } from './motion-contract.mjs';
+import { compileVisualDirection, loadVisualDirections, responsiveCompositionTokens, visualDirectionClasses } from './visual-direction.mjs';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -85,21 +86,46 @@ export function assertAccentColor(value) {
   return accent;
 }
 
+/**
+ * The promoted visual direction, as a durable design decision.
+ *
+ * Phase 4D promotes a candidate by writing its direction here rather than by
+ * inventing a parallel piece of project state. A rebuild therefore replays the
+ * promoted direction the same way it replays a chosen density, and a rejected
+ * candidate leaves nothing behind but its evidence.
+ *
+ * It is validated by compiling it, so an id no registry entry backs fails at
+ * the point it is recorded rather than at the point a build tries to render it.
+ */
+export function assertVisualDirection(value, factoryRoot = process.cwd()) {
+  if (typeof value !== 'string' || !value.trim()) throw new Error(`Unsupported visual direction: ${String(value)}.`);
+  compileVisualDirection(value, loadVisualDirections(factoryRoot));
+  return value;
+}
+
 const CHOICES = {
   accentColor: { assert: assertAccentColor },
   maxWidth: { allowed: MAX_WIDTHS.map((entry) => entry.id) },
   radius: { allowed: RADII.map((entry) => entry.id) },
   density: { allowed: Object.keys(DENSITIES) },
+  visualDirection: { assert: assertVisualDirection },
 };
 
-/** Refuse anything the contract does not offer, rather than compiling it. */
-export function assertDesignChoices(choices = {}) {
+/**
+ * Refuse anything the contract does not offer, rather than compiling it.
+ *
+ * `factoryRoot` is here because one control — the promoted visual direction — is
+ * validated against a registry on disk rather than against a list in this file.
+ * A caller that knows where the factory lives should say so rather than leave it
+ * to whichever directory the process happens to have been started in.
+ */
+export function assertDesignChoices(choices = {}, { factoryRoot = process.cwd() } = {}) {
   const resolved = {};
   for (const [key, value] of Object.entries(choices)) {
     const control = CHOICES[key];
     if (!control) throw new Error(`Unsupported design control: ${key}.`);
     if (value === null || value === undefined) continue;
-    if (control.assert) { resolved[key] = control.assert(value); continue; }
+    if (control.assert) { resolved[key] = control.assert(value, factoryRoot); continue; }
     if (!control.allowed.includes(value)) {
       throw new Error(`Unsupported ${key}: ${String(value)}. It offers: ${control.allowed.join(', ')}.`);
     }
@@ -117,8 +143,18 @@ export function designControls(design) {
   ];
 }
 
-export function applyDesignChoices(design, choices = {}) {
-  return { ...design, ...assertDesignChoices(choices) };
+/**
+ * Apply the token-level controls over a composed design.
+ *
+ * `visualDirection` is deliberately not merged here. It is not a token: it
+ * decides the art-direction plan, the section sequence and the responsive plan,
+ * so it has to be resolved before a design is composed rather than applied over
+ * one. `selectDesign` reads it from the same durable record, which is why
+ * clearing it still returns the build to the factory's own selection.
+ */
+export function applyDesignChoices(design, choices = {}, options = {}) {
+  const { visualDirection: _resolvedEarlier, ...tokenChoices } = assertDesignChoices(choices, options);
+  return { ...design, ...tokenChoices };
 }
 
 /**
@@ -140,6 +176,10 @@ export function compileDesignTokens(design) {
     '--section-space': density.sectionSpace,
     ...artDirectionTokens(artDirection),
     ...motionTokens(artDirection.motion),
+    // The responsive half of the art direction. Mobile is where a direction
+    // makes its own decisions rather than inheriting desktop with fewer
+    // columns, and two of those decisions are values rather than structure.
+    ...responsiveCompositionTokens(artDirection.responsive),
   };
 }
 
@@ -161,7 +201,12 @@ export function compileDesignSystemSpec(design) {
       patternId: design.patternId,
       label: design.label,
       shellClass: design.shellClass,
+      // What the generated shell actually carries, compiled once here so the
+      // portable artifact records the classes the stylesheet was given rather
+      // than a description of them.
+      shellClasses: visualDirectionClasses({ id: design.visualDirectionId, artDirection: design.artDirection, shellClass: design.shellClass }),
     },
+    visualDirection: design.visualDirectionId ?? null,
     controls: {
       accentColor: design.accentColor,
       maxWidth: design.maxWidth,
@@ -214,6 +259,9 @@ export function writeDesignArtifacts(projectDir, design) {
   fs.mkdirSync(path.dirname(path.join(root, DESIGN_SYSTEM_SPEC_PATH)), { recursive: true });
   fs.writeFileSync(path.join(root, DESIGN_SYSTEM_SPEC_PATH), `${JSON.stringify(spec, null, 2)}\n`);
   fs.writeFileSync(path.join(root, 'src/generated/brand.css'), renderDesignSystemCss(spec));
-  fs.writeFileSync(path.join(root, 'src/generated/design.ts'), renderDesignModule(design));
+  // The shell's class list comes out of the same compilation as the tokens, so
+  // the direction a build was asked to present and the classes the stylesheet
+  // is given cannot describe two different builds.
+  fs.writeFileSync(path.join(root, 'src/generated/design.ts'), renderDesignModule({ ...design, shellClasses: spec.layout.shellClasses }));
   return spec;
 }

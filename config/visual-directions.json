@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "description": "Named visual directions. A direction is a coherent set of art-direction decisions that differ STRUCTURALLY from the others — hero strategy, grid family, section order, heading treatment, responsive composition — not by palette, radius or token values. Every field here has a renderer or composer consumer; a dimension nothing reads would be a knob on a picture of a machine. `assetAppetite` is checked against Visual Asset Readiness before a direction may become a candidate, so 'no publishable imagery' is an art-direction input rather than a late defect.",
+  "projectTypeCandidates": {
+    "marketing-site": ["structured-practice", "editorial-authority", "immersive-lead"],
+    "content-site": ["editorial-authority", "structured-practice", "immersive-lead"],
+    "b2b-saas": ["dense-utility", "structured-practice"],
+    "consumer-app": ["structured-practice", "dense-utility"],
+    "internal-tool": ["dense-utility", "structured-practice"],
+    "ai-app": ["dense-utility", "structured-practice"]
+  },
+  "directions": {
+    "structured-practice": {
+      "label": "Structured practice",
+      "purpose": "An architectural, professional register. A regular grid, a split opening, and a rule above every section heading. Credibility comes from order and detail rather than from scale.",
+      "design": { "density": "comfortable", "maxWidth": "72rem", "radius": "0.625rem" },
+      "artDirection": {
+        "layoutVariance": "alternating",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "balanced",
+        "restraintLevel": "high"
+      },
+      "composition": {
+        "heroStrategy": "split",
+        "gridFamily": "symmetric",
+        "headingTreatment": "ruled",
+        "ctaPlacement": "closing",
+        "sectionOrder": ["item-grid", "gallery", "proof-grid", "people-grid", "location-list", "contact-panel"],
+        "distinctiveMoment": "figure-index"
+      },
+      "assetAppetite": "imagery-optional",
+      "responsive": {
+        "mobileHero": "copy-first",
+        "navigation": "disclosure",
+        "mobileSectionOrder": "conversion-first",
+        "mobileDensity": "tighter",
+        "mobileMotion": "as-desktop"
+      }
+    },
+    "editorial-authority": {
+      "label": "Editorial authority",
+      "purpose": "Typography-led. The opening is a statement set in type with no picture beside it, items read as indexed rows rather than cards, and the page behaves like a document. Distinctive through hierarchy and restraint.",
+      "design": { "density": "relaxed", "maxWidth": "68rem", "radius": "0rem" },
+      "artDirection": {
+        "layoutVariance": "varied",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "expressive",
+        "restraintLevel": "medium"
+      },
+      "composition": {
+        "heroStrategy": "editorial",
+        "gridFamily": "editorial-rows",
+        "headingTreatment": "ruled",
+        "ctaPlacement": "closing",
+        "sectionOrder": ["proof-grid", "item-grid", "people-grid", "gallery", "location-list", "contact-panel"],
+        "distinctiveMoment": "lead-statement"
+      },
+      "assetAppetite": "typographic",
+      "responsive": {
+        "mobileHero": "copy-only",
+        "navigation": "inline-scroll",
+        "mobileSectionOrder": "as-desktop",
+        "mobileDensity": "as-desktop",
+        "mobileMotion": "as-desktop"
+      }
+    },
+    "immersive-lead": {
+      "label": "Immersive lead",
+      "purpose": "Imagery-led. The lead photograph carries the opening, the work appears before the words about it, and the closing action sits mid-page so the page ends on contact. Requires publishable photography.",
+      "design": { "density": "comfortable", "maxWidth": "72rem", "radius": "1rem" },
+      "artDirection": {
+        "layoutVariance": "alternating",
+        "motionIntensity": "moderate",
+        "visualDistinctiveness": "expressive",
+        "restraintLevel": "low"
+      },
+      "composition": {
+        "heroStrategy": "immersive",
+        "gridFamily": "asymmetric",
+        "headingTreatment": "plain",
+        "ctaPlacement": "mid-page",
+        "sectionOrder": ["gallery", "item-grid", "proof-grid", "people-grid", "location-list", "contact-panel"],
+        "distinctiveMoment": "full-bleed-lead"
+      },
+      "assetAppetite": "imagery-required",
+      "responsive": {
+        "mobileHero": "image-first",
+        "navigation": "disclosure",
+        "mobileSectionOrder": "conversion-first",
+        "mobileDensity": "as-desktop",
+        "mobileMotion": "reduced"
+      }
+    },
+    "dense-utility": {
+      "label": "Dense utility",
+      "purpose": "A surface that is worked in rather than read. A compact opening with the action on the same line, one ground throughout, and no decoration that costs vertical space.",
+      "design": { "density": "dense", "maxWidth": "96rem", "radius": "0.625rem" },
+      "artDirection": {
+        "layoutVariance": "uniform",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "restrained",
+        "restraintLevel": "high"
+      },
+      "composition": {
+        "heroStrategy": "utility",
+        "gridFamily": "symmetric",
+        "headingTreatment": "plain",
+        "ctaPlacement": "closing",
+        "sectionOrder": [],
+        "distinctiveMoment": "none"
+      },
+      "assetAppetite": "typographic",
+      "responsive": {
+        "mobileHero": "copy-only",
+        "navigation": "disclosure",
+        "mobileSectionOrder": "as-desktop",
+        "mobileDensity": "tighter",
+        "mobileMotion": "reduced"
+      }
+    }
+  }
+}

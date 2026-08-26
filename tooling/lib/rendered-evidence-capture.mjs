@@ -67,6 +67,33 @@ export function evidenceUrl(route, baseUrl) {
   return new URL(String(route).replace(/^\/+/, ''), base).toString();
 }
 
+/**
+ * Make a full-page capture show the pictures the page actually has.
+ *
+ * Every image the template renders is `loading="lazy"`, which is right for a
+ * visitor and wrong for a full-page screenshot: the browser never scrolls, so
+ * an image below the fold is never fetched, and the capture publishes a
+ * blank rectangle where a photograph is. Evidence that omits the photography is
+ * worse than no evidence, because a reviewer reads it as a build with no
+ * pictures rather than as a capture that did not wait.
+ *
+ * Scroll to the end, ask for anything still deferred, then wait for each image
+ * to report itself complete before returning to the top. Bounded: an image that
+ * never loads leaves the page as it is rather than hanging the capture.
+ */
+async function settleLazyImages(page) {
+  await page.evaluate(async () => {
+    const step = Math.max(window.innerHeight, 480);
+    for (let offset = 0; offset < document.body.scrollHeight; offset += step) {
+      window.scrollTo(0, offset);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    }
+    for (const image of document.querySelectorAll('img[loading="lazy"]')) image.loading = 'eager';
+    window.scrollTo(0, 0);
+  });
+  await page.waitForFunction(() => [...document.images].every((image) => image.complete), null, { timeout: 10_000 }).catch(() => {});
+}
+
 export async function captureEvidence({ plan, baseUrl, launch = null, onCapture = null, env = process.env } = {}) {
   if (!plan?.captures?.length) return { results: [], failures: [] };
   if (!launch) {
@@ -98,6 +125,7 @@ export async function captureEvidence({ plan, baseUrl, launch = null, onCapture 
           if (!INTERACTIONS[capture.state.interaction]) throw new Error(`Unknown evidence interaction: ${capture.state.interaction}`);
           await perform(page, capture.state.interaction);
         }
+        await settleLazyImages(page);
         const bytes = await page.screenshot({ fullPage: true, animations: 'disabled', type: 'png' });
         results.push({ id: capture.id, bytes });
         if (onCapture) onCapture(capture);

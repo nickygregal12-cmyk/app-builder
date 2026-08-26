@@ -97,6 +97,21 @@ try {
     }
   }
 
+  // A conditional stage is either done or deferred, never quietly both. A
+  // deferral has to say what would revive it, otherwise "deferred" is just a
+  // stage nobody is accountable for.
+  const completed = new Set(status.completedStages ?? []);
+  for (const entry of status.deferredCapabilities ?? []) {
+    if (!entry.stage || !entry.title || !entry.reason || !entry.revivesWhen) {
+      console.error(`Deferred capability ${entry.stage ?? '(unnamed)'} must record stage, title, reason and revivesWhen.`);
+      failed = true;
+    }
+    if (completed.has(entry.stage)) {
+      console.error(`Stage ${entry.stage} is recorded as both completed and deferred.`);
+      failed = true;
+    }
+  }
+
   const policies = readJson('config/agent-policies.json');
   const productionActions = ['deploy.production', 'database.production_write'];
   for (const [policyId, policy] of Object.entries(policies.policies ?? {})) {

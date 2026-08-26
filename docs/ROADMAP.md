@@ -1,10 +1,10 @@
 # Roadmap
 
-Current stage: **Phase 3.8 — Product proof and correctness hardening**. The Phase 4A Console vertical slice is delivered.
+Current stage: **Phase 4D — Visual direction, responsive composition and candidate promotion**.
 
-The Phase 3.8 correctness gates are closed except the genuine real-business product proof (3.8E), which needs actual company material and a human product review rather than more infrastructure. The Phase 4A slice was built alongside it because that proof has to run through the product — real intake, real source ingestion, real generation — not through a CLI beside it.
+Phase 3.8 closed when 3.8E passed against a real business on 2026-08-26; the immutable record is `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`. Phase 4C closed on the same date against its own completion gate — the design declarations the product uses have real deterministic consumers and focused tests, and the portable design contract survives generated-repo handoff. 4C.6, the design-intelligence catalogue, is **conditionally deferred** rather than complete: nothing is ready to query it, and `config/factory-status.json` records what would revive it.
 
-Phase 4B and later Console work should not accelerate until 3.8E has actually been run against a real business and its findings fed back.
+Phase 4D is where the factory stops having exactly one visual answer.
 
 The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The deterministic engineering-gate programme lives in `docs/ENGINEERING_QUALITY_PROGRAMME.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
 
@@ -731,7 +731,11 @@ Original scope for reference:
   - generation-forward;
 - Design Contract editing.
 
-### Phase 4C — Design System Registry, BrandSpec and art direction
+### Phase 4C — Design System Registry, BrandSpec and art direction ✅ Complete
+
+Delivered: 4C.1 DesignSystemSpec compiler IR, 4C.2 portable `.product/design-system.json` from one writer, 4C.3 BrandSpec/ArtDirectionPlan/MotionContract with template consumers, 4C.4 a Presentation Registry compiled from what the template renders, 4C.5 deterministic DesignLint carried inside RenderedEvidence. **4C.6 is conditionally deferred**, not complete: the catalogue is pulled into existence by a consumer, never pushed by a roadmap. Storybook was evaluated at 4C.4 and not adopted. `docs/PHASE_4C_EXECUTION.md` holds the implementation record.
+
+The original plan for the stage follows, retained because it is still the specification the delivered work was measured against.
 
 Use shadcn registry architecture as prior art, not as a mandatory runtime dependency.
 
@@ -793,7 +797,17 @@ Introduce `MotionContract`:
 - reduced-motion behavior;
 - explicit no-motion zones.
 
-### Phase 4D — Visual design canvas and controlled art-direction variants
+### Phase 4D — Visual direction, responsive composition and candidate promotion 🚧 In progress
+
+The stage was previously named for its last and most conditional deliverable, the comparison canvas. It is named for its purpose now: the factory must be able to produce several genuinely different, coherent, responsive visual directions from one frozen product truth, compare them on deterministic evidence plus independent judgement, and promote exactly one. A canvas is adopted only if the ordinary Console proves it cannot do the comparison.
+
+Differences between candidates must be structural — hero strategy, section grouping and sequence, grid family, responsive composition, proof placement, motion language. A candidate that differs only in palette, radius or token values is a theme swap and is refused before it costs an evidence capture.
+
+`docs/PHASE_4D_EXECUTION.md` holds the implementation order and which slices are done, deferred or
+outstanding. Three things are recorded as deferred rather than built: reference analysis (no project
+supplies a reference the factory does not already read), a MessagingPlan (the composition already
+carries the narrative, with provenance) and the comparison canvas (the ordinary Console does the
+comparison). The original plan for the stage follows.
 
 - produce 2–4 genuinely different bounded candidate art directions/layouts from the same product/content truth;
 - ingest moodboards, screenshots, existing sites and design references into normalized traits and

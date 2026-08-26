@@ -135,7 +135,28 @@ Put `predictedManualEdits` and any remaining blockers into `launchReadiness` on
 the evidence, so the prediction can be compared against what a person actually
 had to change.
 
-**10. Review it as a person, and count.** This is the part no script does.
+**10. Take the review packet.**
+
+```bash
+npm run acceptance:genuine-business:packet -- --project <projectId> --out <dir>
+```
+
+The factory assembles everything it can prove about its own run: the source
+ledger with the hash of what was actually ingested, the journey record taken
+from the durable event ledger rather than from anyone's memory, the metrics,
+the launch-readiness numbers, the artifacts copied and hashed beside the
+evidence, the generated repository without its build machinery, the retained
+originals of the files you supplied, and the rendered captures themselves so
+the packet can be read away from a running factory. It writes
+`evidence.draft.json` and a `REVIEW.md`.
+
+The draft deliberately does **not** validate. `productReview` and `manualEdits`
+are absent because they are yours, and a run nobody reviewed must not be able
+to pass by accident. If the run cannot be validated for a machine-side reason —
+nothing ingested, no website crawled, no evidence captured — the packet says so
+and exits non-zero rather than producing a tidy file that hides it.
+
+**11. Review it as a person, and count.** This is the part no script does.
 Judge factual accuracy, brand fit, visual quality, responsive quality and
 accessibility, and record every meaningful manual edit with its category. The
 schema requires all five checks to be `passed` and every recorded edit to be

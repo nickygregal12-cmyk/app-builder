@@ -454,6 +454,19 @@ test('the broker refuses an unauthenticated or forged caller', async () => {
   });
 });
 
+test('a rejected caller is recorded on the diagnostic stream, never under a project it named', async () => {
+  await withBroker(async ({ service, socketPath }) => {
+    const project = service.createProject({ id: 'project-boundary', manifest: manifest('boundary-reject') });
+    // A forged grant naming a real project must not be able to write an entry
+    // into that project's ledger: its payload is the thing that did not verify.
+    const forged = grantFor({ capabilities: ['project.read'] }, 'z'.repeat(48)).token;
+    const response = await brokerRequest(socketPath, { token: forged, body: { operation: 'project.read', projectId: project.id } });
+    assert.equal(response.status, 403);
+    assert.equal(response.body.reason, 'grant-signature-invalid');
+    assert.deepEqual(service.listEvents(project.id, { afterSequence: 0 }).filter((event) => event.type.startsWith('agent.operation.')), []);
+  });
+});
+
 test('an allowed read reaches the Factory and lands in the durable ledger', async () => {
   await withBroker(async ({ service, socketPath }) => {
     const project = service.createProject({ id: 'project-boundary', manifest: manifest('boundary-allowed') });

@@ -197,6 +197,12 @@ export function createAgentBroker({ service, registry, secret, clock = () => new
       grant = nonces.register(verifyCapabilityGrant(Array.isArray(token) ? token[0] : token, { secret, now: clock() }));
     } catch (error) {
       const reason = error instanceof GrantError ? error.reason : 'grant-malformed';
+      // The event ledger is project-scoped, and a grant that failed
+      // verification has no project this code may believe — its payload is
+      // exactly the thing that did not verify. So a rejected caller is
+      // recorded on the service's own diagnostic stream, which the host
+      // journal keeps, rather than filed under a project the caller chose.
+      console.error(`[agent-broker] rejected caller: ${reason} (${clock().toISOString()})`);
       await record({ allowed: false, reason, detail: error.message, operation: null, capability: null }, null);
       return send(response, 403, { error: 'denied', reason });
     }

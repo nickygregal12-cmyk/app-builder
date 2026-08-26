@@ -398,6 +398,27 @@ Delivered:
 
 Roles remain `planned`. This stage defines decision boundaries, routing and budgets; authoring the skill packets and executing the roles is Phase 4 groundwork and Phase 5 runtime work.
 
+
+### 3.8J — Executable architecture and deterministic risk classification ✅ Complete
+
+Turns two Phase 3.8I planning items into enforced behaviour:
+
+- `npm run architecture` makes the dependency direction in `AGENTS.md` a blocking CI gate across eleven zones and seven rules, with a cycle check. It parses module specifiers and declared dependencies, so prose mentioning a package is not a violation and a deep relative path cannot dodge a package-name rule. `dependency-cruiser` was evaluated and deliberately not adopted.
+- `config/risk-surfaces.json` plus `packages/control-plane/src/risk.js` classify a declared ChangeSet deterministically and return the conditional reviewers it must buy. An ordinary presentation change buys none; an auth, RLS, secrets, billing, capability-policy or production-deploy change buys the differential reviewer, the security reviewer, the environment guardian or an independent second opinion as the surface requires.
+
+Neither displaces the outstanding 3.8E genuine-business product proof.
+
+
+### 3.8K — Launch readiness: making the new tooling serve the product ✅ Complete
+
+3.8H–3.8J improved how agents work on the factory. This points that machinery at what the factory produces, which is what Phase 3.8E is actually judged on.
+
+- `npm run audit:launch` audits composed output before a human reviews it, predicting meaningful manual edits in the same category vocabulary 3.8E records, each naming the specialist role that owns the fix;
+- `StateMatrixSpec` and `JourneyClosureEvidence` are derived deterministically from composed output, ranked by user risk rather than enumerated combinatorially;
+- missing evidence is counted separately from defects, so the prediction stays trustworthy;
+- `config/factory-benchmarks.json` records a measured predicted-edit ceiling per canonical project type and `generate:acceptance` fails when generated product gets worse;
+- the 3.8E evidence records the audit taken at handover and the validator reports it against the real edit count, including how far the prediction was off. It is recorded, not enforced: while the factory is still being built a genuine run is expected to start from a build that still has known findings, and refusing it would make the proof unrunnable.
+
 ---
 
 ## Phase 4 — Full Builder Console ⬜ Planned

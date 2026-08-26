@@ -60,6 +60,8 @@ Exceeding a ceiling requires a written reason in the task output and must remain
 - `config`: registries/routing/status/policies/roles/pipelines, not application business logic.
 - generated projects must not import `@app-builder/control-plane`, Builder Console code or agent-runtime dependencies.
 
+These boundaries are executable, not advisory: `config/architecture-boundaries.json` is the machine-readable form and `npm run architecture` fails the build on an illegal edge or a new cycle.
+
 ## Agent/runtime rules
 
 Before a later runtime executes an autonomous implementation attempt, it should be able to identify:

@@ -308,6 +308,78 @@ Delivered as deterministic contracts and executable acceptance:
 Roles remain `planned`: this stage defines the decision boundaries, routing and budgets. Authoring
 their `SKILL.md` packets and executing them is Phase 4 groundwork and Phase 5 runtime work.
 
+### 3.8J — Executable architecture and deterministic risk classification ✅ Complete
+
+Phase 3.8I recorded these as planning. This stage makes both executable, and neither displaces the
+outstanding 3.8E genuine-business proof or the Console work.
+
+**Architecture boundaries are now a blocking gate.** `AGENTS.md` stated the dependency direction in
+prose; `npm run architecture` now enforces it inside `npm run check`, so CI rejects an illegal edge.
+Seven rules cover generated-output portability, the Console/service boundary, the MCP adapter
+boundary, control-plane provider-neutrality, dependency-light contracts, composition purity and
+content-intelligence independence, plus a cycle check over the zone graph. It parses module
+specifiers and declared dependencies rather than scanning for substrings, so a deep relative path
+cannot dodge a package-name rule and a package named in prose is not a violation.
+`dependency-cruiser` was evaluated and deliberately not adopted; see
+`docs/ENGINEERING_QUALITY_PROGRAMME.md` for that decision and for the two real findings the first
+run surfaced.
+
+**Conditional review is now genuinely conditional.** 3.8I registered `differential-reviewer`,
+`independent-second-opinion` and `environment-guardian` but nothing could select them.
+`config/risk-surfaces.json` and `packages/control-plane/src/risk.js` classify a declared ChangeSet
+against eleven risk surfaces and the requested capability actions, and return the reviewers the
+change must buy. Severity is the highest matched surface, never an average; independent review is
+bought at the threshold the registry names rather than by anyone's sense of importance; and an
+ordinary presentation or documentation change returns no reviewers at all, which is what keeps the
+expensive lenses affordable. A model does not decide whether a risky surface was touched.
+
+Two false positives were found and fixed while building it, both of which would have defeated the
+purpose: a design-token file matched the authentication `token` signal, and a JSON Schema contract
+matched the *database* schema surface. Matching is now word-accurate and both cases are held by
+tests.
+
+### 3.8K — Launch readiness: making the new tooling serve the product ✅ Complete
+
+Phases 3.8H–3.8J built a stronger *development-agent operating system*. None of it changed what the
+factory produces, and 3.8E is judged on exactly that. This stage points the machinery at generated
+product.
+
+**`npm run audit:launch -- --project <dir>` audits composed output before a human sees it.** Every
+finding uses the same category vocabulary as `manualEdits` in
+`schemas/genuine-business-acceptance.schema.json` and names the specialist role that owns the fix, so
+a predicted edit is actionable rather than a complaint. It catches unresolved bindings, placeholder
+copy, generated claims with no source, heroes with no imagery, dead internal links, unreachable
+pages, a missing not-found route, no conversion path, and unresolved or custom capabilities.
+
+**`StateMatrixSpec` and `JourneyClosureEvidence` are now derived deterministically**, not left as
+registry entries waiting for an agent. State axes come from what a surface actually exposes — a page
+with no capture surface has no write axis — and are ranked by user risk rather than enumerated
+combinatorially. Journeys are derived from composed output rather than a manifest field that is often
+absent, with each step marked proven, unproven, or needing executable evidence.
+
+**Missing proof and a defect are counted separately.** A high-risk state with no fixture is a gap in
+the factory's evidence, not an edit a person makes to the site. Merging them would inflate the
+prediction into a number nobody could trust.
+
+**Canonical generation now gates on product quality.** `config/factory-benchmarks.json` records a
+predicted-edit ceiling per project type, measured rather than guessed, and `generate:acceptance`
+fails when output gets worse. Ceilings are lowered as the factory improves and never raised to make a
+regression pass.
+
+**Phase 3.8E is served without being gated.** `launchReadiness` on the acceptance evidence records
+the audit taken at handover, and the validator reports it alongside the real edit count, including
+how far the prediction was off. It is deliberately **recorded, not enforced**: the factory is still
+being built, so a genuine run is expected to start from a build that still carries known findings.
+Refusing such a run would make the proof unrunnable and would reward omitting the field over
+recording it honestly. The value is that a reviewer knows what the factory already knew, and that
+prediction accuracy becomes measurable. Tightening this into a gate is a decision for after the
+first real run, not before it.
+
+Current canonical baselines: marketing-site 10, content-site 8, b2b-saas 13, consumer-app 15,
+internal-tool 15, ai-app 15 predicted edits. Every one is below the 20-edit target and every one is
+worth reducing. These ceilings gate **synthetic canonical fixtures**, where they can only catch a
+regression; they are not a quality bar applied to a real business build.
+
 ### 3.8G — Brand-source and asset-provenance foundation — P1/P2
 
 Extend the existing content/asset intelligence rather than creating a second extraction subsystem.

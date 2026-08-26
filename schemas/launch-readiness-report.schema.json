@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/launch-readiness-report.schema.json",
+  "title": "App Builder Launch Readiness Report",
+  "description": "Deterministic audit of composed product before a human reviews it. Findings predict the meaningful manual edits a reviewer would otherwise make by hand, using the same category vocabulary as schemas/genuine-business-acceptance.schema.json so predicted and actual edits are directly comparable.",
+  "type": "object",
+  "required": ["schemaVersion", "launchable", "predictedManualEdits", "summary", "findings", "evidenceGaps", "stateMatrix", "journeys"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "projectType": {"type": ["string", "null"]},
+    "compositionHash": {"type": ["string", "null"]},
+    "manifestVersion": {"type": ["integer", "null"]},
+    "launchable": {"type": "boolean", "description": "False while any blocker finding stands."},
+    "predictedManualEdits": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Blocker plus major findings. Evidence gaps are deliberately excluded: missing proof is a factory gap, not an edit a person makes to the site."
+    },
+    "summary": {
+      "type": "object",
+      "required": ["blocker", "major", "minor", "byCategory", "evidenceGaps"],
+      "properties": {
+        "blocker": {"type": "integer", "minimum": 0},
+        "major": {"type": "integer", "minimum": 0},
+        "minor": {"type": "integer", "minimum": 0},
+        "byCategory": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "evidenceGaps": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "findings": {"type": "array", "items": {"$ref": "#/definitions/finding"}},
+    "evidenceGaps": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/finding"},
+      "description": "Reachable, meaningful states and journey steps that composition cannot prove. These need executable evidence, not a site edit."
+    },
+    "stateMatrix": {
+      "type": "array",
+      "description": "State axes each surface genuinely exposes. Deliberately small: impossible and speculative combinations are removed before ranking.",
+      "items": {
+        "type": "object",
+        "required": ["page", "axes", "states"],
+        "properties": {
+          "page": {"type": "string"},
+          "axes": {"type": "array", "items": {"type": "string"}},
+          "states": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["axis", "state", "risk", "evidence"],
+              "properties": {
+                "axis": {"type": "string"},
+                "state": {"type": "string"},
+                "risk": {"enum": ["low", "medium", "high"]},
+                "evidence": {"enum": ["none", "fixture", "browser"]}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "journeys": {
+      "type": "array",
+      "description": "Journeys derived from composed output, with per-step closure status. A component existing is not journey completion.",
+      "items": {
+        "type": "object",
+        "required": ["id", "entry", "steps"],
+        "properties": {
+          "id": {"type": "string"},
+          "entry": {"type": "string"},
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["step", "status", "detail"],
+              "properties": {
+                "step": {"type": "string"},
+                "status": {"enum": ["proven", "unproven", "needs-executable-evidence"]},
+                "detail": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "finding": {
+      "type": "object",
+      "required": ["check", "category", "severity", "owningRole", "title", "guidance", "where", "detail"],
+      "properties": {
+        "check": {"type": "string", "minLength": 1},
+        "category": {
+          "enum": ["content", "brand", "imagery", "layout", "responsive", "visual", "behavior", "integration", "accessibility", "data", "other"],
+          "description": "Matches the Phase 3.8E manual-edit categories exactly."
+        },
+        "severity": {"enum": ["minor", "major", "blocker"]},
+        "owningRole": {"type": "string", "minLength": 1, "description": "Role id from config/agent-roles.json. A finding with no owner is a complaint."},
+        "title": {"type": "string", "minLength": 1},
+        "guidance": {"type": "string", "minLength": 1},
+        "where": {"type": "string", "minLength": 1},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

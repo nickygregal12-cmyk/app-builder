@@ -21,6 +21,9 @@ const required = [
   'config/skill-registry.json',
   'config/external-sources.json',
   'config/agent-routing-benchmarks.json',
+  'config/architecture-boundaries.json',
+  'config/risk-surfaces.json',
+  'config/launch-readiness-rules.json',
   'schemas/control-task.schema.json',
   'schemas/build-event.schema.json',
   'schemas/change-set.schema.json',
@@ -38,11 +41,14 @@ const required = [
   'schemas/skill-registration.schema.json',
   'schemas/external-source.schema.json',
   'schemas/routing-benchmark-case.schema.json',
+  'schemas/risk-classification.schema.json',
+  'schemas/launch-readiness-report.schema.json',
   'packages/control-plane/package.json',
   'packages/control-plane/src/index.js',
   'packages/control-plane/src/upgrades.js',
   'packages/control-plane/src/roles.js',
   'packages/control-plane/src/routing.js',
+  'packages/control-plane/src/risk.js',
   'tooling/lib/recipe-upgrades.mjs',
   'tooling/plan-recipe-upgrades.mjs',
   'tooling/control-plane.test.mjs',
@@ -51,6 +57,12 @@ const required = [
   'tooling/agent-architecture.test.mjs',
   'tooling/agent-routing-benchmark.test.mjs',
   'tooling/agent-route.mjs',
+  'tooling/architecture-boundaries.mjs',
+  'tooling/architecture-boundaries.test.mjs',
+  'tooling/risk-classification.test.mjs',
+  'tooling/lib/launch-readiness.mjs',
+  'tooling/launch-readiness.mjs',
+  'tooling/launch-readiness.test.mjs',
   'tooling/benchmark-acceptance.mjs',
 ];
 
@@ -155,6 +167,10 @@ try {
   }
   if (pkg.exports?.['./routing'] !== './src/routing.js') {
     console.error('Control-plane package must expose the deterministic routing primitives.');
+    failed = true;
+  }
+  if (pkg.exports?.['./risk'] !== './src/risk.js') {
+    console.error('Control-plane package must expose the deterministic risk classifier.');
     failed = true;
   }
 
@@ -302,6 +318,80 @@ try {
       }
     }
   }
+  // Conditional review must be genuinely conditional and genuinely reachable. The full behaviour
+  // lives in tooling/risk-classification.test.mjs; the doctor guards the two invariants that make
+  // the mechanism worth having at all.
+  const riskRegistry = readJson('config/risk-surfaces.json');
+  const requiredReviewers = new Set([
+    ...Object.values(riskRegistry.surfaces ?? {}).flatMap((surface) => surface.reviewers ?? []),
+    ...Object.values(riskRegistry.capabilityActions ?? {}).flatMap((entry) => entry.reviewers ?? []),
+  ]);
+  for (const reviewer of requiredReviewers) {
+    if (roles[reviewer]?.kind !== 'reviewer') {
+      console.error(`Risk registry requires ${reviewer}, which is not a registered reviewer role.`);
+      failed = true;
+      continue;
+    }
+    for (const [pipelineId, pipeline] of Object.entries(pipelines)) {
+      const reachable = (pipeline.onDemandRoles ?? []).includes(reviewer)
+        || (pipeline.stages ?? []).some((stage) => stage.role === reviewer || stage.reviewer === reviewer);
+      if (!reachable) {
+        console.error(`Pipeline ${pipelineId} cannot summon required reviewer ${reviewer}.`);
+        failed = true;
+      }
+    }
+  }
+  if (!riskRegistry.escalation?.independentSecondOpinionAtOrAbove) {
+    console.error('Risk registry must name the severity threshold at which independent review is bought.');
+    failed = true;
+  }
+
+  const boundaries = readJson('config/architecture-boundaries.json');
+  const zoneIds = new Set(Object.keys(boundaries.zones ?? {}));
+  for (const boundary of boundaries.boundaries ?? []) {
+    if (!zoneIds.has(boundary.from)) {
+      console.error(`Architecture boundary ${boundary.id} declares unknown zone ${boundary.from}.`);
+      failed = true;
+    }
+    for (const zone of boundary.forbidZones ?? []) {
+      if (!zoneIds.has(zone)) {
+        console.error(`Architecture boundary ${boundary.id} forbids unknown zone ${zone}.`);
+        failed = true;
+      }
+    }
+  }
+  if (!String(readJson('package.json').scripts?.check ?? '').includes('architecture')) {
+    console.error('Root check must run the executable architecture boundaries.');
+    failed = true;
+  }
+
+  // Generated product quality is a first-class gate, not a report nobody reads.
+  const launchRules = readJson('config/launch-readiness-rules.json');
+  const editCategories = readJson('schemas/genuine-business-acceptance.schema.json')
+    .properties?.manualEdits?.properties?.entries?.items?.properties?.category?.enum ?? [];
+  for (const [checkId, check] of Object.entries(launchRules.checks ?? {})) {
+    if (roles[check.owningRole]?.id !== check.owningRole) {
+      console.error(`Launch-readiness check ${checkId} names unknown owning role ${check.owningRole}.`);
+      failed = true;
+    }
+    if (!editCategories.includes(check.category)) {
+      console.error(`Launch-readiness check ${checkId} uses category ${check.category}, which Phase 3.8E cannot record.`);
+      failed = true;
+    }
+  }
+  const launchBenchmarks = readJson('config/factory-benchmarks.json').launchReadiness;
+  if (!launchBenchmarks?.ceilings) {
+    console.error('Benchmark registry must record launch-readiness ceilings per canonical project type.');
+    failed = true;
+  } else {
+    for (const [type, ceiling] of Object.entries(launchBenchmarks.ceilings)) {
+      if (ceiling >= launchBenchmarks.targetMaximum) {
+        console.error(`Launch-readiness ceiling for ${type} (${ceiling}) is not below the ${launchBenchmarks.targetMaximum} edit target.`);
+        failed = true;
+      }
+    }
+  }
+
   const benchmarkCases = readJson('config/agent-routing-benchmarks.json').cases ?? [];
   if (!benchmarkCases.some((benchmarkCase) => benchmarkCase.expectUnclassified)) {
     console.error('Routing benchmarks must hold at least one prompt that stays unclassified rather than guessing.');

@@ -135,7 +135,17 @@ packet, baseline without a candidate skill versus with it.
 
 Some roles are too expensive or too specific to run on every change. They are registered as
 `onDemandRoles` on each pipeline and selected by a deterministic `RiskClassification` of the
-ChangeSet rather than by an agent's judgement:
+ChangeSet rather than by an agent's judgement.
+
+That classifier is executable: `config/risk-surfaces.json` declares the surfaces and
+`packages/control-plane/src/risk.js` matches a declared ChangeSet's paths and requested capability
+actions against them. Severity is the highest matched surface, never an average. Independent review
+is bought at the threshold the registry names. An ordinary presentation or documentation change
+matches nothing and buys no reviewer, which is exactly what keeps the expensive lenses affordable.
+Matching is word-accurate on purpose: a design-token file is not an authentication token, and a JSON
+Schema contract is not a database migration.
+
+
 
 | Role | Selected when |
 | --- | --- |

@@ -1,20 +1,150 @@
 {
   "version": 2,
   "scoreVersion": 1,
-  "requiredProjectTypes": ["marketing-site", "b2b-saas", "consumer-app", "internal-tool", "content-site", "ai-app"],
+  "requiredProjectTypes": [
+    "marketing-site",
+    "b2b-saas",
+    "consumer-app",
+    "internal-tool",
+    "content-site",
+    "ai-app"
+  ],
   "profiles": {
-    "deterministicBuild": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 2, "upgradeInventory": 1},
-    "releaseQualityFuture": {"generate": 1, "install": 1, "check": 2, "build": 2, "portable": 1, "upgradeInventory": 1, "browser": 1, "security": 2, "accessibility": 1, "performance": 1, "designContract": 1}
+    "deterministicBuild": {
+      "generate": 1,
+      "install": 1,
+      "check": 2,
+      "build": 2,
+      "portable": 2,
+      "upgradeInventory": 1
+    },
+    "releaseQualityFuture": {
+      "generate": 1,
+      "install": 1,
+      "check": 2,
+      "build": 2,
+      "portable": 1,
+      "upgradeInventory": 1,
+      "browser": 1,
+      "security": 2,
+      "accessibility": 1,
+      "performance": 1,
+      "designContract": 1
+    }
   },
   "cases": [
-    {"id":"marketing-basic","projectType":"marketing-site","canonical":true,"status":"ready","tags":["seo","leads"]},
-    {"id":"b2b-core","projectType":"b2b-saas","canonical":true,"status":"ready","tags":["auth","profiles","organisations","admin"]},
-    {"id":"consumer-canonical","projectType":"consumer-app","canonical":true,"status":"ready","tags":["auth","profiles","engagement"]},
-    {"id":"internal-canonical","projectType":"internal-tool","canonical":true,"status":"ready","tags":["auth","admin","dense-ui"]},
-    {"id":"content-canonical","projectType":"content-site","canonical":true,"status":"ready","tags":["seo","content","analytics"]},
-    {"id":"ai-canonical","projectType":"ai-app","canonical":true,"status":"ready","tags":["ai","uploads","budget"]},
-    {"id":"intersection-multitenant-files","projectType":"b2b-saas","canonical":false,"status":"planned","tags":["auth","organisations","admin","uploads"]},
-    {"id":"intersection-ai-commercial","projectType":"ai-app","canonical":false,"status":"planned","tags":["auth","uploads","billing","ai"]},
-    {"id":"intersection-marketing-growth","projectType":"marketing-site","canonical":false,"status":"planned","tags":["seo","lead-generation","analytics"]}
-  ]
+    {
+      "id": "marketing-basic",
+      "projectType": "marketing-site",
+      "canonical": true,
+      "status": "ready",
+      "tags": [
+        "seo",
+        "leads"
+      ]
+    },
+    {
+      "id": "b2b-core",
+      "projectType": "b2b-saas",
+      "canonical": true,
+      "status": "ready",
+      "tags": [
+        "auth",
+        "profiles",
+        "organisations",
+        "admin"
+      ]
+    },
+    {
+      "id": "consumer-canonical",
+      "projectType": "consumer-app",
+      "canonical": true,
+      "status": "ready",
+      "tags": [
+        "auth",
+        "profiles",
+        "engagement"
+      ]
+    },
+    {
+      "id": "internal-canonical",
+      "projectType": "internal-tool",
+      "canonical": true,
+      "status": "ready",
+      "tags": [
+        "auth",
+        "admin",
+        "dense-ui"
+      ]
+    },
+    {
+      "id": "content-canonical",
+      "projectType": "content-site",
+      "canonical": true,
+      "status": "ready",
+      "tags": [
+        "seo",
+        "content",
+        "analytics"
+      ]
+    },
+    {
+      "id": "ai-canonical",
+      "projectType": "ai-app",
+      "canonical": true,
+      "status": "ready",
+      "tags": [
+        "ai",
+        "uploads",
+        "budget"
+      ]
+    },
+    {
+      "id": "intersection-multitenant-files",
+      "projectType": "b2b-saas",
+      "canonical": false,
+      "status": "planned",
+      "tags": [
+        "auth",
+        "organisations",
+        "admin",
+        "uploads"
+      ]
+    },
+    {
+      "id": "intersection-ai-commercial",
+      "projectType": "ai-app",
+      "canonical": false,
+      "status": "planned",
+      "tags": [
+        "auth",
+        "uploads",
+        "billing",
+        "ai"
+      ]
+    },
+    {
+      "id": "intersection-marketing-growth",
+      "projectType": "marketing-site",
+      "canonical": false,
+      "status": "planned",
+      "tags": [
+        "seo",
+        "lead-generation",
+        "analytics"
+      ]
+    }
+  ],
+  "launchReadiness": {
+    "description": "Predicted meaningful manual edits per canonical project type, measured by tooling/lib/launch-readiness.mjs. These are ceilings, not targets: they exist so a change that makes generated product worse fails immediately. Lower them as the factory improves; never raise one to make a regression pass.",
+    "targetMaximum": 20,
+    "ceilings": {
+      "marketing-site": 10,
+      "b2b-saas": 13,
+      "consumer-app": 15,
+      "internal-tool": 15,
+      "content-site": 8,
+      "ai-app": 15
+    }
+  }
 }

@@ -133,6 +133,10 @@
       "reason": "Inlined into the intake-session family."
     },
     {
+      "schema": "launch-readiness-report.schema.json",
+      "reason": "Launch-readiness reports are produced by tooling/lib and read by acceptance; migrate if the Console or service consumes them across a boundary."
+    },
+    {
       "schema": "non-functional-requirements.schema.json",
       "reason": "Consumed only by the control-plane doctor today."
     },
@@ -159,6 +163,10 @@
     {
       "schema": "review-verdict.schema.json",
       "reason": "Review verdicts are asserted by the agent-architecture tests, not yet produced or consumed at a service boundary."
+    },
+    {
+      "schema": "risk-classification.schema.json",
+      "reason": "Risk classifications are produced by the control plane and consumed by conditional review routing; migrate when a runtime dispatches against them."
     },
     {
       "schema": "routing-benchmark-case.schema.json",

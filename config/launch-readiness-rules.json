@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "description": "Deterministic launch-readiness rules for generated product. Every finding maps to a Phase 3.8E manualEdits category and names the specialist role that owns the fix, so a predicted edit is actionable rather than a complaint. The point is to spend the 20-edit budget on judgement a person actually has to make, not on gaps a script can name first.",
+  "rules": [
+    "A finding is a prediction that a human would otherwise have to make this edit by hand. Categories match schemas/genuine-business-acceptance.schema.json so predicted and actual edits are directly comparable.",
+    "Severity is about launchability, not taste. blocker: the site should not go live. major: a reviewer will almost certainly change this. minor: worth knowing, not worth blocking.",
+    "Every rule names an owning role from config/agent-roles.json. A finding with no owner is a complaint.",
+    "This audit reads composed output. It cannot see rendered pixels, so it never claims a design is good or bad \u2014 that stays with rendered evidence and the design critic.",
+    "This audit informs Phase 3.8E; it does not gate it. While the factory is still being built a real run is expected to start from a build that still has findings. Ceilings apply to synthetic canonical fixtures, where they can only catch a regression."
+  ],
+  "severityOrder": [
+    "minor",
+    "major",
+    "blocker"
+  ],
+  "checks": {
+    "unresolved-binding": {
+      "category": "content",
+      "severity": "blocker",
+      "owningRole": "ux-writer",
+      "title": "A content binding resolved to nothing",
+      "guidance": "The section will render an empty slot. Either bind real content or remove the section."
+    },
+    "placeholder-copy": {
+      "category": "content",
+      "severity": "blocker",
+      "owningRole": "ux-writer",
+      "title": "Placeholder copy would ship",
+      "guidance": "Lorem ipsum, TBD, 'your company' and example.com are never launchable."
+    },
+    "generated-claim-without-source": {
+      "category": "content",
+      "severity": "major",
+      "owningRole": "ux-writer",
+      "title": "Generated copy makes a claim with no source",
+      "guidance": "Generated content may not silently become a factual claim. Bind it to a source fact or soften it."
+    },
+    "missing-page-purpose": {
+      "category": "content",
+      "severity": "minor",
+      "owningRole": "ux-writer",
+      "title": "Page has no stated purpose",
+      "guidance": "Purpose drives the meta description and the page's reason to exist."
+    },
+    "duplicate-page-title": {
+      "category": "content",
+      "severity": "major",
+      "owningRole": "information-architect",
+      "title": "Two pages share a title",
+      "guidance": "Duplicate titles read as unfinished and weaken search results."
+    },
+    "missing-services-content": {
+      "category": "content",
+      "severity": "major",
+      "owningRole": "marketing-content",
+      "title": "No services or offering content was available",
+      "guidance": "A business site that cannot say what it sells will need hand-written copy."
+    },
+    "no-conversion-path": {
+      "category": "behavior",
+      "severity": "blocker",
+      "owningRole": "product-specification",
+      "title": "The site has no way to convert a visitor",
+      "guidance": "No primary action and no enquiry surface means the build cannot do its job."
+    },
+    "missing-contact-details": {
+      "category": "behavior",
+      "severity": "blocker",
+      "owningRole": "product-specification",
+      "title": "No contact details are available to publish",
+      "guidance": "A visitor who wants to get in touch has nowhere to go."
+    },
+    "action-target-missing": {
+      "category": "behavior",
+      "severity": "blocker",
+      "owningRole": "frontend-implementation",
+      "title": "An action points at a route that does not exist",
+      "guidance": "An internal link with no matching page is a dead end in the primary journey."
+    },
+    "orphan-page": {
+      "category": "behavior",
+      "severity": "major",
+      "owningRole": "information-architect",
+      "title": "A page is unreachable",
+      "guidance": "The page is absent from navigation and no action links to it, so nobody will find it."
+    },
+    "missing-not-found-route": {
+      "category": "behavior",
+      "severity": "major",
+      "owningRole": "frontend-implementation",
+      "title": "No not-found route",
+      "guidance": "A mistyped or stale URL should land somewhere deliberate rather than a blank screen."
+    },
+    "section-expects-imagery": {
+      "category": "imagery",
+      "severity": "major",
+      "owningRole": "art-direction",
+      "title": "A section that reads as visual has no imagery",
+      "guidance": "A hero or gallery with no asset is the most common reason a generated site looks unfinished."
+    },
+    "no-publishable-imagery": {
+      "category": "imagery",
+      "severity": "major",
+      "owningRole": "art-direction",
+      "title": "No approved imagery is available to publish",
+      "guidance": "Supplied assets were absent, unapproved or unusable, so every visual surface falls back to plain layout."
+    },
+    "unresolved-capability": {
+      "category": "integration",
+      "severity": "blocker",
+      "owningRole": "product-specification",
+      "title": "A requested capability has no implementation",
+      "guidance": "The build cannot claim this capability. Decide explicitly: exclude it or schedule custom work."
+    },
+    "custom-capability-pending": {
+      "category": "integration",
+      "severity": "major",
+      "owningRole": "product-specification",
+      "title": "A capability is marked as custom work",
+      "guidance": "Custom work is real work. It must be visible in the launch decision rather than discovered later."
+    },
+    "knowledge-pack-not-provided": {
+      "category": "data",
+      "severity": "major",
+      "owningRole": "research-agent",
+      "title": "No trusted knowledge pack informed this build",
+      "guidance": "Without ingested source material the build can only use manifest answers, so copy will be thin and generic."
+    },
+    "state-evidence-missing": {
+      "category": "behavior",
+      "severity": "major",
+      "owningRole": "state-matrix",
+      "title": "A high-risk surface state has no evidence",
+      "guidance": "The state is reachable and matters to a user, but nothing proves it renders correctly."
+    },
+    "journey-step-unproven": {
+      "category": "behavior",
+      "severity": "major",
+      "owningRole": "journey-closure",
+      "title": "A journey step is not proven by composed output",
+      "guidance": "A component existing is not journey completion. This step needs an executable proof."
+    }
+  }
+}

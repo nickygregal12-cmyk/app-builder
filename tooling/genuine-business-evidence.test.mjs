@@ -168,3 +168,23 @@ test('artifact hashes make recorded product proof tamper evident', (t) => {
   const errors = validateGenuineBusinessEvidence(evidence, { evidenceFile });
   assert.ok(errors.some((error) => error.includes('artifacts.composition.sha256 does not match')));
 });
+
+test('a run is not refused because the factory still produces builds with known findings', (t) => {
+  // Phase 3.8E exists to discover where the factory actually stands. Gating the proof on a
+  // blocker-free build would make it unrunnable while the factory is still being built, and would
+  // reward omitting the field over recording it honestly. Launch readiness is evidence, not a gate.
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  evidence.launchReadiness = {
+    predictedManualEdits: 26,
+    blockersAtHandover: 4,
+    evidenceGaps: 31,
+    reportPath: null,
+  };
+  assert.deepEqual(validateGenuineBusinessEvidence(evidence, { evidenceFile }), []);
+});
+
+test('launch readiness stays optional, so an early run can omit it entirely', (t) => {
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  delete evidence.launchReadiness;
+  assert.deepEqual(validateGenuineBusinessEvidence(evidence, { evidenceFile }), []);
+});

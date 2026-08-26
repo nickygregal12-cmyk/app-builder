@@ -8,7 +8,6 @@ set -euo pipefail
 RUNTIME_USER="appbuilder"
 BASE="/srv/app-builder"
 NODE_VERSION="${APP_BUILDER_NODE_VERSION:-22.23.2}"
-NODE_ARCH="${APP_BUILDER_NODE_ARCH:-x64}"
 CPU_QUOTA="${APP_BUILDER_CPU_QUOTA:-150%}"
 MEMORY_HIGH="${APP_BUILDER_MEMORY_HIGH:-25%}"
 MEMORY_MAX="${APP_BUILDER_MEMORY_MAX:-35%}"
@@ -21,6 +20,25 @@ fi
 
 if ! command -v systemctl >/dev/null 2>&1; then
   echo "systemd is required for the shared-host isolation profile." >&2
+  exit 1
+fi
+
+if [[ -n "${APP_BUILDER_NODE_ARCH:-}" ]]; then
+  NODE_ARCH="$APP_BUILDER_NODE_ARCH"
+else
+  case "$(uname -m)" in
+    x86_64|amd64) NODE_ARCH="x64" ;;
+    aarch64|arm64) NODE_ARCH="arm64" ;;
+    *)
+      echo "Unsupported host architecture $(uname -m); set APP_BUILDER_NODE_ARCH explicitly if Node publishes a matching build." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+# Refuse to take over an unrelated pre-existing account with the same name.
+if id "$RUNTIME_USER" >/dev/null 2>&1 && ! grep -q 'app-builder-runtime-colocated' /etc/app-builder-host.json 2>/dev/null; then
+  echo "User '$RUNTIME_USER' already exists but is not recorded as an App Builder runtime identity. Refusing to modify it." >&2
   exit 1
 fi
 
@@ -63,7 +81,7 @@ install -d -m 0750 -o "$RUNTIME_USER" -g "$RUNTIME_USER" \
 # Install Node for App Builder only. Do not replace /usr/bin/node or
 # /usr/local/bin/node because an existing project on this host may depend on a
 # different version.
-NODE_ROOT="/opt/app-builder/node/v${NODE_VERSION}"
+NODE_ROOT="/opt/app-builder/node/v${NODE_VERSION}-${NODE_ARCH}"
 NODE_TARBALL="node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz"
 NODE_BASE_URL="https://nodejs.org/dist/v${NODE_VERSION}"
 if [[ ! -x "$NODE_ROOT/bin/node" ]]; then
@@ -146,6 +164,7 @@ cat > /etc/app-builder-host.json <<EOF
   "schemaVersion": 1,
   "role": "app-builder-runtime-colocated",
   "nodeVersion": "${NODE_VERSION}",
+  "nodeArch": "${NODE_ARCH}",
   "runtimeUser": "${RUNTIME_USER}",
   "baseDirectory": "${BASE}",
   "resourceSlice": "app-builder-runtime.slice",
@@ -165,5 +184,6 @@ chmod 0644 /etc/app-builder-host.json
 printf '\nApp Builder shared-host baseline installed.\n'
 printf 'Existing SSH, firewall, global Node and project services were left unchanged.\n'
 printf 'Runtime user: %s (locked, non-sudo, no authorized SSH key)\n' "$RUNTIME_USER"
+printf 'Node: %s (%s), isolated under /opt/app-builder\n' "$NODE_VERSION" "$NODE_ARCH"
 printf 'Resource slice: CPU %s, memory high %s, memory max %s, tasks %s\n' "$CPU_QUOTA" "$MEMORY_HIGH" "$MEMORY_MAX" "$TASKS_MAX"
 printf 'No App Builder service, OpenCode session, or autonomous loop was started.\n'

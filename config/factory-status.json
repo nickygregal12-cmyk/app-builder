@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "currentPhase": "3.8",
   "currentStage": "Phase 3.8 — Product proof and correctness hardening",
-  "activeStage": "Phase 3.8E genuine-business trial 2 (nbm Construction Cost Consultants) has run end to end; the gate remains blocked on public-web egress for website ingestion and the required human product review",
+  "activeStage": "Phase 3.8E genuine-business trial 2 (nbm Construction Cost Consultants) has run end to end; the gate remains blocked by live-operator Console defects (#62/#63), public-web egress for website ingestion, and the required human product review",
   "status": "active",
   "completedPhases": [
     "0",
@@ -39,13 +39,17 @@
   "activeWork": [
     "genuine-real-business-acceptance",
     "nbm-trial-2-in-progress",
+    "fix-issue-62-list-question-live-typing",
+    "fix-issue-63-remote-preview-proxy",
     "blocked-on-public-web-egress-for-website-ingestion",
     "awaiting-human-product-review"
   ],
   "outstandingProductGates": [
     "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits",
-    "Phase 3.8E — the nbm website could not be ingested: the session egress policy denies every public host, so no website source can be hashed or cross-checked against the knowledge pack",
+    "Phase 3.8E — issue #62: list-style questionnaire fields strip a newly typed trailing space, so normal multi-word operator input is broken",
+    "Phase 3.8E — issue #63: service-managed previews expose a host-loopback URL to the remote operator browser; preview must travel through the supported Console/Factory boundary without a random per-build SSH tunnel",
+    "Phase 3.8E — the nbm website could not be ingested: the original trial environment denied every public host, so no website source can yet be hashed or cross-checked against the knowledge pack",
     "Phase 3.8E — the human product review the schema requires has not been issued"
   ],
-  "nextStage": "Phase 3.8E. Trial 2 (nbm Construction Cost Consultants) has run the intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview -> rendered-evidence journey. docs/TRIAL_FINDINGS.md records F15-F29: twelve fixed factory defects, plus F19 measurement evidence, F20 the environment blocker and F27 the trial status snapshot. Two things remain and neither is a product-code implementation task: run website ingestion in an environment that can reach https://www.nbm.bz/, then issue the required human product review against the resulting evidence. 4C stays gated behind this."
+  "nextStage": "Phase 3.8E. Trial 2 (nbm Construction Cost Consultants) has run the intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview -> rendered-evidence journey. docs/TRIAL_FINDINGS.md records F15-F29: twelve fixed factory defects, plus F19 measurement evidence, F20 the environment blocker and F27 the trial status snapshot. Subsequent live operator use exposed issue #62 (list-question typing) and issue #63 (remote preview URL escapes the Console boundary); #63 is an explicit visual-acceptance blocker and #62 must be fixed before the product can claim normal operator intake. Resolve those operator defects, run the website ingestion in an environment that can reach https://www.nbm.bz/ (the existing Hetzner Factory is a candidate pending an appbuilder-user egress check), then issue the required human product review and validate the evidence. 4C stays gated behind this."
 }

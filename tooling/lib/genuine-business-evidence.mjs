@@ -103,6 +103,62 @@ function validateArtifactFile(baseDir, label, artifact, errors) {
   if (sha256File(resolved) !== artifact.sha256) errors.push(`${label}.sha256 does not match the referenced file`);
 }
 
+/**
+ * Tie every declared source to the knowledge pack the run actually produced.
+ *
+ * Without this the gate could be satisfied by naming a website. The Phase 3.8E
+ * nbm run proved it: an evidence file listing `https://www.nbm.bz/` as a
+ * website source passed the validator even though the crawler had never
+ * reached the site, because a website source needed no hash and nothing
+ * connected the claim to an ingestion. A source that was never ingested cannot
+ * appear in the pack, and the pack is already hashed and required here.
+ */
+function validateSourcesAgainstKnowledgePack(evidence, baseDir, errors) {
+  const resolved = safeRelativePath(baseDir, evidence.artifacts.knowledgePack.path);
+  if (!resolved || !fs.existsSync(resolved)) return; // already reported by validateArtifactFile
+  let pack;
+  try {
+    pack = JSON.parse(fs.readFileSync(resolved, 'utf8'));
+  } catch {
+    errors.push('artifacts.knowledgePack must be readable JSON');
+    return;
+  }
+  const packSources = Array.isArray(pack.sources) ? pack.sources : null;
+  if (!packSources) {
+    errors.push('artifacts.knowledgePack must record the sources this evidence claims were ingested');
+    return;
+  }
+  const byHash = new Map(packSources.filter((source) => source.contentHash).map((source) => [source.contentHash, source]));
+  for (const source of evidence.sources) {
+    const ingested = byHash.get(source.sha256);
+    if (!ingested) {
+      errors.push(`source ${source.id} is not in the knowledge pack: nothing shows it was ingested`);
+      continue;
+    }
+    if (source.kind === 'website') {
+      const packHost = publicHost(ingested.uri ?? '');
+      const declaredHost = publicHost(source.uri);
+      if (!packHost || packHost !== declaredHost) {
+        errors.push(`website source ${source.id} does not match the ingested page recorded in the knowledge pack`);
+      }
+    }
+  }
+}
+
+const REVIEW_PLACEHOLDER = /\b(tbd|todo|n\/a|not issued|unresolved|pending|placeholder|lorem ipsum|xxx+)\b/i;
+
+/**
+ * A review is a judgement someone made, so it has to read like one.
+ *
+ * This cannot prove a person made it. It can refuse the cases where the file
+ * says outright that nobody did.
+ */
+function validateProductReview(evidence, errors) {
+  const { reviewer, notes } = evidence.productReview;
+  if (REVIEW_PLACEHOLDER.test(reviewer)) errors.push('productReview.reviewer must name who reviewed it, not a placeholder');
+  if (REVIEW_PLACEHOLDER.test(notes)) errors.push('productReview.notes must record what was judged, not a placeholder');
+}
+
 function validateArtifacts(evidence, evidenceFile, errors) {
   const baseDir = path.dirname(path.resolve(evidenceFile));
   validateArtifactFile(baseDir, 'artifacts.manifest', evidence.artifacts.manifest, errors);
@@ -160,8 +216,8 @@ export function validateGenuineBusinessEvidence(evidence, { evidenceFile } = {})
   if (!suppliedMaterial.length) {
     errors.push('sources must include at least one user-supplied document/logo/image/spreadsheet approved for use');
   }
-  for (const source of suppliedMaterial) {
-    if (!source.sha256) errors.push(`approved user-supplied source ${source.id} must record sha256`);
+  for (const source of evidence.sources) {
+    if (!source.sha256) errors.push(`source ${source.id} must record the sha256 of what was ingested`);
   }
 
   if (evidence.manualEdits.total !== evidence.manualEdits.entries.length) {
@@ -177,7 +233,12 @@ export function validateGenuineBusinessEvidence(evidence, { evidenceFile } = {})
     errors.push('run.startedAt/completedAt must be valid chronological timestamps');
   }
 
-  if (evidenceFile) validateArtifacts(evidence, evidenceFile, errors);
+  validateProductReview(evidence, errors);
+
+  if (evidenceFile) {
+    validateArtifacts(evidence, evidenceFile, errors);
+    validateSourcesAgainstKnowledgePack(evidence, path.dirname(path.resolve(evidenceFile)), errors);
+  }
   return errors;
 }
 

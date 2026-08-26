@@ -501,3 +501,52 @@ remains is honest and mostly not the factory's to fix:
 - `/locations` repeats the home page's locations section with no address on
   either card, because only the Glasgow address is verified;
 - no 404 route is composed for any project type.
+
+### F28 — The gate itself accepted a run that had not happened — P0 ✅ Fixed
+
+The most serious finding of the trial, and the one that took the longest to see,
+because it was in the machinery that judges the trial rather than in anything
+the trial produced.
+
+An evidence file was assembled for the nbm run and put through
+`npm run acceptance:genuine-business:validate`. It passed:
+
+```
+Genuine business acceptance passed: NBM Construction Cost Consultants Limited
+Meaningful manual edits: 0/19 allowed
+```
+
+That file listed `https://www.nbm.bz/` as a website source **for a run in which
+the crawler never reached the site**. It recorded zero manual edits with zero
+entries. Its `productReview.reviewer` was the literal string `UNRESOLVED` and its
+notes read `not issued`, with all five human checks marked `passed`.
+
+Three holes, all of the same kind — a field that looked like a claim and was
+checked as a string:
+
+- a website source needed no `sha256`, and nothing connected any source to an
+  ingestion. Naming a URL was evidence that the site had been used;
+- `reviewer` and `notes` needed only to be non-empty;
+- zero edits with zero entries was indistinguishable from an unreviewed build.
+
+The fix ties the claims to artifacts the run already has to produce. Every
+source now records the SHA-256 of what was ingested, and every source is
+cross-checked against `artifacts.knowledgePack`: the hash must be a
+`contentHash` the pack recorded, and a website source must be the page the pack
+actually holds. A source that was never ingested cannot be in the pack, so it
+cannot be in the evidence. A `reviewer` or `notes` that says on its face that
+nobody reviewed it is refused, and notes shorter than a sentence cannot stand in
+for a judgement.
+
+A zero-edit run stays legal. That is the long-run target and refusing it would
+punish the outcome the programme is aiming at.
+
+Re-running the same evidence file against the hardened gate:
+
+```
+Genuine business acceptance failed:
+- /sources/1 must have required property 'sha256'
+- /productReview/notes must NOT have fewer than 80 characters
+```
+
+Which is the correct answer. Phase 3.8E is not passed.

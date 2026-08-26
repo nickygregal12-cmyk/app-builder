@@ -22,12 +22,23 @@ function acceptanceFixture(t) {
   }
 
   const sourceLogo = '<svg xmlns="http://www.w3.org/2000/svg"><text>approved</text></svg>';
+  const crawledHomepage = '<html><head><title>OpenAI</title></head><body><h1>OpenAI</h1></body></html>';
   const manifest = '{"schemaVersion":2}\n';
-  const knowledgePack = '{"schemaVersion":1}\n';
   const composition = '{"schemaVersion":1}\n';
   const verification = '{"checks":"passed"}\n';
 
   const sourceLogoHash = write('sources/company-logo.svg', sourceLogo);
+  const websiteHash = sha256(crawledHomepage);
+  // A realistic pack: the evidence's sources have to be the ones the run
+  // actually ingested, and this is where that is recorded.
+  const knowledgePack = `${JSON.stringify({
+    schemaVersion: 1,
+    packHash: 'b'.repeat(64),
+    sources: [
+      { id: 'pack-site', kind: 'url', uri: 'https://openai.com/', provenance: 'existing-site', contentHash: websiteHash },
+      { id: 'pack-logo', kind: 'logo', uri: null, provenance: 'user-supplied', contentHash: sourceLogoHash },
+    ],
+  }, null, 2)}\n`;
   const manifestHash = write('artifacts/project-manifest.json', manifest);
   const knowledgePackHash = write('artifacts/knowledge-pack.json', knowledgePack);
   const compositionHash = write('artifacts/composition.json', composition);
@@ -54,6 +65,7 @@ function acceptanceFixture(t) {
         kind: 'website',
         label: 'Existing company website',
         uri: 'https://openai.com/',
+        sha256: websiteHash,
         provenance: 'existing-site',
         rightsStatus: 'reference-only',
       },
@@ -89,7 +101,7 @@ function acceptanceFixture(t) {
     productReview: {
       launchable: true,
       reviewer: 'acceptance reviewer',
-      notes: 'Representative product review passed.',
+      notes: 'Read every route at desktop, tablet and mobile. Facts trace to approved sources, the brand reads as the supplied reference, hierarchy and spacing hold at every width, and no serious or critical accessibility violation remains.',
       checks: {
         factualAccuracy: 'passed',
         brandFit: 'passed',
@@ -186,5 +198,74 @@ test('a run is not refused because the factory still produces builds with known 
 test('launch readiness stays optional, so an early run can omit it entirely', (t) => {
   const { evidence, evidenceFile } = acceptanceFixture(t);
   delete evidence.launchReadiness;
+  assert.deepEqual(validateGenuineBusinessEvidence(evidence, { evidenceFile }), []);
+});
+
+// ---------------------------------------------------------------------------
+// Regressions from the Phase 3.8E nbm run. The gate that exists to prove the
+// factory survived a real business accepted an evidence file describing a run
+// that had not happened.
+// ---------------------------------------------------------------------------
+
+test('a website that was never ingested cannot satisfy the gate by being named', (t) => {
+  // The nbm run could not reach https://www.nbm.bz/ at all, and an evidence
+  // file listing it as a website source still passed: a website source needed
+  // no hash, and nothing connected the claim to an ingestion.
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  evidence.sources[0].sha256 = 'c'.repeat(64);
+  const errors = validateGenuineBusinessEvidence(evidence, { evidenceFile });
+  assert.ok(errors.some((error) => error.includes('is not in the knowledge pack')));
+});
+
+test('every source must record the hash of what was ingested', (t) => {
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  delete evidence.sources[0].sha256;
+  const errors = validateGenuineBusinessEvidence(evidence, { evidenceFile });
+  assert.ok(errors.some((error) => error.includes('sha256')));
+});
+
+test('a website source must be the page the knowledge pack actually holds', (t) => {
+  const { evidence, evidenceFile, root } = acceptanceFixture(t);
+  const packPath = path.join(root, evidence.artifacts.knowledgePack.path);
+  const pack = JSON.parse(fs.readFileSync(packPath, 'utf8'));
+  pack.sources[0].uri = 'https://a-different-company.co.uk/';
+  const updated = `${JSON.stringify(pack, null, 2)}\n`;
+  fs.writeFileSync(packPath, updated);
+  evidence.artifacts.knowledgePack.sha256 = sha256(updated);
+  const errors = validateGenuineBusinessEvidence(evidence, { evidenceFile });
+  assert.ok(errors.some((error) => error.includes('does not match the ingested page')));
+});
+
+test('a knowledge pack that records no sources cannot back any claim', (t) => {
+  const { evidence, evidenceFile, root } = acceptanceFixture(t);
+  const packPath = path.join(root, evidence.artifacts.knowledgePack.path);
+  const empty = '{"schemaVersion":1}\n';
+  fs.writeFileSync(packPath, empty);
+  evidence.artifacts.knowledgePack.sha256 = sha256(empty);
+  const errors = validateGenuineBusinessEvidence(evidence, { evidenceFile });
+  assert.ok(errors.some((error) => error.includes('must record the sources this evidence claims')));
+});
+
+test('a review that says nobody reviewed it is refused', (t) => {
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  evidence.productReview.reviewer = 'UNRESOLVED';
+  assert.ok(validateGenuineBusinessEvidence(evidence, { evidenceFile })
+    .some((error) => error.includes('productReview.reviewer must name who reviewed it')));
+
+  const second = acceptanceFixture(t);
+  second.evidence.productReview.notes = `TBD ${'.'.repeat(90)}`;
+  assert.ok(validateGenuineBusinessEvidence(second.evidence, { evidenceFile: second.evidenceFile })
+    .some((error) => error.includes('productReview.notes must record what was judged')));
+});
+
+test('a one-line note is not a product review', (t) => {
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  evidence.productReview.notes = 'Looks fine.';
+  assert.ok(validateGenuineBusinessEvidence(evidence, { evidenceFile }).length > 0);
+});
+
+test('a zero-edit run stays legal, because that is the long-run target', (t) => {
+  const { evidence, evidenceFile } = acceptanceFixture(t);
+  evidence.manualEdits = { total: 0, targetMaximum: 20, entries: [] };
   assert.deepEqual(validateGenuineBusinessEvidence(evidence, { evidenceFile }), []);
 });

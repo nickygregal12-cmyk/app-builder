@@ -54,13 +54,23 @@ const PROJECT_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
  */
 export const BROKER_OPERATIONS = Object.freeze({
   'project.list': async (service) => ({ projects: service.listProjects() }),
-  'project.create': async (service, { args }) => ({
-    project: service.createProject({
-      manifest: args.manifest,
-      knowledgePack: args.knowledgePack ?? null,
-      id: args.id ?? null,
-    }),
-  }),
+  // Creation is the one mutating operation that names a project the grant's
+  // scope check cannot have compared against, because the project does not
+  // exist yet. Bind it explicitly: an attempt may create the project its grant
+  // names and no other, or a grant for one project would be a licence to write
+  // durable state under any name the task chose.
+  'project.create': async (service, { projectId, args }) => {
+    if (args.id !== undefined && args.id !== null && args.id !== projectId) {
+      throw new Error(`This attempt may only create ${projectId}, not ${args.id}.`);
+    }
+    return {
+      project: service.createProject({
+        manifest: args.manifest,
+        knowledgePack: args.knowledgePack ?? null,
+        id: projectId,
+      }),
+    };
+  },
   'project.read': async (service, { projectId }) => ({ project: service.getProject(projectId) }),
   'project.manifest.read': async (service, { projectId }) => ({ manifest: service.getManifest(projectId) }),
   'project.knowledge.read': async (service, { projectId }) => ({ knowledgePack: service.getKnowledgePack(projectId) }),
@@ -100,8 +110,8 @@ export const BROKER_OPERATIONS = Object.freeze({
   'integration.status.read': async (service) => ({ integrations: service.integrationStatus() }),
 });
 
-/** Operations that address one existing project and must be given a valid id. */
-const PROJECT_SCOPED = new Set(Object.keys(BROKER_OPERATIONS).filter((name) => name !== 'project.list' && name !== 'project.create' && name !== 'integration.status.read'));
+/** Operations that address one project and must resolve to a valid bounded id. */
+const PROJECT_SCOPED = new Set(Object.keys(BROKER_OPERATIONS).filter((name) => name !== 'project.list' && name !== 'integration.status.read'));
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -152,21 +162,26 @@ export function createAgentBroker({ service, registry, secret, clock = () => new
    * only exists in a log line cannot be reviewed after the session ends, and
    * the whole point of this boundary is that it is auditable afterwards.
    */
-  async function record(decision, grant) {
-    const entry = createAuthorisationDecision({ decision, grant }, clock().toISOString());
-    const projectId = grant?.projectId ?? null;
-    if (!projectId || !service.getProject(projectId)) return entry;
+  async function append(entry) {
+    const projectId = entry.projectId;
+    if (!projectId || !service.getProject(projectId)) return false;
     try {
       await service.recordOperationalEvent(
         projectId,
         entry.allowed ? 'agent.operation.allowed' : 'agent.operation.denied',
         entry,
       );
+      return true;
     } catch {
       // A project that vanished between authorisation and recording must not
       // turn a deny into a throw the caller could read as a different outcome.
+      return false;
     }
-    return entry;
+  }
+
+  async function record(decision, grant) {
+    const entry = createAuthorisationDecision({ decision, grant }, clock().toISOString());
+    return { entry, recorded: await append(entry) };
   }
 
   async function handle(request, response) {
@@ -210,7 +225,7 @@ export function createAgentBroker({ service, registry, secret, clock = () => new
     }
 
     spent.set(grant.attemptId, (spent.get(grant.attemptId) ?? 0) + 1);
-    const entry = await record(decision, grant);
+    const { entry, recorded } = await record(decision, grant);
 
     const projectId = requestedProject ?? grant.projectId;
     if (PROJECT_SCOPED.has(operation) && !PROJECT_ID.test(projectId)) {
@@ -219,6 +234,9 @@ export function createAgentBroker({ service, registry, secret, clock = () => new
 
     try {
       const value = await BROKER_OPERATIONS[operation](service, { projectId, args: body?.arguments ?? {} });
+      // A creation authorised before its project existed would otherwise be the
+      // one dispatch with no durable record of who asked for it.
+      if (!recorded) await append(entry);
       return send(response, 200, { operation, decisionId: entry.id, result: value });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

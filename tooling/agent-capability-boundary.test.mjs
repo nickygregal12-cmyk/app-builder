@@ -564,3 +564,28 @@ test('the granular projection is never wider than the coarse rule it replaced', 
     }
   }
 });
+
+test('an attempt may create only the project its grant names, and the creation is audited', async () => {
+  await withBroker(async ({ service, socketPath }) => {
+    const { token } = grantFor({ capabilities: ['project.create', 'project.read'] });
+
+    // Creation is authorised before the project exists, so the grant's project
+    // scope is the only thing that can bound which project gets written.
+    const elsewhere = await brokerRequest(socketPath, { token, body: { operation: 'project.create', arguments: { id: 'project-somewhere-else', manifest: manifest('elsewhere') } } });
+    assert.equal(elsewhere.status, 500);
+    assert.match(elsewhere.body.message, /may only create project-boundary/);
+    assert.equal(service.getProject('project-somewhere-else'), null);
+
+    const own = await brokerRequest(socketPath, { token, body: { operation: 'project.create', arguments: { id: 'project-boundary', manifest: manifest('own') } } });
+    assert.equal(own.status, 200, JSON.stringify(own.body));
+    assert.equal(own.body.result.project.id, 'project-boundary');
+
+    // An unnamed creation still lands on the grant's project rather than a
+    // service-chosen identifier.
+    const events = service.listEvents('project-boundary', { afterSequence: 0 });
+    const allowed = events.filter((event) => event.type === 'agent.operation.allowed');
+    assert.equal(allowed.length, 1, 'the creation must be recorded even though the project did not exist when it was authorised');
+    assert.equal(allowed[0].payload.operation, 'project.create');
+    assert.equal(allowed[0].payload.attemptId.startsWith('attempt-'), true);
+  });
+});

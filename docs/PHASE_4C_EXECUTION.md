@@ -37,9 +37,31 @@ This is intentionally an intermediate step rather than a new schema/registry exp
 - invalid/non-authoritative compiler output fails closed;
 - no new runtime dependency is added to generated repositories.
 
-## 4C.2 — Persist the portable design artifact
+## 4C.2 — Persist the portable design artifact — done
 
-Once 4C.1 is green, persist the compiled design system into the ordinary generated repository, preferably under the existing `.product/` provenance area rather than inventing a second metadata root.
+The compiled design system is persisted into the ordinary generated repository at
+`.product/design-system.json`, the product-facing summary area described in
+`docs/ARCHITECTURE.md`. `.app-builder/` remains the factory's build record; the two are
+not duplicated, because `project.json` and `handover.json` name the portable artifact by
+path rather than repeating it.
+
+`writeDesignArtifacts` in `tooling/lib/design-choices.mjs` is the single writer: it
+compiles the DesignSystemSpec once and writes `.product/design-system.json`,
+`src/generated/brand.css` and `src/generated/design.ts` from that one compilation.
+Initial generation (`tooling/lib/generator.mjs`) and a live Console design edit
+(`FactoryService.rewriteWorkspaceDesign`) both call it, so the stylesheet cannot describe
+a design the portable artifact does not.
+
+`tooling/design-system-portability.test.mjs` proves the artifact equals the compiler
+output for the live design, that the stylesheet renders from the persisted spec, that a
+live edit rewrites both, that clearing a human override returns that control to the
+factory-composed value, that a rebuild reproduces the artifact from durable choices
+without rewriting the previous workspace, that recipe reconciliation does not reset it,
+and that no `@app-builder/*` dependency reaches the generated package.
+
+The shape is not yet a contract family. It has one producer and one renderer inside the
+factory; promoting it to a schema is worth doing when a second consumer needs to validate
+it at a boundary.
 
 Target shape should include at least:
 
@@ -59,29 +81,75 @@ Acceptance must prove that:
 
 Only after the shape has a real consumer and stable semantics should it be promoted to a formal contract family/schema if that boundary is useful.
 
-## 4C.3 — BrandSpec, ArtDirectionPlan and MotionContract
+## 4C.3 — BrandSpec, ArtDirectionPlan and MotionContract — done
 
-Introduce these one at a time, not as a batch of decorative JSON.
+All three landed together because all three compile into the same token set and the same
+`DesignSystemSpec`; splitting them would have meant landing a contract whose only consumer
+was the next pull request. `tooling/art-direction.test.mjs` covers them.
 
-### BrandSpec
+### BrandSpec — live
 
-Only fields with a concrete compiler/policy effect become executable. Examples include approved palette roles, typography intent that maps to actual font/token configuration, logo/asset publication policy and explicit brand constraints.
+`tooling/lib/brand-spec.mjs`. Resolves the two presentation inputs the design system
+compiles: the accent colour and the typography voice. It does not extract anything — Phase 3
+already records the hex colours and font families a company's own pages use, with sources,
+in the knowledge pack's `brand` block, and this reads that rather than adding a second
+extraction pipeline.
 
-### ArtDirectionPlan
+Three origins stay apart, and `sourceIds` is non-empty only for an observation:
 
-Machine-readable dimensions should include the planned 4C fields:
+- `supplied` — stated in the manifest (`brand.accentColor`, `brand.typographyVoice`);
+- `observed` — read from the company's material, with the sources named;
+- `derived` — the factory's own default, with nothing behind it.
 
-- `layoutVariance`;
-- `motionIntensity`;
-- `informationDensity`;
-- `visualDistinctiveness`;
-- `restraintLevel`.
+An observed colour has to actually be a colour (a channel spread of at least 24) and carry a
+readable label, so the greys and near-whites a stylesheet is full of cannot stand in for a
+brand. A font family nothing here can resolve is not guessed at: the voice stays derived.
+Every voice is a system stack, so a serif business reads as one without the generated app
+downloading a font. A human accent override is recorded as `accent.overridden` beside the
+unchanged origin, so choosing a colour never rewrites what the sources showed.
 
-A field is not selectable until a composer/selector/DesignLint rule actually consumes it.
+Consumers: `--color-accent`, `--font-display`, `--font-body`, all read by
+`templates/react-vite-neutral/files/src/styles.css`.
 
-### MotionContract
+### ArtDirectionPlan — live
 
-Motion values must map to real transition/animation parameters and reduced-motion behaviour. A motion label that changes no output is rejected by the same issue #58 invariant.
+`tooling/lib/art-direction.mjs`. The intent is declared per layout pattern in
+`config/layout-patterns.json`; the plan is compiled from it. Each dimension has a consumer:
+
+| dimension | consumer | observable behaviour |
+| --- | --- | --- |
+| `informationDensity` | the existing density control | `--section-space` |
+| `layoutVariance` | `--section-alt-ground` | whether, and how strongly, a page changes ground as it scrolls |
+| `visualDistinctiveness` | `--hero-scale`, `--display-measure` | how much room the opening claims |
+| `motionIntensity` | the MotionContract | every motion token |
+| `restraintLevel` | the ceiling in `compileArtDirectionPlan` | reduces the three above and records each cut in `clamped[]` |
+
+`informationDensity` is named rather than duplicated: the density control already is that
+dimension, so there is one place a rhythm can be changed. `restraintLevel` can only reduce —
+a ceiling never raises a quiet plan — and what it cut is part of the output rather than a log
+line, so a reviewer can tell a build that was asked to be quiet from one that was cut back.
+
+The six canonical project types now differ in composition rather than colour: an internal
+tool sits on one ground with a 1.05 hero, a content site changes ground on the muted surface,
+a marketing site opens at 1.65.
+
+### MotionContract — live
+
+`tooling/lib/motion-contract.mjs`. Four bands (`none`, `subtle`, `moderate`, `expressive`)
+replacing the `.18s`, `.5s` and `1.03` scale that were typed into the stylesheet. Each band
+compiles `--motion-duration-fast`, `--motion-duration-slow`, `--motion-ease`,
+`--motion-hover-lift` and `--motion-decorative-scale`, and every transition in the template
+reads them.
+
+`prefers-reduced-motion` is not a band. It is required at every intensity and the template's
+reduced-motion block stands regardless. Decorative movement — movement with no interaction
+behind it — is refused below `moderate` rather than merely made small.
+
+### Not delivered here
+
+No Console control was added for art direction or motion. The dimensions are factory
+decisions today; exposing them as human choices belongs with the presentation registry that
+decides what a person is offered.
 
 ## 4C.4 — Component Manifest Protocol and Presentation Registry
 

@@ -13,11 +13,17 @@
  *
  * Phase 4C adds a compiler IR named DesignSystemSpec between those decisions
  * and CSS. It is derived from the existing Design Contract rather than becoming
- * another design authority. Existing generation and live Console edits already
- * call `renderBrandCss`, so routing that function through the spec gives the
- * declaration a real renderer consumer before any registry or extra UI is
- * allowed to grow around it.
+ * another design authority. Generation and live Console edits both reach the
+ * stylesheet through that compiler, so the declaration has a real renderer
+ * consumer before any registry or extra UI is allowed to grow around it, and
+ * `writeDesignArtifacts` is the one place a build's design becomes files.
  */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { DEFAULT_ART_DIRECTION, artDirectionTokens, compileArtDirectionPlan } from './art-direction.mjs';
+import { brandTokens, compileBrandSpec } from './brand-spec.mjs';
+import { motionTokens } from './motion-contract.mjs';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -123,11 +129,17 @@ export function applyDesignChoices(design, choices = {}) {
  */
 export function compileDesignTokens(design) {
   const density = DENSITIES[design.density] ?? DENSITIES.comfortable;
+  const brand = design.brand ?? compileBrandSpec();
+  const artDirection = design.artDirection ?? compileArtDirectionPlan(DEFAULT_ART_DIRECTION);
   return {
-    '--color-accent': design.accentColor,
+    // The accent stays the design control's value, so a person who picks a
+    // colour still overrides whatever the brand resolved.
+    ...brandTokens(brand, design.accentColor),
     '--layout-max-width': design.maxWidth,
     '--layout-radius': design.radius,
     '--section-space': density.sectionSpace,
+    ...artDirectionTokens(artDirection),
+    ...motionTokens(artDirection.motion),
   };
 }
 
@@ -140,6 +152,8 @@ export function compileDesignTokens(design) {
  * a second source of design truth.
  */
 export function compileDesignSystemSpec(design) {
+  const brand = design.brand ?? compileBrandSpec();
+  const artDirection = design.artDirection ?? compileArtDirectionPlan(DEFAULT_ART_DIRECTION);
   return {
     schemaVersion: 1,
     authority: 'design-contract',
@@ -154,6 +168,18 @@ export function compileDesignSystemSpec(design) {
       radius: design.radius,
       density: design.density,
     },
+    // Where the accent came from, and whether a person then chose another.
+    // Recording both is what lets a review tell an observation from a decision.
+    brand: {
+      ...brand,
+      accent: { ...brand.accent, overridden: design.accentColor !== brand.accent.value },
+    },
+    artDirection: {
+      ...artDirection,
+      // The density control is this dimension. It is named here rather than
+      // duplicated, so there is one place a rhythm can be changed.
+      dimensions: { ...artDirection.dimensions, informationDensity: design.density },
+    },
     tokens: compileDesignTokens(design),
   };
 }
@@ -167,7 +193,27 @@ export function renderDesignSystemCss(spec) {
   return `:root {\n${entries.join('\n')}\n}\n`;
 }
 
-/** Existing product path: generation and live Console edits now compile through DesignSystemSpec. */
-export function renderBrandCss(design) {
-  return renderDesignSystemCss(compileDesignSystemSpec(design));
+/** Where the compiled design travels inside the ordinary generated repository. */
+export const DESIGN_SYSTEM_SPEC_PATH = '.product/design-system.json';
+
+const renderDesignModule = (design) => `export const design = ${JSON.stringify(design, null, 2)} as const;\n`;
+
+/**
+ * Write everything a build derives from one design, from one compilation.
+ *
+ * Generation and a live Console edit are two paths to the same three files, and
+ * they drifted before: the service rendered `design.ts` from its own copy of the
+ * template string. Compiling once here is what keeps the portable spec, the
+ * stylesheet and the module describing the same design rather than three
+ * artifacts that merely tend to agree.
+ */
+export function writeDesignArtifacts(projectDir, design) {
+  const root = path.resolve(projectDir);
+  const spec = compileDesignSystemSpec(design);
+  fs.mkdirSync(path.join(root, 'src/generated'), { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(root, DESIGN_SYSTEM_SPEC_PATH)), { recursive: true });
+  fs.writeFileSync(path.join(root, DESIGN_SYSTEM_SPEC_PATH), `${JSON.stringify(spec, null, 2)}\n`);
+  fs.writeFileSync(path.join(root, 'src/generated/brand.css'), renderDesignSystemCss(spec));
+  fs.writeFileSync(path.join(root, 'src/generated/design.ts'), renderDesignModule(design));
+  return spec;
 }

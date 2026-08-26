@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { applyDesignChoices, assertAccentColor, renderBrandCss } from './design-choices.mjs';
+import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, writeDesignArtifacts } from './design-choices.mjs';
+import { artDirectionIntent, compileArtDirectionPlan } from './art-direction.mjs';
+import { compileBrandSpec } from './brand-spec.mjs';
 
 export function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 export function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
@@ -104,15 +106,6 @@ function resolveRecipeClosure(recipeIds, templateId, catalog, factoryRoot, selec
 // A brand accent that cannot carry its own label is refused rather than
 // shipped, so an unusable one from intake falls back to the default instead of
 // producing unreadable buttons.
-function requestedAccent(manifest) {
-  try {
-    return assertAccentColor(manifest.brand?.accentColor);
-  } catch {
-    return DEFAULT_ACCENT;
-  }
-}
-
-const DEFAULT_ACCENT = '#315b72';
 
 /**
  * What the factory selects, and what a person chose over it.
@@ -121,11 +114,18 @@ const DEFAULT_ACCENT = '#315b72';
  * selection, and that is only recoverable if the selection was recorded rather
  * than overwritten.
  */
-function selectDesign(manifest, catalog, designChoices = {}) {
+function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null) {
   const patternId = catalog.layouts.projectTypeDefaults?.[manifest.project.type];
   const pattern = catalog.layouts.patterns?.[patternId];
   if (!pattern) throw new Error(`No layout pattern for project type ${manifest.project.type}.`);
-  const composed = { patternId, ...pattern, accentColor: requestedAccent(manifest) };
+  // The brand a build presents is resolved from what the company stated and
+  // what Phase 3 already observed in its own material, not extracted again.
+  // The pattern's art-direction intent becomes a plan rather than travelling
+  // on the design as raw config nobody compiled.
+  const { artDirection: _intent, ...patternDesign } = pattern;
+  const brand = compileBrandSpec({ manifest, knowledgePack });
+  const artDirection = compileArtDirectionPlan(artDirectionIntent(pattern));
+  const composed = { patternId, ...patternDesign, accentColor: brand.accent.value, brand, artDirection };
   return { composed, design: applyDesignChoices(composed, designChoices) };
 }
 
@@ -137,7 +137,7 @@ function selectScenarios(manifest, catalog) {
   return [...new Set(values)];
 }
 
-export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {} } = {}) {
+export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null } = {}) {
   const templateId = catalog.templates.projectTypeDefaults?.[manifest.project.type];
   const templateEntry = catalog.templates.templates?.[templateId];
   if (!templateId || !templateEntry || templateEntry.status !== 'ready') throw new Error(`No ready template for project type ${manifest.project.type}.`);
@@ -158,7 +158,7 @@ export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), cat
     recipes: resolveRecipeClosure(recipeIds, template.id, catalog, factoryRoot, adapterIds),
     enabledModules,
     missingModules,
-    ...selectDesign(manifest, catalog, designChoices),
+    ...selectDesign(manifest, catalog, designChoices, knowledgePack),
     scenarios: selectScenarios(manifest, catalog),
   };
 }
@@ -175,7 +175,6 @@ function renderRecipeRegistry(recipes) {
 }
 
 const renderProject = (project) => `export const project = ${JSON.stringify({ name: project.name, slug: project.slug, type: project.type, primaryGoal: project.primaryGoal }, null, 2)} as const;\n`;
-const renderDesign = (design) => `export const design = ${JSON.stringify(design, null, 2)} as const;\n`;
 function renderScenarios(scenarios) {
   const values = JSON.stringify(scenarios);
   return `export const supportedScenarios = ${values} as const;\nexport type AppScenario = (typeof supportedScenarios)[number];\n`;
@@ -245,15 +244,17 @@ function writeGeneratedState(projectDir, manifest, plan, templatePackage, packag
   fs.mkdirSync(generated, { recursive: true });
   fs.writeFileSync(path.join(generated, 'project.ts'), renderProject(manifest.project));
   fs.writeFileSync(path.join(generated, 'recipes.tsx'), renderRecipeRegistry(plan.recipes));
-  fs.writeFileSync(path.join(generated, 'design.ts'), renderDesign(plan.design));
-  fs.writeFileSync(path.join(generated, 'brand.css'), renderBrandCss(plan.design));
   fs.writeFileSync(path.join(generated, 'scenarios.ts'), renderScenarios(plan.scenarios));
+  // The portable spec, the stylesheet and the design module come from one
+  // compilation, so a generated repository cannot carry three descriptions of
+  // its own design that disagree.
+  writeDesignArtifacts(projectDir, plan.design);
   writeJson(path.join(projectDir, '.app-builder/manifest.json'), manifest);
-  writeJson(path.join(projectDir, '.app-builder/project.json'), { schemaVersion: 1, template: { id: plan.template.id, version: plan.template.version }, projectType: manifest.project.type, design: plan.design, composedDesign: plan.composed ?? plan.design, scenarios: plan.scenarios });
+  writeJson(path.join(projectDir, '.app-builder/project.json'), { schemaVersion: 1, template: { id: plan.template.id, version: plan.template.version }, projectType: manifest.project.type, design: plan.design, composedDesign: plan.composed ?? plan.design, designSystemSpec: DESIGN_SYSTEM_SPEC_PATH, scenarios: plan.scenarios });
   writeJson(path.join(projectDir, '.app-builder/adapters.json'), { schemaVersion: 1, installed: plan.adapters.map((adapter) => ({ id: adapter.id, kind: adapter.kind, version: adapter.version })) });
   writeJson(path.join(projectDir, '.app-builder/recipes.json'), { schemaVersion: 1, installed: plan.recipes.map((recipe) => ({ id: recipe.id, module: recipe.module, version: recipe.version })), packageManaged, databaseFragments });
   writeJson(path.join(projectDir, '.app-builder/template-package.json'), templatePackage);
-  writeJson(path.join(projectDir, '.app-builder/handover.json'), { schemaVersion: 1, project: manifest.project, template: { id: plan.template.id, version: plan.template.version }, adapters: plan.adapters.map(({ id, kind, version }) => ({ id, kind, version })), recipes: plan.recipes.map(({ id, module, version }) => ({ id, module, version })), design: plan.design, scenarios: plan.scenarios, aiBudget: manifest.aiBudget, databaseFragments });
+  writeJson(path.join(projectDir, '.app-builder/handover.json'), { schemaVersion: 1, project: manifest.project, template: { id: plan.template.id, version: plan.template.version }, adapters: plan.adapters.map(({ id, kind, version }) => ({ id, kind, version })), recipes: plan.recipes.map(({ id, module, version }) => ({ id, module, version })), design: plan.design, designSystemSpec: DESIGN_SYSTEM_SPEC_PATH, scenarios: plan.scenarios, aiBudget: manifest.aiBudget, databaseFragments });
 }
 
 function writeHandover(projectDir, manifest, plan, databaseFragments) {
@@ -269,6 +270,7 @@ function writeHandover(projectDir, manifest, plan, databaseFragments) {
     `- Goal: ${manifest.project.primaryGoal}`,
     `- Template: ${plan.template.id} ${plan.template.version}`,
     `- Layout: ${plan.design.patternId} (${plan.design.label})`,
+    '- Portable design system: `.product/design-system.json`',
     `- AI budget mode: ${manifest.aiBudget.mode}`,
     '- App Builder runtime dependency: none',
     '',
@@ -317,11 +319,11 @@ function writeHandover(projectDir, manifest, plan, databaseFragments) {
 function writeReadme(projectDir, manifest, plan) {
   const adapterLines = plan.adapters.length ? plan.adapters.map((adapter) => `- ${adapter.id} ${adapter.version} (${adapter.kind})`).join('\n') : '- none';
   const recipeLines = plan.recipes.length ? plan.recipes.map((recipe) => `- ${recipe.id} ${recipe.version}`).join('\n') : '- none';
-  fs.writeFileSync(path.join(projectDir, 'README.md'), `# ${manifest.project.name}\n\n${manifest.project.primaryGoal}\n\n## Generated foundation\n\n- Template: ${plan.template.id} ${plan.template.version}\n- Project type: ${manifest.project.type}\n- Layout: ${plan.design.patternId}\n- App Builder runtime dependency: none\n\n## Infrastructure adapters\n\n${adapterLines}\n\n## Installed recipes\n\n${recipeLines}\n\nSee \`docs/HANDOVER.md\` for environment, database, deployment and scenario notes.\n\n## Commands\n\n\`\`\`bash\nnpm install\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n`);
+  fs.writeFileSync(path.join(projectDir, 'README.md'), `# ${manifest.project.name}\n\n${manifest.project.primaryGoal}\n\n## Generated foundation\n\n- Template: ${plan.template.id} ${plan.template.version}\n- Project type: ${manifest.project.type}\n- Layout: ${plan.design.patternId}\n- Portable design system: \`.product/design-system.json\`\n- App Builder runtime dependency: none\n\n## Infrastructure adapters\n\n${adapterLines}\n\n## Installed recipes\n\n${recipeLines}\n\nSee \`docs/HANDOVER.md\` for environment, database, deployment and scenario notes.\n\n## Commands\n\n\`\`\`bash\nnpm install\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n`);
 }
 
-export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {} } = {}) {
-  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices });
+export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null } = {}) {
+  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices, knowledgePack });
   if (plan.missingModules.length) throw new Error(`No ready deterministic recipe for enabled module(s): ${plan.missingModules.join(', ')}.`);
   const out = path.resolve(outputDir);
   if (fs.existsSync(out)) throw new Error(`Refusing to overwrite existing directory: ${out}`);

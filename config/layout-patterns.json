@@ -9,11 +9,83 @@
     "ai-app": "workspace"
   },
   "patterns": {
-    "public-marketing": {"label":"Public marketing","shellClass":"layout-public","maxWidth":"72rem","density":"comfortable","radius":"1rem"},
-    "app-sidebar": {"label":"Application sidebar","shellClass":"layout-app-sidebar","maxWidth":"90rem","density":"comfortable","radius":"0.875rem"},
-    "app-focused": {"label":"Focused application","shellClass":"layout-app-focused","maxWidth":"72rem","density":"comfortable","radius":"1rem"},
-    "app-dense": {"label":"Dense internal tool","shellClass":"layout-app-dense","maxWidth":"96rem","density":"compact","radius":"0.625rem"},
-    "editorial": {"label":"Editorial content","shellClass":"layout-editorial","maxWidth":"68rem","density":"relaxed","radius":"0.75rem"},
-    "workspace": {"label":"AI workspace","shellClass":"layout-workspace","maxWidth":"96rem","density":"comfortable","radius":"0.875rem"}
+    "public-marketing": {
+      "label": "Public marketing",
+      "shellClass": "layout-public",
+      "maxWidth": "72rem",
+      "density": "comfortable",
+      "radius": "1rem",
+      "artDirection": {
+        "layoutVariance": "alternating",
+        "motionIntensity": "moderate",
+        "visualDistinctiveness": "expressive",
+        "restraintLevel": "medium"
+      }
+    },
+    "app-sidebar": {
+      "label": "Application sidebar",
+      "shellClass": "layout-app-sidebar",
+      "maxWidth": "90rem",
+      "density": "comfortable",
+      "radius": "0.875rem",
+      "artDirection": {
+        "layoutVariance": "uniform",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "balanced",
+        "restraintLevel": "high"
+      }
+    },
+    "app-focused": {
+      "label": "Focused application",
+      "shellClass": "layout-app-focused",
+      "maxWidth": "72rem",
+      "density": "comfortable",
+      "radius": "1rem",
+      "artDirection": {
+        "layoutVariance": "alternating",
+        "motionIntensity": "moderate",
+        "visualDistinctiveness": "balanced",
+        "restraintLevel": "medium"
+      }
+    },
+    "app-dense": {
+      "label": "Dense internal tool",
+      "shellClass": "layout-app-dense",
+      "maxWidth": "96rem",
+      "density": "compact",
+      "radius": "0.625rem",
+      "artDirection": {
+        "layoutVariance": "uniform",
+        "motionIntensity": "moderate",
+        "visualDistinctiveness": "restrained",
+        "restraintLevel": "high"
+      }
+    },
+    "editorial": {
+      "label": "Editorial content",
+      "shellClass": "layout-editorial",
+      "maxWidth": "68rem",
+      "density": "relaxed",
+      "radius": "0.75rem",
+      "artDirection": {
+        "layoutVariance": "varied",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "balanced",
+        "restraintLevel": "medium"
+      }
+    },
+    "workspace": {
+      "label": "AI workspace",
+      "shellClass": "layout-workspace",
+      "maxWidth": "96rem",
+      "density": "comfortable",
+      "radius": "0.875rem",
+      "artDirection": {
+        "layoutVariance": "uniform",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "balanced",
+        "restraintLevel": "high"
+      }
+    }
   }
 }

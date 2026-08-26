@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "currentPhase": "4C",
-  "currentStage": "Phase 4C — Design intelligence and presentation-system hardening",
+  "currentStage": "Phase 4C — Design System Registry, BrandSpec and art direction",
   "activeStage": "Phase 4C.1 — establish compiler-backed DesignSystemSpec behaviour on the existing design authority, then persist the portable artifact before expanding the contract surface",
   "status": "active",
   "completedPhases": [

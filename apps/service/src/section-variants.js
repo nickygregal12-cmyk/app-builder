@@ -1,13 +1,46 @@
+import { compilePresentationRegistry, loadPresentationManifest, readyPresentation } from '../../../tooling/lib/presentation-registry.mjs';
+
 /**
  * Presentation choices.
  *
  * A section can be shown more than one way, but only in the ways its template
  * actually implements. The template declares those; anything else is refused
  * rather than written into the composition as a class that styles nothing.
+ *
+ * The choice goes through the Presentation Registry rather than straight to the
+ * template, so a component that is described but not yet ready is offered to
+ * nobody. A registry that could hand a person a presentation the build cannot
+ * render would be worse than no registry.
  */
+const registries = new WeakMap();
+
+/**
+ * The registry for a build's own template.
+ *
+ * Cached per template object: `sectionVariantOptions` asks once per section,
+ * and re-reading and re-compiling the manifest each time would turn one file
+ * read into one per section of the build.
+ */
+function presentationRegistry(template) {
+  if (!template?.presentation) return null;
+  if (registries.has(template)) return registries.get(template);
+  let registry = null;
+  try {
+    registry = compilePresentationRegistry({ template, manifest: loadPresentationManifest() });
+  } catch {
+    // A registry that will not compile is a factory fault, not a reason to
+    // offer presentations nothing has checked.
+    registry = null;
+  }
+  registries.set(template, registry);
+  return registry;
+}
+
 export function componentVariants(template, sectionType) {
   const component = template?.presentation?.components?.[sectionType];
-  return { component: component ?? null, variants: component?.variants ?? [] };
+  if (!component) return { component: null, variants: [] };
+  const entry = readyPresentation(presentationRegistry(template), sectionType);
+  return entry ? { component, variants: entry.variants } : { component: null, variants: [] };
 }
 
 /**

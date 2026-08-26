@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "currentPhase": "4C",
   "currentStage": "Phase 4C \u2014 Design System Registry, BrandSpec and art direction",
-  "activeStage": "Phase 4C.4 \u2014 seed a Presentation Registry and Component Manifest from the presentation components the factory actually renders, with behavioural consumption tests",
+  "activeStage": "Phase 4C.5 \u2014 add deterministic DesignLint ahead of expensive visual review and make its report part of rendered visual evidence",
   "status": "active",
   "completedPhases": [
     "0",
@@ -38,16 +38,16 @@
     "4B.3c",
     "4C.1",
     "4C.2",
-    "4C.3"
+    "4C.3",
+    "4C.4"
   ],
   "activeWork": [
     "phase-4c-design-intelligence",
-    "presentation-registry-component-manifest",
+    "deterministic-design-lint",
     "behavioural-consumer-invariants"
   ],
   "outstandingProductGates": [
-    "Phase 4C \u2014 seed Component Manifest and Presentation Registry from presentation components the factory actually renders, with runtime requirements and behavioural-consumption tests",
     "Phase 4C \u2014 add deterministic DesignLint ahead of expensive visual review and make its report part of rendered visual evidence"
   ],
-  "nextStage": "Phase 4C.4. Phase 3.8E passed on 2026-08-26 using the genuine nbm Construction Cost Consultants run. The Factory runtime ingested the owner-approved workbook plus eight pages from https://www.nbm.bz/, generated and verified a source-backed v2 workspace, captured rendered evidence, and the human product review passed factual accuracy, brand fit, visual quality, responsive quality and accessibility with 0 meaningful manual edits. The final evidence validator passed with 6 predicted edits, 0 blockers and 14 recorded evidence gaps; evidence.json SHA-256 was a3b3baf5e67c0cb369da6f6329da3088e8eb8df4d27e1e13497ff8b7bccee990. 4C.1 routed the Design Contract through a DesignSystemSpec compiler with a real renderer consumer; 4C.2 persisted that compiled spec as .product/design-system.json in the ordinary generated repository from one shared writer; 4C.3 added BrandSpec, ArtDirectionPlan and MotionContract, each compiling into that same spec with template consumers, so the six canonical project types now differ in typography, ground, opening and movement rather than only in accent colour. Next seed a Presentation Registry and Component Manifest from the twelve presentation components the template actually renders, then add deterministic DesignLint ahead of visual review. Broad autonomous runtime work remains separately gated by the runtime-to-factory capability boundary."
+  "nextStage": "Phase 4C.5. Phase 3.8E passed on 2026-08-26 using the genuine nbm Construction Cost Consultants run. The Factory runtime ingested the owner-approved workbook plus eight pages from https://www.nbm.bz/, generated and verified a source-backed v2 workspace, captured rendered evidence, and the human product review passed factual accuracy, brand fit, visual quality, responsive quality and accessibility with 0 meaningful manual edits. The final evidence validator passed with 6 predicted edits, 0 blockers and 14 recorded evidence gaps; evidence.json SHA-256 was a3b3baf5e67c0cb369da6f6329da3088e8eb8df4d27e1e13497ff8b7bccee990. 4C.1 routed the Design Contract through a DesignSystemSpec compiler; 4C.2 persisted that compiled spec as .product/design-system.json in the ordinary generated repository from one shared writer; 4C.3 added BrandSpec, ArtDirectionPlan and MotionContract, each compiling into that spec with template consumers; 4C.4 compiled a Presentation Registry from the twelve components the template actually renders, which caught a section whose recipe could be missing and three composer-named variants nothing rendered. Next add deterministic DesignLint over the compiled composition and design evidence, ahead of any AI visual review, and make its report part of rendered evidence. Storybook was evaluated at 4C.4 and not adopted. Broad autonomous runtime work remains separately gated by the runtime-to-factory capability boundary."
 }

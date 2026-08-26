@@ -3,6 +3,7 @@ import path from 'node:path';
 import { assertContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, composeProject, deriveElementIdentities, stripContentOverrides, stripSectionVariants } from '../../packages/composition/src/index.js';
 import { generateProject } from './generator.mjs';
+import { auditComposedPresentation, compilePresentationRegistry, loadPresentationManifest } from './presentation-registry.mjs';
 
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -107,6 +108,17 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   const composition = assertContract('composition', applySectionVariants(applyContentOverrides(composeProject({ manifest, knowledgePack, assetDecisions }), contentOverrides), sectionVariants));
   const out = path.resolve(outputDir);
   const assets = materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir: out, assetDecisions });
+  // A section whose presentation the build cannot actually satisfy still
+  // renders — as a heading with nothing under it. The composer and the renderer
+  // agreed about `enquiry-form` only because both happened to key off the same
+  // module name in two separate places; the registry makes that enforced.
+  if (plan.template.presentation) {
+    const registry = compilePresentationRegistry({ template: plan.template, manifest: loadPresentationManifest(factoryRoot) });
+    const problems = auditComposedPresentation({ registry, composition, recipeIds: plan.recipes.map((recipe) => recipe.id) });
+    if (problems.length) {
+      throw new Error(`Composed presentation is not renderable: ${problems.map((entry) => `${entry.sectionId} (${entry.problem}: ${entry.detail})`).join('; ')}`);
+    }
+  }
   writeJson(path.join(out, '.app-builder/composition.json'), composition);
   fs.mkdirSync(path.join(out, 'src/generated'), { recursive: true });
   fs.writeFileSync(path.join(out, 'src/generated/composition.ts'), renderModule('composition', composition));

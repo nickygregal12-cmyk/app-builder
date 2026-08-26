@@ -151,24 +151,75 @@ No Console control was added for art direction or motion. The dimensions are fac
 decisions today; exposing them as human choices belongs with the presentation registry that
 decides what a person is offered.
 
-## 4C.4 — Component Manifest Protocol and Presentation Registry
+## 4C.4 — Component Manifest Protocol and Presentation Registry — done
 
-Seed from presentation components/section variants the factory actually renders now.
+`config/presentation-manifest.json` and `tooling/lib/presentation-registry.mjs`.
+`tooling/presentation-registry.test.mjs` covers them.
 
-Every manifest entry must describe the real implementation, including:
+The registry is **compiled, not authored**. The template keeps its declaration of each
+component's id, version, binding roles and the variants it renders; the manifest adds only
+what a template cannot express — what renders a component (`template` or `recipe`), what a
+build must have wired for it to render correctly, and which design tokens its own
+appearance depends on. Variants are read from the template rather than restated, so there
+is one place a presentation can be added.
 
-- id/category/purpose;
-- supported project classes;
-- variants and states;
-- responsive rules;
-- accessibility contract;
-- dependencies;
-- token dependencies;
-- runtime requirements;
-- test/accessibility/visual-review status;
-- version.
+Compilation fails closed both ways: a manifest entry naming a component the template does
+not render is refused, and a rendered component nothing describes is refused. That is what
+keeps it from becoming a catalogue of components that do not exist.
 
-The Presentation Registry remains separate from the Capability Registry. A registered presentation must have a renderer/selector path and focused invariant coverage showing that its supported variant produces a real, distinct rendered state.
+It stays separate from the capability registry. Recipes decide what a generated app can
+**do**; this decides how its surfaces may be **shown**. They meet in exactly one place — a
+section whose component a recipe owns — and that meeting is now checkable.
+
+### Consumers, and what they found
+
+**Generation audit.** `generateComposedProject` audits every composed section against the
+registry and refuses a build it cannot render. This caught a real quiet failure: an
+`enquiry-form` section whose `lead-generation` recipe was never installed still renders, as
+a heading with nothing under it. The composer and the renderer agreed only because both
+happened to key off the same module name in two separate places.
+
+**Variant validity.** The same audit caught the composer naming presentations the template
+never implemented — `accent` on a call to action, `prose` on a passage, `panel` on the
+enquiry form. They reached `.app-builder/composition.json`, `src/generated/composition.ts`
+and element identity, and styled nothing. Those sections now compose as `default`. The fix
+is in the composer, not in the artifacts it produced.
+
+**Console offering.** `sectionVariantOptions` and `chooseSectionVariant` go through the
+registry, so a component described but not `ready` is offered to nobody.
+
+**Token dependency.** Every `ready` component declares the tokens its appearance depends on,
+and a test proves each resolves against either the compiled DesignSystemSpec or the
+template's own defaults. A component depending on `--hero-scale` is stating a dependency on
+the design system compiling it; without the check, the compiler could stop emitting it and
+the component would render against an unresolvable property.
+
+### Not in the manifest, deliberately
+
+`accessibilityContract`, `responsiveRules`, `propsSchema`, `examples`, `visualExamples` and
+the review-status fields the protocol names are **not** here. Accessibility is already
+covered behaviourally by the axe gate over a real build, and the rest have no deterministic
+consumer today. DesignLint (4C.5) is the consumer that would give responsive and
+accessibility obligations meaning; they belong there, with rules that read them, rather than
+here as prose nothing checks.
+
+An art-direction dimension list per component is also absent: the token list already states
+which dimensions a component responds to (`--hero-scale` is `visualDistinctiveness`), and
+restating it would be two places to disagree.
+
+An asset requirement on the gallery was written and then removed. A gallery composes with no
+pictures at all where it only points at where the work lives, so the requirement could never
+fail — and a requirement nothing can fail is not a requirement. An unrecognised requirement
+is now reported rather than assumed met, so the manifest cannot quietly declare a dependency
+nothing knows how to check.
+
+### Storybook — evaluated and not adopted
+
+Recorded in `docs/ENGINEERING_QUALITY_PROGRAMME.md`, Stage Q3. The registry enumerates the
+components, the service-managed preview renders the real build, and rendered evidence
+already drives a real browser over real interaction states. Stories would be a second
+declaration of what each component renders, beside the template and the registry. Revisit
+only if Phase 4D's visual regression contracts prove they need per-component isolation.
 
 ## 4C.5 — Deterministic DesignLint
 

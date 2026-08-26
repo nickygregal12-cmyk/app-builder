@@ -19,7 +19,13 @@
  * record them and promote; supply nothing and it reports the promotion as
  * outstanding, which is the honest state.
  *
- *   node tooling/visual-candidate-acceptance.mjs [--verdicts verdicts.json]
+ * The run leaves an ordinary factory state behind at `.app-builder/visual-review`
+ * rather than in a build temp directory, because the evidence exists to be
+ * looked at by somebody who did not produce it. `npm run review:visual-candidates`
+ * points the ordinary Builder Console at exactly that state, so reviewing is
+ * opening a page rather than finding a screenshot in a workspace.
+ *
+ *   node tooling/visual-candidate-acceptance.mjs [--verdicts verdicts.json] [--out dir]
  */
 
 import fs from 'node:fs';
@@ -29,12 +35,20 @@ import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
-const root = path.resolve('.tmp/visual-candidate-acceptance');
 
 function argument(name) {
   const index = process.argv.indexOf(name);
   return index === -1 ? null : process.argv[index + 1] ?? null;
 }
+
+// Durable factory state, not build scratch. `.tmp` says "delete me", and a
+// reviewer told the only copy of the evidence is under a temp directory is
+// being told to hunt through build output. This is the same ordinary state
+// layout the Console already serves, in a place named for what it holds.
+const REVIEW_ROOT = '.app-builder/visual-review';
+const root = path.resolve(argument('--out') ?? REVIEW_ROOT);
+const stateRoot = path.join(root, 'service');
+const workspacesRoot = path.join(root, 'workspaces');
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, stdio: 'pipe', encoding: 'utf8', shell: process.platform === 'win32' });
@@ -48,8 +62,8 @@ function sequenceOf(candidate) {
 fs.rmSync(root, { recursive: true, force: true });
 fs.mkdirSync(root, { recursive: true });
 
-const store = new FactoryStore({ stateRoot: path.join(root, 'service-state') });
-const service = new FactoryService({ store, workspacesRoot: path.join(root, 'workspaces'), factoryRoot: process.cwd() });
+const store = new FactoryStore({ stateRoot });
+const service = new FactoryService({ store, workspacesRoot, factoryRoot: process.cwd() });
 
 try {
   const bundle = JSON.parse(fs.readFileSync(BUNDLE, 'utf8'));
@@ -137,6 +151,14 @@ try {
   fs.writeFileSync(path.join(root, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify(report, null, 2));
   if (!promotion) console.log('\nNo verdict supplied: promotion remains outstanding, which is the honest state rather than a failure.');
+  // Where the evidence is and how to look at it. A run that photographs two
+  // candidates and then says nothing about how to see the photographs has done
+  // the expensive half of the job.
+  console.log('');
+  console.log(`Evidence: ${root}`);
+  console.log(`  report.json, review-packets.json, service/ (durable factory state), workspaces/ (built candidates)`);
+  console.log('Review it in the ordinary Console:');
+  console.log(`  npm run review:visual-candidates   # then open http://127.0.0.1:5173/builder and choose ${report.business}`);
 } finally {
   await service.close();
   store.close();

@@ -5,6 +5,7 @@ import {
   captureVisualCandidateEvidence,
   generateVisualCandidates,
   promoteVisualCandidate,
+  readVisualReviewPacket,
   recordVisualReview,
   chooseSectionVariant,
   decideProjectAsset,
@@ -33,6 +34,7 @@ import {
   type RenderedEvidence,
   type VisualCandidate,
   type VisualCandidateSet,
+  type VisualReviewPacket,
   type SectionVariantOption,
   type SourceGovernanceDecision,
   type SourceReference,
@@ -42,6 +44,7 @@ import {
 import './workspace.css';
 
 type Device = 'desktop' | 'tablet' | 'mobile';
+type StageView = 'preview' | 'compare';
 type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | 'capture-evidence' | null;
 
 const deviceWidth: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
@@ -528,9 +531,15 @@ const UNCOVERED_REASON: Record<string, string> = {
  * The ordinary Console, deliberately, rather than an infinite canvas. What a
  * comparison actually needs is: the candidates side by side at a chosen width,
  * the differences named rather than left to be spotted, what the deterministic
- * checks already settled, and a way to promote exactly one. All of that is a
- * two-column grid and a viewport switch. A canvas is adopted only when this
- * proves it cannot do the job, and it has not.
+ * checks already settled, the questions a rule deliberately does not answer,
+ * and a way to promote exactly one. All of that is a two-column grid and a
+ * viewport switch. A canvas is adopted only when this proves it cannot do the
+ * job, and it has not.
+ *
+ * It renders in the builder stage rather than the activity sidebar. That is not
+ * a cosmetic preference: two full-page captures cropped into a 330px column are
+ * not a comparison, and the surface that could not do the job was the narrow
+ * one, not the ordinary one. The stage is the width the Console already has.
  *
  * The differences are computed and shown rather than implied. "These two look
  * different" is what a reviewer should be checking, not deducing.
@@ -545,7 +554,23 @@ const AXIS_LABELS: Record<string, string> = {
   visualDistinctiveness: 'Opening scale',
   motionIntensity: 'Motion',
   informationDensity: 'Rhythm',
-  responsiveStrategy: 'On a phone',
+};
+
+/**
+ * The responsive plan, field by field, rather than the signature's packed form.
+ *
+ * `responsiveStrategy` exists so two candidates can be compared for equality
+ * cheaply, and `copy-first/disclosure/conversion-first/tighter/as-desktop` is
+ * the right shape for that and the wrong shape for a person. The reviewer is
+ * asked whether the mobile rendering is a designed composition rather than the
+ * desktop one with fewer columns, so the composition is what gets shown.
+ */
+const RESPONSIVE_LABELS: Record<string, string> = {
+  mobileHero: 'Opening on a phone',
+  navigation: 'Navigation',
+  mobileSectionOrder: 'Section order on a phone',
+  mobileDensity: 'Density',
+  mobileMotion: 'Motion',
 };
 
 const GATE_LABELS: Record<string, string> = {
@@ -555,9 +580,34 @@ const GATE_LABELS: Record<string, string> = {
   'not-run': 'Not yet checked',
 };
 
+const SEVERITY_LABELS: Record<string, string> = {
+  violation: 'Blocks promotion',
+  warning: 'You must speak to this',
+  recommendation: 'Take it or leave it',
+};
+
 /** Which axes actually differ across the set, so the table shows differences rather than a dump. */
 function differingAxes(candidates: VisualCandidate[]) {
   return Object.keys(AXIS_LABELS).filter((axis) => new Set(candidates.map((candidate) => String(candidate.signature.axes[axis] ?? ''))).size > 1);
+}
+
+/** The same, for the responsive plan the template actually reads. */
+function differingResponsive(candidates: VisualCandidate[]) {
+  return Object.keys(RESPONSIVE_LABELS).filter((field) => new Set(candidates.map((candidate) => String(candidate.artDirection?.responsive?.[field] ?? ''))).size > 1);
+}
+
+/**
+ * The criteria the packets scope this set to.
+ *
+ * They are derived per candidate but from set-level facts — project type and
+ * whether anything publishable is being photographed — so they are shown once.
+ * A union rather than the first packet's list, because silently dropping a
+ * question one candidate carries would narrow the review without saying so.
+ */
+function scopedCriteria(packets: Record<string, VisualReviewPacket>) {
+  const seen = new Map<string, string>();
+  for (const packet of Object.values(packets)) for (const criterion of packet.criteria) seen.set(criterion.id, criterion.question);
+  return [...seen].map(([id, question]) => ({ id, question }));
 }
 
 function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
@@ -570,6 +620,7 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
   const [viewport, setViewport] = useState('desktop');
   const [route, setRoute] = useState('/');
   const [evidence, setEvidence] = useState<Record<string, RenderedEvidence>>({});
+  const [packets, setPackets] = useState<Record<string, VisualReviewPacket>>({});
   const [reviewer, setReviewer] = useState('');
   const [rationale, setRationale] = useState<Record<string, string>>({});
 
@@ -581,6 +632,23 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
       if (cancelled) return;
       setEvidence(Object.fromEntries(all.filter((entry) => ids.includes(entry.id)).map((entry) => [entry.id, entry])));
     }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [projectId, set]);
+
+  // The packet carries the two things the set itself does not: what the
+  // direction was trying to do, and the questions a rule deliberately does not
+  // answer. Without them the panel shows a reviewer two pictures and no brief.
+  useEffect(() => {
+    let cancelled = false;
+    const candidateIds = (set?.candidates ?? []).map((candidate) => candidate.candidateId);
+    if (!candidateIds.length) return undefined;
+    Promise.all(candidateIds.map((candidateId) => readVisualReviewPacket(projectId, candidateId).then(
+      (packet) => [candidateId, packet] as const,
+      () => null,
+    ))).then((entries) => {
+      if (cancelled) return;
+      setPackets(Object.fromEntries(entries.filter((entry): entry is readonly [string, VisualReviewPacket] => Boolean(entry))));
+    });
     return () => { cancelled = true; };
   }, [projectId, set]);
 
@@ -598,11 +666,14 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
 
   const candidates = set?.candidates ?? [];
   const axes = differingAxes(candidates);
+  const responsiveFields = differingResponsive(candidates);
+  const criteria = scopedCriteria(packets);
   const routes = [...new Set(Object.values(evidence).flatMap((entry) => entry.captures.map((capture) => capture.route)))];
   const captureFor = (candidate: VisualCandidate) => {
     const entry = candidate.evidenceId ? evidence[candidate.evidenceId] : null;
     return entry?.captures.find((capture) => capture.route === route && capture.viewport === viewport && capture.state.axis === 'viewport') ?? null;
   };
+  const detailFor = (candidate: VisualCandidate, rule: string) => candidate.designLint?.findings.find((finding) => finding.rule === rule)?.detail ?? null;
 
   return <section className="builder-panel candidate-panel" aria-label="Visual directions">
     <div className="panel-title-row">
@@ -620,6 +691,23 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
         <div><dt>Imagery</dt><dd>{set.assetReadiness.strategyReason}</dd></div>
         <div><dt>Distinct</dt><dd>{set.diversity.distinct ? `Differ in at least ${set.diversity.minimumDifferingPlanes} of sequence, composition and responsive behaviour` : 'Not distinct'}</dd></div>
       </dl>
+
+      {/* What every candidate shares. A comparison is only a comparison while
+          the two things being compared say the same thing, so the reviewer is
+          shown the truth they share rather than asked to assume it. */}
+      <details className="candidate-truth">
+        <summary>What every candidate shares</summary>
+        <dl className="builder-definition candidate-provenance">
+          <div><dt>Set</dt><dd><code>{set.setId}</code></dd></div>
+          <div><dt>Created</dt><dd>{new Date(set.createdAt).toLocaleString()}</dd></div>
+          <div><dt>Project type</dt><dd>{label(set.frozenTruth.projectType)}</dd></div>
+          <div><dt>Manifest</dt><dd>v{set.frozenTruth.manifestVersion}</dd></div>
+          <div><dt>Knowledge pack</dt><dd><code>{set.frozenTruth.knowledgePackHash ?? 'none attached'}</code></dd></div>
+          <div><dt>Baseline composition</dt><dd><code>{set.frozenTruth.baselineCompositionHash}</code></dd></div>
+        </dl>
+        <p className="builder-empty">Facts, routes, capabilities, claims and provenance are frozen across the set. A candidate that regenerated any of them is not a visual candidate.</p>
+      </details>
+
       {set.refusedDirections.length > 0 && <div className="evidence-uncovered">
         <strong>{set.refusedDirections.length} direction(s) this project cannot present by</strong>
         {set.refusedDirections.map((entry) => <span key={entry.directionId}>{entry.directionId} — {entry.detail}</span>)}
@@ -640,29 +728,57 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
 
       <div className="candidate-grid">{candidates.map((candidate) => {
         const capture = captureFor(candidate);
+        const packet = packets[candidate.candidateId] ?? null;
+        const findings = candidate.designLint?.findings ?? [];
         return <article key={candidate.candidateId} className={`candidate-card outcome-${candidate.outcome}`}>
           <header>
             <strong>{candidate.directionLabel}</strong>
             <span className={`candidate-gate gate-${candidate.gate.status}`}>{GATE_LABELS[candidate.gate.status] ?? candidate.gate.status}</span>
           </header>
+          <p className="candidate-id"><code>{candidate.candidateId}</code> · {label(candidate.assetStrategy)}</p>
+          {packet?.purpose && <p className="candidate-purpose">{packet.purpose}</p>}
           {capture && candidate.evidenceId
-            ? <img src={renderedCaptureUrl(projectId, candidate.evidenceId, capture.id)} alt={`${candidate.directionLabel} at ${route}, ${viewport}`} loading="lazy" />
+            ? <div
+              className="candidate-shot"
+              // A full-page capture is taller than the card, so the card scrolls
+              // it. A scroll region a keyboard cannot reach is content a keyboard
+              // user cannot read, which on a review surface means half the
+              // evidence.
+              tabIndex={0}
+              role="group"
+              aria-label={`${candidate.directionLabel} at ${route}, ${viewport} — scrollable full-page capture`}
+            >
+              <img src={renderedCaptureUrl(projectId, candidate.evidenceId, capture.id)} alt={`${candidate.directionLabel} at ${route}, ${viewport}`} loading="lazy" />
+            </div>
             : <p className="builder-empty">No capture yet at this route and width.</p>}
-          <dl className="builder-definition candidate-axes">
+          {axes.length > 0 && <dl className="builder-definition candidate-axes">
             {axes.map((axis) => <div key={axis}><dt>{AXIS_LABELS[axis]}</dt><dd>{label(String(candidate.signature.axes[axis] ?? '—'))}</dd></div>)}
-          </dl>
+          </dl>}
+          {responsiveFields.length > 0 && <dl className="builder-definition candidate-axes candidate-responsive">
+            {responsiveFields.map((field) => <div key={field}><dt>{RESPONSIVE_LABELS[field]}</dt><dd>{label(String(candidate.artDirection?.responsive?.[field] ?? '—'))}</dd></div>)}
+          </dl>}
           {candidate.gate.blocking.length > 0 && <div className="evidence-uncovered">
             <strong>Cannot be promoted</strong>
             {candidate.gate.blocking.map((entry) => <span key={entry.rule}>{entry.detail}</span>)}
           </div>}
           {candidate.gate.mustAddress.length > 0 && <div className="evidence-uncovered">
             <strong>Say what you think about {candidate.gate.mustAddress.length === 1 ? 'this' : 'these'}</strong>
-            {candidate.gate.mustAddress.map((rule) => <span key={rule}>{label(rule)}</span>)}
+            {candidate.gate.mustAddress.map((rule) => <span key={rule}>{label(rule)}{detailFor(candidate, rule) ? ` — ${detailFor(candidate, rule)}` : ''}</span>)}
           </div>}
+          {/* Everything DesignLint settled, at every severity. A recommendation
+              never blocks anything, and a reviewer who cannot see it cannot
+              decide to ignore it on purpose. */}
+          <div className="candidate-lint">
+            <strong>DesignLint</strong>
+            {findings.length === 0
+              ? <span>No violation, warning or recommendation on this candidate.</span>
+              : findings.map((finding) => <span key={`${finding.rule}-${finding.detail}`}><em>{SEVERITY_LABELS[finding.severity] ?? finding.severity}</em> {label(finding.rule)} — {finding.detail}</span>)}
+          </div>
           {candidate.review && <p className="builder-empty">{label(candidate.review.verdict)} by {candidate.review.reviewedBy}{candidate.review.rationale ? ` — ${candidate.review.rationale}` : ''}</p>}
           {!set.promotedCandidateId && candidate.gate.status !== 'blocked' && candidate.gate.status !== 'not-run' && <div className="candidate-actions">
             <textarea
               rows={2}
+              aria-label={`Why — ${candidate.directionLabel}`}
               placeholder="Why. A verdict with no reason is not a review."
               value={rationale[candidate.candidateId] ?? ''}
               onChange={(event) => setRationale((current) => ({ ...current, [candidate.candidateId]: event.target.value }))}
@@ -678,6 +794,15 @@ function VisualCandidatePanel({ projectId, set, onChanged, onError }: {
           </div>}
         </article>;
       })}</div>
+
+      {/* The questions, once, because they are scoped from set-level facts. Each
+          one needs judgement; none of them can be settled by reading the
+          compiled design, which is the test a criterion has to pass to be
+          here at all. */}
+      {criteria.length > 0 && <div className="candidate-criteria">
+        <strong>What only judgement can settle</strong>
+        <ol>{criteria.map((criterion) => <li key={criterion.id}><span>{label(criterion.id)}</span>{criterion.question}</li>)}</ol>
+      </div>}
 
       {!set.promotedCandidateId && <label className="candidate-reviewer">
         <span>Who is deciding</span>
@@ -736,6 +861,9 @@ function EvidencePanel({ projectId, evidence, onCapture, busy, canCapture }: {
 export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onExit: () => void }) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
   const [device, setDevice] = useState<Device>('desktop');
+  // The stage shows one thing at a time: the running preview, or the candidate
+  // comparison. Both want the wide column, and neither is useful in a 330px one.
+  const [stageView, setStageView] = useState<StageView>('preview');
   const [operation, setOperation] = useState<Operation>(null);
   const [sourceOperation, setSourceOperation] = useState<string | null>(null);
   const [assetOperation, setAssetOperation] = useState<string | null>(null);
@@ -1011,7 +1139,11 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
       <span>Rebuild the project so {knowledgeIsNewerThanBuild ? 'the new knowledge' : 'the new decisions'} reach the generated repository. The current build stays on disk.</span>
     </div>}
 
-    <section className="builder-layout">
+    {/* Comparing gives the stage the whole width. Two full-page captures
+        beside each other is the job; the build sidebars are context for
+        building, and the comparison panel already carries what a reviewer
+        needs. One click back to preview restores them. */}
+    <section className={stageView === 'compare' ? 'builder-layout comparing' : 'builder-layout'}>
       <aside className="builder-sidebar">
         <section className="builder-panel project-panel">
           <span className="builder-kicker">Project</span>
@@ -1084,12 +1216,27 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
 
       <section className="builder-stage">
         <div className="preview-toolbar">
-          <div><span className="builder-kicker">Live preview</span><strong>{previewRunning ? snapshot.preview.path : 'Service-managed preview'}</strong></div>
-          <div className="device-switcher" role="group" aria-label="Preview device">{(['desktop', 'tablet', 'mobile'] as Device[]).map((value) => <button type="button" key={value} className={device === value ? 'active' : ''} onClick={() => setDevice(value)}>{value}</button>)}</div>
+          <div><span className="builder-kicker">{stageView === 'compare' ? 'Visual directions' : 'Live preview'}</span><strong>{stageView === 'compare'
+            ? snapshot.visualCandidates ? `${snapshot.visualCandidates.candidates.length} candidates over one frozen truth` : 'No candidate set yet'
+            : previewRunning ? snapshot.preview.path : 'Service-managed preview'}</strong></div>
+          <div className="stage-controls">
+            <div className="device-switcher" role="group" aria-label="Builder stage">
+              <button type="button" className={stageView === 'preview' ? 'active' : ''} onClick={() => setStageView('preview')}>preview</button>
+              <button type="button" className={stageView === 'compare' ? 'active' : ''} onClick={() => setStageView('compare')}>compare</button>
+            </div>
+            {stageView === 'preview' && <div className="device-switcher" role="group" aria-label="Preview device">{(['desktop', 'tablet', 'mobile'] as Device[]).map((value) => <button type="button" key={value} className={device === value ? 'active' : ''} onClick={() => setDevice(value)}>{value}</button>)}</div>}
+          </div>
         </div>
-        <div className={`preview-canvas preview-${device}`}>
-          {previewRunning ? <iframe key={previewNonce} title={`${snapshot.project.name} preview`} src={`${snapshot.preview.path}?__builder=1`} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
-        </div>
+        {stageView === 'compare'
+          ? <div className="stage-compare"><VisualCandidatePanel
+            projectId={projectId}
+            set={snapshot.visualCandidates}
+            onChanged={(next) => setSnapshot((current) => (current ? { ...current, visualCandidates: next } : current))}
+            onError={setError}
+          /></div>
+          : <div className={`preview-canvas preview-${device}`}>
+            {previewRunning ? <iframe key={previewNonce} title={`${snapshot.project.name} preview`} src={`${snapshot.preview.path}?__builder=1`} style={{ width: `${deviceWidth[device]}px` }} /> : <div className="preview-empty"><div className="preview-glyph">↗</div><h2>{snapshot.project.state === 'ready' ? 'Generate the product foundation.' : snapshot.project.state === 'generated' ? 'Verify the standalone build.' : 'Start the local preview.'}</h2><p>The preview process belongs to the factory service. Desktop, tablet and mobile frames all use the same generated repository.</p></div>}
+          </div>}
       </section>
 
       <aside className="activity-sidebar">
@@ -1111,12 +1258,6 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <p className="builder-empty">Click anything in the preview to resolve its element identity; headings and paragraphs can be edited from there. {overrides.length > 0 ? `${overrides.length} edit${overrides.length === 1 ? '' : 's'} saved.` : 'Edits are kept and replayed over every rebuild.'}</p>
         </section>}
 
-        <VisualCandidatePanel
-          projectId={projectId}
-          set={snapshot.visualCandidates}
-          onChanged={(next) => setSnapshot((current) => (current ? { ...current, visualCandidates: next } : current))}
-          onError={setError}
-        />
         <EvidencePanel
           projectId={projectId}
           evidence={snapshot.evidence}

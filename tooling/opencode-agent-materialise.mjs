@@ -37,6 +37,7 @@ const projection = materialiseRoles({
   roles: read('config/agent-roles.json'),
   pipelines: read('config/agent-pipelines.json'),
   policies: read('config/agent-policies.json'),
+  capabilities: read('config/agent-capabilities.json'),
   bindings: MCP_TOOL_BINDINGS,
   projectClass: options.projectClass,
 });

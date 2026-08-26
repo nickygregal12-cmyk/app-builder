@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { capabilitiesForRole } from '@app-builder/control-plane/capabilities';
 
 export const REPOSITORY_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 export const OPENCODE_CONFIG_PATH = path.join(REPOSITORY_ROOT, 'opencode.json');
@@ -309,18 +310,38 @@ function toolStateForRole(policy) {
   return tools;
 }
 
-function mcpToolsForRole({ role, bindings }) {
-  // Every role reaches the Factory only through the bounded MCP surface, and a
-  // role that may not write the repository does not get a mutating Factory
-  // operation either.
-  const mayMutate = (role.mutationScopes ?? []).length > 0;
-  return bindings
-    .filter((binding) => mayMutate || !binding.mutating)
-    .map((binding) => `${MCP_SERVER_NAME}_${binding.name}`)
-    .sort();
+function mcpToolsForRole({ role, policy, bindings, capabilities }) {
+  // A role's Factory reach is its *operation-level* capability set, not the
+  // mutating/non-mutating halves of the tool surface.
+  //
+  // The rule this replaced asked only whether the role owned any mutation
+  // scope, so a role scoped to write frontend files projected generate,
+  // overrides-write, ingestion and preview control alike (issue #55). The
+  // registry now says which policy actions and which mutation scopes each
+  // operation actually needs, and `capabilitiesForRole` is the same function
+  // the trusted broker's grant minting uses — one projection, one rule.
+  const { granted } = capabilitiesForRole({ role, policy, registry: capabilities });
+  const byOperation = new Map(bindings.map((binding) => [binding.serviceTool, binding]));
+  const gated = new Set((capabilities.capabilities ?? []).filter((entry) => entry.approvalRequired).map((entry) => entry.id));
+
+  const tools = [];
+  const approvalGated = [];
+  for (const capabilityId of granted) {
+    const binding = byOperation.get(capabilityId);
+    if (!binding) continue;
+    // An approval-gated capability is not an enabled tool. It is listed
+    // separately so the projection cannot read as though the role may invoke
+    // it unattended, which is the same rule `toolStateForRole` applies to
+    // approval-gated policy actions.
+    (gated.has(capabilityId) ? approvalGated : tools).push(`${MCP_SERVER_NAME}_${binding.name}`);
+  }
+  return { mcpTools: tools.sort(), approvalGatedMcpTools: approvalGated.sort() };
 }
 
-export function materialiseRoles({ roles, pipelines, policies, bindings, projectClass = null }) {
+export function materialiseRoles({ roles, pipelines, policies, bindings, capabilities, projectClass = null }) {
+  if (!capabilities?.capabilities) {
+    throw new Error('materialiseRoles needs config/agent-capabilities.json: a role\'s Factory reach is an operation-level capability set, not a mutating/non-mutating split.');
+  }
   const registryRoles = roles?.roles ?? {};
   const pipeline = projectClass ? pipelines?.pipelines?.[projectClass] : null;
   if (projectClass && !pipeline) {
@@ -350,7 +371,7 @@ export function materialiseRoles({ roles, pipelines, policies, bindings, project
       // this projection exists to avoid.
       mode: 'subagent',
       tools: toolStateForRole(policy),
-      mcpTools: mcpToolsForRole({ role, bindings }),
+      ...mcpToolsForRole({ role, policy, bindings, capabilities }),
       source: {
         registry: 'config/agent-roles.json',
         roleId: role.id,
@@ -363,7 +384,7 @@ export function materialiseRoles({ roles, pipelines, policies, bindings, project
       runtimeReady: false,
       blockedBy: [
         role.status === 'available' ? null : `role status is "${role.status}" in config/agent-roles.json`,
-        'issue #55: a task sandbox can still reach internal Factory HTTP directly',
+        'no execution sandbox yet isolates a task from the internal Factory HTTP listener (issue #55)',
         'no AgentRuntimeAdapter, provider credentials or per-role session lifecycle exist yet',
       ].filter(Boolean),
     };
@@ -371,7 +392,7 @@ export function materialiseRoles({ roles, pipelines, policies, bindings, project
 
   return {
     $dryRun: true,
-    generatedFrom: ['config/agent-roles.json', 'config/agent-pipelines.json', 'config/agent-policies.json'],
+    generatedFrom: ['config/agent-roles.json', 'config/agent-pipelines.json', 'config/agent-policies.json', 'config/agent-capabilities.json'],
     warning: 'Representation only. Do not write these definitions into opencode.json; the Factory role registry stays the single source of truth.',
     projectClass,
     validatedOpenCodeVersion: VALIDATED_OPENCODE_VERSION,

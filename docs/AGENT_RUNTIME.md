@@ -166,10 +166,60 @@ What is **not** proven, and must not be read into this milestone:
 
 - no provider credential exists, so no OpenCode *model session* has invoked a Factory tool. Only the
   transport, tool surface and adapter behaviour behind that connection are evidenced;
-- the OpenCode `permission` block is client configuration, not enforcement. A process on the host
-  still reaches `127.0.0.1:4310` directly, which is issue #55 and the exact prerequisite for broad
-  autonomous execution;
+- the OpenCode `permission` block is client configuration, not enforcement. It remains defence in
+  depth only; the capability broker below is the boundary;
 - no role is runtime-ready, no loop is scheduled and no phase claim advances.
+
+### Validated capability-boundary milestone — 2026-08-26
+
+The runtime-to-Factory capability boundary issue #55 describes is now enforced in
+code rather than described in metadata. The enforced path is:
+
+```text
+task policy (config/agent-policies.json)
+  -> role capability projection (capabilitiesForRole)
+  -> signed attempt-scoped grant
+  -> trusted capability broker on a Unix socket
+  -> authorisation: capability, project, environment, approval, budget
+  -> Factory operation
+  -> durable allow-or-deny decision in the event ledger
+```
+
+What changed:
+
+- `config/agent-capabilities.json` is the operation-level agent surface. Every
+  Factory operation is either an agent capability or an explicitly declared
+  internal-only one, and the rich Console routes are recorded as internal-only
+  with the fragment of `apps/service/src/http.js` that serves each;
+- `packages/control-plane/src/capabilities.js` mints and verifies grants and
+  makes the single deny-by-default authorisation decision. `approvalRequired`
+  is evaluated there before dispatch;
+- `apps/service/src/agent-broker.js` is the trusted broker. It listens on a
+  Unix socket, serves one endpoint for one method, and takes an operation
+  *name* rather than a URL — so there is no path for a hostile caller to
+  respell, re-encode or traverse;
+- the coarse projection rule the #78 review recorded is gone. A role receives an
+  operation only when its policy allows every action that operation needs
+  outright and it owns every mutation scope the operation writes; a role that
+  owns no mutation scope receives no mutating operation at all.
+
+`tooling/agent-capability-boundary.test.mjs` is the acceptance. It proves, among
+other refusals: an internal-only operation is unreachable even under the most
+privileged grant the system can mint; a forged, tampered, expired, replayed,
+wrong-project or wrong-environment grant fails closed with a named reason; an
+approval-gated operation without an approval is refused before the mutation; a
+narrowly-scoped mutation succeeds while the adjacent one stays forbidden; and
+every decision lands in the durable ledger.
+
+What this milestone does **not** yet prove, and must not be read as:
+
+- the broker removes the *authority* to call an internal route; it does not by
+  itself remove the *route*. A process that still shares the host network
+  namespace can still reach `127.0.0.1:4310`. Closing that requires the task
+  sandbox, and until it exists the boundary holds for a task that goes through
+  the adapter and not for one with a shell on the host;
+- no provider credential, schedule or runtime-ready role is introduced here.
+  Every role remains `runtimeReady: false`.
 
 ### Materialising roles into a runtime, later
 
@@ -180,10 +230,13 @@ projected role carries `runtimeReady: false` with its blockers, and no role is p
 
 The projection is how the "two sources of truth" failure is avoided: registry roles become subagents
 mechanically — no primary is invented — tools are derived deny-by-default from the role's capability
-policy (an approval-gated action is not an enabled tool), and each role's Factory reach is the
-bounded MCP surface filtered by whether the role owns a mutation scope. When a runtime finally needs
-agent definitions, it should generate them from the registry through this projection rather than
-maintain a second hand-written taxonomy.
+policy (an approval-gated action is not an enabled tool), and each role's Factory reach is its
+operation-level capability set from `config/agent-capabilities.json`. That set comes from
+`capabilitiesForRole`, the same function the trusted broker's grant minting uses, so the projection
+cannot drift from what is actually enforced. Approval-gated capabilities are listed separately as
+`approvalGatedMcpTools` rather than as enabled tools. When a runtime finally needs agent definitions,
+it should generate them from the registry through this projection rather than maintain a second
+hand-written taxonomy.
 
 ### OpenCode 2 evaluation
 

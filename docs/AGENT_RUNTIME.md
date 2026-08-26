@@ -263,11 +263,113 @@ What this milestone does **not** yet prove, and must not be read as:
   development runtime. Issue #55 stays open until
   `ops/hetzner/verify-agent-boundary.sh` has genuinely run on the Hetzner host
   and its output is recorded;
-- nothing creates, runs, supervises or disposes of an attempt sandbox. The
-  isolation contract and its translation exist; the `ExecutionEnvironmentAdapter`
-  lifecycle, the pinned task image and the `app-builder-egress` network do not;
+- nothing creates, runs, supervises or disposes of an attempt sandbox at the
+  time of that milestone. The `ExecutionEnvironmentAdapter` lifecycle landed
+  afterwards and is recorded below;
 - no provider credential, schedule or runtime-ready role is introduced here.
   Every role remains `runtimeReady: false`.
+
+### Validated attempt-lifecycle milestone — 2026-08-26
+
+Issue #55 closed with hosted acceptance, which proved the boundary an attempt
+would run inside. It did not create, run, supervise or dispose of one. That
+lifecycle now exists, provider-neutrally:
+
+```text
+control plane
+   |
+ExecutionEnvironmentAdapter          packages/control-plane/src/execution-adapter.js
+   |
+ExecutionDriver (7 neutral verbs)    create start inspect collect signal remove list
+   |
+rootless Podman today                tooling/lib/execution-driver-podman.mjs
+local process for the canary         tooling/lib/execution-driver-local.mjs
+   |
+isolated attempt
+```
+
+`packages/control-plane/src/attempts.js` owns what an attempt *is*.
+`createAttemptPlan` binds task, attempt, project, environment, role, policy,
+projected operation capabilities, the signed grant, workspace, context packet,
+budget, network profile, broker socket and pinned image in one place, and each
+of them is a required input rather than something read from ambient host state.
+The grant is minted inside trusted control-plane code with a secret that never
+enters a sandbox, and the durable record keeps its **fingerprint** rather than
+the token, so the ledger is auditable without becoming a place to steal
+authority from.
+
+The grant reaches the sandbox as a read-only mounted file, not as
+`--env GRANT=...`. On a shared host every other user can read the process
+table, and an attempt-scoped bearer credential on a command line is a
+credential handed to everyone on the machine.
+
+`ExecutionEnvironmentAdapter` supervises. Beyond create/start/inspect/collect,
+three properties are the reason it exists:
+
+- **a wall clock that does not depend on anyone waiting.** The bound is a
+  referenced timer inside the adapter, so an attempt is stopped even when no
+  caller is blocked on its exit;
+- **disposal is not optional.** Every terminal path — including a failed
+  start and a cancelled attempt — runs through `dispose`, which asks the driver
+  to confirm removal and raises an orphan rather than assuming it;
+- **restart recovery never guesses success.** `reduceAttemptEvents` rebuilds
+  attempt state from the ordinary project ledger, and `recover` reconciles it
+  against the runtime: still running is adopted, gone is recorded `lost`, and a
+  sandbox the ledger never mentioned is reported as an orphan. "We do not know"
+  and "it worked" are different answers.
+
+There is no second ledger. Attempt lifecycle events are ordinary control-plane
+events on the project's existing stream, so cost, duration, capability
+decisions and attempt outcome are already reconcilable with each other.
+
+#### The deterministic runtime canary
+
+`npm run runtime:canary` (and `tooling/runtime-lifecycle.test.mjs` in
+`npm test`) proves the whole lifecycle **before any model provider exists**.
+That ordering is deliberate: calling an LLM inside a sandbox nobody can start,
+bound, cancel, collect and dispose of would produce output with no evidence.
+
+It runs the real Factory HTTP service, the real capability broker, the real
+capability registry, the real role projection and a real signed grant across
+five scenarios — a writer role, a reader role, a deliberate failure, a wall
+clock and a cancel — and asserts:
+
+- the attempt reads its grant from the mounted file and no credential-shaped
+  variable reached it;
+- `127.0.0.1:4310`, `localhost`, `[::1]` and every global host address are
+  unreachable from inside the attempt, while the broker socket answers;
+- an allowed operation succeeds, an internal-only operation is refused
+  `operation-not-agent-accessible`, an approval-gated one `approval-required`,
+  and — for the reader role — an ungranted mutation `capability-not-granted`;
+- a grant the task widened itself is refused `grant-signature-invalid`;
+- writes stay inside the role's declared ChangeSet scope;
+- the four exit reasons `completed`, `failed`, `timed-out` and `cancelled` are
+  each genuinely reached, with the cancel interrupting a task that ignores
+  `SIGTERM` while it is actually running;
+- no runtime handle and no live attempt survive; the ledger records every
+  attempt as disposed with a named reason; and a fresh supervisor recovering
+  from that ledger finds nothing unresolved.
+
+The runtime under the canary is a bounded local process, not a container. The
+report says so in `isolationMode`, and where a network namespace is
+unavailable every isolation claim is reported `unproven` — the test then fails
+unless `APP_BUILDER_ALLOW_UNPROVEN_ISOLATION=1` is set deliberately. A skipped
+proof under a green tick has already cost this repository one false pass.
+
+Neither mode is a hosted proof. `ops/hetzner/verify-agent-boundary.sh` remains
+the operator's proof that the host's rootless Podman is configured this way.
+
+#### What this milestone does not do
+
+- **it promotes no role.** All 38 stay `runtimeReady: false`.
+  `config/runtime-readiness.json` is now the explicit promotion gate and
+  `packages/control-plane/src/runtime-readiness.js` enforces it deny-by-default:
+  context packet, operation set, environment profile, pinned image, lifecycle
+  support, deterministic coverage, convergence behaviour and one reviewed real
+  model attempt. The recorded evidence map is empty, and a test asserts that
+  infrastructure evidence alone still refuses promotion;
+- **no provider credential, schedule or autonomous loop is introduced.**
+  `config/factory-status.json` is unchanged.
 
 ### Materialising roles into a runtime, later
 

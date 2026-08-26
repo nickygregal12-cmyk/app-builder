@@ -47,21 +47,28 @@ function networkArguments(spec) {
 }
 
 /**
- * Build the rootless `podman run` argv for one attempt.
+ * Build the rootless podman argv for one attempt.
+ *
+ * `verb` is `run` for a one-shot invocation and `create` for the supervised
+ * lifecycle, where the container must survive its own exit long enough for the
+ * adapter to read the exit code and the structured result. A `--rm` container
+ * that has already been reaped cannot be inspected, and an attempt whose
+ * outcome cannot be inspected has no durable evidence.
  *
  * `image` is the caller's to supply and to have pinned by digest; this
  * function refuses a floating tag rather than producing an argv whose contents
  * can change under a proven boundary.
  */
-export function podmanRunArgs(spec, { image, command = [], name = null } = {}) {
+export function podmanContainerArgs(spec, { image, command = [], name = null, verb = 'run', environment = {} } = {}) {
   assertSpecIsolation(spec);
+  if (verb !== 'run' && verb !== 'create') throw new Error(`Unsupported podman verb: ${verb}`);
   if (typeof image !== 'string' || !image.includes('@sha256:')) {
     throw new Error('The task sandbox image must be pinned by digest; a floating tag can change under a proven boundary.');
   }
 
   const args = [
-    'run',
-    '--rm',
+    verb,
+    ...(verb === 'run' ? ['--rm'] : []),
     '--name', name ?? `app-builder-attempt-${spec.attemptId}`,
     '--userns=keep-id',
     '--user', '1000:1000',
@@ -87,13 +94,38 @@ export function podmanRunArgs(spec, { image, command = [], name = null } = {}) {
     args.push('--volume', `${mount.source}:${mount.target}:${mount.mode},Z`);
   }
 
-  // The grant is passed by value; the signing key stays with the broker and has
-  // no representation here at all.
+  // Only non-secret co-ordinates reach the command line. The grant itself
+  // arrives as the read-only file the spec mounts, and the signing key has no
+  // representation here at all.
   args.push('--env', `${spec.factoryAccess.socketEnvironmentVariable}=${spec.factoryAccess.containerSocketPath}`);
+  if (spec.factoryAccess.grantFile !== null && spec.factoryAccess.grantFile !== undefined) {
+    args.push('--env', `${spec.factoryAccess.grantFileEnvironmentVariable}=${spec.factoryAccess.containerGrantPath}`);
+  }
+  const allowed = new Set(spec.environment?.allowed ?? []);
+  for (const [key, value] of Object.entries(environment)) {
+    // Deny-by-default, and the spec's own forbidden patterns are re-checked
+    // here rather than trusted: this is the last place a secret could be
+    // spelled onto a shared host's process table.
+    if (!allowed.has(key)) throw new Error(`Refusing sandbox arguments: ${key} is not an allowed sandbox environment variable.`);
+    for (const pattern of spec.environment?.forbiddenPatterns ?? []) {
+      if (key.includes(pattern)) throw new Error(`Refusing sandbox arguments: ${key} matches the forbidden pattern ${pattern}.`);
+    }
+    args.push('--env', `${key}=${value}`);
+  }
   args.push('--env-file', '/dev/null');
 
   args.push(image, ...command);
   return assertArgumentsPreserveIsolation(args);
+}
+
+/** The one-shot form, unchanged for callers that only need an argv. */
+export function podmanRunArgs(spec, options = {}) {
+  return podmanContainerArgs(spec, { ...options, verb: 'run' });
+}
+
+/** The supervised form the `ExecutionEnvironmentAdapter` lifecycle uses. */
+export function podmanCreateArgs(spec, options = {}) {
+  return podmanContainerArgs(spec, { ...options, verb: 'create' });
 }
 
 /**

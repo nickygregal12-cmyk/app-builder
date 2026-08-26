@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { applyDesignChoices, assertAccentColor, renderBrandCss } from './design-choices.mjs';
 
 export function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 export function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
@@ -100,13 +101,32 @@ function resolveRecipeClosure(recipeIds, templateId, catalog, factoryRoot, selec
   return resolved;
 }
 
-function selectDesign(manifest, catalog) {
+// A brand accent that cannot carry its own label is refused rather than
+// shipped, so an unusable one from intake falls back to the default instead of
+// producing unreadable buttons.
+function requestedAccent(manifest) {
+  try {
+    return assertAccentColor(manifest.brand?.accentColor);
+  } catch {
+    return DEFAULT_ACCENT;
+  }
+}
+
+const DEFAULT_ACCENT = '#315b72';
+
+/**
+ * What the factory selects, and what a person chose over it.
+ *
+ * Both are kept. Clearing a control has to return it to the factory's own
+ * selection, and that is only recoverable if the selection was recorded rather
+ * than overwritten.
+ */
+function selectDesign(manifest, catalog, designChoices = {}) {
   const patternId = catalog.layouts.projectTypeDefaults?.[manifest.project.type];
   const pattern = catalog.layouts.patterns?.[patternId];
   if (!pattern) throw new Error(`No layout pattern for project type ${manifest.project.type}.`);
-  const requestedAccent = manifest.brand?.accentColor;
-  const accentColor = typeof requestedAccent === 'string' && /^#[0-9a-fA-F]{6}$/.test(requestedAccent) ? requestedAccent.toLowerCase() : '#315b72';
-  return { patternId, ...pattern, accentColor };
+  const composed = { patternId, ...pattern, accentColor: requestedAccent(manifest) };
+  return { composed, design: applyDesignChoices(composed, designChoices) };
 }
 
 function selectScenarios(manifest, catalog) {
@@ -117,7 +137,7 @@ function selectScenarios(manifest, catalog) {
   return [...new Set(values)];
 }
 
-export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot) } = {}) {
+export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {} } = {}) {
   const templateId = catalog.templates.projectTypeDefaults?.[manifest.project.type];
   const templateEntry = catalog.templates.templates?.[templateId];
   if (!templateId || !templateEntry || templateEntry.status !== 'ready') throw new Error(`No ready template for project type ${manifest.project.type}.`);
@@ -138,7 +158,7 @@ export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), cat
     recipes: resolveRecipeClosure(recipeIds, template.id, catalog, factoryRoot, adapterIds),
     enabledModules,
     missingModules,
-    design: selectDesign(manifest, catalog),
+    ...selectDesign(manifest, catalog, designChoices),
     scenarios: selectScenarios(manifest, catalog),
   };
 }
@@ -156,9 +176,6 @@ function renderRecipeRegistry(recipes) {
 
 const renderProject = (project) => `export const project = ${JSON.stringify({ name: project.name, slug: project.slug, type: project.type, primaryGoal: project.primaryGoal }, null, 2)} as const;\n`;
 const renderDesign = (design) => `export const design = ${JSON.stringify(design, null, 2)} as const;\n`;
-function renderBrandCss(design) {
-  return `:root {\n  --color-accent: ${design.accentColor};\n  --layout-max-width: ${design.maxWidth};\n  --layout-radius: ${design.radius};\n}\n`;
-}
 function renderScenarios(scenarios) {
   const values = JSON.stringify(scenarios);
   return `export const supportedScenarios = ${values} as const;\nexport type AppScenario = (typeof supportedScenarios)[number];\n`;
@@ -232,7 +249,7 @@ function writeGeneratedState(projectDir, manifest, plan, templatePackage, packag
   fs.writeFileSync(path.join(generated, 'brand.css'), renderBrandCss(plan.design));
   fs.writeFileSync(path.join(generated, 'scenarios.ts'), renderScenarios(plan.scenarios));
   writeJson(path.join(projectDir, '.app-builder/manifest.json'), manifest);
-  writeJson(path.join(projectDir, '.app-builder/project.json'), { schemaVersion: 1, template: { id: plan.template.id, version: plan.template.version }, projectType: manifest.project.type, design: plan.design, scenarios: plan.scenarios });
+  writeJson(path.join(projectDir, '.app-builder/project.json'), { schemaVersion: 1, template: { id: plan.template.id, version: plan.template.version }, projectType: manifest.project.type, design: plan.design, composedDesign: plan.composed ?? plan.design, scenarios: plan.scenarios });
   writeJson(path.join(projectDir, '.app-builder/adapters.json'), { schemaVersion: 1, installed: plan.adapters.map((adapter) => ({ id: adapter.id, kind: adapter.kind, version: adapter.version })) });
   writeJson(path.join(projectDir, '.app-builder/recipes.json'), { schemaVersion: 1, installed: plan.recipes.map((recipe) => ({ id: recipe.id, module: recipe.module, version: recipe.version })), packageManaged, databaseFragments });
   writeJson(path.join(projectDir, '.app-builder/template-package.json'), templatePackage);
@@ -303,8 +320,8 @@ function writeReadme(projectDir, manifest, plan) {
   fs.writeFileSync(path.join(projectDir, 'README.md'), `# ${manifest.project.name}\n\n${manifest.project.primaryGoal}\n\n## Generated foundation\n\n- Template: ${plan.template.id} ${plan.template.version}\n- Project type: ${manifest.project.type}\n- Layout: ${plan.design.patternId}\n- App Builder runtime dependency: none\n\n## Infrastructure adapters\n\n${adapterLines}\n\n## Installed recipes\n\n${recipeLines}\n\nSee \`docs/HANDOVER.md\` for environment, database, deployment and scenario notes.\n\n## Commands\n\n\`\`\`bash\nnpm install\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n`);
 }
 
-export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot) } = {}) {
-  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog });
+export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {} } = {}) {
+  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices });
   if (plan.missingModules.length) throw new Error(`No ready deterministic recipe for enabled module(s): ${plan.missingModules.join(', ')}.`);
   const out = path.resolve(outputDir);
   if (fs.existsSync(out)) throw new Error(`Refusing to overwrite existing directory: ${out}`);
@@ -363,7 +380,12 @@ export function reconcileProjectRecipes(projectDir, desiredRecipeIds, { factoryR
   const managedModules = new Set(Object.values(catalog.recipes.recipes ?? {}).map((entry) => entry.module));
   for (const moduleName of managedModules) manifest.modules[moduleName] = false;
   for (const recipe of recipes) manifest.modules[recipe.module] = true;
-  const plan = { template, adapters, recipes, design: selectDesign(manifest, catalog), scenarios: selectScenarios(manifest, catalog) };
+  // Reconciliation adds or removes a capability; it is not a design decision.
+  // Re-selecting here would quietly reset an accent, measure or rhythm someone
+  // chose, so the design the project already records is kept.
+  const record = readJson(path.join(projectRoot, '.app-builder/project.json'));
+  const selected = selectDesign(manifest, catalog);
+  const plan = { template, adapters, recipes, design: record?.design ?? selected.design, composed: record?.composedDesign ?? selected.composed, scenarios: selectScenarios(manifest, catalog) };
   writeGeneratedState(projectRoot, manifest, plan, templatePackage, packageManaged, databaseFragments);
   writeHandover(projectRoot, manifest, plan, databaseFragments);
   writeReadme(projectRoot, manifest, plan);

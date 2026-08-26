@@ -448,6 +448,9 @@ Delivered:
 - **section presentation**: a section can be shown any way its template actually
   renders, chosen from the declared set, recorded durably and recomposed rather
   than mutated;
+- **Design Contract editing**: accent, measure, corners and section rhythm as
+  structured controls that compile into the tokens the template reads, with an
+  accent refused when it cannot carry its own label;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -601,11 +604,39 @@ recomposed, which the running preview shows without a rebuild. Identity is
 derived from a baseline with both overlays stripped, so choosing a presentation
 does not move any element address.
 
+**Design Contract editing (4B.5).** Structured controls over the design
+decisions the factory already makes — accent, measure, corners and section
+rhythm — never arbitrary CSS. Every control offers a declared set of values and
+anything outside it is refused, including a key the contract does not name.
+
+The accent is the one control that takes a free value, and it is bounded by a
+rule rather than a list: an accent that cannot carry the label placed on it at
+4.5:1 is refused. That is a correctness rule, not a matter of taste, and it
+stops an unreadable primary action being generated and then discovered by an
+accessibility gate, or not discovered at all. An unusable accent arriving from
+intake now falls back to the default instead of shipping.
+
+`density` was the third field found declared and unread, after
+`reviewBeforePublish` and `SectionSpec.variant`: present in every layout pattern
+and in the design-contract schema, consumed by nothing. It now compiles to
+`--section-space`, and the hero's variants scale that rhythm rather than
+replacing it, so the design contract and a section's presentation compose
+instead of one silently winning.
+
+Choices live in a durable `design-choices.json` and are applied over the
+factory's own selection, which the build records separately so clearing a
+control returns it rather than freezing the last value. The brand stylesheet is
+generated, so a compiled design reaches the running preview without a rebuild.
+
+Two latent bugs surfaced: recipe reconciliation re-selected the design, which
+would have quietly reset a chosen accent whenever a capability was added or
+removed; and the hero's own padding overrode the section rhythm, so density
+would have had no effect on the most visible part of the page.
+
 Remaining:
 - asset replacement (swapping the bytes behind an approved asset);
 - comparing supplied and generated alternatives (needs generation first);
 - project asset policy modes;
-- Design Contract editing;
 - **Product Opportunity Scout** for existing-app improvement: a broad prompt such as "improve this
   page" resolves to at most three ranked, materially different opportunities grounded in the current
   implementation, not to a default redesign;

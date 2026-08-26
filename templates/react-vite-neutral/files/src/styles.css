@@ -30,8 +30,11 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 
 /* Hero ---------------------------------------------------------------- */
 .hero-section { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-top: clamp(48px, 7vw, 92px); padding-bottom: clamp(48px, 7vw, 92px) }
-.hero-section.variant-primary { padding-top: clamp(72px, 9vw, 132px); padding-bottom: clamp(72px, 9vw, 132px) }
-.hero-section.variant-compact { padding-top: clamp(36px, 5vw, 64px); padding-bottom: clamp(36px, 5vw, 64px) }
+/* Hero density scales the section rhythm rather than replacing it, so the
+   design contract's rhythm and the section's variant compose instead of one
+   silently winning. */
+.hero-section.variant-primary { padding-top: calc(var(--section-space) * 1.3); padding-bottom: calc(var(--section-space) * 1.3) }
+.hero-section.variant-compact { padding-top: calc(var(--section-space) * 0.65); padding-bottom: calc(var(--section-space) * 0.65) }
 .hero-section.has-image { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: clamp(32px, 5vw, 72px); align-items: center }
 .hero-copy-column { display: flex; flex-direction: column; align-items: flex-start; min-width: 0 }
 .hero-image { display: block }

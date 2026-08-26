@@ -90,6 +90,11 @@ export function createFactoryHttpServer({ service }) {
         const body = await readJson(request);
         return send(response, 200, await decideProjectAsset(service, route.projectId, decodeURIComponent(assetDecisionRoute[1]), body));
       }
+      if (request.method === 'GET' && route.action === 'design') return send(response, 200, { design: service.designContract(route.projectId) });
+      if (request.method === 'POST' && route.action === 'design') {
+        const body = await readJson(request);
+        return send(response, 200, { design: await service.writeDesignChoices(route.projectId, body.choices ?? {}) });
+      }
       if (request.method === 'GET' && route.action === 'section-variants') return send(response, 200, { sections: sectionVariantOptions(service, route.projectId) });
       const variantRoute = route.action?.match(/^sections\/([^/]+)\/variant$/);
       if (request.method === 'POST' && variantRoute) {
@@ -150,7 +155,7 @@ export function createFactoryHttpServer({ service }) {
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,
-        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
+        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
       ].some((pattern) => pattern.test(message));
       const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });

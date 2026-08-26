@@ -9,6 +9,7 @@ import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
+import { applyDesignChoices, assertDesignChoices, designControls, renderBrandCss } from '../../../tooling/lib/design-choices.mjs';
 import { deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
 import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
@@ -166,6 +167,70 @@ export class FactoryService {
 
   overridesPath(projectId) {
     return path.join(this.ingestion.projectRoot(projectId), 'content-overrides.json');
+  }
+
+  designChoicesPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'design-choices.json');
+  }
+
+  readDesignChoices(projectId) {
+    this.requireProject(projectId);
+    const file = this.designChoicesPath(projectId);
+    if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, choices: {} };
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  /** The design the live build compiled, with the controls offered over it. */
+  designContract(projectId) {
+    const project = this.requireProject(projectId);
+    const file = project.workspacePath ? path.join(project.workspacePath, '.app-builder', 'project.json') : null;
+    if (!file || !fs.existsSync(file)) return null;
+    const design = JSON.parse(fs.readFileSync(file, 'utf8')).design ?? null;
+    if (!design) return null;
+    const chosen = this.readDesignChoices(projectId).choices;
+    return { design, chosen, controls: designControls(design), accentContrastMinimum: 4.5 };
+  }
+
+  /**
+   * Record a design decision and compile it.
+   *
+   * The brand stylesheet is a generated file, so rewriting it puts the change
+   * in front of the person who made it without a rebuild. The durable record is
+   * what a later build replays: a rebuild picks up new source material without
+   * discarding how someone set the design.
+   */
+  async writeDesignChoices(projectId, choices) {
+    const project = this.requireProject(projectId);
+    const merged = { ...this.readDesignChoices(projectId).choices, ...assertDesignChoices(choices) };
+    // A control set back to nothing returns to what the factory selected rather
+    // than recording a value that happens to match it.
+    for (const [key, value] of Object.entries(choices)) if (value === null) delete merged[key];
+
+    const document = assertContract('design-choice', { schemaVersion: 1, projectId, choices: merged, chosenAt: new Date().toISOString(), chosenBy: 'console' });
+    fs.mkdirSync(path.dirname(this.designChoicesPath(projectId)), { recursive: true });
+    fs.writeFileSync(this.designChoicesPath(projectId), `${JSON.stringify(document, null, 2)}\n`);
+
+    if (project.workspacePath && fs.existsSync(project.workspacePath)) this.rewriteWorkspaceDesign(project.workspacePath, document.choices);
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'design.contract.updated',
+      actor: 'console',
+      payload: { controls: Object.keys(document.choices), ...document.choices },
+    }));
+    return this.designContract(projectId);
+  }
+
+  rewriteWorkspaceDesign(workspace, choices) {
+    const file = path.join(workspace, '.app-builder', 'project.json');
+    if (!fs.existsSync(file)) return null;
+    const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+    // Apply over what the factory selected, never over the last thing written,
+    // so clearing a control returns it rather than leaving the previous value.
+    const design = applyDesignChoices(record.composedDesign ?? record.design, choices);
+    fs.writeFileSync(file, `${JSON.stringify({ ...record, design }, null, 2)}\n`);
+    fs.writeFileSync(path.join(workspace, 'src/generated/brand.css'), renderBrandCss(design));
+    fs.writeFileSync(path.join(workspace, 'src/generated/design.ts'), `export const design = ${JSON.stringify(design, null, 2)} as const;\n`);
+    return design;
   }
 
   sectionVariantsPath(projectId) {
@@ -755,6 +820,7 @@ export class FactoryService {
         contentOverrides: this.readOverrides(projectId).overrides,
         assetDecisions: this.readAssetDecisions(projectId).decisions,
         sectionVariants: this.readSectionVariants(projectId).choices,
+        designChoices: this.readDesignChoices(projectId).choices,
         projectId,
       });
       await this.store.recordEvent(createEvent({

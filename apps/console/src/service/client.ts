@@ -260,6 +260,16 @@ export type SectionVariantOption = {
   variants: Array<{ id: string; label: string; purpose: string }>;
 };
 
+/** The design the live build compiled, and the structured controls offered over
+ * it. Every control has a declared set of values; this is a contract, not a
+ * stylesheet. */
+export type DesignContract = {
+  design: { patternId: string; label: string; accentColor: string; maxWidth: string; radius: string; density: string };
+  chosen: Record<string, string>;
+  controls: Array<{ control: string; label: string; value: string; options: Array<{ id: string; label: string; purpose: string }> }>;
+  accentContrastMinimum: number;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
   input?: { manifestVersion: number; knowledgePackHash: string | null; assetDecisionsHash: string | null };
@@ -285,6 +295,7 @@ export type WorkspaceSnapshot = {
   assets: ProjectAsset[];
   assetDecisionsHash: string | null;
   sectionVariants: SectionVariantOption[];
+  design: DesignContract | null;
 };
 
 const API_ROOT = '/api';
@@ -357,6 +368,13 @@ export function assetPreviewUrl(projectId: string, assetId: string) {
   return `${API_ROOT}/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/preview`;
 }
 
+export async function updateDesignContract(projectId: string, choices: Record<string, string | null>) {
+  return (await request<{ design: DesignContract | null }>(
+    `/projects/${encodeURIComponent(projectId)}/design`,
+    { method: 'POST', body: JSON.stringify({ choices }) },
+  )).design;
+}
+
 export async function listSectionVariants(projectId: string) {
   return (await request<{ sections: SectionVariantOption[] }>(`/projects/${encodeURIComponent(projectId)}/section-variants`)).sections;
 }
@@ -409,7 +427,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult, designResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
@@ -425,6 +443,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ evidence: RenderedEvidence[] }>(`/projects/${id}/evidence`),
     request<{ assets: ProjectAsset[]; assetDecisionsHash: string | null }>(`/projects/${id}/assets`),
     request<{ sections: SectionVariantOption[] }>(`/projects/${id}/section-variants`),
+    request<{ design: DesignContract | null }>(`/projects/${id}/design`),
   ]);
   const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
@@ -444,5 +463,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     assets: assetsResult.assets,
     assetDecisionsHash: assetsResult.assetDecisionsHash,
     sectionVariants: variantsResult.sections,
+    design: designResult.design,
   };
 }

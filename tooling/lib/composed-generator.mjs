@@ -96,8 +96,8 @@ function writeElementIdentityIndex(outputDir, { composition, template, projectId
   return index;
 }
 
-export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
-  const plan = generateProject(manifest, outputDir, { factoryRoot, ...(catalog ? { catalog } : {}) });
+export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], designChoices = {}, projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
+  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
   // new section types reached generated projects without ever being added to

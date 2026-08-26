@@ -85,6 +85,40 @@ composition. A human sentence replaces a value without moving the element it
 lives in, so writing copy leaves every address intact; whether a binding has
 been overridden is read live from the composition at resolve time.
 
+## Design Contract
+
+Structured controls over the design decisions the factory already makes, not a
+stylesheet someone can type into. Four controls: the brand accent, the measure,
+the corner radius and the section rhythm.
+
+Three of them take a value from a declared set, and a value outside it is
+refused — as is a control the contract does not name, so arbitrary CSS cannot
+arrive through the same door. The accent is the one free value, bounded by a
+rule instead of a list: an accent that cannot carry the label placed on it at
+4.5:1 is refused, because an unreadable primary action is a correctness problem
+rather than a matter of taste.
+
+The contract compiles. `compileDesignTokens` emits only custom properties the
+stylesheet actually reads — `--color-accent`, `--layout-max-width`,
+`--layout-radius` and `--section-space` — and a test asserts every compiled
+property is one the template uses and has a default in the token file. A design
+contract that does not compile is a prompt.
+
+`density` used to be exactly that: named in every layout pattern and in
+`schemas/design-contract.schema.json`, read by nothing. It now compiles to
+`--section-space`, and the hero's variants scale that rhythm rather than
+replacing it, so the design contract and a section's presentation compose.
+
+Choices live in a durable `design-choices.json` and are applied over the
+factory's own selection. The build records that selection separately as
+`composedDesign`, so clearing a control returns it to what the factory chose
+instead of freezing whatever was written last. Because the brand stylesheet is
+generated, a compiled design reaches the running preview without a rebuild, and
+recipe reconciliation keeps the recorded design rather than re-selecting it.
+
+Full design-system authoring — palettes, type scales, component theming — is
+Phase 4C. This is the bounded set that already compiles.
+
 ## Section presentation
 
 A composed section can be shown more than one way, but only in the ways its

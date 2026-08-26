@@ -27,3 +27,119 @@ test('XLSX extraction caps data into structured sheet tables', async () => { con
 test('image intake records metadata, responsive variants and exact duplicates', async () => { const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-assets-')); try { const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="#336699"/><text x="100" y="200" font-size="80">ACME</text></svg>'); const normalized = await normalizeSources([{ data: svg, name: 'logo.svg', label: 'Company logo', kind: 'logo', provenance: 'user-supplied' }, { data: svg, name: 'logo-copy.svg', label: 'Logo copy', kind: 'image', provenance: 'user-supplied' }], { cacheDir: path.join(root, 'cache'), assetOutputDir: path.join(root, 'assets'), assetUriPrefix: 'assets' }); const pack = buildKnowledgePack(normalized); assert.equal(pack.assets.length, 2); assert.ok(pack.assets[0].metadata.width === 1600); assert.ok(pack.assets[0].variants.some((variant) => variant.role === 'responsive' && variant.format === 'webp')); assert.ok(pack.assets[0].variants.some((variant) => variant.role === 'hero-16x9' && variant.reviewBeforePublish === true)); assert.equal(pack.assets[1].duplicateOf, pack.assets[0].id); assert.ok(pack.brand.logoCandidates.includes(pack.assets[0].id)); } finally { fs.rmSync(root, { recursive: true, force: true }); } });
 test('structured user data can become verified facts but generated copy stays separate', async () => { const source = await normalizeSource({ data: Buffer.from(JSON.stringify({ company: { name: 'Acme Ltd', email: 'team@acme.example', phone: '0141 555 0202' } })), name: 'company.json', label: 'Approved company data', kind: 'document', mimeType: 'application/json', provenance: 'user-supplied' }); const pack = buildKnowledgePack([source]); assert.ok(pack.facts.some((fact) => fact.path === 'identity.name' && fact.verification === 'user-provided' && fact.confidence === 1)); assert.deepEqual(pack.generatedCopy, []); });
 test('remote intake rejects obvious local/private targets', () => { assert.throws(() => assertSafeRemoteUrl('http://127.0.0.1/internal'), /local\/private/); assert.throws(() => assertSafeRemoteUrl('http://localhost:3000'), /local\/private/); assert.doesNotThrow(() => assertSafeRemoteUrl('https://example.com')); });
+
+// ---------------------------------------------------------------------------
+// Operator-authored spreadsheets. Phase 3.8E asks for "a genuine user-supplied
+// company document, logo, image or spreadsheet". Before the nbm trial the only
+// structured company path was a JSON document shaped like
+// `{ company: { ... } }`, which no business has ever handed anyone; a workbook
+// carrying the legal name, company number, registered office, offices and
+// service lines yielded exactly one fact, scraped out by a phone regex.
+// ---------------------------------------------------------------------------
+
+async function workbook(sheets) {
+  const book = new ExcelJS.Workbook();
+  for (const [name, rows] of Object.entries(sheets)) {
+    const sheet = book.addWorksheet(name);
+    for (const row of rows) sheet.addRow(row);
+  }
+  return Buffer.from(await book.xlsx.writeBuffer());
+}
+
+const supplied = (data, name = 'company.xlsx') => normalizeSource({
+  data, name, label: 'Owner-approved company workbook', kind: 'spreadsheet',
+  provenance: 'user-supplied', approvedForUse: true,
+});
+
+test('an operator fact sheet carries company identity, contact and offices', async () => {
+  const source = await supplied(await workbook({
+    Facts: [
+      ['Field', 'Value', 'Source'],
+      ['Business name', 'Northbridge Surveying', 'Public website'],
+      ['Legal name', 'NORTHBRIDGE SURVEYING LIMITED', 'Companies House'],
+      ['Registered office', '9 Example Crescent, Glasgow, G3 7UL', 'Companies House'],
+      ['Website', 'https://northbridge.example/', 'Public website'],
+      ['Telephone', '0141 555 0101', 'Public website'],
+    ],
+    Offices: [
+      ['Location', 'Address', 'Phone'],
+      ['Glasgow', '9 Example Crescent, Glasgow, G3 7UL', '0141 555 0101'],
+      ['Edinburgh', '', ''],
+    ],
+  }));
+  const profile = buildKnowledgePack([source]).companyProfile;
+  assert.equal(profile.identity.name.value, 'Northbridge Surveying');
+  assert.equal(profile.identity.legalName.value, 'NORTHBRIDGE SURVEYING LIMITED');
+  assert.equal(profile.contact.address.value, '9 Example Crescent, Glasgow, G3 7UL');
+  assert.equal(profile.contact.website.value, 'https://northbridge.example/');
+  assert.equal(profile.contact.phone.value, '0141 555 0101');
+  assert.deepEqual(profile.serviceAreas.map((area) => area.value), ['Glasgow', 'Edinburgh']);
+});
+
+test('what an operator wrote down is user-provided truth, not a regex candidate', async () => {
+  const source = await supplied(await workbook({
+    Facts: [['Field', 'Value'], ['Telephone', '0141 555 0101']],
+  }));
+  const phone = buildKnowledgePack([source]).companyProfile.contact.phone;
+  assert.equal(phone.verification, 'user-provided');
+  assert.equal(phone.confidence, 1);
+});
+
+test('the same sheet read from a crawled file stays a candidate', async () => {
+  const data = await workbook({ Facts: [['Field', 'Value'], ['Business name', 'Northbridge Surveying']] });
+  const source = await normalizeSource({ data, name: 'facts.xlsx', label: 'Found online', kind: 'spreadsheet', provenance: 'existing-site' });
+  assert.equal(buildKnowledgePack([source]).companyProfile.identity.name.verification, 'candidate');
+});
+
+test('an unrecognised row label contributes nothing rather than being guessed at', async () => {
+  const source = await supplied(await workbook({
+    Facts: [
+      ['Field', 'Value'],
+      ['Internal notes', 'Client prefers Tuesday meetings'],
+      ['Target impression', 'Credible, premium, established'],
+      ['Business name', 'Northbridge Surveying'],
+    ],
+  }));
+  const pack = buildKnowledgePack([source]);
+  assert.equal(pack.companyProfile.identity.name.value, 'Northbridge Surveying');
+  for (const fact of pack.facts) {
+    assert.ok(!fact.value.includes('Tuesday'), 'an unknown label must not become a company fact');
+    assert.ok(!fact.value.includes('Credible'), 'acceptance intent is not website copy');
+  }
+});
+
+test('a two-column sheet whose value column is not a value column yields no facts', async () => {
+  // "Item | Intent" is how the nbm workbook recorded the owner's acceptance
+  // brief. It must never reach the site as company truth.
+  const source = await supplied(await workbook({
+    Intent: [['Item', 'Intent'], ['Business name', 'Credible and premium']],
+  }));
+  assert.deepEqual(buildKnowledgePack([source]).facts, []);
+});
+
+test('entity tables carry services, projects, people and accreditations with their detail', async () => {
+  const source = await supplied(await workbook({
+    Services: [
+      ['Service', 'Description'],
+      ['Cost Consultancy', 'Chartered quantity surveying across the project lifecycle.'],
+      ["Employer's Agent", "Employer's Agent duties on design-and-build contracts."],
+    ],
+    Projects: [['Project', 'Location', 'Sector'], ['Riverside Refurbishment', 'Leeds', 'Hotel']],
+    Team: [['Person', 'Role'], ['A. Surveyor', 'Director']],
+    Memberships: [['Accreditation', 'Issuer'], ['Chartered membership', 'Example Institution']],
+  }));
+  const profile = buildKnowledgePack([source]).companyProfile;
+  assert.deepEqual(profile.services.map((item) => item.name), ['Cost Consultancy', "Employer's Agent"]);
+  assert.equal(profile.services[0].description, 'Chartered quantity surveying across the project lifecycle.');
+  assert.equal(profile.services[0].verification, 'user-provided');
+  assert.deepEqual(profile.projects.map((item) => [item.name, item.location, item.sector]), [['Riverside Refurbishment', 'Leeds', 'Hotel']]);
+  assert.deepEqual(profile.people.map((item) => [item.name, item.role]), [['A. Surveyor', 'Director']]);
+  assert.deepEqual(profile.accreditations.map((item) => item.name), ['Chartered membership']);
+});
+
+test('the pricing sheet the earlier trial relied on still works', async () => {
+  const source = await supplied(await workbook({ Pricing: [['Service', 'Price'], ['Survey', '250']] }));
+  const services = buildKnowledgePack([source]).companyProfile.services;
+  assert.equal(services[0].name, 'Survey');
+  assert.equal(services[0].price, '250');
+});

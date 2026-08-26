@@ -159,4 +159,31 @@ The complete closure record, including the Playwright-browser provisioning findi
 
 Anything a future genuine-business rerun exposes that another project would hit is a Factory defect: fix the Factory, add regression coverage and rerun the same approved intake. Do not hand-beautify generated output to improve the benchmark.
 
+## From one accepted run to a frozen corpus
+
+One accepted run proves the path works once. Repeatable product quality needs several deliberately different businesses run through the same contract. `docs/ROADMAP.md` sequences that product-proof freeze and states its entry condition; this document owns what each corpus run must satisfy.
+
+The corpus is adversarial by design rather than ten variations of the same brochure site. Aim for at least ten businesses spanning distinctly different demands, for example:
+
+- local trade with project photography and quote conversion;
+- restrained professional consultancy with project evidence — the accepted NBM run is the first;
+- restaurant or hospitality conversion with menu, location and booking or contact;
+- a trust-heavy professional or regulated-adjacent service where factual restraint matters most;
+- an image-heavy hospitality business such as a hotel, with rooms, amenities and local content;
+- text-heavy professional services where authority and information hierarchy carry the page;
+- a charity or community organisation, with trust, donations or contact and content depth;
+- a catalogue or ecommerce-adjacent brand with collections and consistent product imagery;
+- an editorial or content organisation with a larger information architecture;
+- an unusual premium brand that deliberately challenges the default section rhythm, typography and hero patterns.
+
+Each accepted corpus project freezes its approved input so a later factory version reruns the same truth rather than a new interpretation of it. The approved-intake bundle, the ingested sources and their hashes are the frozen input; `examples/genuine-business/nbm-approved-intake.v1.json` is the existing shape.
+
+The loop each corpus project runs is:
+
+`frozen approved input -> build -> evidence -> meaningful edits counted -> human quality judgement -> defects classified -> narrow factory fix -> rerun the same frozen input -> compare`
+
+Classify every defect a run exposes as **project-specific** or **reusable factory debt**, because only the second kind justifies factory work during the freeze. Record the per-project measurements listed in `docs/VISUAL_EXCELLENCE.md` so the corpus can be compared against itself over time, and run the anti-template diversity diagnostic across unrelated corpus builds so the factory cannot pass quality by making every business the same beautiful template.
+
+Two honesty rules carry over from the single-run gate. A worse real number is never hidden to protect a target — the mature mainstream-site aim of a median of five or fewer meaningful edits is a target, not a claim. And website evidence never silently graduates complex SaaS, consumer or AI applications to the same maturity: those belong to the separate corpus in `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
+
 **Phase 3.8E is complete. Phase 4C is now the active product stage.**

@@ -134,6 +134,15 @@ Accessibility: 6/6 axe WCAG 2.1 A/AA checks pass across desktop and mobile at
 Rendered evidence: 21 captures over six routes at three widths, plus the
 enquiry-failure state at all three, zero capture failures.
 
+## How this landed
+
+The implementation was written on a branch that forked from `686f9d2`, one commit before the
+design-reference, scored-visual-review and rework-lineage work landed. It was **re-anchored** on current
+`main` rather than merged: renderer selection and the `referenceInfluence`/`reworkOverrides` parameters
+land on the same two signatures in `tooling/lib/generator.mjs`, so taking either side alone would have
+silently reverted a shipped capability. Nothing from after the fork was lost, and the static renderer
+itself is preserved as written rather than rewritten.
+
 ## Reusable factory defects this stage found and fixed
 
 These were found by the static renderer and fixed at their cause. None of them

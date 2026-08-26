@@ -24,13 +24,20 @@ RUNTIME_USER="${APP_BUILDER_RUNTIME_USER:-appbuilder}"
 RUNTIME_PATH="/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin"
 FACTORY_PORT="${APP_BUILDER_SERVICE_PORT:-4310}"
 PROBE_IMAGE="${APP_BUILDER_PROBE_IMAGE:-docker.io/library/alpine:3.21}"
+BROKER_ENV_FILE="/etc/app-builder/agent-broker.env"
 
 pass() { printf 'PASS  %s\n' "$1"; }
 fail() { printf 'FAIL  %s\n' "$1" >&2; failures=$((failures + 1)); }
 skip() { printf 'SKIP  %s\n' "$1"; }
 
 as_runtime() {
-  runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" XDG_RUNTIME_DIR="/run/user/$(id -u "$RUNTIME_USER")" "$@"
+  # The operator commonly invokes this script from /home/predictor, which the
+  # isolated appbuilder user must not be able to traverse. Use a neutral working
+  # directory so rootless Podman never depends on the caller's private home.
+  (
+    cd /tmp
+    runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" XDG_RUNTIME_DIR="/run/user/$(id -u "$RUNTIME_USER")" "$@"
+  )
 }
 
 printf '== App Builder agent boundary acceptance ==\n'
@@ -128,7 +135,14 @@ for host_path in /srv/app-builder /etc/app-builder; do
 done
 
 # --- 5. The broker socket, when enabled -------------------------------------
-broker_socket="$(systemctl show app-builder-factory.service -p Environment --value 2>/dev/null | tr ' ' '\n' | sed -n 's/^APP_BUILDER_AGENT_BROKER_SOCKET=//p' || true)"
+# The broker variables intentionally live in an EnvironmentFile so `systemctl
+# show -p Environment` cannot reveal the signing key. Read only the non-secret
+# socket line from that file. If the file exists, the broker was configured and
+# a missing socket is a failure rather than an optional SKIP.
+broker_socket=""
+if [[ -r "$BROKER_ENV_FILE" ]]; then
+  broker_socket="$(sed -n 's/^APP_BUILDER_AGENT_BROKER_SOCKET=//p' "$BROKER_ENV_FILE" | tail -n 1)"
+fi
 if [[ -n "$broker_socket" && -S "$broker_socket" ]]; then
   mode="$(stat -c '%a' "$broker_socket")"
   owner="$(stat -c '%U' "$broker_socket")"
@@ -144,8 +158,10 @@ if [[ -n "$broker_socket" && -S "$broker_socket" ]]; then
   else
     fail "the broker socket did not mount into the sandbox"
   fi
+elif [[ -e "$BROKER_ENV_FILE" ]]; then
+  fail "agent broker is configured by ${BROKER_ENV_FILE}, but its socket is missing"
 else
-  skip "agent broker is not enabled on this host (set APP_BUILDER_AGENT_BROKER_SOCKET and APP_BUILDER_AGENT_GRANT_SECRET on app-builder-factory.service)"
+  skip "agent broker is not enabled on this host (run install-service-units.sh with APP_BUILDER_ENABLE_AGENT_BROKER=1)"
 fi
 
 # --- 6. Nothing else on this shared host changed -----------------------------

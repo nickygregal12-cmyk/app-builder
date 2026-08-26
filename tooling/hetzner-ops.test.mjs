@@ -83,13 +83,16 @@ test('rootless subordinate IDs are not assigned from a fixed shared-host range',
   assert.equal(source.includes('usermod --add-subgids 100000-165535'), false);
 });
 
-test('OpenCode service is dormant, isolated, authenticated, and loopback-only', () => {
+test('OpenCode service is dormant, isolated, authenticated, loopback-only, and reinstall-safe', () => {
   const source = readFileSync('ops/hetzner/install-service-units.sh', 'utf8');
   assert.match(source, /APP_BUILDER_OPENCODE_PORT:-4097/);
   assert.match(source, /opencode serve --hostname 127\.0\.0\.1 --port/);
   assert.match(source, /OPENCODE_SERVER_PASSWORD=/);
   assert.match(source, /User=\$\{RUNTIME_USER\}/);
   assert.match(source, /Slice=app-builder-runtime\.slice/);
+  assert.match(source, /systemctl is-active --quiet app-builder-opencode\.service/);
+  assert.match(source, /active loopback-only App Builder OpenCode service; preserving it during idempotent reinstall/);
+  assert.match(source, /something other than the active loopback-only App Builder OpenCode service/);
   assert.equal(/systemctl\s+(?:--\S+\s+)*enable\b/.test(source), false);
   assert.equal(/systemctl\s+(?:--\S+\s+)*start\b/.test(source), false);
 });
@@ -143,6 +146,15 @@ test('the agent boundary acceptance is read-only and probes the exact bypasses #
   // It must not start, stop or enable anything, and must not print the key.
   assert.equal(/systemctl\s+(?:--\S+\s+)*(?:start|stop|enable|disable|restart)\b/.test(source), false);
   assert.equal(source.includes('APP_BUILDER_AGENT_GRANT_SECRET='), false, 'the acceptance must never echo the signing key');
+});
+
+test('the hosted boundary verifier detects an EnvironmentFile broker without reading the secret', () => {
+  const source = readFileSync('ops/hetzner/verify-agent-boundary.sh', 'utf8');
+  assert.match(source, /BROKER_ENV_FILE="\/etc\/app-builder\/agent-broker\.env"/);
+  assert.match(source, /sed -n 's\/\^APP_BUILDER_AGENT_BROKER_SOCKET=\/\/p'/);
+  assert.match(source, /agent broker is configured by \$\{BROKER_ENV_FILE\}, but its socket is missing/);
+  assert.match(source, /cd \/tmp/);
+  assert.doesNotMatch(source, /systemctl show app-builder-factory\.service -p Environment --value/);
 });
 
 test('the agent broker is opt-in, socket-bound and never publishes a port', () => {

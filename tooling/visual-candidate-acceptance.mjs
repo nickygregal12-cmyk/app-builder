@@ -59,6 +59,20 @@ function sequenceOf(candidate) {
   return candidate.signature.sequence.map((page) => `${page.pageId}: ${page.presentation.join(' > ')}`);
 }
 
+function captureInventory(evidence) {
+  return (evidence?.captures ?? []).map((capture) => ({
+    id: capture.id,
+    pageId: capture.pageId,
+    route: capture.route,
+    viewport: capture.viewport,
+    state: capture.state,
+    file: capture.file,
+    contentHash: capture.contentHash,
+    byteSize: capture.byteSize,
+    elementRefs: capture.elementRefs,
+  }));
+}
+
 fs.rmSync(root, { recursive: true, force: true });
 fs.mkdirSync(root, { recursive: true });
 
@@ -123,19 +137,23 @@ try {
     assetReadiness: decided.assetReadiness,
     diversity: decided.diversity,
     refusedDirections: decided.refusedDirections,
-    candidates: decided.candidates.map((candidate) => ({
-      candidateId: candidate.candidateId,
-      directionId: candidate.directionId,
-      state: candidate.state,
-      axes: candidate.signature.axes,
-      sequence: sequenceOf(candidate),
-      gate: candidate.gate,
-      evidenceId: candidate.evidenceId,
-      captures: service.getRenderedEvidence(project.id, candidate.evidenceId)?.captures.length ?? 0,
-      designLint: candidate.designLint?.counts ?? null,
-      review: candidate.review,
-      outcome: candidate.outcome,
-    })),
+    candidates: decided.candidates.map((candidate) => {
+      const evidence = service.getRenderedEvidence(project.id, candidate.evidenceId);
+      return {
+        candidateId: candidate.candidateId,
+        directionId: candidate.directionId,
+        state: candidate.state,
+        axes: candidate.signature.axes,
+        sequence: sequenceOf(candidate),
+        gate: candidate.gate,
+        evidenceId: candidate.evidenceId,
+        captures: evidence?.captures.length ?? 0,
+        captureInventory: captureInventory(evidence),
+        designLint: candidate.designLint?.counts ?? null,
+        review: candidate.review,
+        outcome: candidate.outcome,
+      };
+    }),
     promotedCandidateId: decided.promotedCandidateId,
     // Recorded rather than implied. Phase 5 is where a genuinely independent
     // runtime could issue this verdict; nothing here pretends one did.

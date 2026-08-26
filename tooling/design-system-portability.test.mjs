@@ -187,3 +187,43 @@ test('recipe reconciliation preserves the portable design system artifact', () =
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test('every canonical project type carries its own portable design system', () => {
+  const catalog = loadCatalog();
+  const layoutDefaults = JSON.parse(fs.readFileSync('config/layout-patterns.json', 'utf8'));
+  const projectTypes = Object.keys(layoutDefaults.projectTypeDefaults);
+  assert.equal(projectTypes.length, 6, 'the factory declares six canonical project types');
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-portable-design-types-'));
+  const seen = new Map();
+
+  try {
+    for (const projectType of projectTypes) {
+      const projectManifest = manifest(`portable-${projectType}`);
+      projectManifest.project.type = projectType;
+      const out = path.join(tmp, projectType);
+      const plan = generateProject(projectManifest, out, { catalog });
+
+      const spec = designSpec(out);
+      assert.deepEqual(spec, compileDesignSystemSpec(plan.design), `${projectType} must persist the design its own build compiled`);
+      assert.equal(spec.layout.patternId, layoutDefaults.projectTypeDefaults[projectType], `${projectType} must record the layout family the factory selected for it`);
+      assert.equal(fs.readFileSync(path.join(out, 'src/generated/brand.css'), 'utf8'), renderDesignSystemCss(spec), `${projectType} must render its stylesheet from its own persisted spec`);
+
+      const packageJson = readJson(path.join(out, 'package.json'));
+      const dependencyNames = [...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.devDependencies ?? {})];
+      assert.equal(dependencyNames.some((name) => name.startsWith('@app-builder/')), false, `${projectType} must stay an ordinary repository`);
+
+      seen.set(projectType, spec.tokens);
+    }
+
+    // The six types are not one page with different colours: the compiled
+    // rhythm and measure genuinely differ between an editorial site and a
+    // dense internal tool.
+    const rhythms = new Set([...seen.values()].map((tokens) => tokens['--section-space']));
+    const measures = new Set([...seen.values()].map((tokens) => tokens['--layout-max-width']));
+    assert.ok(rhythms.size >= 3, `expected the canonical project types to compile distinct section rhythms, got ${rhythms.size}`);
+    assert.ok(measures.size >= 3, `expected the canonical project types to compile distinct measures, got ${measures.size}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

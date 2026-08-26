@@ -279,7 +279,9 @@ Continuing boundary: add service endpoints because a real Console/runtime workfl
 
 ---
 
-## Phase 3.8 — Product Proof and Correctness Hardening 🚧 Active
+## Phase 3.8 — Product Proof and Correctness Hardening ✅ Complete
+
+Closed 2026-08-26 when 3.8E passed against a real business. The immutable record is `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`.
 
 This phase captures newly identified work that is cheaper and safer to solve before the Builder Console and autonomous tool surface expand.
 
@@ -421,7 +423,7 @@ Neither displaces the outstanding 3.8E genuine-business product proof.
 
 ---
 
-## Phase 4 — Full Builder Console ⬜ Planned
+## Phase 4 — Full Builder Console 🚧 In progress
 
 Begins after Phase 3.8 P0 correctness gates are closed or explicitly dispositioned.
 
@@ -453,7 +455,7 @@ Build a complete useful loop before adding every editor feature:
 - Design Contract editing;
 - versions/checkpoint restore.
 
-### Phase 4C — Design System Registry
+### Phase 4C — Design System Registry ✅ Complete (4C.6 conditionally deferred; see `docs/PHASE_4C_EXECUTION.md`)
 
 Use shadcn's registry architecture as prior art, not as mandatory generated-app infrastructure.
 
@@ -488,7 +490,7 @@ Phase 4C also introduces the design-intelligence layer specified in `docs/DESIGN
 - machine-readable `ArtDirectionPlan` dimensions (layout variance, motion intensity, information
   density, visual distinctiveness, restraint) instead of prompt adjectives.
 
-### Phase 4D — Visual canvas and controlled variants
+### Phase 4D — Visual direction, responsive composition and candidate promotion 🚧 In progress (see `docs/PHASE_4D_EXECUTION.md`; the canvas is deferred because the Console does the comparison)
 
 Best-in-class visual workflow:
 - structured reference analysis: screenshots, moodboards, existing sites and design references become

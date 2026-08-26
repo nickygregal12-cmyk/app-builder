@@ -48,7 +48,7 @@ Current invariants include:
 - MCP, OpenCode, the Builder Console and the Hetzner runtime are development/control adapters, never production requirements of generated apps.
 - A behaviour-changing registry/contract declaration must prove a real deterministic consumer or remain explicitly non-executable.
 
-Machine-readable progress lives in `config/factory-status.json`. See `docs/MASTER_PLAN.md` for the full delivery plan, `docs/ROADMAP.md` for the staged roadmap, `docs/PHASE_4C_EXECUTION.md` for the bounded current execution order, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts, `docs/ENGINEERING_QUALITY_PROGRAMME.md` for the deterministic engineering gates and tool responsibility map, and `docs/AGENT_RUNTIME.md` for the Hetzner/OpenCode runtime architecture.
+Machine-readable progress lives in `config/factory-status.json`, and `AGENTS.md` carries the authority map that says which document owns which decision. See `docs/ROADMAP.md` for where we are and what comes next in order, `docs/MASTER_PLAN.md` for the end state and what "finished" means, `docs/PHASE_4D_EXECUTION.md` for the bounded current execution order, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts, `docs/ENGINEERING_QUALITY_PROGRAMME.md` for the deterministic engineering gates and tool responsibility map, and `docs/AGENT_RUNTIME.md` for the Hetzner/OpenCode runtime architecture.
 
 ## Run it yourself
 
@@ -77,7 +77,7 @@ In the Console you can today:
 
 Generated projects are ordinary repositories. `.app-builder/workspaces/` holds local development outputs; copy a generated repository anywhere, `npm install && npm run dev`, and it runs with no dependency on the factory runtime.
 
-Still planned: the full Phase 4C/4D design-intelligence stack, richer click-to-edit visual manipulation, comparison/art-direction workflows and deployment from the Console. Until the deployment product slice lands, a finished generated repository is deployed through its own ordinary platform workflow.
+Still planned: richer click-to-edit visual manipulation, a second static/content renderer, and deployment from the Console. Until the deployment product slice lands, a finished generated repository is deployed through its own ordinary platform workflow. The ordered path from here to a finished core product is the top of `docs/ROADMAP.md`.
 
 ## Commands
 

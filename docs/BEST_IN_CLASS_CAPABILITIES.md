@@ -518,7 +518,12 @@ Do **not** adopt these by default merely because they appeared in research:
 - multi-persona review on one model presented as an independent second opinion;
 - repository-wide mutation testing, or any blocking gate whose output has not been baselined.
 
-## 10. Recommended implementation order
+## 10. Priority bands
+
+**This register does not sequence delivery.** `docs/ROADMAP.md` owns the ordered path; the bands below
+are the relative priority of the items *within this register*, and several of the P0/P1/P2 entries have
+since shipped. Read a band as "how much this is worth", not as "what to do next", and check
+`config/factory-status.json` before treating any line here as outstanding.
 
 ### P0 — before broad Phase 4 work
 1. harden ChangeSet path matching and add property tests;

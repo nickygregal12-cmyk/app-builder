@@ -186,4 +186,4 @@ Classify every defect a run exposes as **project-specific** or **reusable factor
 
 Two honesty rules carry over from the single-run gate. A worse real number is never hidden to protect a target — the mature mainstream-site aim of a median of five or fewer meaningful edits is a target, not a claim. And website evidence never silently graduates complex SaaS, consumer or AI applications to the same maturity: those belong to the separate corpus in `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
 
-**Phase 3.8E is complete. Phase 4C is now the active product stage.**
+**Phase 3.8E is complete.** Which stage is active is recorded in `config/factory-status.json` and sequenced in `docs/ROADMAP.md`; this document does not restate it.

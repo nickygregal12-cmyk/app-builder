@@ -64,25 +64,38 @@ Exceeding a ceiling requires a written reason in the task output and must remain
 
 These boundaries are executable, not advisory: `config/architecture-boundaries.json` is the machine-readable form and `npm run architecture` fails the build on an illegal edge or a new cycle.
 
-## Planning and evidence authorities
+## Authority map
 
-Use the narrowest authority that owns the decision, and do not create a second roadmap, design authority, maturity system or lessons file beside one of these:
+One concern, one authoritative home. Use the narrowest authority that owns the decision; do not start a
+second roadmap, design authority, maturity system, product-proof programme or lessons file beside one of
+these. Everything else references rather than restates.
 
-- `config/factory-status.json` — machine-readable current phase, stage, completed stages and outstanding gates;
-- `docs/ROADMAP.md` — stage sequencing, including the product-proof freeze and evidence-led expansion order;
-- `docs/MASTER_PLAN.md` — detailed delivery plan;
-- `docs/PHASE_<stage>_EXECUTION.md` — the bounded execution order and implementation record of a stage being delivered, one per stage;
-- `docs/VISUAL_EXCELLENCE.md` / `docs/DESIGN_INTELLIGENCE.md` — premium visual, design-system and art-direction quality, including the professional-output completeness gate and the anti-template diversity diagnostic;
-- `docs/GENUINE_BUSINESS_ACCEPTANCE.md` — the genuine-business proof contract and the frozen real-project corpus built on it;
-- `docs/ENGINEERING_QUALITY_PROGRAMME.md` — which deterministic checks run, in what order, and what each proves;
-- `docs/PRODUCTION_COMPLETENESS.md` — states, journeys and release completeness;
-- `docs/FACTORY_CONTROL_PLANE.md` — durable task/event/ChangeSet/policy architecture;
-- `docs/AGENT_RUNTIME.md` — sandbox, session, capacity and recovery architecture;
-- `docs/PLATFORM_PARITY_PROGRAMME.md` — remaining product-surface capabilities, including integrations, Git workflow, stakeholder review and deployment operations;
-- `docs/BEST_IN_CLASS_CAPABILITIES.md` — the reviewed capability/tooling backlog;
-- `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` — the complex-application pressure test.
+| Concern | Authority | Supporting detail |
+| --- | --- | --- |
+| Current phase, active stage, completed stages, outstanding gates, deferrals | `config/factory-status.json` | `docs/PHASE_<stage>_EXECUTION.md` for the stage being delivered |
+| What comes next, in what order, on what evidence | `docs/ROADMAP.md` | — |
+| What App Builder becomes, and what "finished" means | `docs/MASTER_PLAN.md` | `docs/PRODUCT.md`, `docs/ARCHITECTURE.md` |
+| Professional visual/product quality bar and its evidence | `docs/VISUAL_EXCELLENCE.md` | `docs/PRODUCTION_COMPLETENESS.md` for state/journey/release completeness |
+| Design machinery, contracts and decision process | `docs/DESIGN_INTELLIGENCE.md` | `docs/COMPOSITION.md`, `docs/GENERATOR.md` |
+| Deterministic quality, security and release gates | `docs/ENGINEERING_QUALITY_PROGRAMME.md` | — |
+| Durable orchestration and control-plane architecture | `docs/FACTORY_CONTROL_PLANE.md` | — |
+| Agent execution, sandbox, capacity, runtime security and readiness | `docs/AGENT_RUNTIME.md` | `config/runtime-readiness.json`, `config/task-images.json` |
+| Specialist decision boundaries | `docs/AGENT_SPECIALIST_ARCHITECTURE.md` | `config/agent-roles.json` |
+| Handoff, rework and promotion semantics | `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` | `config/agent-pipelines.json` |
+| Real-business proof and the frozen corpus protocol | `docs/GENUINE_BUSINESS_ACCEPTANCE.md` | `docs/TRIAL_FINDINGS.md` for per-trial evidence |
+| Later product-surface parity backlog | `docs/PLATFORM_PARITY_PROGRAMME.md` | `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability/tooling register |
+| Complex-application north star | `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` | — |
+| Historical phase evidence | `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md` and closed `docs/PHASE_<stage>_EXECUTION.md` | — |
 
-`docs/POST_PRODUCT_*.md` are inactive commercial/venture planning. They are never ordinary engineering context and are loaded only when the task is explicitly commercial or venture work.
+**Which wins if two statements disagree.** Machine-readable state beats prose: `config/factory-status.json`
+and the registries decide what is done, active and outstanding. Among prose, the narrower authority beats
+the broader one on its own subject — `docs/VISUAL_EXCELLENCE.md` beats `docs/ROADMAP.md` on the visual
+bar, `docs/ROADMAP.md` beats `docs/MASTER_PLAN.md` on sequencing, `docs/MASTER_PLAN.md` beats everything
+on the end state. A closed `docs/PHASE_<stage>_EXECUTION.md` or acceptance record is historical evidence
+and never a current instruction. Fix the loser rather than living with the disagreement.
+
+`docs/POST_PRODUCT_*.md` are inactive commercial/venture planning. They are never ordinary engineering
+context and are loaded only when the task is explicitly commercial or venture work.
 
 ## Agent/runtime rules
 

@@ -1,14 +1,57 @@
 # Roadmap
 
+This document is the **sequencing authority**: where we are, what comes next, in what order, and what
+evidence advances each step.
+
+`config/factory-status.json` is the machine-readable authority for the current phase, active stage,
+completed stages, outstanding gates and deliberately deferred capabilities. This document does not
+restate that state, and where the two disagree the status file wins.
+
 Current stage: **Phase 4D — Visual direction, responsive composition and candidate promotion**.
 
-Phase 3.8 closed when 3.8E passed against a real business on 2026-08-26; the immutable record is `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`. Phase 4C closed on the same date against its own completion gate — the design declarations the product uses have real deterministic consumers and focused tests, and the portable design contract survives generated-repo handoff. 4C.6, the design-intelligence catalogue, is **conditionally deferred** rather than complete: nothing is ready to query it, and `config/factory-status.json` records what would revive it.
+**The one gate blocking advancement today** is `phase-4d-visual-review-verdict`: the nbm candidate set is
+generated, built and photographed, both candidates lint clean, and no candidate is promoted, because the
+factory created them and rule 17 forbids it promoting its own work. A reviewer who did not create them
+must pass, rework or reject each candidate. `npm run acceptance:visual-candidates` produces the evidence
+and `npm run review:visual-candidates` opens the Console over it.
 
-Phase 4D is where the factory stops having exactly one visual answer.
+## The path to a finished core product
 
-`config/factory-status.json` remains the machine-readable progress authority — current phase, active stage, completed stages and outstanding product gates — and this document is the sequencing authority for what comes next, in what order and on what evidence.
+The ordered top-level route from today to a finished core product. Everything below this section is the
+detail behind one of these steps. What "finished" means — the v1 core, the class-maturity tiers and the
+expansion that deliberately sits outside v1 — is defined once in `docs/MASTER_PLAN.md` §7.
 
-The detailed delivery specification lives in `docs/MASTER_PLAN.md`. The best-in-class capability register lives in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The remaining product-surface parity work lives in `docs/PLATFORM_PARITY_PROGRAMME.md`. The cross-cutting premium-quality programme lives in `docs/VISUAL_EXCELLENCE.md`. The deterministic engineering-gate programme lives in `docs/ENGINEERING_QUALITY_PROGRAMME.md`. The genuine-business proof contract and the real-project corpus built on it live in `docs/GENUINE_BUSINESS_ACCEPTANCE.md`. The control-plane programme lives in `docs/FACTORY_CONTROL_PLANE.md`; the dedicated future agent runtime is defined in `docs/AGENT_RUNTIME.md`.
+1. **Take the outstanding Phase 4D visual verdict** and promote or rework accordingly.
+2. **Close Phase 4D honestly** against the exit gate in `docs/PHASE_4D_EXECUTION.md`, leaving 4D.2, 4D.3
+   and the comparison canvas recorded as deferred rather than done.
+3. **Finish the documentation and product-proof alignment** so one authority owns each concern.
+4. **Phase 4.2 — prove the static/content renderer**, so the template contract is real rather than a
+   single-renderer assumption.
+5. **Close the genuinely missing professional-output capabilities** — and only those; the rule that
+   separates a missing capability from a correctly deferred one is `docs/VISUAL_EXCELLENCE.md` §9.
+6. **Enter the product-proof freeze** (below): stop extending output machinery and start proving it.
+7. **Run the varied real-business corpus**, including MGB Decor, under the contract in
+   `docs/GENUINE_BUSINESS_ACCEPTANCE.md`.
+8. **Fix only the reusable defects the corpus exposes** and rerun the same frozen inputs to compare.
+9. **Establish evidence-earned project-class maturity** and the anti-template diversity evidence.
+10. **Phase 4.3 — mature website-builder capabilities**: CMS/content collections, localisation,
+    existing-repository adoption, SEO/AEO.
+11. **Phase 4.4 — high-value application capabilities**: email, notifications, webhooks, jobs/cron/queues,
+    realtime, billing, IntegrationSpec/connections.
+12. **Phase 4E/4F — environments, Git/staging, stakeholder review and release UX.**
+13. **In parallel where safe, finish the runtime proof**: a pinned task-image host digest, hosted egress
+    attestation, one low-risk real-model canary, and then one genuinely runtime-ready role.
+14. **Phase 5 — bounded specialist AI orchestration.**
+15. **Phase 5.5 — model/skill evaluation and red team.**
+16. **Phase 6 — production-quality, cross-browser, security and performance verification.**
+17. **Phase 7 — deployment, operations, upgrade propagation and post-launch.**
+18. **Phase 8 — evidence-driven factory improvement.**
+19. **The complex-app maturity programme**, culminating in the Predictor-class benchmark in
+    `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
+
+Steps 1–9 are the core product path and gate the v1 claim. Step 13 runs beside them because it is a
+safety boundary rather than a product surface, and nothing in it is a prerequisite for the corpus.
+Steps 10–12 and 14–19 are sequenced work that does **not** block v1.
 
 ## Sequencing discipline
 
@@ -19,6 +62,29 @@ Three rules govern what advances next:
 3. **After that gate, real project failures outrank roadmap enthusiasm.** The product-proof freeze below is the point where the corpus, not the plan, chooses the work.
 
 Security, data-loss and durability blockers may interrupt that sequence. Speculative architecture may not.
+
+## How to read the phase records below
+
+Every phase record falls into one of these categories, and its marker says which:
+
+- **✅ Delivered** — shipped. The description is kept because it is what the work was measured against; it is not an instruction to repeat it.
+- **🚧 Active** — being delivered now. `config/factory-status.json` names the one active product stage.
+- **◐ Partly landed** — work from a later phase that landed early because it was cheaper or safer to build first. It is not the active stage and landing it promotes nothing.
+- **⬜ Next / Planned** — specified and sequenced, not started.
+- **⏸ Later / conditional** — deliberately not now. A conditional capability records why it is deferred and what would revive it in `config/factory-status.json`; that mechanism is the only backlog language, and no document keeps a second one.
+- **Historical evidence** — `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md` and closed `docs/PHASE_<stage>_EXECUTION.md` records. Immutable, never a current roadmap.
+
+## Where the detail lives
+
+The end-state and the definition of finished live in `docs/MASTER_PLAN.md`. The remaining product-surface
+parity work lives in `docs/PLATFORM_PARITY_PROGRAMME.md`, and the reviewed capability/tooling register in
+`docs/BEST_IN_CLASS_CAPABILITIES.md` — both are sequenced by this document rather than by their own
+ordering sections. Premium visual quality lives in `docs/VISUAL_EXCELLENCE.md` and the design machinery in
+`docs/DESIGN_INTELLIGENCE.md`. Deterministic gates live in `docs/ENGINEERING_QUALITY_PROGRAMME.md`. The
+genuine-business proof contract and the real-project corpus built on it live in
+`docs/GENUINE_BUSINESS_ACCEPTANCE.md`. The control-plane programme lives in
+`docs/FACTORY_CONTROL_PLANE.md`, and the agent runtime, its sandbox and its readiness gate in
+`docs/AGENT_RUNTIME.md`. The full map, including the tie-break rule, is in `AGENTS.md`.
 
 ## Phase 0 — Foundation ✅ Complete
 
@@ -114,17 +180,19 @@ The existing Phase 3 brand observations are the base for later BrandSpec/asset i
 - rich Design Contract groundwork
 - status/progress drift checks
 
-### Phase 3.5C — Sandbox and trace adapters ⏸ Deferred until before Phase 5
+### Phase 3.5C — Sandbox and trace adapters ◐ Mostly landed early through Phase 4.5 work
 
-Deferred scope:
-- provider-neutral `ExecutionEnvironmentAdapter`
-- disposable/rootless sandbox implementation
-- CPU/memory/runtime/network/secret policies
-- preview/artifact/checkpoint interface
-- OTel-compatible trace export mapping
-- explicit production deployment/database approval boundary
+Deferred at 3.5 and resumed ahead of schedule because the runtime boundary became the cheaper thing to
+build first. What has landed: the provider-neutral execution adapter and its local and rootless-Podman
+drivers, the supervised attempt lifecycle, CPU/memory/runtime limits, the pinned content-addressed task
+image and its bounded public egress, and the deny-by-default capability broker that stands between a task
+and a Factory operation.
 
-## Phase 3.6 — Requirements-to-Product Composition ✅ Core complete; real-world proof remains open
+Still outstanding, tracked under Phase 4.5 below: the OTel-compatible trace export mapping, the pinned
+image's host build digest, the hosted egress attestation, and the explicit production
+deployment/database approval boundary.
+
+## Phase 3.6 — Requirements-to-Product Composition ✅ Complete
 
 ### Phase 3.6A — Manifest and Build Contract v2 ✅ Complete
 
@@ -212,7 +280,7 @@ Delivered:
 
 Remaining schemas stay listed as pending with a recorded reason. Migrate them when they become real exchanged boundaries rather than attempting a risky all-at-once rewrite; `schemas/genuine-business-acceptance.schema.json` also needs its draft-07 dialect migrated first.
 
-### 3.8C — Executed Supabase security acceptance — P0
+### 3.8C — Executed Supabase security acceptance ✅ Complete
 
 - keep cheap static SQL smoke tests;
 - add local Supabase/pgTAP execution for generated database recipes;
@@ -221,7 +289,7 @@ Remaining schemas stay listed as pending with a recorded reason. Migrate them wh
 - cover owner/admin/editor/member/viewer and anonymous cases;
 - make executable RLS behavior part of recipe readiness/release acceptance.
 
-### 3.8D — Accessibility baseline — P0/P1
+### 3.8D — Accessibility baseline ✅ Complete
 
 - add `@axe-core/playwright` to canonical generated-app browser acceptance;
 - establish deterministic serious/critical accessibility gates before later AI review;
@@ -233,7 +301,7 @@ Phase 3.6C was completed honestly through the product path rather than a CLI bes
 
 Its purpose continues: observed edit categories, brand/asset shortcomings, generic-design issues, image gaps, copy/messaging edits and responsive/visual edits feed back into composer, templates and recipes so the Visual Excellence programme stays evidence-led. The corpus that turns one accepted run into repeatable evidence is the product-proof freeze below.
 
-### 3.8F — MCP interoperability facade — P1
+### 3.8F — MCP interoperability facade ✅ Complete
 
 Expose the existing safe factory service tool contract through MCP v2:
 
@@ -390,7 +458,7 @@ internal-tool 15, ai-app 15 predicted edits. Every one is below the 20-edit targ
 worth reducing. These ceilings gate **synthetic canonical fixtures**, where they can only catch a
 regression; they are not a quality bar applied to a real business build.
 
-### 3.8G — Brand-source and asset-provenance foundation — P1/P2
+### 3.8G — Brand-source and asset-provenance foundation ✅ Complete
 
 Extend the existing content/asset intelligence rather than creating a second extraction subsystem.
 
@@ -435,7 +503,7 @@ The `state-matrix` and `journey-closure` specialists registered in Phase 3.8I ge
 inputs from this slice: it is what makes a `StateMatrixSpec` and a `JourneyClosureEvidence` ledger
 possible to produce and check against a real build.
 
-### Phase 4B — Direct manipulation, brand sources and assets 🚧 In progress
+### Phase 4B — Direct manipulation, brand sources and assets ✅ Slices delivered; two items wait on a capability that does not exist
 
 Delivered:
 - **Builder Element Identity**: a rendered element resolves deterministically to
@@ -831,7 +899,9 @@ comparison). The original plan for the stage follows.
   everything, and never let a passing journey stand in for "the design did not regress";
 - an independent visual critic on a different model or runtime for release-critical visual decisions.
 
-### Phase 4E — Environments, integrations and release controls
+### Phase 4E/4F — Environments, integrations, stakeholder review and release controls ⬜ Planned
+
+Phase 4E is the environment and release boundary below. Phase 4F is the collaboration surface on top of it — stakeholder review links, comment/approval flow, internal branches and release promotion — specified in `docs/PLATFORM_PARITY_PROGRAMME.md` §5 and §6.
 
 Introduce explicit **development / preview / production** environment identity:
 - deployment/backend identities;
@@ -857,11 +927,11 @@ Then add:
 - cost/trace view;
 - preview/production deploy controls with approval gates.
 
-### Hono decision point
+### Hono decision point ⏸ Conditional
 
 Evaluate Hono only if Console/service development begins duplicating route/request/response types. Do not rewrite the service merely to adopt it; `packages/contracts` remains authoritative.
 
-## Phase 4.2 — Generated-Product and Web-Builder Quality Expansion ⬜ Planned alongside/after early Console
+## Phase 4.2 — Generated-Product and Web-Builder Quality Expansion ⬜ Next, after Phase 4D closes
 
 ### Static/content template — 10/10 priority
 
@@ -880,6 +950,33 @@ Default direction:
 - page-level SEO/meta output appropriate to the selected template;
 - deterministic asset suitability/quality scoring, responsive crop variants and focal-point metadata;
 - detect duplicate, undersized, badly-cropped and obviously unsuitable assets before AI image generation is considered.
+
+## Product-proof freeze — the first varied real-project corpus ⬜ First major evidence checkpoint
+
+Entry condition: the professional-output completeness gate in `docs/VISUAL_EXCELLENCE.md` is genuinely usable in the product path, not merely declared. Do not wait for every mature website capability, every integration or every autonomous-runtime stage first.
+
+At that point, pause speculative architecture and run deliberately varied real businesses through the same product path that closed Phase 3.8E. The corpus contract — how a run is set up, replayed, measured and validated — is `docs/GENUINE_BUSINESS_ACCEPTANCE.md`. Per-project measurements and the anti-template diversity diagnostic are owned by `docs/VISUAL_EXCELLENCE.md`.
+
+During the freeze the allowed work is:
+
+- a reusable defect the corpus exposed;
+- a deterministic check for a real observed failure;
+- a contract, recipe, renderer or presentation improvement that real output proved insufficient;
+- a security, data-loss, durability or runtime blocker;
+- a measured cost, latency or intervention bottleneck.
+
+Deliberately paused during the freeze: new orchestration frameworks, further role proliferation, a new project class without corpus evidence, provider integrations with no live use case, framework rewrites, and any capability wanted because it sounds impressive rather than because a real project failed without it.
+
+### Project-class maturity tiers
+
+The corpus is what earns them. The tier vocabulary itself — `proven`, `supported`,
+`assisted-engineering`, `experimental`, what each requires and what each unlocks — is defined once in
+`docs/MASTER_PLAN.md` §7, because it is part of what "finished" means rather than a stage of work. No
+class is claimed at any tier today.
+
+### Comparative evidence
+
+Once the internal corpus is stable enough for the comparison to mean anything, the same frozen brief and source pack may be run through relevant current builders and scored blind where practical, on first-output quality, distinctiveness, factual accuracy, mobile quality, journeys, accessibility, performance, manual edits, elapsed time, cost, portability and provenance discipline. The purpose is to test the best-in-class claim, not to chase every competitor feature.
 
 ## Phase 4.3 — Mature Website-Builder Capabilities ⬜ Planned
 
@@ -929,43 +1026,39 @@ Today's inline base64/browser-state upload path is adequate for the small approv
 
 Add resumability only when measured file sizes and real interruptions justify the extra machinery. The capability itself is sequenced with the rest of the file lifecycle in `docs/PLATFORM_PARITY_PROGRAMME.md`.
 
-## Product-proof freeze — the first varied real-project corpus ⬜ First major evidence checkpoint
+## Phase 4.4 — High-Value Application Capabilities ⬜ Planned
 
-Entry condition: the professional-output completeness gate in `docs/VISUAL_EXCELLENCE.md` is genuinely usable in the product path, not merely declared. Do not wait for every mature website capability, every integration or every autonomous-runtime stage first.
+The capabilities that separate a generated brochure site from a generated product, and the ones a real
+application is expected to have before anyone would run a business on it:
 
-At that point, pause speculative architecture and run deliberately varied real businesses through the same product path that closed Phase 3.8E. The corpus contract — how a run is set up, replayed, measured and validated — is `docs/GENUINE_BUSINESS_ACCEPTANCE.md`. Per-project measurements and the anti-template diversity diagnostic are owned by `docs/VISUAL_EXCELLENCE.md`.
+- transactional email;
+- notifications;
+- inbound and outbound webhooks;
+- background jobs, cron and queues;
+- realtime;
+- billing and payments;
+- `IntegrationSpec` and the connection manager, including end-user connections.
 
-During the freeze the allowed work is:
+Each is specified in `docs/PLATFORM_PARITY_PROGRAMME.md` §3 and §4. None of them is a prerequisite for
+the product-proof freeze, and none of them may be claimed as first-class without the integration
+acceptance standard that document sets.
 
-- a reusable defect the corpus exposed;
-- a deterministic check for a real observed failure;
-- a contract, recipe, renderer or presentation improvement that real output proved insufficient;
-- a security, data-loss, durability or runtime blocker;
-- a measured cost, latency or intervention bottleneck.
+## Phase 4.5 — Pre-Agent Hardening ◐ Partly landed ahead of its place in the sequence
 
-Deliberately paused during the freeze: new orchestration frameworks, further role proliferation, a new project class without corpus evidence, provider integrations with no live use case, framework rewrites, and any capability wanted because it sounds impressive rather than because a real project failed without it.
+The runtime boundary is being built before Phase 5 rather than beside it, because a sandbox that does not
+exist cannot be reviewed later. Landed already: the execution sandbox abstraction and its rootless
+implementation, secret/network/resource restrictions, the supervised attempt lifecycle, the pinned
+content-addressed task image with bounded public egress, and the deny-by-default capability broker.
 
-### Project-class maturity tiers
+**No role is `runtimeReady`, and nothing here promotes one.** `config/runtime-readiness.json` holds the
+deny-by-default evidence list a role must carry, and `packages/control-plane/src/runtime-readiness.js`
+refuses a promotion without it. The requirements still unmet for every role are the pinned image's host
+build digest, the hosted egress attestation and one bounded real model-powered attempt.
 
-A project class must not look equally proven merely because a recipe or template exists for it. Introduce a machine-readable maturity vocabulary for project classes and capability families:
+Still outstanding here:
 
-- **proven** — material real-project evidence shows the class routinely performs at the declared quality and intervention target;
-- **supported** — known architecture, recipes and representative acceptance, but not enough corpus evidence for a "normally excellent" claim;
-- **assisted-engineering** — the factory can architect and implement the class, but substantial specialist and human judgement is expected;
-- **experimental** — novel or insufficiently proven; explicit approval and custom engineering required.
-
-Maturity should influence autonomy, model/tool budget, verification depth, required human review, the confidence the Console shows and whether one-prompt quality claims are permitted. It is earned from recorded evidence and may regress when a benchmark exposes deterioration; a canonical synthetic app passing build and tests never promotes a class to `proven`. This tier vocabulary is the evidence-earned complement to the per-request supported-vs-custom classification in `docs/VISUAL_EXCELLENCE.md`, not a second system.
-
-### Comparative evidence
-
-Once the internal corpus is stable enough for the comparison to mean anything, the same frozen brief and source pack may be run through relevant current builders and scored blind where practical, on first-output quality, distinctiveness, factual accuracy, mobile quality, journeys, accessibility, performance, manual edits, elapsed time, cost, portability and provenance discipline. The purpose is to test the best-in-class claim, not to chase every competitor feature.
-
-## Phase 4.5 — Pre-Agent Hardening ⬜ Planned
-
-Resume deferred 3.5C immediately before powerful autonomous agents are enabled:
-
-- execution sandbox abstraction and first rootless implementation;
-- secret/network/resource restrictions;
+- the pinned task image's host build digest, and the hosted egress attestation;
+- one bounded low-risk real-model canary attempt, reviewed;
 - trace/export mapping;
 - production action approval boundary;
 - dead/orphan integration detection (`Knip` where justified), non-blocking until baselined;
@@ -1125,19 +1218,11 @@ After analytics, privacy and deployment state are mature:
 
 ### Real-world benchmark corpus
 
-The six canonical project classes remain engineering regressions. Build a separate corpus that grows toward roughly **30–50 varied real-world projects** across local services/trades, professional services, hospitality, health, property/construction, charity, SaaS/B2B, AI products, creator/editorial, ecommerce/brands and internal applications.
-
-Track per project:
-- first-build success;
-- meaningful manual edits before acceptable launch;
-- visual/product and mobile scores;
-- content accuracy/unsupported claims;
-- accessibility/performance/SEO/security;
-- functional journey success;
-- elapsed time and AI/model/tool cost;
-- human interventions;
-- accepted/rejected art-direction variants;
-- asset issues and generated-image acceptance rate.
+The six canonical project classes remain engineering regressions; they are not evidence of design quality.
+The varied real-world corpus that is, its target span and the per-project measurements it records are
+defined once in `docs/VISUAL_EXCELLENCE.md` §8, and the protocol for running one is
+`docs/GENUINE_BUSINESS_ACCEPTANCE.md`. By Phase 8 the corpus is the input to factory improvement rather
+than a new programme: what it has measured decides which patterns are promoted and which are retired.
 
 ### Long-run 10/10 Gold Standard
 
@@ -1177,4 +1262,4 @@ A project outside the proven envelope must be classified honestly as factory-sup
 - do not claim independent review when both reviewers run on the same model or runtime;
 - do not create a second memory/lessons documentation system; one fact gets one home;
 - do not start a refactor programme because a file is large. `FactoryService` and `BuilderWorkspace` may become thinner as runtime, source, execution and evidence boundaries become real, but extract by product capability when divergence actually appears;
-- do not treat the `consumer-app` web class as native-mobile support. If native applications are ever claimed, they need their own project class and contracts for permissions, notifications, device capabilities, deep links, offline state, secure storage, signing, store metadata and device testing.
+- do not treat the `consumer-app` web class as native-mobile support; native applications are later expansion with their own project class and contracts, per `docs/MASTER_PLAN.md` §7.3.

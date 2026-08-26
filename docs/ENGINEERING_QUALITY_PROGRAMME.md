@@ -53,8 +53,9 @@ acceptance dimensions separate.
 
 ## Programme stages
 
-Sequencing follows the roadmap rather than tool enthusiasm. Nothing here displaces the outstanding
-Phase 3.8E genuine-business product gate or the active Phase 4 source-ingestion and Console work.
+Sequencing follows `docs/ROADMAP.md` rather than tool enthusiasm, and nothing here displaces the active
+product stage that `config/factory-status.json` records. A stage below is a specification, not a
+statement about what is installed: check the status file before treating one as outstanding.
 
 ### Stage Q1 — architecture made executable ✅ Delivered
 

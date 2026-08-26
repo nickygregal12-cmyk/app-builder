@@ -335,23 +335,12 @@ exist, because a canvas with nothing durable to compare is a demo.
 
 ## 15. Anti-template diversity diagnostic — product-proof stage
 
-A build can be individually polished while the factory as a whole remains obviously template-like.
-After the professional-output foundation exists, compare unrelated corpus projects across signals such
-as:
-
-- section-family sequence;
-- hero treatment;
-- layout family;
-- information density;
-- typography combinations;
-- CTA structure;
-- component-family sequence;
-- motion language;
-- repeated visual motif;
-- responsive composition strategy.
-
-Treat this as a diagnostic first. Establish a real corpus baseline before inventing hard thresholds,
-and use the result to retire generic patterns rather than to inject uncontrolled randomness.
+A build can be individually polished while the factory as a whole remains obviously template-like. The
+signals compared across unrelated corpus projects, and the rule that this starts as a diagnostic rather
+than a threshold, are defined once in `docs/VISUAL_EXCELLENCE.md` §8. What belongs here is the machinery:
+the comparison runs over the same structural signature and composition axes that `assessDiversity`
+already computes within a candidate set, so cross-build diversity is measured with the same instrument as
+within-set diversity rather than a second definition of "different".
 
 ## Placement summary
 

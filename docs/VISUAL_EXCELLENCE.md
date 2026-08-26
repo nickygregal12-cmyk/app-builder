@@ -322,24 +322,9 @@ Do not multiply the entire browser matrix unnecessarily. Use targeted WebKit/Fir
 
 The six canonical project classes remain engineering regression cases. They are not enough to prove design quality.
 
-Build a separate real-world benchmark corpus that grows toward roughly 30–50 varied projects, for example:
+The varied real-world corpus that is — which businesses it spans, how each run is frozen, replayed and validated, and how a defect is classified project-specific or reusable factory debt — is owned by `docs/GENUINE_BUSINESS_ACCEPTANCE.md`, and its place in the sequence by `docs/ROADMAP.md`. It grows toward roughly 30–50 varied projects.
 
-- trades/local services;
-- architect/design practice;
-- hotel/hospitality;
-- restaurant;
-- accountant/professional services;
-- dentist/clinic;
-- legal;
-- property/construction;
-- charity;
-- gym/wellness;
-- recruitment;
-- SaaS/B2B software;
-- AI product;
-- creator/content/editorial;
-- ecommerce/brand;
-- internal application/dashboard.
+What this document owns is what each run has to measure, and the diagnostic that stops the corpus passing by making every business the same beautiful template.
 
 Track per project:
 
@@ -376,25 +361,63 @@ Begin as a diagnostic rather than an arbitrary blocking threshold. Use real corp
 
 ## 9. Professional-output completeness gate before corpus freeze
 
-Before the first deliberate product-proof freeze / ten-business benchmark is treated as evidence of boutique-agency quality, all of the following must be genuinely usable in the product path:
+Before the first deliberate product-proof freeze is treated as evidence of boutique-agency quality, the
+factory must genuinely be able to produce professional output. This section says what that means and how
+a requirement is discharged.
 
-- compiler-backed DesignSystemSpec;
-- BrandSpec with source/decision provenance;
-- TypographySpec with real font/token output and licensing policy;
-- ArtDirectionPlan with at least one distinctive-moment strategy;
-- ResponsiveCompositionPlan with real viewport-specific consumers;
-- MotionContract with reduced-motion behaviour;
-- Visual Asset Readiness + ImagePlan;
-- MessagingPlan for public-facing projects where messaging matters;
-- Presentation Registry / Component Manifest retrieval;
-- controlled bespoke-presentation fallback when the registry cannot satisfy the direction;
-- deterministic DesignLint;
-- rendered responsive evidence;
-- independent visual critic and bounded correction loop;
-- targeted Chromium/WebKit/Firefox visual portability smoke;
-- anti-template diversity diagnostics across unrelated corpus builds.
+### The rule that makes this gate decidable
 
-This gate is about **creative-production completeness**, not adding another authority. Where a listed artifact does not justify its own stable contract, keep it as a derived/compiler/evidence structure under the existing Design Contract and product authorities.
+A capability cannot simultaneously be "required before product proof" and "correctly deferred because it
+has no consumer". The rule that separates the two:
+
+> Every entry below is a **capability and evidence requirement**, not a mandate for a standalone contract.
+> A requirement is satisfied when the product path demonstrably produces the behaviour and the evidence
+> can be pointed at. Where an existing composition, design or evidence structure already carries it,
+> **that structure is the answer** and a second schema would only create a second place the same decision
+> could be made. Where nothing carries it, the requirement is genuinely outstanding and blocks the freeze.
+> Where the behaviour has no real consumer or supplier at all, the requirement is **conditional**: it is
+> deferred with a reviving condition in `config/factory-status.json`, and a conditional requirement is
+> never counted as a blocker.
+
+Three consequences, stated so they cannot be argued away later:
+
+- a conditional deferral is not a free pass. It needs a recorded reviving condition, and the moment a
+  real consumer appears the requirement becomes ordinary outstanding work;
+- "satisfied by an existing structure" is a claim about the product path, not about a plan. If the
+  behaviour cannot be shown in generated output or captured evidence, it is not satisfied;
+- corpus entry still requires professional visual quality. A build nobody would call professional is not
+  meaningfully reviewable, so the freeze does not open merely because every row below has some status.
+
+### The requirements
+
+| Requirement | How it is discharged today |
+| --- | --- |
+| Compiler-backed DesignSystemSpec | **Satisfied.** 4C.1/4C.2: design choices compile through a `DesignSystemSpec` IR and persist as `.product/design-system.json` in the generated repository. |
+| BrandSpec with source/decision provenance | **Satisfied.** 4C.3: accent and typographic voice resolve from the colours and font families the company's own pages showed, with source ids. |
+| Typography with real font/token output and a licensing policy | **Satisfied by BrandSpec, not by a separate TypographySpec.** The voice compiles to real `--font-display`/`--font-body` output, and the licensing question is answered by the policy rather than by paperwork: a voice may not cost the generated app a webfont request or a licence, so the stacks are system stacks. A standalone `TypographySpec` is warranted only when a decision needs typographic information BrandSpec cannot express. |
+| ArtDirectionPlan with at least one distinctive-moment strategy | **Satisfied.** 4C.3/4D.6: directions declare a distinctive moment, and one with nothing to render is refused rather than shipped empty. |
+| ResponsiveCompositionPlan with real viewport-specific consumers | **Satisfied.** 4D.5: mobile content order, navigation treatment, hero stacking, density and motion, each read by the template. |
+| MotionContract with reduced-motion behaviour | **Satisfied.** 4C.3, with `prefers-reduced-motion` honoured in the compiled tokens. |
+| Visual asset readiness | **Satisfied.** 4D.4: readiness is resolved before directions are selected, and an asset the business has not cleared never counts towards coverage. |
+| ImagePlan | **Conditional — deferred.** An ImagePlan organises image *generation*, and the factory cannot generate images. The sufficiency half of the requirement is what matters before the freeze, and asset readiness above carries it. Revives with image generation, as Phase 5 sequences it. |
+| MessagingPlan where messaging matters | **Conditional — deferred (4D.3).** The composition already carries what it would organise, with provenance: page narrative is the section sequence, CTA strategy derives from declared conversion goals, proof gaps are `declaredProofGap`, audience is on the manifest, and forbidden claims are the existing provenance boundary. Revives when an art-direction or composition decision needs narrative information the composition cannot express. The reviving condition is recorded in `config/factory-status.json`. |
+| Presentation Registry / Component Manifest retrieval | **Satisfied.** 4C.4: the registry is compiled from what the template actually renders, and a build whose presentation it cannot satisfy is refused. |
+| Controlled bespoke-presentation fallback | **Outstanding.** The registry currently refuses what it cannot satisfy, which is correct but is not a fallback. The bespoke lane in §4 is the missing half, and a direction the registry cannot serve is a real corpus risk. |
+| Deterministic DesignLint | **Satisfied.** 4C.5, carried inside RenderedEvidence so a critic is never paid to re-derive a rule. |
+| Rendered responsive evidence | **Satisfied.** 4B.2 and 4D.7: every candidate photographed at the same three viewports over the same routes. |
+| Independent visual critic and bounded correction loop | **Outstanding, and it is the current blocking gate.** The contract and the review packet exist; no genuinely independent model runtime is enabled, so no verdict has been issued. Restarting the same model is not independence and is not done. |
+| Targeted Chromium/WebKit/Firefox visual portability smoke | **Outstanding.** Capture runs on Chromium only. A layout that breaks in Safari is exactly the defect a corpus is supposed to catch, and catching it per project rather than once is the expensive way. |
+| Anti-template diversity diagnostics across unrelated builds | **Outstanding.** Diversity is enforced *within* a candidate set (`assessDiversity` over three planes). Across unrelated businesses — the signal that the factory is not making every business the same beautiful template — nothing measures it yet. §8 defines the signals. |
+
+### What this means for the freeze
+
+The freeze opens once the outstanding rows are closed: the independent visual verdict, a controlled
+bespoke-presentation fallback, cross-browser visual smoke, and the cross-build anti-template diagnostic.
+The conditional rows do not gate it, and closing them early would mean building a contract with no reader.
+
+This gate is about **creative-production completeness**, not adding another authority. Where a listed
+capability does not justify its own stable contract, it stays a derived/compiler/evidence structure under
+the existing Design Contract and product authorities.
 
 ## 10. Supported-vs-custom boundary
 

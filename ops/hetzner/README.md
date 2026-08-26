@@ -280,6 +280,62 @@ configuration, not enforcement. A process on this host can still reach `127.0.0.
 the MCP lane is the *supported* path rather than the *only possible* path. Closing that is issue #55
 and remains the prerequisite for broad autonomous execution.
 
+## 6b. Enable and prove the agent capability boundary
+
+This is the hosted half of issue #55. The repository proves the boundary under a
+bare network namespace; this section proves the *host's* rootless Podman is
+actually configured that way. Nothing below opens a port or touches anything the
+Predictor owns.
+
+### Enable the broker (optional, and only when a task runtime is next)
+
+```bash
+sudo APP_BUILDER_ENABLE_AGENT_BROKER=1 bash ops/hetzner/install-service-units.sh
+sudo systemctl daemon-reload
+sudo systemctl restart app-builder-factory.service   # only if it is already running
+```
+
+That writes `/etc/app-builder/agent-broker.env` (root:appbuilder, `0640`) with a
+generated signing key, creates `/srv/app-builder/runtime/` (`0700`, appbuilder)
+and points the factory service at a Unix socket there. It is idempotent: an
+existing key is preserved so already-issued grants stay verifiable.
+
+The key is a local signing key for capability grants. It is **not** a provider
+credential, it must never be reused as one, and it never enters a task sandbox.
+It lives in an `EnvironmentFile` rather than a unit `Environment=` line so
+`systemctl show` does not print it.
+
+A Unix socket is not a port. Enabling the broker adds no listener, no firewall
+rule and nothing reachable from another account on this host — the socket is
+`0600` and owned by `appbuilder`.
+
+### Run the read-only acceptance
+
+```bash
+sudo bash ops/hetzner/verify-agent-boundary.sh
+```
+
+It starts nothing, stops nothing and enables nothing. It runs one short-lived
+`--network=none` rootless Podman container as `appbuilder` and establishes:
+
+- the sandbox mechanism and its version;
+- that the factory answers `/health` on `127.0.0.1:4310` **before** claiming
+  isolation, so an unreachable-from-the-sandbox result cannot pass by accident;
+- that `127.0.0.1:4310`, `localhost:4310`, `[::1]:4310`, `host.containers.internal`,
+  `host.docker.internal` and every global address on this host are all refused
+  from inside the sandbox;
+- that a `--network=none` sandbox sees only loopback;
+- that no Podman/Docker control socket, `/srv/app-builder` or `/etc/app-builder`
+  is visible inside the sandbox;
+- that the broker socket, when enabled, is owner-only and is the sandbox's one
+  Factory reach;
+- that `4310`, `4096` and the App Builder OpenCode port remain loopback-only,
+  and that the factory service is still inside `app-builder-runtime.slice`.
+
+It requires the factory service to be running; without a live listener the
+isolation result would prove nothing, so the script fails rather than passing
+quietly. Record its output — the issue is not closed on repository tests alone.
+
 ## 7. Running bounded one-off commands
 
 For a simple bounded command outside a long-lived unit:
@@ -326,7 +382,15 @@ Because durable App Builder state lives under its own `/srv/app-builder` tree an
 
 The host boundary is now proven, but these remain later runtime work:
 
-- `ExecutionEnvironmentAdapter` per-task sandbox lifecycle;
+- `ExecutionEnvironmentAdapter` per-task sandbox **lifecycle** — the isolation
+  contract and its rootless Podman translation now exist
+  (`packages/control-plane/src/execution-environment.js`,
+  `tooling/lib/sandbox-podman.mjs`), but nothing creates, runs, supervises or
+  disposes of an attempt sandbox yet;
+- a pinned task sandbox image — `podmanRunArgs` refuses a floating tag, and no
+  image is built or pinned here;
+- the `app-builder-egress` Podman network for the roles whose policy allows
+  public internet, with its egress filter;
 - `AgentRuntimeAdapter` around OpenCode;
 - bounded worker scheduling;
 - scoped secret broker;

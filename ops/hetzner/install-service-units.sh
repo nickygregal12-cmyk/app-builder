@@ -10,6 +10,7 @@ ETC_DIR="/etc/app-builder"
 STATE_ROOT="/srv/app-builder/state/service"
 WORKSPACES_ROOT="/srv/app-builder/workspaces"
 OPENCODE_PORT="${APP_BUILDER_OPENCODE_PORT:-4097}"
+BROKER_SOCKET="/srv/app-builder/runtime/agent-broker.sock"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Run this script as root or through sudo." >&2
@@ -56,6 +57,33 @@ EOF
   chmod 0640 "$ETC_DIR/opencode-server.env"
 fi
 
+# Agent capability broker (issue #55). Opt-in, because a broker is only a
+# boundary when the operator has decided a task runtime exists to bound: until
+# then it would be one more thing listening. It binds a Unix socket under the
+# runtime directory, never a port, so enabling it exposes nothing new to the
+# network and nothing at all to the rest of this shared host.
+BROKER_ENV_LINES=""
+if [[ "${APP_BUILDER_ENABLE_AGENT_BROKER:-0}" == "1" ]]; then
+  # The signing key never leaves the factory process. It is not a provider
+  # credential and must not be reused as one. Preserved across repeat installs
+  # so already-issued grants stay verifiable.
+  if [[ ! -s "$ETC_DIR/agent-broker.env" ]]; then
+    if command -v openssl >/dev/null 2>&1; then
+      grant_secret="$(openssl rand -hex 48)"
+    else
+      grant_secret="$(head -c 64 /dev/urandom | base64 | tr -d '\n' | tr '/+' '_-')"
+    fi
+    cat > "$ETC_DIR/agent-broker.env" <<BROKER
+APP_BUILDER_AGENT_BROKER_SOCKET=${BROKER_SOCKET}
+APP_BUILDER_AGENT_GRANT_SECRET=${grant_secret}
+BROKER
+    chown root:"$RUNTIME_USER" "$ETC_DIR/agent-broker.env"
+    chmod 0640 "$ETC_DIR/agent-broker.env"
+  fi
+  install -d -m 0700 -o "$RUNTIME_USER" -g "$RUNTIME_USER" "$(dirname "$BROKER_SOCKET")"
+  BROKER_ENV_LINES="EnvironmentFile=${ETC_DIR}/agent-broker.env"
+fi
+
 cat > /etc/systemd/system/app-builder-factory.service <<EOF
 [Unit]
 Description=App Builder factory service
@@ -74,6 +102,7 @@ Environment=APP_BUILDER_SERVICE_HOST=127.0.0.1
 Environment=APP_BUILDER_SERVICE_PORT=4310
 Environment=APP_BUILDER_STATE_ROOT=${STATE_ROOT}
 Environment=APP_BUILDER_WORKSPACES_ROOT=${WORKSPACES_ROOT}
+${BROKER_ENV_LINES}
 ExecStart=/home/${RUNTIME_USER}/.local/bin/npm run service
 Restart=on-failure
 RestartSec=5s
@@ -143,5 +172,10 @@ printf '  app-builder-factory.service  (127.0.0.1:4310)\n'
 printf '    state: %s\n' "$STATE_ROOT"
 printf '    workspaces: %s\n' "$WORKSPACES_ROOT"
 printf '  app-builder-opencode.service (127.0.0.1:%s)\n' "$OPENCODE_PORT"
+if [[ -n "$BROKER_ENV_LINES" ]]; then
+  printf '  agent capability broker: %s (Unix socket, no port)\n' "$BROKER_SOCKET"
+else
+  printf '  agent capability broker: disabled (set APP_BUILDER_ENABLE_AGENT_BROKER=1 to install it)\n'
+fi
 printf '\nNeither unit was enabled or started.\n'
 printf 'Run verify-host.sh and install repository dependencies before starting either service.\n'

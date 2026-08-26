@@ -173,7 +173,8 @@ What is **not** proven, and must not be read into this milestone:
 ### Validated capability-boundary milestone — 2026-08-26
 
 The runtime-to-Factory capability boundary issue #55 describes is now enforced in
-code rather than described in metadata. The enforced path is:
+code rather than described in metadata, and the route it was worried about is
+closed by task isolation. The enforced path is:
 
 ```text
 task policy (config/agent-policies.json)
@@ -211,13 +212,60 @@ approval-gated operation without an approval is refused before the mutation; a
 narrowly-scoped mutation succeeds while the adjacent one stays forbidden; and
 every decision lands in the durable ledger.
 
+### The task sandbox: removing the route, not just the authority
+
+The broker removes a task's *authority* to invoke an internal operation. It does
+not by itself remove the *route*: a process sharing the host network namespace
+can open a socket to `127.0.0.1:4310` whatever the broker thinks. The second
+half of #55 is therefore an isolation contract.
+
+`packages/control-plane/src/execution-environment.js` defines it, provider-
+neutrally. An attempt runs rootless, with its own network, PID, IPC, UTS and
+cgroup namespaces; no host namespace, no container control socket, no
+`/srv/app-builder`, no `/etc/app-builder`, no published port, no added
+capability, `no-new-privileges`, all capabilities dropped, a read-only root
+filesystem, a `noexec` tmpfs, and bounded CPU, memory, PIDs and wall clock. The
+only Factory reach is one bind-mounted Unix socket. `assertSpecIsolation` fails
+closed on every widening rather than warning about it, and each branch of it is
+a way a container has actually been escaped in the wild.
+
+Network profile follows policy, not preference: a role gets
+`public-egress-only` only when its policy allows `network.public` outright, and
+everything else gets `none`. Even the egress profile keeps its own namespace and
+the same forbidden destinations — the host control plane, private ranges and
+link-local metadata.
+
+`tooling/lib/sandbox-podman.mjs` is one runtime's spelling of that spec. Keeping
+the translation in tooling rather than the control plane is what stops Podman
+from becoming a stable requirement of the factory; a second runtime would be a
+second translation, not a second definition of the boundary. It refuses an
+unpinned image and refuses an argv carrying an isolation-breaking flag, whoever
+added it.
+
+`tooling/agent-sandbox.test.mjs` proves the property by connecting, not by
+asserting about configuration. It starts the real Factory HTTP server, confirms
+it answers on host loopback — without that the isolated failures would prove
+nothing but a dead listener — then, from inside a fresh empty network namespace,
+attempts `127.0.0.1:4310`, `localhost:4310`, `[::1]:4310` and every global
+address the host holds. All are refused; the namespace sees only loopback; and
+the broker still answers over the mounted socket, so the boundary is usable
+rather than merely closed.
+
+That namespace is the same kernel primitive rootless Podman's `--network=none`
+creates. It is a faithful proof of the property and it is **not** a proof that
+the hosted Podman installation is configured that way.
+`ops/hetzner/verify-agent-boundary.sh` is that proof, it runs a real
+`--network=none` container on the host, and it is the operator's to run.
+
 What this milestone does **not** yet prove, and must not be read as:
 
-- the broker removes the *authority* to call an internal route; it does not by
-  itself remove the *route*. A process that still shares the host network
-  namespace can still reach `127.0.0.1:4310`. Closing that requires the task
-  sandbox, and until it exists the boundary holds for a task that goes through
-  the adapter and not for one with a shell on the host;
+- **the hosted proof has not been run.** Everything above was executed on a
+  development runtime. Issue #55 stays open until
+  `ops/hetzner/verify-agent-boundary.sh` has genuinely run on the Hetzner host
+  and its output is recorded;
+- nothing creates, runs, supervises or disposes of an attempt sandbox. The
+  isolation contract and its translation exist; the `ExecutionEnvironmentAdapter`
+  lifecycle, the pinned task image and the `app-builder-egress` network do not;
 - no provider credential, schedule or runtime-ready role is introduced here.
   Every role remains `runtimeReady: false`.
 

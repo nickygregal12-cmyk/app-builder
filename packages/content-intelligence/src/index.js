@@ -5,6 +5,7 @@ export { RIGHTS_STATUSES, ASSET_STATUSES, SOURCE_ROLES, SOURCE_CHANNELS, ASSET_D
 export { CONTENT_INTELLIGENCE_VERSION, DEFAULT_LIMITS, assertSafeRemoteUrl, inferSourceKind } from './shared.js';
 export { normalizeReferenceSource, normalizeSource, normalizeSources, normalizeWebsite } from './normalize.js';
 export { assertKnowledgePack, validateKnowledgePack } from './validation.js';
+export { CROP_ROLES, cropWindow, originalAssetFile, recropAsset } from './extractors.js';
 
 export function buildKnowledgePack(normalizedSources, options = {}) {
   const raw = buildRawKnowledgePack(normalizedSources, options);

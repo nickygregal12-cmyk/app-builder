@@ -64,6 +64,20 @@ test('an ingested photograph needs its own decision before the factory will publ
   await expect(item.getByText('decided approve')).toBeVisible();
   await expect(page.getByText('asset · governance · updated')).toBeVisible();
 
+  // Saying where the subject is recomputes the crops around it. It does not
+  // publish them: agreeing with the result is a separate judgement.
+  await expect(item.getByText('Crops chosen by the attention heuristic')).toBeVisible();
+  const picker = item.getByRole('button', { name: /Set the focal point/ });
+  await expect(picker.locator('img')).toBeVisible();
+  const box = await picker.boundingBox();
+  expect(box).not.toBeNull();
+  await picker.click({ position: { x: (box?.width ?? 100) * 0.25, y: (box?.height ?? 60) * 0.2 } });
+  await expect(item.getByText(/Focal point \d+% \/ \d+%/)).toBeVisible({ timeout: 20_000 });
+  await expect(item.getByText(/generated crop/)).toContainText('withheld until reviewed');
+
+  await item.getByRole('button', { name: 'Approve crops' }).click();
+  await expect(item.getByText(/generated crop/)).toContainText('approved, will publish', { timeout: 20_000 });
+
   await page.getByRole('button', { name: 'Generate project' }).click();
   await expect(page.locator('.state-pill')).toHaveText('generated', { timeout: 60_000 });
   await expect(page.locator('.builder-notice')).toHaveCount(0);

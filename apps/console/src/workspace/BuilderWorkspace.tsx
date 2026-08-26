@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  assetPreviewUrl,
   captureRenderedEvidence,
   decideProjectAsset,
   generateProject,
@@ -8,6 +9,7 @@ import {
   renderedCaptureUrl,
   resolveElement,
   saveOverrides,
+  setAssetFocalPoint,
   startPreview,
   stopPreview,
   updateSourceGovernance,
@@ -256,9 +258,49 @@ function dimensions(asset: ProjectAsset) {
  * person decided are shown separately: an asset nobody has looked at must not
  * read as one that was approved.
  */
-function AssetPanel({ assets, onDecide, busyAssetId, disabled }: {
+/**
+ * Choosing where the subject is.
+ *
+ * Sharp's attention heuristic decides the crop when nobody has said. Clicking
+ * the picture says, and the three crops are recomputed around that point. It
+ * does not publish them: agreeing with the result is a separate judgement.
+ */
+function FocalPointPicker({ projectId, asset, onPick, busy }: {
+  projectId: string;
+  asset: ProjectAsset;
+  onPick: (assetId: string, focalPoint: { x: number; y: number }) => Promise<void>;
+  busy: boolean;
+}) {
+  const point = asset.focalPoint ?? { x: 0.5, y: 0.5 };
+  return <div className="focal-picker">
+    <button
+      type="button"
+      className="focal-target"
+      aria-label={`Set the focal point for ${asset.sourceLabel ?? asset.id}`}
+      disabled={busy}
+      onClick={(event) => {
+        const box = event.currentTarget.getBoundingClientRect();
+        if (!box.width || !box.height) return;
+        onPick(asset.id, {
+          x: Math.min(Math.max((event.clientX - box.left) / box.width, 0), 1),
+          y: Math.min(Math.max((event.clientY - box.top) / box.height, 0), 1),
+        });
+      }}
+    >
+      <img src={assetPreviewUrl(projectId, asset.id)} alt="" />
+      <span className="focal-marker" style={{ left: `${point.x * 100}%`, top: `${point.y * 100}%` }} />
+    </button>
+    <span className="asset-meta">
+      {asset.focalPoint ? `Focal point ${Math.round(point.x * 100)}% / ${Math.round(point.y * 100)}%` : 'Crops chosen by the attention heuristic — click to say where the subject is.'}
+    </span>
+  </div>;
+}
+
+function AssetPanel({ projectId, assets, onDecide, onPickFocalPoint, busyAssetId, disabled }: {
+  projectId: string;
   assets: ProjectAsset[];
   onDecide: (assetId: string, decision: AssetDecisionRequest) => Promise<void>;
+  onPickFocalPoint: (assetId: string, focalPoint: { x: number; y: number }) => Promise<void>;
   busyAssetId: string | null;
   disabled: boolean;
 }) {
@@ -292,6 +334,7 @@ function AssetPanel({ assets, onDecide, busyAssetId, disabled }: {
             {asset.cropCount > 0 && <span className="asset-meta">
               {asset.cropCount} generated crop{asset.cropCount === 1 ? '' : 's'} · {asset.cropReview === 'approved' ? 'approved, will publish' : 'withheld until reviewed'}
             </span>}
+            {asset.recroppable && !asset.duplicateOf && <FocalPointPicker projectId={projectId} asset={asset} onPick={onPickFocalPoint} busy={blocked} />}
             {!asset.duplicateOf && <div className="asset-actions">
               <button type="button" onClick={() => onDecide(asset.id, { decision: 'approve', rightsDeclaration: asset.rightsDeclarationRequired ? 'owned-by-the-business' : null, cropReview: asset.cropReview === 'approved' ? 'approved' : 'pending' })} disabled={blocked}>
                 {asset.rightsDeclarationRequired ? 'Approve — we own this' : 'Approve'}
@@ -502,11 +545,11 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     setSelection(null);
   }, [overrides, selection, writeOverrides]);
 
-  const decideAsset = useCallback(async (assetId: string, decision: AssetDecisionRequest) => {
+  const runAssetChange = useCallback(async (assetId: string, change: () => Promise<unknown>) => {
     setAssetOperation(assetId);
     setError('');
     try {
-      await decideProjectAsset(projectId, assetId, decision);
+      await change();
       await refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -514,7 +557,17 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     } finally {
       setAssetOperation(null);
     }
-  }, [projectId, refresh]);
+  }, [refresh]);
+
+  const decideAsset = useCallback(
+    (assetId: string, decision: AssetDecisionRequest) => runAssetChange(assetId, () => decideProjectAsset(projectId, assetId, decision)),
+    [projectId, runAssetChange],
+  );
+
+  const pickFocalPoint = useCallback(
+    (assetId: string, focalPoint: { x: number; y: number }) => runAssetChange(assetId, () => setAssetFocalPoint(projectId, assetId, focalPoint)),
+    [projectId, runAssetChange],
+  );
 
   const decideSource = useCallback(async (sourceId: string, decision: SourceGovernanceDecision) => {
     setSourceOperation(sourceId);
@@ -620,8 +673,10 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
         />
 
         <AssetPanel
+          projectId={projectId}
           assets={snapshot.assets}
           onDecide={decideAsset}
+          onPickFocalPoint={pickFocalPoint}
           busyAssetId={assetOperation}
           disabled={snapshot.project.state === 'generating'}
         />

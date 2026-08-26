@@ -443,6 +443,8 @@ Delivered:
 - **asset-level governance**: each ingested image carries its own publication
   decision, an approval beyond its source's rights needs a declaration about
   that asset, and unreviewed smart crops are withheld;
+- **focal-point cropping**: originals are retained, a chosen point recomputes
+  the crops around it, and the result needs its own review before it publishes;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -550,8 +552,27 @@ resolution, variant and crop counts, exact and visual duplicates — with what
 each asset inherited and what a person decided kept apart, so an asset nobody
 has looked at cannot read as one that was approved.
 
+**Crop and focal-point selection (4B.3b).** Ingestion now retains the original
+image. Every derived file is a resize or a crop of it, so without one a chosen
+framing could only be applied to an already compressed variant — and replacing
+an asset would have nothing to work from. Originals stay factory-side: they are
+not variants, so nothing places them in a generated repository.
+
+Clicking the picture in the Console records a focal point in normalised
+coordinates and recomputes `hero-16x9`, `card-4x3` and `square-1x1` around it
+with a computed window rather than Sharp's attention heuristic. The window is
+clamped to the image, so a subject near an edge moves the frame without running
+off it.
+
+Choosing a point does not publish the result. `cropReview` returns to pending,
+because saying where the subject is and agreeing with the crop are two different
+judgements, and the 4B.3a withhold path already gates publication on the second.
+The point is recorded on the asset's decision, so it survives a rebuild and is
+re-applied after re-ingestion — which regenerates derived files and would
+otherwise hand the framing back to the heuristic.
+
 Remaining:
-- asset manager: replacement, crop and focal-point selection (4B.3b);
+- asset replacement (swapping the bytes behind an approved asset);
 - comparing supplied and generated alternatives (needs generation first);
 - section/component variant selection;
 - project asset policy modes;

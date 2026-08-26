@@ -164,7 +164,9 @@ export async function main({ env = process.env, argv = process.argv.slice(2) } =
   const plan = JSON.parse(argv[0] ?? '{}');
   const resultFile = env.APP_BUILDER_RESULT_FILE ?? null;
   if (plan.mode === 'hold') {
-    if (resultFile) fs.writeFileSync(resultFile, JSON.stringify({ mode: 'hold', holding: true }));
+    // The pid is recorded so a test can prove the *attempt* was stopped, not
+    // merely the wrapper the supervisor happened to hold a handle to.
+    if (resultFile) fs.writeFileSync(resultFile, JSON.stringify({ mode: 'hold', holding: true, pid: process.pid }));
     process.stdout.write('holding\n');
     // Ignore the polite signal on purpose. A cancel or a wall clock that only
     // works on a co-operative task is not a bound.

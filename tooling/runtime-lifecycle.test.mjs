@@ -22,8 +22,11 @@
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import process from 'node:process';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   ATTEMPT_EVENT_TYPES,
@@ -41,6 +44,7 @@ import {
 } from '@app-builder/control-plane/execution-adapter';
 
 import { evaluateRuntimeReadiness, unearnedRuntimeReadyRoles } from '@app-builder/control-plane/runtime-readiness';
+import { createLocalExecutionDriver, detectNetworkIsolation } from './lib/execution-driver-local.mjs';
 
 import { runRuntimeCanary } from './runtime-canary.mjs';
 
@@ -418,4 +422,94 @@ test('the recorded evidence map is empty, so the gate refuses every role today',
   for (const role of Object.values(ROLES)) {
     assert.equal(evaluateRuntimeReadiness({ role, gate: GATE }).ready, false, role.id);
   }
+});
+
+
+// ---------------------------------------------------------------------------
+// Stopping the attempt, not the wrapper.
+// ---------------------------------------------------------------------------
+
+/**
+ * The regression this exists for cost a CI run.
+ *
+ * The isolation runner is not always the attempt. `unshare` execs, so the
+ * child *is* the task; `sudo` forks, so the child is `sudo` and the task runs
+ * underneath it — as root, which an unprivileged supervisor cannot even
+ * signal. On a GitHub runner the driver falls back to `sudo -n unshare`, so a
+ * cancel killed the wrapper, left the task running, and the leaked task held
+ * the inherited stdout pipe. An open pipe from a live process keeps the
+ * supervisor's event loop alive, so `npm run check` did not fail — it hung,
+ * which is worse, because a hang is not a named failure anyone can read.
+ *
+ * The wrapper below forks rather than execs and ignores SIGTERM, which is the
+ * shape that broke, without needing the privileged path to reproduce it.
+ */
+test('cancelling an attempt behind a forking wrapper stops the attempt, not just the wrapper', async () => {
+  const worker = fileURLToPath(new URL('./lib/canary-worker.mjs', import.meta.url));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-wrapper-'));
+  // `sh -c` with a trailing `wait`: the shell stays alive as a parent, and
+  // ignores the polite signal, exactly as the real fallback runner does.
+  const driver = createLocalExecutionDriver({
+    isolation: { binary: '/bin/sh', prefix: ['-c', 'trap "" TERM; "$@" & wait $!', 'sandbox-wrapper'], privileged: false },
+  });
+  const { journal } = recorder();
+  const adapter = new ExecutionEnvironmentAdapter({ driver, journal, stopGraceMs: 300 });
+  const attemptPlan = plan({
+    attemptId: 'attempt-wrapper-1',
+    workspacePath: path.join(root, 'workspace'),
+    scratchPath: path.join(root, 'scratch'),
+    grantPath: path.join(root, 'grant'),
+    brokerSocketPath: path.join(root, 'broker.sock'),
+    limits: { wallClockMs: 60_000 },
+  });
+
+  try {
+    await adapter.createAttempt(attemptPlan, { command: [process.execPath, worker, JSON.stringify({ mode: 'hold' })] });
+    await adapter.start('attempt-wrapper-1');
+
+    // Wait for the task itself to exist, so the cancel below interrupts
+    // something real rather than racing its start.
+    const resultFile = path.join(root, 'scratch', 'attempt-result.json');
+    let taskPid = null;
+    for (let attempt = 0; attempt < 100 && taskPid === null; attempt += 1) {
+      try {
+        taskPid = JSON.parse(fs.readFileSync(resultFile, 'utf8')).pid ?? null;
+      } catch {
+        await new Promise((resolve) => { setTimeout(resolve, 100); });
+      }
+    }
+    assert.ok(Number.isInteger(taskPid), 'the attempt must have started for this proof to mean anything');
+    assert.doesNotThrow(() => process.kill(taskPid, 0), 'the attempt must be alive before it is cancelled');
+    assert.notEqual(taskPid, adapter.status('attempt-wrapper-1').containerId, 'the wrapper and the attempt must be different processes');
+
+    await adapter.cancel('attempt-wrapper-1', 'proving the group is stopped');
+    const collected = await adapter.collect('attempt-wrapper-1');
+    assert.equal(collected.exitReason, 'cancelled');
+    await adapter.dispose('attempt-wrapper-1');
+
+    // The whole point: the task underneath the wrapper is gone too.
+    let alive = true;
+    for (let attempt = 0; attempt < 50 && alive; attempt += 1) {
+      try {
+        process.kill(taskPid, 0);
+        await new Promise((resolve) => { setTimeout(resolve, 100); });
+      } catch {
+        alive = false;
+      }
+    }
+    assert.equal(alive, false, `the attempt process ${taskPid} outlived its cancelled attempt`);
+    assert.deepEqual(await driver.list(), [], 'dispose must leave no runtime handle');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('the isolation runner reports whether stopping it needs the privilege that started it', () => {
+  const detected = detectNetworkIsolation();
+  if (detected === null) return; // Reported by the canary as `unproven`; not silently passed here.
+  assert.ok(typeof detected.binary === 'string' && detected.binary.length > 0);
+  assert.ok(Array.isArray(detected.prefix));
+  // `sudo` forks and runs the attempt as root; the flag is what makes the
+  // driver deliver its stop signal with the same privilege.
+  assert.equal(detected.privileged, detected.binary === 'sudo');
 });

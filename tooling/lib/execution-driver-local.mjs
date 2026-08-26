@@ -39,15 +39,66 @@ export const LOCAL_DRIVER_ID = 'local-process';
  */
 export function detectNetworkIsolation() {
   const candidates = [
-    ['unshare', ['--net', '--']],
-    ['unshare', ['--user', '--map-root-user', '--net', '--']],
-    ['sudo', ['-n', 'unshare', '--net', '--']],
+    // `unshare` execs the command, so the attempt process *is* the child and
+    // the supervisor can signal it directly.
+    { binary: 'unshare', prefix: ['--net', '--'], privileged: false },
+    { binary: 'unshare', prefix: ['--user', '--map-root-user', '--net', '--'], privileged: false },
+    // `sudo` does not exec: it forks, and the attempt runs as root underneath
+    // it. A non-root supervisor cannot signal either of them — `kill` returns
+    // EPERM — so stopping one needs the same privilege that started it.
+    { binary: 'sudo', prefix: ['-n', 'unshare', '--net', '--'], privileged: true },
   ];
-  for (const [binary, prefix] of candidates) {
-    const probe = spawnSync(binary, [...prefix, 'true'], { stdio: 'ignore' });
-    if (probe.status === 0) return { binary, prefix };
+  for (const candidate of candidates) {
+    const probe = spawnSync(candidate.binary, [...candidate.prefix, 'true'], { stdio: 'ignore' });
+    if (probe.status === 0) return candidate;
   }
   return null;
+}
+
+/**
+ * Stop an attempt and everything it started.
+ *
+ * Two failure modes this exists for, both of which leak a sandbox that
+ * outlives the attempt that owned it — the exact orphan the lifecycle claims
+ * to prevent:
+ *
+ * 1. **an intermediate process.** Where the runner forks rather than execs,
+ *    signalling the child kills the wrapper and leaves the attempt running.
+ *    So the attempt is started in its own process group and the *group* is
+ *    signalled.
+ * 2. **a more privileged attempt.** Where the runner is `sudo`, the group runs
+ *    as root and an unprivileged supervisor's `kill` returns EPERM. So the
+ *    signal is delivered with the same privilege that started it.
+ */
+function signalGroup(entry, signal) {
+  const pid = entry.child?.pid;
+  if (!pid) return;
+  // Node's process API wants `SIGTERM`; `/bin/kill` wants `-TERM`. Passing one
+  // spelling where the other is expected throws, and a throw that is caught
+  // and ignored means nothing was signalled at all — which is indistinguishable
+  // from a task that refused to stop.
+  const nodeSignal = signal.startsWith('SIG') ? signal : `SIG${signal}`;
+  const killSignal = nodeSignal.slice(3);
+
+  if (entry.privileged) {
+    // Best effort: a signal to something already gone is not a failure to stop
+    // it. The group first, then the leader, because `sudo` is the leader and
+    // the attempt is underneath it.
+    spawnSync('sudo', ['-n', 'kill', `-${killSignal}`, '--', `-${pid}`], { stdio: 'ignore' });
+    spawnSync('sudo', ['-n', 'kill', `-${killSignal}`, '--', String(pid)], { stdio: 'ignore' });
+    return;
+  }
+  try {
+    process.kill(-pid, nodeSignal);
+    return;
+  } catch {
+    // No process group to signal — fall through to the child itself.
+  }
+  try {
+    entry.child.kill(nodeSignal);
+  } catch {
+    // Already gone.
+  }
 }
 
 function hostPath(spec, target) {
@@ -145,8 +196,12 @@ export function createLocalExecutionDriver({ nodeExecutable = process.execPath, 
       const [binary, ...rest] = entry.command;
       const argv = runner ? [...runner.prefix, binary, ...rest] : [binary, ...rest];
       const executable = runner ? runner.binary : binary;
-      const child = spawn(executable, argv, { cwd: entry.cwd, env: entry.environment, stdio: ['ignore', 'pipe', 'pipe'] });
+      // `detached` makes the attempt a process-group leader, so a cancel can
+      // signal the whole group rather than only whatever the supervisor
+      // happens to be holding a handle to.
+      const child = spawn(executable, argv, { cwd: entry.cwd, env: entry.environment, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
       entry.child = child;
+      entry.privileged = Boolean(runner?.privileged);
       entry.running = true;
       entry.startedAt = new Date().toISOString();
       child.stdout.on('data', (chunk) => { entry.stdout += chunk.toString('utf8'); });
@@ -201,9 +256,10 @@ export function createLocalExecutionDriver({ nodeExecutable = process.execPath, 
     async signal(handle, signal = 'SIGTERM', { graceMs = 0 } = {}) {
       const entry = containers.get(handle);
       if (!entry?.child || !entry.running) return;
-      entry.child.kill(signal === 'SIGKILL' ? 'SIGKILL' : 'SIGTERM');
+      signalGroup(entry, signal === 'SIGKILL' ? 'KILL' : 'TERM');
       if (signal === 'SIGKILL' || graceMs <= 0) {
-        entry.child.kill('SIGKILL');
+        signalGroup(entry, 'KILL');
+        await entry.exited;
         return;
       }
       // The grace is a courtesy; the kill is the guarantee.
@@ -211,7 +267,7 @@ export function createLocalExecutionDriver({ nodeExecutable = process.execPath, 
         entry.exited,
         new Promise((resolve) => { const timer = setTimeout(resolve, graceMs); if (typeof timer.unref === 'function') timer.unref(); }),
       ]);
-      if (entry.running) entry.child.kill('SIGKILL');
+      if (entry.running) signalGroup(entry, 'KILL');
       await entry.exited;
     },
 
@@ -219,9 +275,22 @@ export function createLocalExecutionDriver({ nodeExecutable = process.execPath, 
       const entry = containers.get(handle);
       if (!entry) return;
       if (entry.running) {
-        entry.child?.kill('SIGKILL');
+        signalGroup(entry, 'KILL');
         await entry.exited;
       }
+      // A descendant that outlived the group kill would still hold the
+      // inherited pipes, and an open pipe from a live process keeps the
+      // supervisor's event loop alive indefinitely. Releasing them means a
+      // leak shows up as an orphan report rather than as a hung process.
+      for (const stream of [entry.child?.stdout, entry.child?.stderr]) {
+        try {
+          stream?.removeAllListeners('data');
+          stream?.destroy();
+        } catch {
+          // Already closed.
+        }
+      }
+      entry.child?.unref();
       // The grant dies with the attempt. Leaving it on disk would leave a
       // usable bearer credential behind a disposed sandbox.
       if (entry.grantFile) fs.rmSync(entry.grantFile, { force: true });

@@ -7,7 +7,7 @@ function json(value) { return JSON.stringify(value ?? null); }
 function parse(value) { return value == null ? null : JSON.parse(String(value)); }
 
 export class FactoryStore {
-  constructor({ stateRoot }) {
+  constructor({ stateRoot, reconcile = true }) {
     this.stateRoot = path.resolve(stateRoot);
     fs.mkdirSync(this.stateRoot, { recursive: true });
     this.databasePath = path.join(this.stateRoot, 'factory.sqlite');
@@ -56,6 +56,10 @@ export class FactoryStore {
       );
       CREATE INDEX IF NOT EXISTS events_project_sequence ON events(project_id, sequence);
       CREATE INDEX IF NOT EXISTS events_task_sequence ON events(task_id, sequence);
+      CREATE TABLE IF NOT EXISTS projection_state (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        last_projected_sequence INTEGER NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS checkpoints (
         id TEXT PRIMARY KEY,
         project_id TEXT NOT NULL,
@@ -70,6 +74,12 @@ export class FactoryStore {
     // asking an operator to discard their projects.
     const columns = this.db.prepare('PRAGMA table_info(projects)').all().map((column) => column.name);
     if (!columns.includes('intake_bundle_json')) this.db.exec('ALTER TABLE projects ADD COLUMN intake_bundle_json TEXT');
+
+    // Opening the store is where a lost projection is found. A crash between
+    // the ledger append and the projection insert leaves the read model short,
+    // and nothing else in the system would ever notice — so the check runs
+    // here, before anything can read a database that disagrees with the ledger.
+    this.reconciliation = reconcile === false ? null : this.reconcileProjection();
   }
 
   upsertProject(project) {
@@ -129,12 +139,145 @@ export class FactoryStore {
     return this.db.prepare('SELECT task_json FROM tasks WHERE project_id = ? ORDER BY created_at ASC').all(projectId).map((row) => parse(row.task_json));
   }
 
-  async recordEvent(event) {
-    await appendEvent(this.ledgerPath, event);
-    this.db.prepare(`
+  /**
+   * Project one event into the read model.
+   *
+   * Idempotent by `id`, which is what makes reconciliation and rebuild safe:
+   * projecting an event the database already has must be a no-op rather than a
+   * unique-constraint failure, or the recovery path becomes the thing that
+   * needs recovering.
+   */
+  projectEvent(event) {
+    return this.db.prepare(`
       INSERT INTO events (id,project_id,task_id,type,timestamp,actor,cost_gbp,duration_ms,input_tokens,output_tokens,event_json)
       VALUES (?,?,?,?,?,?,?,?,?,?,?)
+      ON CONFLICT(id) DO NOTHING
     `).run(event.id, event.projectId, event.taskId ?? null, event.type, event.timestamp, event.actor, event.usage?.costGbp ?? 0, event.usage?.durationMs ?? 0, event.usage?.inputTokens ?? 0, event.usage?.outputTokens ?? 0, json(event));
+  }
+
+  /**
+   * The ledger, read synchronously.
+   *
+   * The async reader in the control plane is the one callers use; reconciliation
+   * happens while a store is being opened, and an operation that has to run
+   * before anything can read the database is clearer as part of opening it than
+   * as something every caller must remember to await.
+   *
+   * **A ledger event's sequence is its position in the file, one-based.** The
+   * ledger is append-only JSONL, so position already *is* the monotonic
+   * sequence Stage Q11 asks for. Writing one into each line as well would create
+   * a second source of the same number, and two sources of one number are two
+   * numbers as soon as anything goes wrong.
+   */
+  readLedger() {
+    if (!fs.existsSync(this.ledgerPath)) return [];
+    return fs.readFileSync(this.ledgerPath, 'utf8').split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+  }
+
+  lastProjectedSequence() {
+    const row = this.db.prepare('SELECT last_projected_sequence FROM projection_state WHERE id = 1').get();
+    return row ? Number(row.last_projected_sequence) : 0;
+  }
+
+  setLastProjectedSequence(sequence) {
+    this.db.prepare('INSERT INTO projection_state (id,last_projected_sequence) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET last_projected_sequence = excluded.last_projected_sequence').run(sequence);
+  }
+
+  /**
+   * Make the read model equal the ledger.
+   *
+   * The failure this exists for is silent, which is the worst kind. `recordEvent`
+   * appends to the authoritative ledger and then inserts into SQLite; a process
+   * that dies between those two statements leaves an event that happened and a
+   * read model that has never heard of it. Reopening the store used to notice
+   * nothing at all — two events in the ledger, one in the projection, and every
+   * later read, every cost total and every resume packet quietly short by one.
+   *
+   * Stage Q11 in `docs/ENGINEERING_QUALITY_PROGRAMME.md` says what to do about
+   * it: ledger at 1827 and projection at 1821 means replaying 1822 to 1827,
+   * rather than guessing. `last_projected_sequence` is what makes that a replay
+   * of six events instead of a scan of all 1827.
+   *
+   * A counter alone is not enough to trust, though, because it only describes
+   * one shape of divergence. Two cheap checks decide whether the fast path is
+   * safe: the projection must hold exactly that many rows, and the row at that
+   * sequence must be the ledger's event at that position. If either disagrees —
+   * a row deleted from the middle, a row the ledger never had, a counter that
+   * outran the table — no replay can fix it, because `sequence` is assigned on
+   * insert and appending a missing middle event would place it after events that
+   * came later. That is a **rebuild**, which is always available precisely
+   * because the events table is derived from the ledger and nothing else.
+   *
+   * An event whose project is not in the database is reported rather than
+   * inserted. The projects table is separate durable state, not a projection of
+   * the ledger, so a foreign key that cannot resolve is a fact about this store
+   * worth surfacing — not something reconciliation should invent a project to
+   * satisfy.
+   */
+  reconcileProjection() {
+    const ledger = this.readLedger();
+    const projectedRows = this.db.prepare('SELECT id FROM events ORDER BY sequence ASC').all().map((row) => row.id);
+    const stored = this.lastProjectedSequence();
+
+    const countAgrees = projectedRows.length === stored;
+    const boundaryAgrees = stored === 0 || (stored <= ledger.length && projectedRows[stored - 1] === ledger[stored - 1]?.id);
+    const canReplay = countAgrees && boundaryAgrees && stored <= ledger.length;
+
+    const from = canReplay ? stored : 0;
+    // A rebuild resets the sequence counter as well as the rows. `AUTOINCREMENT`
+    // never reuses a value, so without this a rebuilt projection would return
+    // the same events under different sequence numbers — and `listEvents` takes
+    // `afterSequence`, so a caller polling from 3 would silently skip whatever
+    // the rebuild renumbered past it. Resetting makes the projection a
+    // deterministic function of the ledger rather than of how many times it has
+    // been rebuilt.
+    if (!canReplay) this.db.exec("DELETE FROM events; DELETE FROM sqlite_sequence WHERE name = 'events'");
+
+    const knownProjects = new Set(this.db.prepare('SELECT id FROM projects').all().map((row) => row.id));
+    const orphaned = [];
+    let recovered = 0;
+    for (let index = from; index < ledger.length; index += 1) {
+      const event = ledger[index];
+      if (!knownProjects.has(event.projectId)) {
+        orphaned.push({ eventId: event.id, projectId: event.projectId, type: event.type, sequence: index + 1 });
+        continue;
+      }
+      this.projectEvent(event);
+      recovered += 1;
+    }
+    this.setLastProjectedSequence(ledger.length - orphaned.length);
+
+    return {
+      mode: canReplay ? (recovered || orphaned.length ? 'replayed' : 'already-consistent') : 'rebuilt',
+      ledgerEvents: ledger.length,
+      replayedFrom: from + 1,
+      recovered,
+      orphaned,
+    };
+  }
+
+  /**
+   * Re-derive the read model from the ledger alone.
+   *
+   * Deliberately not "rebuild everything". Projects, tasks and checkpoints are
+   * written directly and are not projections of the ledger, so this rebuilds
+   * exactly what the ledger is authoritative for and says so rather than
+   * implying a recovery it cannot perform.
+   */
+  rebuildProjection() {
+    this.db.exec("DELETE FROM events; DELETE FROM sqlite_sequence WHERE name = 'events'");
+    this.setLastProjectedSequence(0);
+    return this.reconcileProjection();
+  }
+
+  async recordEvent(event) {
+    await appendEvent(this.ledgerPath, event);
+    this.projectEvent(event);
+    // The counter moves only after the projection insert, so a crash between
+    // the two leaves it pointing at the last event that genuinely reached the
+    // read model. A counter advanced optimistically would describe a projection
+    // that does not exist, which is worse than no counter at all.
+    this.setLastProjectedSequence(this.lastProjectedSequence() + 1);
     return event;
   }
 

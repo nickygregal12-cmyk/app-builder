@@ -43,7 +43,7 @@ budgets and credit disappear.
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
 | Is the generated product worth launching? | `npm run audit:launch` | generated-product quality |
-| Is durable state projection caught up and rebuildable? | ledger reconciliation/rebuild (Stage Q11) | durability |
+| Is durable state projection caught up and rebuildable? | ledger reconciliation/rebuild (Stage Q11 ✅) | durability |
 | Is a production data change safe to run? | data-change safety contract (Stage Q12) | deployment/database safety |
 
 Playwright and DevTools are deliberately different tools: Playwright proves **what a user can do**,
@@ -258,27 +258,61 @@ handler in the broker, so a capability nobody can perform fails rather than reas
 shape — declaration names its consumer, test checks the consumer exists — rather than inventing a
 new mechanism per registry.
 
-### Stage Q11 — ledger and projection reconciliation (Phase 4.5, before broad concurrency)
+### Stage Q11 — ledger and projection reconciliation ✅ delivered
 
 The durability model treats the JSONL event ledger as authoritative evidence and SQLite as a read
 projection. That is only safe if the projection is recoverable rather than dependent on two writes
 always succeeding together. A crash between ledger append and projection insert must not create two
 permanent truths.
 
-If JSONL remains authoritative, add:
+It did. `recordEvent` appended to the ledger and then inserted into SQLite, and a process that died
+between those two statements left an event that happened and a read model that had never heard of it.
+Reopening the store noticed nothing at all: two events in the ledger, one in the projection, and every
+later read, every cost total and every resume packet quietly short by one. It is reproducible in about
+fifteen lines, which is what it took to find.
 
-- a monotonic ledger sequence;
-- an idempotent projection, so replaying an event twice is not a second fact;
-- a stored last-projected sequence;
-- startup reconciliation that catches the projection up from that sequence;
-- a rebuild command — `npm run ledger:rebuild` or equivalent — that reconstructs the projection from
-  the ledger alone;
-- an acceptance test that deletes the projection, rebuilds it and proves the durable read state the
-  service returns is unchanged.
+JSONL remains authoritative, and the stage's list is delivered:
 
-Concretely: ledger at sequence 1827 and projection at 1821 means replaying 1822 to 1827, not
-guessing. If a later architecture chooses SQLite as the authoritative store instead, that is an
-explicit recorded decision and migration, never accidental drift.
+- **a monotonic ledger sequence** — an event's sequence is its one-based position in the file. The
+  ledger is append-only JSONL, so position already *is* the monotonic sequence; writing one into each
+  line as well would create a second source of the same number, and two sources of one number are two
+  numbers as soon as anything goes wrong;
+- **an idempotent projection** — `ON CONFLICT(id) DO NOTHING`, so projecting an event the database
+  already has is a no-op rather than a unique-constraint failure. Without it the recovery path becomes
+  the thing that needs recovering;
+- **a stored last-projected sequence** — `projection_state`, advanced only *after* the projection
+  insert. A counter advanced optimistically would describe a projection that does not exist, which is
+  worse than no counter;
+- **startup reconciliation** — in the store's constructor, before anything can read a database that
+  disagrees with the ledger. Ledger at 1827 and projection at 1821 replays 1822 to 1827;
+- **`npm run ledger:rebuild`**, with `npm run ledger:check` reporting what reconciliation would do
+  without doing it, because a store that is already consistent should not be rebuilt to find that out;
+- **the acceptance test** — through the `FactoryService`, not the store: a real generation, the
+  projection deleted outright, rebuilt, and every event and every derived total identical.
+
+Two things the stage list did not ask for and the implementation needs.
+
+A counter alone describes one shape of divergence. Two cheap checks decide whether replay is safe: the
+projection must hold exactly that many rows, and the row at that sequence must be the ledger's event at
+that position. A row deleted from the middle, a row the ledger never had, or a counter that outran the
+table cannot be fixed by replaying, because `sequence` is assigned on insert and appending a missing
+middle event would place it *after* events that came later. That case rebuilds, which is always
+available precisely because the events table is derived from the ledger and nothing else.
+
+And a rebuild resets the sequence counter, not only the rows. `AUTOINCREMENT` never reuses a value, so
+a rebuilt projection would otherwise return the same events under different sequence numbers — and
+`listEvents` takes `afterSequence`, so a Console polling from 3 would be handed everything again or
+nothing at all, depending on which side of the shift it landed. Resetting makes the projection a
+deterministic function of the ledger rather than of how many times it has been rebuilt.
+
+What this deliberately does not claim: projects, tasks and checkpoints are written directly and are not
+projections of the ledger, so the rebuild recovers exactly what the ledger is authoritative for. An
+event naming a project the store does not have is reported as orphaned rather than inserted — a
+foreign key that cannot resolve is a fact worth surfacing, not something reconciliation should invent a
+project to satisfy.
+
+If a later architecture chooses SQLite as the authoritative store instead, that is an explicit recorded
+decision and migration, never accidental drift.
 
 ### Stage Q12 — production data-change safety (before autonomous live data mutation)
 

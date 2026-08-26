@@ -55,7 +55,8 @@
     "behavioural-consumer-invariants",
     "design-reference-input",
     "phase-4-2a-static-renderer",
-    "bespoke-presentation-fulfilment"
+    "bespoke-presentation-fulfilment",
+    "ledger-projection-reconciliation"
   ],
   "outstandingProductGates": [
     "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. The factory created them, so the factory cannot promote one. The evidence is now reviewer-reachable rather than buried in build output: `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review, `npm run review:visual-candidates` opens the ordinary Builder Console over exactly that state, and the stage's compare view shows both candidates at three widths over six routes with the differing axes, the responsive plan, every DesignLint finding, the frozen truth, the refused direction and the scoped critic criteria. A reviewer who did not create them still has to pass, rework or reject each candidate against those criteria before Phase 4D closes.",

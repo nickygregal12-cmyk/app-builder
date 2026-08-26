@@ -55,10 +55,15 @@ export function applyQuestionDefaults(questions, answers = {}) {
   return next;
 }
 
+export function normalizeListAnswer(value) {
+  const lines = Array.isArray(value) ? value.map((item) => String(item ?? '')) : String(value ?? '').split('\n');
+  return lines.map((item) => item.trim()).filter(Boolean);
+}
+
 export function isAnswered(question, value) {
   if (value === undefined || value === null) return false;
   if (typeof value === 'string') return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
+  if (Array.isArray(value)) return value.some((item) => String(item ?? '').trim().length > 0);
   if (typeof value === 'object') return Object.values(value).some((item) => String(item ?? '').trim().length > 0);
   return true;
 }

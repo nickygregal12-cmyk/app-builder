@@ -76,6 +76,7 @@ export function mergeQuestionnaires(base: QuestionnaireDefinition, specific: Que
 export function isQuestionVisible(question: Question, answers?: Answers): boolean;
 export function questionsForMode(questions: Question[], mode: IntakeMode, answers?: Answers): Question[];
 export function applyQuestionDefaults(questions: Question[], answers?: Answers): Answers;
+export function normalizeListAnswer(value: unknown): string[];
 export function isAnswered(question: Question, value: AnswerValue): boolean;
 export function getUnresolvedHighImpactQuestions(questions: Question[], answers: Answers): string[];
 export function createSourceReference(input?: Partial<SourceReference> & { kind?: SourceKind; label?: string; name?: string; uri?: string; size?: number }): SourceReference;

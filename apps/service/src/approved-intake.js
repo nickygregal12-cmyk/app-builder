@@ -47,7 +47,8 @@ export function hashArtifact(value) {
  * approvals disagree and make every replay of a bundle look like drift.
  */
 export function hashBuildContract(contract) {
-  const { approvedAt, ...decisions } = contract;
+  const decisions = { ...contract };
+  delete decisions.approvedAt;
   return hashArtifact(decisions);
 }
 

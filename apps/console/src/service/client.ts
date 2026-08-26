@@ -236,6 +236,8 @@ export type ProjectAsset = {
   inherited: { rightsStatus: string; assetStatus: string; publishUseAllowed: boolean };
   decision: { decision: string; rightsDeclaration: string | null; cropReview: string; decidedAt: string; note: string | null } | null;
   cropReview: string;
+  focalPoint: { x: number; y: number } | null;
+  recroppable: boolean;
   rightsStatus: string;
   assetStatus: string;
   publishUseAllowed: boolean;
@@ -324,6 +326,18 @@ export async function decideProjectAsset(projectId: string, assetId: string, dec
     `/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/decision`,
     { method: 'POST', body: JSON.stringify(decision) },
   );
+}
+
+export async function setAssetFocalPoint(projectId: string, assetId: string, focalPoint: { x: number; y: number }) {
+  return await request<{ asset: ProjectAsset | null }>(
+    `/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/focal-point`,
+    { method: 'POST', body: JSON.stringify({ focalPoint }) },
+  );
+}
+
+/** The service streams the bytes; the Console only needs the address. */
+export function assetPreviewUrl(projectId: string, assetId: string) {
+  return `${API_ROOT}/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/preview`;
 }
 
 export async function listRenderedEvidence(projectId: string) {

@@ -7,6 +7,7 @@ import { assertContract, validateContract } from '@app-builder/contracts';
 import { applyContentOverrides, assertEditableElement, assetDecisionsHash, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
+import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
@@ -522,6 +523,37 @@ export class FactoryService {
     }
   }
 
+  /**
+   * The bytes the Console shows when someone is choosing a focal point.
+   *
+   * Served from the retained original where there is one, falling back to the
+   * widest responsive variant, so the picture being pointed at is the picture
+   * the crop will come from.
+   */
+  readAssetPreview(projectId, assetId) {
+    const pack = this.getKnowledgePack(projectId);
+    const asset = (pack?.assets ?? []).find((entry) => entry.id === assetId);
+    if (!asset) return null;
+    const directory = this.ingestion.assetDirectory(projectId);
+    if (!fs.existsSync(directory)) return null;
+
+    const prefix = `${String(asset.contentHash ?? '').slice(0, 16)}-original.`;
+    const original = fs.readdirSync(directory).find((entry) => entry.startsWith(prefix));
+    if (original) return { file: path.join(directory, original), mimeType: asset.mimeType ?? 'application/octet-stream' };
+
+    const widest = (asset.variants ?? [])
+      .filter((variant) => variant.role === 'responsive' && variant.format === 'webp')
+      .sort((a, b) => (a.width ?? 0) - (b.width ?? 0))
+      .at(-1);
+    if (!widest) return null;
+    // Variant URIs come from the knowledge pack, which is data rather than
+    // authority, so a traversing path must not resolve outside the directory.
+    const base = path.resolve(directory);
+    const target = path.resolve(base, String(widest.uri).replace(/^assets\//, ''));
+    if (!target.startsWith(`${base}${path.sep}`) || !fs.existsSync(target)) return null;
+    return { file: target, mimeType: 'image/webp' };
+  }
+
   integrationStatus() {
     const entries = [
       ['netlify', 'NETLIFY_AUTH_TOKEN'],
@@ -588,6 +620,9 @@ export class FactoryService {
       const { pack, added, sourceCount } = await this.ingestion.ingest(projectId, requests);
       const now = new Date().toISOString();
       project = this.store.upsertProject({ ...project, knowledgePack: pack, updatedAt: now });
+      // Ingestion regenerates derived files from the source, which would hand an
+      // attention heuristic back any framing a person already chose.
+      await reapplyAssetFocalPoints(this, projectId);
 
       const checkpoint = createCheckpoint({
         projectId,

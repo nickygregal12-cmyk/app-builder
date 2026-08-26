@@ -114,6 +114,16 @@ once someone has approved them. The picture itself still publishes: the template
 falls back to the widest responsive variant and the layout sets its own aspect
 ratio, so an unreviewed crop costs a considered framing rather than the image.
 
+A person can say where the subject is instead. Ingestion retains the original —
+every derived file is a resize or a crop of it, and it stays factory-side
+because it is not a variant. A focal point recorded in normalised coordinates
+recomputes the three crops with a window clamped to the image, so a subject near
+an edge moves the frame without running off it. Choosing a point returns
+`cropReview` to pending: saying where the subject is and agreeing with the crop
+are different judgements. The point is durable and re-applied after
+re-ingestion, which regenerates derived files and would otherwise hand the
+framing back to the heuristic.
+
 ## Rendered evidence
 
 The launch-readiness audit reads composed output and says so plainly: it cannot

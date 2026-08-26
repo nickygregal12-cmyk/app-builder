@@ -207,6 +207,67 @@ export async function extractBuffer(buffer, mimeType, source, limits) {
   return { type: 'binary', text: '', truncated: false, metadata: { note: 'Indexed as binary; no deterministic extractor is registered.' } };
 }
 
+export const CROP_ROLES = Object.freeze([
+  Object.freeze({ role: 'hero-16x9', width: 1600, height: 900 }),
+  Object.freeze({ role: 'card-4x3', width: 800, height: 600 }),
+  Object.freeze({ role: 'square-1x1', width: 600, height: 600 }),
+]);
+
+export function originalAssetFile(contentHash, format) {
+  return `${contentHash.slice(0, 16)}-original.${format}`;
+}
+
+/**
+ * The region to keep when cropping around a point.
+ *
+ * The point is where the subject is, in normalised coordinates, so it stays as
+ * close to the centre of the crop as the edges allow. Clamping rather than
+ * letting the window run off the image is what keeps a face near the top of a
+ * photograph from producing a band of sky.
+ */
+export function cropWindow({ width, height, targetWidth, targetHeight, focalPoint }) {
+  const scale = Math.max(targetWidth / width, targetHeight / height);
+  const windowWidth = Math.min(width, Math.round(targetWidth / scale));
+  const windowHeight = Math.min(height, Math.round(targetHeight / scale));
+  const focusX = Math.min(Math.max(Number(focalPoint?.x ?? 0.5), 0), 1) * width;
+  const focusY = Math.min(Math.max(Number(focalPoint?.y ?? 0.5), 0), 1) * height;
+  return {
+    left: Math.round(Math.min(Math.max(focusX - windowWidth / 2, 0), width - windowWidth)),
+    top: Math.round(Math.min(Math.max(focusY - windowHeight / 2, 0), height - windowHeight)),
+    width: windowWidth,
+    height: windowHeight,
+  };
+}
+
+/**
+ * Recompute one crop around a chosen point.
+ *
+ * Sharp's `attention` heuristic decides where to cut when nobody has said. When
+ * someone has, the window is computed rather than guessed, and the file keeps
+ * the same name so the asset it belongs to does not change identity.
+ */
+export async function recropAsset(buffer, contentHash, focalPoint, options) {
+  const metadata = await sharp(buffer).metadata();
+  const width = metadata.width ?? 0;
+  const height = metadata.height ?? 0;
+  if (!width || !height) return [];
+  await options.fs.mkdir(options.assetOutputDir, { recursive: true });
+
+  const variants = [];
+  for (const { role, width: targetWidth, height: targetHeight } of CROP_ROLES) {
+    if (width < targetWidth || height < targetHeight) continue;
+    const filename = `${contentHash.slice(0, 16)}-${role}.webp`;
+    await sharp(buffer)
+      .rotate()
+      .extract(cropWindow({ width, height, targetWidth, targetHeight, focalPoint }))
+      .resize(targetWidth, targetHeight, { fit: 'cover' })
+      .webp({ quality: 84 })
+      .toFile(path.join(options.assetOutputDir, filename));
+    variants.push({ role, format: 'webp', width: targetWidth, height: targetHeight, uri: `${options.assetUriPrefix ?? 'assets'}/${filename}`, reviewBeforePublish: true });
+  }
+  return variants;
+}
+
 export async function materializeImageVariants(buffer, contentHash, options) {
   if (!options.assetOutputDir) return [];
   await options.fs.mkdir(options.assetOutputDir, { recursive: true });
@@ -214,6 +275,12 @@ export async function materializeImageVariants(buffer, contentHash, options) {
   const width = metadata.width ?? 0;
   const height = metadata.height ?? 0;
   if (!width || !height) return [];
+  // Keep the original. Every derived file is a resize or a crop of it, so
+  // without it a chosen focal point could only be applied to an already
+  // compressed variant, and replacing an asset would have nothing to work from.
+  if (metadata.format) {
+    await options.fs.writeFile(path.join(options.assetOutputDir, originalAssetFile(contentHash, metadata.format)), buffer);
+  }
   const variants = [];
   const widths = [...new Set([480, 960, 1600].filter((candidate) => candidate <= width).concat(Math.min(width, 1600)))].sort((a, b) => a - b);
   for (const targetWidth of widths) {
@@ -225,7 +292,7 @@ export async function materializeImageVariants(buffer, contentHash, options) {
       variants.push({ role: 'responsive', format, width: targetWidth, uri: `${options.assetUriPrefix ?? 'assets'}/${filename}` });
     }
   }
-  for (const [role, targetWidth, targetHeight] of [['hero-16x9', 1600, 900], ['card-4x3', 800, 600], ['square-1x1', 600, 600]]) {
+  for (const { role, width: targetWidth, height: targetHeight } of CROP_ROLES) {
     if (width < targetWidth || height < targetHeight) continue;
     const filename = `${contentHash.slice(0, 16)}-${role}.webp`;
     await sharp(buffer).rotate().resize(targetWidth, targetHeight, { fit: 'cover', position: 'attention' }).webp({ quality: 84 }).toFile(path.join(options.assetOutputDir, filename));

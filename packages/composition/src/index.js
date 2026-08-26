@@ -99,7 +99,7 @@ function entityBinding(key, pack, field, manifestItems = []) {
 export function assetDecisionsHash(assetDecisions) {
   const entries = list(assetDecisions)
     .filter((entry) => entry?.assetId && entry?.effect)
-    .map((entry) => [entry.assetId, entry.effect, entry.cropReview ?? 'pending'])
+    .map((entry) => [entry.assetId, entry.effect, entry.cropReview ?? 'pending', entry.focalPoint ?? null])
     .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   return entries.length ? hash(entries) : null;
 }

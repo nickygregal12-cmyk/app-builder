@@ -32,9 +32,20 @@ if [[ ! -d "$REPO" ]]; then
   exit 1
 fi
 
+# Re-running this installer on an already-provisioned host is expected. A live
+# app-builder-opencode.service already owns 4097 in that case, and treating our
+# own listener as a collision prevents later idempotent changes (for example,
+# enabling the agent broker). Only tolerate the occupied port when the existing
+# App Builder unit is active and every listener on that port is still loopback-
+# only. A stray process or a public bind remains a hard failure.
 if ss -H -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)${OPENCODE_PORT}$"; then
-  echo "Port ${OPENCODE_PORT} is already in use. Set APP_BUILDER_OPENCODE_PORT to a free loopback port before installing the unit." >&2
-  exit 1
+  exposed="$(ss -H -ltn 2>/dev/null | awk -v p=":${OPENCODE_PORT}" '$4 ~ p"$" && $4 !~ /^127\.0\.0\.1:/ && $4 !~ /^\[::1\]:/ {print $4}')"
+  if systemctl is-active --quiet app-builder-opencode.service && [[ -z "$exposed" ]]; then
+    printf 'Port %s is already held by the active loopback-only App Builder OpenCode service; preserving it during idempotent reinstall.\n' "$OPENCODE_PORT"
+  else
+    echo "Port ${OPENCODE_PORT} is already in use by something other than the active loopback-only App Builder OpenCode service. Set APP_BUILDER_OPENCODE_PORT to a free loopback port before installing the unit." >&2
+    exit 1
+  fi
 fi
 
 install -d -m 0750 -o root -g "$RUNTIME_USER" "$ETC_DIR"

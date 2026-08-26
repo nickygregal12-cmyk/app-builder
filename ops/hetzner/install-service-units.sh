@@ -7,6 +7,8 @@ set -euo pipefail
 RUNTIME_USER="appbuilder"
 REPO="/srv/app-builder/repository"
 ETC_DIR="/etc/app-builder"
+STATE_ROOT="/srv/app-builder/state/service"
+WORKSPACES_ROOT="/srv/app-builder/workspaces"
 OPENCODE_PORT="${APP_BUILDER_OPENCODE_PORT:-4097}"
 
 if [[ "${EUID}" -ne 0 ]]; then
@@ -35,6 +37,7 @@ if ss -H -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)${OPENCODE_PORT}$"
 fi
 
 install -d -m 0750 -o root -g "$RUNTIME_USER" "$ETC_DIR"
+install -d -m 0750 -o "$RUNTIME_USER" -g "$RUNTIME_USER" "$STATE_ROOT" "$WORKSPACES_ROOT"
 
 # Generate a local-only OpenCode HTTP password. This is not a model/provider
 # secret; it protects the loopback API from unrelated local users/processes.
@@ -53,21 +56,25 @@ EOF
   chmod 0640 "$ETC_DIR/opencode-server.env"
 fi
 
-cat > /etc/systemd/system/app-builder-factory.service <<'EOF'
+cat > /etc/systemd/system/app-builder-factory.service <<EOF
 [Unit]
 Description=App Builder factory service
 After=network-online.target
 Wants=network-online.target
-ConditionPathExists=/srv/app-builder/repository/package.json
+ConditionPathExists=${REPO}/package.json
 
 [Service]
 Type=simple
-User=appbuilder
-Group=appbuilder
-WorkingDirectory=/srv/app-builder/repository
-Environment=HOME=/home/appbuilder
-Environment=PATH=/home/appbuilder/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/home/appbuilder/.local/bin/npm run service
+User=${RUNTIME_USER}
+Group=${RUNTIME_USER}
+WorkingDirectory=${REPO}
+Environment=HOME=/home/${RUNTIME_USER}
+Environment=PATH=/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=APP_BUILDER_SERVICE_HOST=127.0.0.1
+Environment=APP_BUILDER_SERVICE_PORT=4310
+Environment=APP_BUILDER_STATE_ROOT=${STATE_ROOT}
+Environment=APP_BUILDER_WORKSPACES_ROOT=${WORKSPACES_ROOT}
+ExecStart=/home/${RUNTIME_USER}/.local/bin/npm run service
 Restart=on-failure
 RestartSec=5s
 Slice=app-builder-runtime.slice
@@ -89,18 +96,18 @@ cat > /etc/systemd/system/app-builder-opencode.service <<EOF
 Description=App Builder loopback OpenCode server
 After=network-online.target
 Wants=network-online.target
-ConditionPathExists=/home/appbuilder/.local/bin/opencode
-ConditionPathExists=/srv/app-builder/repository/package.json
+ConditionPathExists=/home/${RUNTIME_USER}/.local/bin/opencode
+ConditionPathExists=${REPO}/package.json
 
 [Service]
 Type=simple
-User=appbuilder
-Group=appbuilder
-WorkingDirectory=/srv/app-builder/repository
-Environment=HOME=/home/appbuilder
-Environment=PATH=/home/appbuilder/.local/bin:/usr/local/bin:/usr/bin:/bin
+User=${RUNTIME_USER}
+Group=${RUNTIME_USER}
+WorkingDirectory=${REPO}
+Environment=HOME=/home/${RUNTIME_USER}
+Environment=PATH=/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin
 EnvironmentFile=${ETC_DIR}/opencode-server.env
-ExecStart=/home/appbuilder/.local/bin/opencode serve --hostname 127.0.0.1 --port ${OPENCODE_PORT}
+ExecStart=/home/${RUNTIME_USER}/.local/bin/opencode serve --hostname 127.0.0.1 --port ${OPENCODE_PORT}
 Restart=on-failure
 RestartSec=5s
 Slice=app-builder-runtime.slice
@@ -117,17 +124,24 @@ LockPersonality=true
 WantedBy=multi-user.target
 EOF
 
-# Record the selected local port in the existing host marker for later
-# verification and AgentRuntimeAdapter discovery.
+# Record the selected local port and durable service paths in the existing host
+# marker for later verification and AgentRuntimeAdapter discovery.
 tmp_marker="$(mktemp)"
-jq --argjson port "$OPENCODE_PORT" '.opencodePort = $port' /etc/app-builder-host.json > "$tmp_marker"
+jq \
+  --argjson port "$OPENCODE_PORT" \
+  --arg stateRoot "$STATE_ROOT" \
+  --arg workspacesRoot "$WORKSPACES_ROOT" \
+  '.opencodePort = $port | .serviceStateRoot = $stateRoot | .serviceWorkspacesRoot = $workspacesRoot' \
+  /etc/app-builder-host.json > "$tmp_marker"
 install -m 0644 -o root -g root "$tmp_marker" /etc/app-builder-host.json
 rm -f "$tmp_marker"
 
 systemctl daemon-reload
 
 printf 'Installed dormant App Builder units:\n'
-printf '  app-builder-factory.service  (expected loopback factory port 4310)\n'
+printf '  app-builder-factory.service  (127.0.0.1:4310)\n'
+printf '    state: %s\n' "$STATE_ROOT"
+printf '    workspaces: %s\n' "$WORKSPACES_ROOT"
 printf '  app-builder-opencode.service (127.0.0.1:%s)\n' "$OPENCODE_PORT"
 printf '\nNeither unit was enabled or started.\n'
 printf 'Run verify-host.sh and install repository dependencies before starting either service.\n'

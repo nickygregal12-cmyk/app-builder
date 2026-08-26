@@ -1,0 +1,250 @@
+#!/usr/bin/env node
+// Bounded OpenCode -> MCP -> Factory lane smoke test.
+//
+// It launches the adapter exactly as opencode.json declares it and drives it
+// over the MCP protocol, so what is exercised is the agent-facing lane rather
+// than the internal Factory HTTP surface. It proves two things in one run:
+// the safe journey works, and the excluded capabilities are genuinely absent.
+//
+//   npm run service          # in another process, or the hosted unit
+//   npm run opencode:smoke
+//
+// Exit codes: 0 pass, 1 a lane assertion failed, 2 the lane could not be
+// reached at all (no service, adapter would not start).
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import {
+  EXCLUDED_CAPABILITIES,
+  MCP_SERVER_NAME,
+  McpStdioClient,
+  REPOSITORY_ROOT,
+  SERVICE_URL_ENV,
+  excludedCapabilitiesFor,
+  readOpenCodeConfig,
+} from './lib/opencode-runtime.mjs';
+import { MCP_TOOL_BINDINGS } from '../apps/mcp/src/mcp-server.js';
+
+function parseArgs(argv) {
+  const options = { project: null, out: null, json: false, verify: false };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--project') options.project = argv[++index];
+    else if (arg === '--out') options.out = argv[++index];
+    else if (arg === '--json') options.json = true;
+    else if (arg === '--verify') options.verify = true;
+    else throw new Error(`Unknown argument: ${arg}`);
+  }
+  return options;
+}
+
+const options = parseArgs(process.argv.slice(2));
+const config = readOpenCodeConfig();
+const server = config.mcp?.[MCP_SERVER_NAME];
+if (!server) {
+  console.error(`opencode.json declares no "${MCP_SERVER_NAME}" MCP server. Run npm run opencode:doctor first.`);
+  process.exit(2);
+}
+const serviceUrl = server.environment?.[SERVICE_URL_ENV];
+
+const checks = [];
+let failures = 0;
+function record(id, ok, detail) {
+  checks.push({ id, ok, detail });
+  if (!ok) failures += 1;
+  const mark = ok ? 'pass' : 'FAIL';
+  console.error(`  [${mark}] ${id}${detail ? ` — ${detail}` : ''}`);
+}
+
+function expect(id, condition, detail) {
+  record(id, Boolean(condition), detail);
+  return Boolean(condition);
+}
+
+async function serviceReachable() {
+  try {
+    const response = await fetch(new URL('/health', serviceUrl));
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+const health = await serviceReachable();
+if (!health) {
+  console.error(`No App Builder factory service on ${serviceUrl}. Start it with "npm run service" (or the hosted app-builder-factory.service) and retry.`);
+  process.exit(2);
+}
+
+const client = new McpStdioClient({ command: server.command, environment: server.environment }).start();
+const evidence = {
+  schemaVersion: 1,
+  lane: 'opencode -> app-builder mcp adapter -> factory tool contract -> durable factory state',
+  serviceUrl,
+  serviceHealth: health,
+  mcpServerName: MCP_SERVER_NAME,
+  command: server.command,
+  operations: [],
+};
+
+async function call(toolName, args, { expectOk = true } = {}) {
+  const outcome = await client.callTool(toolName, args);
+  evidence.operations.push({ tool: toolName, arguments: args, ok: outcome.ok, message: outcome.message });
+  if (expectOk) expect(`invoke:${toolName}`, outcome.ok, outcome.ok ? null : outcome.message);
+  return outcome;
+}
+
+try {
+  console.error('MCP handshake');
+  const initialised = await client.initialize();
+  evidence.serverInfo = initialised.serverInfo;
+  evidence.protocolVersion = initialised.protocolVersion;
+  expect('handshake:initialize', initialised.serverInfo?.name === 'app-builder', `serverInfo=${JSON.stringify(initialised.serverInfo)}`);
+
+  const tools = await client.listTools();
+  const toolNames = tools.map((tool) => tool.name).sort();
+  evidence.tools = toolNames;
+  const declared = MCP_TOOL_BINDINGS.map((binding) => binding.name).sort();
+  expect('surface:matches-declared-bindings', JSON.stringify(toolNames) === JSON.stringify(declared), `${toolNames.length} tools`);
+
+  console.error('Bounded journey');
+  const projects = await call('project_list', {});
+  const listed = Array.isArray(projects.value?.projects) ? projects.value.projects : [];
+  evidence.projectCount = listed.length;
+
+  let projectId = options.project;
+  if (!projectId) projectId = listed[0]?.id ?? null;
+  if (!projectId) {
+    const manifest = JSON.parse(fs.readFileSync(path.join(REPOSITORY_ROOT, 'examples/project-manifest.example.json'), 'utf8'));
+    const created = await call('project_create', { id: 'opencode-lane-smoke', manifest });
+    projectId = created.value?.project?.id ?? created.value?.id ?? 'opencode-lane-smoke';
+    evidence.createdProject = projectId;
+  }
+  evidence.projectId = projectId;
+
+  const project = await call('project_read', { projectId });
+  expect('durable:project-has-identity', Boolean(project.value?.project?.id ?? project.value?.id), `projectId=${projectId}`);
+
+  const manifest = await call('project_manifest_read', { projectId });
+  expect('durable:manifest-is-factory-owned', Boolean(manifest.value?.manifest ?? manifest.value?.schemaVersion));
+
+  await call('project_composition_read', { projectId });
+
+  const tasks = await call('project_tasks_read', { projectId });
+  const events = await call('project_events_read', { projectId, after: 0 });
+  const checkpoints = await call('project_checkpoints_read', { projectId });
+  evidence.durableState = {
+    tasks: Array.isArray(tasks.value?.tasks) ? tasks.value.tasks.length : null,
+    events: Array.isArray(events.value?.events) ? events.value.events.length : null,
+    checkpoints: Array.isArray(checkpoints.value?.checkpoints) ? checkpoints.value.checkpoints.length : null,
+  };
+  expect('durable:ledger-is-readable', evidence.durableState.events !== null, JSON.stringify(evidence.durableState));
+
+  await call('project_metrics_read', { projectId });
+
+  // One safe bounded deterministic operation. preview-status is the default
+  // because it reports service-owned state without starting a build; verify is
+  // opt-in because it installs and builds a workspace.
+  const preview = await call('project_preview_status', { projectId });
+  evidence.previewStatus = preview.value ?? null;
+  if (options.verify) {
+    const verified = await call('project_verify', { projectId });
+    evidence.verify = verified.value ?? null;
+  }
+
+  const integrations = await call('integration_status_read', {});
+  const integrationText = JSON.stringify(integrations.value ?? {});
+  expect(
+    'excluded:no-secret-values-in-integration-status',
+    !/[A-Za-z0-9_-]{32,}/.test(integrationText),
+    'integration status reports configured/not-configured only',
+  );
+
+  console.error('Excluded capabilities');
+  for (const capability of EXCLUDED_CAPABILITIES) {
+    const matches = toolNames.filter((name) => excludedCapabilitiesFor(name).includes(capability.id));
+    expect(`excluded:${capability.id}`, matches.length === 0, matches.length ? `exposed: ${matches.join(', ')}` : 'no such tool on the MCP surface');
+  }
+
+  // A client cannot reach an operation the adapter never registered, even when
+  // the factory service itself has an internal route for it.
+  for (const absent of ['bash', 'shell_exec', 'read_file', 'fs_read', 'secrets_read', 'deploy_production', 'database_write', 'http_fetch', 'project_source_governance_update']) {
+    const outcome = await call(absent, {}, { expectOk: false });
+    expect(`excluded:unregistered-tool:${absent}`, !outcome.ok, outcome.ok ? 'tool executed' : 'rejected');
+  }
+
+  // Project identifiers are bounded, so a traversal or absolute path cannot
+  // become a filesystem selector.
+  for (const hostile of ['../../etc/passwd', '/etc/passwd', '..', 'a/../../b', '', ' ']) {
+    const outcome = await call('project_read', { projectId: hostile }, { expectOk: false });
+    expect(`excluded:arbitrary-path:${JSON.stringify(hostile)}`, !outcome.ok, outcome.ok ? 'accepted' : 'rejected');
+  }
+
+  // Ingestion is the only outbound operation and it is not a fetch proxy:
+  // non-http schemes and private/loopback destinations must both be refused.
+  for (const hostile of ['file:///etc/passwd', 'http://127.0.0.1:4310/projects', 'http://169.254.169.254/latest/meta-data/']) {
+    const outcome = await call('project_sources_ingest', { projectId, sources: [{ uri: hostile }] }, { expectOk: false });
+    expect(`excluded:unrestricted-fetch:${hostile}`, !outcome.ok, outcome.ok ? 'fetched' : 'refused');
+  }
+
+  // The refusals above are the Factory's, not the adapter's manners: each one
+  // lands in the durable event ledger, so the boundary is auditable after the
+  // session that hit it is gone.
+  console.error('Durable state');
+  const afterEvents = await call('project_events_read', { projectId, after: 0 });
+  const eventList = Array.isArray(afterEvents.value?.events) ? afterEvents.value.events : [];
+  const afterTasks = await call('project_tasks_read', { projectId });
+  evidence.durableStateAfterProbes = {
+    events: eventList.length,
+    tasks: Array.isArray(afterTasks.value?.tasks) ? afterTasks.value.tasks.length : null,
+    eventTypes: [...new Set(eventList.map((event) => event.type))],
+  };
+  expect(
+    'durable:refusals-are-recorded-by-the-factory',
+    eventList.length > (evidence.durableState.events ?? 0) && eventList.some((event) => String(event.type).includes('failed')),
+    JSON.stringify(evidence.durableStateAfterProbes),
+  );
+} catch (error) {
+  record('lane:unexpected-error', false, error instanceof Error ? error.message : String(error));
+} finally {
+  await client.close();
+}
+
+// The adapter fails closed when pointed away from loopback, so the lane cannot
+// be redirected at a remote Factory by environment alone.
+{
+  const remote = new McpStdioClient({
+    command: server.command,
+    environment: { [SERVICE_URL_ENV]: 'http://198.51.100.10:4310' },
+    timeoutMs: 20_000,
+  }).start();
+  let started = false;
+  try {
+    await remote.initialize();
+    started = true;
+  } catch {
+    started = false;
+  } finally {
+    await remote.close();
+  }
+  expect('excluded:non-loopback-service-origin', !started, started ? 'adapter accepted a remote factory origin' : 'adapter refused to start');
+}
+
+evidence.checks = checks;
+evidence.passed = failures === 0;
+evidence.failureCount = failures;
+
+const report = JSON.stringify(evidence, null, 2);
+if (options.out) {
+  fs.mkdirSync(path.dirname(path.resolve(options.out)), { recursive: true });
+  fs.writeFileSync(path.resolve(options.out), `${report}\n`);
+  console.error(`Evidence written to ${options.out}`);
+}
+if (options.json) console.log(report);
+
+if (failures > 0) {
+  console.error(`OpenCode -> MCP -> Factory lane smoke FAILED: ${failures} of ${checks.length} checks.`);
+  process.exit(1);
+}
+console.error(`OpenCode -> MCP -> Factory lane smoke passed: ${checks.length} checks, ${evidence.operations.length} MCP operations.`);

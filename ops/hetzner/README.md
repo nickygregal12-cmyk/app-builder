@@ -240,6 +240,46 @@ The real co-located host has passed the infrastructure acceptance intended by th
 
 This is **infrastructure evidence, not a Phase 5 runtime promotion**. `config/factory-status.json` and the product-proof gate remain authoritative for sequencing.
 
+## 6a. Prove the bounded MCP lane on the host
+
+Once the factory service is running, verify that OpenCode reaches the Factory only through the
+bounded MCP adapter. From `/srv/app-builder/repository` as `appbuilder`:
+
+```bash
+npm run opencode:doctor          # configuration contract, no service needed
+npm run opencode:smoke -- --out /srv/app-builder/artifacts/opencode-mcp-smoke.json
+```
+
+The smoke test launches `npm run mcp` exactly as `opencode.json` declares it, drives it over the MCP
+protocol against `127.0.0.1:4310`, and fails if any excluded capability is reachable. It starts no
+service, opens no port and needs no provider credential. Pass `--project PROJECT_ID` to run the
+journey against an existing durable project instead of creating a bounded smoke project.
+
+Confirm OpenCode itself is wired to the same adapter:
+
+```bash
+opencode mcp list                # expect: app-builder connected
+
+sudo bash -c '
+  set -a
+  source /etc/app-builder/opencode-server.env
+  set +a
+  curl --fail --silent --show-error \
+    -u "$OPENCODE_SERVER_USERNAME:$OPENCODE_SERVER_PASSWORD" \
+    http://127.0.0.1:4097/mcp
+'
+# expect: {"app-builder":{"status":"connected"}}
+```
+
+Invoking a Factory tool from inside an OpenCode model session additionally requires provider
+credentials, which remain deliberately absent. The lane's transport, tool surface and refusals are
+proven without them.
+
+Note the residual gap this does not close: the `permission` block in `opencode.json` is client
+configuration, not enforcement. A process on this host can still reach `127.0.0.1:4310` directly, so
+the MCP lane is the *supported* path rather than the *only possible* path. Closing that is issue #55
+and remains the prerequisite for broad autonomous execution.
+
 ## 7. Running bounded one-off commands
 
 For a simple bounded command outside a long-lived unit:

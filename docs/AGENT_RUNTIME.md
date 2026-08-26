@@ -131,6 +131,74 @@ The co-located infrastructure has been exercised on the real host and passed the
 
 This milestone proves the **host boundary only**. It does not satisfy the autonomous-runtime success criteria below and does not advance the machine-readable product phase past its current genuine-business acceptance gate.
 
+### Validated MCP lane milestone — 2026-08-26
+
+The bounded agent-facing path has now been exercised end to end against a running factory service.
+It was run on a development runtime with the same pinned OpenCode `1.18.14` and the same loopback
+`127.0.0.1:4310` factory, not on the Hetzner host: the host re-run is the documented command in
+`ops/hetzner/README.md` section 6a and is still outstanding. The lane under test is:
+
+```text
+OpenCode 1.18.14 (loopback, no provider credentials)
+  -> opencode.json: one local MCP server, command ["npm","run","mcp"]
+  -> apps/mcp stdio adapter (loopback service origin enforced)
+  -> FACTORY_TOOLS-backed service operations
+  -> durable Factory project/task/event/checkpoint state
+```
+
+What is proven:
+
+- OpenCode launches the existing adapter and completes the MCP handshake (`opencode mcp list`
+  reports `app-builder connected`; the loopback OpenCode server's `GET /mcp` agrees);
+- the served tool list is exactly the declared bindings — 21 tools, no more;
+- a bounded read journey (projects, project, Manifest, composition, tasks, events, checkpoints,
+  metrics) and one safe deterministic operation (preview status) return Factory-owned state;
+- the excluded capabilities are absent rather than merely unused: no secret, filesystem, shell,
+  fetch, deployment or database tool exists on the surface; an unregistered tool name is rejected;
+  a traversing or absolute project identifier is refused; ingestion refuses non-`http(s)`, loopback
+  and link-local destinations; and the adapter refuses to start against a non-loopback origin;
+- refusals land in the durable event ledger, so the boundary is auditable after the session ends.
+
+`npm run opencode:doctor` holds the configuration contract in `npm run check`; `npm run opencode:smoke`
+runs the live journey. `docs/MCP_ADAPTER.md` carries the configuration itself.
+
+What is **not** proven, and must not be read into this milestone:
+
+- no provider credential exists, so no OpenCode *model session* has invoked a Factory tool. Only the
+  transport, tool surface and adapter behaviour behind that connection are evidenced;
+- the OpenCode `permission` block is client configuration, not enforcement. A process on the host
+  still reaches `127.0.0.1:4310` directly, which is issue #55 and the exact prerequisite for broad
+  autonomous execution;
+- no role is runtime-ready, no loop is scheduled and no phase claim advances.
+
+### Materialising roles into a runtime, later
+
+`npm run agents:materialise` projects `config/agent-roles.json`, `config/agent-pipelines.json` and
+`config/agent-policies.json` into the shape OpenCode agent definitions would take, optionally scoped
+to one project class. It is a **dry run**: it prints, it refuses to write `opencode.json`, every
+projected role carries `runtimeReady: false` with its blockers, and no role is promoted.
+
+The projection is how the "two sources of truth" failure is avoided: registry roles become subagents
+mechanically — no primary is invented — tools are derived deny-by-default from the role's capability
+policy (an approval-gated action is not an enabled tool), and each role's Factory reach is the
+bounded MCP surface filtered by whether the role owns a mutation scope. When a runtime finally needs
+agent definitions, it should generate them from the registry through this projection rather than
+maintain a second hand-written taxonomy.
+
+### OpenCode 2 evaluation
+
+Checked 2026-08-26: no 2.x release of `opencode-ai` is published. `latest` is `1.18.23`; the only
+non-1.x channels are `beta`, `next` and per-branch snapshots, all versioned `0.0.0-*`. A side-by-side
+benchmark therefore has nothing stable to benchmark against and is **not** justified yet.
+
+Revisit when a 2.x line is published as a stable dist-tag, and then only as a side-by-side install
+(it ships as a separate binary) measuring the things that would actually change the
+`AgentRuntimeAdapter`: whether subagent definitions can be generated from the role registry rather
+than hand-written, whether its permission model enforces capability boundaries in the runtime instead
+of the client configuration, and whether session lifecycle/compaction supports fresh-session-per-role
+with durable resume. Adopt nothing beta-only into stable factory architecture, and keep 1.18.14 as
+the validated runtime until the replacement passes the same lane smoke.
+
 ## Runtime adapter responsibilities
 
 A future `AgentRuntimeAdapter` should support operations conceptually equivalent to:

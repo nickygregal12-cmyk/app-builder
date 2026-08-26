@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import { FACTORY_TOOLS } from '../apps/service/src/tool-contract.js';
 
 const root = process.cwd();
@@ -23,6 +24,17 @@ for (const relative of required) {
     console.error(`Missing factory service file: ${relative}`);
     failed = true;
   }
+}
+
+try {
+  // Load the real service dependency graph without starting the HTTP server.
+  // This catches incomplete/corrupt production installs (for example a
+  // dependency directory that exists but cannot actually be imported) before
+  // systemd enters a restart loop.
+  await import(pathToFileURL(path.join(root, 'apps/service/src/factory-service.js')).href);
+} catch (error) {
+  console.error(`Factory service runtime import failed: ${error instanceof Error ? error.message : error}`);
+  failed = true;
 }
 
 try {
@@ -91,4 +103,4 @@ try {
 }
 
 if (failed) process.exit(1);
-console.log('Factory service doctor: local boundary, safe tool surface and generated-app portability are valid.');
+console.log('Factory service doctor: runtime imports, local boundary, safe tool surface and generated-app portability are valid.');

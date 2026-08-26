@@ -9,6 +9,7 @@ import { REQUIRED_ENGINES, summarise } from './portability-evidence.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = fs.readFileSync(path.join(ROOT, 'playwright.portability.config.ts'), 'utf8');
 const SPEC = fs.readFileSync(path.join(ROOT, 'tests/portability/generated-site.spec.ts'), 'utf8');
+const SHARED_STYLES = fs.readFileSync(path.join(ROOT, 'templates/shared/presentation/styles.css'), 'utf8');
 
 /**
  * The lane's shape is part of what it claims.
@@ -19,6 +20,19 @@ const SPEC = fs.readFileSync(path.join(ROOT, 'tests/portability/generated-site.s
  * grows without limit turns a smoke lane into a second full suite. Neither
  * change announces itself in a diff, so both are held here.
  */
+test('the lane includes a viewport the mobile stylesheet applies to', () => {
+  // The sticky-header defect lived under `@media (max-width: 720px)` and every
+  // desktop project in the matrix is 1280 wide, so three engines agreed the
+  // page was fine and none of them had loaded the rule that broke it. A phone
+  // project is not a nice-to-have in this lane; it is the only member that can
+  // see half the stylesheet.
+  const mobileBreakpoint = [...SHARED_STYLES.matchAll(/@media \(max-width:\s*(\d+)px\)/g)]
+    .map((match) => Number(match[1]))
+    .sort((a, b) => a - b)[0];
+  assert.ok(Number.isFinite(mobileBreakpoint), 'the shared presentation no longer has a mobile breakpoint to cover');
+  assert.match(CONFIG, /devices\['iPhone \d+'\]/, `the shared stylesheet changes below ${mobileBreakpoint}px and only a phone project loads those rules`);
+});
+
 test('the portability lane covers three engines and a phone', () => {
   for (const engine of REQUIRED_ENGINES) {
     assert.match(CONFIG, new RegExp(`name:\\s*'${engine}'`), `the portability config no longer declares the ${engine} project`);
@@ -78,4 +92,38 @@ test('a sticky-header check on a page too short to scroll is not evidence either
   ]])));
   assert.equal(report.notExercised.length, REQUIRED_ENGINES.length);
   assert.equal(report.engines.webkit.checks['/ sticky-header'], 'not-exercised');
+});
+
+/**
+ * The first defect this lane found, held deterministically so a browser is not
+ * needed to catch it again.
+ *
+ * At <=720px the header rule set `position: relative`, which overrode the
+ * `position: sticky` it is given at every other width. The disclosure panel
+ * under it is absolutely positioned and does need a positioned ancestor —
+ * `relative` is the reflex answer — but `sticky` is already a positioned value
+ * and already that ancestor. So the navigation scrolled away with the page on
+ * every phone, in every engine, and nothing noticed because nothing asked a
+ * mobile viewport whether the header stayed put.
+ *
+ * The browser lane catches it on `mobile-webkit`. This catches it in
+ * `npm run check`, which is where a change to this stylesheet is actually made.
+ */
+test('no rule takes the site header off sticky', () => {
+  const offenders = [];
+  for (const match of SHARED_STYLES.matchAll(/([^{}]*\.site-header[^{}]*)\{([^}]*)\}/g)) {
+    const [, selector, body] = match;
+    const position = body.match(/(?:^|;)\s*position\s*:\s*([a-z-]+)/);
+    if (!position) continue;
+    // A rule for something *inside* the header positions itself, which is
+    // ordinary. Only a rule whose subject is the header itself is the header.
+    const subject = selector.split(',').map((entry) => entry.trim()).some((entry) => /\.site-header[a-z0-9_.:[\]"'=-]*$/i.test(entry));
+    if (!subject) continue;
+    if (position[1] !== 'sticky') offenders.push({ selector: selector.trim(), position: position[1] });
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `these rules take the site header off sticky, so the navigation scrolls away with the page: ${JSON.stringify(offenders)}. The disclosure panel does not need position: relative here — sticky is already a positioned ancestor.`,
+  );
 });

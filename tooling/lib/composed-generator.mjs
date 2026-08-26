@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertContract } from '@app-builder/contracts';
-import { applyContentOverrides, composeProject, deriveElementIdentities, stripContentOverrides } from '../../packages/composition/src/index.js';
+import { applyContentOverrides, applySectionVariants, composeProject, deriveElementIdentities, stripContentOverrides, stripSectionVariants } from '../../packages/composition/src/index.js';
 import { generateProject } from './generator.mjs';
 
 function writeJson(file, value) {
@@ -83,7 +83,9 @@ function materializeAssets(composition, knowledgePack, { assetSourceDir, outputD
 function writeElementIdentityIndex(outputDir, { composition, template, projectId, assets = {} }) {
   if (!template?.presentation) return null;
   const index = assertContract('element-identity', deriveElementIdentities({
-    composition: stripContentOverrides(composition),
+    // Identity describes what the factory built. Neither a rewritten sentence
+    // nor a chosen presentation moves the element it applies to.
+    composition: stripSectionVariants(stripContentOverrides(composition)),
     presentation: template.presentation,
     projectId,
     templateId: template.id,
@@ -94,7 +96,7 @@ function writeElementIdentityIndex(outputDir, { composition, template, projectId
   return index;
 }
 
-export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
+export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
   const plan = generateProject(manifest, outputDir, { factoryRoot, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
@@ -102,7 +104,7 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   // the schema, because nothing validated the output.
   // Human edits are replayed over freshly composed output, so a rebuild picks
   // up new source material without discarding what someone wrote by hand.
-  const composition = assertContract('composition', applyContentOverrides(composeProject({ manifest, knowledgePack, assetDecisions }), contentOverrides));
+  const composition = assertContract('composition', applySectionVariants(applyContentOverrides(composeProject({ manifest, knowledgePack, assetDecisions }), contentOverrides), sectionVariants));
   const out = path.resolve(outputDir);
   const assets = materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir: out, assetDecisions });
   writeJson(path.join(out, '.app-builder/composition.json'), composition);

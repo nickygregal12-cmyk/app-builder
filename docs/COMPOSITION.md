@@ -85,6 +85,39 @@ composition. A human sentence replaces a value without moving the element it
 lives in, so writing copy leaves every address intact; whether a binding has
 been overridden is read live from the composition at resolve time.
 
+## Section presentation
+
+A composed section can be shown more than one way, but only in the ways its
+template actually implements.
+
+`SectionSpec.variant` used to be close to decorative: the composer emitted
+eleven values, the template rendered each as a `variant-<name>` class, and the
+stylesheet styled one of them. A picker on top of that would have offered
+choices that changed nothing.
+
+The template now declares, per component, the variants it genuinely renders
+differently, each with a label and what it is for. `Items` presents cards, a
+list or feature columns according to the section's variant instead of guessing
+from whether items happen to carry detail. A component that renders one way
+declares no variants and is not offered, because a choice of one is not a
+choice, and a variant the template does not declare is refused rather than
+written into the composition as a class that styles nothing.
+
+Because the variant is now authoritative, the composer records a truthful one:
+it knows whether its items carry detail, so it says `cards` or `list`
+accordingly.
+
+Choices live in a durable `section-variants.json` and are replayed by
+`applySectionVariants` over the deterministic composition, keeping what they
+replaced in `variantOverriddenFrom` so the factory's own presentation is always
+recoverable through `stripSectionVariants`. Nothing mutates the DOM: the choice
+is recorded and the section recomposed, and because the preview renders the
+workspace composition it appears without a rebuild.
+
+Element identity is derived from a baseline with both this and content
+overrides stripped, so choosing a presentation — like writing a sentence — does
+not move any element address.
+
 ## Asset decisions
 
 Composition places an asset only when someone has said it may be published.

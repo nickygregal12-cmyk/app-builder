@@ -445,6 +445,9 @@ Delivered:
   that asset, and unreviewed smart crops are withheld;
 - **focal-point cropping**: originals are retained, a chosen point recomputes
   the crops around it, and the result needs its own review before it publishes;
+- **section presentation**: a section can be shown any way its template actually
+  renders, chosen from the declared set, recorded durably and recomposed rather
+  than mutated;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -571,10 +574,36 @@ The point is recorded on the asset's decision, so it survives a rebuild and is
 re-applied after re-ingestion — which regenerates derived files and would
 otherwise hand the framing back to the heuristic.
 
+**Section and component variant selection (4B.4).** `SectionSpec.variant` was
+almost entirely decorative: the composer emitted eleven values, the template
+rendered each as a `variant-<name>` class, and the stylesheet styled exactly one
+of them. Offering a picker on top of that would have been offering choices that
+did nothing.
+
+So the variants a component declares are now ones it genuinely renders
+differently — `Items` presents cards, a list or feature columns according to the
+section's variant instead of guessing, and the hero's two densities are both
+explicit rules. The template declares what it implements, and a variant it does
+not declare is refused rather than written into the composition as a class that
+styles nothing. A component with a single presentation offers no choice at all,
+because a choice of one is not a choice.
+
+Making the variant authoritative meant the composer had to record a truthful
+one: it knows whether its items carry detail, so it now says `cards` or `list`
+accordingly rather than always `cards` and leaving the template to
+second-guess it.
+
+Choices live in a durable `section-variants.json` and are replayed over the
+deterministic composition, the same shape content overrides use, so a rebuild
+picks up new source material without discarding how someone decided the page
+should read. Nothing mutates the DOM: the choice is recorded and the section
+recomposed, which the running preview shows without a rebuild. Identity is
+derived from a baseline with both overlays stripped, so choosing a presentation
+does not move any element address.
+
 Remaining:
 - asset replacement (swapping the bytes behind an approved asset);
 - comparing supplied and generated alternatives (needs generation first);
-- section/component variant selection;
 - project asset policy modes;
 - Design Contract editing;
 - **Product Opportunity Scout** for existing-app improvement: a broad prompt such as "improve this

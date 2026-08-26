@@ -4,6 +4,7 @@ import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
 import { updateProjectSourceGovernance } from './source-governance.js';
 import { assetInventory, decideProjectAsset, recropProjectAsset } from './asset-governance.js';
+import { chooseSectionVariant, sectionVariantOptions } from './section-variants.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -89,6 +90,13 @@ export function createFactoryHttpServer({ service }) {
         const body = await readJson(request);
         return send(response, 200, await decideProjectAsset(service, route.projectId, decodeURIComponent(assetDecisionRoute[1]), body));
       }
+      if (request.method === 'GET' && route.action === 'section-variants') return send(response, 200, { sections: sectionVariantOptions(service, route.projectId) });
+      const variantRoute = route.action?.match(/^sections\/([^/]+)\/variant$/);
+      if (request.method === 'POST' && variantRoute) {
+        const body = await readJson(request);
+        await chooseSectionVariant(service, route.projectId, decodeURIComponent(variantRoute[1]), body.variant ?? null);
+        return send(response, 200, { sections: sectionVariantOptions(service, route.projectId) });
+      }
       if (request.method === 'GET' && route.action === 'evidence') return send(response, 200, { evidence: service.listRenderedEvidence(route.projectId) });
       if (request.method === 'POST' && route.action === 'evidence/capture') {
         const result = await service.captureRenderedEvidence(route.projectId);
@@ -142,7 +150,7 @@ export function createFactoryHttpServer({ service }) {
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,
-        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
+        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
       ].some((pattern) => pattern.test(message));
       const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });

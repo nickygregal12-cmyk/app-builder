@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/section-variant.schema.json",
+  "title": "App Builder Section Variant Choices",
+  "description": "Presentation chosen by a person for a composed section, from the variants its template declares it genuinely renders differently. Composition stays a pure function of manifest and knowledge; a choice lives beside it and is replayed on top, so a rebuild picks up new source material without discarding how someone decided the page should read. A choice the template does not declare is refused rather than rendered as an unknown class.",
+  "type": "object",
+  "required": ["schemaVersion", "projectId", "choices"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "choices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sectionId", "variant", "chosenAt", "chosenBy"],
+        "properties": {
+          "sectionId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "variant": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "chosenAt": {"type": "string", "minLength": 1},
+          "chosenBy": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

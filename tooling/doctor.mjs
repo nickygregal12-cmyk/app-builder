@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
 const required = [
@@ -159,6 +160,27 @@ try {
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   failed = true;
+}
+
+/**
+ * Nothing the factory generates from may be invisible to a fresh clone.
+ *
+ * `.gitignore` carries rules aimed at generated output — `generated/`, `dist/`,
+ * `.tmp/` — and a template ships its own placeholder module at one of those
+ * paths. An ignored file is still there for whoever wrote it and simply absent
+ * in CI, so the failure arrives as a missing file in a checkout rather than as
+ * a mistake at the point it was made.
+ */
+try {
+  const ignored = spawnSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', 'templates', 'recipes', 'adapters'], { cwd: root, encoding: 'utf8' });
+  if (ignored.status === 0) {
+    for (const file of ignored.stdout.split('\n').map((line) => line.trim()).filter(Boolean)) {
+      console.error(`Factory source is git-ignored and would be missing from a fresh clone: ${file}`);
+      failed = true;
+    }
+  }
+} catch {
+  // A checkout without git still runs every other check.
 }
 
 const scanRoots = ['apps', 'packages', 'config', 'schemas', 'questionnaires', 'tooling', 'templates', 'recipes', 'adapters', 'tests'];

@@ -3,6 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { FactoryStore } from '../apps/service/src/store.js';
+import { FactoryService } from '../apps/service/src/factory-service.js';
 import { generateComposedProject } from './lib/composed-generator.mjs';
 import { loadCatalog } from './lib/generator.mjs';
 import { compilePresentationRegistry, loadPresentationManifest } from './lib/presentation-registry.mjs';
@@ -256,5 +258,55 @@ test('the application renderer is unchanged by any of this', () => {
     assert.match(read(out, 'netlify.toml'), /to = "\/index\.html"/);
   } finally {
     fs.rmSync(path.dirname(out), { recursive: true, force: true });
+  }
+});
+
+test('a renderer switch never silently resets what a project decided', async () => {
+  // Every durable decision a person can make, replayed across two rebuilds of a
+  // statically rendered genuine business: a promoted visual direction, a design
+  // control, a chosen section presentation and a sentence someone wrote. A
+  // rebuild that quietly returned any of them to the factory's own selection
+  // would make a second renderer a way to lose work.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-rebuild-'));
+  const store = new FactoryStore({ stateRoot: path.join(root, 'service') });
+  const service = new FactoryService({ store, workspacesRoot: path.join(root, 'workspaces'), factoryRoot: process.cwd() });
+  try {
+    const bundle = JSON.parse(fs.readFileSync('examples/genuine-business/nbm-approved-intake.v1.json', 'utf8'));
+    const { project } = await service.replayIntakeBundle(bundle);
+    await service.writeDesignChoices(project.id, { visualDirection: 'structured-practice', density: 'relaxed' });
+
+    const first = await service.generateProject(project.id);
+    assert.equal(JSON.parse(read(first.workspace, '.app-builder/project.json')).renderer.id, 'static-content');
+    const hero = first.composition.sections.find((section) => section.type === 'hero');
+    const grid = first.composition.sections.find((section) => section.type === 'item-grid');
+    await service.saveOverrides(project.id, [{ sectionId: hero.id, bindingKey: 'title', value: 'Written by a person', editedAt: '2026-08-26T00:00:00.000Z' }]);
+    if (grid) await service.writeSectionVariants(project.id, [{ sectionId: grid.id, variant: 'features', chosenAt: '2026-08-26T00:00:00.000Z', chosenBy: 'test' }]);
+
+    const second = await service.generateProject(project.id);
+    const third = await service.generateProject(project.id);
+
+    const spec = JSON.parse(read(third.workspace, '.product/design-system.json'));
+    assert.equal(spec.visualDirection, 'structured-practice', 'a promoted direction survives a rebuild');
+    assert.equal(spec.controls.density, 'relaxed', 'a chosen design control survives a rebuild');
+
+    const record = JSON.parse(read(third.workspace, '.app-builder/project.json'));
+    assert.equal(record.renderer.id, 'static-content', 'the renderer is stable across rebuilds');
+    assert.equal(record.template.id, 'astro-static-content');
+
+    const composition = JSON.parse(read(third.workspace, '.app-builder/composition.json'));
+    assert.equal(composition.sections.find((section) => section.id === hero.id).bindings.find((entry) => entry.key === 'title').value, 'Written by a person');
+    if (grid) assert.equal(composition.sections.find((section) => section.id === grid.id).variant, 'features');
+
+    // Equivalent approved inputs, equivalent structural output.
+    const earlier = JSON.parse(read(second.workspace, '.product/design-system.json'));
+    assert.equal(earlier.layout.shellClasses, spec.layout.shellClasses);
+    assert.deepEqual(earlier.tokens, spec.tokens);
+    assert.equal(JSON.parse(read(second.workspace, '.app-builder/composition.json')).compositionHash, composition.compositionHash);
+    assert.equal(read(second.workspace, '.app-builder/element-identity.json'), read(third.workspace, '.app-builder/element-identity.json'));
+    assert.equal(read(second.workspace, 'src/generated/composition.ts'), read(third.workspace, 'src/generated/composition.ts'));
+  } finally {
+    await service.close();
+    store.close();
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });

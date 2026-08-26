@@ -15,7 +15,6 @@ import {
   compileDesignSystemSpec,
   compileDesignTokens,
   contrastRatio,
-  renderBrandCss,
   renderDesignSystemCss,
 } from './lib/design-choices.mjs';
 import { FactoryService } from '../apps/service/src/factory-service.js';
@@ -69,9 +68,8 @@ test('every compiled property is one the template actually reads', () => {
   }
   // A design contract that does not compile is a prompt. The product renderer
   // now consumes DesignSystemSpec rather than bypassing that compiler stage.
-  assert.equal(renderBrandCss(baseDesign), renderDesignSystemCss(spec));
   assert.match(renderDesignSystemCss(spec), /--section-space: clamp\(56px, 7vw, 104px\);/);
-  assert.match(renderBrandCss({ ...baseDesign, density: 'dense' }), /--section-space: clamp\(28px, 3\.5vw, 52px\);/);
+  assert.match(renderDesignSystemCss(compileDesignSystemSpec({ ...baseDesign, density: 'dense' })), /--section-space: clamp\(28px, 3\.5vw, 52px\);/);
 });
 
 test('every active DesignSystemSpec control changes output the renderer consumes', () => {

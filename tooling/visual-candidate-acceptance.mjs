@@ -15,9 +15,9 @@
  * It stops there deliberately. The creator of a candidate may not promote it,
  * and no genuinely independent model runtime is enabled in this repository, so
  * the runner will not manufacture a verdict to make its own report look
- * complete. Supply `--verdicts <file>` with a reviewer's decisions and it will
- * record them and promote; supply nothing and it reports the promotion as
- * outstanding, which is the honest state.
+ * complete. Supply `--verdicts <file>` with an independent reviewer's decisions
+ * and it will record them and promote; supply nothing and it reports the
+ * promotion as outstanding, which is the honest state.
  *
  * The run leaves an ordinary factory state behind at `.app-builder/visual-review`
  * rather than in a build temp directory, because the evidence exists to be
@@ -42,10 +42,6 @@ function argument(name) {
   return index === -1 ? null : process.argv[index + 1] ?? null;
 }
 
-// Durable factory state, not build scratch. `.tmp` says "delete me", and a
-// reviewer told the only copy of the evidence is under a temp directory is
-// being told to hunt through build output. This is the same ordinary state
-// layout the Console already serves, in a place named for what it holds.
 const REVIEW_ROOT = '.app-builder/visual-review';
 const root = path.resolve(argument('--out') ?? REVIEW_ROOT);
 const stateRoot = path.join(root, 'service');
@@ -71,8 +67,6 @@ try {
   const { project } = await service.replayIntakeBundle(bundle);
   console.log(`Replayed ${bundle.bundleId} as ${project.id}.`);
 
-  // The canonical build first. A candidate set is a choice over a project that
-  // already has an answer, not a substitute for having one.
   const baseline = await service.generateProject(project.id);
   console.log(`Canonical build: ${baseline.workspace}`);
 
@@ -99,8 +93,6 @@ try {
     if (verdicts.promote) {
       decided = await service.promoteVisualCandidate(project.id, verdicts.promote.candidateId, verdicts.promote);
       promotion = verdicts.promote;
-      // The promoted direction is a durable design choice, so the project's own
-      // next build renders it. This is where the promotion becomes the product.
       const rebuilt = await service.generateProject(project.id);
       run('npm', ['install', '--no-audit', '--no-fund'], rebuilt.workspace);
       run('npm', ['run', 'check'], rebuilt.workspace);
@@ -142,13 +134,11 @@ try {
       };
     }),
     promotedCandidateId: decided.promotedCandidateId,
-    // Recorded rather than implied. Phase 5 is where a genuinely independent
-    // runtime could issue this verdict; nothing here pretends one did.
     independentVisualReview: {
       executed: Boolean(promotion),
       automatedCrossProviderJudgement: 'unexecuted',
       detail: promotion
-        ? `Verdicts supplied by ${promotion.promotedBy} through --verdicts. No automated cross-provider critic ran; this is a recorded human decision over deterministic and browser evidence.`
+        ? `Verdicts supplied by ${promotion.promotedBy} through --verdicts. No automated cross-provider critic ran; this is a recorded independent decision supplied from outside the candidate-creation runtime.`
         : 'No verdict was supplied, so no candidate was promoted. The creator of a candidate may not promote it, and no independent model runtime is enabled in this repository.',
     },
     outstanding: promotion ? [] : ['visual-review-verdict'],
@@ -156,9 +146,6 @@ try {
   fs.writeFileSync(path.join(root, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify(report, null, 2));
   if (!promotion) console.log('\nNo verdict supplied: promotion remains outstanding, which is the honest state rather than a failure.');
-  // Where the evidence is and how to look at it. A run that photographs two
-  // candidates and then says nothing about how to see the photographs has done
-  // the expensive half of the job.
   console.log('');
   console.log(`Evidence: ${root}`);
   console.log(`  report.json, review-packets.json, service/ (durable factory state), workspaces/ (built candidates)`);

@@ -454,6 +454,8 @@ Delivered:
 - **Product Opportunity Scout**: a broad improvement prompt resolves to at most
   three ranked, owned opportunities grounded in findings the build actually has,
   with proving kept separate from fixing;
+- **asset replacement**: new bytes are a new asset, the retired one records what
+  superseded it, and no permission is inherited across the swap;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -667,10 +669,36 @@ separately, never offered as defects and never counted as predicted edits — th
 distinction Phase 3.8K established to keep the manual-edit prediction
 trustworthy.
 
+**Asset replacement (4B.3c).** An asset's identity comes from its bytes, so new
+bytes are a new asset. That is the honest model rather than a limitation to work
+around, and it decides what replacement means: a different photograph does not
+inherit the retired one's rights declaration, because that declaration was about
+the picture it replaced, nor its crop review or focal point, because those
+described a different subject. The declaration for the new picture arrives with
+it, in the same deliberate act.
+
+What it does inherit is a place in the record. The retired asset is marked
+`supersededBy` and the replacement records what it `replaces`, so an audit of
+what a page shows can follow the chain back rather than finding a rejected
+picture with no explanation. Composition then follows governance without extra
+machinery: the retired picture leaves the build and the replacement enters it,
+because placement has always followed publishability.
+
+Replacement is ingested as a replacement rather than as new material, so the
+ledger says a photograph was replaced once instead of claiming sources arrived
+and then that one was withdrawn.
+
 Remaining in 4B:
-- asset replacement (swapping the bytes behind an approved asset);
-- comparing supplied and generated alternatives (needs generation first);
-- project asset policy modes.
+- comparing supplied and generated alternatives — needs image generation, which
+  does not exist;
+- **project asset policy modes** — deliberately not implemented. The four modes
+  are supplied-only, supplied + optimise, supplied + generate gaps and
+  generation-forward. Two of them describe generation the factory cannot do, so
+  declaring all four would create the same defect this phase found three times
+  over: a field that reads as meaningful and that nothing consumes. The two
+  implementable modes differ only in whether derived variants are allowed, which
+  is a narrow distinction not worth an enum whose other half errors. This lands
+  with generation.
 
 **State Matrix and Journey Closure are surfaced, not finished.** The axes are
 derived and ranked by user risk, and rendered evidence raises the viewport axis.

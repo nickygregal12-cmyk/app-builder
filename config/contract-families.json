@@ -103,8 +103,8 @@
       "schema": "asset-decision.schema.json",
       "typeName": "AppBuilderAssetDecisions",
       "boundary": "Per-asset publication decisions recorded by the service and replayed into composition.",
-      "schemaHash": "d048796440a7c91d172057578342a6f548057d7cbf717e6bf769a65ecbafa725",
-      "typesHash": "3276f1bddc1c2614daf0bdb73c3ee63aed8ec9bde8acb2cc398bd3ceaa4fbaee"
+      "schemaHash": "c48c9606e891e1dbe7ad4ca1ff83d038521e5af3ba42093f3d6b220b5a142006",
+      "typesHash": "ccc2e1f816a4e9dd20416d793cba78d146babba185d29003d95043bd4b000340"
     },
     {
       "id": "section-variant",

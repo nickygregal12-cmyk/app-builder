@@ -61,6 +61,8 @@ export function assetInventory(service, projectId) {
       // them would hide whether anyone has actually looked at this asset.
       inherited: { rightsStatus: asset.rightsStatus, assetStatus: asset.assetStatus, publishUseAllowed: asset.publishUseAllowed },
       decision: decision ? { decision: decision.decision, rightsDeclaration: decision.rightsDeclaration ?? null, cropReview: decision.cropReview, decidedAt: decision.decidedAt, note: decision.note ?? null } : null,
+      supersededBy: decision?.supersededBy ?? null,
+      replaces: decision?.replaces ?? null,
       cropReview: decision?.cropReview ?? 'pending',
       focalPoint: decision?.focalPoint ?? null,
       rightsStatus: effective.rightsStatus,
@@ -188,4 +190,80 @@ export async function reapplyAssetFocalPoints(service, projectId) {
     applied += 1;
   }
   return applied;
+}
+
+/**
+ * Replace the picture behind an asset.
+ *
+ * An asset's identity comes from its bytes, so new bytes are a new asset — and
+ * that is the honest model, not a limitation to work around. A replacement is a
+ * different photograph: it does not inherit the retired asset's rights
+ * declaration, because that declaration was about the picture it replaced, nor
+ * its crop review or focal point, because those described a different subject.
+ *
+ * What it does inherit is a place in the record. The retired asset is marked
+ * superseded and the new one records what it replaced, so an audit of what a
+ * page shows can follow the chain back instead of finding a rejected picture
+ * with no explanation.
+ *
+ * The declaration for the new picture arrives with it, in the same deliberate
+ * act, rather than being carried over from the last one.
+ */
+export async function replaceProjectAsset(service, projectId, assetId, request) {
+  const pack = service.getKnowledgePack(projectId);
+  if (!pack) throw new Error('Asset decisions need an ingested knowledge pack; there are no assets to decide about yet.');
+  const retiring = (pack.assets ?? []).find((entry) => entry.id === assetId);
+  if (!retiring) throw new Error(`Unknown project asset: ${assetId}`);
+  if (!request?.source) throw new Error('Replacing an asset needs the replacement file.');
+
+  const { pack: nextPack, added } = await service.ingestSourcesForReplacement(projectId, [request.source]);
+  const replacement = (nextPack.assets ?? []).find((entry) => added.some((source) => source.id === entry.sourceId));
+  if (!replacement) throw new Error('The replacement file produced no image asset.');
+  if (replacement.id === assetId) throw new Error('The replacement is the same picture as the asset it would replace.');
+
+  const source = (nextPack.sources ?? []).find((entry) => entry.id === replacement.sourceId) ?? null;
+  const effect = decideAssetGovernance(replacement, source, {
+    decision: request.decision ?? 'approve',
+    rightsDeclaration: request.rightsDeclaration ?? null,
+    cropReview: 'pending',
+  });
+
+  const now = new Date().toISOString();
+  const existing = service.readAssetDecisions(projectId).decisions;
+  const retired = existing.find((entry) => entry.assetId === assetId) ?? null;
+  const decisions = [
+    ...existing.filter((entry) => entry.assetId !== assetId && entry.assetId !== replacement.id),
+    {
+      assetId,
+      decision: 'do-not-use',
+      rightsDeclaration: retired?.rightsDeclaration ?? null,
+      focalPoint: retired?.focalPoint ?? null,
+      cropReview: retired?.cropReview ?? 'pending',
+      supersededBy: replacement.id,
+      ...(retired?.note ? { note: retired.note } : {}),
+      decidedAt: now,
+      decidedBy: 'console',
+      effect: { rightsStatus: retiring.rightsStatus, assetStatus: 'do-not-use', publishUseAllowed: false },
+    },
+    {
+      assetId: replacement.id,
+      decision: request.decision ?? 'approve',
+      rightsDeclaration: request.rightsDeclaration ?? null,
+      // A different picture is a different subject and a different crop.
+      focalPoint: null,
+      cropReview: 'pending',
+      replaces: assetId,
+      ...(request.note ? { note: String(request.note) } : {}),
+      decidedAt: now,
+      decidedBy: 'console',
+      effect,
+    },
+  ];
+
+  await service.writeAssetDecisions(projectId, decisions, { assetId: replacement.id, decision: 'replace', rightsDeclaration: request.rightsDeclaration ?? null, cropReview: 'pending', effect });
+  const inventory = assetInventory(service, projectId);
+  return {
+    retired: inventory.find((entry) => entry.id === assetId) ?? null,
+    replacement: inventory.find((entry) => entry.id === replacement.id) ?? null,
+  };
 }

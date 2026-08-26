@@ -8,6 +8,7 @@ import {
   ingestSources,
   loadWorkspace,
   renderedCaptureUrl,
+  replaceProjectAsset,
   resolveElement,
   saveOverrides,
   setAssetFocalPoint,
@@ -435,11 +436,12 @@ function FocalPointPicker({ projectId, asset, onPick, busy }: {
   </div>;
 }
 
-function AssetPanel({ projectId, assets, onDecide, onPickFocalPoint, busyAssetId, disabled }: {
+function AssetPanel({ projectId, assets, onDecide, onPickFocalPoint, onReplace, busyAssetId, disabled }: {
   projectId: string;
   assets: ProjectAsset[];
   onDecide: (assetId: string, decision: AssetDecisionRequest) => Promise<void>;
   onPickFocalPoint: (assetId: string, focalPoint: { x: number; y: number }) => Promise<void>;
+  onReplace: (assetId: string, file: File, rightsDeclarationRequired: boolean) => Promise<void>;
   busyAssetId: string | null;
   disabled: boolean;
 }) {
@@ -474,6 +476,22 @@ function AssetPanel({ projectId, assets, onDecide, onPickFocalPoint, busyAssetId
               {asset.cropCount} generated crop{asset.cropCount === 1 ? '' : 's'} · {asset.cropReview === 'approved' ? 'approved, will publish' : 'withheld until reviewed'}
             </span>}
             {asset.recroppable && !asset.duplicateOf && <FocalPointPicker projectId={projectId} asset={asset} onPick={onPickFocalPoint} busy={blocked} />}
+            {asset.supersededBy && <span className="asset-note">Replaced by a newer picture.</span>}
+            {asset.replaces && <span className="asset-meta">Replaced an earlier picture.</span>}
+            {!asset.duplicateOf && !asset.supersededBy && <label className="asset-replace">
+              <span>Replace this picture</span>
+              <input
+                type="file"
+                accept="image/*"
+                aria-label={`Replace ${asset.sourceLabel ?? asset.id}`}
+                disabled={blocked}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (file) onReplace(asset.id, file, asset.rightsDeclarationRequired);
+                }}
+              />
+            </label>}
             {!asset.duplicateOf && <div className="asset-actions">
               <button type="button" onClick={() => onDecide(asset.id, { decision: 'approve', rightsDeclaration: asset.rightsDeclarationRequired ? 'owned-by-the-business' : null, cropReview: asset.cropReview === 'approved' ? 'approved' : 'pending' })} disabled={blocked}>
                 {asset.rightsDeclarationRequired ? 'Approve — we own this' : 'Approve'}
@@ -710,6 +728,16 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     [projectId, runAssetChange],
   );
 
+  const replaceAsset = useCallback(
+    (assetId: string, file: File, rightsDeclarationRequired: boolean) => runAssetChange(assetId, async () => {
+      const source = await fileToSourceRequest(file, false, 'replacement image');
+      // A replacement is a different photograph, so the declaration is made now
+      // rather than carried over from the picture it replaces.
+      return replaceProjectAsset(projectId, assetId, source, rightsDeclarationRequired ? 'owned-by-the-business' : null);
+    }),
+    [projectId, runAssetChange],
+  );
+
   const pickFocalPoint = useCallback(
     (assetId: string, focalPoint: { x: number; y: number }) => runAssetChange(assetId, () => setAssetFocalPoint(projectId, assetId, focalPoint)),
     [projectId, runAssetChange],
@@ -861,6 +889,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           assets={snapshot.assets}
           onDecide={decideAsset}
           onPickFocalPoint={pickFocalPoint}
+          onReplace={replaceAsset}
           busyAssetId={assetOperation}
           disabled={snapshot.project.state === 'generating'}
         />

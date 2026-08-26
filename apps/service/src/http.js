@@ -3,7 +3,7 @@ import http from 'node:http';
 import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
 import { updateProjectSourceGovernance } from './source-governance.js';
-import { assetInventory, decideProjectAsset, recropProjectAsset } from './asset-governance.js';
+import { assetInventory, decideProjectAsset, recropProjectAsset, replaceProjectAsset } from './asset-governance.js';
 import { chooseSectionVariant, sectionVariantOptions } from './section-variants.js';
 
 function send(response, status, value) {
@@ -85,6 +85,12 @@ export function createFactoryHttpServer({ service }) {
         const body = await readJson(request);
         return send(response, 200, await recropProjectAsset(service, route.projectId, decodeURIComponent(assetRecropRoute[1]), body.focalPoint ?? body));
       }
+      const assetReplaceRoute = route.action?.match(/^assets\/([^/]+)\/replace$/);
+      if (request.method === 'POST' && assetReplaceRoute) {
+        const body = await readJson(request, 48 * 1024 * 1024);
+        const [source] = parseSourceRequests([body.source ?? body]);
+        return send(response, 200, await replaceProjectAsset(service, route.projectId, decodeURIComponent(assetReplaceRoute[1]), { ...body, source }));
+      }
       const assetDecisionRoute = route.action?.match(/^assets\/([^/]+)\/decision$/);
       if (request.method === 'POST' && assetDecisionRoute) {
         const body = await readJson(request);
@@ -156,7 +162,7 @@ export function createFactoryHttpServer({ service }) {
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,
-        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
+        /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Replacing an asset needs/, /^The replacement (is the same|file produced)/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
       ].some((pattern) => pattern.test(message));
       const status = clientError ? 400 : 500;
       return send(response, status, { error: 'request-failed', message });

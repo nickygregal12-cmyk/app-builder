@@ -819,6 +819,22 @@ export class FactoryService {
     }
   }
 
+  /**
+   * Ingest a replacement without announcing it as new material.
+   *
+   * Replacing a picture is not the same event as supplying more of it: the
+   * ledger should say a photograph was replaced, once, rather than claiming
+   * sources arrived and then that one was withdrawn.
+   */
+  async ingestSourcesForReplacement(projectId, requests) {
+    const project = this.requireProject(projectId);
+    if (project.state === 'generating') throw new Error('Project generation is already running.');
+    const { pack, added } = await this.ingestion.ingest(projectId, requests);
+    this.store.upsertProject({ ...project, knowledgePack: pack, updatedAt: new Date().toISOString() });
+    await reapplyAssetFocalPoints(this, projectId);
+    return { pack, added };
+  }
+
   async generateProject(projectId) {
     let project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');

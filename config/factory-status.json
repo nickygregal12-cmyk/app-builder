@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "currentPhase": "3.8",
   "currentStage": "Phase 3.8 — Product proof and correctness hardening",
-  "activeStage": "Phase 4B closing — 4B.1 through 4B.6 delivered; asset replacement, asset policy modes and executable state/journey fixtures remain",
+  "activeStage": "Phase 4B delivered to the limit of what is buildable; Phase 3.8E genuine-business proof is the blocking gate",
   "status": "active",
   "completedPhases": ["0", "1", "2", "3"],
-  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8F", "3.8G", "3.8H", "3.8I", "3.8J", "3.8K", "4A", "4B.1", "4B.2", "4B.3a", "4B.3b", "4B.4", "4B.5", "4B.6"],
+  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8F", "3.8G", "3.8H", "3.8I", "3.8J", "3.8K", "4A", "4B.1", "4B.2", "4B.3a", "4B.3b", "4B.4", "4B.5", "4B.6", "4B.3c"],
   "activeWork": [
     "genuine-real-business-acceptance",
-    "phase-4b-remaining-asset-replacement-and-policy-modes"
+    "awaiting-owner-supplied-business-material"
   ],
   "outstandingProductGates": [
     "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits"
   ],
-  "nextStage": "Phase 4B remainder — asset replacement and project asset policy modes; 4C stays gated behind the Phase 3.8E genuine-business proof"
+  "nextStage": "Phase 3.8E genuine real-business acceptance. It needs owner-supplied material and human product review; 4C stays gated behind it, and the rest of 4B needs image generation that does not exist yet."
 }

@@ -62,10 +62,22 @@ test('OpenCode service is dormant, isolated, authenticated, and loopback-only', 
   assert.match(source, /APP_BUILDER_OPENCODE_PORT:-4097/);
   assert.match(source, /opencode serve --hostname 127\.0\.0\.1 --port/);
   assert.match(source, /OPENCODE_SERVER_PASSWORD=/);
-  assert.match(source, /User=appbuilder/);
+  assert.match(source, /User=\$\{RUNTIME_USER\}/);
   assert.match(source, /Slice=app-builder-runtime\.slice/);
   assert.equal(/systemctl\s+(?:--\S+\s+)*enable\b/.test(source), false);
   assert.equal(/systemctl\s+(?:--\S+\s+)*start\b/.test(source), false);
+});
+
+test('factory service binds loopback and keeps durable state outside the repository', () => {
+  const source = readFileSync('ops/hetzner/install-service-units.sh', 'utf8');
+  assert.match(source, /STATE_ROOT="\/srv\/app-builder\/state\/service"/);
+  assert.match(source, /WORKSPACES_ROOT="\/srv\/app-builder\/workspaces"/);
+  assert.match(source, /Environment=APP_BUILDER_SERVICE_HOST=127\.0\.0\.1/);
+  assert.match(source, /Environment=APP_BUILDER_SERVICE_PORT=4310/);
+  assert.match(source, /Environment=APP_BUILDER_STATE_ROOT=\$\{STATE_ROOT\}/);
+  assert.match(source, /Environment=APP_BUILDER_WORKSPACES_ROOT=\$\{WORKSPACES_ROOT\}/);
+  assert.equal(source.includes('APP_BUILDER_STATE_ROOT=.app-builder'), false);
+  assert.equal(source.includes('APP_BUILDER_WORKSPACES_ROOT=.app-builder'), false);
 });
 
 test('shared-host verifier checks loopback exposure and subordinate-ID overlap', () => {

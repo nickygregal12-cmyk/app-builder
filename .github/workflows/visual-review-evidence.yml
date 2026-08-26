@@ -40,6 +40,19 @@ jobs:
       - name: Generate genuine-business visual review evidence
         run: npm run acceptance:visual-candidates
 
+      # The packet is the reviewer's surface, so it is what travels.
+      #
+      # Uploading the captures alone hands a reviewer 36 loose PNGs named by
+      # candidate, route and viewport, and nothing that says what the
+      # professional bar is, which criteria are theirs to score, which
+      # direction was refused and why, or what DesignLint already settled. The
+      # packet carries all of that beside the pictures and opens from a file://
+      # URL, which is the whole reason it is generated.
+      #
+      # The service captures stay as well. The packet omits a capture it could
+      # not copy rather than naming one it does not have, so they are not
+      # guaranteed to be the same set, and evidence is the wrong place to trade
+      # completeness for a smaller download.
       - name: Upload detached review evidence only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -47,6 +60,9 @@ jobs:
           path: |
             .app-builder/visual-review/report.json
             .app-builder/visual-review/review-packets.json
+            .app-builder/visual-review/packet/index.html
+            .app-builder/visual-review/packet/review.json
+            .app-builder/visual-review/packet/captures/*.png
             .app-builder/visual-review/service/**/captures/*.png
           if-no-files-found: error
           retention-days: 7

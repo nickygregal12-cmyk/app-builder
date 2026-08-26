@@ -111,14 +111,21 @@ const CHOICES = {
   visualDirection: { assert: assertVisualDirection },
 };
 
-/** Refuse anything the contract does not offer, rather than compiling it. */
-export function assertDesignChoices(choices = {}) {
+/**
+ * Refuse anything the contract does not offer, rather than compiling it.
+ *
+ * `factoryRoot` is here because one control — the promoted visual direction — is
+ * validated against a registry on disk rather than against a list in this file.
+ * A caller that knows where the factory lives should say so rather than leave it
+ * to whichever directory the process happens to have been started in.
+ */
+export function assertDesignChoices(choices = {}, { factoryRoot = process.cwd() } = {}) {
   const resolved = {};
   for (const [key, value] of Object.entries(choices)) {
     const control = CHOICES[key];
     if (!control) throw new Error(`Unsupported design control: ${key}.`);
     if (value === null || value === undefined) continue;
-    if (control.assert) { resolved[key] = control.assert(value); continue; }
+    if (control.assert) { resolved[key] = control.assert(value, factoryRoot); continue; }
     if (!control.allowed.includes(value)) {
       throw new Error(`Unsupported ${key}: ${String(value)}. It offers: ${control.allowed.join(', ')}.`);
     }
@@ -145,8 +152,8 @@ export function designControls(design) {
  * one. `selectDesign` reads it from the same durable record, which is why
  * clearing it still returns the build to the factory's own selection.
  */
-export function applyDesignChoices(design, choices = {}) {
-  const { visualDirection: _resolvedEarlier, ...tokenChoices } = assertDesignChoices(choices);
+export function applyDesignChoices(design, choices = {}, options = {}) {
+  const { visualDirection: _resolvedEarlier, ...tokenChoices } = assertDesignChoices(choices, options);
   return { ...design, ...tokenChoices };
 }
 

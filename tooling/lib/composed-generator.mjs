@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, composeProject, deriveElementIdentities, stripContentOverrides, stripSectionVariants } from '../../packages/composition/src/index.js';
-import { compileAssetReadiness } from './asset-readiness.mjs';
 import { generateProject } from './generator.mjs';
 import { applyVisualDirection } from './visual-direction.mjs';
 import { auditComposedPresentation, compilePresentationRegistry, loadPresentationManifest } from './presentation-registry.mjs';
@@ -100,11 +99,7 @@ function writeElementIdentityIndex(outputDir, { composition, template, projectId
 }
 
 export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], designChoices = {}, projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
-  // What the approved inventory can support decides which visual directions a
-  // build may present by, so it is resolved before the design is selected
-  // rather than discovered at review as a page of grey rectangles.
-  const assetReadiness = compileAssetReadiness({ knowledgePack, assetDecisions });
-  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, assetReadiness, ...(catalog ? { catalog } : {}) });
+  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
   // new section types reached generated projects without ever being added to
@@ -141,5 +136,5 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   const elementIdentity = projectId
     ? writeElementIdentityIndex(out, { composition, template: plan.template, projectId, assets })
     : null;
-  return { plan, composition, assets, elementIdentity, assetReadiness };
+  return { plan, composition, assets, elementIdentity };
 }

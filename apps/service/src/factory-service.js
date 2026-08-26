@@ -270,7 +270,7 @@ export class FactoryService {
    */
   async writeDesignChoices(projectId, choices) {
     const project = this.requireProject(projectId);
-    const merged = { ...this.readDesignChoices(projectId).choices, ...assertDesignChoices(choices) };
+    const merged = { ...this.readDesignChoices(projectId).choices, ...assertDesignChoices(choices, { factoryRoot: this.factoryRoot }) };
     // A control set back to nothing returns to what the factory selected rather
     // than recording a value that happens to match it.
     for (const [key, value] of Object.entries(choices)) if (value === null) delete merged[key];
@@ -295,7 +295,7 @@ export class FactoryService {
     const record = JSON.parse(fs.readFileSync(file, 'utf8'));
     // Apply over what the factory selected, never over the last thing written,
     // so clearing a control returns it rather than leaving the previous value.
-    const design = applyDesignChoices(record.composedDesign ?? record.design, choices);
+    const design = applyDesignChoices(record.composedDesign ?? record.design, choices, { factoryRoot: this.factoryRoot });
     fs.writeFileSync(file, `${JSON.stringify({ ...record, design, designSystemSpec: DESIGN_SYSTEM_SPEC_PATH }, null, 2)}\n`);
     // A live edit goes through the same writer generation uses, so the portable
     // spec a person walks away with is never the one the last build left behind.
@@ -978,6 +978,7 @@ export class FactoryService {
         sectionVariants: this.readSectionVariants(projectId).choices,
         designChoices: this.readDesignChoices(projectId).choices,
         projectId,
+        factoryRoot: this.factoryRoot,
       });
       await this.store.recordEvent(createEvent({
         projectId,

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "currentPhase": "4D",
-  "currentStage": "Phase 4D — Visual direction, responsive composition and candidate promotion",
-  "activeStage": "Phase 4D.8/4D.9 — the visual review verdict on the genuine-business candidate set. The machinery is built and the evidence is captured; what is outstanding is a decision by someone who did not create the candidates.",
+  "currentPhase": "4.2",
+  "currentStage": "Phase 4.2 — Generated-Product Quality Expansion",
+  "activeStage": "Phase 4.2 — Static/content-oriented second renderer MVP",
   "status": "active",
   "completedPhases": [
     "0",
@@ -46,44 +46,46 @@
     "4D.4",
     "4D.5",
     "4D.6",
-    "4D.7"
+    "4D.7",
+    "4D.8",
+    "4D.9",
+    "4D"
   ],
   "activeWork": [
-    "phase-4d-visual-direction",
-    "visual-candidate-promotion",
+    "phase-4-2-static-content-renderer",
     "behavioural-consumer-invariants"
   ],
   "outstandingProductGates": [
-    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. The factory created them, so the factory cannot promote one. The evidence is now reviewer-reachable rather than buried in build output: `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review, `npm run review:visual-candidates` opens the ordinary Builder Console over exactly that state, and the stage's compare view shows both candidates at three widths over six routes with the differing axes, the responsive plan, every DesignLint finding, the frozen truth, the refused direction and the scoped critic criteria. A reviewer who did not create them still has to pass, rework or reject each candidate against those criteria before Phase 4D closes."
+    "phase-4-2-static-content-renderer: prove a genuinely different static/content-oriented renderer over the existing Manifest/PageSpec/SectionSpec and design contracts, with standalone generated output that independently installs/checks/builds and passes browser acceptance. Evaluate Astro first; do not call a React/Vite wrapper a second renderer."
   ],
-  "nextStage": "Phase 4D.8/4D.9. The Factory can now produce several genuinely different presentations of one frozen product truth and decide between them. 4D.1 made promotion a recorded decision with a deterministic gate: a DesignLint violation blocks promotion outright, a warning reaches review but the reviewer must speak to it by rule, a recommendation never blocks, exactly one candidate is promoted and the creator cannot promote its own. 4D.4 made asset readiness an art-direction input, so an imagery-led direction is refused before it becomes a page of grey rectangles. 4D.5 added a ResponsiveCompositionPlan subordinate to the ArtDirectionPlan, with mobile content order, navigation treatment, hero stacking, density and motion all read by the template. 4D.6 added four visual directions differing structurally rather than thematically, with a diversity check over three planes that refuses a theme swap before it costs an evidence capture. 4D.7 captures comparable evidence per candidate from its own built output. The nbm genuine-business run generated two candidates over one truth, refused the imagery-led direction with a recorded reason, built and photographed both at three widths across six routes, and both lint clean. What remains is a verdict from someone who did not create them, and then promotion. 4D.2, 4D.3 and the comparison canvas are recorded in deferredCapabilities. Automated cross-provider visual judgement remains unexecuted and is recorded as such rather than simulated.",
+  "nextStage": "Phase 4.2 — prove the second renderer with the smallest real marketing/content vertical slice. Keep the shared product/content/design truth renderer-neutral, make renderer choice explicit and explainable, and preserve ordinary generated-repository portability. After that, close only the genuinely missing professional-output capabilities before the product-proof freeze and varied real-business corpus.",
   "deferredCapabilities": [
     {
       "stage": "4C.6",
       "title": "Deterministic design-intelligence catalogue",
-      "reason": "No component asks \"which reviewed design patterns fit this project?\". BrandSpec reads the knowledge pack's own brand observations, ArtDirectionPlan reads config/layout-patterns.json, and the Presentation Registry is compiled from what the template renders. A catalogue built now would have one producer and no reader.",
-      "revivesWhen": "A real 4D consumer cannot answer a project/industry/intent pattern question from deterministic config. Then document that consumer first, and implement only the smallest lexical (BM25/keyword) catalogue it needs — no vector store, no embeddings, no generic design corpus.",
+      "reason": "No component asks which reviewed design patterns fit this project. BrandSpec reads the knowledge pack's own brand observations, ArtDirectionPlan reads config/layout-patterns.json, and the Presentation Registry is compiled from what the template renders. A catalogue built now would have one producer and no reader.",
+      "revivesWhen": "A real consumer cannot answer a project/industry/intent pattern question from deterministic config. Document that consumer first, then implement only the smallest lexical BM25/keyword catalogue it needs — no vector store, embeddings or generic design corpus.",
       "recordedAt": "2026-08-26"
     },
     {
       "stage": "4D.2",
       "title": "Visual reference analysis",
-      "reason": "No project supplies a design reference the factory does not already read. The half of reference handling that has a supplier shipped at 4C.3: BrandSpec resolves the accent and the typographic voice from the colours and font families Phase 3 observed in a company's own pages, with sources. What 4D.2 would add — layout, density, hero treatment and spacing rhythm decomposed from a screenshot or moodboard — has no input today, and inventing traits from a site nobody supplied would be a fabricated observation.",
-      "revivesWhen": "A project supplies a screenshot, moodboard or approved reference URL AND a direction-selection decision exists that asset readiness and project type cannot make. Traits must then become adopt[]/avoid[] with confidence and source ids, never markup, and never bypass PageSpec/SectionSpec/ElementIdentity.",
+      "reason": "No project currently supplies a screenshot, moodboard or approved design-reference input that requires decomposition beyond the brand observations already consumed by BrandSpec.",
+      "revivesWhen": "A project supplies a screenshot, moodboard or approved reference URL and a real direction-selection decision needs layout, density, spacing, imagery or motion traits from it. Record adopt/avoid traits with confidence and source ids; never copy proprietary markup or treat reference content as authority.",
       "recordedAt": "2026-08-26"
     },
     {
       "stage": "4D.3",
       "title": "MessagingPlan",
-      "reason": "The composition already carries what a MessagingPlan would organise, with provenance. Page narrative is the section sequence; CTA strategy is derived from the declared conversion goals; proof requirements and their gaps are `declaredProofGap`; audience is on the manifest; forbidden claims are the existing source/provenance boundary. A second narrative authority would have fields nothing reads and a second place the same decision could be made.",
-      "revivesWhen": "An art-direction or composition decision needs narrative information the composition cannot express — a proof sequence that does not follow from what is available, or an objection-handling order. Implement only the fields that decision reads.",
+      "reason": "The current composition already carries page narrative, CTA strategy, proof gaps, audience and provenance. A second narrative contract would duplicate decisions with no reader.",
+      "revivesWhen": "An art-direction or composition decision needs narrative information the existing composition cannot express, such as an evidence-dependent proof sequence or objection-handling order. Implement only fields that decision consumes.",
       "recordedAt": "2026-08-26"
     },
     {
       "stage": "4D-canvas",
       "title": "Visual comparison canvas",
-      "reason": "The ordinary Builder Console does the comparison. Its candidate panel shows every candidate side by side, switches route and viewport over the captured evidence, names the axes that actually differ rather than leaving them to be spotted, shows the responsive plan field by field, shows what the deterministic checks settled and what the reviewer must speak to, exposes the scoped critic criteria, and promotes exactly one. The one usability failure found was the 330px activity sidebar cropping two full-page captures into roughly 150px columns; the panel moved to the builder stage and the problem went with it. The failing surface was the narrow column, not the Console, so tldraw or an equivalent would still be a dependency bought against a layout problem.",
-      "revivesWhen": "A concrete comparison task proves the Console cannot do it — spatial arrangement of many more candidates, or freehand annotation a reviewer genuinely needs to hand back. Record the task first.",
+      "reason": "The ordinary Builder Console now performs the candidate comparison at useful width, including route/viewport switching, differing axes, responsive plans, lint, frozen truth and critic criteria. The observed failure was a narrow sidebar layout, not a missing canvas capability.",
+      "revivesWhen": "A concrete review task proves the Console cannot support the required comparison, for example spatial arrangement of many candidates or freehand annotation that a reviewer genuinely needs to return.",
       "recordedAt": "2026-08-26"
     }
   ]

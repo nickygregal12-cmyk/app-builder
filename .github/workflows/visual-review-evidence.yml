@@ -15,6 +15,13 @@ on:
 permissions:
   contents: read
 
+# Evidence is tied to one exact head. A newer commit makes an in-flight capture
+# obsolete, so do not finish building and uploading screenshots nobody should
+# review. Manual runs keep unique groups and are never cancelled by a PR update.
+concurrency:
+  group: visual-review-evidence-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   evidence:
     runs-on: ubuntu-latest

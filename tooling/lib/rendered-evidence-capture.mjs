@@ -33,8 +33,11 @@ function launchOptions(env) {
 /** Reach the state, deterministically, or say the capture did not happen. */
 async function perform(page, interaction) {
   if (interaction === 'enquiry-submit-failed') {
+    const { outcome } = INTERACTIONS[interaction];
     const form = page.locator('form.enquiry-form');
     await form.waitFor({ state: 'visible', timeout: 5000 });
+    // Cause the failure rather than hoping for one.
+    if (outcome.failRequest) await page.route(outcome.failRequest, (route) => route.abort());
     await form.locator('input[name="name"]').fill('Evidence capture');
     await form.locator('input[name="email"]').fill('evidence@example.com');
     await form.locator('textarea[name="message"]').fill('Capturing how a failed submission reports itself.');
@@ -42,7 +45,15 @@ async function perform(page, interaction) {
     // The recipe writes the outcome into a live region; wait for the outcome
     // rather than for a fixed delay, so the picture is of the state and not of
     // whatever the page happened to look like after a sleep.
-    await page.locator('.enquiry-actions p', { hasText: /could not send|Thanks/ }).waitFor({ timeout: 10_000 });
+    const region = page.locator(outcome.selector, { hasText: outcome.settled });
+    await region.waitFor({ timeout: 10_000 });
+    // Settling is not arriving. If the submission succeeded, this capture never
+    // reached the state it claims, and publishing the picture anyway would make
+    // the evidence set assert something it did not see.
+    const text = (await region.first().innerText()).trim();
+    if (!outcome.reached.test(text)) {
+      throw new Error(`Interaction ${interaction} did not reach its state: the form reported ${JSON.stringify(text)}.`);
+    }
     return;
   }
   throw new Error(`Unknown evidence interaction: ${interaction}`);

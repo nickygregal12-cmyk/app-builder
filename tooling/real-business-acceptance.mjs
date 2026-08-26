@@ -51,7 +51,7 @@ const approvedCompany = await normalizeSource({
     name: 'Acme Ltd', legalName: 'Acme Retrofit Limited', description: 'Residential retrofit contractor',
     email: 'hello@acme.example', phone: '0141 555 0101', address: '1 High Street, Glasgow',
     serviceAreas: ['Glasgow', 'Renfrewshire'],
-    services: [{ name: 'Home survey' }, { name: 'Retrofit installation' }],
+    services: [{ name: 'Home survey', description: 'A whole-house assessment before any work starts.' }, { name: 'Retrofit installation' }],
     testimonials: [{ quote: 'Clear and reliable', customer: 'J Smith' }],
     accreditations: [{ name: 'Example Quality Scheme' }],
   } })),

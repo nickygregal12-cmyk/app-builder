@@ -430,3 +430,74 @@ reach is a condition they have to see and act on, not a fault to hide behind an
 internal error. Every remote-source failure the crawler can raise is now a `400`
 carrying the reason, and the classifier is exported and tested rather than being
 an inline list nobody could check.
+
+### F23 — Intake answers were published as the company's proof — P0 ✅ Fixed
+
+`company.trustSignals` is the intake question "What proof can we use?": a closed
+list of the *kinds* of evidence the operator says exist. The composer rendered
+those tokens directly, so the nbm homepage carried a section headed "Proof and
+trust" whose single card read **"case studies"**.
+
+Two defects in one card. Configuration was displayed as content, and the one
+section that exists to support claims was making an unsupported one.
+
+The declaration still matters — it is what tells the factory proof was promised
+and never arrived. A proof section is now composed only from source-backed
+testimonials and accreditations, and an unbacked declaration becomes
+`declared-proof-missing:<kind>`, reported against the research role that owns
+finding the evidence.
+
+### F24 — A field name reached the page — P1 ✅ Fixed
+
+Once F21 let service entities carry descriptions, the template rendered every
+non-title field as `key: value`, so each service card read **"description:
+Chartered quantity surveying across the project lifecycle."**
+
+`Price: 250` and `Role: Director` are clearer with a label; a description is the
+item's own sentence. Prose fields now render unlabelled, from a closed list.
+
+### F25 — Rendered evidence published a success screenshot as failure evidence — P0 ✅ Fixed
+
+The `write/failed` capture on `/contact` — the picture whose stated purpose is
+"How the enquiry form reports a failed submission" — showed **"Thanks — your
+enquiry has been sent."** at all three viewports.
+
+The interaction waited for the form to settle on either outcome and then
+photographed whichever one arrived. Under a dev preview the form POST succeeds,
+so the failure state was never reachable and the evidence set asserted a state
+it had not seen. That is worse than having no capture: RenderedEvidence exists
+precisely so a picture cannot claim more than it shows.
+
+Two changes. An interaction now declares what reaching its state looks like, and
+a capture whose outcome does not match is dropped with a named failure rather
+than published. And the failure is *caused* rather than waited for: the form's
+POST is aborted at the browser, so the state is reachable on any host instead of
+depending on whether the preview happens to answer.
+
+### F26 — Mobile navigation was collapsed, not designed — P1 ✅ Fixed
+
+Seven surfaces produced seven navigation pills, which wrapped over four rows
+above the fold at 390px. The owner's acceptance brief asked specifically that
+mobile "feel designed rather than merely collapsed".
+
+The header now carries a Menu disclosure below 720px, with `aria-expanded`, a
+panel that closes when a link is followed, and no change at all above the
+breakpoint. Accessibility passes at both the desktop and Pixel 7 profiles, and
+the mixed-source browser acceptance asserts the behaviour at both widths.
+
+### F27 — Where the nbm build stands
+
+12 predicted manual edits, `launchable: true`, no composition blocker. What
+remains is honest and mostly not the factory's to fix:
+
+- no imagery at all. Every photograph on the nbm site belongs to a photographer,
+  a client or a hotel operator, and none was approved. The build is correct to
+  withhold them and the design carries it on type alone, but "construction and
+  property character" is not achievable without pictures. This is the strongest
+  argument yet for the Phase 4C/4D art-direction work;
+- `/projects` and `/careers` are still dead ends. Both were declared by the
+  operator and neither has source material, which is exactly what
+  `content-less-page` now says;
+- `/locations` repeats the home page's locations section with no address on
+  either card, because only the Glasgow address is verified;
+- no 404 route is composed for any project type.

@@ -270,18 +270,42 @@ function servicesSection(pageId, pack, manifest) {
   ], [], [], itemVariant(items.value));
 }
 
-function proofSection(pageId, pack, manifest) {
+// `company.trustSignals` is the intake question "What proof can we use?" — a
+// closed list of the *kinds* of evidence the operator says exist. It is an
+// inventory, not the evidence. Publishing it rendered a proof card reading
+// "case studies" on the nbm build: configuration displayed as content, and an
+// unsupported trust claim in the one section that exists to support claims.
+//
+// The declaration still matters. It is what tells the factory that proof was
+// promised and never arrived, which `declaredProofGap` reports.
+function proofSection(pageId, pack) {
   const testimonials = entityBinding('testimonials', pack, 'testimonials');
   const accreditations = entityBinding('accreditations', pack, 'accreditations');
-  const manifestProof = list(manifest?.company?.trustSignals);
-  const fallback = manifestProof.length ? manifestBinding('items', manifestProof.map((name) => ({ name }))) : null;
-  if (!testimonials && !accreditations && !fallback) return null;
+  if (!testimonials && !accreditations) return null;
   return section(`${pageId}-proof`, 'proof-grid', 'Show source-backed proof and trust evidence', [
     manifestBinding('title', 'Proof and trust'),
     testimonials,
     accreditations,
-    fallback,
   ], [], [], 'evidence');
+}
+
+/** Proof kinds the operator declared that no ingested source can back. */
+function declaredProofGap(manifest, pack) {
+  const declared = list(manifest?.company?.trustSignals)
+    .map((item) => String(item).trim().toLowerCase())
+    .filter((item) => item && item !== 'none');
+  if (!declared.length) return [];
+  const backing = {
+    testimonials: () => list(pack?.companyProfile?.testimonials).length > 0,
+    accreditations: () => list(pack?.companyProfile?.accreditations).length > 0,
+    awards: () => list(pack?.companyProfile?.accreditations).length > 0,
+    'case studies': () => list(pack?.companyProfile?.projects).length > 0,
+    'project photos': () => list(pack?.assets).some((asset) => asset.publishUseAllowed),
+    'client logos': () => list(pack?.assets).some((asset) => asset.publishUseAllowed),
+  };
+  // An unrecognised declaration is reported rather than assumed satisfied: the
+  // operator said proof exists, and nothing here can show that it does.
+  return declared.filter((item) => !(backing[item]?.() ?? false));
 }
 
 function peopleSection(pageId, pack) {
@@ -378,15 +402,17 @@ function contentSection(pageId, pack) {
   ], [], [], 'list');
 }
 
-function ctaSection(pageId, pack, manifest, action) {
+function ctaSection(pageId, pack, manifest, action, index) {
   if (!action) return null;
   const goals = list(manifest?.company?.conversionGoals).map((item) => String(item).toLowerCase());
   const title = goals.some((goal) => goal.includes('quote')) ? 'Get a quote'
     : goals.some((goal) => goal.includes('book') || goal.includes('appointment')) ? 'Book an appointment'
     : 'Get in touch';
+  // The same summary sentence on every page reads as a template rather than a
+  // site. The entry page carries it; the rest carry the action alone.
   return section(`${pageId}-cta`, 'cta', 'Provide the primary next action', [
     defaultBinding('title', title),
-    summaryFromDeclaredFacts(pack, manifest),
+    index === 0 ? summaryFromDeclaredFacts(pack, manifest) : null,
   ], [action], [], 'accent');
 }
 
@@ -401,7 +427,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action, asset
     output.push(journeysSection(pageId, manifest));
     output.push(gallerySection(pageId, pack, manifest, assetDecisions));
     output.push(projectsSection(pageId, pack));
-    output.push(proofSection(pageId, pack, manifest));
+    output.push(proofSection(pageId, pack));
     output.push(locationsSection(pageId, pack, manifest));
     output.push(contactSection(pageId, pack, manifest));
   } else if (/service|product|offering/.test(lower)) {
@@ -410,7 +436,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action, asset
   } else if (/about|team|people/.test(lower)) {
     output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)], [], [], 'prose'));
     output.push(peopleSection(pageId, pack));
-    output.push(proofSection(pageId, pack, manifest));
+    output.push(proofSection(pageId, pack));
   } else if (/work|gallery|portfolio|project/.test(lower)) {
     output.push(gallerySection(pageId, pack, manifest, assetDecisions));
     output.push(projectsSection(pageId, pack));
@@ -429,7 +455,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action, asset
     output.push(entitiesSection(pageId, manifest));
   }
 
-  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, action));
+  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, action, index));
   const unique = output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
   return dropRepeatedHeading(unique);
 }
@@ -492,6 +518,7 @@ function warningsFor(manifest, pack, assetDecisions) {
     // classes, so silence here would be misleading.
     if (!publishableAssets(pack, assetDecisions).length) warnings.push('no-publishable-imagery');
   }
+  for (const signal of declaredProofGap(manifest, pack)) warnings.push(`declared-proof-missing:${signal}`);
   for (const capability of list(manifest?.constraints?.customCapabilities)) warnings.push(`custom-capability:${capability}`);
   for (const capability of list(manifest?.constraints?.unresolvedCapabilities)) warnings.push(`unresolved-capability:${capability}`);
   return unique(warnings);

@@ -223,3 +223,36 @@ test('the service refuses to capture without a running preview and keeps evidenc
     fs.rmSync(dirs.root, { recursive: true, force: true });
   }
 });
+
+test('a capture that did not reach its state is dropped, not published as that state', async () => {
+  // The Phase 3.8E nbm run published a picture labelled write/failed showing
+  // "Thanks — your enquiry has been sent." The interaction waited for the form
+  // to settle either way and photographed whichever outcome arrived.
+  const { outcome } = INTERACTIONS['enquiry-submit-failed'];
+  assert.ok(outcome, 'an interaction must say what reaching its state looks like');
+  assert.ok(outcome.reached.test('We could not send your enquiry. Please try again.'));
+  assert.ok(!outcome.reached.test('Thanks — your enquiry has been sent.'),
+    'a success message must not satisfy the failed-write state');
+  assert.ok(outcome.settled.test('Thanks — your enquiry has been sent.'),
+    'a success message still settles the form, which is when the check runs');
+  assert.ok(outcome.failRequest,
+    'the failure has to be caused deterministically; a preview whose POST succeeds cannot reach this state on its own');
+});
+
+test('capture failures leave the state uncovered rather than silently proven', () => {
+  const composition = composeProject({ manifest: manifest('drop', { 'lead-generation': true }) });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
+  const interactionCaptures = plan.captures.filter((capture) => capture.state.interaction);
+  assert.ok(interactionCaptures.length > 0);
+  // Build the set as if every interaction capture had failed.
+  const evidence = buildEvidenceSet({
+    plan,
+    results: fakeResults(plan).filter((result) => !interactionCaptures.some((capture) => capture.id === result.id)),
+    projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z',
+  });
+  assert.ok(!evidence.captures.some((capture) => capture.state.interaction),
+    'a capture with no bytes must not appear in the evidence set');
+  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), evidence);
+  const failedWrite = matrix.flatMap((surface) => surface.states).find((state) => state.axis === 'write' && state.state === 'failed');
+  assert.equal(failedWrite.evidence, 'none', 'the state it could not reach stays unproven');
+});

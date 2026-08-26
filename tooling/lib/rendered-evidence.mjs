@@ -42,6 +42,25 @@ export const INTERACTIONS = Object.freeze({
     state: 'failed',
     risk: 'high',
     proves: 'How the enquiry form reports a failed submission. It is not evidence that a successful submission works.',
+    // What the capture must actually see before it may claim this state.
+    //
+    // The Phase 3.8E nbm run published a picture labelled write/failed that
+    // showed "Thanks — your enquiry has been sent.": the capture waited for the
+    // form to settle either way and then photographed whichever outcome it got.
+    // A capture that can assert a state it did not reach is worse than no
+    // capture, so `settled` says when to look and `reached` says what has to be
+    // there.
+    outcome: Object.freeze({
+      selector: '.enquiry-actions p',
+      settled: /could not send|Thanks/i,
+      reached: /could not send/i,
+      // How the failure is caused, deterministically. Waiting for a submission
+      // to fail by itself is not a method: under a dev preview the POST
+      // succeeds, so the state was never reachable and the capture published
+      // the success message instead. Failing the request makes the state real
+      // on any host.
+      failRequest: '**/__forms.html',
+    }),
   }),
 });
 

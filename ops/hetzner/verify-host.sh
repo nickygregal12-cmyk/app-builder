@@ -125,7 +125,7 @@ if [[ -f /etc/systemd/system/app-builder-factory.service ]]; then
 fi
 if [[ -f /etc/systemd/system/app-builder-opencode.service ]]; then
   if systemd-analyze verify /etc/systemd/system/app-builder-opencode.service >/dev/null 2>&1 && \
-     grep -Fq "--hostname 127.0.0.1 --port ${opencode_port}" /etc/systemd/system/app-builder-opencode.service; then
+     grep -Fq -- "--hostname 127.0.0.1 --port ${opencode_port}" /etc/systemd/system/app-builder-opencode.service; then
     pass "OpenCode unit is valid and loopback-only"
   else
     fail "OpenCode unit is valid and loopback-only"

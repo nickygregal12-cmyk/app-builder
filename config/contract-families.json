@@ -173,6 +173,10 @@
       "reason": "Inlined into the build-contract and intake-session families."
     },
     {
+      "schema": "bespoke-presentation.schema.json",
+      "reason": "A fulfilment is produced and bounded by tooling/lib/bespoke-presentation.mjs and validated by tooling/bespoke-presentation.test.mjs. It becomes a contract family when the Console reads one — nothing does yet, and generating types for a boundary with no second side is a type nobody imports."
+    },
+    {
       "schema": "company-profile.schema.json",
       "reason": "Inlined into the knowledge-pack family."
     },

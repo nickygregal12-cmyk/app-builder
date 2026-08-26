@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/bespoke-presentation.schema.json",
+  "title": "BespokePresentation",
+  "description": "One project-local presentation that fulfils a classified customPresentation requirement. It exists because the Presentation Registry is not allowed to be a ceiling: where a failed visual review names a criterion no registered presentation can answer, the rework plan classifies the requirement, and this is the smallest thing that can then actually build it. It is deliberately a stylesheet and nothing else. A presentation that needed new markup would need new bindings, and new bindings move the composition — so CSS-only is what makes 'preserves PageSpec, SectionSpec and content provenance' true by construction rather than by inspection.",
+  "type": "object",
+  "required": ["schemaVersion", "presentationId", "projectId", "sectionId", "scope", "status", "artDirectionNeed", "registryInsufficientBecause", "changeSet", "css", "tokensUsed", "frozenTruthHash", "createdAt", "createdBy"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "presentationId": {"type": "string", "pattern": "^bespoke-[a-f0-9]{16}$"},
+    "projectId": {"type": "string", "minLength": 1},
+    "setId": {"type": ["string", "null"], "description": "The candidate set whose review classified the requirement."},
+    "planId": {"type": ["string", "null"], "description": "The rework plan that carries the classification. Lineage back to the failure, so a bespoke presentation can always answer 'which review asked for this?'."},
+    "sectionId": {"type": "string", "minLength": 1},
+    "sectionType": {"type": ["string", "null"]},
+    "scope": {
+      "const": "project-local",
+      "description": "The only scope a fulfilment may claim. A bespoke presentation must not automatically become a registry component: promotion into the registry is a separate decision that needs repeated evidence across projects, and a lane that promoted on first use would turn one project's exception into every project's default."
+    },
+    "status": {
+      "enum": ["awaiting-visual-review", "accepted", "rejected"],
+      "description": "A fulfilment starts awaiting review and cannot start anywhere else. The factory wrote it, so under AGENTS.md rule 17 the factory cannot pass it."
+    },
+    "artDirectionNeed": {"type": "string", "minLength": 1},
+    "registryInsufficientBecause": {"type": "string", "minLength": 1},
+    "changeSet": {
+      "type": "object",
+      "description": "Exactly which files this presentation owns. Anything outside is refused rather than merged, so a bespoke presentation cannot reach the composition, the compiled design system, the generated modules or the project's package manifest.",
+      "required": ["files"],
+      "properties": {
+        "files": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "css": {"type": "string", "minLength": 1},
+    "tokensUsed": {
+      "type": "array",
+      "description": "Design tokens the declaration reads. Every one must be emitted by the project's compiled DesignSystemSpec; a bespoke presentation that invented its own colour would be a second design authority in one file.",
+      "items": {"type": "string", "pattern": "^--[a-z0-9-]+$"}
+    },
+    "responsive": {
+      "type": "object",
+      "required": ["composesAtMobile", "detail"],
+      "properties": {
+        "composesAtMobile": {"const": true, "description": "A bespoke presentation must compose deliberately at a phone width rather than inherit the desktop arrangement narrowed. That is the requirement the classification recorded, and it is checkable."},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "motion": {
+      "type": "object",
+      "required": ["declaresMotion", "reducedMotionHonoured"],
+      "properties": {
+        "declaresMotion": {"type": "boolean"},
+        "reducedMotionHonoured": {"type": "boolean"},
+        "detail": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "designLint": {
+      "type": ["object", "null"],
+      "required": ["violation", "warning", "recommendation"],
+      "properties": {
+        "violation": {"type": "integer", "minimum": 0},
+        "warning": {"type": "integer", "minimum": 0},
+        "recommendation": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "renderedEvidenceId": {"type": ["string", "null"]},
+    "review": {
+      "type": ["object", "null"],
+      "description": "The independent verdict. Null until someone who did not create this presentation has looked at it.",
+      "required": ["verdict", "reviewedBy", "reviewedAt"],
+      "properties": {
+        "verdict": {"enum": ["pass", "rework", "reject"]},
+        "reviewedBy": {"type": "string", "minLength": 1},
+        "reviewedAt": {"type": "string", "minLength": 1},
+        "notes": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "frozenTruthHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "registryPromotion": {
+      "type": "object",
+      "description": "Deliberately not a decision this lane can take. It records what would have to be true, so 'promote it' is a later conversation with evidence rather than an implicit consequence of building one.",
+      "required": ["eligible", "requires"],
+      "properties": {
+        "eligible": {"const": false},
+        "requires": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "createdAt": {"type": "string", "minLength": 1},
+    "createdBy": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

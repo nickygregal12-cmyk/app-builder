@@ -14,9 +14,10 @@ import { designReferenceInfluence } from './visual-references.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
-import { compileDesignLintReport } from '../../../tooling/lib/design-lint.mjs';
+import { compileDesignLintReport, templateTokenDefaults } from '../../../tooling/lib/design-lint.mjs';
 import { compileAssetReadiness } from '../../../tooling/lib/asset-readiness.mjs';
 import { applyVisualDirection, compileVisualDirection, loadVisualDirections, selectVisualDirections, structuralSignature } from '../../../tooling/lib/visual-direction.mjs';
+import { validateBespokePresentation, writeBespokePresentation } from '../../../tooling/lib/bespoke-presentation.mjs';
 import { buildCandidateSet, decideCandidateSet, loadVisualQualityGate, promoteCandidate, recordCandidateEvidence, recordReview, reviewCriteriaFor, summariseCandidateSet } from '../../../tooling/lib/visual-candidates.mjs';
 import { attachRevisedCandidate, planVisualRework, remainingReworkBudget, reworkOverrides } from '../../../tooling/lib/visual-rework.mjs';
 import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
@@ -249,6 +250,63 @@ export class FactoryService {
     const file = this.designChoicesPath(projectId);
     if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, choices: {} };
     return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  bespokePresentationsPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'bespoke-presentations.json');
+  }
+
+  /**
+   * The bespoke presentations this project carries.
+   *
+   * Durable for the same reason a section-variant choice is: a rebuild
+   * generates into a fresh workspace, so anything that lives only in the
+   * previous one is lost the next time the project is built. A presentation
+   * that survived one build and vanished from the next would be worse than
+   * never having had one, because the review that passed it would still be on
+   * the record.
+   */
+  readBespokePresentations(projectId) {
+    this.requireProject(projectId);
+    const file = this.bespokePresentationsPath(projectId);
+    if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, presentations: [] };
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  /**
+   * Write one bespoke presentation into a workspace, or say why it cannot be.
+   *
+   * Re-validated against *this* build rather than the one it was written for.
+   * A rebuild whose design system stopped emitting a token the presentation
+   * reads would otherwise leave the declaration resolving to nothing and the
+   * section quietly losing its shape — the exact failure the token rule exists
+   * to prevent, arriving through the back door of a rebuild.
+   *
+   * A refusal skips the file and is recorded. It does not fail the build: a
+   * project is not bricked because one section's bespoke presentation no longer
+   * resolves, and a refusal nobody can see is a refusal nobody can fix, so it
+   * reaches the build record either way.
+   */
+  applyBespokePresentations(projectId, workspace) {
+    const stored = this.readBespokePresentations(projectId).presentations;
+    if (!stored.length) return { applied: [], refused: [] };
+    const specPath = path.join(workspace, '.product/design-system.json');
+    const compiledTokens = fs.existsSync(specPath) ? JSON.parse(fs.readFileSync(specPath, 'utf8')).tokens ?? {} : {};
+    const tokensCss = path.join(workspace, 'src/design/tokens.css');
+    const defaults = fs.existsSync(tokensCss) ? templateTokenDefaults(fs.readFileSync(tokensCss, 'utf8')) : new Set();
+
+    const applied = [];
+    const refused = [];
+    for (const presentation of stored) {
+      const problems = validateBespokePresentation(presentation, { compiledTokens, templateTokenDefaults: defaults });
+      if (problems.length) {
+        refused.push({ presentationId: presentation.presentationId, sectionId: presentation.sectionId, problems });
+        continue;
+      }
+      writeBespokePresentation(workspace, presentation, { compiledTokens, templateTokenDefaults: defaults });
+      applied.push({ presentationId: presentation.presentationId, sectionId: presentation.sectionId, files: presentation.changeSet.files });
+    }
+    return { applied, refused };
   }
 
   /**
@@ -1001,6 +1059,20 @@ export class FactoryService {
         projectId,
         factoryRoot: this.factoryRoot,
       });
+      // Any bespoke presentation this project carries, re-applied into the new
+      // workspace. After generation, because it is the build's own compiled
+      // tokens that decide whether the declaration still resolves.
+      const bespoke = this.applyBespokePresentations(projectId, workspace);
+      for (const refusal of bespoke.refused) {
+        await this.store.recordEvent(createEvent({
+          projectId,
+          taskId: task.id,
+          type: 'bespoke-presentation.refused',
+          actor: 'factory-service',
+          payload: { presentationId: refusal.presentationId, sectionId: refusal.sectionId, problems: refusal.problems },
+        }));
+      }
+
       await this.store.recordEvent(createEvent({
         projectId,
         taskId: task.id,

@@ -1,17 +1,50 @@
 {
   "schemaVersion": 1,
   "currentPhase": "3.8",
-  "currentStage": "Phase 3.8 — Product proof and correctness hardening",
-  "activeStage": "Phase 4B delivered to the limit of what is buildable; Phase 3.8E genuine-business proof is the blocking gate",
+  "currentStage": "Phase 3.8 \u2014 Product proof and correctness hardening",
+  "activeStage": "Phase 3.8E genuine-business trial 2 (nbm Construction Cost Consultants) is running; the gate is blocked on public-web egress",
   "status": "active",
-  "completedPhases": ["0", "1", "2", "3"],
-  "completedStages": ["3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8F", "3.8G", "3.8H", "3.8I", "3.8J", "3.8K", "4A", "4B.1", "4B.2", "4B.3a", "4B.3b", "4B.4", "4B.5", "4B.6", "4B.3c"],
+  "completedPhases": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "completedStages": [
+    "3.5A",
+    "3.5B",
+    "3.6A",
+    "3.6B",
+    "3.7",
+    "3.8A",
+    "3.8B",
+    "3.8C",
+    "3.8D",
+    "3.8F",
+    "3.8G",
+    "3.8H",
+    "3.8I",
+    "3.8J",
+    "3.8K",
+    "4A",
+    "4B.1",
+    "4B.2",
+    "4B.3a",
+    "4B.3b",
+    "4B.4",
+    "4B.5",
+    "4B.6",
+    "4B.3c"
+  ],
   "activeWork": [
     "genuine-real-business-acceptance",
-    "awaiting-owner-supplied-business-material"
+    "nbm-trial-2-in-progress",
+    "blocked-on-public-web-egress-for-website-ingestion"
   ],
   "outstandingProductGates": [
-    "Phase 3.6C / 3.8E — genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits"
+    "Phase 3.6C / 3.8E \u2014 genuine real-business end-to-end acceptance with launchability review and fewer than 20 meaningful manual edits",
+    "Phase 3.8E \u2014 the nbm website could not be ingested: the session egress policy denies every public host, so no website source can be hashed or cross-checked against the knowledge pack",
+    "Phase 3.8E \u2014 the human product review the schema requires has not been issued"
   ],
-  "nextStage": "Phase 3.8E genuine real-business acceptance. It needs owner-supplied material and human product review; 4C stays gated behind it, and the rest of 4B needs image generation that does not exist yet."
+  "nextStage": "Phase 3.8E. Trial 2 (nbm Construction Cost Consultants) has run the intake -> Build Contract -> Manifest -> ingest -> compose -> generate -> verify -> preview -> rendered-evidence journey and produced eleven fixed factory defects (docs/TRIAL_FINDINGS.md F15-F28). Two things remain and neither is code: an environment that can reach https://www.nbm.bz/ so the crawler can ingest it, and a human product review. 4C stays gated behind this."
 }

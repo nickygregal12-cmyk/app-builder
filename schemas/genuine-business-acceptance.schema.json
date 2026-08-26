@@ -92,6 +92,7 @@
           "kind",
           "label",
           "uri",
+          "sha256",
           "provenance",
           "rightsStatus"
         ],
@@ -120,7 +121,8 @@
           },
           "sha256": {
             "type": "string",
-            "pattern": "^[0-9a-f]{64}$"
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the source as it was ingested. For an upload this is the file. For a website it is the content hash the knowledge pack recorded for the crawl, which only exists if the crawl actually ran."
           },
           "provenance": {
             "enum": [
@@ -255,11 +257,12 @@
         },
         "reviewer": {
           "type": "string",
-          "minLength": 1
+          "minLength": 3
         },
         "notes": {
           "type": "string",
-          "minLength": 1
+          "minLength": 80,
+          "description": "What the reviewer actually judged. Long enough to say something: a one-word note is indistinguishable from no review at all."
         },
         "checks": {
           "type": "object",

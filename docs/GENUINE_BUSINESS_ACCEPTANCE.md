@@ -27,7 +27,13 @@ The following cannot satisfy Phase 3.8E:
 - public assets whose reuse rights have not been approved;
 - compile/build success without product review;
 - an evidence JSON file that references missing or changed artifacts;
-- a run with 20 or more meaningful manual edits.
+- a run with 20 or more meaningful manual edits;
+- a source that was named but never ingested. Every source records the SHA-256
+  of what was ingested and has to appear in the knowledge pack the run produced.
+  Listing a company's website URL is not evidence that the crawler ever reached
+  it;
+- a `productReview` that says on its face that nobody reviewed it — a
+  placeholder reviewer, or notes too short to have judged anything.
 
 The existing Acme scenario remains useful CI regression coverage and is intentionally named `synthetic-mixed-source` in commands and workflow labels.
 
@@ -125,5 +131,13 @@ npm run acceptance:genuine-business:validate -- /path/to/run-root/evidence.json
 ```
 
 The schema authority is `schemas/genuine-business-acceptance.schema.json`. Semantic and artifact checks live in `tooling/lib/genuine-business-evidence.mjs`.
+
+Every declared source is cross-checked against `artifacts.knowledgePack`: its
+`sha256` must be a `contentHash` the pack recorded, and a website source must be
+the page the pack actually holds. A source the run never ingested cannot be in
+the pack, so it cannot be in the evidence. The Phase 3.8E nbm trial found this
+the hard way — before the check existed, an evidence file naming
+`https://www.nbm.bz/` passed the validator even though the crawler had never
+reached the site.
 
 A passing validator result is necessary but not sufficient to close Phase 3.8E: the evidence must come from an actual business trial. After the trial, observed shortcomings should be fixed in the deterministic composer/templates/recipes where possible, then the same business should be regenerated and re-reviewed before the stage is marked complete.

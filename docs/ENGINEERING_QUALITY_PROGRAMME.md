@@ -44,7 +44,7 @@ budgets and credit disappear.
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
 | Is the generated product worth launching? | `npm run audit:launch` | generated-product quality |
 | Is durable state projection caught up and rebuildable? | ledger reconciliation/rebuild (Stage Q11 ✅) | durability |
-| Is a production data change safe to run? | data-change safety contract (Stage Q12) | deployment/database safety |
+| Is a production data change safe to run? | `DataChangeSafety` (`packages/control-plane/src/data-change.js`) | deployment/database safety |
 
 Playwright and DevTools are deliberately different tools: Playwright proves **what a user can do**,
 DevTools explains **why the browser behaves as it does**. A trace is not a passing journey, and a
@@ -371,27 +371,61 @@ generated before baselines were kept are each reported as decisions rather than 
 ### Stage Q12 — production data-change safety (before autonomous live data mutation)
 
 Executed RLS acceptance proves tenant isolation. It does not prove that a migration is safe to run
-against real data someone depends on. Those are separate questions, and only the first has a gate
-today.
+against real data someone depends on. Those are separate questions, and the second one now has a
+contract: `packages/control-plane/src/data-change.js`, covered by `tooling/data-change-safety.test.mjs`.
 
-Before the factory may autonomously mutate a production database, a material schema or data change
-should carry a machine-readable safety contract covering:
+**Delivered — the decision.** `planDataChange` reads a proposed change into a classified plan and
+`evaluateDataChangeSafety` returns one decision with named refusals. It is a pure function of
+declared facts: no connection, no provider, no model, and no branch that returns `allowed` without
+having passed every check. The ten questions a serious mutation has to answer before it runs are
+each a refusal reason rather than a paragraph in a runbook, because a runbook cannot fail closed.
 
-- classification: additive, destructive, backfill or contract step;
-- old-code/new-schema compatibility, and new-code/old-schema compatibility where relevant;
-- estimated rows affected;
-- backfill plan;
-- backup requirement and the evidence that it exists;
-- restore test evidence;
-- application rollback;
-- schema and data rollback, or a forward-repair strategy where rollback is impossible;
-- partial-deployment behaviour;
-- target `EnvironmentIdentity`;
-- required approvals.
+- **What changes** — a SQL reader, not a parser. It knows the shapes that lose data (`drop column`,
+  `truncate`, an unbounded `delete`, a dropped policy, disabled RLS) and separates them from the
+  `alter table` statements they resemble. A statement it does not recognise is `unclassified`, which
+  is a refusal. A classifier that assumes what it cannot read is harmless is how a `drop table` ships
+  as an additive change. Statement splitting handles string literals, nested block comments and
+  dollar-quoted bodies, so a semicolon inside a trigger function is not a statement boundary.
+- **Which environment** — the plan names its environment *and* its database, the executor supplies
+  what is actually in front of it, and an operator registry says which database belongs to which
+  environment. All three must agree: a preview plan whose database is registered to production is
+  refused even though the plan and the executor agree with each other, because they can agree and
+  both be wrong. That is the preview-hits-production class, closed by data rather than by care.
+- **Is it destructive** — the plan is classified by its worst statement, never its average.
+- **What data is affected** — `rowsAffected: null` and `rowsAffected: 0` are different answers. The
+  first is "nobody looked", and for anything touching existing rows it is a refusal.
+- **What backup exists, and how restore is proven** — these are deliberately two requirements. A
+  snapshot id with a digest answers the first; only a performed, verified restore rehearsal bound to
+  that snapshot answers the second. `backup: true` is a claim, not evidence. Snapshots also expire:
+  restoring a snapshot older than the recovery window is a second data-loss event.
+- **What runs first, what proves success, what happens when it does not** — named checks, not
+  intentions, and an explicit answer for a failed verification.
+- **What approval is required** — every production change, including an additive one; "it only adds
+  a column" is an argument about blast radius, not about who decided to change production. An
+  approval binds to a digest of the reviewed statements and target, so recapturing a snapshot does
+  not invalidate it but editing, reordering, adding or retargeting a statement does. A proposer who
+  is its own only approver is refused (AGENTS.md principle 17).
+
+Migration order is part of safety rather than tidiness: a plan written against a schema the target
+does not have was classified for a different database. Missing, unexpected and already-applied
+migrations are each refused.
+
+Requirements tighten with class and environment instead of being one fixed list, so an additive
+change in development carries almost nothing and a destructive change in production carries
+everything. `narrowing` and `contract` steps carry the recovery burden too — the first rejects rows
+that already exist, the second removes the compatibility a rollback would need.
 
 Prefer `expand -> deploy compatible code -> migrate/backfill -> verify -> contract later` over one
-destructive migration. A migration that succeeded on a disposable test database is not backup,
-restore and rollback evidence for a real environment.
+destructive migration.
+
+**Outstanding — the evidence.** The contract refuses a change whose restore was never rehearsed. It
+cannot itself rehearse one, and a migration that succeeded on a disposable test database is still not
+backup, restore and rollback evidence for a real environment. Stage Q12 is not complete until an
+executable acceptance produces a real restore rehearsal against an isolated database — seed, snapshot,
+mutate destructively, restore, and prove the schema, the rows and the tenant-isolation invariants come
+back — behind a provider-neutral seam, so the contract is fed by a performed restore rather than by a
+hand-written fixture. Old-code/new-schema compatibility and partial-deployment behaviour remain
+declared fields awaiting a deployment coupling to enforce them against.
 
 ## Explicit non-adoptions
 

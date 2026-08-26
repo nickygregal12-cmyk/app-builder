@@ -52,9 +52,9 @@ test('shared-host installer never takes over global SSH, firewall, or Node paths
   ]) {
     assert.equal(source.includes(forbidden), false, `co-location installer must not contain ${forbidden}`);
   }
-  assert.match(source, /hostSshModified\": false/);
-  assert.match(source, /hostFirewallModified\": false/);
-  assert.match(source, /globalNodeModified\": false/);
+  assert.match(source, /hostSshModified": false/);
+  assert.match(source, /hostFirewallModified": false/);
+  assert.match(source, /globalNodeModified": false/);
 });
 
 test('rootless subordinate IDs are not assigned from a fixed shared-host range', () => {
@@ -82,5 +82,5 @@ test('shared-host verifier checks loopback exposure and subordinate-ID overlap',
   assert.match(source, /check_subid_non_overlap \/etc\/subuid/);
   assert.match(source, /check_subid_non_overlap \/etc\/subgid/);
   assert.match(source, /opencodePort \/\/ 4097/);
-  assert.match(source, /127\\\.0\\\.0\\\.1/);
+  assert.equal(source.includes('127\\.0\\.0\\.1'), true);
 });

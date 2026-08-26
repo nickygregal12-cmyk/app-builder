@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/design-choice.schema.json",
+  "title": "App Builder Design Choices",
+  "description": "Structured design decisions made by a person, over the ones the factory already makes. Every control has a declared set of values or a rule that decides whether a value is acceptable; this is a contract, not a stylesheet. Choices are applied over the factory's own selection at generation, so a rebuild picks up a new layout pattern without discarding how someone set the design.",
+  "type": "object",
+  "required": ["schemaVersion", "projectId", "choices"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "choices": {
+      "type": "object",
+      "properties": {
+        "accentColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}$",
+          "description": "The brand accent. Also refused when it cannot carry the label placed on it at the contrast a reader needs, which the schema cannot express and the service checks."
+        },
+        "maxWidth": {"type": "string", "minLength": 1},
+        "radius": {"type": "string", "minLength": 1},
+        "density": {"enum": ["relaxed", "comfortable", "compact", "dense"]}
+      },
+      "additionalProperties": false
+    },
+    "chosenAt": {"type": "string", "minLength": 1},
+    "chosenBy": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

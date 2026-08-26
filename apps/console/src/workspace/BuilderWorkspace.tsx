@@ -13,9 +13,11 @@ import {
   setAssetFocalPoint,
   startPreview,
   stopPreview,
+  updateDesignContract,
   updateSourceGovernance,
   verifyProject,
   type ContentOverride,
+  type DesignContract,
   type ElementResolution,
   type AssetDecisionRequest,
   type KnowledgeSummary,
@@ -55,6 +57,7 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'quality.check.succeeded') return `Checks passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.build.succeeded') return `Production build passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'source.governance.updated') return `${String(payload.sourceId ?? 'Source')} · ${label(String(payload.decision ?? 'updated'))}`;
+  if (event.type === 'design.contract.updated') return `${((payload.controls as string[] | undefined) ?? []).join(', ') || 'design'} set`;
   if (event.type === 'section.variant.chosen') return payload.variant ? `${String(payload.sectionId ?? 'Section')} · ${label(String(payload.variant))}` : `${String(payload.sectionId ?? 'Section')} · back to composed`;
   if (event.type === 'asset.governance.updated') return `${label(String(payload.decision ?? 'updated'))}${payload.cropReview ? ` · crop ${label(String(payload.cropReview))}` : ''} · ${String(payload.decided ?? 0)} decided`;
   if (event.type === 'evidence.capture.started') return `Capturing ${String(payload.planned ?? 0)} view(s) across ${((payload.viewports as string[] | undefined) ?? []).join(', ')}`;
@@ -281,6 +284,52 @@ function SectionVariantPanel({ option, onChoose, busy }: {
   </section>;
 }
 
+
+/**
+ * Design Contract.
+ *
+ * Structured controls over the decisions the factory already makes, not a
+ * stylesheet. Every control offers a declared set of values, and the accent is
+ * refused when it cannot carry the label placed on it at a readable contrast —
+ * which is a correctness rule, not a matter of taste.
+ */
+function DesignPanel({ contract, onChoose, busy }: {
+  contract: DesignContract;
+  onChoose: (choices: Record<string, string | null>) => Promise<void>;
+  busy: boolean;
+}) {
+  const [accent, setAccent] = useState(contract.design.accentColor);
+  useEffect(() => { setAccent(contract.design.accentColor); }, [contract.design.accentColor]);
+
+  return <section className="builder-panel design-panel" aria-label="Design contract">
+    <div className="panel-title-row"><span className="builder-kicker">Design</span><span>{contract.design.label}</span></div>
+
+    <label className="design-accent">
+      <span>Accent</span>
+      <input type="color" aria-label="Brand accent colour" value={accent} onChange={(event) => setAccent(event.target.value)} disabled={busy} />
+      <code>{accent}</code>
+      <button type="button" className="secondary compact" onClick={() => onChoose({ accentColor: accent })} disabled={busy || accent === contract.design.accentColor}>Apply</button>
+    </label>
+    <p className="builder-empty">An accent that cannot carry its own label at {contract.accentContrastMinimum}:1 is refused.</p>
+
+    {contract.controls.map((control) => <div className="design-control" key={control.control}>
+      <span className="design-control-label">{control.label}</span>
+      <div className="design-options">{control.options.map((option) => <button
+        type="button"
+        key={option.id}
+        title={option.purpose}
+        className={control.value === option.id ? 'design-option active' : 'design-option'}
+        onClick={() => onChoose({ [control.control]: option.id })}
+        disabled={busy || control.value === option.id}
+      >{option.label}</button>)}</div>
+    </div>)}
+
+    {Object.keys(contract.chosen).length > 0 && <button type="button" className="secondary compact" onClick={() => onChoose(Object.fromEntries(Object.keys(contract.chosen).map((key) => [key, null])))} disabled={busy}>
+      Back to the factory's design
+    </button>}
+  </section>;
+}
+
 function dimensions(asset: ProjectAsset) {
   if (!asset.width || !asset.height) return 'dimensions unknown';
   return `${asset.width}×${asset.height}${asset.lowResolution ? ' · low resolution' : ''}`;
@@ -448,6 +497,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const [resolving, setResolving] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [choosingVariant, setChoosingVariant] = useState(false);
+  const [choosingDesign, setChoosingDesign] = useState(false);
   const [previewNonce, setPreviewNonce] = useState(0);
 
   const refresh = useCallback(async () => {
@@ -628,6 +678,23 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     }
   }, [projectId, refresh]);
 
+  const chooseDesign = useCallback(async (choices: Record<string, string | null>) => {
+    setChoosingDesign(true);
+    setError('');
+    try {
+      await updateDesignContract(projectId, choices);
+      await refresh();
+      // The brand stylesheet is generated, so a compiled design reaches the
+      // preview without a rebuild.
+      setPreviewNonce((value) => value + 1);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      await refresh().catch(() => undefined);
+    } finally {
+      setChoosingDesign(false);
+    }
+  }, [projectId, refresh]);
+
   const decideSource = useCallback(async (sourceId: string, decision: SourceGovernanceDecision) => {
     setSourceOperation(sourceId);
     setError('');
@@ -730,6 +797,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           busy={operation === 'ingest'}
           onIngest={ingest}
         />
+
+        {snapshot.design && <DesignPanel contract={snapshot.design} onChoose={chooseDesign} busy={choosingDesign} />}
 
         <AssetPanel
           projectId={projectId}

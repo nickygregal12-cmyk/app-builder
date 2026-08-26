@@ -154,6 +154,18 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByLabel('Content value')).toHaveCount(0);
   await page.getByRole('button', { name: 'Close' }).click();
 
+  // Design contract: a structured choice compiles into the tokens the template
+  // reads, and reaches the preview without a rebuild.
+  const design = page.getByLabel('Design contract');
+  const heroSection = preview.contentFrame().locator('.hero-section');
+  const spacedBefore = await heroSection.evaluate((node) => getComputedStyle(node).paddingTop);
+  await design.getByRole('button', { name: 'Dense', exact: true }).click();
+  await expect(page.getByText('design · contract · updated')).toBeVisible({ timeout: 20_000 });
+  await expect.poll(
+    async () => heroSection.evaluate((node) => getComputedStyle(node).paddingTop),
+    { timeout: 20_000 },
+  ).not.toBe(spacedBefore);
+
   // Rendered evidence: capture what the build actually renders, from the same
   // preview that was just reviewed.
   const evidencePanel = page.getByLabel('Rendered evidence');
@@ -174,7 +186,8 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByText('preview · stopped')).toBeVisible();
   // 11 build/quality/preview events, one source governance decision, the save
   // and revert of one content edit, the choice and clearing of one section
-  // presentation, and the start and completion of one evidence capture.
-  await expect(page.getByLabel('Project metrics').getByText('18', { exact: true })).toBeVisible();
+  // presentation, one design choice, and the start and completion of one
+  // evidence capture.
+  await expect(page.getByLabel('Project metrics').getByText('19', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

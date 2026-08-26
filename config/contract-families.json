@@ -113,6 +113,14 @@
       "boundary": "Presentation choices stored by the service and replayed over a deterministic composition.",
       "schemaHash": "55eb371e45aab0c6a7ed2c84d15bec9b75bac09f9f90ad58a8484043241ecbd5",
       "typesHash": "7f1f259c49ecfdd90233b6845c87869fccfd008b147272e09c00c2beff0293d2"
+    },
+    {
+      "id": "design-choice",
+      "schema": "design-choice.schema.json",
+      "typeName": "AppBuilderDesignChoices",
+      "boundary": "Structured design decisions stored by the service and compiled into the generated project's brand tokens.",
+      "schemaHash": "df2d56eceb6cf96e0d81c21c9431428c63d80c1d1180d27ec17764eb4a0026c5",
+      "typesHash": "25beaa2b8eb885d7b973db5aafb1de456085d090e0ddd9feae9a5ba2f58f8d14"
     }
   ],
   "pending": [

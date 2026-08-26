@@ -43,6 +43,8 @@ budgets and credit disappear.
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
 | Is the generated product worth launching? | `npm run audit:launch` | generated-product quality |
+| Is durable state projection caught up and rebuildable? | ledger reconciliation/rebuild (Stage Q11) | durability |
+| Is a production data change safe to run? | data-change safety contract (Stage Q12) | deployment/database safety |
 
 Playwright and DevTools are deliberately different tools: Playwright proves **what a user can do**,
 DevTools explains **why the browser behaves as it does**. A trace is not a passing journey, and a
@@ -51,8 +53,9 @@ acceptance dimensions separate.
 
 ## Programme stages
 
-Sequencing follows the roadmap rather than tool enthusiasm. Nothing here displaces the outstanding
-Phase 3.8E genuine-business product gate or the active Phase 4 source-ingestion and Console work.
+Sequencing follows `docs/ROADMAP.md` rather than tool enthusiasm, and nothing here displaces the active
+product stage that `config/factory-status.json` records. A stage below is a specification, not a
+statement about what is installed: check the status file before treating one as outstanding.
 
 ### Stage Q1 — architecture made executable ✅ Delivered
 
@@ -255,6 +258,53 @@ handler in the broker, so a capability nobody can perform fails rather than reas
 shape — declaration names its consumer, test checks the consumer exists — rather than inventing a
 new mechanism per registry.
 
+### Stage Q11 — ledger and projection reconciliation (Phase 4.5, before broad concurrency)
+
+The durability model treats the JSONL event ledger as authoritative evidence and SQLite as a read
+projection. That is only safe if the projection is recoverable rather than dependent on two writes
+always succeeding together. A crash between ledger append and projection insert must not create two
+permanent truths.
+
+If JSONL remains authoritative, add:
+
+- a monotonic ledger sequence;
+- an idempotent projection, so replaying an event twice is not a second fact;
+- a stored last-projected sequence;
+- startup reconciliation that catches the projection up from that sequence;
+- a rebuild command — `npm run ledger:rebuild` or equivalent — that reconstructs the projection from
+  the ledger alone;
+- an acceptance test that deletes the projection, rebuilds it and proves the durable read state the
+  service returns is unchanged.
+
+Concretely: ledger at sequence 1827 and projection at 1821 means replaying 1822 to 1827, not
+guessing. If a later architecture chooses SQLite as the authoritative store instead, that is an
+explicit recorded decision and migration, never accidental drift.
+
+### Stage Q12 — production data-change safety (before autonomous live data mutation)
+
+Executed RLS acceptance proves tenant isolation. It does not prove that a migration is safe to run
+against real data someone depends on. Those are separate questions, and only the first has a gate
+today.
+
+Before the factory may autonomously mutate a production database, a material schema or data change
+should carry a machine-readable safety contract covering:
+
+- classification: additive, destructive, backfill or contract step;
+- old-code/new-schema compatibility, and new-code/old-schema compatibility where relevant;
+- estimated rows affected;
+- backfill plan;
+- backup requirement and the evidence that it exists;
+- restore test evidence;
+- application rollback;
+- schema and data rollback, or a forward-repair strategy where rollback is impossible;
+- partial-deployment behaviour;
+- target `EnvironmentIdentity`;
+- required approvals.
+
+Prefer `expand -> deploy compatible code -> migrate/backfill -> verify -> contract later` over one
+destructive migration. A migration that succeeded on a disposable test database is not backup,
+restore and rollback evidence for a real environment.
+
 ## Explicit non-adoptions
 
 - No blocking gate before its output has been baselined against real generated projects.
@@ -265,3 +315,4 @@ new mechanism per registry.
   deterministic check.
 - No developer tool becomes a runtime dependency of a generated application. Generated repositories
   remain ordinary repositories.
+- No production data mutation approved because schema and RLS tests passed.

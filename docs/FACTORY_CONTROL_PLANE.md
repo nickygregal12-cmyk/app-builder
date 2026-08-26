@@ -76,16 +76,15 @@ A powerful agent is not a security boundary. File scope, environment identity, c
 - managed-file modification detection;
 - non-functional and Design Contract groundwork.
 
-### 3.5C — Sandbox and telemetry adapters ⏸ Deferred
+### 3.5C — Sandbox and telemetry adapters ◐ Mostly landed early under Phase 4.5
 
-- provider-neutral `ExecutionEnvironmentAdapter`;
-- local disposable/rootless implementation;
-- resource/time/network/secrets policy contract;
-- preview/artifact/checkpoint interface;
-- event-to-trace mapping compatible with OpenTelemetry-style spans;
-- no production deploy or production DB access from an ordinary implementation task.
+Landed: the provider-neutral `ExecutionEnvironmentAdapter`, the local disposable/rootless implementation,
+the resource/time/network/secrets policy contract, and the preview/artifact/checkpoint interface.
 
-The first powerful hosted runtime remains deferred until Phase 5 so the factory proves product and safety boundaries before vendor/runtime coupling.
+Still outstanding: event-to-trace mapping compatible with OpenTelemetry-style spans, and the explicit
+boundary that keeps production deploy and production DB access out of an ordinary implementation task.
+
+The first powerful hosted runtime remains deferred until Phase 5 so the factory proves product and safety boundaries before vendor/runtime coupling. Infrastructure landing promotes nothing: `config/runtime-readiness.json` is the deny-by-default gate, and no role is `runtimeReady`.
 
 ## Phase 4.5 — the agent capability boundary
 

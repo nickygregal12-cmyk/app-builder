@@ -195,21 +195,18 @@ Delivered:
 - richer Design Contract groundwork;
 - machine-readable factory status and doc-drift checking.
 
-### 3.5C — Sandbox/trace implementation ⏸ Deferred
+### 3.5C — Sandbox/trace implementation ◐ Mostly landed early under Phase 4.5
 
-Resume immediately before powerful autonomous execution in Phase 5.
+Deferred at 3.5 and resumed ahead of schedule. Landed: the `ExecutionEnvironmentAdapter` and its local
+and rootless-Podman drivers, the first disposable sandbox, resource/network/secret limits and the pinned
+content-addressed task image with bounded public egress.
 
-Deferred:
-- `ExecutionEnvironmentAdapter`;
-- first rootless/disposable sandbox;
-- resource/network/secret limits;
-- preview/artifact interface;
-- OTel-compatible trace export mapping;
-- hard production write/deploy approval boundary.
+Still outstanding, tracked under Phase 4.5: the OTel-compatible trace export mapping and the hard
+production write/deploy approval boundary. `docs/ROADMAP.md` sequences the rest.
 
 ---
 
-## Phase 3.6 — Requirements-to-Product Composition ✅ Core complete, product proof still open
+## Phase 3.6 — Requirements-to-Product Composition ✅ Complete
 
 ### Phase 3.6A — Manifest and Build Contract v2 ✅ Complete
 
@@ -241,11 +238,13 @@ Delivered:
 
 The section renderer remains replaceable so later visual systems can improve presentation without rewriting product structure.
 
-### Phase 3.6C — Real-business acceptance ⚠️ Synthetic regression exists; genuine gate outstanding
+### Phase 3.6C — Real-business acceptance ✅ Closed by the accepted Phase 3.8E run
 
 Keep the current Acme mixed-source fixture as a deterministic regression case.
 
-Still required:
+The genuine product gate this stage left open was closed by the accepted NBM run; the immutable record is
+`docs/PHASE_3_8E_ACCEPTANCE_RECORD.md` and the contract governing any rerun is
+`docs/GENUINE_BUSINESS_ACCEPTANCE.md`. What it required:
 - genuine existing business URL;
 - genuine PDF/document material;
 - genuine logo/photographs/assets;
@@ -254,9 +253,11 @@ Still required:
 - meaningful manual edits counted and categorized;
 - AI calls/tokens/cost, elapsed work, retries/interventions and quality failures recorded.
 
-Initial target: **fewer than 20 meaningful manual edits before launchable quality**.
+Initial target: **fewer than 20 meaningful manual edits before launchable quality**. The accepted run
+came in at 0.
 
-This remains an honest product gate even though later service infrastructure has already been built.
+One accepted run proves the path works once. Turning it into repeatable evidence is the product-proof
+freeze and the varied corpus, sequenced in `docs/ROADMAP.md`.
 
 ---
 
@@ -380,8 +381,8 @@ Delivered as a bounded architecture/contract foundation, not as a running agent 
 Architecture: `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
 Design-side artifacts: `docs/DESIGN_INTELLIGENCE.md`.
 
-This stage adds no new orchestration framework. It is a tighter expression of the existing control plane, and it does not
-close the outstanding Phase 3.8E genuine-business product gate.
+This stage adds no new orchestration framework. It is a tighter expression of the existing control plane, and it did not
+close the then-outstanding Phase 3.8E genuine-business product gate — that gate was closed later, by the accepted run.
 
 ### 3.8I — Routing discipline and agent operating-system hardening ✅ Complete
 
@@ -408,7 +409,7 @@ Turns two Phase 3.8I planning items into enforced behaviour:
 - `npm run architecture` makes the dependency direction in `AGENTS.md` a blocking CI gate across eleven zones and seven rules, with a cycle check. It parses module specifiers and declared dependencies, so prose mentioning a package is not a violation and a deep relative path cannot dodge a package-name rule. `dependency-cruiser` was evaluated and deliberately not adopted.
 - `config/risk-surfaces.json` plus `packages/control-plane/src/risk.js` classify a declared ChangeSet deterministically and return the conditional reviewers it must buy. An ordinary presentation change buys none; an auth, RLS, secrets, billing, capability-policy or production-deploy change buys the differential reviewer, the security reviewer, the environment guardian or an independent second opinion as the surface requires.
 
-Neither displaces the outstanding 3.8E genuine-business product proof.
+Neither displaced the then-outstanding 3.8E genuine-business product proof, which was closed later by the accepted run.
 
 
 ### 3.8K — Launch readiness: making the new tooling serve the product ✅ Complete
@@ -646,7 +647,7 @@ AI SEO advice remains optional after deterministic findings.
 
 ---
 
-## Phase 4.5 — Pre-Agent Hardening ⬜ Planned
+## Phase 4.5 — Pre-Agent Hardening ◐ Partly landed ahead of its place in the sequence
 
 Before broad autonomous tools:
 - complete deferred Phase 3.5C sandbox abstraction;
@@ -811,9 +812,88 @@ The first genuine real-business acceptance target remains fewer than **20 meanin
 
 ---
 
-# 7. Definition of a successful v1
+# 7. What "finished" means
 
-App Builder v1 is successful when:
+App Builder can absorb capability indefinitely, so "finished" has to be bounded or it moves forever.
+It is bounded in three parts: a **finished core product**, an **evidence-earned maturity tier per project
+class**, and an explicit list of **later expansion that does not block v1**. Sequencing between them is
+`docs/ROADMAP.md`; this section is what those steps are aiming at.
+
+## 7.1 The finished core product (v1)
+
+v1 is finished when a real project can go end to end through all of the following, and the evidence says
+it does so at the declared quality:
+
+- **idea/source intake** — an idea plus optional company material, with adaptive intake catching
+  high-impact requirements before coding;
+- **Build Contract** — approved, machine-readable, preserving the real product intent, with buildability
+  decided before generation;
+- **trusted ingestion and provenance** — source material becomes a trusted knowledge pack; facts keep
+  provenance and never silently become claims;
+- **deterministic composition** — sensible routes, pages and screens bound to trusted content;
+- **appropriate renderer selection** — a template chosen for the project rather than one shell forced on
+  every project, which requires at least two genuinely different renderers to exist;
+- **premium design and art direction** — a coherent compiled design system, more than one visual answer,
+  and a promotion decision that is recorded rather than assumed;
+- **source and asset rights** — rights, approval and use state resolved per asset, never inferred from
+  public visibility;
+- **portable generated repository** — an ordinary repository that clones, installs and builds with no App
+  Builder dependency;
+- **Builder Console preview, edit and version flow** — preview, direct edit with provenance, durable
+  versions and checkpoint restore;
+- **core deployment** — a generated project reaches a real environment through the product, with explicit
+  environment identity;
+- **deterministic QA** — correctness, security, accessibility and launch-readiness gates run before any
+  expensive AI review;
+- **real-business evidence** — the varied corpus in `docs/GENUINE_BUSINESS_ACCEPTANCE.md`, not one
+  accepted run and not a synthetic fixture;
+- **bounded agent-assisted novel work** — AI used where deterministic systems genuinely cannot resolve
+  novelty, inside declared ChangeSets and hard budgets;
+- **safe runtime boundaries** — sandboxed execution, deny-by-default capabilities and no self-approval;
+- **cost and intervention visibility** — AI/tool cost, elapsed work, retries and human interventions
+  visible per project rather than reconstructed afterwards.
+
+Everything on that list has a home elsewhere in this repository. Nothing is added to it because it sounds
+impressive, and nothing is removed from it to make v1 arrive sooner.
+
+## 7.2 Class maturity — what v1 claims, per project class
+
+v1 finished does not mean every project class is equally proven, and a class must not look proven merely
+because a recipe or template exists for it. Each class carries a tier earned from recorded evidence. The
+vocabulary is machine-readable and applies to project classes and capability families:
+
+- **proven** — material real-project evidence shows the class routinely performs at the declared quality and intervention target;
+- **supported** — known architecture, recipes and representative acceptance, but not enough corpus evidence for a "normally excellent" claim;
+- **assisted-engineering** — the factory can architect and implement the class, but substantial specialist and human judgement is expected;
+- **experimental** — novel or insufficiently proven; explicit approval and custom engineering required.
+
+Maturity should influence autonomy, model/tool budget, verification depth, required human review, the confidence the Console shows and whether one-prompt quality claims are permitted. It is earned from recorded evidence and may regress when a benchmark exposes deterioration; a canonical synthetic app passing build and tests never promotes a class to `proven`. This tier vocabulary is the evidence-earned complement to the per-request supported-vs-custom classification in `docs/VISUAL_EXCELLENCE.md` §10, not a second system.
+
+**No class is claimed at any tier today.** The corpus is what will earn the first ones.
+
+## 7.3 Later expansion — outside v1 by decision
+
+These are wanted, planned or plausible, and none of them blocks a finished core product. Putting them
+here is what stops "finished App Builder" meaning "every conceivable software-building feature has
+shipped":
+
+- native mobile applications — a separate project class with its own contracts for permissions,
+  notifications, device capabilities, deep links, offline state, secure storage, signing, store metadata
+  and device testing, never the `consumer-app` web class relabelled;
+- a large connector marketplace beyond the small set of integrations the factory claims as first-class;
+- generated applications exposed as agent-accessible products (generated-app MCP/API);
+- enterprise SSO and organisation-scale identity;
+- broad marketplace and ecommerce depth;
+- advanced experimentation and personalisation;
+- the complex-application class at `proven`, whose bar is `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
+
+This bounds the product. It does not lower the bar: the core product list above is not negotiable, and a
+class stays at the tier its evidence earns.
+
+## 7.4 The original v1 success statement
+
+Retained because it is what the earlier stages were measured against, and because 7.1 is its successor
+rather than its replacement. App Builder v1 is successful when:
 - a real project starts from an idea plus optional company/source material;
 - adaptive intake catches high-impact requirements before coding;
 - approved contracts preserve the real product intent;
@@ -827,26 +907,18 @@ App Builder v1 is successful when:
 - the result can be previewed, edited, versioned and deployed through service/Console;
 - automated correctness/security/accessibility/quality gates run before release;
 - multiple coding clients can call safe deterministic factory operations through an interoperable adapter without becoming project truth;
-- one genuine business build reaches acceptable launch quality with fewer than 20 meaningful manual edits;
+- one genuine business build reaches acceptable launch quality with fewer than 20 meaningful manual edits (passed 2026-08-26 at 0 edits; the corpus in 7.1 is what turns it into repeatable evidence);
 - project evidence feeds reviewed/versioned improvements.
 
 Best-in-class capabilities such as CMS, localization, Figma mapping, existing-repo adoption and experiments may mature after the first useful v1 vertical slice, but their architecture is now planned so Phase 4 does not paint the system into a corner.
 
 ---
 
-# 8. Immediate execution order
+# 8. Sequencing
 
-1. **Close ChangeSet path-scope correctness** and add property tests.
-2. **Unify schema/types/runtime validation** around canonical schemas + generated contracts + Ajv.
-3. **Add executed Supabase RLS acceptance** using local Supabase/pgTAP test users.
-4. **Add the axe accessibility baseline** to generated-app browser acceptance.
-5. **Run the genuine Phase 3.6C business build** and record meaningful edits/cost/time/interventions.
-6. **Add the MCP v2 adapter** over the existing service tool boundary.
-7. Begin **Phase 4A service-backed Console vertical slice**.
-8. In parallel only where it directly improves generated output, prove the **static/content second template** and its Pagefind/structured-data/social-image path.
-9. Build the **Design System Registry + DesignSystemSpec + Component Manifest + DesignLint** before scaling AI-generated visual variation, and land **Builder Element Identity** before enabling direct manipulation.
-10. Complete environments/direct editing/visual variants, then mature CMS/localization/Figma/existing-repo adoption.
-11. Complete sandbox/security hardening before broad autonomous agents, and stage the deterministic engineering gates in `docs/ENGINEERING_QUALITY_PROGRAMME.md` — architecture dependency gates first, then curated visual contracts, performance/payload budgets, design-token enforcement, dead-code analysis, property tests, targeted mutation testing and supply-chain hardening.
-12. Add the Hetzner/OpenCode runtime and low-credit AI orchestration only after deterministic product/safety boundaries prove useful.
+The ordered path from the current state to a finished core product is maintained once, in
+`docs/ROADMAP.md`. This document deliberately keeps no second execution queue: an execution order that
+lives in two places is an execution order that disagrees with itself as soon as one stage closes.
 
-`AGENTS.md` remains the root engineering authority. `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`, `docs/DESIGN_INTELLIGENCE.md` and `docs/ENGINEERING_QUALITY_PROGRAMME.md` are detail documents under these authorities and never override them. Schemas/config are machine-readable authorities for their contracts; `config/factory-status.json` is the machine-readable delivery status. `docs/BEST_IN_CLASS_CAPABILITIES.md` records the reviewed capability recommendations and explicit non-adoptions.
+`config/factory-status.json` remains the machine-readable authority for what is current, complete and
+outstanding.

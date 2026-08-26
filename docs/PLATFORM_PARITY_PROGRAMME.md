@@ -515,20 +515,17 @@ Do not prioritize this before the core build/edit/deploy/integration experience 
 | Post-launch maintenance agents | Phase 7/8 |
 | Generated-app MCP/API exposure | Later optional |
 
-## Dependency ordering
+## Dependency ordering within this programme
 
-The recommended product order after the currently active design/runtime work is:
+**This programme does not sequence itself.** The one ordered path from the current state to a finished
+core product is `docs/ROADMAP.md`, and the stage placements above are where each capability lands on that
+path — not a competing queue. In particular, the product-proof freeze comes **before** the Phase 4.3/4.4
+capability breadth in this table, not after it: the corpus is what tells us which of these capabilities
+real projects actually need.
 
-1. finish 4C professional design machinery;
-2. 4D reference-driven visual candidates + critic + professional visual editing;
-3. 4.2 static/content renderer;
-4. 4.3 CMS/localization/existing-repo maturity;
-5. 4.4 high-value application capabilities + IntegrationSpec/connectors;
-6. 4E/4F environments, Git/staging, collaboration and release UX;
-7. product-proof freeze and varied real-project corpus;
-8. Phase 5 real agents can proceed in parallel once runtime gates permit them;
-9. Phase 6 production quality;
-10. Phase 7 operations and bounded post-launch maintenance.
+What this programme does own is the dependency between its own items: connections before connectors,
+environment identity before release promotion, Git adoption before bidirectional workflow, and a real
+egress proof before any research agent reaches the public web.
 
 Do not delay the first real-project corpus until every late platform feature exists. Use maturity tiers: a project class can be proven for marketing/content sites before every SaaS integration capability is proven. But do not claim broad “best app builder” parity while common auth/billing/integration/deployment workflows still require bespoke manual glue.
 

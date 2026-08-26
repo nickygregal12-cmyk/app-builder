@@ -112,6 +112,37 @@ try {
     }
   }
 
+  // The drift this catches is the one that costs a later agent a day: a stage
+  // is closed by adding it to completedStages and the pointers that say what is
+  // current are left behind, so two places in the same file disagree about the
+  // present. It reads only machine-readable state — no Markdown wording is
+  // matched, because a documentation linter that greps headings fails on
+  // rewording rather than on drift.
+  const currentStageId = /^Phase\s+([0-9](?:[0-9A-Za-z.]*[0-9A-Za-z])?)\b/.exec(status.currentStage ?? '')?.[1];
+  if (!currentStageId) {
+    console.error(`Factory status currentStage must begin with the stage it names, e.g. "Phase 4D — ...": ${status.currentStage}`);
+    failed = true;
+  } else if (completed.has(currentStageId)) {
+    console.error(`Stage ${currentStageId} is the active stage and is also recorded as completed.`);
+    failed = true;
+  }
+  if ((status.completedPhases ?? []).includes(status.currentPhase)) {
+    console.error(`Phase ${status.currentPhase} is the current phase and is also recorded as completed.`);
+    failed = true;
+  }
+  // An active stage with no outstanding gate and no next stage is a status file
+  // that has quietly stopped saying what is blocking or what follows.
+  if (status.status === 'active') {
+    if ((status.outstandingProductGates ?? []).length === 0) {
+      console.error('An active delivery stage must record at least one outstanding product gate.');
+      failed = true;
+    }
+    if (!status.nextStage) {
+      console.error('An active delivery stage must record its next stage.');
+      failed = true;
+    }
+  }
+
   const policies = readJson('config/agent-policies.json');
   const productionActions = ['deploy.production', 'database.production_write'];
   for (const [policyId, policy] of Object.entries(policies.policies ?? {})) {

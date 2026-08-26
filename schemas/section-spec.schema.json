@@ -11,7 +11,8 @@
     "bindings":{"type":"array","items":{"$ref":"content-binding.schema.json"}},
     "actions":{"type":"array","items":{"type":"object","required":["label","href"],"properties":{"label":{"type":"string","minLength":1},"href":{"type":"string","minLength":1}},"additionalProperties":false}},
     "assetIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},
-    "variant":{"type":"string","minLength":1}
+    "variant":{"type":"string","minLength":1},
+    "variantOverriddenFrom":{"type":"string","minLength":1,"description":"The variant the factory composed, retained when a person chose a different one so the deterministic presentation is always recoverable."}
   },
   "additionalProperties":false
 }

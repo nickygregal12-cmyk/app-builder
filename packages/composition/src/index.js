@@ -234,6 +234,17 @@ function primaryAction(manifest, surfaces, pack) {
   return null;
 }
 
+// Items with nothing but a name are a list, not a grid of tall empty cards. The
+// composer knows which it has, so the variant it records is the one that suits
+// the content rather than a hint the template has to second-guess.
+const NAME_FIELDS = ['name', 'title', 'quote', 'value', 'label'];
+
+function itemVariant(items) {
+  const detailed = list(items).some((item) => item && typeof item === 'object' && !Array.isArray(item)
+    && Object.entries(item).some(([key, value]) => !NAME_FIELDS.includes(key) && ['string', 'number', 'boolean'].includes(typeof value) && String(value).trim()));
+  return detailed ? 'cards' : 'list';
+}
+
 function section(id, type, purpose, bindings, actions = [], assetIds = [], variant = 'default') {
   return { id, type, purpose, bindings: bindings.filter(Boolean), actions, assetIds: unique(assetIds), variant };
 }
@@ -256,7 +267,7 @@ function servicesSection(pageId, pack, manifest) {
   return section(`${pageId}-services`, 'item-grid', 'Present services or products', [
     manifestBinding('title', 'Services'),
     items,
-  ], [], [], 'cards');
+  ], [], [], itemVariant(items.value));
 }
 
 function proofSection(pageId, pack, manifest) {
@@ -276,19 +287,19 @@ function proofSection(pageId, pack, manifest) {
 function peopleSection(pageId, pack) {
   const items = entityBinding('items', pack, 'people');
   if (!items) return null;
-  return section(`${pageId}-people`, 'people-grid', 'Introduce source-backed people or team members', [manifestBinding('title', 'People'), items], [], [], 'cards');
+  return section(`${pageId}-people`, 'people-grid', 'Introduce source-backed people or team members', [manifestBinding('title', 'People'), items], [], [], itemVariant(items.value));
 }
 
 function projectsSection(pageId, pack) {
   const items = entityBinding('items', pack, 'projects');
   if (!items) return null;
-  return section(`${pageId}-projects`, 'item-grid', 'Present source-backed projects or case studies', [manifestBinding('title', 'Projects'), items], [], [], 'cards');
+  return section(`${pageId}-projects`, 'item-grid', 'Present source-backed projects or case studies', [manifestBinding('title', 'Projects'), items], [], [], itemVariant(items.value));
 }
 
 function locationsSection(pageId, pack, manifest) {
   const items = serviceAreaBinding(pack, manifest);
   if (!items) return null;
-  return section(`${pageId}-locations`, 'location-list', 'Present confirmed service areas or locations', [manifestBinding('title', 'Locations'), items], [], [], 'list');
+  return section(`${pageId}-locations`, 'location-list', 'Present confirmed service areas or locations', [manifestBinding('title', 'Locations'), items], [], [], itemVariant(items.value));
 }
 
 function enquiryFormSection(pageId, manifest) {
@@ -557,6 +568,49 @@ export function applyContentOverrides(composition, overrides = []) {
   });
 
   if (!applied) return composition;
+  const base = { ...composition, sections };
+  delete base.compositionHash;
+  return { ...base, compositionHash: hash(base) };
+}
+
+/**
+ * Apply presentation choices over a deterministic composition.
+ *
+ * The same shape as content overrides, for the same reason: composition stays a
+ * pure function of manifest and knowledge, and a person's decision lives beside
+ * it and is replayed on top. The composed variant is kept so the factory's own
+ * presentation is always recoverable.
+ *
+ * Whether a variant is one the template actually renders is decided where the
+ * choice is recorded. What arrives here has already been checked.
+ */
+export function applySectionVariants(composition, choices = []) {
+  const wanted = new Map(list(choices).filter((entry) => entry?.sectionId && entry?.variant).map((entry) => [entry.sectionId, entry.variant]));
+  if (!wanted.size) return composition;
+
+  let applied = 0;
+  const sections = composition.sections.map((section) => {
+    const variant = wanted.get(section.id);
+    if (!variant || variant === section.variant) return section;
+    applied += 1;
+    return { ...section, variant, variantOverriddenFrom: section.variantOverriddenFrom ?? section.variant };
+  });
+  if (!applied) return composition;
+  const base = { ...composition, sections };
+  delete base.compositionHash;
+  return { ...base, compositionHash: hash(base) };
+}
+
+/** Remove presentation choices, returning the composition the factory composed. */
+export function stripSectionVariants(composition) {
+  let restored = 0;
+  const sections = composition.sections.map((section) => {
+    if (!section.variantOverriddenFrom) return section;
+    restored += 1;
+    const { variantOverriddenFrom, ...rest } = section;
+    return { ...rest, variant: variantOverriddenFrom };
+  });
+  if (!restored) return composition;
   const base = { ...composition, sections };
   delete base.compositionHash;
   return { ...base, compositionHash: hash(base) };

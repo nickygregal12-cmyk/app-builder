@@ -4,7 +4,7 @@ import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { assertContract, validateContract } from '@app-builder/contracts';
-import { applyContentOverrides, assertEditableElement, assetDecisionsHash, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides } from '@app-builder/composition';
+import { applyContentOverrides, applySectionVariants, assertEditableElement, assetDecisionsHash, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides, stripSectionVariants } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
@@ -168,6 +168,60 @@ export class FactoryService {
     return path.join(this.ingestion.projectRoot(projectId), 'content-overrides.json');
   }
 
+  sectionVariantsPath(projectId) {
+    return path.join(this.ingestion.projectRoot(projectId), 'section-variants.json');
+  }
+
+  readSectionVariants(projectId) {
+    this.requireProject(projectId);
+    const file = this.sectionVariantsPath(projectId);
+    if (!fs.existsSync(file)) return { schemaVersion: 1, projectId, choices: [] };
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }
+
+  /**
+   * The template a build was generated from.
+   *
+   * Read back from the build's own record rather than from the current
+   * registry, so what a section may be shown as is decided by the template that
+   * actually rendered it.
+   */
+  workspaceTemplate(projectId) {
+    const project = this.requireProject(projectId);
+    const file = project.workspacePath ? path.join(project.workspacePath, '.app-builder', 'project.json') : null;
+    if (!file || !fs.existsSync(file)) return null;
+    const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const entry = this.templateCatalog()?.templates?.[record.template?.id];
+    if (!entry) return null;
+    const descriptor = path.resolve(process.cwd(), entry.path, 'template.json');
+    return fs.existsSync(descriptor) ? JSON.parse(fs.readFileSync(descriptor, 'utf8')) : null;
+  }
+
+  templateCatalog() {
+    const file = path.resolve(process.cwd(), 'config/templates.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  async writeSectionVariants(projectId, choices, change = null) {
+    const project = this.requireProject(projectId);
+    const document = assertContract('section-variant', { schemaVersion: 1, projectId, choices });
+    fs.mkdirSync(path.dirname(this.sectionVariantsPath(projectId)), { recursive: true });
+    fs.writeFileSync(this.sectionVariantsPath(projectId), `${JSON.stringify(document, null, 2)}\n`);
+
+    // A presentation choice is composition, so the running preview can show it
+    // without a rebuild, exactly as an edited sentence does.
+    if (project.workspacePath && fs.existsSync(project.workspacePath)) {
+      this.rewriteWorkspaceComposition(project.workspacePath, this.readOverrides(projectId).overrides, document.choices);
+    }
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'section.variant.chosen',
+      actor: 'console',
+      payload: { sectionId: change?.sectionId ?? null, variant: change?.variant ?? null, chosen: document.choices.length },
+    }));
+    return document.choices;
+  }
+
   assetDecisionsPath(projectId) {
     return path.join(this.ingestion.projectRoot(projectId), 'asset-decisions.json');
   }
@@ -255,14 +309,16 @@ export class FactoryService {
     return { overrides: document.overrides, composition: composition ? { compositionHash: composition.compositionHash } : null };
   }
 
-  rewriteWorkspaceComposition(workspace, overrides) {
+  rewriteWorkspaceComposition(workspace, overrides, variants = null) {
     const file = path.join(workspace, '.app-builder', 'composition.json');
     if (!fs.existsSync(file)) return null;
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
-    // Replay from the deterministic baseline so removing an edit restores the
-    // generated value rather than leaving the previous override in place.
-    const baseline = stripContentOverrides(stored);
-    const next = assertContract('composition', applyContentOverrides(baseline, overrides));
+    // Replay from the deterministic baseline so removing an edit or a
+    // presentation choice restores what the factory composed rather than
+    // leaving the previous one in place.
+    const baseline = stripSectionVariants(stripContentOverrides(stored));
+    const chosen = variants ?? stored.sections.filter((section) => section.variantOverriddenFrom).map((section) => ({ sectionId: section.id, variant: section.variant }));
+    const next = assertContract('composition', applySectionVariants(applyContentOverrides(baseline, overrides), chosen));
     fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
     fs.writeFileSync(path.join(workspace, 'src/generated/composition.ts'), `export const composition = ${JSON.stringify(next, null, 2)} as const;\n`);
     return next;
@@ -337,10 +393,11 @@ export class FactoryService {
   }
 
   // Identity is derived from the deterministic baseline, so staleness is
-  // measured against the baseline too. Otherwise saving a sentence would make
-  // every address in the build look stale.
+  // measured against the baseline too, and it has to strip everything the
+  // derivation strips. Otherwise writing a sentence or choosing how a section
+  // reads would make every address in the build look stale.
   baselineCompositionHash(composition) {
-    return composition ? stripContentOverrides(composition).compositionHash : null;
+    return composition ? stripSectionVariants(stripContentOverrides(composition)).compositionHash : null;
   }
 
   /**
@@ -697,6 +754,7 @@ export class FactoryService {
         assetSourceDir: this.ingestion.assetDirectory(projectId),
         contentOverrides: this.readOverrides(projectId).overrides,
         assetDecisions: this.readAssetDecisions(projectId).decisions,
+        sectionVariants: this.readSectionVariants(projectId).choices,
         projectId,
       });
       await this.store.recordEvent(createEvent({

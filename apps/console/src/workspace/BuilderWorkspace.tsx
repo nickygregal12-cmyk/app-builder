@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   assetPreviewUrl,
   captureRenderedEvidence,
+  chooseSectionVariant,
   decideProjectAsset,
   generateProject,
   ingestSources,
@@ -21,6 +22,7 @@ import {
   type ProjectAsset,
   type ProjectSummary,
   type RenderedEvidence,
+  type SectionVariantOption,
   type SourceGovernanceDecision,
   type SourceReference,
   type SourceRequest,
@@ -53,6 +55,7 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'quality.check.succeeded') return `Checks passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.build.succeeded') return `Production build passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'source.governance.updated') return `${String(payload.sourceId ?? 'Source')} · ${label(String(payload.decision ?? 'updated'))}`;
+  if (event.type === 'section.variant.chosen') return payload.variant ? `${String(payload.sectionId ?? 'Section')} · ${label(String(payload.variant))}` : `${String(payload.sectionId ?? 'Section')} · back to composed`;
   if (event.type === 'asset.governance.updated') return `${label(String(payload.decision ?? 'updated'))}${payload.cropReview ? ` · crop ${label(String(payload.cropReview))}` : ''} · ${String(payload.decided ?? 0)} decided`;
   if (event.type === 'evidence.capture.started') return `Capturing ${String(payload.planned ?? 0)} view(s) across ${((payload.viewports as string[] | undefined) ?? []).join(', ')}`;
   if (event.type === 'evidence.captured') return `${String(payload.captures ?? 0)} capture(s) · ${String(payload.uncovered ?? 0)} state(s) uncovered`;
@@ -245,6 +248,39 @@ function ElementInspector({ selection, resolution, resolving, override, onSave, 
 }
 
 
+
+/**
+ * How a selected section reads.
+ *
+ * Only the presentations its template genuinely renders are offered. A
+ * component with one presentation is not listed at all, because a choice of one
+ * is not a choice, and nothing here mutates the DOM: the choice is recorded and
+ * the section is recomposed.
+ */
+function SectionVariantPanel({ option, onChoose, busy }: {
+  option: SectionVariantOption;
+  onChoose: (sectionId: string, variant: string | null) => Promise<void>;
+  busy: boolean;
+}) {
+  return <section className="builder-panel variant-panel" aria-label="Section presentation">
+    <div className="panel-title-row"><span className="builder-kicker">Presentation</span><span>{option.componentId}</span></div>
+    <p className="editor-target">{option.sectionId.replace(/^page-/, '').replaceAll('-', ' ')}</p>
+    <div className="variant-options">{option.variants.map((variant) => <button
+      type="button"
+      key={variant.id}
+      className={option.variant === variant.id ? 'variant-option active' : 'variant-option'}
+      onClick={() => onChoose(option.sectionId, variant.id)}
+      disabled={busy || option.variant === variant.id}
+    >
+      <strong>{variant.label}</strong>
+      <span>{variant.purpose}</span>
+    </button>)}</div>
+    {option.chosen && <button type="button" className="secondary compact" onClick={() => onChoose(option.sectionId, null)} disabled={busy}>
+      Back to {option.composedVariant}, as composed
+    </button>}
+  </section>;
+}
+
 function dimensions(asset: ProjectAsset) {
   if (!asset.width || !asset.height) return 'dimensions unknown';
   return `${asset.width}×${asset.height}${asset.lowResolution ? ' · low resolution' : ''}`;
@@ -411,6 +447,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const [resolution, setResolution] = useState<ElementResolution | null>(null);
   const [resolving, setResolving] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [choosingVariant, setChoosingVariant] = useState(false);
   const [previewNonce, setPreviewNonce] = useState(0);
 
   const refresh = useCallback(async () => {
@@ -526,6 +563,11 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   }, [projectId, refresh]);
 
   const overrides = snapshot?.overrides ?? [];
+  // A selection resolves to the section it sits in, so choosing how that
+  // section reads is offered wherever anything inside it is selected.
+  const selectedVariantOption = selection
+    ? snapshot?.sectionVariants.find((entry) => entry.sectionId === selection.sectionId) ?? null
+    : null;
   const activeOverride = selection?.bindingKey
     ? overrides.find((entry) => entry.sectionId === selection.sectionId && entry.bindingKey === selection.bindingKey) ?? null
     : null;
@@ -568,6 +610,23 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
     (assetId: string, focalPoint: { x: number; y: number }) => runAssetChange(assetId, () => setAssetFocalPoint(projectId, assetId, focalPoint)),
     [projectId, runAssetChange],
   );
+
+  const chooseVariant = useCallback(async (sectionId: string, variant: string | null) => {
+    setChoosingVariant(true);
+    setError('');
+    try {
+      await chooseSectionVariant(projectId, sectionId, variant);
+      await refresh();
+      // The preview renders the workspace composition, so a recomposed section
+      // reaches it without a rebuild.
+      setPreviewNonce((value) => value + 1);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      await refresh().catch(() => undefined);
+    } finally {
+      setChoosingVariant(false);
+    }
+  }, [projectId, refresh]);
 
   const decideSource = useCallback(async (sourceId: string, decision: SourceGovernanceDecision) => {
     setSourceOperation(sourceId);
@@ -714,6 +773,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           onClose={() => setSelection(null)}
           busy={savingEdit}
         />}
+
+        {selectedVariantOption && <SectionVariantPanel option={selectedVariantOption} onChoose={chooseVariant} busy={choosingVariant} />}
 
         {previewRunning && !selection && <section className="builder-panel">
           <span className="builder-kicker">Editing</span>

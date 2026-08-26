@@ -129,6 +129,23 @@ test('Builder Console drives governed sources, generation, verification and prev
   await page.getByRole('button', { name: 'Revert to generated' }).click();
   await expect(preview.contentFrame().getByRole('heading', { name: 'Workspace E2E', exact: true })).toBeVisible({ timeout: 20_000 });
 
+  // Presentation: the same section, shown a different way. The choice is
+  // recorded and the section recomposed — nothing mutates the DOM — and the
+  // preview picks it up without a rebuild.
+  await preview.contentFrame().locator('#page-home-services h2').click();
+  const presentation = page.getByLabel('Section presentation');
+  await expect(presentation.getByText('item-grid-section')).toBeVisible();
+  await expect(preview.contentFrame().locator('#page-home-services ul.plain-list')).toBeVisible();
+  await expect(preview.contentFrame().locator('#page-home-services ul.feature-list')).toHaveCount(0);
+
+  await presentation.getByRole('button', { name: /Feature columns/ }).click();
+  await expect(preview.contentFrame().locator('#page-home-services ul.feature-list')).toBeVisible({ timeout: 20_000 });
+  await expect(preview.contentFrame().locator('#page-home-services ul.plain-list')).toHaveCount(0);
+  await expect(page.getByText('section · variant · chosen')).toBeVisible();
+
+  await presentation.getByRole('button', { name: /as composed/ }).click();
+  await expect(preview.contentFrame().locator('#page-home-services ul.plain-list')).toBeVisible({ timeout: 20_000 });
+
   // An element that resolves but exposes no editable property is inspectable
   // and explicitly not editable: no textarea appears for it.
   await preview.contentFrame().locator('.hero-section a.primary-action').click();
@@ -156,8 +173,8 @@ test('Builder Console drives governed sources, generation, verification and prev
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
   // 11 build/quality/preview events, one source governance decision, the save
-  // and revert of one content edit, and the start and completion of one
-  // evidence capture.
-  await expect(page.getByLabel('Project metrics').getByText('16', { exact: true })).toBeVisible();
+  // and revert of one content edit, the choice and clearing of one section
+  // presentation, and the start and completion of one evidence capture.
+  await expect(page.getByLabel('Project metrics').getByText('18', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

@@ -39,7 +39,7 @@
       "schema": "composition.schema.json",
       "typeName": "DeterministicProjectComposition",
       "boundary": "Composer output and generated .app-builder/composition.json reads.",
-      "typesHash": "ead9aa75bb95defc85dc16ed458aaca69370f3ac5460ab993894c0981ea959ec",
+      "typesHash": "b58220a66dbc9fc7aeeccfd5fdcbdd557cac38449bf89d7721710669a35a847c",
       "schemaHash": "beb9db5a816da43549906f853a8e0697377a0e60eba2a63f4de3723c44c4b282"
     },
     {
@@ -105,6 +105,14 @@
       "boundary": "Per-asset publication decisions recorded by the service and replayed into composition.",
       "schemaHash": "d048796440a7c91d172057578342a6f548057d7cbf717e6bf769a65ecbafa725",
       "typesHash": "3276f1bddc1c2614daf0bdb73c3ee63aed8ec9bde8acb2cc398bd3ceaa4fbaee"
+    },
+    {
+      "id": "section-variant",
+      "schema": "section-variant.schema.json",
+      "typeName": "AppBuilderSectionVariantChoices",
+      "boundary": "Presentation choices stored by the service and replayed over a deterministic composition.",
+      "schemaHash": "55eb371e45aab0c6a7ed2c84d15bec9b75bac09f9f90ad58a8484043241ecbd5",
+      "typesHash": "7f1f259c49ecfdd90233b6845c87869fccfd008b147272e09c00c2beff0293d2"
     }
   ],
   "pending": [

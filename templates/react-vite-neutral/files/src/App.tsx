@@ -139,12 +139,28 @@ function SocialLinks({ profiles }: { profiles: unknown }) {
   </li>)}</ul>;
 }
 
-// Items with nothing but a name are a list, not a grid of tall empty cards.
-function Items({ values, className = 'item-grid' }: { values: unknown; className?: string }) {
+/**
+ * How a set of items is presented.
+ *
+ * The section's variant decides, because a person can choose it. Where it names
+ * none of these, the fallback is the old rule: items with nothing but a name
+ * are a list, not a grid of tall empty cards.
+ */
+function Items({ values, variant }: { values: unknown; variant?: string }) {
   if (!Array.isArray(values) || values.length === 0) return null;
   const detailed = values.some((item) => itemDetail(item).length > 0);
-  if (!detailed) return <ul className="plain-list">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}</ul>;
-  return <div className={className}>{values.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
+  const shape = variant === 'cards' || variant === 'list' || variant === 'features' ? variant : (detailed ? 'cards' : 'list');
+
+  if (shape === 'list') {
+    return <ul className="plain-list">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}</ul>;
+  }
+  if (shape === 'features') {
+    return <ul className="feature-list">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>
+      <strong>{itemTitle(item)}</strong>
+      {itemDetail(item).map((detail) => <span key={detail}>{detail}</span>)}
+    </li>)}</ul>;
+  }
+  return <div className="item-grid">{values.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
     <h3>{itemTitle(item)}</h3>
     {itemDetail(item).map((detail) => <p key={detail}>{detail}</p>)}
   </article>)}</div>;
@@ -174,7 +190,7 @@ function GenericSection({ section, navigate }: { section: SectionSpec; navigate:
       {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
       {body && <p className="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
     </div>
-    {itemBindings.map((item) => <Items key={item.key} values={item.value} />)}
+    {itemBindings.map((item) => <Items key={item.key} values={item.value} variant={section.variant} />)}
     <Actions actions={section.actions} navigate={navigate} />
   </section>;
 }

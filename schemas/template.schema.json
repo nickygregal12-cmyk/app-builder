@@ -44,7 +44,22 @@
               "bindingRoles": {"type":"object","additionalProperties":{"type":"string","minLength":1}},
               "defaultBindingRole": {"type":"string","minLength":1},
               "actions": {"type":"boolean"},
-              "assets": {"type":"boolean"}
+              "assets": {"type":"boolean"},
+              "variants": {
+                "type": "array",
+                "uniqueItems": true,
+                "description": "Presentations this component genuinely renders differently. Only what the template actually implements belongs here: a declared variant that changes nothing is a control that does nothing. An empty list means the component has one presentation and offers no choice.",
+                "items": {
+                  "type": "object",
+                  "required": ["id","label","purpose"],
+                  "properties": {
+                    "id": {"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+                    "label": {"type":"string","minLength":1},
+                    "purpose": {"type":"string","minLength":1}
+                  },
+                  "additionalProperties": false
+                }
+              }
             },
             "additionalProperties": false
           }

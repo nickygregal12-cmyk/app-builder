@@ -244,6 +244,22 @@ export type ProjectAsset = {
   rightsDeclarationRequired: boolean;
 };
 
+/** One composed section and the presentations its template genuinely renders.
+ * A component with a single presentation is not offered at all. */
+export type SectionVariantOption = {
+  sectionId: string;
+  sectionType: string;
+  pageId: string | null;
+  pagePath: string | null;
+  componentId: string;
+  componentVersion: string;
+  variant: string;
+  composedVariant: string;
+  chosen: boolean;
+  chosenAt: string | null;
+  variants: Array<{ id: string; label: string; purpose: string }>;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
   input?: { manifestVersion: number; knowledgePackHash: string | null; assetDecisionsHash: string | null };
@@ -268,6 +284,7 @@ export type WorkspaceSnapshot = {
   evidence: RenderedEvidence[];
   assets: ProjectAsset[];
   assetDecisionsHash: string | null;
+  sectionVariants: SectionVariantOption[];
 };
 
 const API_ROOT = '/api';
@@ -340,6 +357,17 @@ export function assetPreviewUrl(projectId: string, assetId: string) {
   return `${API_ROOT}/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/preview`;
 }
 
+export async function listSectionVariants(projectId: string) {
+  return (await request<{ sections: SectionVariantOption[] }>(`/projects/${encodeURIComponent(projectId)}/section-variants`)).sections;
+}
+
+export async function chooseSectionVariant(projectId: string, sectionId: string, variant: string | null) {
+  return (await request<{ sections: SectionVariantOption[] }>(
+    `/projects/${encodeURIComponent(projectId)}/sections/${encodeURIComponent(sectionId)}/variant`,
+    { method: 'POST', body: JSON.stringify({ variant }) },
+  )).sections;
+}
+
 export async function listRenderedEvidence(projectId: string) {
   return (await request<{ evidence: RenderedEvidence[] }>(`/projects/${encodeURIComponent(projectId)}/evidence`)).evidence;
 }
@@ -381,7 +409,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult, assetsResult, variantsResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
@@ -396,6 +424,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ overrides: ContentOverride[] }>(`/projects/${id}/overrides`),
     request<{ evidence: RenderedEvidence[] }>(`/projects/${id}/evidence`),
     request<{ assets: ProjectAsset[]; assetDecisionsHash: string | null }>(`/projects/${id}/assets`),
+    request<{ sections: SectionVariantOption[] }>(`/projects/${id}/section-variants`),
   ]);
   const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
@@ -414,5 +443,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     evidence: evidenceResult.evidence,
     assets: assetsResult.assets,
     assetDecisionsHash: assetsResult.assetDecisionsHash,
+    sectionVariants: variantsResult.sections,
   };
 }

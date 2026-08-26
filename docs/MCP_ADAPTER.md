@@ -67,6 +67,64 @@ everything imported keeps `instructionAuthority: none`.
 
 The MCP client cannot choose a project filesystem path. Project identifiers are bounded and every project operation maps to a fixed service route. The service remains responsible for Manifest/knowledge validation, durable tasks/events/checkpoints and workspace containment.
 
+## OpenCode client lane
+
+`opencode.json` in the repository root is the whole OpenCode-side configuration. It declares one
+local MCP server that launches the existing adapter and nothing else:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "app-builder": {
+      "type": "local",
+      "command": ["npm", "run", "mcp"],
+      "enabled": true,
+      "environment": { "APP_BUILDER_SERVICE_URL": "http://127.0.0.1:4310" }
+    }
+  },
+  "permission": { "bash": "deny", "edit": "deny", "webfetch": "deny" },
+  "share": "disabled",
+  "autoupdate": false
+}
+```
+
+Validated against **OpenCode 1.18.14**, the version the Hetzner runtime records. The shape is
+version-sensitive in a way that fails silently: OpenCode 1.x resolves an MCP entry it does not
+recognise — `"type": "stdio"`, or `command` as a string — down to `{ "enabled": true }`, discarding
+the command without an error or a warning. Copying later configuration syntax therefore produces an
+agent that has quietly lost the Factory lane rather than one that refuses to start.
+`npm run opencode:doctor` exists to catch exactly that, and runs as part of `npm run check`.
+
+`permission` and `autoupdate` are client-side configuration, not a boundary. They keep this
+configuration from offering a second route to the Factory; they do not stop a process on the host
+from reaching `127.0.0.1:4310` directly. That gap is issue #55 and remains open.
+
+### Proving the lane
+
+With the factory service running (`npm run service`, or the hosted `app-builder-factory.service`):
+
+```bash
+npm run opencode:smoke                 # bounded journey + capability exclusions
+npm run opencode:smoke -- --project PROJECT_ID --out evidence.json
+```
+
+The smoke test launches the adapter exactly as `opencode.json` declares it and drives it over the
+MCP protocol, so it exercises the agent-facing lane rather than the internal service HTTP surface.
+It asserts the served tool list equals the declared bindings, walks project list/read, Manifest,
+composition, tasks, events, checkpoints, metrics and preview status, and then proves the exclusions:
+no tool on the surface matches a secret, filesystem, shell, fetch, deployment or database capability;
+an unregistered tool name is rejected rather than executed; a traversing or absolute `projectId` is
+refused; ingestion refuses `file://`, loopback and link-local destinations; and the adapter fails to
+start at all against a non-loopback service origin. It finishes by re-reading the event ledger to
+confirm the refusals were recorded as durable Factory state.
+
+Invoking a tool *through an OpenCode model session* additionally requires provider credentials, which
+remain deliberately absent. What is proven without them is that OpenCode connects to and handshakes
+with the adapter (`opencode mcp list` reports `app-builder connected`, and `GET /mcp` on the loopback
+OpenCode server reports `{"app-builder":{"status":"connected"}}`), and that the adapter behind that
+connection behaves as bounded above.
+
 ## Security model
 
 MCP is an interoperability adapter, not an authority layer. A tool call can only request an operation already represented by the factory service contract. Adding a powerful operation therefore requires, in order:

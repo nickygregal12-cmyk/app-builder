@@ -314,6 +314,35 @@ project to satisfy.
 If a later architecture chooses SQLite as the authoritative store instead, that is an explicit recorded
 decision and migration, never accidental drift.
 
+### Stage Q11b — a CSP a generated site can actually be served under ✅ delivered
+
+The deployment adapters shipped four security headers and no Content-Security-Policy, which is the one
+that stops an injected script running.
+
+The reason it was missing is the reason it needed generating rather than declaring. A generated site's
+own scripts are inline — a navigation disclosure, an analytics dispatch, an error reporter — so a
+policy written into `netlify.toml` could only have allowed them with `'unsafe-inline'`, and a
+`script-src` with `'unsafe-inline'` allows every injected script too. That is not a weaker CSP; it is
+most of the CSP gone.
+
+`tooling/generate-csp.mjs` runs as the adapter's `postbuild`, hashes every inline script and style the
+publish directory actually carries, and writes `_headers`. `netlify.toml` keeps the headers that are
+the same for every build; this writes the one that is not, and a test refuses a CSP in both places.
+
+The generated output made a strict policy achievable rather than aspirational: no inline style
+attributes, no external hosts, a same-origin form action. So the baseline is
+`default-src 'self'` with `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'` and hashes
+for exactly the scripts the page contains.
+
+Verified in a browser against a server that actually sends the header, both ways round — the site's own
+inline scripts run and the stylesheet applies with no violations, and an injected inline script does
+not execute while a third-party `src` is refused. A policy proven only not to break the site is a
+policy proven only to be inert.
+
+A project that genuinely needs a third-party origin extends `csp.json` beside the script. It may name
+an origin; it may not add `'unsafe-inline'` to `script-src`, and a directive the policy does not define
+is a typo rather than a new rule. Both refusals are tested.
+
 ### Stage Q12 — production data-change safety (before autonomous live data mutation)
 
 Executed RLS acceptance proves tenant isolation. It does not prove that a migration is safe to run

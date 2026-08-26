@@ -1068,9 +1068,7 @@ Still outstanding here:
   environment guards, routing predicates and deployment safety — scheduled or pre-release, never
   repository-wide on every pull request;
 - staged supply-chain hardening per `docs/ENGINEERING_QUALITY_PROGRAMME.md`;
-- CSP baseline in deployment adapters;
 - safe three-way recipe reconciliation (`git merge-file` where useful);
-- ledger/projection reconciliation and rebuild, specified as Stage Q11 in `docs/ENGINEERING_QUALITY_PROGRAMME.md`;
 - the production data-change safety contract, specified as Stage Q12 there, before any autonomous mutation of real production data;
 - re-run all ChangeSet/contract/RLS/accessibility properties under the real sandbox/tool runtime.
 

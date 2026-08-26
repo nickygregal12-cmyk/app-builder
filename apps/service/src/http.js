@@ -38,7 +38,7 @@ function projectRoute(pathname) {
 const CLIENT_ERROR_PATTERNS = [
       /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
       /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Rendered evidence (needs|is captured)/, /Sources cannot reference/, /Only http\(s\) source URLs/,
-      /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
+      /^Source \w+ (is required|must be)/, /^Approved intake/, /^Unknown project type/, /^An intake bundle records/, /^Invalid approved-intake-bundle/, /cannot be replayed/, /Uploaded source/, /maxPages must be/,
       // A source the operator named that cannot be reached is their problem to
       // see and act on — a different URL, a different network — not an
       // internal factory failure to hide behind a 500.
@@ -71,8 +71,18 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
       if (request.method === 'GET' && url.pathname === '/projects') return send(response, 200, { projects: service.listProjects() });
       if (request.method === 'POST' && url.pathname === '/projects') {
         const body = await readJson(request);
-        const project = service.createProject({ manifest: body.manifest, knowledgePack: body.knowledgePack ?? null, id: body.id ?? null });
+        const project = service.createProject({ manifest: body.manifest, knowledgePack: body.knowledgePack ?? null, id: body.id ?? null, intakeBundle: body.intakeBundle ?? null });
         return send(response, 201, { project });
+      }
+      // Approved intake is durable product state, not a browser download. It is
+      // minted here so a rerun replays this factory's own contract output.
+      if (request.method === 'POST' && url.pathname === '/intake-bundles') {
+        const body = await readJson(request);
+        return send(response, 201, { bundle: service.approveIntake(body.intake ?? body) });
+      }
+      if (request.method === 'POST' && url.pathname === '/intake-bundles/replay') {
+        const body = await readJson(request);
+        return send(response, 201, await service.replayIntakeBundle(body.bundle ?? body));
       }
 
       const route = projectRoute(url.pathname);
@@ -89,6 +99,7 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
 
       if (request.method === 'GET' && route.action === null) return send(response, 200, { project });
       if (request.method === 'GET' && route.action === 'manifest') return send(response, 200, { manifest: service.getManifest(route.projectId) });
+      if (request.method === 'GET' && route.action === 'intake-bundle') return send(response, 200, { bundle: service.getIntakeBundle(route.projectId) });
       if (request.method === 'GET' && route.action === 'knowledge-pack') return send(response, 200, { knowledgePack: service.getKnowledgePack(route.projectId) });
       if (request.method === 'GET' && route.action === 'sources') return send(response, 200, { knowledge: service.knowledgeSummary(route.projectId) });
       if (request.method === 'POST' && route.action === 'sources') {

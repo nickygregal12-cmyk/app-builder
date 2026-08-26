@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 1,
+  "bundleId": "intake-nbm-acceptance-v1",
+  "createdAt": "2026-08-26T00:00:00.000Z",
+  "provenance": {
+    "factoryEngineVersion": 4,
+    "producedBy": "operator-authored",
+    "note": "Canonical Phase 3.8E nbm acceptance intake, v1. Replays without re-keying the questionnaire.",
+    "replacesUnrecoverableIntake": {
+      "reason": "The intake that produced the original nbm Build Contract and Manifest was never persisted, and is not present in any branch, commit or durable service state in this repository. It cannot be recovered, so this bundle is a new baseline rather than a reconstruction of it.",
+      "baselineFrom": [
+        "examples/genuine-business/nbm-genuine-business-acceptance.xlsx",
+        "docs/GENUINE_BUSINESS_ACCEPTANCE.md",
+        "docs/TRIAL_FINDINGS.md"
+      ]
+    }
+  },
+  "questionnaire": {
+    "version": "1.3.0",
+    "projectType": "marketing-site",
+    "mode": "thorough",
+    "questionIds": [
+      "project_type",
+      "project_name",
+      "primary_goal",
+      "target_users",
+      "must_have",
+      "major_surfaces",
+      "out_of_scope",
+      "existing_inputs",
+      "design_control",
+      "cost_priority",
+      "expected_scale",
+      "hard_constraints",
+      "company_identity",
+      "services",
+      "locations",
+      "conversion",
+      "trust",
+      "existing_site",
+      "contact_details",
+      "seo_priority",
+      "content_approval"
+    ],
+    "requiredQuestionIds": [
+      "project_type",
+      "project_name",
+      "primary_goal",
+      "target_users",
+      "must_have",
+      "company_identity",
+      "services"
+    ]
+  },
+  "intake": {
+    "answers": {
+      "project_type": "marketing-site",
+      "project_name": "nbm Construction Cost Consultants",
+      "primary_goal": "Present nbm as an established, credible construction cost consultancy and turn a qualified project enquiry into contact with the practice.",
+      "target_users": "Clients and professional teams commissioning construction projects in central Scotland: developers, public-sector and private clients, architects and contractors looking for quantity surveying, employer’s agent, project management or building surveying support.",
+      "must_have": [
+        "Understand what nbm does across the project lifecycle",
+        "Find the right service for a specific project need",
+        "See where the practice is based and which areas it works in",
+        "Contact the practice about a project"
+      ],
+      "major_surfaces": [
+        "Home",
+        "Services",
+        "About",
+        "Contact"
+      ],
+      "out_of_scope": [
+        "Named client or project case studies, which could not be re-verified through source ingestion",
+        "Republished nbm website photographs, logo files or staff photographs",
+        "Performance, client, award, accreditation or experience claims that no approved source supports",
+        "Online payment, client portal or document exchange"
+      ],
+      "existing_inputs": [
+        "existing website",
+        "spreadsheets/CSV"
+      ],
+      "design_control": "show-design-directions",
+      "hard_constraints": [
+        "No unsupported performance, client, award, accreditation or experience claims",
+        "No republication of nbm website photographs, logo files or staff photographs",
+        "Imagery must be genuinely relevant and rights-safe",
+        "Mobile must feel designed rather than collapsed"
+      ],
+      "company_identity": {
+        "name": "nbm Construction Cost Consultants",
+        "legalName": "NBM CONSTRUCTION COST CONSULTANTS LIMITED",
+        "description": "Construction cost consultancy and quantity surveying practice incorporated in Scotland on 6 March 2002, company number SC228801. Registered office 9 Woodside Crescent, Glasgow, G3 7UL. Principal activity: quantity surveying activities."
+      },
+      "services": [
+        "Cost Consultancy and Quantity Surveying",
+        "Employer’s Agent",
+        "Project Management",
+        "Building Surveying and Defect Analysis"
+      ],
+      "locations": [
+        "Glasgow",
+        "Edinburgh"
+      ],
+      "conversion": [
+        "call",
+        "email",
+        "contact form"
+      ],
+      "existing_site": "https://www.nbm.bz/",
+      "contact_details": {
+        "phone": "0141 333 1836",
+        "address": "9 Woodside Crescent, Glasgow, G3 7UL"
+      },
+      "cost_priority": "lowest-sensible-cost",
+      "expected_scale": "under-1000",
+      "seo_priority": "important",
+      "content_approval": "me"
+    },
+    "acceptedDefaults": [
+      {
+        "questionId": "cost_priority",
+        "value": "lowest-sensible-cost",
+        "detail": "Default accepted unchanged."
+      },
+      {
+        "questionId": "expected_scale",
+        "value": "under-1000",
+        "detail": "Default accepted unchanged."
+      },
+      {
+        "questionId": "seo_priority",
+        "value": "important",
+        "detail": "Default accepted unchanged."
+      },
+      {
+        "questionId": "content_approval",
+        "value": "me",
+        "detail": "Default accepted unchanged."
+      }
+    ],
+    "capabilityDecisions": {},
+    "sourceReferences": [
+      {
+        "id": "nbm-approved-workbook",
+        "kind": "spreadsheet",
+        "label": "Owner-approved nbm acceptance workbook",
+        "name": "nbm-genuine-business-acceptance.xlsx",
+        "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "provenance": "user-supplied",
+        "purpose": "Verified public facts, services, offices and the acceptance intent the build must satisfy.",
+        "rightsStatus": "approved-for-use",
+        "assetStatus": "approved",
+        "sourceRole": "requirement",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": true,
+        "recordedAt": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "id": "nbm-public-website",
+        "kind": "url",
+        "label": "nbm public website",
+        "uri": "https://www.nbm.bz/",
+        "provenance": "existing-site",
+        "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "website",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-26T00:00:00.000Z"
+      }
+    ],
+    "feedback": []
+  },
+  "buildContract": {
+    "version": 2,
+    "status": "approved",
+    "project": {
+      "name": "nbm Construction Cost Consultants",
+      "type": "marketing-site",
+      "primaryGoal": "Present nbm as an established, credible construction cost consultancy and turn a qualified project enquiry into contact with the practice.",
+      "targetUsers": "Clients and professional teams commissioning construction projects in central Scotland: developers, public-sector and private clients, architects and contractors looking for quantity surveying, employer’s agent, project management or building surveying support."
+    },
+    "audience": {
+      "summary": "Clients and professional teams commissioning construction projects in central Scotland: developers, public-sector and private clients, architects and contractors looking for quantity surveying, employer’s agent, project management or building surveying support.",
+      "roles": []
+    },
+    "entities": [],
+    "company": {
+      "identity": {
+        "name": "nbm Construction Cost Consultants",
+        "legalName": "NBM CONSTRUCTION COST CONSULTANTS LIMITED",
+        "description": "Construction cost consultancy and quantity surveying practice incorporated in Scotland on 6 March 2002, company number SC228801. Registered office 9 Woodside Crescent, Glasgow, G3 7UL. Principal activity: quantity surveying activities."
+      },
+      "services": [
+        "Cost Consultancy and Quantity Surveying",
+        "Employer’s Agent",
+        "Project Management",
+        "Building Surveying and Defect Analysis"
+      ],
+      "locations": [
+        "Glasgow",
+        "Edinburgh"
+      ],
+      "contactDetails": {
+        "phone": "0141 333 1836",
+        "address": "9 Woodside Crescent, Glasgow, G3 7UL"
+      },
+      "trustSignals": [],
+      "conversionGoals": [
+        "call",
+        "email",
+        "contact form"
+      ]
+    },
+    "constraints": {
+      "hard": [
+        "No unsupported performance, client, award, accreditation or experience claims",
+        "No republication of nbm website photographs, logo files or staff photographs",
+        "Imagery must be genuinely relevant and rights-safe",
+        "Mobile must feel designed rather than collapsed"
+      ],
+      "expectedScale": "under-1000",
+      "sensitivity": "",
+      "tenantModel": "",
+      "integrations": [],
+      "existingData": [],
+      "uploadTypes": [],
+      "customCapabilities": [],
+      "excludedCapabilities": [],
+      "unresolvedCapabilities": []
+    },
+    "coreJourneys": [
+      "Understand what nbm does across the project lifecycle",
+      "Find the right service for a specific project need",
+      "See where the practice is based and which areas it works in",
+      "Contact the practice about a project"
+    ],
+    "majorSurfaces": [
+      "Home",
+      "Services",
+      "About",
+      "Contact",
+      "Locations"
+    ],
+    "requestedModules": [
+      "analytics",
+      "lead-generation",
+      "observability",
+      "seo"
+    ],
+    "enabledModules": [
+      "analytics",
+      "lead-generation",
+      "observability",
+      "seo"
+    ],
+    "customWorkModules": [],
+    "excludedModules": [],
+    "capabilityPlan": [
+      {
+        "module": "analytics",
+        "availability": "ready",
+        "decision": "include"
+      },
+      {
+        "module": "lead-generation",
+        "availability": "ready",
+        "decision": "include"
+      },
+      {
+        "module": "observability",
+        "availability": "ready",
+        "decision": "include"
+      },
+      {
+        "module": "seo",
+        "availability": "ready",
+        "decision": "include"
+      }
+    ],
+    "infrastructure": {
+      "backend": "none",
+      "deployment": "netlify"
+    },
+    "brandDesignDirection": "show-design-directions",
+    "designDirection": "show-design-directions",
+    "sourceInputs": [
+      {
+        "id": "nbm-approved-workbook",
+        "kind": "spreadsheet",
+        "label": "Owner-approved nbm acceptance workbook",
+        "name": "nbm-genuine-business-acceptance.xlsx",
+        "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "provenance": "user-supplied",
+        "purpose": "Verified public facts, services, offices and the acceptance intent the build must satisfy.",
+        "rightsStatus": "approved-for-use",
+        "assetStatus": "approved",
+        "sourceRole": "requirement",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": true,
+        "recordedAt": "2026-08-26T00:00:00.000Z"
+      },
+      {
+        "id": "nbm-public-website",
+        "kind": "url",
+        "label": "nbm public website",
+        "uri": "https://www.nbm.bz/",
+        "provenance": "existing-site",
+        "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "website",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-26T00:00:00.000Z"
+      }
+    ],
+    "explicitlyExcluded": [
+      "Named client or project case studies, which could not be re-verified through source ingestion",
+      "Republished nbm website photographs, logo files or staff photographs",
+      "Performance, client, award, accreditation or experience claims that no approved source supports",
+      "Online payment, client portal or document exchange"
+    ],
+    "acceptanceCriteria": [
+      "V1 supports: Understand what nbm does across the project lifecycle",
+      "V1 supports: Find the right service for a specific project need",
+      "V1 supports: See where the practice is based and which areas it works in",
+      "V1 supports: Contact the practice about a project"
+    ],
+    "unresolvedHighImpactQuestions": [],
+    "unresolvedCapabilityDecisions": [],
+    "ambiguityFollowUp": {
+      "version": 1,
+      "required": false,
+      "maxQuestions": 3,
+      "aiAllowed": true,
+      "budget": {
+        "maxTokens": 1200,
+        "modelClass": "economy"
+      },
+      "candidates": []
+    },
+    "estimatedAiCostMode": {
+      "mode": "economy",
+      "maxBuildCostGbp": 5
+    },
+    "approvedAt": "2026-08-26T00:00:00.000Z"
+  },
+  "buildContractHash": "24a426ad38ede610798bb7c88f07aa9ec87fb78c391b29bb2142bd1578423ef3",
+  "projectManifest": {
+    "schemaVersion": 2,
+    "project": {
+      "name": "nbm Construction Cost Consultants",
+      "slug": "nbm-construction-cost-consultants",
+      "type": "marketing-site",
+      "primaryGoal": "Present nbm as an established, credible construction cost consultancy and turn a qualified project enquiry into contact with the practice."
+    },
+    "audience": {
+      "summary": "Clients and professional teams commissioning construction projects in central Scotland: developers, public-sector and private clients, architects and contractors looking for quantity surveying, employer’s agent, project management or building surveying support.",
+      "roles": []
+    },
+    "journeys": [
+      "Understand what nbm does across the project lifecycle",
+      "Find the right service for a specific project need",
+      "See where the practice is based and which areas it works in",
+      "Contact the practice about a project"
+    ],
+    "majorSurfaces": [
+      "Home",
+      "Services",
+      "About",
+      "Contact",
+      "Locations"
+    ],
+    "entities": [],
+    "company": {
+      "identity": {
+        "name": "nbm Construction Cost Consultants",
+        "legalName": "NBM CONSTRUCTION COST CONSULTANTS LIMITED",
+        "description": "Construction cost consultancy and quantity surveying practice incorporated in Scotland on 6 March 2002, company number SC228801. Registered office 9 Woodside Crescent, Glasgow, G3 7UL. Principal activity: quantity surveying activities."
+      },
+      "services": [
+        "Cost Consultancy and Quantity Surveying",
+        "Employer’s Agent",
+        "Project Management",
+        "Building Surveying and Defect Analysis"
+      ],
+      "locations": [
+        "Glasgow",
+        "Edinburgh"
+      ],
+      "contactDetails": {
+        "phone": "0141 333 1836",
+        "address": "9 Woodside Crescent, Glasgow, G3 7UL"
+      },
+      "trustSignals": [],
+      "conversionGoals": [
+        "call",
+        "email",
+        "contact form"
+      ]
+    },
+    "constraints": {
+      "hard": [
+        "No unsupported performance, client, award, accreditation or experience claims",
+        "No republication of nbm website photographs, logo files or staff photographs",
+        "Imagery must be genuinely relevant and rights-safe",
+        "Mobile must feel designed rather than collapsed"
+      ],
+      "expectedScale": "under-1000",
+      "sensitivity": "",
+      "tenantModel": "",
+      "integrations": [],
+      "existingData": [],
+      "uploadTypes": [],
+      "customCapabilities": [],
+      "excludedCapabilities": [],
+      "unresolvedCapabilities": []
+    },
+    "modules": {
+      "auth": false,
+      "profiles": false,
+      "organisations": false,
+      "admin": false,
+      "billing": false,
+      "email": false,
+      "notifications": false,
+      "uploads": false,
+      "search": false,
+      "audit-log": false,
+      "feature-flags": false,
+      "analytics": true,
+      "observability": true,
+      "seo": true,
+      "lead-generation": true,
+      "pwa": false,
+      "ai": false,
+      "jobs": false,
+      "integrations": false,
+      "feedback": false
+    },
+    "infrastructure": {
+      "backend": "none",
+      "deployment": "netlify"
+    },
+    "aiBudget": {
+      "mode": "economy",
+      "maxBuildCostGbp": 5
+    },
+    "brand": {
+      "designControl": "show-design-directions"
+    },
+    "inputs": {
+      "inventory": [
+        "existing website",
+        "spreadsheets/CSV"
+      ],
+      "existingWebsite": "https://www.nbm.bz/",
+      "sources": [
+        {
+          "id": "nbm-approved-workbook",
+          "kind": "spreadsheet",
+          "label": "Owner-approved nbm acceptance workbook",
+          "name": "nbm-genuine-business-acceptance.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "provenance": "user-supplied",
+          "purpose": "Verified public facts, services, offices and the acceptance intent the build must satisfy.",
+          "rightsStatus": "approved-for-use",
+          "assetStatus": "approved",
+          "sourceRole": "requirement",
+          "sourceChannel": "upload",
+          "instructionAuthority": "none",
+          "publishUseAllowed": true,
+          "recordedAt": "2026-08-26T00:00:00.000Z"
+        },
+        {
+          "id": "nbm-public-website",
+          "kind": "url",
+          "label": "nbm public website",
+          "uri": "https://www.nbm.bz/",
+          "provenance": "existing-site",
+          "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+          "rightsStatus": "reference-only",
+          "sourceRole": "research",
+          "sourceChannel": "website",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-26T00:00:00.000Z"
+        }
+      ]
+    },
+    "outOfScope": [
+      "Named client or project case studies, which could not be re-verified through source ingestion",
+      "Republished nbm website photographs, logo files or staff photographs",
+      "Performance, client, award, accreditation or experience claims that no approved source supports",
+      "Online payment, client portal or document exchange"
+    ]
+  },
+  "projectManifestHash": "dda1b4bc9a49e0719802d41bdc7285d5ff13659264e0993c69f8d8e89b922e4d"
+}

@@ -583,3 +583,44 @@ Predicted edits per canonical type, after F15–F29:
 Part of that is the audit telling the truth (F15–F17); the rest is output that
 genuinely improved (F18, F23, F24, F26, F29). Ceilings are lowered to the new
 measurements.
+
+### F30 — The approved intake was never persisted, and is unrecoverable — P0 ✅ Fixed (the cause)
+
+The nbm trial ran through intake, Build Contract, Manifest, ingest, compose,
+generate, verify, preview and rendered evidence. What it never wrote down was
+the intake itself.
+
+The Console kept the operator's answers in a browser draft. The factory kept the
+Manifest that came out of them. Nothing kept the answers, the questionnaire
+version they were answered against, which defaults the operator accepted, or the
+capability decisions. So a rerun of the trial meant re-keying the questionnaire
+from memory, which changes the input and destroys the before/after comparison
+the gate exists to make.
+
+**The original nbm answers are gone.** Before writing a replacement, they were
+searched for in every branch and every commit in this repository and in the
+durable service state, and they are not there. This is recorded plainly rather
+than papered over: nothing in the repository can reconstruct them, and a
+reconstruction offered as the original would be a fabrication.
+
+Two things follow.
+
+**The cause is fixed.** An approved intake is now a durable, versioned,
+schema-backed artifact (`schemas/approved-intake-bundle.schema.json`) carrying
+the questionnaire version, project type, intake mode, normalised answers,
+accepted defaults, source references, capability decisions, the approved Build
+Contract and Manifest, and a hash of each. Creating a project through the
+Console records one; the service can replay one into a fresh run; and a rerun
+never asks the operator what they answered last time. Replay goes through the
+ordinary contract builders rather than around them, shows the operator what is
+being reused before anything is spent, refuses a bundle whose questionnaire or
+schema has moved instead of coercing it, and produces new task, build, evidence
+and checkpoint identity — approved intent is reused, generated output never is.
+
+**The nbm baseline is explicitly a replacement.**
+`examples/genuine-business/nbm-approved-intake.v1.json` is authored from the
+owner-approved workbook, the acceptance contract and these findings. Its
+provenance says so in the artifact itself, and a test enforces that it keeps
+saying so. It is the baseline for subsequent reruns; it is not the lost
+original, and no comparison should treat it as one. The first run replayed from
+it establishes the numbers everything after is measured against.

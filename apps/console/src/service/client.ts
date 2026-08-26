@@ -1,4 +1,4 @@
-import type { AppBuilderProjectManifest } from '@app-builder/contracts';
+import type { AppBuilderApprovedIntakeBundle, AppBuilderProjectManifest } from '@app-builder/contracts';
 import type { SourceReference } from '@app-builder/factory-core';
 
 export type { SourceReference };
@@ -15,6 +15,7 @@ export type ProjectSummary = {
   workspacePath: string | null;
   manifestVersion: number;
   knowledgePackHash: string | null;
+  approvedIntakeBundleId: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -77,6 +78,30 @@ export type PreviewState = {
   state: 'running' | 'stopped';
   path: string | null;
   startedAt: string | null;
+};
+
+/** Mirrors schemas/approved-intake-bundle.schema.json. The Console carries the
+ * bundle between the service and the operator's disk; it never assembles one,
+ * because the factory that will replay it is the factory that mints it. */
+export type ApprovedIntakeBundle = AppBuilderApprovedIntakeBundle;
+
+export type IntakeBundleDrift = { code: string; severity: 'blocking' | 'notice'; detail: string };
+
+/** What a replay is reusing, in the operator's terms rather than as a hash. */
+export type ReplayedIntakeSummary = {
+  bundleId: string;
+  approvedAt: string;
+  projectName: string;
+  projectType: string;
+  mode: string;
+  questionnaireVersion: string;
+  answeredQuestions: number;
+  totalQuestions: number;
+  acceptedDefaults: string[];
+  sourceReferences: Array<{ id: string; label: string; kind: string; uri: string | null; rightsStatus: string }>;
+  capabilityDecisions: Record<string, string>;
+  approvedBuildContractHash: string;
+  approvedProjectManifestHash: string;
 };
 
 export type IntegrationStatus = { id: string; configured: boolean };
@@ -455,6 +480,32 @@ export async function updateSourceGovernance(projectId: string, sourceId: string
     `/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}/governance`,
     { method: 'POST', body: JSON.stringify({ decision }) },
   );
+}
+
+/** Record an approved intake durably. The service builds the contract and
+ * manifest, so what comes back is what a rerun will actually replay. */
+export async function approveIntake(intake: {
+  projectType: string;
+  mode: string;
+  answers: Record<string, unknown>;
+  sourceReferences?: SourceReference[];
+  capabilityDecisions?: Record<string, string>;
+  feedback?: unknown[];
+}) {
+  return (await request<{ bundle: ApprovedIntakeBundle }>('/intake-bundles', { method: 'POST', body: JSON.stringify({ intake }) })).bundle;
+}
+
+/** Start a fresh run from an approved intake. The project is new — new tasks,
+ * new build, new evidence, new checkpoints — and only the decisions are reused. */
+export async function replayIntakeBundle(bundle: ApprovedIntakeBundle) {
+  return await request<{ project: ProjectSummary; reused: ReplayedIntakeSummary; drift: IntakeBundleDrift[] }>(
+    '/intake-bundles/replay',
+    { method: 'POST', body: JSON.stringify({ bundle }) },
+  );
+}
+
+export async function loadIntakeBundle(projectId: string) {
+  return (await request<{ bundle: ApprovedIntakeBundle | null }>(`/projects/${encodeURIComponent(projectId)}/intake-bundle`)).bundle;
 }
 
 export async function generateProject(projectId: string) {

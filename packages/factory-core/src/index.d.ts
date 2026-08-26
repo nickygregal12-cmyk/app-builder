@@ -84,6 +84,61 @@ export function createFeedbackEvent(type: FeedbackType, detail?: Partial<Feedbac
 export function collectAcceptedDefaultEvidence(questions: Question[], answers: Answers, existingEvents?: FeedbackEvent[]): FeedbackEvent[];
 export function buildAmbiguityFollowUpRequest(input: { questions: Question[]; answers: Answers; maxQuestions?: number; maxTokens?: number }): AmbiguityFollowUpRequest;
 export function createIntakeSession(input: { projectType: string; mode?: IntakeMode; questionnaireVersion?: string; questions: Question[]; seedAnswers?: Answers; sourceReferences?: SourceReference[]; feedback?: FeedbackEvent[] }): Record<string, unknown>;
+export interface IntakeBundleDrift { code: string; severity: 'blocking' | 'notice'; detail: string }
+export interface AcceptedDefaultRecord { questionId: string; value: AnswerValue; detail?: string; evidenceId?: string }
+export interface ApprovedIntakeBundle {
+  schemaVersion: 1;
+  bundleId: string;
+  createdAt: string;
+  provenance: { producedBy: 'console-intake' | 'service-replay' | 'operator-authored'; factoryEngineVersion: number; note?: string; replacesUnrecoverableIntake?: { reason: string; baselineFrom: string[] }; replayedFromBundleId?: string };
+  questionnaire: { version: string; projectType: string; mode: IntakeMode; questionIds: string[]; requiredQuestionIds?: string[] };
+  intake: { answers: Answers; acceptedDefaults: AcceptedDefaultRecord[]; capabilityDecisions: CapabilityDecisions; sourceReferences: SourceReference[]; feedback?: FeedbackEvent[] };
+  buildContract: BuildContract;
+  buildContractHash: string;
+  projectManifest: ProjectManifestV2;
+  projectManifestHash: string;
+}
+export interface ReplayedApprovedIntake {
+  drift: IntakeBundleDrift[];
+  buildContract: BuildContract;
+  projectManifest: ProjectManifestV2;
+  reused: {
+    bundleId: string;
+    approvedAt: string;
+    projectName: string;
+    projectType: string;
+    mode: IntakeMode;
+    questionnaireVersion: string;
+    answeredQuestions: number;
+    totalQuestions: number;
+    acceptedDefaults: string[];
+    sourceReferences: Array<{ id: string; label: string; kind: SourceKind; uri: string | null; rightsStatus: string }>;
+    capabilityDecisions: CapabilityDecisions;
+    approvedBuildContractHash: string;
+    approvedProjectManifestHash: string;
+  };
+}
+export function canonicalJson(value: unknown): string;
+export function collectAcceptedDefaults(questions: Question[], answers?: Answers): AcceptedDefaultRecord[];
+export function createApprovedIntakeBundle(input: {
+  bundleId: string;
+  createdAt: string;
+  provenance: ApprovedIntakeBundle['provenance'];
+  projectType: string;
+  mode: IntakeMode;
+  questionnaireVersion: string;
+  questions: Question[];
+  answers: Answers;
+  sourceReferences?: SourceReference[];
+  capabilityDecisions?: CapabilityDecisions;
+  feedback?: FeedbackEvent[];
+  buildContract: BuildContract;
+  projectManifest: ProjectManifestV2;
+  buildContractHash: string;
+  projectManifestHash: string;
+}): ApprovedIntakeBundle;
+export function detectIntakeBundleDrift(bundle: ApprovedIntakeBundle, context: { questions: Question[]; questionnaireVersion?: string; projectTypesConfig: ProjectTypesConfig }): IntakeBundleDrift[];
+export function replayApprovedIntakeBundle(bundle: ApprovedIntakeBundle, context: { questions: Question[]; questionnaireVersion?: string; projectTypesConfig: ProjectTypesConfig }): ReplayedApprovedIntake;
 export function serializeIntakeBundle(input: { session: unknown; buildContract: unknown; projectManifest: unknown }): string;
 export function deriveEnabledModules(projectType: string, answers: Answers, projectTypesConfig: ProjectTypesConfig): string[];
 export function assessRequestedCapabilities(projectType: string, answers: Answers, projectTypesConfig: ProjectTypesConfig, capabilityDecisions?: CapabilityDecisions): CapabilityPlan;

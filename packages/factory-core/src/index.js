@@ -178,6 +178,172 @@ export function createIntakeSession({ projectType, mode = 'standard', questionna
   };
 }
 
+// An approved intake is a durable artifact, so anything hashed from it has to
+// serialise the same way twice. Key order in a JSON object is incidental, and
+// two runs that agree on every value must not disagree on a hash.
+export function canonicalJson(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value ?? null);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const entries = Object.entries(value)
+    .filter(([, item]) => item !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(',')}}`;
+}
+
+/**
+ * Which answers the operator left at the questionnaire's default.
+ *
+ * A default is a decision the operator did not make, so a replay has to be able
+ * to show it as one rather than presenting it as an answer they gave.
+ */
+export function collectAcceptedDefaults(questions, answers = {}) {
+  const accepted = [];
+  for (const question of questions) {
+    if (question.default === undefined || !isQuestionVisible(question, answers)) continue;
+    if (!sameValue(question.default, answers[question.id])) continue;
+    accepted.push({ questionId: question.id, value: structuredClone(answers[question.id]), detail: 'Default accepted unchanged.' });
+  }
+  return accepted;
+}
+
+/**
+ * Build the durable record of an approved intake.
+ *
+ * It carries approved intent only. Generated output is deliberately absent: a
+ * replay reproduces the decisions, then the factory builds again from scratch.
+ * Hashes are supplied by the caller, because the only component that mints a
+ * durable bundle is the factory service and it owns the hash function.
+ */
+export function createApprovedIntakeBundle({
+  bundleId,
+  createdAt,
+  provenance,
+  projectType,
+  mode,
+  questionnaireVersion,
+  questions,
+  answers,
+  sourceReferences = [],
+  capabilityDecisions = {},
+  feedback = [],
+  buildContract,
+  projectManifest,
+  buildContractHash,
+  projectManifestHash,
+}) {
+  if (buildContract?.status !== 'approved') throw new Error('An intake bundle records an approved Build Contract; this one is not approved.');
+  const visible = questionsForMode(questions, mode, answers);
+  return {
+    schemaVersion: 1,
+    bundleId,
+    createdAt,
+    provenance: { factoryEngineVersion: FACTORY_ENGINE_VERSION, ...provenance },
+    questionnaire: {
+      version: questionnaireVersion,
+      projectType,
+      mode,
+      questionIds: visible.map((question) => question.id),
+      requiredQuestionIds: visible.filter((question) => question.required).map((question) => question.id),
+    },
+    intake: {
+      answers: structuredClone(answers),
+      acceptedDefaults: collectAcceptedDefaults(visible, answers),
+      capabilityDecisions: structuredClone(capabilityDecisions),
+      sourceReferences: sourceReferences.map(createSourceReference),
+      feedback: structuredClone(feedback),
+    },
+    buildContract,
+    buildContractHash,
+    projectManifest,
+    projectManifestHash,
+  };
+}
+
+/**
+ * What changed underneath an approved intake since it was recorded.
+ *
+ * Replay must not quietly coerce an old bundle into a questionnaire that has
+ * moved. `blocking` drift means the recorded intent can no longer be trusted to
+ * mean what it meant; `notice` drift is worth showing the operator and is safe
+ * to proceed through.
+ */
+export function detectIntakeBundleDrift(bundle, { questions, questionnaireVersion, projectTypesConfig }) {
+  const drift = [];
+  if (bundle?.schemaVersion !== 1) {
+    drift.push({ code: 'bundle-schema-unsupported', severity: 'blocking', detail: `This factory replays approved-intake bundles at schemaVersion 1; the bundle declares ${JSON.stringify(bundle?.schemaVersion ?? null)}.` });
+    return drift;
+  }
+  const { projectType, mode, version } = bundle.questionnaire;
+  if (!projectTypesConfig?.projectTypes?.[projectType]) {
+    drift.push({ code: 'project-type-unknown', severity: 'blocking', detail: `Project type ${projectType} is no longer a first-class type in this factory.` });
+    return drift;
+  }
+  if (questionnaireVersion && version !== questionnaireVersion) {
+    drift.push({ code: 'questionnaire-version-changed', severity: 'blocking', detail: `The bundle was approved against questionnaire ${version}; this factory asks ${questionnaireVersion}. Re-approve the intake rather than replaying answers to different questions.` });
+  }
+  const answers = bundle.intake.answers ?? {};
+  const visible = questionsForMode(questions, mode, answers);
+  const currentIds = new Set(visible.map((question) => question.id));
+  for (const question of visible) {
+    if (question.required && !isAnswered(question, answers[question.id])) {
+      drift.push({ code: 'required-question-unanswered', severity: 'blocking', detail: `The questionnaire now requires "${question.label}", which this bundle has no answer for.` });
+    }
+  }
+  for (const questionId of bundle.questionnaire.questionIds ?? []) {
+    if (!currentIds.has(questionId)) {
+      drift.push({ code: 'question-removed', severity: 'notice', detail: `Question ${questionId} no longer exists, so its recorded answer is inert.` });
+    }
+  }
+  if (bundle.provenance?.factoryEngineVersion !== FACTORY_ENGINE_VERSION) {
+    drift.push({ code: 'factory-engine-changed', severity: 'notice', detail: `The bundle was approved by factory engine ${bundle.provenance?.factoryEngineVersion}; this factory is version ${FACTORY_ENGINE_VERSION}, so the rebuilt contract may differ.` });
+  }
+  return drift;
+}
+
+/**
+ * Rebuild an approved Build Contract and Manifest from a durable bundle.
+ *
+ * This goes through the same contract and manifest builders normal intake uses.
+ * It reproduces approved intent; it never restores generated output, so the
+ * caller still gets a fresh project with its own task, build, evidence and
+ * checkpoint identity.
+ */
+export function replayApprovedIntakeBundle(bundle, { questions, questionnaireVersion, projectTypesConfig }) {
+  const drift = detectIntakeBundleDrift(bundle, { questions, questionnaireVersion, projectTypesConfig });
+  const blocking = drift.filter((entry) => entry.severity === 'blocking');
+  if (blocking.length) throw new Error(`Approved intake cannot be replayed: ${blocking.map((entry) => entry.detail).join(' ')}`);
+
+  const { projectType, mode } = bundle.questionnaire;
+  const answers = structuredClone(bundle.intake.answers ?? {});
+  const sourceReferences = (bundle.intake.sourceReferences ?? []).map(createSourceReference);
+  const capabilityDecisions = structuredClone(bundle.intake.capabilityDecisions ?? {});
+  const visible = questionsForMode(questions, mode, answers);
+  const buildContract = approveBuildContract(buildBuildContract({ projectType, answers, questions: visible, projectTypesConfig, sourceReferences, capabilityDecisions }));
+  const projectManifest = buildProjectManifest({ projectType, answers, projectTypesConfig, sourceReferences, capabilityDecisions });
+  return {
+    drift,
+    buildContract,
+    projectManifest,
+    // What the operator is being asked to accept as reused, in the terms they
+    // answered it in, rather than a hash they cannot read.
+    reused: {
+      bundleId: bundle.bundleId,
+      approvedAt: bundle.createdAt,
+      projectName: projectManifest.project.name,
+      projectType,
+      mode,
+      questionnaireVersion: bundle.questionnaire.version,
+      answeredQuestions: visible.filter((question) => isAnswered(question, answers[question.id])).length,
+      totalQuestions: visible.length,
+      acceptedDefaults: (bundle.intake.acceptedDefaults ?? []).map((entry) => entry.questionId),
+      sourceReferences: sourceReferences.map((source) => ({ id: source.id, label: source.label, kind: source.kind, uri: source.uri ?? null, rightsStatus: source.rightsStatus ?? 'unknown' })),
+      capabilityDecisions,
+      approvedBuildContractHash: bundle.buildContractHash,
+      approvedProjectManifestHash: bundle.projectManifestHash,
+    },
+  };
+}
+
 export function serializeIntakeBundle({ session, buildContract, projectManifest }) {
   return JSON.stringify({
     bundleVersion: 2,

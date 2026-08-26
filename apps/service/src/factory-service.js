@@ -7,6 +7,7 @@ import { assertContract, validateContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, assertEditableElement, assetDecisionsHash, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides, stripSectionVariants } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
+import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { applyDesignChoices, assertDesignChoices, designControls, renderBrandCss } from '../../../tooling/lib/design-choices.mjs';
@@ -45,6 +46,9 @@ function summary(project) {
     workspacePath: project.workspacePath,
     manifestVersion: project.manifest.schemaVersion ?? 1,
     knowledgePackHash: project.knowledgePack?.packHash ?? null,
+    // The bundle itself is a large artifact, so a summary reports only that
+    // this project can be rerun without re-keying the questionnaire.
+    approvedIntakeBundleId: project.intakeBundle?.bundleId ?? null,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
@@ -140,7 +144,44 @@ export class FactoryService {
     fs.mkdirSync(this.workspacesRoot, { recursive: true });
   }
 
-  createProject({ manifest, knowledgePack = null, id = null }) {
+  /**
+   * Record an approved intake so a rerun never asks the operator to remember
+   * questionnaire answers. The service builds the contract and manifest itself,
+   * so what is persisted is this factory's own output from those answers.
+   */
+  approveIntake(intake) {
+    return mintApprovedIntakeBundle(intake ?? {});
+  }
+
+  getIntakeBundle(projectId) {
+    return this.requireProject(projectId).intakeBundle ?? null;
+  }
+
+  /**
+   * Start a fresh run from an approved intake bundle.
+   *
+   * The bundle is validated, replayed through the ordinary contract builders
+   * and refused outright if the questionnaire has moved underneath it. What
+   * comes back is a new project in `ready` state with its own identity: no
+   * workspace, no build, no evidence and no checkpoint is carried across, so
+   * approved intent is reused and generated output never is.
+   */
+  async replayIntakeBundle(bundle) {
+    const replayed = replayApprovedIntake(bundle);
+    const project = this.createProject({
+      manifest: replayed.projectManifest,
+      intakeBundle: bundleForReplayedRun(bundle, replayed),
+    });
+    await this.store.recordEvent(createEvent({
+      projectId: project.id,
+      type: 'intake.replayed',
+      actor: 'factory-service',
+      payload: { fromBundleId: bundle.bundleId, reused: replayed.reused, drift: replayed.drift },
+    }));
+    return { project, reused: replayed.reused, drift: replayed.drift };
+  }
+
+  createProject({ manifest, knowledgePack = null, id = null, intakeBundle = null }) {
     const errors = validateManifest(manifest);
     if (errors.length) throw new Error(`Invalid project manifest: ${errors.join('; ')}`);
     if (knowledgePack) {
@@ -157,6 +198,7 @@ export class FactoryService {
       workspacePath: null,
       manifest,
       knowledgePack,
+      intakeBundle,
       createdAt: now,
       updatedAt: now,
     });

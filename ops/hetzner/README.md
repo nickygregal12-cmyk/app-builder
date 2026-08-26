@@ -43,9 +43,27 @@ The co-located installer deliberately does **not**:
 - expose new public ports;
 - start App Builder or OpenCode automatically.
 
-## 1. Check available capacity
+## 1. Run the read-only preflight first
 
-Before installing, record the current server shape and load:
+Before changing the server, run:
+
+```bash
+bash ops/hetzner/preflight-existing-host.sh
+```
+
+The preflight makes **no changes**. It reports:
+
+- operating system, kernel and architecture;
+- CPU, RAM and disk capacity;
+- whether the required systemd model is available;
+- collisions with an existing `appbuilder` user, `/srv/app-builder` tree or resource slice;
+- whether factory/Console ports `4310`/`5173` or the planned App Builder OpenCode port `4097` are already in use;
+- whether Podman/Docker/global Node are already present;
+- conservative CPU and memory limits derived from the server's capacity.
+
+A hard collision fails the preflight and means the installer should not be run until it is understood. Capacity findings are warnings rather than guesses about the existing workload.
+
+For additional manual context, these remain useful:
 
 ```bash
 nproc
@@ -54,26 +72,26 @@ df -h /
 systemctl --failed
 ```
 
-The default App Builder slice is intentionally conservative:
+The installer's default App Builder slice is intentionally conservative:
 
 - CPU quota: `150%` (up to 1.5 CPU cores worth of sustained time);
 - memory high watermark: `25%` of host RAM;
 - hard memory maximum: `35%` of host RAM;
 - task/process cap: `1024`.
 
-These are protection defaults, not performance targets. Override them during installation only when the existing server has enough spare capacity, for example:
+Prefer the preflight's suggested starting values when they are lower than those defaults. Override during installation only when the existing server has enough spare capacity, for example:
 
 ```bash
 sudo \
-  APP_BUILDER_CPU_QUOTA=250% \
-  APP_BUILDER_MEMORY_HIGH=35% \
-  APP_BUILDER_MEMORY_MAX=45% \
+  APP_BUILDER_CPU_QUOTA=125% \
+  APP_BUILDER_MEMORY_HIGH=20% \
+  APP_BUILDER_MEMORY_MAX=30% \
   bash ops/hetzner/install-existing-host.sh
 ```
 
 ## 2. Install the isolated host baseline
 
-From a checkout of this branch/repository on the existing server:
+From a checkout of this repository on the existing server:
 
 ```bash
 sudo bash ops/hetzner/install-existing-host.sh
@@ -82,12 +100,15 @@ sudo bash ops/hetzner/install-existing-host.sh
 The installer:
 
 - creates `appbuilder` if it does not exist;
-- locks its password and removes any `authorized_keys`;
+- fails closed if an unrelated pre-existing `appbuilder` identity or `/srv/app-builder` tree would be taken over;
+- locks the runtime account's password and removes any `authorized_keys`;
 - does not add it to sudo;
 - creates App Builder-owned directories under `/srv/app-builder`;
 - installs Node 22 under `/opt/app-builder/node`, then exposes it only through the `appbuilder` account's `~/.local/bin`;
 - does not replace the server's existing `/usr/bin/node` or `/usr/local/bin/node`;
+- supports x64 and arm64 hosts;
 - installs rootless Podman prerequisites for future disposable workspaces;
+- allocates subordinate UID/GID ranges without overlapping ranges already present on the shared host;
 - creates `app-builder-runtime.slice` with CPU/memory/task limits;
 - creates `app-builder-run`, the bounded launcher future service/runtime commands can use;
 - writes `/etc/app-builder-host.json` recording that SSH, firewall and global Node were not taken over;
@@ -104,13 +125,15 @@ sudo bash ops/hetzner/verify-host.sh
 The check verifies that:
 
 - the `appbuilder` account exists and has no sudo authority;
-- it has no SSH authorized key;
+- it has no inbound SSH authorized key;
 - App Builder directories are owned by that account;
 - its own Node satisfies the repository's `>=22.13` requirement;
+- subordinate UID/GID ranges do not overlap another host user;
 - rootless-container tooling is callable;
 - the resource slice is syntactically valid;
 - the bounded launcher exists;
-- factory/Console ports `4310` and `5173` are not bound publicly;
+- App Builder ports are never publicly bound;
+- optional service units, if installed, are valid and OpenCode remains loopback-only;
 - the installation record says host SSH, firewall and global Node were left untouched.
 
 It deliberately does not judge or rewrite unrelated host firewall/SSH configuration because another application already lives on the machine.
@@ -149,28 +172,56 @@ It does not:
 
 Provider credentials should eventually be injected by a scoped secret broker for a named task/role/environment, not stored in repository files or shell profiles.
 
-## 6. Running App Builder processes without affecting the host
+## 6. Install dormant service units
 
-Future service/runtime processes should be launched through the resource slice rather than as unrestricted background processes.
+Once the App Builder repository is at `/srv/app-builder/repository`, dependencies are installed, and OpenCode is installed, prepare the two local services:
 
-For a simple bounded command:
+```bash
+sudo bash ops/hetzner/install-service-units.sh
+```
+
+This installs but does **not** enable or start:
+
+- `app-builder-factory.service` — the existing factory service, expected to bind on loopback port `4310`;
+- `app-builder-opencode.service` — `opencode serve` bound explicitly to `127.0.0.1:4097` by default.
+
+OpenCode itself normally defaults to port `4096`; App Builder intentionally uses `4097` so it does not compete with the existing Predictor OpenCode runtime. Override with `APP_BUILDER_OPENCODE_PORT` only if the preflight shows `4097` is unavailable.
+
+Both units run as `appbuilder`, inherit `app-builder-runtime.slice`, use restrictive umasks/no-new-privileges controls, and are separate from Predictor services. The installer creates a random local OpenCode HTTP Basic Auth password at `/etc/app-builder/opencode-server.env`; it contains no model/provider credential.
+
+The OpenCode server exists only as a local runtime endpoint for the future `AgentRuntimeAdapter`. Starting it does not grant autonomous permissions or production authority.
+
+When the checkout is ready, the services can be exercised explicitly rather than auto-starting them during host setup:
+
+```bash
+sudo systemctl start app-builder-factory.service
+sudo systemctl start app-builder-opencode.service
+sudo systemctl status app-builder-factory.service app-builder-opencode.service
+```
+
+Do not enable them at boot until their normal restart/recovery behaviour has been observed on the shared host.
+
+## 7. Running bounded one-off commands
+
+For a simple bounded command outside a long-lived unit:
 
 ```bash
 sudo app-builder-run /home/appbuilder/.local/bin/node --version
 ```
 
-The future systemd units/AgentRuntimeAdapter should explicitly use `app-builder-runtime.slice` too.
+Future systemd units/AgentRuntimeAdapter workers should use `app-builder-runtime.slice` rather than unrestricted background processes.
 
 Do not run long-lived OpenCode workers directly as root or as the existing Predictor service account.
 
-## 7. Network exposure
+## 8. Network exposure
 
-The current factory service/Console should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173` or arbitrary preview ports.
+The current factory service, Console and OpenCode server should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173`, `4097` or arbitrary preview ports.
 
 When intentionally running the stack later, access it through the server's existing secure administration path, for example SSH local forwarding:
 
 ```bash
 ssh \
+  -L 4097:127.0.0.1:4097 \
   -L 4310:127.0.0.1:4310 \
   -L 5173:127.0.0.1:5173 \
   YOUR_EXISTING_ADMIN_USER@SERVER_IP
@@ -178,7 +229,7 @@ ssh \
 
 Use the existing server's known-good SSH identity; this setup does not create a replacement administrator account.
 
-## 8. When a second server becomes justified
+## 9. When a second server becomes justified
 
 Do not pay for another VM pre-emptively. Measure first.
 
@@ -192,7 +243,7 @@ A separate App Builder server becomes worthwhile if one or more of these persist
 
 Because durable App Builder state lives under its own `/srv/app-builder` tree and runtime providers are adapters, migration to another server later should be an infrastructure move rather than an application redesign.
 
-## 9. Still deliberately deferred
+## 10. Still deliberately deferred
 
 This setup prepares the host boundary only. These remain later runtime work:
 

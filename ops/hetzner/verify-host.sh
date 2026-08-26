@@ -42,9 +42,9 @@ else
 fi
 
 if [[ ! -s "/home/${RUNTIME_USER}/.ssh/authorized_keys" ]]; then
-  pass "appbuilder has no SSH authorized key"
+  pass "appbuilder has no inbound SSH authorized key"
 else
-  fail "appbuilder has no SSH authorized key"
+  fail "appbuilder has no inbound SSH authorized key"
 fi
 
 for dir in repository runtime workspaces state checkpoints logs artifacts; do
@@ -55,6 +55,36 @@ for dir in repository runtime workspaces state checkpoints logs artifacts; do
     fail "$path owned by appbuilder"
   fi
 done
+
+check_subid_non_overlap() {
+  local file="$1"
+  local label="$2"
+  if awk -F: -v u="$RUNTIME_USER" '
+    NF >= 3 {
+      s = $2 + 0; e = s + ($3 + 0) - 1;
+      if ($1 == u) { as[++na] = s; ae[na] = e; }
+      else { os[++no] = s; oe[no] = e; on[no] = $1; }
+    }
+    END {
+      if (na == 0) exit 2;
+      for (i = 1; i <= na; i++) {
+        for (j = 1; j <= no; j++) {
+          if (as[i] <= oe[j] && os[j] <= ae[i]) {
+            printf "overlap with %s: %d-%d vs %d-%d\n", on[j], as[i], ae[i], os[j], oe[j] > "/dev/stderr";
+            exit 1;
+          }
+        }
+      }
+    }
+  ' "$file"; then
+    pass "appbuilder $label range exists and does not overlap another user"
+  else
+    fail "appbuilder $label range exists and does not overlap another user"
+  fi
+}
+
+check_subid_non_overlap /etc/subuid 'subordinate UID'
+check_subid_non_overlap /etc/subgid 'subordinate GID'
 
 if runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" podman --version >/dev/null 2>&1; then
   pass "rootless-container tooling callable as appbuilder"
@@ -74,9 +104,10 @@ else
   fail "bounded runtime launcher installed"
 fi
 
-# Co-location is allowed to have the factory listening on loopback, but never on
-# all interfaces. Do not make assumptions about other applications or ports.
-for port in 4310 5173; do
+# Co-location is allowed to have these services listening on loopback, but never
+# on all interfaces. The OpenCode port is recorded when service units are installed.
+opencode_port="$(jq -r '.opencodePort // 4097' /etc/app-builder-host.json 2>/dev/null || echo 4097)"
+for port in 4310 5173 "$opencode_port"; do
   exposed="$(ss -H -ltn 2>/dev/null | awk -v p=":${port}" '$4 ~ p"$" && $4 !~ /^127\.0\.0\.1:/ && $4 !~ /^\[::1\]:/ {print $4}')"
   if [[ -z "$exposed" ]]; then
     pass "App Builder port $port is not publicly bound"
@@ -84,6 +115,22 @@ for port in 4310 5173; do
     fail "App Builder port $port is not publicly bound (found: $exposed)"
   fi
 done
+
+if [[ -f /etc/systemd/system/app-builder-factory.service ]]; then
+  if systemd-analyze verify /etc/systemd/system/app-builder-factory.service >/dev/null 2>&1; then
+    pass "factory systemd unit is valid"
+  else
+    fail "factory systemd unit is valid"
+  fi
+fi
+if [[ -f /etc/systemd/system/app-builder-opencode.service ]]; then
+  if systemd-analyze verify /etc/systemd/system/app-builder-opencode.service >/dev/null 2>&1 && \
+     grep -Fq -- "--hostname 127.0.0.1 --port ${opencode_port}" /etc/systemd/system/app-builder-opencode.service; then
+    pass "OpenCode unit is valid and loopback-only"
+  else
+    fail "OpenCode unit is valid and loopback-only"
+  fi
+fi
 
 if grep -q '"hostSshModified": false' /etc/app-builder-host.json && \
    grep -q '"hostFirewallModified": false' /etc/app-builder-host.json && \

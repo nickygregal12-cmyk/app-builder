@@ -12,6 +12,8 @@ CPU_QUOTA="${APP_BUILDER_CPU_QUOTA:-150%}"
 MEMORY_HIGH="${APP_BUILDER_MEMORY_HIGH:-25%}"
 MEMORY_MAX="${APP_BUILDER_MEMORY_MAX:-35%}"
 TASKS_MAX="${APP_BUILDER_TASKS_MAX:-1024}"
+SUBID_COUNT=65536
+SUBID_MIN=100000
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Run this script as root or through sudo." >&2
@@ -42,6 +44,12 @@ if id "$RUNTIME_USER" >/dev/null 2>&1 && ! grep -q 'app-builder-runtime-colocate
   exit 1
 fi
 
+# Refuse to take over an unrelated filesystem tree.
+if [[ -e "$BASE" ]] && ! grep -q 'app-builder-runtime-colocated' /etc/app-builder-host.json 2>/dev/null; then
+  echo "$BASE already exists but is not recorded as App Builder-managed. Refusing to modify it." >&2
+  exit 1
+fi
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends \
@@ -63,7 +71,7 @@ if ! id "$RUNTIME_USER" >/dev/null 2>&1; then
 fi
 passwd -l "$RUNTIME_USER" >/dev/null 2>&1 || true
 
-# Runtime account is deliberately not granted sudo and receives no SSH key.
+# Runtime account is deliberately not granted sudo and receives no inbound SSH key.
 rm -f "/home/${RUNTIME_USER}/.ssh/authorized_keys"
 
 install -d -m 0750 -o "$RUNTIME_USER" -g "$RUNTIME_USER" \
@@ -110,11 +118,29 @@ fi
 chown "$RUNTIME_USER:$RUNTIME_USER" "/home/${RUNTIME_USER}/.profile"
 
 # Rootless container prerequisites for the future ExecutionEnvironmentAdapter.
+# useradd normally allocates subordinate IDs automatically on Ubuntu. If it did
+# not, allocate a fresh range *after* all ranges already present on the host so
+# App Builder cannot overlap another runtime user (for example Predictor).
+next_subid_start() {
+  local file="$1"
+  local max_end
+  max_end="$(awk -F: 'NF >= 3 { end = ($2 + 0) + ($3 + 0); if (end > max) max = end } END { print max + 0 }' "$file" 2>/dev/null || echo 0)"
+  if (( max_end < SUBID_MIN )); then
+    printf '%d\n' "$SUBID_MIN"
+  else
+    printf '%d\n' "$max_end"
+  fi
+}
+
 if ! grep -q "^${RUNTIME_USER}:" /etc/subuid; then
-  usermod --add-subuids 100000-165535 "$RUNTIME_USER"
+  subuid_start="$(next_subid_start /etc/subuid)"
+  subuid_end=$((subuid_start + SUBID_COUNT - 1))
+  usermod --add-subuids "${subuid_start}-${subuid_end}" "$RUNTIME_USER"
 fi
 if ! grep -q "^${RUNTIME_USER}:" /etc/subgid; then
-  usermod --add-subgids 100000-165535 "$RUNTIME_USER"
+  subgid_start="$(next_subid_start /etc/subgid)"
+  subgid_end=$((subgid_start + SUBID_COUNT - 1))
+  usermod --add-subgids "${subgid_start}-${subgid_end}" "$RUNTIME_USER"
 fi
 loginctl enable-linger "$RUNTIME_USER" || true
 

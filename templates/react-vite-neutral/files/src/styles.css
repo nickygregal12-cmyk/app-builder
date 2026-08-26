@@ -132,6 +132,6 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 }
 
 /* Builder edit mode. Present only when the preview is opened by the Console. */
-.builder-mode [data-binding-key] { cursor: pointer; outline-offset: 3px }
-.builder-mode [data-binding-key]:hover { outline: 2px dashed var(--color-accent) }
+.builder-mode [data-element-key] { cursor: pointer; outline-offset: 3px }
+.builder-mode [data-element-key]:hover { outline: 2px dashed var(--color-accent) }
 .builder-mode .builder-selected { outline: 2px solid var(--color-accent) }

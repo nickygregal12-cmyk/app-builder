@@ -531,3 +531,11 @@ export function applyContentOverrides(composition, overrides = []) {
 }
 
 export { COMPOSITION_VERSION };
+export {
+  assertEditableElement,
+  bindingElementKey,
+  deriveElementIdentities,
+  elementRef,
+  parseElementRef,
+  resolveElementIdentity,
+} from './element-identity.js';

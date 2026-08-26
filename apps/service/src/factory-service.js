@@ -4,7 +4,7 @@ import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { assertContract, validateContract } from '@app-builder/contracts';
-import { applyContentOverrides, stripContentOverrides } from '@app-builder/composition';
+import { applyContentOverrides, assertEditableElement, bindingElementKey, elementRef, resolveElementIdentity, stripContentOverrides } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
@@ -182,6 +182,10 @@ export class FactoryService {
       projectId,
       overrides: overrides.map((entry) => ({ editedBy: 'console', ...entry })),
     });
+    // Shape first, then identity. A malformed document is a caller mistake; an
+    // unresolvable target is an edit with nowhere to land, and neither reaches
+    // disk.
+    this.assertOverridesResolve(projectId, document.overrides);
     fs.mkdirSync(path.dirname(this.overridesPath(projectId)), { recursive: true });
     fs.writeFileSync(this.overridesPath(projectId), `${JSON.stringify(document, null, 2)}\n`);
 
@@ -222,6 +226,94 @@ export class FactoryService {
     if (!project.workspacePath) return null;
     const file = path.join(project.workspacePath, '.app-builder', 'composition.json');
     return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  /**
+   * Read the Builder Element Identity index the live build recorded.
+   *
+   * Null means the build cannot be edited by direct manipulation at all — an
+   * older workspace, or a template that declares no presentation contract —
+   * which every caller must treat as a refusal rather than as permission.
+   */
+  elementIdentityIndex(projectId) {
+    const project = this.requireProject(projectId);
+    if (!project.workspacePath) return null;
+    const file = path.join(project.workspacePath, '.app-builder', 'element-identity.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  /**
+   * Resolve a rendered element to its full identity.
+   *
+   * The preview reports coordinates it can see — page, section, element key —
+   * and the resolution happens here against the durable index rather than in
+   * the browser, so the DOM never carries source ids, file paths or anything
+   * else the deployed site has no business publishing.
+   */
+  resolveElement(projectId, target) {
+    const index = this.elementIdentityIndex(projectId);
+    const ref = typeof target === 'string'
+      ? target
+      : elementRef(String(target?.pageId ?? ''), String(target?.sectionId ?? ''), String(target?.elementKey ?? ''));
+    if (!index) return { status: 'unknown', ref, identity: null, projectId };
+    const composition = this.getComposition(projectId);
+    const resolution = resolveElementIdentity(index, ref, { compositionHash: this.baselineCompositionHash(composition) });
+    if (resolution.status !== 'resolved') return { ...resolution, projectId };
+    return { ...resolution, identity: this.withLiveProvenance(composition, resolution.identity), projectId };
+  }
+
+  // The index describes what the factory built. Whether a person has since
+  // rewritten a binding is live state, so it is read from the composition the
+  // preview is actually rendering rather than baked into the address.
+  withLiveProvenance(composition, identity) {
+    if (!identity.bindingKey || !composition) return identity;
+    const entry = composition.sections
+      .find((section) => section.id === identity.sectionId)?.bindings
+      .find((binding) => binding.key === identity.bindingKey);
+    if (!entry) return identity;
+    return {
+      ...identity,
+      provenance: {
+        ...identity.provenance,
+        origin: entry.origin,
+        generated: Boolean(entry.generated),
+        overridden: Boolean(entry.overriddenFrom),
+        overriddenFromOrigin: entry.overriddenFrom?.origin ?? null,
+      },
+    };
+  }
+
+  // Identity is derived from the deterministic baseline, so staleness is
+  // measured against the baseline too. Otherwise saving a sentence would make
+  // every address in the build look stale.
+  baselineCompositionHash(composition) {
+    return composition ? stripContentOverrides(composition).compositionHash : null;
+  }
+
+  /**
+   * Refuse an edit whose target does not resolve.
+   *
+   * Only overrides that are new or changed are checked. Removing an edit, or
+   * re-sending one a previous build accepted, must keep working: a rebuild that
+   * drops a section should not be able to wedge the whole edit record.
+   */
+  assertOverridesResolve(projectId, overrides) {
+    const existing = new Map(this.readOverrides(projectId).overrides.map((entry) => [`${entry.sectionId}/${entry.bindingKey}`, entry.value]));
+    const changed = overrides.filter((entry) => existing.get(`${entry.sectionId}/${entry.bindingKey}`) !== entry.value);
+    if (!changed.length) return;
+    const index = this.elementIdentityIndex(projectId);
+    if (!index) throw new Error('Unresolved element identity: this project has no generated build carrying an element identity index, so an edit cannot be attributed to a rendered element.');
+    const composition = this.getComposition(projectId);
+    for (const entry of changed) {
+      // An override names a section and a binding; the page is whichever one
+      // the build put that section on. Looking it up in the index rather than
+      // assembling a ref means a section this build does not render reads as
+      // unresolved instead of as a malformed address.
+      const elementKey = bindingElementKey(entry.bindingKey);
+      const match = index.elements.find((element) => element.sectionId === entry.sectionId && element.elementKey === elementKey);
+      if (!match) throw new Error(`Unresolved element identity: ${entry.sectionId}/${elementKey} does not resolve to an element this build renders.`);
+      assertEditableElement(index, match.ref, 'text', { compositionHash: this.baselineCompositionHash(composition) });
+    }
   }
 
   integrationStatus() {
@@ -363,6 +455,7 @@ export class FactoryService {
         knowledgePack: project.knowledgePack,
         assetSourceDir: this.ingestion.assetDirectory(projectId),
         contentOverrides: this.readOverrides(projectId).overrides,
+        projectId,
       });
       await this.store.recordEvent(createEvent({
         projectId,

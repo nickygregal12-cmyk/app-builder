@@ -5,5 +5,35 @@
   "status": "ready",
   "projectTypes": ["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"],
   "filesRoot": "files",
-  "managedFiles": ["src/generated/project.ts","src/generated/recipes.ts",".app-builder/manifest.json",".app-builder/project.json",".app-builder/recipes.json",".app-builder/template-package.json","README.md"]
+  "managedFiles": ["src/generated/project.ts","src/generated/recipes.ts",".app-builder/manifest.json",".app-builder/project.json",".app-builder/recipes.json",".app-builder/template-package.json","README.md"],
+  "presentation": {
+    "version": "1.0.0",
+    "renderer": "src/App.tsx",
+    "tokenSource": "src/design/tokens.css",
+    "elementRoles": {
+      "display": {"editableProperties":["text"],"designTokens":["--color-ink","--text-4xl"]},
+      "heading": {"editableProperties":["text"],"designTokens":["--color-ink","--text-3xl"]},
+      "body-copy": {"editableProperties":["text"],"designTokens":["--color-text-muted","--text-lg"]},
+      "eyebrow": {"editableProperties":["text"],"designTokens":["--color-accent","--text-sm"]},
+      "detail": {"editableProperties":[],"designTokens":["--color-ink","--color-border","--layout-radius"]},
+      "collection": {"editableProperties":[],"designTokens":["--color-surface","--layout-radius","--shadow-soft"]},
+      "action": {"editableProperties":[],"designTokens":["--color-accent","--color-accent-contrast","--radius-pill"]},
+      "asset": {"editableProperties":[],"designTokens":["--layout-radius","--shadow-lifted"]},
+      "section": {"editableProperties":[],"designTokens":["--section-space","--layout-max-width"]}
+    },
+    "components": {
+      "hero": {"id":"hero-section","version":"1.0.0","bindingRoles":{"eyebrow":"eyebrow","title":"display","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":true},
+      "rich-text": {"id":"rich-text-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "item-grid": {"id":"item-grid-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "proof-grid": {"id":"proof-grid-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "people-grid": {"id":"people-grid-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "location-list": {"id":"location-list-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "entity-list": {"id":"entity-list-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "content-list": {"id":"content-list-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "gallery": {"id":"gallery-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":true},
+      "cta": {"id":"cta-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false},
+      "contact-panel": {"id":"contact-panel-section","version":"1.0.0","bindingRoles":{"title":"heading","email":"detail","phone":"detail","address":"detail","website":"detail","profiles":"collection"},"defaultBindingRole":"collection","actions":false,"assets":false},
+      "enquiry-form": {"id":"enquiry-form-section","version":"1.0.0","bindingRoles":{"title":"heading","body":"body-copy"},"defaultBindingRole":"collection","actions":false,"assets":false}
+    }
+  }
 }

@@ -132,6 +132,44 @@ export type ContentOverride = {
   editedBy?: string;
 };
 
+/** Mirrors schemas/element-identity.schema.json. The Console never derives an
+ * identity itself: it reports the coordinates the preview gave it and the
+ * service answers with the resolved element or a refusal. */
+export type ElementIdentity = {
+  ref: string;
+  pageId: string;
+  pagePath: string;
+  sectionId: string;
+  sectionType: string;
+  sectionVariant: string;
+  componentId: string;
+  componentVersion: string;
+  componentInstanceId: string;
+  elementKey: string;
+  elementRole: string;
+  bindingKey: string | null;
+  editableProperties: string[];
+  designTokens: string[];
+  provenance: {
+    origin: string;
+    generated: boolean;
+    overridden: boolean;
+    overriddenFromOrigin?: string | null;
+    sourceIds: string[];
+    factIds: string[];
+    entityIds: string[];
+  };
+  sourceLocation: { artifact: string; pointer: string; generatedModule: string; renderer: string };
+  assetBinding: { assetId: string; kind: string | null; provenance: string | null; assetStatus: string | null; rightsStatus: string | null } | null;
+};
+
+export type ElementResolution = {
+  status: 'resolved' | 'unknown' | 'stale' | 'malformed';
+  ref: string | null;
+  identity: ElementIdentity | null;
+  projectId: string;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
   input?: { manifestVersion: number; knowledgePackHash: string | null };
@@ -192,6 +230,13 @@ export async function saveOverrides(projectId: string, overrides: ContentOverrid
   return await request<{ overrides: ContentOverride[]; composition: { compositionHash: string } | null }>(
     `/projects/${encodeURIComponent(projectId)}/overrides`,
     { method: 'PUT', body: JSON.stringify({ overrides }) },
+  );
+}
+
+export async function resolveElement(projectId: string, target: { pageId: string; sectionId: string; elementKey: string }) {
+  return await request<ElementResolution>(
+    `/projects/${encodeURIComponent(projectId)}/element-identity/resolve`,
+    { method: 'POST', body: JSON.stringify(target) },
   );
 }
 

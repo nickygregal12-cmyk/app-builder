@@ -81,6 +81,14 @@
       "boundary": "Human content edits stored by the service and applied over a deterministic composition.",
       "schemaHash": "c34b6773099787b9ba83ce9045b9cd1b73af023983340d2668863ff831febcdf",
       "typesHash": "2e6cc623ea17196452983ab50a9bf86570a846204885767f88581cc23b26c0a5"
+    },
+    {
+      "id": "element-identity",
+      "schema": "element-identity.schema.json",
+      "typeName": "AppBuilderElementIdentityIndex",
+      "boundary": "Builder Element Identity derived at generation time, written beside the composition and resolved by the service before any direct-manipulation edit.",
+      "schemaHash": "096399b408aa810d285b9f0867a577b980730e5ad9476e4b010559a19f111016",
+      "typesHash": "4f1910e0d7d30ce28cdb03f23dfdc6d4353e9c765d0083f0dd1c5903f60be502"
     }
   ],
   "pending": [

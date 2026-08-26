@@ -6,6 +6,8 @@ import test from 'node:test';
 import { validateContract } from '@app-builder/contracts';
 import { composeProject } from '../packages/composition/src/index.js';
 import { deriveJourneys, deriveStateMatrix } from './lib/launch-readiness.mjs';
+
+const launchRules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
 import { INTERACTIONS, VIEWPORTS, applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from './lib/rendered-evidence.mjs';
 import { captureEvidence } from './lib/rendered-evidence-capture.mjs';
 import { FactoryStore } from '../apps/service/src/store.js';
@@ -38,7 +40,7 @@ function manifest(slug, modules = {}) {
 
 function planFor(projectManifest = readJson('examples/project-manifest.example.json')) {
   const composition = composeProject({ manifest: projectManifest });
-  return { composition, plan: deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition) }) };
+  return { composition, plan: deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) }) };
 }
 
 function fakeResults(plan) {
@@ -76,7 +78,7 @@ test('a write state is never planned as a capture and says why', () => {
 
 test('data and content states are recorded as needing a fixture rather than omitted', () => {
   const { composition, plan } = planFor(manifest('fixture-states', { 'lead-generation': true }));
-  const matrix = deriveStateMatrix(composition);
+  const matrix = deriveStateMatrix(composition, launchRules);
   const declared = matrix.flatMap((surface) => surface.states
     .filter((entry) => entry.axis !== 'viewport')
     .map((entry) => `${surface.page}::${entry.axis}::${entry.state}`));
@@ -93,12 +95,12 @@ test('data and content states are recorded as needing a fixture rather than omit
 test('an interaction state is planned only where the build has the section for it', () => {
   const withoutForm = deriveEvidencePlan({
     composition: composeProject({ manifest: manifest('no-form') }),
-    stateMatrix: deriveStateMatrix(composeProject({ manifest: manifest('no-form') })),
+    stateMatrix: deriveStateMatrix(composeProject({ manifest: manifest('no-form') }), launchRules),
   });
   assert.equal(withoutForm.captures.some((capture) => capture.state.interaction), false);
 
   const composition = composeProject({ manifest: manifest('with-form', { 'lead-generation': true }) });
-  const withForm = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition) });
+  const withForm = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
   const interactions = withForm.captures.filter((capture) => capture.state.interaction === 'enquiry-submit-failed');
   assert.equal(interactions.length, VIEWPORTS.length, 'the failure state is worth seeing at every viewport');
   assert.match(interactions[0].state.proves, /not evidence that a successful submission works/);
@@ -143,7 +145,7 @@ test('identical captures hash identically and different bytes do not', () => {
 test('rendered evidence raises only the states a picture settles', () => {
   const { composition, plan } = planFor();
   const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' });
-  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition), evidence);
+  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), evidence);
   const states = matrix.flatMap((surface) => surface.states);
 
   assert.ok(states.some((entry) => entry.axis === 'viewport' && entry.evidence === 'rendered'), 'a capture at that width is the evidence for that viewport state');
@@ -153,14 +155,18 @@ test('rendered evidence raises only the states a picture settles', () => {
 });
 
 test('rendered evidence never answers a journey step', () => {
-  const composition = composeProject({ manifest: manifest('journeys', { 'lead-generation': true }) });
-  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition) });
+  // The journey has to land on a page this composition serves: a mailto: primary action leaves the
+  // site, so it has no on-site steps for a capture to be mistaken for.
+  const routed = manifest('journeys', { 'lead-generation': true });
+  routed.company = { ...routed.company, conversionGoals: ['contact form'] };
+  const composition = composeProject({ manifest: routed });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
   const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' });
 
   // The build has an enquiry form and evidence of how it fails. That is a
   // picture of a state, not proof the enquiry arrives.
   assert.ok(evidence.captures.some((capture) => capture.state.interaction === 'enquiry-submit-failed'));
-  const unproven = deriveJourneys(composition).flatMap((journey) => journey.steps).filter((step) => step.status === 'needs-executable-evidence');
+  const unproven = deriveJourneys(composition, launchRules).flatMap((journey) => journey.steps).filter((step) => step.status === 'needs-executable-evidence');
   assert.ok(unproven.length > 0);
   for (const step of unproven) {
     assert.equal(evidence.captures.some((capture) => capture.state.state === step.step), false, `a capture must not stand in for the ${step.step} step`);

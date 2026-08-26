@@ -246,3 +246,135 @@ photographs, real contact details, and the generic visual treatment that Phase
 4C/4D exists to address. A rebuild with four deterministic placeholder images
 produced zero composition warnings. The count is not a Phase 3.8E result: no company asset was ingested
 and no human review was recorded.
+
+## Trial 2 — nbm Construction Cost Consultants (quantity surveying, Glasgow/Edinburgh)
+
+**Status:** in progress. Does not yet satisfy Phase 3.8E. The public website
+could not be ingested (see F20), so the run has one approved source rather than
+the website-plus-supplied-material the gate requires, and no human product
+review has been recorded.
+
+**Inputs available:** an operator-authored workbook approved by the owner for
+this exercise, carrying verified public register facts (legal name, company
+number SC228801, status, registered office, principal activity), the public
+service lines, the Glasgow and Edinburgh offices, and the owner's acceptance
+intent. The public website at `https://www.nbm.bz/` was declared as a
+reference-only source; its photographs, logo and staff images were never
+approved for republication.
+
+**First build:** 7 pages, 23 sections, one composition warning
+(`no-publishable-imagery`). It installed, checked, production-built and
+previewed without intervention, and rendered evidence captured 24 pictures
+across desktop, tablet and mobile.
+
+**Launch readiness at handover:** 29 predicted manual edits, `launchable: false`,
+6 blockers, 23 majors, 49 evidence gaps.
+
+That number was wrong, and finding out why is the most valuable thing this trial
+has produced so far.
+
+### F15 — Every list binding was reported as an empty hole — P0 ✅ Fixed
+
+`auditContent` read each binding through a helper that returned `''` for
+anything that was not a string. `item-grid.items`, `location-list.items` and
+`proof-grid.items` are arrays of records, so all six of the build's populated
+lists — the four service cards, the two offices — were reported as blockers.
+Every blocker in the report was false, and `launchable: false` was false with
+them.
+
+The same helper fed the placeholder and generated-claim checks, so placeholder
+copy sitting inside a list item was invisible to both.
+
+Bindings are now flattened into the text a visitor would actually read before
+any check looks at them, and only genuine emptiness is emptiness.
+
+### F16 — Three section-role sets named types the composer cannot emit — P0 ✅ Fixed
+
+The audit carried three hardcoded sets of section types. Measured against the
+`type` enum in `section-spec.schema.json`:
+
+- `CLAIM_SECTIONS` was `proof`, `stats`, `testimonial`, `trust`, `pricing`,
+  `faq` — **not one of them is a real section type**, so
+  `generated-claim-without-source`, the check that exists to stop invented
+  claims reaching a client's website, had never fired in production;
+- `VISUAL_SECTIONS` carried four dead entries alongside two real ones;
+- `CONVERSION_SECTIONS` missed `contact-panel`, the section that actually holds
+  a business's phone number and address.
+
+Its unit test passed because the test built a fixture section of type `proof` —
+a type no composition may contain. The rule worked perfectly on a fixture that
+could not exist.
+
+This is the Phase 4B lesson again: configuration that reads well and matches
+nothing. The sets now live in `config/launch-readiness-rules.json` as
+`sectionRoles`, every entry is checked against the section-type contract, an
+unknown type throws rather than quietly disabling its rule, and a test asserts
+the audit's vocabulary equals the schema's.
+
+### F17 — A phone number was audited as a missing page — P0 ✅ Fixed
+
+The composer derives `{ label: 'Call', href: 'tel:01413331836' }` from the
+conversion goals. `deriveJourneys` then treated that href as an internal route,
+looked for a page serving `tel:01413331836`, found none, and reported the
+destination unproven and the capture surface missing — on all seven pages.
+Fourteen of the twenty-three majors were findings no edit could ever fix.
+
+A `tel:`, `mailto:` or `sms:` action is a conversion, not a route: its
+destination is the visitor's own dialler or mail client and the call is the
+capture. An absolute URL leaves the site and cannot be proven from composition
+at all. Action targets are now classified, and the steps a direct-contact
+journey can never have — field validation, an observable success state — are not
+emitted rather than being recorded as evidence gaps that nothing could close.
+
+### F18 — Two pages shipped with nothing on them, and no check saw it — P1 ✅ Fixed
+
+`/projects` and `/careers` were composed as a page title, a Call button and the
+same closing call to action every other page carried. Both sat in the main
+navigation. Every binding on them resolved, so no existing check had anything to
+say about them, while the audit was busy reporting six lists that were fine.
+
+A new `content-less-page` check names a surface whose sections are chrome only.
+Two behaviours follow from it, and they are deliberately different:
+
+- a surface **the operator declared** is still published. It is their intent and
+  the factory does not get to overrule it; the finding tells them the content
+  gap is theirs to fill.
+- a surface **the factory proposed for itself** and then could not fill is not
+  published at all, and is reported as `unfillable-surface`. Shipping it would
+  put a hole in the navigation of every generated site whose sources are thin.
+
+The canonical content-site fixture had been shipping `/content-index` and
+`/content-detail` this way since it was created.
+
+### F19 — Predicted edits, before and after
+
+Measured over the same unchanged canonical output:
+
+| project type | before | after |
+| --- | --- | --- |
+| marketing-site | 10 | 8 |
+| b2b-saas | 13 | 6 |
+| consumer-app | 15 | 7 |
+| internal-tool | 15 | 7 |
+| content-site | 8 | 5 |
+| ai-app | 15 | 7 |
+
+The NBM build itself went from 29 predicted edits to 11, and from
+`launchable: false` to `launchable: true`, without a single change to what the
+factory produced for it. Ceilings in `config/factory-benchmarks.json` are
+lowered to the new measurements.
+
+The lesson is not that the factory improved by 18 edits. It is that a gate
+nobody had measured against real output was reporting a number that could not be
+trusted in either direction: it invented twenty defects and missed two.
+
+### F20 — The public website could not be ingested — environment blocker
+
+`POST /projects/:id/sources` with `https://www.nbm.bz/` failed: the session's
+egress policy denies every public host at the gateway, so the deterministic
+crawler cannot reach the site. The same denial applies to the Companies House
+register and to out-of-band fetch tooling.
+
+No website source was fabricated and no hash was invented. Phase 3.8E requires a
+real public company website as an input source, so the gate stays open until the
+crawl can run.

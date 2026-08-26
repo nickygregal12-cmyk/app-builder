@@ -102,10 +102,38 @@ test('v1 manifests still receive project-type composition defaults as a compatib
   const projectTypes = ['marketing-site','b2b-saas','consumer-app','internal-tool','content-site','ai-app'];
   for (const type of projectTypes) {
     const composition = composeProject({ manifest:{schemaVersion:1,project:{name:`Test ${type}`,slug:`test-${type}`,type,primaryGoal:'Ship V1'},modules:{}} });
-    assert.ok(composition.pages.length >= 4, type);
+    assert.ok(composition.pages.length >= 1, type);
+    assert.ok(composition.pages.some((page) => page.path === '/'), `${type} must always publish an entry page`);
     assert.ok(composition.sections.length >= composition.pages.length, type);
     assert.ok(composition.warnings.includes('manifest-v2-not-provided'), type);
+    // A surface the factory proposed for itself and could not fill is not published, but it is
+    // never dropped silently: the operator has to be able to see what the factory wanted and why
+    // it could not build it.
+    const published = new Set(composition.pages.map((page) => page.title));
+    for (const warning of composition.warnings.filter((item) => item.startsWith('unfillable-surface:'))) {
+      assert.ok(!published.has(warning.slice('unfillable-surface:'.length)), `${type} published a surface it reported as unfillable`);
+    }
   }
+});
+
+test('a surface the factory proposed and cannot fill is withheld, not shipped as a dead end', () => {
+  const composition = composeProject({ manifest:{schemaVersion:2,project:{name:'Thin Content Co',slug:'thin',type:'content-site',primaryGoal:'Publish'},modules:{}} });
+  const dropped = composition.warnings.filter((item) => item.startsWith('unfillable-surface:'));
+  assert.ok(dropped.length > 0, 'a content site with no sources cannot fill its content surfaces');
+  for (const page of composition.pages) {
+    const sections = composition.sections.filter((section) => page.sectionIds.includes(section.id));
+    const chrome = sections.every((section) => ['hero','cta'].includes(section.type));
+    const heroSpeaks = sections.some((section) => section.type === 'hero'
+      && section.bindings.some((binding) => binding.key !== 'title' && binding.value));
+    assert.ok(page.path === '/' || !chrome || heroSpeaks, `${page.path} shipped as a dead end`);
+  }
+});
+
+test('a surface the operator declared is published even when the factory cannot fill it', () => {
+  const composition = composeProject({ manifest:{schemaVersion:2,project:{name:'Declared Co',slug:'declared',type:'marketing-site',primaryGoal:'Win work'},majorSurfaces:['Home','Projects','Careers'],modules:{}} });
+  assert.deepEqual(composition.pages.map((page) => page.path), ['/','/projects','/careers'],
+    'operator intent outranks the factory’s own judgement about what it can fill');
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('unfillable-surface:')), []);
 });
 
 test('custom and unresolved capability intent survives as composition warnings', () => {

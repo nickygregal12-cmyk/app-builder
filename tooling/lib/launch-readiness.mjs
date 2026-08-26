@@ -15,10 +15,48 @@
  */
 
 const PLACEHOLDER = /\b(lorem ipsum|tbd|to be decided|coming soon|your company|your business|example\.com|placeholder|xxx+)\b/i;
-const VISUAL_SECTIONS = new Set(['hero', 'gallery', 'feature', 'showcase', 'proof', 'testimonial']);
-const CLAIM_SECTIONS = new Set(['proof', 'stats', 'testimonial', 'trust', 'pricing', 'faq']);
-const CONVERSION_SECTIONS = new Set(['enquiry-form', 'contact', 'cta', 'lead-form', 'booking']);
 const NOT_FOUND = /(^|\/)(404|not-found)$/;
+
+/**
+ * The section types a composition can actually contain.
+ *
+ * This mirrors the `type` enum in `schemas/section-spec.schema.json` and exists so the role sets
+ * below can be checked against reality. Phase 4B kept shipping configuration that read well and
+ * matched nothing; a role set naming `proof` or `testimonial` — types the composer cannot emit —
+ * silently disables the rule that reads it. `launch-readiness.test.mjs` asserts this set equals the
+ * schema enum, so drift fails the build instead of quietly switching a check off.
+ */
+export const SECTION_TYPES = Object.freeze([
+  'hero', 'rich-text', 'item-grid', 'proof-grid', 'people-grid', 'location-list',
+  'contact-panel', 'entity-list', 'content-list', 'cta', 'gallery', 'enquiry-form',
+]);
+
+/**
+ * Which section types play which role in an audit, read from the rule registry.
+ *
+ * Fails closed: a role naming a type no composition can contain is a configuration error, not a
+ * check that quietly never fires.
+ */
+function sectionRoles(rules) {
+  const configured = rules.sectionRoles;
+  if (!configured) throw new Error('Launch readiness requires sectionRoles in the rule registry.');
+  const roles = {};
+  for (const [role, types] of Object.entries(configured)) {
+    if (!Array.isArray(types) || types.length === 0) {
+      throw new Error(`Launch-readiness section role "${role}" must list at least one section type.`);
+    }
+    for (const type of types) {
+      if (!SECTION_TYPES.includes(type)) {
+        throw new Error(`Launch-readiness section role "${role}" names unknown section type "${type}".`);
+      }
+    }
+    roles[role] = new Set(types);
+  }
+  for (const required of ['visual', 'claim', 'conversion', 'capture', 'write', 'chrome']) {
+    if (!roles[required]) throw new Error(`Launch-readiness section roles must include "${required}".`);
+  }
+  return roles;
+}
 
 /** Composer warnings are already deterministic signals; map the ones that predict a manual edit. */
 const WARNING_CHECKS = {
@@ -30,6 +68,27 @@ const WARNING_CHECKS = {
 
 const list = (value) => (Array.isArray(value) ? value : []);
 const text = (value) => (typeof value === 'string' ? value.trim() : '');
+
+/**
+ * Flatten a binding value into the text a visitor would read.
+ *
+ * A binding is not always a string. `item-grid.items`, `location-list.items` and `proof-grid.items`
+ * are arrays of records, and treating a non-string as "" reported every list in the build as an
+ * empty hole while simultaneously hiding placeholder copy sitting inside those lists. The 3.8E NBM
+ * run produced six blockers this way, all of them false, on lists that carried real content.
+ */
+export function bindingText(value) {
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(bindingText).filter(Boolean).join(' ');
+  if (value && typeof value === 'object') return Object.values(value).map(bindingText).filter(Boolean).join(' ');
+  return '';
+}
+
+/** A binding renders a hole when nothing a visitor could read comes out of it. */
+export function bindingIsEmpty(value) {
+  return bindingText(value) === '';
+}
 
 function finding(rules, checkId, where, detail, extra = {}) {
   const rule = rules.checks[checkId];
@@ -47,7 +106,7 @@ function finding(rules, checkId, where, detail, extra = {}) {
   };
 }
 
-function auditContent(composition, rules, findings) {
+function auditContent(composition, rules, roles, findings) {
   const sectionsByPage = new Map();
   for (const page of list(composition.pages)) {
     sectionsByPage.set(
@@ -58,7 +117,7 @@ function auditContent(composition, rules, findings) {
 
   for (const section of list(composition.sections)) {
     for (const binding of list(section.bindings)) {
-      const value = text(binding.value);
+      const value = bindingText(binding.value);
       if (value === '') {
         findings.push(finding(rules, 'unresolved-binding', `${section.id}.${binding.key}`,
           `Binding "${binding.key}" resolved to an empty value.`));
@@ -69,14 +128,35 @@ function auditContent(composition, rules, findings) {
           `Binding "${binding.key}" still reads as placeholder text: ${JSON.stringify(value.slice(0, 80))}.`));
       }
       const unsourced = list(binding.sourceIds).length === 0 && list(binding.factIds).length === 0;
-      if (binding.generated === true && unsourced && CLAIM_SECTIONS.has(section.type)) {
+      if (binding.generated === true && unsourced && roles.claim.has(section.type)) {
         findings.push(finding(rules, 'generated-claim-without-source', `${section.id}.${binding.key}`,
           `Generated content sits in a ${section.type} section with no source or fact behind it.`));
       }
     }
-    if (VISUAL_SECTIONS.has(section.type) && list(section.assetIds).length === 0) {
+    if (roles.visual.has(section.type) && list(section.assetIds).length === 0) {
       findings.push(finding(rules, 'section-expects-imagery', section.id,
         `A ${section.type} section has no asset bound to it.`));
+    }
+  }
+
+  // A surface that exists only to hold a page title and a call to action is a dead end. The 3.8E
+  // NBM run composed /projects and /careers this way — declared in intake, reachable from the main
+  // navigation, and carrying nothing a visitor came for. Every binding on them resolved, so no
+  // other check saw it.
+  for (const page of list(composition.pages)) {
+    if (NOT_FOUND.test(page.path)) continue;
+    const sections = sectionsByPage.get(page.id) ?? [];
+    if (sections.length === 0) continue;
+    const substantive = sections.some((section) => {
+      if (!roles.chrome.has(section.type)) return true;
+      // A call to action is never the reason a visitor came. A hero earns its page only when it
+      // says something beyond repeating the page title.
+      if (section.type !== 'hero') return false;
+      return list(section.bindings).some((binding) => binding.key !== 'title' && !bindingIsEmpty(binding.value));
+    });
+    if (!substantive) {
+      findings.push(finding(rules, 'content-less-page', page.path,
+        `Page "${page.path}" carries only ${sections.map((section) => section.type).join(' + ')} and no content a visitor came for.`));
     }
   }
 
@@ -97,7 +177,7 @@ function auditContent(composition, rules, findings) {
   return sectionsByPage;
 }
 
-function auditNavigation(composition, rules, findings) {
+function auditNavigation(composition, rules, roles, findings) {
   const pages = list(composition.pages);
   const paths = new Set(pages.map((page) => page.path));
   const linked = new Set();
@@ -144,7 +224,7 @@ function auditNavigation(composition, rules, findings) {
   }
 
   const hasConversion = pages.some((page) => page.primaryAction)
-    || list(composition.sections).some((section) => CONVERSION_SECTIONS.has(section.type));
+    || list(composition.sections).some((section) => roles.conversion.has(section.type));
   if (!hasConversion) {
     findings.push(finding(rules, 'no-conversion-path', 'site',
       'No page declares a primary action and no enquiry, contact or call-to-action section exists.'));
@@ -158,7 +238,10 @@ function auditWarnings(composition, rules, findings) {
       findings.push(finding(rules, direct, 'composition', `Composer reported "${warning}".`));
       continue;
     }
-    if (warning.startsWith('unresolved-capability:')) {
+    if (warning.startsWith('unfillable-surface:')) {
+      findings.push(finding(rules, 'unfillable-surface', 'surfaces',
+        `The factory proposed a "${warning.slice('unfillable-surface:'.length)}" surface and had no content to put on it, so it was not published.`));
+    } else if (warning.startsWith('unresolved-capability:')) {
       findings.push(finding(rules, 'unresolved-capability', 'capabilities',
         `Requested capability "${warning.split(':')[1]}" has no ready implementation.`));
     } else if (warning.startsWith('custom-capability:')) {
@@ -174,12 +257,13 @@ function auditWarnings(composition, rules, findings) {
  * Deliberately small: only axes the composed output can justify. A combinatorial catalogue of
  * fictional states is worse than none, because it makes missing evidence impossible to rank.
  */
-export function deriveStateMatrix(composition) {
+export function deriveStateMatrix(composition, rules) {
+  const roles = sectionRoles(rules);
   const surfaces = [];
   for (const page of list(composition.pages)) {
     const sections = list(composition.sections).filter((section) => list(page.sectionIds).includes(section.id));
     const bindings = sections.flatMap((section) => list(section.bindings));
-    const writes = sections.filter((section) => CONVERSION_SECTIONS.has(section.type));
+    const writes = sections.filter((section) => roles.write.has(section.type));
     const sourceBacked = bindings.some((binding) => list(binding.sourceIds).length > 0 || list(binding.factIds).length > 0);
 
     const axes = [];
@@ -214,10 +298,36 @@ export function deriveStateMatrix(composition) {
 }
 
 /**
+ * What kind of thing a primary action points at.
+ *
+ * `tel:`/`mailto:`/`sms:` are conversions in their own right, not routes; an absolute URL is off
+ * this site. Only a path is a route this composition can be held to.
+ */
+export function actionTargetKind(href) {
+  const value = text(href);
+  if (value === '') return 'missing';
+  if (/^(tel|mailto|sms):/i.test(value)) return 'direct-contact';
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith('//')) return 'external';
+  return 'route';
+}
+
+function directContactChannel(href) {
+  const scheme = text(href).split(':')[0].toLowerCase();
+  return scheme === 'mailto' ? 'Email' : scheme === 'sms' ? 'Text message' : 'Call';
+}
+
+function slugForTarget(kind, href, targetPath) {
+  if (kind === 'route') return targetPath.replace(/\//g, '') || 'home';
+  const scheme = text(href).split(':')[0].toLowerCase();
+  return kind === 'direct-contact' ? scheme : 'external';
+}
+
+/**
  * Derive journeys from composed output rather than from a manifest field that may be absent, then
  * check each step against what composition can actually prove.
  */
-export function deriveJourneys(composition) {
+export function deriveJourneys(composition, rules) {
+  const roles = sectionRoles(rules);
   const pages = list(composition.pages);
   const byPath = new Map(pages.map((page) => [page.path, page]));
   const journeys = [];
@@ -225,31 +335,77 @@ export function deriveJourneys(composition) {
   for (const page of pages) {
     const action = page.primaryAction;
     if (!action) continue;
-    const targetPath = text(action.href).split(/[?#]/)[0].replace(/\/$/, '') || '/';
-    const target = byPath.get(targetPath);
+    const href = text(action.href);
+    const kind = actionTargetKind(href);
+    const targetPath = href.split(/[?#]/)[0].replace(/\/$/, '') || '/';
+    const target = kind === 'route' ? byPath.get(targetPath) : null;
     const targetSections = target
       ? list(composition.sections).filter((section) => list(target.sectionIds).includes(section.id))
       : [];
-    const writeSection = targetSections.find((section) => CONVERSION_SECTIONS.has(section.type));
+    const writeSection = targetSections.find((section) => roles.capture.has(section.type));
+
+    const discovery = (() => {
+      const reachable = page.navigation?.visible === true || page.path === '/';
+      return {
+        step: 'discovery',
+        status: reachable ? 'proven' : 'unproven',
+        detail: reachable
+          ? `Entry page ${page.path} is reachable from navigation.`
+          : `Entry page ${page.path} is not in navigation, so the journey has no discoverable start.`,
+      };
+    })();
+    const primaryAction = {
+      step: 'primary-action',
+      status: text(action.label) ? 'proven' : 'unproven',
+      detail: text(action.label)
+        ? `Primary action "${text(action.label)}" is present.`
+        : 'The primary action has no label, so nothing invites the visitor to act.',
+    };
+
+    const id = `${page.path === '/' ? 'home' : page.path.replace(/\//g, '')}-to-${slugForTarget(kind, href, targetPath)}`;
+
+    // A phone or email action leaves the site entirely. Its destination is the visitor's dialler or
+    // mail client and the call itself is the capture, so demanding a page that "serves"
+    // tel:01413331836 — and then a form on that page — invents two defects per page that no edit
+    // could ever fix. The 3.8E NBM run produced fourteen of them across seven pages.
+    if (kind === 'direct-contact') {
+      journeys.push({
+        id,
+        entry: page.path,
+        steps: [
+          discovery,
+          primaryAction,
+          { step: 'destination', status: 'proven',
+            detail: `${directContactChannel(href)} action hands the visitor to their own ${directContactChannel(href) === 'Email' ? 'mail client' : 'dialler'}.` },
+          { step: 'capture', status: 'proven',
+            detail: 'The call or email is the capture; there is no on-site surface to prove.' },
+        ],
+      });
+      continue;
+    }
+
+    // An off-site destination cannot be proven from this repository's composition at all. Reporting
+    // it as a missing page would be wrong; reporting nothing would hide it.
+    if (kind === 'external') {
+      journeys.push({
+        id,
+        entry: page.path,
+        steps: [
+          discovery,
+          primaryAction,
+          { step: 'destination', status: 'needs-executable-evidence',
+            detail: `Primary action leaves the site for ${href}; only a live check can prove it resolves.` },
+        ],
+      });
+      continue;
+    }
 
     journeys.push({
-      id: `${page.path === '/' ? 'home' : page.path.replace(/\//g, '')}-to-${targetPath.replace(/\//g, '') || 'home'}`,
+      id,
       entry: page.path,
       steps: [
-        (() => {
-          const reachable = page.navigation?.visible === true || page.path === '/';
-          return {
-            step: 'discovery',
-            status: reachable ? 'proven' : 'unproven',
-            detail: reachable
-              ? `Entry page ${page.path} is reachable from navigation.`
-              : `Entry page ${page.path} is not in navigation, so the journey has no discoverable start.`,
-          };
-        })(),
-        { step: 'primary-action', status: text(action.label) ? 'proven' : 'unproven',
-          detail: text(action.label)
-            ? `Primary action "${text(action.label)}" is present.`
-            : 'The primary action has no label, so nothing invites the visitor to act.' },
+        discovery,
+        primaryAction,
         { step: 'destination', status: target ? 'proven' : 'unproven',
           detail: target ? `Resolves to ${targetPath}.` : `No page serves ${targetPath}.` },
         { step: 'capture', status: writeSection ? 'proven' : 'unproven',
@@ -268,15 +424,16 @@ export function auditLaunchReadiness({ composition, rules, manifest = null } = {
   if (!rules?.checks) throw new Error('Launch readiness requires a rule registry.');
 
   const findings = [];
-  auditContent(composition, rules, findings);
-  auditNavigation(composition, rules, findings);
+  const roles = sectionRoles(rules);
+  auditContent(composition, rules, roles, findings);
+  auditNavigation(composition, rules, roles, findings);
   auditWarnings(composition, rules, findings);
 
   // Missing proof and a defect are different things. A high-risk state with no fixture is a gap in
   // the factory's evidence; it is not an edit a person makes to the site. Counting them together
   // would inflate the 3.8E manual-edit prediction into a number nobody could trust.
   const evidenceGaps = [];
-  const stateMatrix = deriveStateMatrix(composition);
+  const stateMatrix = deriveStateMatrix(composition, rules);
   for (const surface of stateMatrix) {
     for (const state of surface.states) {
       if (state.risk === 'high' && state.evidence === 'none') {
@@ -286,7 +443,7 @@ export function auditLaunchReadiness({ composition, rules, manifest = null } = {
     }
   }
 
-  const journeys = deriveJourneys(composition);
+  const journeys = deriveJourneys(composition, rules);
   for (const journey of journeys) {
     for (const step of journey.steps) {
       if (step.status === 'unproven') {

@@ -38,6 +38,26 @@ A private interface over the engine:
 - build and operating-cost visibility
 - preview/production deployment
 
+### Preview boundary
+
+A generated preview is an ordinary dev server the factory owns. It binds
+loopback only and is never exposed directly, because a factory-host address is
+not reachable by a remote operator and a per-build tunnel is an operations
+workaround, not a product.
+
+The Console therefore never learns a preview's host or port. Operator-facing
+preview state is a path — `/preview/<projectId>/` — which the Console serves
+from its own origin and forwards to the factory service unchanged. The service
+is the only component that maps that project to a loopback port, and it takes
+the destination from its own preview state, so a caller can name a project but
+never a host, a port or another local service. An unknown project, a stopped
+preview or a stale one fails closed.
+
+The preview process is launched with that same path as its base, so every
+module, asset and route the generated app emits is already addressed through
+the boundary. The base is a launch argument: the generated repository stays an
+ordinary portable project that serves from the domain root everywhere else.
+
 ## Generated app flow
 
 ```text

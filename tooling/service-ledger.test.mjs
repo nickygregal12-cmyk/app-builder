@@ -66,12 +66,28 @@ test('real service lifecycle persists generation verification preview and metric
 
     const preview = await service.startPreview(project.id);
     assert.equal(preview.state, 'running');
-    assert.match(preview.url, /^http:\/\/127\.0\.0\.1:\d+$/);
-    const previewResponse = await fetch(preview.url);
+    // The operator-facing preview state is a path through the Console boundary.
+    // A host or a port here would be a remote operator's broken preview.
+    assert.equal(preview.path, `/preview/${project.id}/`);
+    assert.equal(Object.hasOwn(preview, 'url'), false);
+    assert.equal(Object.hasOwn(preview, 'port'), false);
+    assert.equal(JSON.stringify(preview).includes('127.0.0.1'), false);
+
+    // The loopback destination stays inside the factory, and the generated app
+    // really is served under the base path the operator's browser will use.
+    const target = service.previewTarget(project.id);
+    assert.equal(target.basePath, preview.path);
+    assert.match(target.url, /^http:\/\/127\.0\.0\.1:\d+\/preview\/project-service-test\/$/);
+    const previewResponse = await fetch(target.url);
     assert.equal(previewResponse.ok, true);
+    const previewHtml = await previewResponse.text();
+    assert.match(previewHtml, new RegExp(`src="${preview.path}src/main.tsx"`));
     assert.equal(service.previewStatus(project.id).state, 'running');
+
     const stopped = await service.stopPreview(project.id);
     assert.equal(stopped.state, 'stopped');
+    assert.equal(stopped.path, null);
+    assert.equal(service.previewTarget(project.id), null);
 
     const tasks = service.listTasks(project.id);
     assert.equal(tasks.length, 2);

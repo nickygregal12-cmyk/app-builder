@@ -82,6 +82,12 @@ async function freeLocalPort() {
   return port;
 }
 
+// A project id is an opaque factory identifier, so it is encoded once here and
+// this is the only place the operator-facing preview path is constructed.
+function previewBasePath(projectId) {
+  return `/preview/${encodeURIComponent(projectId)}/`;
+}
+
 async function waitForPreview(url, child, timeoutMs = 15_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -555,8 +561,8 @@ export class FactoryService {
    */
   async captureRenderedEvidence(projectId) {
     const { project, workspace } = this.requireWorkspace(projectId);
-    const preview = this.previewStatus(projectId);
-    if (preview.state !== 'running' || !preview.url) throw new Error('Rendered evidence is captured from the running preview. Start the preview first.');
+    const preview = this.previewTarget(projectId);
+    if (!preview) throw new Error('Rendered evidence is captured from the running preview. Start the preview first.');
     const composition = this.getComposition(projectId);
     if (!composition) return null;
 
@@ -967,11 +973,29 @@ export class FactoryService {
     }
   }
 
+  /**
+   * The operator-facing preview state. It deliberately carries no host and no
+   * port: a remote operator's browser reaches a preview through the supported
+   * Console -> Factory boundary at this path, never at a factory-host loopback
+   * address it could not resolve anyway.
+   */
   previewStatus(projectId) {
     this.requireProject(projectId);
     const preview = this.previews.get(projectId);
-    if (!preview || preview.process.exitCode !== null) return { state: 'stopped', url: null, port: null, startedAt: null };
-    return { state: 'running', url: preview.url, port: preview.port, startedAt: preview.startedAt };
+    if (!preview || preview.process.exitCode !== null) return { state: 'stopped', path: null, startedAt: null };
+    return { state: 'running', path: preview.basePath, startedAt: preview.startedAt };
+  }
+
+  /**
+   * The factory-internal preview destination. Only in-factory callers use it:
+   * the preview proxy, which never lets a caller name a destination, and
+   * rendered-evidence capture, which runs beside the preview process.
+   */
+  previewTarget(projectId) {
+    this.requireProject(projectId);
+    const preview = this.previews.get(projectId);
+    if (!preview || preview.process.exitCode !== null) return null;
+    return { port: preview.port, basePath: preview.basePath, url: preview.url };
   }
 
   async startPreview(projectId) {
@@ -980,22 +1004,27 @@ export class FactoryService {
     if (existing.state === 'running') return existing;
     if (!fs.existsSync(path.join(workspace, 'node_modules'))) throw new Error('Project dependencies are not installed. Run verification before starting preview.');
     const port = await freeLocalPort();
-    const url = `http://127.0.0.1:${port}`;
-    const child = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port)], {
+    // The preview serves under the same path the operator's browser asks for,
+    // so every asset, module and route the generated app emits is already
+    // addressed through the Console boundary. `--base` is a launch argument:
+    // the generated repository stays an ordinary portable project.
+    const basePath = previewBasePath(projectId);
+    const url = `http://127.0.0.1:${port}${basePath}`;
+    const child = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port), '--base', basePath], {
       cwd: workspace,
       stdio: 'ignore',
       shell: process.platform === 'win32',
       detached: process.platform !== 'win32',
       env: { ...process.env, BROWSER: 'none' },
     });
-    const preview = { process: child, port, url, startedAt: new Date().toISOString() };
+    const preview = { process: child, port, url, basePath, startedAt: new Date().toISOString() };
     this.previews.set(projectId, preview);
     child.once('exit', () => {
       if (this.previews.get(projectId)?.process === child) this.previews.delete(projectId);
     });
     try {
       await waitForPreview(url, child);
-      await this.store.recordEvent(createEvent({ projectId, type: 'preview.started', actor: 'factory-service', payload: { url, port } }));
+      await this.store.recordEvent(createEvent({ projectId, type: 'preview.started', actor: 'factory-service', payload: { path: basePath, port } }));
       return this.previewStatus(projectId);
     } catch (error) {
       await terminatePreview(child);
@@ -1009,12 +1038,12 @@ export class FactoryService {
     const preview = this.previews.get(projectId);
     if (!preview || preview.process.exitCode !== null) {
       this.previews.delete(projectId);
-      return { state: 'stopped', url: null, port: null, startedAt: null };
+      return { state: 'stopped', path: null, startedAt: null };
     }
     await terminatePreview(preview.process);
     this.previews.delete(projectId);
     await this.store.recordEvent(createEvent({ projectId, type: 'preview.stopped', actor: 'factory-service', payload: { port: preview.port } }));
-    return { state: 'stopped', url: null, port: null, startedAt: null };
+    return { state: 'stopped', path: null, startedAt: null };
   }
 
   async close() {

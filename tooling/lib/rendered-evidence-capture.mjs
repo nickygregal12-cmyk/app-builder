@@ -59,6 +59,13 @@ async function perform(page, interaction) {
   throw new Error(`Unknown evidence interaction: ${interaction}`);
 }
 
+// The preview serves under a base path, so a route is resolved *inside* that
+// base. `new URL('/services', base)` would drop it and address the host root.
+export function evidenceUrl(route, baseUrl) {
+  const base = String(baseUrl).endsWith('/') ? String(baseUrl) : `${baseUrl}/`;
+  return new URL(String(route).replace(/^\/+/, ''), base).toString();
+}
+
 export async function captureEvidence({ plan, baseUrl, launch = null, onCapture = null, env = process.env } = {}) {
   if (!plan?.captures?.length) return { results: [], failures: [] };
   const browser = await (launch ? launch() : (await chromium()).launch(launchOptions(env)));
@@ -76,7 +83,7 @@ export async function captureEvidence({ plan, baseUrl, launch = null, onCapture 
       });
       const page = await context.newPage();
       try {
-        await page.goto(new URL(capture.route, baseUrl).toString(), { waitUntil: 'networkidle', timeout: 20_000 });
+        await page.goto(evidenceUrl(capture.route, baseUrl), { waitUntil: 'networkidle', timeout: 20_000 });
         await page.locator('main').waitFor({ timeout: 10_000 });
         if (capture.state.interaction) {
           if (!INTERACTIONS[capture.state.interaction]) throw new Error(`Unknown evidence interaction: ${capture.state.interaction}`);

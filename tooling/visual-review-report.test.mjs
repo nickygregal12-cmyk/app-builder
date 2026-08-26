@@ -179,6 +179,66 @@ test('a portable packet carries everything a reviewer needs, and no hidden state
   }
 });
 
+/**
+ * The whole capture has to be reachable, not just its first screenful.
+ *
+ * The grid crops each thumbnail to the top of the page, which is right for
+ * comparing candidates side by side and wrong as the only way to see one. On
+ * the first real nbm run every one of the 36 captures was a full-page render
+ * between 1,600px and 3,090px tall shown through a 420px window: none was
+ * fully visible, the median showed about a third, and the worst showed 13.9%.
+ * A reviewer scoring `responsive-quality` — "is the mobile rendering a designed
+ * composition, or the desktop one with fewer columns?" — cannot answer that
+ * from the top of the page, so the packet was asking for a judgement it did
+ * not show the evidence for.
+ *
+ * The fix is a link, not a script: the packet must still open from a file://
+ * URL on a machine that has never heard of this repository.
+ */
+test('every capture in the packet is reachable at full size without a script', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-packet-full-'));
+  try {
+    const result = writePacket(root);
+    const index = fs.readFileSync(path.join(result.root, 'index.html'), 'utf8');
+
+    const shown = [...index.matchAll(/<img src="([^"]+)"/g)].map((match) => match[1]);
+    const linked = [...index.matchAll(/<a href="(captures\/[^"]+)"/g)].map((match) => match[1]);
+    assert.equal(shown.length, result.captureCount);
+    assert.deepEqual(
+      [...linked].sort(),
+      [...shown].sort(),
+      'every capture the packet shows cropped must also be openable whole',
+    );
+
+    // The link is to the capture inside the packet, so it resolves offline.
+    for (const target of linked) {
+      assert.equal(target.startsWith('/') || target.includes('://'), false, `${target} is not a relative path inside the packet`);
+      assert.ok(fs.existsSync(path.join(result.root, target)), `${target} is linked and is not in the packet`);
+    }
+
+    // Reachability must not have been bought with a script the packet cannot run.
+    assert.equal(index.includes('<script'), false, 'the index must still render with no script');
+    // And the reviewer has to be told the thumbnail is a crop, or they will
+    // read a cropped page as the whole page.
+    assert.match(index, /Select one to open that capture whole/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a packet with no captures promises none', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-packet-none-'));
+  try {
+    const result = writePacket(root, { readCapture: () => null });
+    const index = fs.readFileSync(path.join(result.root, 'index.html'), 'utf8');
+    assert.equal(result.captureCount, 0);
+    assert.equal(index.includes('<a href="captures/'), false, 'a packet with no captures must link to none');
+    assert.equal(index.includes('<p class="crop-note">'), false, 'a packet with no captures must not explain a crop it never shows');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('a capture the packet cannot copy is not named by it', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-packet-missing-'));
   try {

@@ -70,9 +70,12 @@ function renderIndex(packet) {
       ${definition(Object.entries(candidate.axes).map(([axis, value]) => [axis, value ?? '—']))}
       ${candidate.review ? `<p class="verdict"><strong>${escapeHtml(candidate.review.verdict)}</strong> by ${escapeHtml(candidate.review.reviewedBy)}${typeof candidate.review.overallScore === 'number' ? ` · ${candidate.review.overallScore}/10` : ''}${candidate.review.rationale ? ` — ${escapeHtml(candidate.review.rationale)}` : ''}</p>` : '<p class="verdict pending">No verdict yet.</p>'}
       ${candidate.designLint.length ? `<ul class="lint">${candidate.designLint.map((finding) => `<li><em>${escapeHtml(finding.severity)}</em> ${escapeHtml(finding.rule)} — ${escapeHtml(finding.detail)}</li>`).join('')}</ul>` : '<p class="lint-clean">DesignLint: nothing to report.</p>'}
+      ${candidate.captures.length ? '<p class="crop-note">Thumbnails show the top of each page so the set stays comparable. Select one to open that capture whole — a page is judged by all of it, not by its first screenful.</p>' : ''}
       <div class="shots">${candidate.captures.map((capture) => `
         <figure>
-          <img src="${escapeHtml(capture.file)}" alt="${escapeHtml(candidate.directionLabel)} at ${escapeHtml(capture.route)}, ${escapeHtml(capture.viewport)}, ${escapeHtml(capture.state.interaction ?? 'at rest')}" loading="lazy">
+          <a href="${escapeHtml(capture.file)}" title="Open the whole capture: ${escapeHtml(candidate.directionLabel)} at ${escapeHtml(capture.route)}, ${escapeHtml(capture.viewport)}">
+            <img src="${escapeHtml(capture.file)}" alt="${escapeHtml(candidate.directionLabel)} at ${escapeHtml(capture.route)}, ${escapeHtml(capture.viewport)}, ${escapeHtml(capture.state.interaction ?? 'at rest')}" loading="lazy">
+          </a>
           <figcaption>${escapeHtml(capture.route)} · ${escapeHtml(capture.viewport)} · ${escapeHtml(capture.state.interaction ?? 'at rest')}</figcaption>
         </figure>`).join('')}</div>
     </article>`).join('');
@@ -100,7 +103,10 @@ function renderIndex(packet) {
   .gate-blocked { background: #f4dcd8; }
   .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px; }
   figure { margin: 0; }
+  figure a { display: block; border-radius: 8px; }
+  figure a:focus-visible { outline: 3px solid #2f5d8a; outline-offset: 3px; }
   figure img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: cover; object-position: top; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+  .crop-note { font-size: 0.78rem; color: #666; margin: 12px 0 0; }
   figcaption { font-size: 0.74rem; color: #666; padding-top: 4px; }
   ul.lint { margin: 10px 0; padding-left: 18px; font-size: 0.82rem; }
   .lint-clean, .verdict { font-size: 0.86rem; }

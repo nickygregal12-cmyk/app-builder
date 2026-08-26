@@ -3,98 +3,377 @@
   "id": "react-vite-neutral",
   "version": "1.0.0",
   "status": "ready",
-  "projectTypes": ["marketing-site","b2b-saas","consumer-app","internal-tool","content-site","ai-app"],
+  "projectTypes": [
+    "marketing-site",
+    "b2b-saas",
+    "consumer-app",
+    "internal-tool",
+    "content-site",
+    "ai-app"
+  ],
   "filesRoot": "files",
-  "managedFiles": ["src/generated/project.ts","src/generated/recipes.ts",".app-builder/manifest.json",".app-builder/project.json",".app-builder/recipes.json",".app-builder/template-package.json","README.md"],
+  "renderer": "application",
+  "sharedFiles": [
+    {
+      "from": "presentation/tokens.css",
+      "to": "src/design/tokens.css"
+    },
+    {
+      "from": "presentation/styles.css",
+      "to": "src/styles.css"
+    }
+  ],
+  "generated": {
+    "root": "src/generated",
+    "recipeRegistry": {
+      "file": "src/generated/recipes.tsx",
+      "format": "react"
+    }
+  },
+  "managedFiles": [
+    "src/generated/project.ts",
+    "src/generated/recipes.ts",
+    ".app-builder/manifest.json",
+    ".app-builder/project.json",
+    ".app-builder/recipes.json",
+    ".app-builder/template-package.json",
+    "README.md"
+  ],
   "presentation": {
     "version": "1.1.0",
     "renderer": "src/App.tsx",
     "tokenSource": "src/design/tokens.css",
     "elementRoles": {
-      "display": {"editableProperties":["text"],"designTokens":["--color-ink","--text-4xl"]},
-      "heading": {"editableProperties":["text"],"designTokens":["--color-ink","--text-3xl"]},
-      "body-copy": {"editableProperties":["text"],"designTokens":["--color-text-muted","--text-lg"]},
-      "eyebrow": {"editableProperties":["text"],"designTokens":["--color-accent","--text-sm"]},
-      "detail": {"editableProperties":[],"designTokens":["--color-ink","--color-border","--layout-radius"]},
-      "collection": {"editableProperties":[],"designTokens":["--color-surface","--layout-radius","--shadow-soft"]},
-      "action": {"editableProperties":[],"designTokens":["--color-accent","--color-accent-contrast","--radius-pill"]},
-      "asset": {"editableProperties":[],"designTokens":["--layout-radius","--shadow-lifted"]},
-      "section": {"editableProperties":[],"designTokens":["--section-space","--layout-max-width"]}
+      "display": {
+        "editableProperties": [
+          "text"
+        ],
+        "designTokens": [
+          "--color-ink",
+          "--text-4xl"
+        ]
+      },
+      "heading": {
+        "editableProperties": [
+          "text"
+        ],
+        "designTokens": [
+          "--color-ink",
+          "--text-3xl"
+        ]
+      },
+      "body-copy": {
+        "editableProperties": [
+          "text"
+        ],
+        "designTokens": [
+          "--color-text-muted",
+          "--text-lg"
+        ]
+      },
+      "eyebrow": {
+        "editableProperties": [
+          "text"
+        ],
+        "designTokens": [
+          "--color-accent",
+          "--text-sm"
+        ]
+      },
+      "detail": {
+        "editableProperties": [],
+        "designTokens": [
+          "--color-ink",
+          "--color-border",
+          "--layout-radius"
+        ]
+      },
+      "collection": {
+        "editableProperties": [],
+        "designTokens": [
+          "--color-surface",
+          "--layout-radius",
+          "--shadow-soft"
+        ]
+      },
+      "action": {
+        "editableProperties": [],
+        "designTokens": [
+          "--color-accent",
+          "--color-accent-contrast",
+          "--radius-pill"
+        ]
+      },
+      "asset": {
+        "editableProperties": [],
+        "designTokens": [
+          "--layout-radius",
+          "--shadow-lifted"
+        ]
+      },
+      "section": {
+        "editableProperties": [],
+        "designTokens": [
+          "--section-space",
+          "--layout-max-width"
+        ]
+      }
     },
     "components": {
       "hero": {
-        "id":"hero-section","version":"1.0.0","bindingRoles":{"eyebrow": "eyebrow","title": "display","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":true,
+        "id": "hero-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "eyebrow": "eyebrow",
+          "title": "display",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": true,
         "variants": [
-          {"id":"primary","label":"Full","purpose":"Full-height introduction. Best for a landing surface."},
-          {"id":"compact","label":"Compact","purpose":"Reduced vertical space. Best for a secondary page that gets to the point."}
+          {
+            "id": "primary",
+            "label": "Full",
+            "purpose": "Full-height introduction. Best for a landing surface."
+          },
+          {
+            "id": "compact",
+            "label": "Compact",
+            "purpose": "Reduced vertical space. Best for a secondary page that gets to the point."
+          }
         ]
       },
       "rich-text": {
-        "id":"rich-text-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "rich-text-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": []
       },
       "item-grid": {
-        "id":"item-grid-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "item-grid-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": [
-          {"id":"cards","label":"Cards","purpose":"A grid of cards. Best where each item has detail worth reading."},
-          {"id":"list","label":"List","purpose":"One line per item. Best where items are names with nothing else to say."},
-          {"id":"features","label":"Feature columns","purpose":"A denser two-column rule-marked list. Best for many short items."}
+          {
+            "id": "cards",
+            "label": "Cards",
+            "purpose": "A grid of cards. Best where each item has detail worth reading."
+          },
+          {
+            "id": "list",
+            "label": "List",
+            "purpose": "One line per item. Best where items are names with nothing else to say."
+          },
+          {
+            "id": "features",
+            "label": "Feature columns",
+            "purpose": "A denser two-column rule-marked list. Best for many short items."
+          }
         ]
       },
       "proof-grid": {
-        "id":"proof-grid-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "proof-grid-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": [
-          {"id":"cards","label":"Cards","purpose":"A grid of cards. Best where each item has detail worth reading."},
-          {"id":"list","label":"List","purpose":"One line per item. Best where items are names with nothing else to say."},
-          {"id":"features","label":"Feature columns","purpose":"A denser two-column rule-marked list. Best for many short items."}
+          {
+            "id": "cards",
+            "label": "Cards",
+            "purpose": "A grid of cards. Best where each item has detail worth reading."
+          },
+          {
+            "id": "list",
+            "label": "List",
+            "purpose": "One line per item. Best where items are names with nothing else to say."
+          },
+          {
+            "id": "features",
+            "label": "Feature columns",
+            "purpose": "A denser two-column rule-marked list. Best for many short items."
+          }
         ]
       },
       "people-grid": {
-        "id":"people-grid-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "people-grid-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": [
-          {"id":"cards","label":"Cards","purpose":"A grid of cards. Best where each item has detail worth reading."},
-          {"id":"list","label":"List","purpose":"One line per item. Best where items are names with nothing else to say."},
-          {"id":"features","label":"Feature columns","purpose":"A denser two-column rule-marked list. Best for many short items."}
+          {
+            "id": "cards",
+            "label": "Cards",
+            "purpose": "A grid of cards. Best where each item has detail worth reading."
+          },
+          {
+            "id": "list",
+            "label": "List",
+            "purpose": "One line per item. Best where items are names with nothing else to say."
+          },
+          {
+            "id": "features",
+            "label": "Feature columns",
+            "purpose": "A denser two-column rule-marked list. Best for many short items."
+          }
         ]
       },
       "location-list": {
-        "id":"location-list-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "location-list-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": [
-          {"id":"cards","label":"Cards","purpose":"A grid of cards. Best where each item has detail worth reading."},
-          {"id":"list","label":"List","purpose":"One line per item. Best where items are names with nothing else to say."},
-          {"id":"features","label":"Feature columns","purpose":"A denser two-column rule-marked list. Best for many short items."}
+          {
+            "id": "cards",
+            "label": "Cards",
+            "purpose": "A grid of cards. Best where each item has detail worth reading."
+          },
+          {
+            "id": "list",
+            "label": "List",
+            "purpose": "One line per item. Best where items are names with nothing else to say."
+          },
+          {
+            "id": "features",
+            "label": "Feature columns",
+            "purpose": "A denser two-column rule-marked list. Best for many short items."
+          }
         ]
       },
       "entity-list": {
-        "id":"entity-list-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "entity-list-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": [
-          {"id":"cards","label":"Cards","purpose":"A grid of cards. Best where each item has detail worth reading."},
-          {"id":"list","label":"List","purpose":"One line per item. Best where items are names with nothing else to say."},
-          {"id":"features","label":"Feature columns","purpose":"A denser two-column rule-marked list. Best for many short items."}
+          {
+            "id": "cards",
+            "label": "Cards",
+            "purpose": "A grid of cards. Best where each item has detail worth reading."
+          },
+          {
+            "id": "list",
+            "label": "List",
+            "purpose": "One line per item. Best where items are names with nothing else to say."
+          },
+          {
+            "id": "features",
+            "label": "Feature columns",
+            "purpose": "A denser two-column rule-marked list. Best for many short items."
+          }
         ]
       },
       "content-list": {
-        "id":"content-list-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "content-list-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": [
-          {"id":"cards","label":"Cards","purpose":"A grid of cards. Best where each item has detail worth reading."},
-          {"id":"list","label":"List","purpose":"One line per item. Best where items are names with nothing else to say."},
-          {"id":"features","label":"Feature columns","purpose":"A denser two-column rule-marked list. Best for many short items."}
+          {
+            "id": "cards",
+            "label": "Cards",
+            "purpose": "A grid of cards. Best where each item has detail worth reading."
+          },
+          {
+            "id": "list",
+            "label": "List",
+            "purpose": "One line per item. Best where items are names with nothing else to say."
+          },
+          {
+            "id": "features",
+            "label": "Feature columns",
+            "purpose": "A denser two-column rule-marked list. Best for many short items."
+          }
         ]
       },
       "gallery": {
-        "id":"gallery-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":true,
+        "id": "gallery-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": true,
         "variants": []
       },
       "cta": {
-        "id":"cta-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":true,"assets":false,
+        "id": "cta-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": true,
+        "assets": false,
         "variants": []
       },
       "contact-panel": {
-        "id":"contact-panel-section","version":"1.0.0","bindingRoles":{"title": "heading","email": "detail","phone": "detail","address": "detail","website": "detail","profiles": "collection"},"defaultBindingRole":"collection","actions":false,"assets":false,
+        "id": "contact-panel-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "email": "detail",
+          "phone": "detail",
+          "address": "detail",
+          "website": "detail",
+          "profiles": "collection"
+        },
+        "defaultBindingRole": "collection",
+        "actions": false,
+        "assets": false,
         "variants": []
       },
       "enquiry-form": {
-        "id":"enquiry-form-section","version":"1.0.0","bindingRoles":{"title": "heading","body": "body-copy"},"defaultBindingRole":"collection","actions":false,"assets":false,
+        "id": "enquiry-form-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": false,
+        "assets": false,
         "variants": []
       }
     }

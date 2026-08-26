@@ -33,8 +33,8 @@ test('an ordinary presentation change buys no conditional review', () => {
     paths: [
       'apps/console/src/styles.css',
       'apps/console/src/workspace.css',
-      'templates/react-vite-neutral/files/src/design/tokens.css',
-      'templates/react-vite-neutral/files/src/styles.css',
+      'templates/shared/presentation/tokens.css',
+      'templates/shared/presentation/styles.css',
     ],
   });
   assert.equal(result.severity, 'low');
@@ -45,7 +45,7 @@ test('an ordinary presentation change buys no conditional review', () => {
 test('a design-token file is not an authentication token', () => {
   // The single most important false positive to prevent: if `tokens.css` matched the `token`
   // signal, every styling change would pay for adversarial security review.
-  const result = classify({ paths: ['templates/react-vite-neutral/files/src/design/tokens.css'] });
+  const result = classify({ paths: ['templates/shared/presentation/tokens.css'] });
   assert.deepEqual(result.surfaces, []);
 });
 

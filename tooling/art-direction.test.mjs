@@ -16,8 +16,8 @@ import { MOTION_INTENSITY_ORDER, compileMotionContract, motionTokens } from './l
 import { compileDesignSystemSpec, renderDesignSystemCss } from './lib/design-choices.mjs';
 import { generateProject, loadCatalog } from './lib/generator.mjs';
 
-const TOKENS_CSS = fs.readFileSync('templates/react-vite-neutral/files/src/design/tokens.css', 'utf8');
-const STYLES_CSS = fs.readFileSync('templates/react-vite-neutral/files/src/styles.css', 'utf8');
+const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
+const STYLES_CSS = fs.readFileSync('templates/shared/presentation/styles.css', 'utf8');
 const LAYOUTS = JSON.parse(fs.readFileSync('config/layout-patterns.json', 'utf8'));
 
 function baseDesign(overrides = {}) {

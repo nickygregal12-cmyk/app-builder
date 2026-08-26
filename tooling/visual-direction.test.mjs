@@ -29,9 +29,9 @@ import {
   reviewCriteriaFor,
 } from './lib/visual-candidates.mjs';
 
-const STYLES_CSS = fs.readFileSync('templates/react-vite-neutral/files/src/styles.css', 'utf8');
+const STYLES_CSS = fs.readFileSync('templates/shared/presentation/styles.css', 'utf8');
 const APP_TSX = fs.readFileSync('templates/react-vite-neutral/files/src/App.tsx', 'utf8');
-const TOKENS_CSS = fs.readFileSync('templates/react-vite-neutral/files/src/design/tokens.css', 'utf8');
+const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
 const REGISTRY = loadVisualDirections();
 
 function projectManifest(type = 'marketing-site') {

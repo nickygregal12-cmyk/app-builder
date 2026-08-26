@@ -1,0 +1,19 @@
+---
+import type { Action } from '../lib/composition';
+import { isExternal, siteHref } from '../lib/composition';
+
+interface Props { actions: readonly Action[] }
+const { actions } = Astro.props;
+---
+{actions.length > 0 && (
+  <div class="section-actions">
+    {actions.map((action, index) => (
+      <a
+        class={index === 0 ? 'button primary-action' : 'button secondary-action'}
+        data-element-key={`action:${index}`}
+        href={siteHref(action.href)}
+        {...(isExternal(action.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >{action.label}</a>
+    ))}
+  </div>
+)}

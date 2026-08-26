@@ -176,7 +176,11 @@ test('a generated build records an index the service resolves, and refuses an ed
     const written = JSON.parse(fs.readFileSync(path.join(generated.workspace, '.app-builder/element-identity.json'), 'utf8'));
     assert.deepEqual(validateContract('element-identity', written), []);
     assert.equal(written.projectId, project.id);
-    assert.equal(written.templateId, 'react-vite-neutral');
+    // A marketing site is rendered statically, so this is also the proof that
+    // direct manipulation survives the static renderer: the index the Builder
+    // resolves against is derived from the composition and the template's
+    // presentation contract, and neither of those is React's.
+    assert.equal(written.templateId, 'astro-static-content');
     assert.equal(written.compositionHash, generated.composition.compositionHash);
 
     // The index is builder metadata, not something the app imports.

@@ -1,0 +1,15 @@
+---
+import { project } from '../../generated/project';
+---
+{/* Inline, so a marketing page still ships no module graph. The event shape is
+    the module's own: name, properties, occurredAt, dispatched on `window` as
+    `app:analytics` for whatever a project chooses to listen with. */}
+<script is:inline define:vars={{ projectName: project.name, projectType: project.type }}>
+  window.dispatchEvent(new CustomEvent('app:analytics', {
+    detail: {
+      name: 'app_initialized',
+      properties: { project: projectName, projectType: projectType },
+      occurredAt: new Date().toISOString(),
+    },
+  }));
+</script>

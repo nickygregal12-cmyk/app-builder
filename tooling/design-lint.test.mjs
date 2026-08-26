@@ -11,7 +11,7 @@ import { assertAccentColor, compileDesignSystemSpec, contrastRatio } from './lib
 import { generateComposedProject } from './lib/composed-generator.mjs';
 import { buildEvidenceSet } from './lib/rendered-evidence.mjs';
 
-const TOKENS_CSS = fs.readFileSync('templates/react-vite-neutral/files/src/design/tokens.css', 'utf8');
+const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
 const LAYOUTS = JSON.parse(fs.readFileSync('config/layout-patterns.json', 'utf8'));
 
 function projectManifest(type = 'marketing-site') {

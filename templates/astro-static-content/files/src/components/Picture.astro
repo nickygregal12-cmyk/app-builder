@@ -1,0 +1,33 @@
+---
+import type { GeneratedAsset, AssetVariant } from '../lib/composition';
+
+interface Props { asset: GeneratedAsset; role: string; class?: string; sizes: string }
+const { asset, role, class: className, sizes } = Astro.props;
+
+// Prefers the crop the layout asked for, falls back to the widest responsive
+// variant, and never invents alt text: an unlabelled decorative image is better
+// than a confident guess about what it shows.
+const crop = asset.variants.find((variant) => variant.role === role);
+const responsive = asset.variants.filter((variant) => variant.role === 'responsive');
+const byWidth = (list: readonly AssetVariant[]) => [...list].sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+const webp = byWidth(responsive.filter((variant) => variant.format === 'webp'));
+const avif = byWidth(responsive.filter((variant) => variant.format === 'avif'));
+const fallback = crop ?? webp.at(-1) ?? asset.variants[0];
+const srcSet = (list: readonly AssetVariant[]) => list.map((variant) => `${variant.uri} ${variant.width}w`).join(', ');
+---
+{fallback && (
+  <picture class={className} data-element-key={`asset:${asset.id}`}>
+    {!crop && avif.length > 0 && <source type="image/avif" srcset={srcSet(avif)} sizes={sizes} />}
+    {!crop && webp.length > 0 && <source type="image/webp" srcset={srcSet(webp)} sizes={sizes} />}
+    <img
+      src={fallback.uri}
+      width={fallback.width ?? undefined}
+      height={fallback.height ?? undefined}
+      alt={asset.alt ?? ''}
+      loading="lazy"
+      decoding="async"
+      data-asset-provenance={asset.provenance}
+      data-asset-status={asset.assetStatus}
+    />
+  </picture>
+)}

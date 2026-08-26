@@ -1,0 +1,130 @@
+---
+/**
+ * One composed section, as a document.
+ *
+ * The dispatch below is the application renderer's, deliberately: same section
+ * types, same class names, same element keys, same data attributes, same DOM
+ * shape. The Phase 4C/4D design intelligence is compiled into design tokens and
+ * into the shell classes the factory writes onto the frame, and it reaches a
+ * page through exactly those class names — so a second renderer that emits the
+ * same markup inherits the promoted art direction, the responsive composition
+ * plan and the motion contract rather than re-deciding any of them.
+ *
+ * What is different is what is missing. There is no router, no hydration and no
+ * event handler. A link is a link.
+ */
+import type { SectionSpec } from '../lib/composition';
+import { HEADING_BINDING_KEYS, binding, editable, text } from '../lib/composition';
+import { design } from '../generated/design';
+import { assets } from '../generated/assets';
+import { recipeSections } from '../generated/recipes';
+import Actions from './Actions.astro';
+import Items from './Items.astro';
+import Picture from './Picture.astro';
+import SocialLinks from './SocialLinks.astro';
+import type { GeneratedAsset, VisualDirection } from '../lib/composition';
+
+interface Props { section: SectionSpec }
+const { section } = Astro.props;
+
+const assetMap = assets as unknown as Record<string, GeneratedAsset>;
+const directed = design as unknown as VisualDirection;
+const HERO_STRATEGY = directed.artDirection?.dimensions?.heroStrategy ?? 'split';
+
+const sectionAssets = section.assetIds.map((id) => assetMap[id]).filter(Boolean);
+const title = binding(section, 'title');
+const body = binding(section, 'body');
+const eyebrow = binding(section, 'eyebrow');
+
+const RecipeSection = recipeSections[section.type];
+
+// The opening is where a visual direction is most visible, so it is the one
+// place the strategy changes the DOM rather than only the CSS. A direction that
+// wants no picture in its opening must not render one and hide it: a hidden
+// hero image is bytes a visitor downloads to see nothing.
+const lead = sectionAssets[0];
+const beside = HERO_STRATEGY === 'split' && Boolean(lead);
+const behind = HERO_STRATEGY === 'immersive' && Boolean(lead);
+const below = HERO_STRATEGY === 'editorial' && Boolean(lead);
+const heroClasses = ['page-section', 'hero-section', `variant-${section.variant}`, `hero-${HERO_STRATEGY}`];
+if (beside) heroClasses.push('has-image');
+if (behind) heroClasses.push('has-backdrop');
+if (below) heroClasses.push('has-band');
+
+const email = binding(section, 'email');
+const phone = binding(section, 'phone');
+const address = binding(section, 'address');
+const website = binding(section, 'website');
+const itemBindings = section.bindings.filter((item) => !HEADING_BINDING_KEYS.includes(item.key));
+const galleryEmpty = section.type === 'gallery' && sectionAssets.length === 0 && section.actions.length === 0;
+---
+{section.type === 'hero' && (
+  <section class={heroClasses.join(' ')} id={section.id} data-section-id={section.id} data-element-key="section" data-hero-strategy={HERO_STRATEGY}>
+    {behind && lead && <Picture asset={lead} role="hero-16x9" class="hero-backdrop" sizes="100vw" />}
+    <div class="hero-copy-column">
+      {eyebrow && <p class="eyebrow" {...editable(section, eyebrow)}>{text(eyebrow.value)}</p>}
+      {title && <h1 {...editable(section, title)}>{text(title.value)}</h1>}
+      {body && <p class="hero-copy" {...editable(section, body)}>{text(body.value)}</p>}
+      <Actions actions={section.actions} />
+    </div>
+    {beside && lead && <Picture asset={lead} role="hero-16x9" class="hero-image" sizes="(max-width: 880px) 100vw, 50vw" />}
+    {below && lead && <Picture asset={lead} role="hero-16x9" class="hero-band" sizes="100vw" />}
+  </section>
+)}
+
+{section.type === 'contact-panel' && (
+  <section class="page-section contact-section" id={section.id} data-section-id={section.id} data-element-key="section">
+    {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+    <div class="contact-grid">
+      {email && <a href={`mailto:${text(email.value)}`} data-binding-origin={email.origin}><span>Email</span><strong>{text(email.value)}</strong></a>}
+      {phone && <a href={`tel:${text(phone.value).replace(/\s+/g, '')}`} data-binding-origin={phone.origin}><span>Phone</span><strong>{text(phone.value)}</strong></a>}
+      {address && <div data-binding-origin={address.origin}><span>Address</span><strong>{text(address.value)}</strong></div>}
+      {website && <a href={text(website.value)} data-binding-origin={website.origin}><span>Website</span><strong>{text(website.value)}</strong></a>}
+    </div>
+    <SocialLinks profiles={binding(section, 'profiles')?.value} />
+  </section>
+)}
+
+{section.type === 'gallery' && !galleryEmpty && (
+  <section class="page-section gallery-section" id={section.id} data-section-id={section.id} data-element-key="section">
+    {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+    {body && <p class="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
+    {sectionAssets.length > 0 && (
+      <div class="gallery-grid">
+        {sectionAssets.map((asset) => <Picture asset={asset} role="card-4x3" class="gallery-item" sizes="(max-width: 880px) 100vw, 33vw" />)}
+      </div>
+    )}
+    <Actions actions={section.actions} />
+  </section>
+)}
+
+{/* A capability recipe owns how its own section renders. The composer decided
+    the section belongs here; it does not know what an enquiry form looks like. */}
+{section.type !== 'hero' && section.type !== 'contact-panel' && section.type !== 'gallery' && RecipeSection && (
+  <section class={`page-section recipe-section section-${section.type}`} id={section.id} data-section-id={section.id} data-element-key="section" data-section-type={section.type}>
+    {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+    {body && <p class="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
+    <RecipeSection sectionId={section.id} />
+  </section>
+)}
+
+{section.type === 'cta' && !RecipeSection && (
+  <section class="page-section cta-section" id={section.id} data-section-id={section.id} data-element-key="section">
+    <div>
+      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+      {body && <p {...editable(section, body)}>{text(body.value)}</p>}
+    </div>
+    <Actions actions={section.actions} />
+  </section>
+)}
+
+{section.type !== 'hero' && section.type !== 'contact-panel' && section.type !== 'gallery' && section.type !== 'cta' && !RecipeSection && (
+  <section class={`page-section section-${section.type} variant-${section.variant}`} id={section.id} data-section-id={section.id} data-element-key="section" data-section-type={section.type}>
+    <div class="section-heading">
+      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+      {body && <p class="section-copy" {...editable(section, body)}>{text(body.value)}</p>}
+    </div>
+    {itemBindings.map((item) => <Items values={item.value} variant={section.variant} />)}
+    <Actions actions={section.actions} />
+  </section>
+)}

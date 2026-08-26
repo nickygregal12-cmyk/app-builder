@@ -75,7 +75,10 @@ export type Checkpoint = {
 // The Console never learns which loopback port a preview runs on. It receives a
 // same-origin path through the supported Console -> Factory boundary.
 export type PreviewState = {
-  state: 'running' | 'stopped';
+  // `starting` is a preview whose process exists but cannot serve yet. The
+  // frame must not mount against it: its one request would fail and stay
+  // failed until something remounted it.
+  state: 'running' | 'starting' | 'stopped';
   path: string | null;
   startedAt: string | null;
 };

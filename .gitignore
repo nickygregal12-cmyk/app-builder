@@ -9,6 +9,11 @@ coverage/
 .DS_Store
 *.log
 generated/
+# ...except a template's own committed source. `generated/` exists to keep a
+# generated project's output out of this repository; a template ships a
+# placeholder module at that path, and silently ignoring it means a fresh
+# clone cannot build the template at all.
+!templates/*/files/src/generated/
 .tmp/
 test-results/
 playwright-report/

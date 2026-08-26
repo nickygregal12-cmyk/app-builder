@@ -343,6 +343,31 @@ A project that genuinely needs a third-party origin extends `csp.json` beside th
 an origin; it may not add `'unsafe-inline'` to `script-src`, and a directive the policy does not define
 is a typo rather than a new rule. Both refusals are tested.
 
+### Stage Q11c — three-way managed-file reconciliation ✅ delivered
+
+An upgrade whose managed files someone had edited went to `review-required` and stopped. That is
+fail-closed and correct as far as it goes, and it also meant the first person to fix a typo in a
+generated file could never take an upgrade again — the recipe system's whole point, quietly lost to one
+edit.
+
+A three-way merge is the ordinary answer and it needs three inputs, one of which the factory did not
+have. `ours` is what the project holds now; `theirs` is the new recipe version; `base` is the bytes the
+recipe originally installed — and installation recorded only a hash, while the factory's own copy of an
+old recipe version is gone once that recipe moves on. So `recordRecipeInstallations` now keeps the
+installed bytes at `.app-builder/managed-baselines/<recipe>/<path>` beside the hash. A hash answers
+"did this change?"; a merge has to know *from what*.
+
+`git merge-file` does the merging rather than a hand-written diff3: it is what every developer's own
+tooling already agrees with, its conflict markers are the ones they can read, and a merge algorithm is
+not a thing to write twice. `--diff3` markers are used deliberately, so a reviewer can see what was
+installed and therefore which side moved.
+
+The reconciliation is a **proposal, never an application**. Planning an upgrade must not edit the
+project it is planning for, so `-p` writes to stdout, the merged text is returned for review and
+nothing is written. A conflict is not a failure of the mechanism — it is the answer, with the file
+named and the hunks counted. A file the target dropped, one the project deleted, and a project
+generated before baselines were kept are each reported as decisions rather than merged past.
+
 ### Stage Q12 — production data-change safety (before autonomous live data mutation)
 
 Executed RLS acceptance proves tenant isolation. It does not prove that a migration is safe to run

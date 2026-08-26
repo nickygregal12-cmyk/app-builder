@@ -33,6 +33,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
+import { captureInventory } from './lib/visual-review-report.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 
@@ -57,20 +58,6 @@ function run(command, args, cwd) {
 
 function sequenceOf(candidate) {
   return candidate.signature.sequence.map((page) => `${page.pageId}: ${page.presentation.join(' > ')}`);
-}
-
-function captureInventory(evidence) {
-  return (evidence?.captures ?? []).map((capture) => ({
-    id: capture.id,
-    pageId: capture.pageId,
-    route: capture.route,
-    viewport: capture.viewport,
-    state: capture.state,
-    file: capture.file,
-    contentHash: capture.contentHash,
-    byteSize: capture.byteSize,
-    elementRefs: capture.elementRefs,
-  }));
 }
 
 fs.rmSync(root, { recursive: true, force: true });

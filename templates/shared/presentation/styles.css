@@ -306,7 +306,14 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 }
 
 @media (max-width: 720px) {
-  .site-header.nav-disclosure { position: relative; align-items: center; flex-direction: row; gap: 12px }
+  /* Not `position: relative`. The disclosure panel below is absolutely
+     positioned and needs a positioned ancestor, and `relative` is the reflex
+     answer — but the header is already `position: sticky`, which is a
+     positioned value and is already that ancestor. Writing `relative` here
+     silently replaced the sticky, so on every phone, in every engine, the
+     navigation scrolled away with the page. Nothing caught it because nothing
+     asked a mobile viewport whether the header stayed put. */
+  .site-header.nav-disclosure { align-items: center; flex-direction: row; gap: 12px }
   .site-header.nav-disclosure .nav-toggle { display: inline-flex }
   .site-header.nav-disclosure nav { position: absolute; top: 100%; right: 0; left: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px; border-bottom: 1px solid var(--color-border); background: var(--color-page); box-shadow: var(--shadow-raised, 0 12px 32px rgb(15 23 42 / 12%)) }
   .site-header.nav-disclosure nav[data-open="false"] { display: none }

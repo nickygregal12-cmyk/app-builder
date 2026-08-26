@@ -204,6 +204,25 @@ was worked around in an acceptance output.
    developer or agent machine. A harness that works on the one host that never
    runs it is not covered by the run that proves it.
 
+7. **The site header was not sticky on any phone.** Found by the cross-browser
+   portability lane on its first hosted run, failing on `mobile-webkit` and
+   only there. It is not a WebKit defect. Under `@media (max-width: 720px)` the
+   header rule set `position: relative` — the disclosure panel beneath it is
+   absolutely positioned and needs a positioned ancestor, and `relative` is the
+   reflex answer — which overrode the `position: sticky` the header carries at
+   every other width. `sticky` is already a positioned value and already that
+   ancestor, so the `relative` bought nothing and cost the navigation: on every
+   phone, in every engine, the header scrolled away with the page. Reproduced
+   at 393px in Chromium (`computedPosition: "relative"`, header top `-496`
+   after scrolling), and `sticky` with top `0` after the fix.
+
+   The reason it survived every previous run is worth keeping: every browser
+   project in every suite was 1280 wide, so nothing had ever loaded the mobile
+   half of the shared stylesheet and asked it a layout question.
+   `tooling/portability.test.mjs` now holds both halves — no rule may take the
+   header off sticky, and the lane must include a viewport the mobile
+   breakpoint actually applies to.
+
 ## Known limitation
 
 Astro's dev server serves Vite's module graph from the server root regardless of

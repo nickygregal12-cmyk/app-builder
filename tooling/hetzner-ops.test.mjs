@@ -8,7 +8,14 @@ const scripts = [
   'ops/hetzner/install-existing-host.sh',
   'ops/hetzner/install-opencode.sh',
   'ops/hetzner/install-service-units.sh',
+  'ops/hetzner/observe-runtime.sh',
   'ops/hetzner/verify-host.sh',
+];
+
+const readOnlyMutationPatterns = [
+  /(?:^|[;&|]\s*)(?:sudo\s+)?(?:apt|apt-get|useradd|usermod|passwd|ufw|iptables|nft|rm|mkdir|install)\b/m,
+  /(?:^|[;&|]\s*)(?:sudo\s+)?systemctl\s+(?:start|stop|restart|enable|disable|daemon-reload)\b/m,
+  /(?:^|[;&|]\s*)(?:sudo\s+)?(?:chown|chmod|chgrp|cp|mv|ln|touch|truncate|tee)\b/m,
 ];
 
 for (const path of scripts) {
@@ -19,14 +26,32 @@ for (const path of scripts) {
 
 test('read-only preflight contains no host mutation commands', () => {
   const source = readFileSync('ops/hetzner/preflight-existing-host.sh', 'utf8');
-  const mutationPatterns = [
-    /(?:^|[;&|]\s*)(?:sudo\s+)?(?:apt|apt-get|useradd|usermod|passwd|ufw|iptables|nft|rm|mkdir|install)\b/m,
-    /(?:^|[;&|]\s*)(?:sudo\s+)?systemctl\s+(?:start|stop|restart|enable|disable|daemon-reload)\b/m,
-    /(?:^|[;&|]\s*)(?:sudo\s+)?(?:chown|chmod|chgrp|cp|mv|ln|touch|truncate|tee)\b/m,
-  ];
-  for (const pattern of mutationPatterns) {
+  for (const pattern of readOnlyMutationPatterns) {
     assert.doesNotMatch(source, pattern, `preflight must remain read-only: ${pattern}`);
   }
+});
+
+test('runtime observer is read-only and reports the soak signals that justify co-location', () => {
+  const source = readFileSync('ops/hetzner/observe-runtime.sh', 'utf8');
+  for (const pattern of readOnlyMutationPatterns) {
+    assert.doesNotMatch(source, pattern, `observer must remain read-only: ${pattern}`);
+  }
+  for (const expected of [
+    'NRestarts',
+    'MemoryCurrent',
+    'MemoryPeak',
+    'CPUUsageNSec',
+    'TasksCurrent',
+    'journalctl --disk-usage',
+    '127.0.0.1:4310/health',
+    '127.0.0.1:4097/global/health',
+    'opencode_unauthenticated_http',
+    '4096|4097|4310|5173',
+  ]) {
+    assert.equal(source.includes(expected), true, `observer must report ${expected}`);
+  }
+  assert.match(source, /unset OPENCODE_SERVER_PASSWORD OPENCODE_SERVER_USERNAME/);
+  assert.doesNotMatch(source, /cat\s+["']?\/etc\/app-builder\/opencode-server\.env/);
 });
 
 test('shared-host installer never takes over global SSH, firewall, or Node paths', () => {

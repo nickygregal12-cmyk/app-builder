@@ -655,7 +655,6 @@ Before broad autonomous tools:
 - fail-closed network/resource/secret policies;
 - production action approvals;
 - dead/orphan integration detection;
-- CSP baseline in deployment adapters;
 - safe three-way recipe/presentation upgrades;
 - re-run ChangeSet/contract/RLS/accessibility properties under the real execution environment.
 

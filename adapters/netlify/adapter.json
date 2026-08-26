@@ -9,25 +9,31 @@
     "astro-static-content"
   ],
   "files": [
+    "docs/DEPLOYMENT.md",
     "netlify.toml",
-    "docs/DEPLOYMENT.md"
+    "tooling/generate-csp.mjs"
   ],
   "package": {
     "dependencies": {},
     "devDependencies": {},
-    "scripts": {}
+    "scripts": {
+      "postbuild": "node tooling/generate-csp.mjs"
+    }
   },
   "renderers": {
     "static-content": {
       "filesRoot": "renderers/static-content/files",
       "files": [
+        "docs/DEPLOYMENT.md",
         "netlify.toml",
-        "docs/DEPLOYMENT.md"
+        "tooling/generate-csp.mjs"
       ],
       "package": {
         "dependencies": {},
         "devDependencies": {},
-        "scripts": {}
+        "scripts": {
+          "postbuild": "node tooling/generate-csp.mjs"
+        }
       }
     }
   }

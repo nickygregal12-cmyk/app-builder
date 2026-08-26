@@ -169,28 +169,54 @@ It does not:
 
 Provider credentials should eventually be injected by a scoped secret broker for a named task/role/environment, not stored in repository files or shell profiles.
 
-## 6. Running App Builder processes without affecting the host
+## 6. Install dormant service units
 
-Future service/runtime processes should be launched through the resource slice rather than as unrestricted background processes.
+Once the App Builder repository is at `/srv/app-builder/repository`, dependencies are installed, and OpenCode is installed, prepare the two local services:
 
-For a simple bounded command:
+```bash
+sudo bash ops/hetzner/install-service-units.sh
+```
+
+This installs but does **not** enable or start:
+
+- `app-builder-factory.service` — the existing factory service, expected to bind on loopback port `4310`;
+- `app-builder-opencode.service` — `opencode serve` bound explicitly to `127.0.0.1:4096`.
+
+Both run as `appbuilder`, inherit `app-builder-runtime.slice`, use restrictive umasks/no-new-privileges controls, and are separate from Predictor services. The installer creates a random local OpenCode HTTP Basic Auth password at `/etc/app-builder/opencode-server.env`; it contains no model/provider credential.
+
+The OpenCode server exists only as a local runtime endpoint for the future `AgentRuntimeAdapter`. Starting it does not grant autonomous permissions or production authority.
+
+When the checkout is ready, the services can be exercised explicitly rather than auto-starting them during host setup:
+
+```bash
+sudo systemctl start app-builder-factory.service
+sudo systemctl start app-builder-opencode.service
+sudo systemctl status app-builder-factory.service app-builder-opencode.service
+```
+
+Do not enable them at boot until their normal restart/recovery behaviour has been observed on the shared host.
+
+## 7. Running bounded one-off commands
+
+For a simple bounded command outside a long-lived unit:
 
 ```bash
 sudo app-builder-run /home/appbuilder/.local/bin/node --version
 ```
 
-The future systemd units/AgentRuntimeAdapter should explicitly use `app-builder-runtime.slice` too.
+Future systemd units/AgentRuntimeAdapter workers should use `app-builder-runtime.slice` rather than unrestricted background processes.
 
 Do not run long-lived OpenCode workers directly as root or as the existing Predictor service account.
 
-## 7. Network exposure
+## 8. Network exposure
 
-The current factory service/Console should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173` or arbitrary preview ports.
+The current factory service, Console and OpenCode server should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173`, `4096` or arbitrary preview ports.
 
 When intentionally running the stack later, access it through the server's existing secure administration path, for example SSH local forwarding:
 
 ```bash
 ssh \
+  -L 4096:127.0.0.1:4096 \
   -L 4310:127.0.0.1:4310 \
   -L 5173:127.0.0.1:5173 \
   YOUR_EXISTING_ADMIN_USER@SERVER_IP
@@ -198,7 +224,7 @@ ssh \
 
 Use the existing server's known-good SSH identity; this setup does not create a replacement administrator account.
 
-## 8. When a second server becomes justified
+## 9. When a second server becomes justified
 
 Do not pay for another VM pre-emptively. Measure first.
 
@@ -212,7 +238,7 @@ A separate App Builder server becomes worthwhile if one or more of these persist
 
 Because durable App Builder state lives under its own `/srv/app-builder` tree and runtime providers are adapters, migration to another server later should be an infrastructure move rather than an application redesign.
 
-## 9. Still deliberately deferred
+## 10. Still deliberately deferred
 
 This setup prepares the host boundary only. These remain later runtime work:
 

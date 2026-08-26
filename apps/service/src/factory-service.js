@@ -1119,7 +1119,14 @@ export class FactoryService {
       frozenTruth: {
         projectType: project.manifest.project.type,
         manifestVersion: project.manifest.schemaVersion ?? 1,
+        // A null pack hash is a fact, not a gap: a project replayed from an
+        // approved intake bundle has an approved manifest and no ingested
+        // material. It used to be indistinguishable from a hash that went
+        // missing, so the manifest's own identity is recorded beside it and a
+        // reviewer always has something to compare candidates against.
+        manifestHash: hashOf(project.manifest),
         knowledgePackHash: project.knowledgePack?.packHash ?? null,
+        knowledgeSource: project.knowledgePack ? 'ingested-knowledge-pack' : 'approved-manifest-only',
         baselineCompositionHash: composition.compositionHash,
       },
     };

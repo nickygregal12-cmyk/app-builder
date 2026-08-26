@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Immersive fixture</title>
+<!--
+  The opposite fixture, and synthetic for the same reason. A lead image that
+  fills the opening, a tight rhythm, grounds that alternate down the page, plain
+  headings, transitions on everything, and navigation that collapses on a phone.
+  The inline SVG is drawn here rather than fetched, so this fixture carries no
+  third party's image.
+-->
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; background: #fbfbfa; color: #14140f; font: 16px/1.5 system-ui, sans-serif; }
+  * { transition: opacity 180ms ease, transform 180ms ease; }
+  @keyframes drift { from { transform: translateY(6px); } to { transform: translateY(0); } }
+  .lead, .band, .items > div { animation: drift 400ms ease both; }
+  header nav { display: flex; gap: 16px; padding: 12px 24px; }
+  header nav a { color: #14140f; }
+  .menu { display: none; }
+  main > section { margin-bottom: 28px; padding: 24px; }
+  main > section:nth-child(even) { background: #ececea; }
+  main > section:nth-child(odd) { background: #fbfbfa; }
+  .lead { padding: 0; background: #101014; }
+  .lead svg { display: block; width: 100%; height: 620px; }
+  h1 { font-size: 40px; margin: 0 0 12px; }
+  h2 { font-size: 24px; margin: 0 0 12px; }
+  p { max-width: 60em; margin: 0 0 12px; }
+  .items { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  @media (max-width: 700px) {
+    header nav { display: none; }
+    .menu { display: inline-block; margin: 12px 24px; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <button class="menu" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav id="nav"><a href="#work">Work</a><a href="#studio">Studio</a><a href="#stock">Stock</a><a href="#contact">Contact</a></nav>
+  </header>
+  <main>
+    <section class="lead">
+      <svg viewBox="0 0 1200 620" role="img" aria-label="A drawn lead image"><rect width="1200" height="620" fill="#1d2430"/><circle cx="820" cy="240" r="180" fill="#3f5a6b"/><rect y="430" width="1200" height="190" fill="#2a3644"/></svg>
+    </section>
+    <section id="work">
+      <h1>Work first, words after.</h1>
+      <p>Photographs of what we made, in the order we made them.</p>
+    </section>
+    <section id="studio">
+      <h2>Studio</h2>
+      <div class="items"><div><p>A room above a bakery.</p></div><div><p>Six of us.</p></div></div>
+    </section>
+    <section id="stock">
+      <h2>Available now</h2>
+      <div class="items"><div><p>Three pieces, finished.</p></div><div><p>Two in progress.</p></div></div>
+    </section>
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>Come and see it in person.</p>
+    </section>
+  </main>
+</body>
+</html>

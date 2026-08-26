@@ -17,7 +17,12 @@
       "properties": {
         "projectType": {"type": "string", "minLength": 1},
         "manifestVersion": {"type": "integer", "minimum": 1},
-        "knowledgePackHash": {"type": ["string", "null"]},
+        "manifestHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "knowledgePackHash": {
+          "type": ["string", "null"],
+          "description": "Null is a fact rather than a gap: a project replayed from an approved intake bundle has an approved manifest and no ingested material. `knowledgeSource` says which case this is, so a reviewer never has to guess whether a hash went missing."
+        },
+        "knowledgeSource": {"enum": ["ingested-knowledge-pack", "approved-manifest-only"]},
         "baselineCompositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       },
       "additionalProperties": false

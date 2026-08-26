@@ -158,7 +158,7 @@ function reworked(id, overrides = {}) {
     addressedRules: [],
     criterionScores: scores(7.5, { distinctiveness: 5, 'distinctive-moment': 5.5 }),
     failingCriteria: ['distinctiveness'],
-    ...(overrides.review ?? {}),
+    ...overrides.review,
   }, { qualityGate: gate, criteria });
 }
 

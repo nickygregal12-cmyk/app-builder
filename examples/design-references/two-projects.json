@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "description": "Two projects whose owners want materially different things, as a replayable fixture. The point of the pair is that no single default visual language can satisfy both: one asks for a restrained, architectural, typography-led page that barely moves, the other for an image-led page with an expressive rhythm. If the Factory produces similar art direction for both, the reference path is decorative and the fixture says so.",
+  "rules": [
+    "Both projects are synthetic. The businesses do not exist, and neither does the site either owner says they like — the reference measurements are supplied inline so the fixture replays without a network or a browser.",
+    "The measurements are the shape `measurePage` returns. They are the fixture's own numbers, not a recording of anybody's real page.",
+    "`expect` names the art-direction values each project must end up with. A change that makes both projects agree fails the fixture rather than quietly passing.",
+    "Cairnhill's reference asks for an expressive opening and its direction declares a high restraint level, so the plan clamps it back to balanced and records the clamp. That is the contract working: a reference steers the one ArtDirectionPlan, it does not overrule what the direction refuses."
+  ],
+  "projects": [
+    {
+      "id": "cairnhill-architects",
+      "name": "Cairnhill Architects",
+      "projectType": "marketing-site",
+      "summary": "A four-person architecture practice. The owner likes documents, hates anything that moves, and wants the writing to carry the page.",
+      "photographs": 0,
+      "company": {
+        "name": "Cairnhill Architects",
+        "legalName": "Cairnhill Architects Limited",
+        "description": "A small architecture practice working on houses, workshops and one library.",
+        "email": "studio@example-practice.test",
+        "phone": "0131 555 0142",
+        "serviceAreas": [
+          "Edinburgh",
+          "The Borders"
+        ],
+        "services": [
+          {
+            "name": "Feasibility and brief",
+            "description": "The written brief a project is measured against before anything is drawn."
+          },
+          {
+            "name": "Detailed design",
+            "description": "Drawings by the person who will stand on site while they are built."
+          }
+        ]
+      },
+      "reference": {
+        "label": "A practice site the owner likes",
+        "preference": "like",
+        "influence": "strong",
+        "useFor": [
+          "typography",
+          "spacing",
+          "motion",
+          "section-rhythm"
+        ],
+        "note": "Big type and lots of whitespace, and it is completely still. No animation anywhere.",
+        "measurements": {
+          "desktop": {
+            "displaySize": 96,
+            "bodySize": 18,
+            "displayFamily": "Fixture Serif",
+            "bodyFamily": "Fixture Serif",
+            "headingCount": 5,
+            "ruledHeadings": 4,
+            "readingMeasure": 600,
+            "medianGap": 160,
+            "sectionCount": 5,
+            "grounds": 1,
+            "backgroundLuminance": 0.96,
+            "containerWidth": 1200,
+            "gridCount": 1,
+            "asymmetric": false,
+            "heroMediaRatio": 0,
+            "imageCount": 0,
+            "videoCount": 0,
+            "transitions": 2,
+            "animated": 0,
+            "navPosition": "static",
+            "navItems": 3,
+            "navVisibleLinks": 3,
+            "navToggle": false
+          },
+          "mobile": {
+            "displaySize": 44,
+            "bodySize": 17,
+            "displayFamily": "Fixture Serif",
+            "bodyFamily": "Fixture Serif",
+            "headingCount": 5,
+            "ruledHeadings": 4,
+            "readingMeasure": 330,
+            "medianGap": 150,
+            "sectionCount": 5,
+            "grounds": 1,
+            "backgroundLuminance": 0.96,
+            "containerWidth": 390,
+            "gridCount": 1,
+            "asymmetric": false,
+            "heroMediaRatio": 0,
+            "imageCount": 0,
+            "videoCount": 0,
+            "transitions": 2,
+            "animated": 0,
+            "navPosition": "static",
+            "navItems": 3,
+            "navVisibleLinks": 3,
+            "navToggle": false
+          }
+        }
+      },
+      "expect": {
+        "visualDistinctiveness": "balanced",
+        "motionIntensity": "subtle",
+        "layoutVariance": "uniform",
+        "density": "relaxed"
+      },
+      "expectClamped": [
+        {
+          "dimension": "visualDistinctiveness",
+          "declared": "expressive",
+          "applied": "balanced"
+        }
+      ]
+    },
+    {
+      "id": "lantern-rooms",
+      "name": "The Lantern Rooms",
+      "projectType": "marketing-site",
+      "summary": "A restaurant with rooms. The owner wants the photographs to do the work and the page to feel alive as it is read.",
+      "photographs": 3,
+      "company": {
+        "name": "The Lantern Rooms",
+        "legalName": "The Lantern Rooms Limited",
+        "description": "A restaurant with six rooms above it, in a converted harbour warehouse.",
+        "email": "bookings@example-rooms.test",
+        "phone": "01620 555 0188",
+        "serviceAreas": [
+          "North Berwick",
+          "East Lothian"
+        ],
+        "services": [
+          {
+            "name": "Dinner",
+            "description": "Five courses, one sitting, whatever the boats brought in."
+          },
+          {
+            "name": "Rooms",
+            "description": "Six rooms above the dining room, each looking at the water."
+          }
+        ]
+      },
+      "reference": {
+        "label": "A hospitality site the owner likes",
+        "preference": "like",
+        "influence": "strong",
+        "useFor": [
+          "imagery",
+          "motion",
+          "spacing",
+          "section-rhythm"
+        ],
+        "note": "The photography leads and the page moves as you scroll. Banded sections. Nothing sparse.",
+        "measurements": {
+          "desktop": {
+            "displaySize": 46,
+            "bodySize": 16,
+            "displayFamily": "Fixture Sans",
+            "bodyFamily": "Fixture Sans",
+            "headingCount": 6,
+            "ruledHeadings": 0,
+            "readingMeasure": 780,
+            "medianGap": 28,
+            "sectionCount": 7,
+            "grounds": 4,
+            "backgroundLuminance": 0.9,
+            "containerWidth": 1600,
+            "gridCount": 3,
+            "asymmetric": true,
+            "heroMediaRatio": 0.82,
+            "imageCount": 14,
+            "videoCount": 1,
+            "transitions": 140,
+            "animated": 11,
+            "navPosition": "sticky",
+            "navItems": 5,
+            "navVisibleLinks": 5,
+            "navToggle": false
+          },
+          "mobile": {
+            "displaySize": 30,
+            "bodySize": 16,
+            "displayFamily": "Fixture Sans",
+            "bodyFamily": "Fixture Sans",
+            "headingCount": 6,
+            "ruledHeadings": 0,
+            "readingMeasure": 340,
+            "medianGap": 20,
+            "sectionCount": 7,
+            "grounds": 4,
+            "backgroundLuminance": 0.9,
+            "containerWidth": 390,
+            "gridCount": 3,
+            "asymmetric": true,
+            "heroMediaRatio": 0.9,
+            "imageCount": 14,
+            "videoCount": 1,
+            "transitions": 140,
+            "animated": 11,
+            "navPosition": "sticky",
+            "navItems": 5,
+            "navVisibleLinks": 0,
+            "navToggle": true
+          }
+        }
+      },
+      "expect": {
+        "visualDistinctiveness": "balanced",
+        "motionIntensity": "expressive",
+        "layoutVariance": "varied",
+        "density": "dense"
+      }
+    }
+  ],
+  "mustDifferOn": [
+    "motionIntensity",
+    "layoutVariance",
+    "density"
+  ]
+}

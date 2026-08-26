@@ -293,8 +293,8 @@ function describeTrait(traitRegistry, trait, { source, confidence, detail = null
     confidence,
     consumer: definition.consumer ?? null,
     consumerAbsentReason: definition.consumer ? null : definition.unconsumedReason ?? null,
-    prefer: { ...(definition.adopt?.prefer ?? {}) },
-    refuse: { ...(definition.avoid?.refuse ?? {}) },
+    prefer: { ...definition.adopt?.prefer },
+    refuse: { ...definition.avoid?.refuse },
     detail,
   };
 }
@@ -399,7 +399,7 @@ export function buildReferenceAnalysis({
   }
 
   const emptyObservations = Object.fromEntries(OBSERVATION_CATEGORIES.map((category) => [category, []]));
-  const observations = { ...emptyObservations, ...(observed ?? {}) };
+  const observations = { ...emptyObservations, ...observed };
   const interpreted = interpretObservations(observations);
   // Measured, not described. A reference whose observations support no trait —
   // an uploaded picture, or a page the browser could not reach — rests on what

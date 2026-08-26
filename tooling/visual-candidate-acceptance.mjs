@@ -33,7 +33,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
-import { captureInventory } from './lib/visual-review-report.mjs';
+import { designReferenceSummary } from '../apps/service/src/visual-references.js';
+import { captureInventory, writeVisualReviewPacket } from './lib/visual-review-report.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 
@@ -90,6 +91,27 @@ try {
   const packets = captured.candidates.map((candidate) => service.visualReviewPacket(project.id, candidate.candidateId));
   fs.writeFileSync(path.join(root, 'review-packets.json'), `${JSON.stringify(packets, null, 2)}\n`);
 
+  // The portable half. `.app-builder/visual-review` is durable factory state and
+  // still needs the factory to read it; this is one directory a second person
+  // can be handed, archived, or uploaded as a CI artifact, and it opens in a
+  // browser with nothing installed.
+  const portable = writeVisualReviewPacket({
+    outputDir: path.join(root, 'packet'),
+    business: bundle.projectManifest.project.name,
+    set: captured,
+    criteria: packets[0]?.criteria ?? [],
+    qualityGate: service.visualQualityGate(),
+    designReferences: designReferenceSummary(service, project.id).references.map((reference) => ({
+      label: reference.sourceRef.label,
+      adopt: reference.adopt.map((trait) => trait.trait),
+      avoid: reference.avoid.map((trait) => trait.trait),
+      approval: reference.approval.state,
+    })),
+    readEvidence: (evidenceId) => service.getRenderedEvidence(project.id, evidenceId),
+    readCapture: (evidenceId, captureId) => service.readRenderedCapture(project.id, evidenceId, captureId)?.bytes ?? null,
+  });
+  console.log(`Portable review packet: ${portable.root} (${portable.captureCount} capture(s))`);
+
   const verdictFile = argument('--verdicts');
   let decided = captured;
   let promotion = null;
@@ -142,6 +164,9 @@ try {
       };
     }),
     promotedCandidateId: decided.promotedCandidateId,
+    setOutcome: decided.setOutcome ?? 'undecided',
+    qualityGate: service.visualQualityGate(),
+    portableReviewPacket: { path: path.relative(process.cwd(), portable.root), files: portable.files.length, captures: portable.captureCount },
     // Recorded rather than implied. Phase 5 is where a genuinely independent
     // runtime could issue this verdict; nothing here pretends one did.
     independentVisualReview: {
@@ -161,7 +186,7 @@ try {
   // the expensive half of the job.
   console.log('');
   console.log(`Evidence: ${root}`);
-  console.log(`  report.json, review-packets.json, service/ (durable factory state), workspaces/ (built candidates)`);
+  console.log(`  report.json, review-packets.json, packet/ (portable — open packet/index.html anywhere), service/ (durable factory state), workspaces/ (built candidates)`);
   console.log('Review it in the ordinary Console:');
   console.log(`  npm run review:visual-candidates   # then open http://127.0.0.1:5173/builder and choose ${report.business}`);
 } finally {

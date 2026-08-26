@@ -43,9 +43,27 @@ The co-located installer deliberately does **not**:
 - expose new public ports;
 - start App Builder or OpenCode automatically.
 
-## 1. Check available capacity
+## 1. Run the read-only preflight first
 
-Before installing, record the current server shape and load:
+Before changing the server, run:
+
+```bash
+bash ops/hetzner/preflight-existing-host.sh
+```
+
+The preflight makes **no changes**. It reports:
+
+- operating system, kernel and architecture;
+- CPU, RAM and disk capacity;
+- whether the required systemd model is available;
+- collisions with an existing `appbuilder` user, `/srv/app-builder` tree or resource slice;
+- whether ports `4310` or `5173` are already in use;
+- whether Podman/Docker/global Node are already present;
+- conservative CPU and memory limits derived from the server's capacity.
+
+A hard collision fails the preflight and means the installer should not be run until it is understood. Capacity findings are warnings rather than guesses about the existing workload.
+
+For additional manual context, these remain useful:
 
 ```bash
 nproc
@@ -54,26 +72,26 @@ df -h /
 systemctl --failed
 ```
 
-The default App Builder slice is intentionally conservative:
+The installer's default App Builder slice is intentionally conservative:
 
 - CPU quota: `150%` (up to 1.5 CPU cores worth of sustained time);
 - memory high watermark: `25%` of host RAM;
 - hard memory maximum: `35%` of host RAM;
 - task/process cap: `1024`.
 
-These are protection defaults, not performance targets. Override them during installation only when the existing server has enough spare capacity, for example:
+Prefer the preflight's suggested starting values when they are lower than those defaults. Override during installation only when the existing server has enough spare capacity, for example:
 
 ```bash
 sudo \
-  APP_BUILDER_CPU_QUOTA=250% \
-  APP_BUILDER_MEMORY_HIGH=35% \
-  APP_BUILDER_MEMORY_MAX=45% \
+  APP_BUILDER_CPU_QUOTA=125% \
+  APP_BUILDER_MEMORY_HIGH=20% \
+  APP_BUILDER_MEMORY_MAX=30% \
   bash ops/hetzner/install-existing-host.sh
 ```
 
 ## 2. Install the isolated host baseline
 
-From a checkout of this branch/repository on the existing server:
+From a checkout of this repository on the existing server:
 
 ```bash
 sudo bash ops/hetzner/install-existing-host.sh
@@ -82,11 +100,13 @@ sudo bash ops/hetzner/install-existing-host.sh
 The installer:
 
 - creates `appbuilder` if it does not exist;
-- locks its password and removes any `authorized_keys`;
+- fails closed if an unrelated pre-existing `appbuilder` identity or `/srv/app-builder` tree would be taken over;
+- locks the runtime account's password and removes any `authorized_keys`;
 - does not add it to sudo;
 - creates App Builder-owned directories under `/srv/app-builder`;
 - installs Node 22 under `/opt/app-builder/node`, then exposes it only through the `appbuilder` account's `~/.local/bin`;
 - does not replace the server's existing `/usr/bin/node` or `/usr/local/bin/node`;
+- supports x64 and arm64 hosts;
 - installs rootless Podman prerequisites for future disposable workspaces;
 - creates `app-builder-runtime.slice` with CPU/memory/task limits;
 - creates `app-builder-run`, the bounded launcher future service/runtime commands can use;

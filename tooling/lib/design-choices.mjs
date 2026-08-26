@@ -21,6 +21,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { DEFAULT_ART_DIRECTION, artDirectionTokens, compileArtDirectionPlan } from './art-direction.mjs';
+import { brandTokens, compileBrandSpec } from './brand-spec.mjs';
+import { motionTokens } from './motion-contract.mjs';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -126,11 +129,17 @@ export function applyDesignChoices(design, choices = {}) {
  */
 export function compileDesignTokens(design) {
   const density = DENSITIES[design.density] ?? DENSITIES.comfortable;
+  const brand = design.brand ?? compileBrandSpec();
+  const artDirection = design.artDirection ?? compileArtDirectionPlan(DEFAULT_ART_DIRECTION);
   return {
-    '--color-accent': design.accentColor,
+    // The accent stays the design control's value, so a person who picks a
+    // colour still overrides whatever the brand resolved.
+    ...brandTokens(brand, design.accentColor),
     '--layout-max-width': design.maxWidth,
     '--layout-radius': design.radius,
     '--section-space': density.sectionSpace,
+    ...artDirectionTokens(artDirection),
+    ...motionTokens(artDirection.motion),
   };
 }
 
@@ -143,6 +152,8 @@ export function compileDesignTokens(design) {
  * a second source of design truth.
  */
 export function compileDesignSystemSpec(design) {
+  const brand = design.brand ?? compileBrandSpec();
+  const artDirection = design.artDirection ?? compileArtDirectionPlan(DEFAULT_ART_DIRECTION);
   return {
     schemaVersion: 1,
     authority: 'design-contract',
@@ -156,6 +167,18 @@ export function compileDesignSystemSpec(design) {
       maxWidth: design.maxWidth,
       radius: design.radius,
       density: design.density,
+    },
+    // Where the accent came from, and whether a person then chose another.
+    // Recording both is what lets a review tell an observation from a decision.
+    brand: {
+      ...brand,
+      accent: { ...brand.accent, overridden: design.accentColor !== brand.accent.value },
+    },
+    artDirection: {
+      ...artDirection,
+      // The density control is this dimension. It is named here rather than
+      // duplicated, so there is one place a rhythm can be changed.
+      dimensions: { ...artDirection.dimensions, informationDensity: design.density },
     },
     tokens: compileDesignTokens(design),
   };

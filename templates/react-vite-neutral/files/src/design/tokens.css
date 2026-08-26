@@ -1,5 +1,11 @@
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Typography is a brand decision, so the families are properties the
+     compiled brand supplies rather than a stack typed in here. These are the
+     defaults a build with no resolved brand falls back to. */
+  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  font-family: var(--font-body);
   color: var(--color-text);
   background: var(--color-page);
   font-synthesis: none;
@@ -47,6 +53,20 @@
 
   --shadow-soft: 0 10px 30px rgb(20 22 26 / 7%);
   --shadow-lifted: 0 24px 60px -20px rgb(20 22 26 / 26%);
+
+  /* Art direction. How much a page changes ground as it scrolls, and how much
+     room its opening claims, are decisions rather than template habits. */
+  --section-alt-ground: var(--color-accent-soft);
+  --hero-scale: 1.3;
+  --display-measure: 16ch;
+
+  /* Motion. Every transition below reads these, so a build that asked for less
+     movement gets less movement rather than the same .18s everywhere. */
+  --motion-duration-fast: 180ms;
+  --motion-duration-slow: 460ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --motion-hover-lift: -2px;
+  --motion-decorative-scale: 1.03;
 }
 
 * { box-sizing: border-box; }

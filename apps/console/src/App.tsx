@@ -10,6 +10,7 @@ import {
   createSourceReference,
   isAnswered,
   mergeQuestionnaires,
+  normalizeListAnswer,
   questionsForMode,
   serializeIntakeBundle,
   type AnswerValue,
@@ -48,9 +49,6 @@ const modeCopy: Record<IntakeMode, { title: string; copy: string }> = {
   thorough: { title: 'Thorough', copy: 'Adds scale, migration, compliance and edge-case questions.' },
 };
 
-function listFromText(value: string) {
-  return value.split('\n').map((item) => item.trim()).filter(Boolean);
-}
 
 function sameValue(a: AnswerValue, b: AnswerValue) {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -75,14 +73,23 @@ function sourceKindForFile(file: File): SourceKind {
   return 'other';
 }
 
+// The textarea holds the operator's raw keystrokes. Trimming every line on each keystroke
+// would delete a space the moment it is typed, so normalisation happens when the value
+// leaves the field (question change, defaults applied, contract build), not while typing.
+function ListField({ question, value, onChange }: { question: Question; value: AnswerValue; onChange: (value: AnswerValue) => void }) {
+  const canonical = (Array.isArray(value) ? value.map((item) => String(item ?? '')) : []).join('\n');
+  const [draft, setDraft] = useState(canonical);
+  useEffect(() => {
+    setDraft((current) => (normalizeListAnswer(current).join('\n') === canonical ? current : canonical));
+  }, [canonical]);
+  return <div><textarea aria-label={question.label} rows={6} value={draft} placeholder="One item per line" onChange={(event) => { setDraft(event.target.value); onChange(normalizeListAnswer(event.target.value)); }} /><p className="field-note">One item per line. Keep these concrete — they become part of the Build Contract.</p></div>;
+}
+
 function QuestionField({ question, value, onChange }: { question: Question; value: AnswerValue; onChange: (value: AnswerValue) => void }) {
   const stringValue = typeof value === 'string' ? value : '';
   if (question.type === 'textarea') return <textarea aria-label={question.label} rows={5} value={stringValue} placeholder={question.placeholder} onChange={(event) => onChange(event.target.value)} />;
   if (question.type === 'text' || question.type === 'url') return <input aria-label={question.label} type={question.type === 'url' ? 'url' : 'text'} value={stringValue} placeholder={question.placeholder} onChange={(event) => onChange(event.target.value)} />;
-  if (question.type === 'list') {
-    const items = Array.isArray(value) ? value : [];
-    return <div><textarea aria-label={question.label} rows={6} value={items.join('\n')} placeholder="One item per line" onChange={(event) => onChange(listFromText(event.target.value))} /><p className="field-note">One item per line. Keep these concrete — they become part of the Build Contract.</p></div>;
-  }
+  if (question.type === 'list') return <ListField question={question} value={value} onChange={onChange} />;
   if (question.type === 'boolean') {
     return <div className="choice-row" role="group" aria-label={question.label}>{[true, false].map((option) => <button className={value === option ? 'choice active' : 'choice'} type="button" key={String(option)} onClick={() => onChange(option)}>{option ? 'Yes' : 'No'}</button>)}</div>;
   }
@@ -284,7 +291,7 @@ export default function App() {
 
     {stage === 'questions' && current && <section className="question-layout">
       <aside className="question-sidebar"><p className="eyebrow">{projectTypeConfig.projectTypes[projectType].label}</p><h2>{modeCopy[mode].title} intake</h2><div className="progress-track"><span style={{ width: `${progress}%` }} /></div><p className="progress-copy">Question {Math.min(questionIndex + 1, questions.length)} of {questions.length} · {progress}%</p><div className="principle-note"><strong>Adaptive intake</strong><p>Later questions can appear or disappear from your answers. Hidden questions never become blockers.</p></div></aside>
-      <div className="question-stage"><div className="question-meta"><span>{String(questionIndex + 1).padStart(2, '0')}</span><span>{current.impact ?? 'normal'} impact</span></div><h1>{current.label}</h1>{current.required && <p className="required-note">Required to shape V1</p>}<QuestionField question={current} value={answers[current.id]} onChange={(value) => updateAnswer(current, value)} />{error && <div className="error-box" role="alert">{error}</div>}<div className="question-actions"><button className="secondary" type="button" onClick={() => questionIndex === 0 ? setStage('start') : setQuestionIndex((index) => Math.max(0, index - 1))}>← Back</button><div className="action-cluster">{!current.required && <button className="text-button" type="button" onClick={markNotRelevant}>Not relevant</button>}<button className="primary" type="button" onClick={next}>{questionIndex >= questions.length - 1 ? 'Add source material' : 'Continue'} <span>→</span></button></div></div></div>
+      <div className="question-stage"><div className="question-meta"><span>{String(questionIndex + 1).padStart(2, '0')}</span><span>{current.impact ?? 'normal'} impact</span></div><h1>{current.label}</h1>{current.required && <p className="required-note">Required to shape V1</p>}<QuestionField key={current.id} question={current} value={answers[current.id]} onChange={(value) => updateAnswer(current, value)} />{error && <div className="error-box" role="alert">{error}</div>}<div className="question-actions"><button className="secondary" type="button" onClick={() => questionIndex === 0 ? setStage('start') : setQuestionIndex((index) => Math.max(0, index - 1))}>← Back</button><div className="action-cluster">{!current.required && <button className="text-button" type="button" onClick={markNotRelevant}>Not relevant</button>}<button className="primary" type="button" onClick={next}>{questionIndex >= questions.length - 1 ? 'Add source material' : 'Continue'} <span>→</span></button></div></div></div>
     </section>}
 
     {stage === 'sources' && <section className="review-layout"><div className="review-heading"><div><p className="eyebrow">Source material</p><h1>Record what the build can rely on.</h1><p className="lede">References and file metadata are captured here. Phase 3 already provides deterministic URL/document/image normalization; browser intake deliberately does not parse local file bytes itself.</p></div><div className="readiness ready"><span>Recorded</span><strong>{sourceReferences.length} sources</strong></div></div><div className="source-layout"><section className="source-panel"><span className="card-kicker">Website / URL</span><div className="field-stack"><input aria-label="Source label" value={sourceLabel} onChange={(event) => setSourceLabel(event.target.value)} placeholder="Existing website" /><input aria-label="Source URL" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://example.com" /><input aria-label="Source purpose" value={sourcePurpose} onChange={(event) => setSourcePurpose(event.target.value)} placeholder="What should the factory use it for?" /><button className="secondary" type="button" onClick={addUrlSource}>Add URL source</button></div><span className="card-kicker source-file-kicker">Files</span><label className="file-drop"><strong>Add logos, photos, screenshots or documents</strong><span>Filename/type/size are recorded here; the factory ingestion layer processes content.</span><input aria-label="Add source files" type="file" multiple onChange={(event) => addFiles(event.target.files)} /></label>{error && <div className="error-box" role="alert">{error}</div>}</section><section className="source-panel"><span className="card-kicker">Source inventory</span>{sourceReferences.length === 0 ? <div className="empty-state"><strong>No sources yet</strong><p>You can continue without them. The Build Contract will record that explicitly.</p></div> : <div className="source-list">{sourceReferences.map((source) => <article key={source.id} className="source-item"><div><strong>{source.label}</strong><span>{source.kind.replaceAll('-', ' ')}{source.name ? ` · ${source.name}` : ''}{source.size ? ` · ${Math.max(1, Math.round(source.size / 1024))} KB` : ''}</span>{source.uri && <small>{source.uri}</small>}</div><button type="button" className="text-button danger" onClick={() => setSourceReferences((items) => items.filter((item) => item.id !== source.id))}>Remove</button></article>)}</div>}</section></div><div className="review-actions"><button className="secondary" type="button" onClick={() => { setStage('questions'); setQuestionIndex(Math.max(questions.length - 1, 0)); }}>← Back to questions</button><button className="primary" type="button" onClick={goToReview}>Review Build Contract <span>→</span></button></div></section>}

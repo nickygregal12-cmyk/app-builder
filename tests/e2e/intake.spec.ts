@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 async function continueStep(page: import('@playwright/test').Page) {
@@ -15,7 +16,13 @@ test('marketing-site intake reaches an approved portable manifest and resumes af
   await continueStep(page);
   await page.getByRole('textbox', { name: 'Who is it for?' }).fill('Homeowners in Glasgow');
   await continueStep(page);
-  await page.getByRole('textbox', { name: 'What must V1 let users do?' }).fill('Understand services\nRequest a quote');
+  const journeys = page.getByRole('textbox', { name: 'What must V1 let users do?' });
+  await journeys.click();
+  // Typed, not pasted: a per-keystroke trim used to delete the space as soon as it was pressed.
+  await journeys.pressSequentially('Understand roof repair services');
+  await journeys.press('Enter');
+  await journeys.pressSequentially('Request a fixed price quote');
+  await expect(journeys).toHaveValue('Understand roof repair services\nRequest a fixed price quote');
   await continueStep(page);
 
   await expect(page.getByRole('heading', { name: 'How much should the factory decide?' })).toBeVisible();
@@ -26,7 +33,13 @@ test('marketing-site intake reaches an approved portable manifest and resumes af
   await page.getByRole('textbox', { name: 'Company name' }).fill('North Star Roofing');
   await page.getByRole('textbox', { name: 'Company description' }).fill('Residential roofing and repair company.');
   await continueStep(page);
-  await page.getByRole('textbox', { name: 'What services/products should the site present?' }).fill('Roof repairs\nNew roofs');
+  const services = page.getByRole('textbox', { name: 'What services/products should the site present?' });
+  await services.click();
+  await services.pressSequentially('Emergency roof repairs');
+  await services.press('Enter');
+  await services.press('Enter');
+  await services.pressSequentially('New pitched roofs ');
+  await expect(services).toHaveValue('Emergency roof repairs\n\nNew pitched roofs ');
   await continueStep(page);
   await expect(page.getByRole('heading', { name: 'What should visitors do next?' })).toBeVisible();
   await continueStep(page);
@@ -40,9 +53,22 @@ test('marketing-site intake reaches an approved portable manifest and resumes af
 
   await expect(page.getByText('Ready for approval')).toBeVisible();
   await expect(page.getByText('Existing website', { exact: true })).toBeVisible();
+  await expect(page.getByRole('listitem').filter({ hasText: 'Understand roof repair services' })).toHaveCount(1);
+  await expect(page.getByRole('listitem').filter({ hasText: 'Request a fixed price quote' })).toHaveCount(1);
   await page.getByRole('button', { name: /Approve Build Contract/ }).click();
   await expect(page.getByRole('heading', { name: /North Star Roofing is ready for deterministic generation/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Download intake bundle/ })).toBeVisible();
+
+  const download = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Download intake bundle/ }).click(),
+  ]).then(([event]) => event);
+  const bundle = JSON.parse(await readFile(await download.path(), 'utf8'));
+  expect(bundle.buildContract.coreJourneys).toContain('Understand roof repair services');
+  expect(bundle.buildContract.coreJourneys).toContain('Request a fixed price quote');
+  expect(bundle.projectManifest.journeys).toContain('Request a fixed price quote');
+  // Blank lines and the trailing space survive typing but never reach the durable contract.
+  expect(bundle.session.answers.services).toEqual(['Emergency roof repairs', 'New pitched roofs']);
 
   await page.getByRole('textbox', { name: 'Intake learning' }).fill('Ask whether emergency call-outs are offered.');
   await page.getByRole('button', { name: 'Add evidence' }).click();

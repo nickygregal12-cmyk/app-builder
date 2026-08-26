@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "description": "The explicit promotion gate for `runtimeReady` in config/agent-roles.json. A sandbox that can launch is not a runtime-ready role. This file is the machine-readable list of evidence a role must carry before its flag may be flipped, and `packages/control-plane/src/runtime-readiness.js` is the code that refuses a promotion without it.",
+  "rules": [
+    "Deny-by-default. A role is runtime-ready only when every requirement below has recorded evidence for that role; there is no partial or provisional promotion.",
+    "Evidence is a reference to something that exists — a config entry, a test, a recorded acceptance run — not a claim in prose. A requirement whose evidence cannot be resolved counts as missing.",
+    "Promotion is never a side effect of infrastructure landing. Merging the execution lifecycle, the pinned image or the egress profile satisfies requirements; it does not promote a role.",
+    "A promoted role may be demoted by any requirement ceasing to hold, and demotion needs no ceremony."
+  ],
+  "requirements": [
+    {
+      "id": "context-packet",
+      "summary": "The role has a usable skill and context packet.",
+      "detail": "`buildRoleContextPacket` produces a packet for this role that includes the artifact kinds it reads, withholds the kinds it does not, and fits its declared context ceiling."
+    },
+    {
+      "id": "operation-set",
+      "summary": "The role's operation-level capability set is projected and non-empty.",
+      "detail": "`capabilitiesForRole` grants this role at least one operation, and the projection is enforced at the broker rather than described."
+    },
+    {
+      "id": "environment-profile",
+      "summary": "The role's network profile is decided by policy and proved for that profile.",
+      "detail": "A role whose profile is `public-egress-only` additionally needs a hosted egress attestation; a `none` role needs the isolation proof."
+    },
+    {
+      "id": "pinned-image",
+      "summary": "A pinned, content-addressed task image exists for the role's work.",
+      "detail": "The image is resolvable by digest from config/task-images.json. A floating tag is refused by the runtime translation and by the attempt record."
+    },
+    {
+      "id": "lifecycle-support",
+      "summary": "The execution lifecycle supports this role's attempts end to end.",
+      "detail": "create, start, inspect, collect, cancel, timeout, terminate, dispose and restart recovery all hold, proved by the deterministic runtime canary."
+    },
+    {
+      "id": "deterministic-coverage",
+      "summary": "Deterministic tests cover the role's bounded behaviour.",
+      "detail": "Not a canary run for the role's class alone: the role's own scope, reviewer and stop criteria are exercised by tests that fail when they regress."
+    },
+    {
+      "id": "convergence-behaviour",
+      "summary": "The role's stop and convergence behaviour is enforced rather than prompted.",
+      "detail": "Loop guards, the independent reviewer and the handoff promotion rule decide when the role stops. A model reporting success is not a stop condition."
+    },
+    {
+      "id": "model-attempt-evidence",
+      "summary": "One bounded real model-powered attempt has run for this role and been reviewed.",
+      "detail": "The last requirement on purpose. Everything above can be true with no provider credential in the system; this one cannot, and it is what makes the flag mean the role has actually worked."
+    }
+  ],
+  "evidence": {}
+}

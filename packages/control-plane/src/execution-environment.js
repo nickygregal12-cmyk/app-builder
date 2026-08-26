@@ -98,6 +98,11 @@ export function createExecutionEnvironmentSpec(input) {
   if (!NETWORK_PROFILES.includes(networkProfile)) throw new Error(`Unknown network profile: ${networkProfile}`);
 
   const limits = { ...DEFAULT_LIMITS, ...input?.limits };
+  // Optional at the spec layer, which describes an isolation shape; required
+  // at the attempt layer, which describes an execution that must be auditable.
+  const grantFile = input?.grantPath === undefined || input?.grantPath === null
+    ? null
+    : absolutePath(input.grantPath, 'grantPath');
   const spec = {
     schemaVersion: 1,
     attemptId: text(input?.attemptId, 'attemptId'),
@@ -154,6 +159,14 @@ export function createExecutionEnvironmentSpec(input) {
       brokerSocket: absolutePath(input?.brokerSocketPath, 'brokerSocketPath'),
       containerSocketPath: '/run/app-builder/broker.sock',
       grantEnvironmentVariable: 'APP_BUILDER_AGENT_GRANT',
+      // The grant is delivered as a read-only file, not as an environment
+      // variable on the runtime's command line. `podman run --env GRANT=...`
+      // puts an attempt's bearer authority into the host process table, where
+      // every other user of a shared host can read it; a 0600 file the
+      // sandbox mounts is authority the sandbox holds and nobody else does.
+      grantFile: grantFile === null ? null : grantFile,
+      containerGrantPath: '/run/app-builder/grant',
+      grantFileEnvironmentVariable: 'APP_BUILDER_AGENT_GRANT_FILE',
       socketEnvironmentVariable: 'APP_BUILDER_AGENT_BROKER_SOCKET',
     },
 
@@ -161,6 +174,7 @@ export function createExecutionEnvironmentSpec(input) {
       { source: absolutePath(input?.workspacePath, 'workspacePath'), target: '/workspace', mode: 'rw' },
       { source: absolutePath(input?.scratchPath, 'scratchPath'), target: '/scratch', mode: 'rw' },
       { source: absolutePath(input?.brokerSocketPath, 'brokerSocketPath'), target: '/run/app-builder/broker.sock', mode: 'rw' },
+      ...(grantFile === null ? [] : [{ source: grantFile, target: '/run/app-builder/grant', mode: 'ro' }]),
     ],
     tmpfs: [{ target: '/tmp', sizeMb: positive(limits.tmpfsMb, DEFAULT_LIMITS.tmpfsMb, 'tmpfsMb') }],
 
@@ -174,7 +188,19 @@ export function createExecutionEnvironmentSpec(input) {
     // A task never receives a raw provider or application secret. The grant is
     // scoped authority, not a credential, and the broker holds the signing key.
     environment: {
-      allowed: ['APP_BUILDER_AGENT_GRANT', 'APP_BUILDER_AGENT_BROKER_SOCKET', 'HOME', 'PATH', 'LANG', 'TMPDIR'],
+      allowed: [
+        'APP_BUILDER_AGENT_GRANT',
+        'APP_BUILDER_AGENT_GRANT_FILE',
+        'APP_BUILDER_AGENT_BROKER_SOCKET',
+        'APP_BUILDER_ATTEMPT_ID',
+        'APP_BUILDER_WORKSPACE',
+        'APP_BUILDER_SCRATCH',
+        'APP_BUILDER_RESULT_FILE',
+        'HOME',
+        'PATH',
+        'LANG',
+        'TMPDIR',
+      ],
       forbiddenPatterns: ['SECRET', 'TOKEN', 'PASSWORD', 'API_KEY', 'CREDENTIAL', 'ANTHROPIC', 'OPENAI', 'SUPABASE', 'NETLIFY', 'APP_BUILDER_AGENT_GRANT_SECRET'],
     },
 
@@ -215,11 +241,21 @@ export function assertSpecIsolation(spec) {
     const source = String(mount.source ?? '');
     if (!source.startsWith('/')) fail(`mount source ${source} is not an absolute path.`);
     if (source.includes('..')) fail(`mount source ${source} contains a parent-directory segment.`);
+    // The broker socket and the attempt's own grant file live under host
+    // runtime directories and are the two deliberate handles. The exemption is
+    // matched on the *pair*: a mount is exempt only when it carries the exact
+    // source the spec named for that target, so a hostile edit cannot smuggle
+    // `/etc/shadow` through by borrowing the grant target's name.
+    const exempt =
+      (mount.target === spec.factoryAccess?.containerSocketPath && source === spec.factoryAccess?.brokerSocket) ||
+      (mount.target === spec.factoryAccess?.containerGrantPath && spec.factoryAccess?.grantFile !== null && source === spec.factoryAccess?.grantFile);
+    if (exempt) {
+      if (mount.target === spec.factoryAccess?.containerGrantPath && mount.mode !== 'ro') {
+        fail('the attempt grant must be mounted read-only.');
+      }
+      continue;
+    }
     for (const forbidden of FORBIDDEN_MOUNT_SOURCES) {
-      // The broker socket lives under a runtime directory and is the one
-      // deliberate host handle; everything else that starts at a forbidden
-      // root is refused, including a path that merely descends into one.
-      if (mount.target === spec.factoryAccess?.containerSocketPath) continue;
       if (source === forbidden || (forbidden !== '/' && source.startsWith(`${forbidden}/`))) {
         fail(`mount of ${source} would hand the task ${forbidden}.`);
       }

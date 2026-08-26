@@ -787,9 +787,15 @@ export class FactoryService {
     return { project, workspace: project.workspacePath };
   }
 
-  async recordOperationalEvent(projectId, type, payload = {}, usage = {}) {
+  /**
+   * `taskId` and `actor` are options rather than fixed, because an attempt
+   * lifecycle event belongs to the task it ran for and names the runtime that
+   * produced it. Both default to the previous behaviour, so existing callers
+   * are unchanged.
+   */
+  async recordOperationalEvent(projectId, type, payload = {}, usage = {}, { taskId = null, actor = 'factory-service' } = {}) {
     this.requireProject(projectId);
-    return this.store.recordEvent(createEvent({ projectId, type, actor: 'factory-service', payload, usage }));
+    return this.store.recordEvent(createEvent({ projectId, taskId, type, actor, payload, usage }));
   }
 
   /**

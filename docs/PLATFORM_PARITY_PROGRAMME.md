@@ -1,0 +1,571 @@
+# Platform Parity Programme
+
+Status: **subordinate capability-planning detail** under `docs/MASTER_PLAN.md` and `docs/BEST_IN_CLASS_CAPABILITIES.md`.
+
+This document does not advance `config/factory-status.json`, create a new product/design authority, or make a capability ready. It records the remaining product-surface work needed for App Builder to compete with the current class of AI builders and visual website platforms while preserving App Builder's stronger provenance, portability and safety boundaries.
+
+The rule is not “copy every competitor feature”. Add a capability only when it materially improves one of these outcomes:
+
+- prompt/brief to working product speed;
+- professional visual quality;
+- breadth of real applications the factory can finish without custom glue;
+- non-technical editing and review;
+- deployment/operations completeness;
+- integration breadth;
+- autonomous execution quality;
+- generated-repository portability and owner control.
+
+## Competitive product gap summary
+
+The current architecture is already strong in source provenance, durable build state, deterministic generation, generated-repository portability, executable quality gates and bounded agent authority. The remaining parity gap is primarily **product completeness**, not another control-plane rewrite.
+
+Leading builders currently make several workflows feel routine that App Builder still has only partly delivered or planned:
+
+1. connect database/auth/storage/payments/email/third-party services from the same build flow;
+2. branch or isolate work, preview it, review a diff and promote it without manual Git choreography;
+3. visually edit layout, typography, responsive behaviour, assets and component choices with low friction;
+4. invite a stakeholder to review/comment/approve a staged result;
+5. publish to a custom domain with environment variables, logs, analytics, monitoring, rollback and staging visible in one place;
+6. search the web or inspect reference sites during research and design;
+7. keep CMS/localized content current after launch;
+8. let bounded agents test, repair and maintain products after the initial build.
+
+The following work closes those gaps without weakening the existing architecture.
+
+---
+
+# 1. Phase 1 / Phase 4D extension — first-class research and inspiration input
+
+## 1.1 “Sites/designs I like” intake
+
+The Builder Console should make inspiration input easy enough for a non-designer to use.
+
+Accept:
+
+- public URLs;
+- uploaded screenshots;
+- moodboards/images;
+- Figma references when available;
+- optional natural-language notes such as “I like this site's typography but not its colours”.
+
+Do not treat design references as company facts or as reusable source content.
+
+Required flow:
+
+`user reference -> trusted browser/reference capture -> VisualReferenceAnalysis -> adopt/avoid traits -> ArtDirectionPlan`
+
+A reference should be able to influence dimensions independently:
+
+- typography;
+- layout/grid;
+- spacing/density;
+- imagery treatment;
+- interaction/motion;
+- navigation;
+- colour relationships;
+- visual mood/distinctive patterns.
+
+The system must preserve the distinction between:
+
+- **company/source truth** -> KnowledgePack;
+- **market/competitor research** -> ResearchPack;
+- **user design inspiration** -> reference-only visual evidence.
+
+## 1.2 Trusted reference capture
+
+Prefer a factory-owned browser capture path for supplied inspiration URLs rather than asking an untrusted coding sandbox to scrape arbitrary sites directly.
+
+Capture, where useful:
+
+- desktop/mobile screenshots;
+- key navigation/open states;
+- high-level DOM/layout metadata;
+- URL, timestamp and content/evidence hashes.
+
+Internet content has `instructionAuthority: none`. Text inside a reference website is data, not an instruction to an agent.
+
+## 1.3 Research-agent execution
+
+Once the runtime's `public-egress-only` profile is proven, promote a bounded research role through the ordinary runtime-readiness gate.
+
+Research should support:
+
+- company/sector research;
+- competitors and category conventions;
+- current technical documentation;
+- design reference discovery;
+- cited market evidence.
+
+Prefer brokered/search tools where they give better provenance, allowlisting and rate control than unrestricted HTTP. General public egress remains available only to roles whose policy explicitly grants it.
+
+---
+
+# 2. Phase 4B / 4D extension — professional visual-editing parity
+
+ElementIdentity gives App Builder a stronger editing foundation than DOM guessing. The remaining work is to make that power feel as immediate as mature visual builders.
+
+Add, where supported by the presentation contract:
+
+- drag/reorder sections through stable SectionSpec identity;
+- duplicate/delete/hide section actions;
+- swap compatible presentation variants/components;
+- direct text editing with provenance preserved;
+- typography role/family/scale controls constrained by TypographySpec;
+- spacing/density/alignment controls constrained by DesignSystemSpec;
+- responsive breakpoint preview and bounded per-breakpoint composition overrides;
+- image replacement, crop, focal point and responsive asset choice;
+- mobile/desktop visibility and interaction-language controls where the ResponsiveCompositionPlan permits them;
+- component state preview for hover/focus/open/error/loading states;
+- undo/redo and named checkpoint history;
+- side-by-side before/after or candidate comparison.
+
+Do not turn the Console into an unconstrained CSS editor by default. The normal path edits durable bindings/design contracts; explicitly custom code remains a separate advanced lane.
+
+Exit evidence should include a non-technical user performing common visual corrections without editing source files.
+
+---
+
+# 3. Phase 4.3 / new Phase 4.4 slice — production application capability breadth
+
+The existing capability registry has strong foundations but must gain enough real recipes that ordinary SaaS/consumer/internal-tool requests do not immediately fall into custom engineering.
+
+Create a staged **Application Capability Expansion** programme after the immediate 4C/4D visual work and before claiming broad app-builder parity.
+
+Prioritize capabilities by frequency and production risk.
+
+## 3.1 Tier A — expected production primitives
+
+Make these deterministic/provider-adapter capabilities where practical:
+
+- transactional email;
+- notifications/in-app notification centre;
+- webhook receive/send;
+- background jobs;
+- scheduled/cron jobs;
+- queues/retry/dead-letter handling where required;
+- real-time subscriptions/events;
+- file upload/download lifecycle beyond the existing baseline;
+- audit/activity history for generated business applications;
+- feature flags with environment-aware defaults;
+- search implementations appropriate to static vs dynamic data.
+
+Each capability needs:
+
+- provider-neutral requirement contract;
+- one proven adapter/recipe before `ready`;
+- deterministic environment/secret requirements;
+- test fixtures and failure states;
+- independent generated-app portability;
+- explicit cost/usage implications where relevant.
+
+## 3.2 Billing and payments
+
+Billing is too common to remain vague custom work.
+
+Add a provider-neutral billing requirement/recipe boundary covering:
+
+- one-time payments;
+- subscriptions;
+- plans/prices;
+- checkout/customer portal;
+- entitlement state;
+- webhook reconciliation;
+- failed-payment/cancellation states;
+- test/sandbox vs production identities;
+- refunds where the product requires them.
+
+Stripe is a strong first adapter candidate, not the stable product contract.
+
+Payment secrets and production account mutation remain approval-gated. Generated applications own their payment/provider account rather than making App Builder merchant of record unless a future business model explicitly changes that.
+
+## 3.3 Auth/backend parity
+
+Continue strengthening the existing Supabase path so an ordinary prompt can safely request:
+
+- sign-up/login/password reset;
+- OAuth/social auth where required;
+- organisations/teams/invitations;
+- RBAC;
+- profiles;
+- file storage;
+- realtime;
+- edge/server functions;
+- admin workflows;
+- migration/test/seed lifecycle.
+
+Do not add a second backend merely for parity. Add another adapter only when a real benchmark demonstrates a project class the current provider cannot satisfy well.
+
+---
+
+# 4. Phase 4.4 — IntegrationSpec and connector platform
+
+Integration breadth is one of the clearest practical gaps against leading builders.
+
+Introduce a provider-neutral `IntegrationSpec` only when its first real consumers land. It should describe the integration requirement, not one vendor SDK.
+
+Useful fields/concepts:
+
+- integration id/type;
+- connection owner (builder owner vs generated-app end user);
+- auth method (OAuth/API key/webhook/etc.);
+- requested scopes/permissions;
+- read/write operations required;
+- webhook/event subscriptions;
+- environment-specific configuration;
+- secret references, never secret values;
+- connection health/status;
+- rate-limit/retry expectations;
+- data sensitivity;
+- user-facing reconnect/disconnect behaviour;
+- test/sandbox support;
+- approval requirements;
+- adapter/version identity.
+
+## 4.1 Connection manager in Builder Console
+
+Provide a simple Connections surface showing:
+
+- configured / missing / unhealthy / expired;
+- environments configured;
+- scopes requested;
+- reconnect/rotate/revoke;
+- last successful check;
+- which generated features depend on the connection.
+
+## 4.2 End-user connections
+
+Some products need the generated application's users to connect their own accounts. Model this separately from builder-owner secrets.
+
+Examples include calendar, CRM, email, accounting or productivity integrations.
+
+Requirements:
+
+- per-user/tenant OAuth ownership;
+- encrypted token storage in the generated product's backend;
+- consent/scope display;
+- revoke/reconnect;
+- tenant isolation;
+- background refresh where applicable;
+- auditability.
+
+## 4.3 Connector strategy
+
+Do not attempt hundreds of hand-written connectors immediately.
+
+Start with a small high-value adapter set driven by real builds, likely including categories such as:
+
+- payments;
+- transactional email;
+- analytics;
+- CRM;
+- calendar/booking;
+- communication;
+- commerce;
+- AI providers.
+
+Where a standards-based MCP/API/automation adapter can expose a broad ecosystem safely, evaluate it as an implementation path while preserving `IntegrationSpec` as the product contract.
+
+Every connector must be permission-scoped and observable; convenience must not create ambient credential access for autonomous agents.
+
+---
+
+# 5. Phase 4.3 / 4E — Git-native project workflow and existing-repository parity
+
+Existing-repository adoption is already planned. Extend it into a complete bidirectional Git workflow.
+
+The Console should eventually support:
+
+- connect/import an existing repository;
+- map its current framework/design/backend/deploy shape before mutation;
+- create an isolated branch/worktree per significant AI task or candidate implementation;
+- show changed files and human-readable ChangeSet summary;
+- preserve commits and original authorship/history;
+- open/update a pull request where GitHub is the selected collaboration system;
+- rebase/refresh safely when base changes;
+- detect conflicts rather than force-pushing through them;
+- promote/merge only after required gates/review;
+- continue to work when the repository is maintained outside App Builder.
+
+Generated new projects should be able to opt into the same Git lifecycle after their initial materialisation.
+
+The durable Factory ledger remains product execution evidence; Git is the source-code collaboration/history layer. Do not create two competing task truths.
+
+---
+
+# 6. Phase 4E / 4F — collaboration, review and staging
+
+A professional builder needs a review experience for people who are not editing code.
+
+Add a bounded stakeholder-review layer after environment identity is real.
+
+## 6.1 Staging/review links
+
+- stable preview/staging URL per reviewable revision;
+- explicit revision/checkpoint shown in the review surface;
+- desktop/tablet/mobile switching;
+- comments pinned to ElementIdentity/PageSpec/SectionSpec where possible;
+- general page/project comments when a specific binding is impossible;
+- approve/request-changes decision;
+- resolved/unresolved discussion state;
+- no reviewer access to secrets, source mutation or production controls unless separately authorized.
+
+## 6.2 Internal branches and release promotion
+
+Support a clear flow:
+
+`work branch/checkpoint -> preview -> review -> required gates -> approved revision -> production release`
+
+A design candidate and a code branch are not the same concept. Visual 4D candidates remain bounded evidence until promoted; implementation branches contain actual source changes.
+
+## 6.3 Collaboration roles
+
+For the private/personal v1, keep roles small:
+
+- owner;
+- editor/developer;
+- reviewer/client.
+
+Enterprise SSO/SAML/SCIM is explicitly later and should not distract from the core product unless a real deployment needs it.
+
+---
+
+# 7. Phase 4E / Phase 7 — deployment and operations console parity
+
+Turn the existing Netlify/deployment primitives into a complete owner workflow rather than a collection of commands.
+
+The Console should surface, per environment:
+
+- deployment target/provider;
+- current deployed revision;
+- preview/staging/production URLs;
+- custom domain status;
+- DNS/SSL state;
+- environment variable/secret readiness without exposing values;
+- build/deploy status and logs;
+- database/migration state;
+- integration health;
+- analytics status;
+- error/observability status;
+- uptime/health checks where configured;
+- performance/Core Web Vitals summary;
+- cost/usage summary;
+- rollback target and release history.
+
+## 7.1 Safe rollback
+
+Release history should make rollback a first-class operation:
+
+- identify the exact source revision/build/deployment/backend migration state;
+- distinguish frontend rollback from irreversible database changes;
+- require approval for production mutation;
+- smoke-test after rollback;
+- record the action in the durable event ledger.
+
+## 7.2 Domain workflow
+
+Move beyond a checklist when a deployment adapter can support it safely:
+
+- attach custom domain;
+- verify DNS state;
+- SSL status;
+- canonical host selection;
+- redirect/www policy;
+- preview vs production separation.
+
+Provider-specific domain APIs remain adapters, not stable project contracts.
+
+---
+
+# 8. Phase 4.3 / 7 — CMS, content operations and localization parity
+
+The existing `CollectionSpec` and `LocaleSpec` direction is correct. The missing parity requirement is the **editing/operations experience** around them.
+
+CMS product surface should eventually provide:
+
+- collection/table view;
+- draft/published states;
+- rich text/media/reference fields;
+- create/edit/bulk actions;
+- preview before publish;
+- scheduled publication when a job capability exists;
+- SEO fields;
+- author/editor metadata where useful;
+- import/export (CSV/Markdown where appropriate);
+- content history/restore;
+- role-aware editing;
+- AI assistance that proposes/revises content without bypassing factual provenance.
+
+Localization should provide:
+
+- locale overview and completeness status;
+- untranslated/needs-review/reviewed state;
+- per-locale routes/slugs/metadata/assets;
+- AI-assisted translation as an optional implementation;
+- manual translation always able to override generated text;
+- hreflang/canonical validation;
+- translation updates triggered when source content changes.
+
+The generated repository/content model must remain usable without the App Builder Console.
+
+---
+
+# 9. Phase 5 — real autonomous builder experience
+
+The safe runtime foundation should culminate in a user experience comparable to leading autonomous builders while keeping App Builder's stricter authority model.
+
+After the deterministic runtime canary and one reviewed real-model canary, add in order:
+
+1. bounded research specialist with public-egress-only/tool-brokered research;
+2. one low-risk implementation specialist;
+3. browser-test/repair specialist loop;
+4. creator -> independent reviewer -> typed rework loop;
+5. parallel specialists only when their write scopes/artifacts are independent;
+6. provider/model routing by measured task performance and cost;
+7. durable background jobs/scheduled sessions;
+8. interruption/restart/provider-capacity recovery;
+9. visible progress, stop/cancel and hard cost budgets in the Console.
+
+The target user experience becomes:
+
+`brief -> research -> plan -> design -> build -> browser test -> fix -> review -> preview -> approval`
+
+without granting one unrestricted model a host shell, production secrets or broad network access.
+
+---
+
+# 10. Phase 6 — browser/device and production-quality parity
+
+Extend the existing QA plan with explicit cross-browser and deployment realism.
+
+Required representative coverage:
+
+- Chromium;
+- WebKit;
+- Firefox;
+- mobile Safari-risk viewport/behaviour checks;
+- responsive breakpoints;
+- keyboard/focus;
+- empty/loading/error/large-data;
+- offline/slow/failing API;
+- authenticated/unauthenticated/role states;
+- integration unavailable/expired states;
+- payment failure/cancel states where billing exists;
+- background job retry/failure states;
+- deploy smoke on the actual host/provider class.
+
+Keep the full expensive matrix risk-based; do not blindly multiply every page by every browser/state.
+
+---
+
+# 11. Phase 7 / 8 — post-launch agents and product maintenance
+
+Leading builders increasingly support maintaining a product, not only creating it. App Builder should eventually use its stronger provenance and review model here.
+
+Possible bounded maintenance workflows:
+
+- monitor error/performance/availability signals and propose a fix;
+- identify broken integrations or expiring connection health and notify the owner;
+- run scheduled SEO/AEO checks;
+- update CMS content from owner-approved sources;
+- propose dependency/recipe upgrades;
+- review analytics/experiment evidence and suggest improvements;
+- create a branch/ChangeSet, rerun gates and request approval;
+- never silently push production changes.
+
+A post-launch agent uses the same capability/grant/environment boundaries as a build agent. Production changes remain approval-gated.
+
+---
+
+# 12. Later optional parity — generated applications as agent-accessible products
+
+Some generated applications may benefit from exposing their own bounded API/MCP surface so their end users can use them from AI clients or automation systems.
+
+This is an **optional generated-app capability**, not an App Builder runtime dependency.
+
+If implemented later:
+
+- generate a provider-neutral tool/API contract from explicit application capabilities;
+- require authentication/authorization per end user/tenant;
+- never expose internal database or admin operations merely because they exist;
+- add audit/rate-limit/revocation controls;
+- keep generated apps independently deployable without the App Builder control plane.
+
+Do not prioritize this before the core build/edit/deploy/integration experience is competitive.
+
+---
+
+# 13. Stage placement summary
+
+| Capability | Intended stage |
+| --- | --- |
+| Inspiration URLs/screenshots + VisualReferenceAnalysis | Phase 1 extension / 4D |
+| Research-agent public-web execution | Phase 5 after public-egress proof |
+| Drag/reorder/component swap/responsive visual editing | Phase 4B/4D |
+| CMS editing surface + content operations | Phase 4.3 |
+| Localization workflow | Phase 4.3 |
+| Existing repo import/adoption + bidirectional Git workflow | Phase 4.3/4E |
+| Payment/billing recipe | Phase 4.4 |
+| Email/notifications/webhooks/jobs/queues/realtime | Phase 4.4 |
+| IntegrationSpec + Connections UI + end-user OAuth connections | Phase 4.4 |
+| Stakeholder comments/review/approval | Phase 4E/4F |
+| Branch/staging/release promotion workflow | Phase 4E/4F |
+| Deployment/logs/domains/analytics/monitoring/rollback console | Phase 4E/7 |
+| Cross-browser/device production matrix | Phase 6 |
+| Autonomous research/build/test/review loops | Phase 5/5.5 |
+| Post-launch maintenance agents | Phase 7/8 |
+| Generated-app MCP/API exposure | Later optional |
+
+## Dependency ordering
+
+The recommended product order after the currently active design/runtime work is:
+
+1. finish 4C professional design machinery;
+2. 4D reference-driven visual candidates + critic + professional visual editing;
+3. 4.2 static/content renderer;
+4. 4.3 CMS/localization/existing-repo maturity;
+5. 4.4 high-value application capabilities + IntegrationSpec/connectors;
+6. 4E/4F environments, Git/staging, collaboration and release UX;
+7. product-proof freeze and varied real-project corpus;
+8. Phase 5 real agents can proceed in parallel once runtime gates permit them;
+9. Phase 6 production quality;
+10. Phase 7 operations and bounded post-launch maintenance.
+
+Do not delay the first real-project corpus until every late platform feature exists. Use maturity tiers: a project class can be proven for marketing/content sites before every SaaS integration capability is proven. But do not claim broad “best app builder” parity while common auth/billing/integration/deployment workflows still require bespoke manual glue.
+
+---
+
+# 14. Acceptance standard for class-level parity
+
+A capability appearing in a plan is not parity. Before claiming App Builder is in the same product class as leading builders, require evidence that a non-specialist can complete representative journeys such as:
+
+### Professional website
+
+`brief + sources + inspiration URLs -> professional responsive site -> visual edit -> custom domain -> analytics/SEO/monitoring -> publish`
+
+### B2B SaaS
+
+`brief -> auth + organisation roles + database + file upload + email + billing + integration -> browser QA -> staging review -> deploy`
+
+### Existing project
+
+`connect repository -> inspect/adopt -> isolated branch -> AI change -> preview -> diff/review -> PR/merge -> deploy`
+
+### Autonomous build
+
+`brief -> bounded research -> plan -> build -> browser test -> independent review -> corrections -> approval`
+
+Measure:
+
+- first-build success;
+- meaningful manual edits;
+- user interventions;
+- visual/product score;
+- functional journeys passed;
+- accessibility/security/performance;
+- time and AI/tool cost;
+- deploy success/rollback readiness;
+- integration setup failures;
+- generated-repository portability;
+- operator confidence in understanding what changed and why.
+
+The competitive target is not feature-count equality. It is that the common high-value journeys feel equally complete while App Builder retains stronger provenance, explainability, portability and bounded autonomy.

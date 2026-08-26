@@ -78,15 +78,28 @@ test('an ingested photograph needs its own decision before the factory will publ
   await item.getByRole('button', { name: 'Approve crops' }).click();
   await expect(item.getByText(/generated crop/)).toContainText('approved, will publish', { timeout: 20_000 });
 
+  // Replacing the picture: new bytes are a new asset, so the old one retires
+  // and the new one carries its own declaration rather than inheriting one.
+  const replacement = Buffer.from(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><rect width="1600" height="900" fill="#5d2f3a"/><text x="80" y="480" font-size="90" fill="#ffffff">Better work</text></svg>',
+    'utf8',
+  );
+  await item.getByLabel(/^Replace /).setInputFiles({ name: 'better.svg', mimeType: 'image/svg+xml', buffer: replacement });
+  await expect(assets.getByText('1/2 publishable')).toBeVisible({ timeout: 30_000 });
+  await expect(assets.getByText('Replaced by a newer picture.')).toBeVisible();
+  await expect(assets.getByText('Replaced an earlier picture.')).toBeVisible();
+  const survivor = assets.locator('.asset-item').filter({ hasText: 'Replaced an earlier picture.' });
+  await expect(survivor.getByText(/generated crop/)).toContainText('withheld until reviewed');
+
   await page.getByRole('button', { name: 'Generate project' }).click();
   await expect(page.locator('.state-pill')).toHaveText('generated', { timeout: 60_000 });
   await expect(page.locator('.builder-notice')).toHaveCount(0);
 
   // A decision made after a build leaves the live repository behind, exactly as
   // new source material does.
-  await item.getByRole('button', { name: 'Do not use' }).click();
+  await survivor.getByRole('button', { name: 'Do not use' }).click();
   await expect(page.locator('.builder-notice')).toContainText('Asset decisions have changed since the last build.', { timeout: 15_000 });
-  await expect(assets.getByText('0/1 publishable')).toBeVisible();
+  await expect(assets.getByText('0/2 publishable')).toBeVisible();
 
   await page.getByRole('button', { name: 'Rebuild project' }).click();
   await expect(page.locator('.history-list article.current')).toContainText('Build v2', { timeout: 60_000 });

@@ -8,7 +8,7 @@ import { composeProject } from '../packages/composition/src/index.js';
 import { decideAssetGovernance } from '../packages/content-intelligence/src/index.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
-import { assetInventory, decideProjectAsset } from '../apps/service/src/asset-governance.js';
+import { assetInventory, decideProjectAsset, recropProjectAsset, replaceProjectAsset } from '../apps/service/src/asset-governance.js';
 
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
@@ -230,6 +230,62 @@ test('an unreviewed smart crop is withheld from the generated repository but the
     await decideProjectAsset(service, project.id, photo.id, { decision: 'approve', cropReview: 'approved' });
     const reviewed = await service.generateProject(project.id);
     assert.equal(shipped(reviewed.workspace).some((file) => file.includes('hero-16x9')), true, 'an approved crop ships');
+  } finally {
+    await service.close();
+    store.close();
+    fs.rmSync(dirs.root, { recursive: true, force: true });
+  }
+});
+
+test('replacing a picture retires the old one, keeps the lineage and inherits no permission', async () => {
+  const dirs = roots('app-builder-asset-replace-');
+  const store = new FactoryStore({ stateRoot: dirs.stateRoot });
+  const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
+  try {
+    const project = service.createProject({ id: 'project-replace', manifest: manifest('asset-replace') });
+    await service.ingestSources(project.id, [
+      { type: 'file', name: 'first.svg', label: 'First photo', kind: 'image', data: svg('FIRST'), purpose: 'portfolio', approvedForUse: false },
+    ]);
+    const original = assetInventory(service, project.id).find((entry) => entry.sourceLabel === 'First photo');
+    await decideProjectAsset(service, project.id, original.id, { decision: 'approve', rightsDeclaration: 'owned-by-the-business', cropReview: 'approved' });
+    await recropProjectAsset(service, project.id, original.id, { x: 0.3, y: 0.3 });
+    assert.equal(assetInventory(service, project.id).find((entry) => entry.id === original.id).publishUseAllowed, true);
+
+    await assert.rejects(() => replaceProjectAsset(service, project.id, original.id, {}), /needs the replacement file/);
+    await assert.rejects(() => replaceProjectAsset(service, project.id, 'asset-nope', { source: { type: 'file', name: 'x.svg', data: svg('X') } }), /Unknown project asset/);
+    // Replacing a picture with itself is a mistake, not a replacement.
+    await assert.rejects(
+      () => replaceProjectAsset(service, project.id, original.id, { source: { type: 'file', name: 'same.svg', label: 'First photo', kind: 'image', data: svg('FIRST') } }),
+      /same picture as the asset it would replace/,
+    );
+
+    // A replacement is a different photograph, so it needs its own declaration.
+    await assert.rejects(
+      () => replaceProjectAsset(service, project.id, original.id, { source: { type: 'file', name: 'second.svg', label: 'Second photo', kind: 'image', data: svg('SECOND') } }),
+      /needs an explicit rights declaration/,
+    );
+
+    const result = await replaceProjectAsset(service, project.id, original.id, {
+      source: { type: 'file', name: 'second.svg', label: 'Second photo', kind: 'image', data: svg('SECOND') },
+      rightsDeclaration: 'owned-by-the-business',
+    });
+
+    assert.notEqual(result.replacement.id, original.id, 'new bytes are a new asset');
+    assert.equal(result.retired.publishUseAllowed, false, 'the replaced picture stops publishing');
+    assert.equal(result.retired.supersededBy, result.replacement.id, 'the retired asset says what replaced it');
+    assert.equal(result.replacement.replaces, original.id, 'the replacement says what it replaced');
+    assert.equal(result.replacement.publishUseAllowed, true);
+
+    // Nothing about the old picture is carried over to the new one.
+    assert.equal(result.replacement.focalPoint, null, 'a different picture has a different subject');
+    assert.equal(result.replacement.cropReview, 'pending', 'a different picture needs its crops looked at again');
+
+    // Composition follows governance without extra machinery: the retired
+    // picture is gone from the build and the replacement is in it.
+    const generated = await service.generateProject(project.id);
+    const placed = new Set(generated.composition.sections.flatMap((section) => section.assetIds));
+    assert.equal(placed.has(original.id), false);
+    assert.equal(placed.has(result.replacement.id), true);
   } finally {
     await service.close();
     store.close();

@@ -174,6 +174,16 @@ both and stays a pure function of its inputs, and the composition records
 `input.assetDecisionsHash` so a decision made after a build reads as newer than
 the build instead of being silently ignored.
 
+Replacing a picture makes a new asset. Identity comes from bytes, so a
+replacement cannot be the same asset, and treating it as one would mean carrying
+a rights declaration made about a different photograph. It does not: the
+declaration for the new picture arrives with it, and the crop review and focal
+point start again because they described a different subject. The retired asset
+records `supersededBy` and the replacement records `replaces`, so the lineage
+survives even though the identity does not, and composition follows governance
+without extra machinery — the retired picture leaves the build and the
+replacement enters it because placement has always followed publishability.
+
 Smart crops are withheld until reviewed. Sharp derives `hero-16x9`, `card-4x3`
 and `square-1x1` with an attention heuristic and marks each
 `reviewBeforePublish`. Those crops are copied into the generated repository only

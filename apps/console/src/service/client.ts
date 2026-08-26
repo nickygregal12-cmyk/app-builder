@@ -236,6 +236,8 @@ export type ProjectAsset = {
   inherited: { rightsStatus: string; assetStatus: string; publishUseAllowed: boolean };
   decision: { decision: string; rightsDeclaration: string | null; cropReview: string; decidedAt: string; note: string | null } | null;
   cropReview: string;
+  supersededBy: string | null;
+  replaces: string | null;
   focalPoint: { x: number; y: number } | null;
   recroppable: boolean;
   rightsStatus: string;
@@ -385,6 +387,15 @@ export async function decideProjectAsset(projectId: string, assetId: string, dec
   return await request<{ asset: ProjectAsset | null }>(
     `/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/decision`,
     { method: 'POST', body: JSON.stringify(decision) },
+  );
+}
+
+/** A replacement is a different photograph, so its rights declaration arrives
+ * with it rather than being carried over from the picture it replaces. */
+export async function replaceProjectAsset(projectId: string, assetId: string, source: SourceRequest, rightsDeclaration: 'owned-by-the-business' | 'licensed-for-publication' | null) {
+  return await request<{ retired: ProjectAsset | null; replacement: ProjectAsset | null }>(
+    `/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/replace`,
+    { method: 'POST', body: JSON.stringify({ source, rightsDeclaration }) },
   );
 }
 

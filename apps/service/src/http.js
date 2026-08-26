@@ -90,6 +90,7 @@ export function createFactoryHttpServer({ service }) {
         const body = await readJson(request);
         return send(response, 200, await decideProjectAsset(service, route.projectId, decodeURIComponent(assetDecisionRoute[1]), body));
       }
+      if (request.method === 'GET' && route.action === 'product-review') return send(response, 200, { review: service.productReview(route.projectId) });
       if (request.method === 'GET' && route.action === 'design') return send(response, 200, { design: service.designContract(route.projectId) });
       if (request.method === 'POST' && route.action === 'design') {
         const body = await readJson(request);

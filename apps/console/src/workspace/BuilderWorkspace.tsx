@@ -22,6 +22,7 @@ import {
   type AssetDecisionRequest,
   type KnowledgeSummary,
   type ProjectAsset,
+  type ProductReview,
   type ProjectSummary,
   type RenderedEvidence,
   type SectionVariantOption,
@@ -327,6 +328,59 @@ function DesignPanel({ contract, onChoose, busy }: {
     {Object.keys(contract.chosen).length > 0 && <button type="button" className="secondary compact" onClick={() => onChoose(Object.fromEntries(Object.keys(contract.chosen).map((key) => [key, null])))} disabled={busy}>
       Back to the factory's design
     </button>}
+  </section>;
+}
+
+
+/**
+ * What this build needs next.
+ *
+ * "Improve this page" is the prompt most likely to produce a redesign nobody
+ * asked for. Every opportunity here is grouped from launch-readiness findings
+ * that already exist, so the answer is what the build actually needs, and each
+ * one names the role that owns the fix — an opportunity nobody owns is a
+ * complaint.
+ *
+ * Proving something and fixing something are kept apart. A state with no
+ * fixture is a gap in the factory's evidence, not an edit a person makes.
+ */
+function ProductReviewPanel({ review }: { review: ProductReview }) {
+  const states = review.stateMatrix.flatMap((surface) => surface.states.map((state) => ({ ...state, page: surface.page })));
+  const highRisk = states.filter((state) => state.risk === 'high');
+  const provenStates = highRisk.filter((state) => state.evidence !== 'none').length;
+  const steps = review.journeys.flatMap((journey) => journey.steps);
+  const provenSteps = steps.filter((step) => step.status === 'proven').length;
+
+  return <section className="builder-panel review-panel" aria-label="Product review">
+    <div className="panel-title-row">
+      <span className="builder-kicker">What this build needs</span>
+      <span className={review.launchable ? 'rights-pill publishable' : 'rights-pill'}>{review.launchable ? 'launchable' : `${review.summary.blocker} blocking`}</span>
+    </div>
+    <p className="builder-empty">{review.predictedManualEdits} edit{review.predictedManualEdits === 1 ? '' : 's'} predicted before a person would call this finished.</p>
+
+    {review.opportunities.length === 0
+      ? <p className="builder-empty">Nothing the deterministic checks can name. Rendered evidence and a human review are what judge it from here.</p>
+      : <div className="opportunity-list">{review.opportunities.map((opportunity) => <article className="opportunity" key={opportunity.id}>
+          <div className="opportunity-heading">
+            <strong>{opportunity.title}</strong>
+            <span className={opportunity.blockedOn === 'owner' ? 'rights-pill' : 'rights-pill publishable'}>{opportunity.blockedOn === 'owner' ? 'needs your material' : 'factory can act'}</span>
+          </div>
+          <ul>{opportunity.summary.map((line) => <li key={line}>{line}</li>)}</ul>
+          <span className="opportunity-meta">{opportunity.findingCount} finding{opportunity.findingCount === 1 ? '' : 's'} · {opportunity.where.slice(0, 3).join(', ')}{opportunity.where.length > 3 ? ` +${opportunity.where.length - 3}` : ''}</span>
+          <small>{opportunity.guidance}</small>
+        </article>)}</div>}
+    {review.consideredCount > review.opportunities.length && <p className="builder-empty">
+      {review.consideredCount - review.opportunities.length} further opportunit{review.consideredCount - review.opportunities.length === 1 ? 'y was' : 'ies were'} considered and not offered, to keep this to the three that matter most.
+    </p>}
+
+    <dl className="builder-definition review-evidence">
+      <div><dt>High-risk states</dt><dd>{provenStates}/{highRisk.length} with evidence</dd></div>
+      <div><dt>Journey steps</dt><dd>{provenSteps}/{steps.length} proven</dd></div>
+    </dl>
+    {review.evidenceOpportunities.length > 0 && <div className="evidence-uncovered">
+      <strong>Worth proving, not fixing</strong>
+      {review.evidenceOpportunities.map((entry) => <span key={entry.id}>{entry.title} — {entry.findingCount} gap{entry.findingCount === 1 ? '' : 's'}</span>)}
+    </div>}
   </section>;
 }
 
@@ -797,6 +851,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           busy={operation === 'ingest'}
           onIngest={ingest}
         />
+
+        {snapshot.review && <ProductReviewPanel review={snapshot.review} />}
 
         {snapshot.design && <DesignPanel contract={snapshot.design} onChoose={chooseDesign} busy={choosingDesign} />}
 

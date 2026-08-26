@@ -154,6 +154,21 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByLabel('Content value')).toHaveCount(0);
   await page.getByRole('button', { name: 'Close' }).click();
 
+  // Product review: a broad "what should I improve" resolves to ranked, owned
+  // opportunities grounded in findings this build actually has — never to a
+  // redesign — and keeps proving separate from fixing.
+  const review = page.getByLabel('Product review');
+  await expect(review.getByText(/edits? predicted before a person would call this finished/)).toBeVisible();
+  const opportunities = review.locator('.opportunity');
+  const offered = await opportunities.count();
+  expect(offered).toBeGreaterThan(0);
+  expect(offered).toBeLessThanOrEqual(3);
+  // Each one names who can act, so none of them is "make it look better".
+  for (let index = 0; index < offered; index += 1) {
+    await expect(opportunities.nth(index).locator('.rights-pill')).toHaveText(/factory can act|needs your material/);
+  }
+  await expect(review.getByText(/journey steps/i)).toBeVisible();
+
   // Design contract: a structured choice compiles into the tokens the template
   // reads, and reaches the preview without a rebuild.
   const design = page.getByLabel('Design contract');

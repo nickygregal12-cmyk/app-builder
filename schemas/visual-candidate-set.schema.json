@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/visual-candidate-set.schema.json",
+  "title": "App Builder Visual Candidate Set",
+  "description": "Several genuinely different visual directions over ONE frozen product truth, and the record of which one was promoted. The frozen truth is stated once for the set rather than per candidate, because candidates are only comparable if they say the same thing. Exactly one candidate may reach 'promoted'; a rejected candidate keeps its evidence and its reason here and never becomes a second workspace the project has to maintain. Promotion is a recorded decision with a deterministic gate status and a named reviewer, not an ad hoc choice.",
+  "type": "object",
+  "required": ["schemaVersion", "setId", "projectId", "createdAt", "frozenTruth", "assetReadiness", "diversity", "candidates", "promotedCandidateId"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "setId": {"type": "string", "pattern": "^candidates-[a-f0-9]{16}$"},
+    "projectId": {"type": "string", "minLength": 1},
+    "createdAt": {"type": "string", "minLength": 1},
+    "frozenTruth": {
+      "type": "object",
+      "description": "What every candidate in this set shares. A candidate that regenerated any of it is not a visual candidate, and the composer transform proves the sharing rather than asserting it.",
+      "required": ["projectType", "manifestVersion", "knowledgePackHash", "baselineCompositionHash"],
+      "properties": {
+        "projectType": {"type": "string", "minLength": 1},
+        "manifestVersion": {"type": "integer", "minimum": 1},
+        "knowledgePackHash": {"type": ["string", "null"]},
+        "baselineCompositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "assetReadiness": {
+      "type": "object",
+      "description": "Whether the approved inventory can support an imagery-led direction. Resolved before directions are selected, so 'no publishable imagery' selects a typography-led direction rather than breaking an imagery-led one.",
+      "required": ["strategy", "supportsImageryLed", "strategyReason"],
+      "properties": {
+        "strategy": {"enum": ["imagery-viable", "imagery-supporting", "typography-led"]},
+        "supportsImageryLed": {"type": "boolean"},
+        "strategyReason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "diversity": {
+      "type": "object",
+      "description": "The deterministic proof that this set is a choice rather than one build in several colours. Token values are deliberately absent from the signature the check reads.",
+      "required": ["distinct", "minimumDifferingPlanes", "duplicates"],
+      "properties": {
+        "distinct": {"type": "boolean"},
+        "minimumDifferingPlanes": {"type": "integer", "minimum": 1},
+        "duplicates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["a", "b", "reason", "detail"],
+            "properties": {
+              "a": {"type": "string"},
+              "b": {"type": "string"},
+              "reason": {"enum": ["theme-swap", "insufficient-structural-difference"]},
+              "differingAxes": {"type": "array", "items": {"type": "string"}},
+              "differingPlanes": {"type": "array", "items": {"enum": ["sequence", "composition", "responsive"]}},
+              "detail": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "refusedDirections": {
+      "type": "array",
+      "description": "Directions the registry offered that this project may not present by, with the reason. A direction refused for lack of publishable photography is an art-direction decision and is recorded as one.",
+      "items": {
+        "type": "object",
+        "required": ["directionId", "reason", "detail"],
+        "properties": {
+          "directionId": {"type": "string", "minLength": 1},
+          "reason": {"enum": ["imagery-not-available", "no-distinctive-moment", "custom-presentation-required"]},
+          "detail": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "candidates": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/candidate"}},
+    "promotedCandidateId": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "candidate": {
+      "type": "object",
+      "required": ["candidateId", "directionId", "directionLabel", "state", "artDirection", "signature", "compositionHash", "assetStrategy", "gate", "outcome"],
+      "properties": {
+        "candidateId": {"type": "string", "pattern": "^candidate-[a-z0-9-]+$"},
+        "directionId": {"type": "string", "minLength": 1},
+        "directionLabel": {"type": "string", "minLength": 1},
+        "state": {
+          "enum": ["draft", "rendered", "deterministic-pass", "deterministic-blocked", "reviewed", "promoted", "rejected"],
+          "description": "draft -> rendered -> deterministic-pass -> reviewed -> promoted, or -> rejected from any state after draft. A deterministic-blocked candidate can never reach promoted."
+        },
+        "artDirection": {
+          "type": "object",
+          "required": ["dimensions", "responsive"],
+          "properties": {
+            "schemaVersion": {"const": 1},
+            "authority": {"type": "string", "minLength": 1},
+            "dimensions": {"type": "object"},
+            "responsive": {"type": "object"},
+            "clamped": {"type": "array", "description": "What restraintLevel cut from the declared plan, so a reviewer can tell a build that was asked to be quiet from one that was cut back."},
+            "motion": {"type": "object"}
+          },
+          "additionalProperties": false
+        },
+        "signature": {
+          "type": "object",
+          "description": "The structural identity of this candidate. Excludes every token, so two candidates that differ only in colour sign identically and the diversity check refuses them.",
+          "required": ["axes", "sequence"],
+          "properties": {
+            "schemaVersion": {"const": 1},
+            "directionId": {"type": ["string", "null"]},
+            "axes": {"type": "object"},
+            "sequence": {"type": "array"}
+          },
+          "additionalProperties": false
+        },
+        "compositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "designSystemSpecHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "workspace": {"type": ["string", "null"], "description": "Where this candidate was built while it was being compared. Temporary by design: a rejected candidate's workspace is removed and only its evidence survives."},
+        "assetStrategy": {"enum": ["imagery-viable", "imagery-supporting", "typography-led"]},
+        "referenceAnalysisIds": {"type": "array", "items": {"type": "string"}},
+        "evidenceId": {"type": ["string", "null"]},
+        "designLint": {"type": ["object", "null"]},
+        "gate": {"$ref": "#/$defs/gate"},
+        "review": {"type": ["object", "null"]},
+        "outcome": {"enum": ["pending", "promoted", "rejected"]},
+        "rationale": {"type": ["string", "null"]},
+        "reworkOwner": {"type": ["string", "null"], "description": "The role that owns fixing a failed candidate. Null unless the outcome is a rejection something can be done about."},
+        "provenance": {
+          "type": "object",
+          "required": ["createdBy"],
+          "properties": {
+            "createdBy": {"type": "string", "minLength": 1},
+            "reviewedBy": {"type": ["string", "null"]},
+            "promotedBy": {"type": ["string", "null"]},
+            "decidedAt": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "gate": {
+      "type": "object",
+      "description": "What the deterministic checks already settled. A violation blocks promotion outright; a warning lets a candidate reach review but the reviewer has to address it by rule; a recommendation never blocks anything.",
+      "required": ["status", "blocking", "mustAddress"],
+      "properties": {
+        "status": {"enum": ["blocked", "review-required", "clear", "not-run"]},
+        "blocking": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "detail"],
+            "properties": {"rule": {"type": "string"}, "detail": {"type": "string"}},
+            "additionalProperties": false
+          }
+        },
+        "mustAddress": {
+          "type": "array",
+          "description": "Rule ids the visual review has to speak to. A review that ignores one is refused rather than accepted quietly.",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

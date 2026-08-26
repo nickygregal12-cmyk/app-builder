@@ -119,8 +119,8 @@
       "schema": "design-choice.schema.json",
       "typeName": "AppBuilderDesignChoices",
       "boundary": "Structured design decisions stored by the service and compiled into the generated project's brand tokens.",
-      "schemaHash": "df2d56eceb6cf96e0d81c21c9431428c63d80c1d1180d27ec17764eb4a0026c5",
-      "typesHash": "25beaa2b8eb885d7b973db5aafb1de456085d090e0ddd9feae9a5ba2f58f8d14"
+      "schemaHash": "1c0029bed29c90805e6f5af489bccb2a9028e11e140e7221b0b94b13f5d7fd66",
+      "typesHash": "e24d3cb4cb8b060c93e3ac26dbe31bcd4909f37a5e8dc3a6329ee241e830fb71"
     },
     {
       "id": "approved-intake-bundle",
@@ -129,6 +129,14 @@
       "boundary": "Durable approved-intake persistence and the service replay/import path.",
       "typesHash": "8d90d4d0bd9667d02c1bae1a47435621b64b84f3afcf215058e252355efd35b3",
       "schemaHash": "43410f0bb6480ac471026f749df7f481d71b294b866caac7454cfff814e8ebfe"
+    },
+    {
+      "id": "visual-candidate-set",
+      "schema": "visual-candidate-set.schema.json",
+      "typeName": "AppBuilderVisualCandidateSet",
+      "boundary": "Phase 4D candidate generation, comparison and promotion; written by the factory service and read by the Console.",
+      "schemaHash": "733b7fb445451ce2dd5b7dc2c6748a588c55461012bf92a70119b8d85b1b1682",
+      "typesHash": "f704123068819a55900a7fc090d540c1f97a09d9fc3f446f16796cc55b5661bc"
     }
   ],
   "pending": [

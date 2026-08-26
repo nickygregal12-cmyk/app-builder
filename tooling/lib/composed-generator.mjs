@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, composeProject, deriveElementIdentities, stripContentOverrides, stripSectionVariants } from '../../packages/composition/src/index.js';
+import { compileAssetReadiness } from './asset-readiness.mjs';
 import { generateProject } from './generator.mjs';
+import { applyVisualDirection } from './visual-direction.mjs';
 import { auditComposedPresentation, compilePresentationRegistry, loadPresentationManifest } from './presentation-registry.mjs';
 
 function writeJson(file, value) {
@@ -98,14 +100,25 @@ function writeElementIdentityIndex(outputDir, { composition, template, projectId
 }
 
 export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], designChoices = {}, projectId = null, factoryRoot = process.cwd(), catalog } = {}) {
-  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, ...(catalog ? { catalog } : {}) });
+  // What the approved inventory can support decides which visual directions a
+  // build may present by, so it is resolved before the design is selected
+  // rather than discovered at review as a page of grey rectangles.
+  const assetReadiness = compileAssetReadiness({ knowledgePack, assetDecisions });
+  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, assetReadiness, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
   // new section types reached generated projects without ever being added to
   // the schema, because nothing validated the output.
   // Human edits are replayed over freshly composed output, so a rebuild picks
   // up new source material without discarding what someone wrote by hand.
-  const composition = assertContract('composition', applySectionVariants(applyContentOverrides(composeProject({ manifest, knowledgePack, assetDecisions }), contentOverrides), sectionVariants));
+  // Order matters, and it is the order of authority. The composer decides what
+  // the page says; the visual direction decides how the factory presents it;
+  // a human edit and a chosen presentation come last, because a person who
+  // changed something must not have it changed back by a direction.
+  const composition = assertContract('composition', applySectionVariants(applyContentOverrides(
+    applyVisualDirection(composeProject({ manifest, knowledgePack, assetDecisions }), plan.direction),
+    contentOverrides,
+  ), sectionVariants));
   const out = path.resolve(outputDir);
   const assets = materializeAssets(composition, knowledgePack, { assetSourceDir, outputDir: out, assetDecisions });
   // A section whose presentation the build cannot actually satisfy still
@@ -128,5 +141,5 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   const elementIdentity = projectId
     ? writeElementIdentityIndex(out, { composition, template: plan.template, projectId, assets })
     : null;
-  return { plan, composition, assets, elementIdentity };
+  return { plan, composition, assets, elementIdentity, assetReadiness };
 }

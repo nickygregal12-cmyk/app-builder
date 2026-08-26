@@ -618,6 +618,20 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
  * The hash is recomputed: a composition whose hash describes different content
  * than it holds is worse than no hash at all.
  */
+/**
+ * Recompute the hash after a transform changed what a composition holds.
+ *
+ * A composition whose hash describes different content than it holds is worse
+ * than no hash at all, and three transforms now need to say so. Exporting it
+ * keeps the hashing rule in the one place that defines it rather than in every
+ * caller that reshapes a composition.
+ */
+export function rehashComposition(composition) {
+  const base = { ...composition };
+  delete base.compositionHash;
+  return { ...base, compositionHash: hash(base) };
+}
+
 export function stripContentOverrides(composition) {
   let restored = 0;
   const sections = composition.sections.map((section) => ({

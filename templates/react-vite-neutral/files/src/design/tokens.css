@@ -50,6 +50,10 @@
   --radius-pill: 999px;
   --space-unit: 0.25rem;
   --section-space: clamp(56px, 7vw, 104px);
+  /* Responsive composition. A direction decides whether a phone gets the same
+     rhythm as a desktop, and this is the one decision of that plan that is a
+     value rather than a structure a class has to change. */
+  --mobile-section-space-scale: 1;
 
   --shadow-soft: 0 10px 30px rgb(20 22 26 / 7%);
   --shadow-lifted: 0 24px 60px -20px rgb(20 22 26 / 26%);

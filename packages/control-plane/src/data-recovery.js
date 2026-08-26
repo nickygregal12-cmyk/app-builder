@@ -95,7 +95,9 @@ export async function runRestoreRehearsal({
     // A restore of nothing is indistinguishable from a successful restore of everything. If the
     // baseline holds no rows, this rehearsal cannot prove that rows come back.
     const numeric = Object.values(baselineInvariants ?? {}).map((value) => Number(value)).filter((value) => Number.isFinite(value));
-    if (numeric.length === 0 || numeric.every((value) => value === 0)) {
+    // `every` over an empty list is true, and that is the right answer here: a baseline with
+    // nothing countable in it is precisely the case this refuses.
+    if (numeric.every((value) => value === 0)) {
       fail('baseline-empty', 'No invariant counted anything before the snapshot. Seed real rows first.');
     }
     if (failures.length > 0) return rehearsalResult({ failures, steps, environment, databaseId, evidenceId, startedAt, clock, snapshot, damage });

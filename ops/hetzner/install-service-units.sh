@@ -7,7 +7,7 @@ set -euo pipefail
 RUNTIME_USER="appbuilder"
 REPO="/srv/app-builder/repository"
 ETC_DIR="/etc/app-builder"
-OPENCODE_PORT="${APP_BUILDER_OPENCODE_PORT:-4096}"
+OPENCODE_PORT="${APP_BUILDER_OPENCODE_PORT:-4097}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Run this script as root or through sudo." >&2
@@ -26,6 +26,11 @@ fi
 
 if [[ ! -d "$REPO" ]]; then
   echo "Repository directory $REPO is missing." >&2
+  exit 1
+fi
+
+if ss -H -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)${OPENCODE_PORT}$"; then
+  echo "Port ${OPENCODE_PORT} is already in use. Set APP_BUILDER_OPENCODE_PORT to a free loopback port before installing the unit." >&2
   exit 1
 fi
 
@@ -111,6 +116,13 @@ LockPersonality=true
 [Install]
 WantedBy=multi-user.target
 EOF
+
+# Record the selected local port in the existing host marker for later
+# verification and AgentRuntimeAdapter discovery.
+tmp_marker="$(mktemp)"
+jq --argjson port "$OPENCODE_PORT" '.opencodePort = $port' /etc/app-builder-host.json > "$tmp_marker"
+install -m 0644 -o root -g root "$tmp_marker" /etc/app-builder-host.json
+rm -f "$tmp_marker"
 
 systemctl daemon-reload
 

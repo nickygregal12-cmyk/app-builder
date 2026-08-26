@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { assertKnowledgePack, buildKnowledgePack, normalizeSource, normalizeWebsite } from '@app-builder/content-intelligence';
 
 // Source ingestion is a service capability so the Console never has to parse
@@ -156,6 +157,33 @@ export class SourceIngestion {
     return path.join(this.projectRoot(projectId), 'normalized-sources.json');
   }
 
+  // Image variants already keep their original. Uploaded documents and
+  // spreadsheets kept nothing, so an acceptance run could not hand over the
+  // material it was built from without asking the operator to find it again.
+  originalsDirectory(projectId) {
+    return path.join(this.projectRoot(projectId), 'originals');
+  }
+
+  retainOriginal(projectId, request) {
+    if (!Buffer.isBuffer(request.data) || !request.data.length) return;
+    const contentHash = createHash('sha256').update(request.data).digest('hex');
+    const directory = this.originalsDirectory(projectId);
+    fs.mkdirSync(directory, { recursive: true });
+    const extension = path.extname(String(request.name ?? '')).replace(/[^A-Za-z0-9.]/g, '').slice(0, 12);
+    const file = path.join(directory, `${contentHash}${extension}`);
+    if (!fs.existsSync(file)) fs.writeFileSync(file, request.data);
+  }
+
+  /** The original bytes of an ingested upload, addressed by what was ingested. */
+  readRetainedOriginal(projectId, contentHash) {
+    if (!/^[0-9a-f]{64}$/.test(String(contentHash))) return null;
+    const directory = this.originalsDirectory(projectId);
+    if (!fs.existsSync(directory)) return null;
+    const name = fs.readdirSync(directory).find((entry) => entry.startsWith(contentHash));
+    if (!name) return null;
+    return { name, bytes: fs.readFileSync(path.join(directory, name)) };
+  }
+
   readNormalized(projectId) {
     const file = this.normalizedPath(projectId);
     return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
@@ -180,6 +208,7 @@ export class SourceIngestion {
         };
         added.push(...await normalizeWebsite(request.uri, { ...options, maxPages: request.maxPages, sourceDefaults }));
       } else {
+        this.retainOriginal(projectId, request);
         added.push(await normalizeSource({
           name: request.name,
           label: request.label,

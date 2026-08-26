@@ -624,3 +624,41 @@ provenance says so in the artifact itself, and a test enforces that it keeps
 saying so. It is the baseline for subsequent reruns; it is not the lost
 original, and no comparison should treat it as one. The first run replayed from
 it establishes the numbers everything after is measured against.
+
+### F31 — The factory could not hand over the material it was built from — P1 ✅ Fixed
+
+Ingesting an uploaded document or spreadsheet kept the normalised text and the
+knowledge pack's hash of the original bytes, and threw the bytes away. Images
+already kept theirs.
+
+That is fine until handover. The acceptance contract requires every declared
+source to sit beside the evidence file with a SHA-256 that matches what was
+ingested, so an acceptance packet either asked the operator to go and find the
+file they uploaded weeks ago, or quietly omitted it. A run that cannot produce
+the material it was built from is not evidence of anything.
+
+Uploads are now retained under the project's own source state, addressed by the
+hash the pack recorded, and the review packet copies them into the handover.
+
+### F32 — Assembling acceptance evidence by hand is where the gate leaks
+
+F28 recorded a run passing the validator while naming a website the crawler had
+never reached. The validator was fixed. The deeper cause was not: the evidence
+file was assembled by hand, so every hash, path and journey claim in it was a
+transcription rather than a reading of durable state.
+
+`npm run acceptance:genuine-business:packet` now assembles the machine-provable
+half from the factory's own record — the source ledger with the hashes the
+knowledge pack holds, the journey record read from the event ledger rather than
+from anyone's memory, the metrics, launch readiness, artifacts copied and hashed
+beside the evidence, the generated repository without its build machinery, the
+retained source originals, and the rendered captures so the packet can be read
+away from a running factory.
+
+It deliberately stops there. `productReview` and `manualEdits` are absent from
+the draft, so the draft does not validate, and a run that nobody reviewed cannot
+pass by accident. Where a run is not evidenceable at all — nothing ingested, no
+site crawled, nothing captured — the packet says which and exits non-zero rather
+than producing a tidy file that hides it.
+
+This does not close the human review. It removes the transcription around it.

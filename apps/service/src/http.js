@@ -54,11 +54,18 @@ export function classifyServiceError(message) {
   return CLIENT_ERROR_PATTERNS.some((pattern) => pattern.test(String(message))) ? 400 : 500;
 }
 
+// OpenCode's local server and its documented alternate. A generated preview has
+// no business reaching either, and this list says so rather than relying on the
+// ephemeral-port allocator never colliding with them.
+const NEVER_PROXIED_PORTS = [4096, 4097];
+
 export function createFactoryHttpServer({ service, servicePort = null }) {
-  // The service's own port is never a legitimate preview destination. Passing
-  // it in lets the proxy refuse to address the factory control surface even if
-  // preview state were ever corrupted.
-  const previewProxy = createPreviewProxy({ service, reservedPorts: [servicePort].filter((port) => Number.isInteger(port)) });
+  // A preview runs on an OS-assigned ephemeral port, so no control surface can
+  // legitimately be one. Naming them anyway makes the invariant executable: the
+  // factory's own port, and the OpenCode host ports that must never be reachable
+  // through a generated preview, are refused as destinations even if preview
+  // state were somehow corrupted.
+  const previewProxy = createPreviewProxy({ service, reservedPorts: [servicePort, ...NEVER_PROXIED_PORTS].filter((port) => Number.isInteger(port)) });
   const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');

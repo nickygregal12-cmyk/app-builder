@@ -113,6 +113,24 @@ test('an adversarial caller cannot proxy an arbitrary localhost service', async 
     // Methods a generated preview never needs fail closed rather than reaching it.
     const deleted = await fetch(`${origin}/preview/live/`, { method: 'DELETE' });
     assert.equal(deleted.status, 405);
+
+    // The control surfaces a preview must never reach are refused by name, not
+    // by trusting the ephemeral-port allocator to avoid them.
+    for (const reserved of [4310, 4096, 4097]) {
+      const target = { previewTarget: () => ({ port: reserved, basePath: '/preview/live/', url: `http://127.0.0.1:${reserved}/preview/live/` }) };
+      assert.equal(resolvePreviewTarget(target, 'live', { reservedPorts: [4310, 4096, 4097] }), null, String(reserved));
+    }
+    const controlSurface = createFactoryHttpServer({
+      service: { previewTarget: () => ({ port: 4310, basePath: '/preview/live/', url: 'http://127.0.0.1:4310/preview/live/' }) },
+      servicePort: 4310,
+    });
+    await listen(controlSurface);
+    try {
+      const refused = await fetch(`http://127.0.0.1:${controlSurface.address().port}/preview/live/`);
+      assert.equal(refused.status, 404);
+    } finally {
+      await close(controlSurface);
+    }
   } finally {
     await close(facade);
     await close(preview.server);

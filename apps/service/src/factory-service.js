@@ -153,6 +153,12 @@ export class FactoryService {
     return mintApprovedIntakeBundle(intake ?? {});
   }
 
+  /** The original bytes of an ingested upload, for handover and evidence. */
+  readRetainedSource(projectId, contentHash) {
+    this.requireProject(projectId);
+    return this.ingestion.readRetainedOriginal(projectId, contentHash);
+  }
+
   getIntakeBundle(projectId) {
     return this.requireProject(projectId).intakeBundle ?? null;
   }

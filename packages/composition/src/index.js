@@ -450,7 +450,34 @@ function dropRepeatedHeading(sections) {
 
 function surfacesFor(manifest) {
   const explicit = list(manifest?.majorSurfaces).map(String).filter(Boolean);
-  return explicit.length ? explicit : [...(DEFAULT_SURFACES[manifest?.project?.type] ?? ['Home'])];
+  if (explicit.length) return explicit.map((name) => ({ name, declared: true }));
+  return [...(DEFAULT_SURFACES[manifest?.project?.type] ?? ['Home'])].map((name) => ({ name, declared: false }));
+}
+
+// A page whose only sections are a hero and a call to action is a dead end: the
+// visitor arrived from navigation and found nothing they came for.
+//
+// The two cases are not the same. A surface the operator declared is their
+// intent, so it is still published and named as an open content gap. A surface
+// the factory proposed for itself and then could not fill is the factory's own
+// mistake, so it is not published at all — shipping it would put a hole in the
+// navigation of every generated site whose sources happen to be thin.
+const CHROME_SECTIONS = new Set(['hero', 'cta']);
+
+function carriesContent(pageSections) {
+  return pageSections.some((item) => {
+    if (!CHROME_SECTIONS.has(item.type)) return true;
+    if (item.type !== 'hero') return false;
+    return item.bindings.some((entry) => entry.key !== 'title' && !isEmptyBindingValue(entry.value));
+  });
+}
+
+function isEmptyBindingValue(value) {
+  if (typeof value === 'string') return value.trim() === '';
+  if (typeof value === 'number' || typeof value === 'boolean') return false;
+  if (Array.isArray(value)) return value.every(isEmptyBindingValue);
+  if (value && typeof value === 'object') return Object.values(value).every(isEmptyBindingValue);
+  return true;
 }
 
 function warningsFor(manifest, pack, assetDecisions) {
@@ -473,26 +500,35 @@ function warningsFor(manifest, pack, assetDecisions) {
 export function composeProject({ manifest, knowledgePack = null, assetDecisions = [] } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
   const surfaces = surfacesFor(manifest);
-  const projectAction = primaryAction(manifest, surfaces, knowledgePack);
+  const projectAction = primaryAction(manifest, surfaces.map((surface) => surface.name), knowledgePack);
   const sections = [];
-  const pages = surfaces.map((surface, index) => {
-    const slug = index === 0 ? 'home' : slugify(surface);
+  const unfillable = [];
+  const pages = [];
+  surfaces.forEach((surface, index) => {
+    const slug = index === 0 ? 'home' : slugify(surface.name);
     const pageId = `page-${slug}`;
     const path = index === 0 ? '/' : `/${slug}`;
     // A call to action that links to the page the visitor is already on is a
     // dead end, so it is dropped for that page rather than rendered.
     const action = projectAction && projectAction.href === path ? null : projectAction;
-    const pageSections = sectionsForPage({ surface, pageId, index, manifest, pack: knowledgePack, action, assetDecisions });
+    const pageSections = sectionsForPage({ surface: surface.name, pageId, index, manifest, pack: knowledgePack, action, assetDecisions });
+    // The home page always ships: dropping it would leave the site with no entry.
+    if (index > 0 && !surface.declared && !carriesContent(pageSections)) {
+      unfillable.push(surface.name);
+      return;
+    }
     sections.push(...pageSections);
-    return {
+    pages.push({
       id: pageId,
       path,
-      title: index === 0 ? manifest.project.name : surface,
-      purpose: index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface} surface for ${manifest.project.name}.`,
-      navigation: { label: surface, order: index, visible: true },
+      title: index === 0 ? manifest.project.name : surface.name,
+      // Navigation order stays the surface's own position so removing an
+      // unfillable surface never reshuffles the ones that remain.
+      purpose: index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface.name} surface for ${manifest.project.name}.`,
+      navigation: { label: surface.name, order: index, visible: true },
       primaryAction: action,
       sectionIds: pageSections.map((item) => item.id),
-    };
+    });
   });
   const base = {
     schemaVersion: 1,
@@ -501,7 +537,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
     input: { manifestVersion: manifest.schemaVersion ?? 1, knowledgePackHash: knowledgePack?.packHash ?? null, assetDecisionsHash: assetDecisionsHash(assetDecisions) },
     pages,
     sections,
-    warnings: warningsFor(manifest, knowledgePack, assetDecisions),
+    warnings: [...warningsFor(manifest, knowledgePack, assetDecisions), ...unfillable.map((name) => `unfillable-surface:${name}`)],
   };
   return { ...base, compositionHash: hash(base) };
 }

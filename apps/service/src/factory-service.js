@@ -541,7 +541,7 @@ export class FactoryService {
     if (!composition) return null;
     return deriveEvidencePlan({
       composition,
-      stateMatrix: deriveStateMatrix(composition),
+      stateMatrix: deriveStateMatrix(composition, this.launchReadinessRules()),
       elementIdentity: this.elementIdentityIndex(projectId),
     });
   }
@@ -577,7 +577,7 @@ export class FactoryService {
     this.store.upsertTask(task);
 
     const started = Date.now();
-    const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition), elementIdentity: this.elementIdentityIndex(projectId) });
+    const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, this.launchReadinessRules()), elementIdentity: this.elementIdentityIndex(projectId) });
     await this.store.recordEvent(createEvent({
       projectId,
       taskId: task.id,

@@ -96,6 +96,21 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
 
+      # Stage Q12. Runs against a disposable local PostgreSQL cluster rather than the Supabase
+      # stack below, because proving that a dump restores is a database question rather than a
+      # provider one - and a recovery gate that needs a cloud project is a gate nobody runs.
+      - name: Executable backup/restore acceptance
+        run: npm run acceptance:data-recovery
+
+      - name: Publish restore-rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: data-recovery-evidence
+          path: .app-builder/data-recovery
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Generate canonical Supabase-backed app
         run: npm run generate:acceptance
 

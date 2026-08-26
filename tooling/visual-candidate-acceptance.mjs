@@ -33,6 +33,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
+import { captureInventory } from './lib/visual-review-report.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 
@@ -123,19 +124,23 @@ try {
     assetReadiness: decided.assetReadiness,
     diversity: decided.diversity,
     refusedDirections: decided.refusedDirections,
-    candidates: decided.candidates.map((candidate) => ({
-      candidateId: candidate.candidateId,
-      directionId: candidate.directionId,
-      state: candidate.state,
-      axes: candidate.signature.axes,
-      sequence: sequenceOf(candidate),
-      gate: candidate.gate,
-      evidenceId: candidate.evidenceId,
-      captures: service.getRenderedEvidence(project.id, candidate.evidenceId)?.captures.length ?? 0,
-      designLint: candidate.designLint?.counts ?? null,
-      review: candidate.review,
-      outcome: candidate.outcome,
-    })),
+    candidates: decided.candidates.map((candidate) => {
+      const evidence = service.getRenderedEvidence(project.id, candidate.evidenceId);
+      return {
+        candidateId: candidate.candidateId,
+        directionId: candidate.directionId,
+        state: candidate.state,
+        axes: candidate.signature.axes,
+        sequence: sequenceOf(candidate),
+        gate: candidate.gate,
+        evidenceId: candidate.evidenceId,
+        captures: evidence?.captures.length ?? 0,
+        captureInventory: captureInventory(evidence),
+        designLint: candidate.designLint?.counts ?? null,
+        review: candidate.review,
+        outcome: candidate.outcome,
+      };
+    }),
     promotedCandidateId: decided.promotedCandidateId,
     // Recorded rather than implied. Phase 5 is where a genuinely independent
     // runtime could issue this verdict; nothing here pretends one did.

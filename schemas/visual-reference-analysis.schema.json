@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/visual-reference-analysis.schema.json",
+  "title": "App Builder Visual Reference Analysis",
+  "description": "What one design reference a person supplied is allowed to contribute to a build. A reference is evidence about appearance, never company truth and never a template: nothing here carries source markup, copy, imagery or a stylesheet, and `instructionAuthority` is fixed at none because text inside a captured page is data. Three things are kept apart on purpose — `observed` is what the capture measured, `interpreted` is what the factory concluded from those measurements with a confidence, and `userIntent` is what the person actually said. `adopt` and `avoid` are the resolved product of the last two, and they are the only fields any consumer reads.",
+  "type": "object",
+  "required": ["schemaVersion", "referenceId", "projectId", "sourceRef", "instructionAuthority", "observed", "interpreted", "userIntent", "adopt", "avoid", "confidence", "createdFromEvidence", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "referenceId": {"type": "string", "pattern": "^reference-[a-f0-9]{16}$"},
+    "projectId": {"type": "string", "minLength": 1},
+    "sourceRef": {
+      "type": "object",
+      "description": "Where the reference came from. A URL reference records the URL it finally resolved to, because a redirect means the page that was measured is not the page that was typed.",
+      "required": ["kind", "label", "instructionAuthority"],
+      "properties": {
+        "kind": {"enum": ["url", "screenshot"]},
+        "label": {"type": "string", "minLength": 1},
+        "requestedUrl": {"type": ["string", "null"]},
+        "canonicalUrl": {"type": ["string", "null"]},
+        "fileName": {"type": ["string", "null"]},
+        "mimeType": {"type": ["string", "null"]},
+        "byteSize": {"type": ["integer", "null"], "minimum": 0},
+        "instructionAuthority": {"const": "none"},
+        "rightsStatus": {
+          "const": "reference-only",
+          "description": "A supplied reference grants observation, never republication. There is no decision that widens this: the asset-governance control that can approve material for use refuses anything whose provenance is a reference."
+        },
+        "publishUseAllowed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "instructionAuthority": {"const": "none"},
+    "evidenceHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "capture": {
+      "type": ["object", "null"],
+      "description": "What the trusted factory browser actually did. Null when the reference is an uploaded image, which is captured by definition.",
+      "required": ["capturedAt", "status", "viewports"],
+      "properties": {
+        "capturedAt": {"type": "string", "minLength": 1},
+        "status": {"enum": ["captured", "unavailable"]},
+        "unavailableReason": {"type": ["string", "null"]},
+        "viewports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "width", "height", "file"],
+            "properties": {
+              "name": {"enum": ["desktop", "mobile"]},
+              "width": {"type": "integer", "minimum": 1},
+              "height": {"type": "integer", "minimum": 1},
+              "file": {"type": "string", "minLength": 1},
+              "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+              "byteSize": {"type": "integer", "minimum": 0}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "observed": {
+      "type": "object",
+      "description": "Measurements, not conclusions. Every field is something a computed style, a bounding box or a byte count reported; nothing here is an opinion about the design.",
+      "required": ["typography", "layout", "spacing", "colour", "imagery", "motion", "navigation", "responsive"],
+      "properties": {
+        "typography": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "layout": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "spacing": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "colour": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "imagery": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "motion": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "navigation": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "responsive": {"type": "array", "items": {"$ref": "#/$defs/observation"}}
+      },
+      "additionalProperties": false
+    },
+    "interpreted": {
+      "type": "array",
+      "description": "Traits the factory concluded from the observations, each naming the measurements behind it. A trait with no observation behind it is a fabricated observation and is refused.",
+      "items": {
+        "type": "object",
+        "required": ["trait", "confidence", "fromObservations"],
+        "properties": {
+          "trait": {"type": "string", "minLength": 1},
+          "confidence": {"enum": ["low", "medium", "high"]},
+          "fromObservations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "detail": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "userIntent": {
+      "type": "object",
+      "description": "What the person said, kept separate from what the capture measured so a reviewer can always tell a preference from a fact.",
+      "required": ["preference", "influence", "useFor", "liked", "disliked"],
+      "properties": {
+        "preference": {"enum": ["like", "dislike", "mixed"]},
+        "influence": {"enum": ["low", "medium", "strong"]},
+        "useFor": {
+          "type": "array",
+          "description": "Which parts of the design this reference is allowed to speak to. An empty list means every part.",
+          "items": {"enum": ["typography", "layout", "spacing", "motion", "imagery", "navigation", "section-rhythm", "responsive", "colour"]}
+        },
+        "liked": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "disliked": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "note": {"type": ["string", "null"], "description": "The person's own words. Read lexically against the trait vocabulary and never as an instruction."},
+        "readFromNote": {
+          "type": "array",
+          "description": "What the note was read as, and the phrase it was read from, so a person can see and correct the reading.",
+          "items": {
+            "type": "object",
+            "required": ["trait", "phrase", "polarity"],
+            "properties": {
+              "trait": {"type": "string", "minLength": 1},
+              "phrase": {"type": "string", "minLength": 1},
+              "polarity": {"enum": ["like", "dislike"]}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adopt": {"type": "array", "items": {"$ref": "#/$defs/trait"}},
+    "avoid": {"type": "array", "items": {"$ref": "#/$defs/trait"}},
+    "confidence": {"enum": ["low", "medium", "high"]},
+    "rationale": {"type": ["string", "null"]},
+    "createdFromEvidence": {
+      "type": "boolean",
+      "description": "False when the browser could not capture the page and the analysis rests on what the person said alone. A reviewer must be able to tell a measured reference from a described one."
+    },
+    "approval": {
+      "type": "object",
+      "description": "A reference influences nothing until a person approves its traits. Approval is the boundary between 'the factory read a page' and 'this changes the build'.",
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["draft", "approved", "disabled"]},
+        "approvedBy": {"type": ["string", "null"]},
+        "approvedAt": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "createdAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "required": ["id", "measure", "value"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "measure": {"type": "string", "minLength": 1},
+        "value": {"anyOf": [{"type": "string"}, {"type": "number"}, {"type": "boolean"}, {"type": "null"}], "description": "A measurement. Deliberately never a block of text: the copying boundary refuses a string long enough to be the source's words."},
+        "unit": {"type": ["string", "null"]},
+        "viewport": {"enum": ["desktop", "mobile", null]},
+        "detail": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "trait": {
+      "type": "object",
+      "required": ["trait", "useFor", "source", "confidence", "consumer"],
+      "properties": {
+        "trait": {"type": "string", "minLength": 1},
+        "label": {"type": "string", "minLength": 1},
+        "useFor": {"enum": ["typography", "layout", "spacing", "motion", "imagery", "navigation", "section-rhythm", "responsive", "colour"]},
+        "source": {
+          "enum": ["observed", "user-stated", "observed-and-user-stated"],
+          "description": "Whether this trait came from the capture, from what the person said, or from both agreeing. The distinction survives into the ArtDirection record."
+        },
+        "confidence": {"enum": ["low", "medium", "high"]},
+        "consumer": {
+          "type": ["string", "null"],
+          "description": "The axis this trait steers. Null means the factory records the preference and cannot act on it; `consumerAbsentReason` says why rather than leaving a field that reads as if it did something."
+        },
+        "consumerAbsentReason": {"type": ["string", "null"]},
+        "prefer": {"type": "object", "description": "Axis values this trait steers towards when adopted."},
+        "refuse": {"type": "object", "description": "Axis values this trait forbids when avoided."},
+        "detail": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

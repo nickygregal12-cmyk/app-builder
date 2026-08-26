@@ -91,7 +91,7 @@
     },
     "visual": {
       "id": "visual",
-      "label": "Rendered visual quality and distinctiveness",
+      "label": "Rendered visual quality and distinctiveness. minimumScore is the professional-output bar a candidate must reach before it may be promoted; minimumCriterionScore stops a strong average hiding one badly failing criterion; reworkIterationBudget bounds how many times a failed candidate may be revised before the set is decided without it.",
       "evaluatedBy": "design-critic",
       "defaultReworkRole": "art-direction",
       "deterministicChecks": [
@@ -102,6 +102,8 @@
         "DesignLintReport"
       ],
       "minimumScore": 8.5,
+      "minimumCriterionScore": 6.5,
+      "reworkIterationBudget": 2,
       "requiresIndependentReviewer": true
     },
     "functionality": {

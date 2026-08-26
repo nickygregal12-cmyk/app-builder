@@ -10,13 +10,15 @@ import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
 import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, serveCandidateBuild, verifyCandidate } from './visual-candidates.js';
+import { designReferenceInfluence } from './visual-references.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
 import { compileDesignLintReport } from '../../../tooling/lib/design-lint.mjs';
 import { compileAssetReadiness } from '../../../tooling/lib/asset-readiness.mjs';
-import { applyVisualDirection, loadVisualDirections, selectVisualDirections, structuralSignature } from '../../../tooling/lib/visual-direction.mjs';
-import { buildCandidateSet, promoteCandidate, recordCandidateEvidence, recordReview, reviewCriteriaFor } from '../../../tooling/lib/visual-candidates.mjs';
+import { applyVisualDirection, compileVisualDirection, loadVisualDirections, selectVisualDirections, structuralSignature } from '../../../tooling/lib/visual-direction.mjs';
+import { buildCandidateSet, decideCandidateSet, loadVisualQualityGate, promoteCandidate, recordCandidateEvidence, recordReview, reviewCriteriaFor, summariseCandidateSet } from '../../../tooling/lib/visual-candidates.mjs';
+import { attachRevisedCandidate, planVisualRework, remainingReworkBudget, reworkOverrides } from '../../../tooling/lib/visual-rework.mjs';
 import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { deriveOpportunities } from '../../../tooling/lib/product-opportunities.mjs';
 import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
@@ -977,6 +979,10 @@ export class FactoryService {
         assetDecisions: this.readAssetDecisions(projectId).decisions,
         sectionVariants: this.readSectionVariants(projectId).choices,
         designChoices: this.readDesignChoices(projectId).choices,
+        // The approved design references, as one bounded influence over the
+        // art-direction plan. A project with none passes null and builds exactly
+        // as it did before references existed.
+        referenceInfluence: this.designReferenceInfluence(projectId),
         projectId,
         factoryRoot: this.factoryRoot,
       });
@@ -1138,6 +1144,7 @@ export class FactoryService {
     const assetDecisions = this.readAssetDecisions(projectId).decisions;
     const assetReadiness = compileAssetReadiness({ knowledgePack: project.knowledgePack, assetDecisions });
     const registry = loadVisualDirections(this.factoryRoot);
+    const referenceInfluence = this.designReferenceInfluence(projectId);
     // The layout family is a property of the project type rather than of the
     // direction, and it belongs in the signature so a candidate set generated
     // across different shells is still comparable.
@@ -1151,9 +1158,22 @@ export class FactoryService {
       // that shows nothing.
       composition,
       requested: directions,
+      // Approved design references reach direction selection here, and only
+      // here. A refusal removes a direction with a recorded reason; a
+      // preference tunes the plan the direction compiles.
+      referenceInfluence,
     });
     if (eligible.length < 2) {
-      throw new Error(`Only ${eligible.length} visual direction is available for a ${frozenTruth.projectType}: ${refused.map((entry) => `${entry.directionId} (${entry.reason})`).join(', ') || 'the registry offers no others'}. One candidate is not a choice.`);
+      // Where an approved design reference is part of why, say so. "Only one
+      // direction is available" is a shortage the operator cannot act on; "the
+      // reference you approved refuses the other two" is a decision they can
+      // change in the panel they made it in.
+      const byReference = refused.filter((entry) => entry.reason === 'reference-avoids-trait');
+      const because = refused.map((entry) => `${entry.directionId} (${entry.reason})`).join(', ') || 'the registry offers no others';
+      const advice = byReference.length
+        ? ` A design reference this project approved refuses ${byReference.map((entry) => entry.directionId).join(' and ')}; narrow what that reference is used for, or disable it, to get a choice back.`
+        : '';
+      throw new Error(`Only ${eligible.length} visual direction is available for a ${frozenTruth.projectType}: ${because}. One candidate is not a choice.${advice}`);
     }
 
     const setId = buildCandidateSet({
@@ -1179,6 +1199,7 @@ export class FactoryService {
         // The direction is the only thing that differs between candidates. Every
         // other input is the project's own.
         designChoices: { ...this.readDesignChoices(projectId).choices, visualDirection: candidate.directionId },
+        referenceInfluence,
         projectId,
         factoryRoot: this.factoryRoot,
       });
@@ -1202,9 +1223,25 @@ export class FactoryService {
         refused: refused.map((entry) => `${entry.directionId}:${entry.reason}`),
         assetStrategy: assetReadiness.strategy,
         baselineCompositionHash: frozenTruth.baselineCompositionHash,
+        referenceIds: referenceInfluence?.referenceIds ?? [],
       },
     }));
     return set;
+  }
+
+  /**
+   * The approved design references, resolved into one bounded influence.
+   *
+   * Read at generation rather than stored on the project, so disabling or
+   * removing a reference returns the next build to the factory's own decision
+   * with nothing left behind to clean up.
+   */
+  designReferenceInfluence(projectId) {
+    const influence = designReferenceInfluence(this, projectId);
+    // Null rather than an empty influence: a project with no approved reference
+    // must compile the plan it compiled before this existed, not a plan
+    // carrying two empty arrays that say a reference did nothing.
+    return influence.influenced ? influence : null;
   }
 
   /** One candidate, before it has been built or photographed. */
@@ -1218,9 +1255,10 @@ export class FactoryService {
       artDirection: direction.artDirection,
       signature: structuralSignature({ direction, composition, design: { density: direction.design.density, patternId } }),
       compositionHash: composition.compositionHash,
-      // No reference informed these unless one was supplied; an empty list is
-      // the honest answer rather than an omitted field.
-      referenceAnalysisIds: [],
+      // Which approved references informed this candidate. An empty list is the
+      // honest answer for a project that supplied none, rather than an omitted
+      // field a reader has to interpret.
+      referenceAnalysisIds: [...(direction.artDirection?.referenceIds ?? [])],
     };
   }
 
@@ -1237,9 +1275,15 @@ export class FactoryService {
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
     if (set.promotedCandidateId) throw new Error(`This set already promoted ${set.promotedCandidateId}.`);
 
-    installSharedDependencies(set.candidates.map((candidate) => candidate.workspace));
+    // Only what has not been photographed yet. A bounded rework adds a revision
+    // to a set whose siblings already have their evidence, and re-capturing
+    // those would both cost a browser run and move a candidate through a state
+    // transition it has already made.
+    const pending = set.candidates.filter((candidate) => candidate.state === 'draft' && candidate.workspace);
+    if (!pending.length) throw new Error(`Every candidate in set ${set.setId} has already been photographed.`);
+    installSharedDependencies(pending.map((candidate) => candidate.workspace));
     const captured = [];
-    for (const candidate of set.candidates) {
+    for (const candidate of pending) {
       const dist = verifyCandidate(candidate.workspace);
       const server = await serveCandidateBuild(dist);
       try {
@@ -1274,7 +1318,11 @@ export class FactoryService {
       }
     }
 
-    const updated = this.writeVisualCandidateSet(projectId, { ...set, candidates: captured });
+    const byId = new Map(captured.map((candidate) => [candidate.candidateId, candidate]));
+    const updated = this.writeVisualCandidateSet(projectId, {
+      ...set,
+      candidates: set.candidates.map((candidate) => byId.get(candidate.candidateId) ?? candidate),
+    });
     await this.store.recordEvent(createEvent({
       projectId,
       type: 'visual.candidates.captured',
@@ -1337,10 +1385,28 @@ export class FactoryService {
       settledByRules: candidate.designLint?.findings ?? [],
       mustAddress: candidate.gate.mustAddress,
       gateStatus: candidate.gate.status,
-      // The questions.
+      // The questions, and the bar the answers are held to. A reviewer that is
+      // not told the bar cannot be expected to score against it, and a scored
+      // review that never sees the threshold is a number with no meaning.
       criteria: reviewCriteriaFor({ projectType: set.frozenTruth.projectType, publishesImagery }),
+      qualityGate: this.visualQualityGate(),
+      iteration: candidate.iteration ?? 0,
+      lineage: candidate.lineage ?? null,
       siblings: set.candidates.filter((entry) => entry.candidateId !== candidateId).map((entry) => ({ candidateId: entry.candidateId, directionLabel: entry.directionLabel, evidenceId: entry.evidenceId })),
     };
+  }
+
+  /** The declared professional bar, read from the pipeline gate registry. */
+  visualQualityGate() {
+    return loadVisualQualityGate(this.factoryRoot);
+  }
+
+  /** What the set currently allows: promote one, rework, or reject them all. */
+  visualCandidateSetSummary(projectId) {
+    const set = this.readVisualCandidateSet(projectId);
+    if (!set) return null;
+    const gate = this.visualQualityGate();
+    return { ...summariseCandidateSet(set, gate), ...remainingReworkBudget(set, gate) };
   }
 
   async recordVisualCandidateReview(projectId, candidateId, review) {
@@ -1348,7 +1414,15 @@ export class FactoryService {
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
     const candidate = set.candidates.find((entry) => entry.candidateId === candidateId);
     if (!candidate) throw new Error(`No visual candidate ${candidateId} in set ${set.setId}.`);
-    const reviewed = recordReview(candidate, { decidedAt: new Date().toISOString(), ...review });
+    const packet = this.visualReviewPacket(projectId, candidateId);
+    const reviewed = recordReview(
+      candidate,
+      { decidedAt: new Date().toISOString(), ...review },
+      // The scoped criteria and the declared bar travel with the verdict, so a
+      // review that skips a criterion or calls a below-bar candidate a pass is
+      // refused here rather than discovered at promotion.
+      { qualityGate: this.visualQualityGate(), criteria: packet?.criteria ?? null },
+    );
     const updated = this.writeVisualCandidateSet(projectId, {
       ...set,
       candidates: set.candidates.map((entry) => (entry.candidateId === candidateId ? reviewed : entry)),
@@ -1357,9 +1431,146 @@ export class FactoryService {
       projectId,
       type: 'visual.candidate.reviewed',
       actor: review.reviewedBy,
-      payload: { setId: set.setId, candidateId, verdict: review.verdict, addressedRules: review.addressedRules ?? [] },
+      payload: {
+        setId: set.setId,
+        candidateId,
+        verdict: review.verdict,
+        addressedRules: review.addressedRules ?? [],
+        overallScore: reviewed.review.overallScore,
+        thresholdMet: reviewed.review.thresholdMet,
+        failingCriteria: reviewed.review.failingCriteria,
+      },
     }));
     return updated;
+  }
+
+  /**
+   * Decide the set without promoting anything.
+   *
+   * This is the button that was missing. A reviewer who has looked at every
+   * candidate and concluded that all of them are competent and none of them is
+   * good enough can now record exactly that, and the set closes or goes back for
+   * one bounded pass rather than quietly promoting the least bad one.
+   */
+  async decideVisualCandidateSet(projectId, { outcome, decidedBy, rationale = null } = {}) {
+    const set = this.readVisualCandidateSet(projectId);
+    if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
+    const decided = decideCandidateSet(set, { outcome, decidedBy, rationale, decidedAt: new Date().toISOString() });
+    const stored = this.writeVisualCandidateSet(projectId, decided);
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'visual.candidates.decided',
+      actor: decidedBy,
+      payload: {
+        setId: set.setId,
+        outcome,
+        rationale,
+        scores: stored.candidates.map((candidate) => ({ candidateId: candidate.candidateId, overallScore: candidate.review?.overallScore ?? null })),
+      },
+    }));
+    return stored;
+  }
+
+  /**
+   * One bounded rework pass over one candidate.
+   *
+   * The plan is derived from the verdict rather than written by whoever runs
+   * this, and the revision is built from the same frozen truth through the same
+   * generator. What changes is the axis values the plan names; what cannot
+   * change is anything the composition says, and `attachRevisedCandidate`
+   * refuses a revision whose composition hash moved.
+   */
+  async reworkVisualCandidate(projectId, candidateId, { plannedBy = 'design-critic' } = {}) {
+    const project = this.requireProject(projectId);
+    const set = this.readVisualCandidateSet(projectId);
+    if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
+    const candidate = set.candidates.find((entry) => entry.candidateId === candidateId);
+    if (!candidate) throw new Error(`No visual candidate ${candidateId} in set ${set.setId}.`);
+    const gate = this.visualQualityGate();
+    const packet = this.visualReviewPacket(projectId, candidateId);
+    const plan = assertContract('visual-rework-plan', planVisualRework({
+      set,
+      candidate,
+      gate,
+      criteria: packet?.criteria ?? null,
+      plannedBy,
+      createdAt: new Date().toISOString(),
+    }));
+
+    if (!plan.targets.length) {
+      // Nothing this lane can change. The plan is still recorded — it is the
+      // durable statement of who owns what failed — but no revision is built,
+      // because building one would spend an iteration proving nothing moved.
+      const stored = this.writeVisualCandidateSet(projectId, { ...set, reworkPlans: [...(set.reworkPlans ?? []), plan] });
+      await this.store.recordEvent(createEvent({
+        projectId,
+        type: 'visual.candidate.rework.planned',
+        actor: plannedBy,
+        payload: { setId: set.setId, planId: plan.planId, candidateId, revised: false, returnedTo: plan.returnedTo.map((entry) => `${entry.criterion}:${entry.role}`), customPresentation: Boolean(plan.customPresentation) },
+      }));
+      return { set: stored, plan, revisedCandidateId: null };
+    }
+
+    const { composition, frozenTruth } = this.frozenProductTruth(projectId);
+    const registry = loadVisualDirections(this.factoryRoot);
+    const referenceInfluence = this.designReferenceInfluence(projectId);
+    const overrides = reworkOverrides(plan);
+    const direction = compileVisualDirection(candidate.directionId, registry, { referenceInfluence, overrides });
+    const layoutPatternId = JSON.parse(fs.readFileSync(path.join(this.factoryRoot, 'config/layout-patterns.json'), 'utf8')).projectTypeDefaults?.[frozenTruth.projectType] ?? null;
+    const draft = this.draftCandidate(direction, composition, layoutPatternId);
+    const revisedId = `${candidate.candidateId}-r${plan.iteration}`;
+
+    const workspace = path.join(candidateRoot(this.workspacesRoot, project.slug, set.setId), `${direction.id}-r${plan.iteration}`);
+    const assetDecisions = this.readAssetDecisions(projectId).decisions;
+    const build = generateComposedProject(project.manifest, workspace, {
+      knowledgePack: project.knowledgePack,
+      assetSourceDir: this.ingestion.assetDirectory(projectId),
+      contentOverrides: this.readOverrides(projectId).overrides,
+      assetDecisions,
+      sectionVariants: this.readSectionVariants(projectId).choices,
+      designChoices: { ...this.readDesignChoices(projectId).choices, visualDirection: candidate.directionId },
+      referenceInfluence,
+      reworkOverrides: overrides,
+      projectId,
+      factoryRoot: this.factoryRoot,
+    });
+    const spec = JSON.parse(fs.readFileSync(path.join(workspace, DESIGN_SYSTEM_SPEC_PATH), 'utf8'));
+
+    const revised = {
+      ...draft,
+      candidateId: revisedId,
+      directionLabel: `${candidate.directionLabel} (revision ${plan.iteration})`,
+      workspace,
+      compositionHash: build.composition.compositionHash,
+      designSystemSpecHash: hashOf(spec),
+      assetStrategy: candidate.assetStrategy,
+      state: 'draft',
+      gate: { status: 'not-run', blocking: [], mustAddress: [] },
+      review: null,
+      outcome: 'pending',
+      rationale: null,
+      reworkOwner: null,
+      provenance: { createdBy: plan.owner, reviewedBy: null, promotedBy: null, decidedAt: null },
+    };
+
+    const stored = this.writeVisualCandidateSet(projectId, attachRevisedCandidate(set, { plan, candidate: revised }));
+    await this.store.recordEvent(createEvent({
+      projectId,
+      type: 'visual.candidate.reworked',
+      actor: plan.owner,
+      payload: {
+        setId: set.setId,
+        planId: plan.planId,
+        parentCandidateId: candidateId,
+        revisedCandidateId: revisedId,
+        iteration: plan.iteration,
+        failingCriteria: plan.failingCriteria,
+        requestedChanges: plan.targets.map((target) => `${target.axis}:${target.from}->${target.to}`),
+        customPresentationRequired: Boolean(plan.customPresentation),
+        frozenTruthUnchanged: revised.compositionHash === candidate.compositionHash,
+      },
+    }));
+    return { set: stored, plan, revisedCandidateId: revisedId };
   }
 
   /**

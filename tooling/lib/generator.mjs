@@ -128,12 +128,12 @@ function resolveRecipeClosure(recipeIds, templateId, catalog, factoryRoot, selec
  * replays it the way it replays a chosen density, and a rejected candidate
  * leaves nothing behind for a rebuild to pick up.
  */
-function selectVisualDirection(catalog, designChoices) {
+function selectVisualDirection(catalog, designChoices, referenceInfluence, overrides) {
   const chosen = designChoices?.visualDirection;
-  return chosen ? compileVisualDirection(chosen, catalog.visualDirections) : null;
+  return chosen ? compileVisualDirection(chosen, catalog.visualDirections, { referenceInfluence, overrides }) : null;
 }
 
-function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null, factoryRoot = process.cwd()) {
+function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null, factoryRoot = process.cwd(), referenceInfluence = null, reworkOverrides = null) {
   const patternId = catalog.layouts.projectTypeDefaults?.[manifest.project.type];
   const pattern = catalog.layouts.patterns?.[patternId];
   if (!pattern) throw new Error(`No layout pattern for project type ${manifest.project.type}.`);
@@ -147,7 +147,7 @@ function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = nul
   // and brings its own rhythm, measure and corner with it: a direction whose
   // grid contradicted its spacing would not be a direction. The pattern still
   // owns the shell, because the shell is what kind of application this is.
-  const direction = selectVisualDirection(catalog, designChoices);
+  const direction = selectVisualDirection(catalog, designChoices, referenceInfluence, reworkOverrides);
   const artDirection = direction ? direction.artDirection : compileArtDirectionPlan(artDirectionIntent(pattern));
   const composed = {
     patternId,
@@ -169,7 +169,7 @@ function selectScenarios(manifest, catalog) {
   return [...new Set(values)];
 }
 
-export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null } = {}) {
+export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null, referenceInfluence = null, reworkOverrides = null } = {}) {
   const templateId = catalog.templates.projectTypeDefaults?.[manifest.project.type];
   const templateEntry = catalog.templates.templates?.[templateId];
   if (!templateId || !templateEntry || templateEntry.status !== 'ready') throw new Error(`No ready template for project type ${manifest.project.type}.`);
@@ -190,7 +190,7 @@ export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), cat
     recipes: resolveRecipeClosure(recipeIds, template.id, catalog, factoryRoot, adapterIds),
     enabledModules,
     missingModules,
-    ...selectDesign(manifest, catalog, designChoices, knowledgePack, factoryRoot),
+    ...selectDesign(manifest, catalog, designChoices, knowledgePack, factoryRoot, referenceInfluence, reworkOverrides),
     scenarios: selectScenarios(manifest, catalog),
   };
 }
@@ -354,8 +354,8 @@ function writeReadme(projectDir, manifest, plan) {
   fs.writeFileSync(path.join(projectDir, 'README.md'), `# ${manifest.project.name}\n\n${manifest.project.primaryGoal}\n\n## Generated foundation\n\n- Template: ${plan.template.id} ${plan.template.version}\n- Project type: ${manifest.project.type}\n- Layout: ${plan.design.patternId}\n- Portable design system: \`.product/design-system.json\`\n- App Builder runtime dependency: none\n\n## Infrastructure adapters\n\n${adapterLines}\n\n## Installed recipes\n\n${recipeLines}\n\nSee \`docs/HANDOVER.md\` for environment, database, deployment and scenario notes.\n\n## Commands\n\n\`\`\`bash\nnpm install\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n`);
 }
 
-export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null } = {}) {
-  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices, knowledgePack });
+export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null, referenceInfluence = null, reworkOverrides = null } = {}) {
+  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices, knowledgePack, referenceInfluence, reworkOverrides });
   if (plan.missingModules.length) throw new Error(`No ready deterministic recipe for enabled module(s): ${plan.missingModules.join(', ')}.`);
   const out = path.resolve(outputDir);
   if (fs.existsSync(out)) throw new Error(`Refusing to overwrite existing directory: ${out}`);

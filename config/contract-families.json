@@ -135,8 +135,24 @@
       "schema": "visual-candidate-set.schema.json",
       "typeName": "AppBuilderVisualCandidateSet",
       "boundary": "Phase 4D candidate generation, comparison and promotion; written by the factory service and read by the Console.",
-      "schemaHash": "733b7fb445451ce2dd5b7dc2c6748a588c55461012bf92a70119b8d85b1b1682",
-      "typesHash": "f704123068819a55900a7fc090d540c1f97a09d9fc3f446f16796cc55b5661bc"
+      "schemaHash": "63aeff0e94a9ceb32a4c9c4578051c774512897a6a9a251d8980522fac8034b3",
+      "typesHash": "9f8d0ec1e30dfa03d1ba2301c6b3292b846dc1a66e750e00350b506717624cc6"
+    },
+    {
+      "id": "visual-reference-analysis",
+      "schema": "visual-reference-analysis.schema.json",
+      "typeName": "AppBuilderVisualReferenceAnalysis",
+      "boundary": "Design references a person supplied, analysed into adopt/avoid traits; written by the factory service, read by the Console and by visual-direction selection.",
+      "schemaHash": "69d0c5722e34a5f96a5497d82fee04e2c3316c54062e1446440f779840b0e034",
+      "typesHash": "c92330df921ecede2c91667c29d9166fb081fdb3a0178c21f56d2ab7e443b8c2"
+    },
+    {
+      "id": "visual-rework-plan",
+      "schema": "visual-rework-plan.schema.json",
+      "typeName": "AppBuilderVisualReworkPlan",
+      "boundary": "One bounded, targeted revision of one visual candidate; written by the factory service when an independent review returns a candidate for rework.",
+      "schemaHash": "56b6d1a4b13bee6262e02e7d7bb342a0c75c56b6da110a67cf600b34013968d0",
+      "typesHash": "f9d8c2b494a226f13591d8be2a707a8b90683672dda15dc43d6a26cd46d4fc8b"
     }
   ],
   "pending": [

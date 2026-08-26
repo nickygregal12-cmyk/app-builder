@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/visual-rework-plan.schema.json",
+  "title": "App Builder Visual Rework Plan",
+  "description": "One bounded, targeted revision of one visual candidate. A failed review names criteria, not a new brief: a candidate that passed hierarchy, credibility and responsive quality and failed distinctiveness must come back with those three intact and that one addressed, not as a different site. This plan is what makes that enforceable — it carries the failing criteria, the criteria that must survive, the specific axis changes requested, the frozen product truth that may not move, and the iteration it belongs to. Where the failing criterion cannot be answered by any axis the registry offers, `customPresentation` records that instead of pretending the closest existing component is good enough.",
+  "type": "object",
+  "required": ["schemaVersion", "planId", "setId", "projectId", "parentCandidateId", "iteration", "owner", "failingCriteria", "targets", "frozenTruthHash", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "planId": {"type": "string", "pattern": "^rework-[a-f0-9]{16}$"},
+    "setId": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "parentCandidateId": {"type": "string", "minLength": 1},
+    "reviewVerdictId": {"type": ["string", "null"]},
+    "iteration": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Which bounded pass this is. Bounded because 'keep making it prettier until the model is happy' is not a process; the ceiling is gates.visual.reworkIterationBudget in config/agent-pipelines.json."
+    },
+    "iterationBudget": {"type": "integer", "minimum": 1},
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The creator role that owns this revision. Taken from the review's rework owner or the gate's default, never chosen by whoever is applying it."
+    },
+    "failingCriteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "preservedCriteria": {
+      "type": "array",
+      "description": "What this candidate already got right and must not lose. Named explicitly so a revision is measurable against more than the thing that failed.",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "targets": {
+      "type": "array",
+      "description": "The axis changes this pass may make. Empty when nothing the factory can tune would answer the failure — which is a real answer, and is why customPresentation and returnedTo exist.",
+      "items": {
+        "type": "object",
+        "required": ["axis", "from", "to", "because"],
+        "properties": {
+          "axis": {"type": "string", "minLength": 1},
+          "from": {"type": "string", "minLength": 1},
+          "to": {"type": "string", "minLength": 1},
+          "because": {"type": "string", "minLength": 1},
+          "criterion": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "returnedTo": {
+      "type": "array",
+      "description": "Failing criteria this lane does not own. A weak photograph is not an art-direction defect and tuning a motion scale will not fix it, so it is routed rather than absorbed.",
+      "items": {
+        "type": "object",
+        "required": ["criterion", "role", "detail"],
+        "properties": {
+          "criterion": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "detail": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "customPresentation": {
+      "type": ["object", "null"],
+      "description": "The Presentation Registry is not allowed to be a ceiling. When a failing criterion needs something no registered presentation renders, this classifies the requirement precisely enough for a later implementation lane to fulfil it — and classifying is deliberately all it does here.",
+      "required": ["sectionId", "reason", "artDirectionNeed", "registryInsufficientBecause", "responsiveBehaviour", "motionBehaviour", "owner"],
+      "properties": {
+        "sectionId": {"type": "string", "minLength": 1},
+        "sectionType": {"type": ["string", "null"]},
+        "reason": {"type": "string", "minLength": 1},
+        "artDirectionNeed": {"type": "string", "minLength": 1},
+        "registryInsufficientBecause": {"type": "string", "minLength": 1},
+        "responsiveBehaviour": {"type": "string", "minLength": 1},
+        "motionBehaviour": {"type": "string", "minLength": 1},
+        "owner": {"type": "string", "minLength": 1},
+        "status": {"enum": ["classified", "fulfilled", "declined"]}
+      },
+      "additionalProperties": false
+    },
+    "frozenTruthHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "The baseline composition every candidate in this set shares. A revision that changes it is regenerating the product rather than re-presenting it, and is refused."
+    },
+    "revisedCandidateId": {"type": ["string", "null"]},
+    "createdAt": {"type": "string", "minLength": 1},
+    "plannedBy": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

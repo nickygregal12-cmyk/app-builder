@@ -5,6 +5,7 @@ import { factoryToolContract } from './tool-contract.js';
 import { updateProjectSourceGovernance } from './source-governance.js';
 import { assetInventory, decideProjectAsset, recropProjectAsset, replaceProjectAsset } from './asset-governance.js';
 import { chooseSectionVariant, sectionVariantOptions } from './section-variants.js';
+import { addDesignReference, designReferenceSummary, readDesignReferenceCapture, removeDesignReference, setDesignReferenceApproval, updateDesignReferenceIntent } from './visual-references.js';
 import { createPreviewProxy, previewProxyRoute } from './preview-proxy.js';
 
 function send(response, status, value) {
@@ -52,9 +53,25 @@ const CLIENT_ERROR_PATTERNS = [
       // exist, opening a second choice while one is still open — rather than
       // the factory failing.
       /^Unknown visual (direction|candidate)/, /^No visual candidate/, /already has an undecided candidate set/, /already promoted/,
-      /^Only \d+ visual direction is available/, /not genuinely different/, /no passing visual review/, /^A visual review must record/,
+      /^Only \d+ visual direction is available/, /to get a choice back/, /not genuinely different/, /no passing visual review/, /^A visual review must record/,
       /Visual review does not address/, /cannot also promote it/, /not a matter for review/, /A visual candidate cannot move/,
       /has no visual candidate set/, /at least two candidates/, /^Promoting a visual candidate/, /^Unsupported visual direction/,
+      // The professional bar and the bounded rework loop. Each of these is the
+      // reviewer being told what the decision it tried to record would mean.
+      /cannot be passed/, /did not clear the professional bar/, /^Visual review (does not score|scores criteria)/,
+      /^A visual review scores each criterion once/, /^Unknown visual candidate set outcome/, /^Deciding a visual candidate set/,
+      /^This set is already/, /has not been judged/, /passed review, so this set has a winner/, /^No candidate was returned for rework/,
+      /^A visual rework plan/, /was not returned for rework/, /bounded visual rework pass/, /names no failing criteria/,
+      /^Unknown visual criteria in the rework verdict/, /fails criteria this candidate was not judged on/,
+      /is already in this set/, /^Attaching a revision needs/, /a different product truth/, /never changes what the product says/,
+      // Design references. Every one of these is a supplied reference the
+      // operator has to correct — a private address, a scheme the capture will
+      // not open, an image the service cannot read — not a factory fault.
+      /^A design reference/, /^No design reference/, /^Unknown design-reference/, /^Refusing to capture/,
+      /^Design reference \S+ carries no traits/, /^A project may carry at most/, /^A screenshot reference/,
+      /^The supplied screenshot/, /^Unknown (design-reference trait|reference preference|reference influence)/,
+      /^Observation \S+ carries/, /grants observation/, /must carry instructionAuthority none/,
+      /^Invalid visual-reference-analysis/,
       /source governance/i, /Unknown project source/, /Unknown project asset/, /^Asset \w[\w-]* (comes from|is an exact)/, /^Unsupported asset (decision|)/, /^Unsupported (crop review|rights declaration)/, /Asset decisions need/, /^Replacing an asset needs/, /^The replacement (is the same|file produced)/, /^Unknown project section/, /^Unsupported section variant/, /Presentation choices need/, /^Unsupported design control/, /^Unsupported (accent colour|maxWidth|radius|density)/, /^Accent colour/, /^A focal point needs/, /has no retained original/, /Public URL references/, /Only user-supplied source material/,
 ];
 
@@ -168,10 +185,45 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
         await chooseSectionVariant(service, route.projectId, decodeURIComponent(variantRoute[1]), body.variant ?? null);
         return send(response, 200, { sections: sectionVariantOptions(service, route.projectId) });
       }
+      // Design references. A supplied URL is captured by the factory's own
+      // browser behind the egress boundary; an uploaded image is stored as it
+      // arrived. Neither ever reaches the source/knowledge path.
+      if (request.method === 'GET' && route.action === 'design-references') {
+        return send(response, 200, designReferenceSummary(service, route.projectId));
+      }
+      if (request.method === 'POST' && route.action === 'design-references') {
+        const body = await readJson(request, 16 * 1024 * 1024);
+        return send(response, 201, { reference: await addDesignReference(service, route.projectId, body) });
+      }
+      const referenceIntentRoute = route.action?.match(/^design-references\/([^/]+)\/intent$/);
+      if (request.method === 'POST' && referenceIntentRoute) {
+        const body = await readJson(request);
+        await updateDesignReferenceIntent(service, route.projectId, decodeURIComponent(referenceIntentRoute[1]), body);
+        return send(response, 200, designReferenceSummary(service, route.projectId));
+      }
+      const referenceApprovalRoute = route.action?.match(/^design-references\/([^/]+)\/approval$/);
+      if (request.method === 'POST' && referenceApprovalRoute) {
+        const body = await readJson(request);
+        await setDesignReferenceApproval(service, route.projectId, decodeURIComponent(referenceApprovalRoute[1]), { state: body.state, approvedBy: body.approvedBy ?? 'console' });
+        return send(response, 200, designReferenceSummary(service, route.projectId));
+      }
+      const referenceCaptureRoute = route.action?.match(/^design-references\/([^/]+)\/captures\/([^/]+)$/);
+      if (request.method === 'GET' && referenceCaptureRoute) {
+        const bytes = readDesignReferenceCapture(service, route.projectId, decodeURIComponent(referenceCaptureRoute[1]), decodeURIComponent(referenceCaptureRoute[2]));
+        if (!bytes) return send(response, 404, { error: 'unknown-reference-capture' });
+        response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store', 'content-length': bytes.length });
+        return response.end(bytes);
+      }
+      const referenceRoute = route.action?.match(/^design-references\/([^/]+)$/);
+      if (request.method === 'DELETE' && referenceRoute) {
+        await removeDesignReference(service, route.projectId, decodeURIComponent(referenceRoute[1]));
+        return send(response, 200, designReferenceSummary(service, route.projectId));
+      }
+
       // Visual candidates — Phase 4D. The Console compares and decides through
       // these; nothing here lets a caller name a workspace or a file.
       if (request.method === 'GET' && route.action === 'visual-candidates') {
-        return send(response, 200, { set: service.readVisualCandidateSet(route.projectId) });
+        return send(response, 200, { set: service.readVisualCandidateSet(route.projectId), summary: service.visualCandidateSetSummary(route.projectId) });
       }
       if (request.method === 'POST' && route.action === 'visual-candidates') {
         const body = await readJson(request);
@@ -190,6 +242,18 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
       if (request.method === 'POST' && reviewRoute) {
         const body = await readJson(request);
         return send(response, 200, { set: await service.recordVisualCandidateReview(route.projectId, decodeURIComponent(reviewRoute[1]), body) });
+      }
+      // The two outcomes that are not a winner. A reviewer who has looked at
+      // every candidate can send the set back for one bounded pass, or close it
+      // with nothing promoted.
+      if (request.method === 'POST' && route.action === 'visual-candidates/decision') {
+        const body = await readJson(request);
+        return send(response, 200, { set: await service.decideVisualCandidateSet(route.projectId, body) });
+      }
+      const reworkRoute = route.action?.match(/^visual-candidates\/([^/]+)\/rework$/);
+      if (request.method === 'POST' && reworkRoute) {
+        const body = await readJson(request);
+        return send(response, 200, await service.reworkVisualCandidate(route.projectId, decodeURIComponent(reworkRoute[1]), body));
       }
       const promoteRoute = route.action?.match(/^visual-candidates\/([^/]+)\/promote$/);
       if (request.method === 'POST' && promoteRoute) {

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "currentPhase": "4C",
-  "currentStage": "Phase 4C \u2014 Design System Registry, BrandSpec and art direction",
-  "activeStage": "Phase 4C.6 \u2014 introduce the deterministic design-intelligence catalogue only when a consumer is ready to query it, with lexical retrieval rather than vector infrastructure",
+  "currentPhase": "4D",
+  "currentStage": "Phase 4D — Visual direction, responsive composition and candidate promotion",
+  "activeStage": "Phase 4D.1 — the visual promotion contract: make candidate promotion and rejection a recorded decision with deterministic gate status rather than an ad hoc choice",
   "status": "active",
   "completedPhases": [
     "0",
@@ -40,13 +40,23 @@
     "4C.2",
     "4C.3",
     "4C.4",
-    "4C.5"
+    "4C.5",
+    "4C"
   ],
   "activeWork": [
-    "phase-4c-design-intelligence",
-    "design-intelligence-catalogue",
+    "phase-4d-visual-direction",
+    "visual-candidate-promotion",
     "behavioural-consumer-invariants"
   ],
   "outstandingProductGates": [],
-  "nextStage": "Phase 4C.6. Phase 3.8E passed on 2026-08-26 using the genuine nbm Construction Cost Consultants run. The Factory runtime ingested the owner-approved workbook plus eight pages from https://www.nbm.bz/, generated and verified a source-backed v2 workspace, captured rendered evidence, and the human product review passed factual accuracy, brand fit, visual quality, responsive quality and accessibility with 0 meaningful manual edits. The final evidence validator passed with 6 predicted edits, 0 blockers and 14 recorded evidence gaps; evidence.json SHA-256 was a3b3baf5e67c0cb369da6f6329da3088e8eb8df4d27e1e13497ff8b7bccee990. 4C.1 routed the Design Contract through a DesignSystemSpec compiler; 4C.2 persisted it as .product/design-system.json from one shared writer; 4C.3 added BrandSpec, ArtDirectionPlan and MotionContract with template consumers; 4C.4 compiled a Presentation Registry from the twelve components the template renders, catching a section whose recipe could be missing and five composer-named variants nothing rendered; 4C.5 added deterministic DesignLint over the compiled design and composition, whose report now travels inside RenderedEvidence so a visual critic is not paid to re-derive what a rule settled. Next, only if a consumer is ready to query it, add the deterministic design-intelligence catalogue with lexical retrieval. Storybook was evaluated at 4C.4 and not adopted. Broad autonomous runtime work remains separately gated by the runtime-to-factory capability boundary."
+  "nextStage": "Phase 4D.1. Phase 4C closed on 2026-08-26 against its own completion gate: the design declarations the product uses have real deterministic consumers (4C.1 DesignSystemSpec compiler, 4C.2 portable .product/design-system.json, 4C.3 BrandSpec/ArtDirectionPlan/MotionContract, 4C.4 compiled Presentation Registry, 4C.5 deterministic DesignLint inside RenderedEvidence), the portable design contract survives generated-repo handoff, presentation selection is registry-backed with no fictional entries, and focused tests hold each behaviour. 4C.6 is recorded in deferredCapabilities as conditionally deferred rather than completed, because no consumer is ready to query a design-intelligence catalogue. Storybook was evaluated at 4C.4 and not adopted. Phase 4D moves the factory from one deterministic visual answer to several genuinely different art directions over the same frozen product truth, compared on deterministic evidence plus independent judgement, with exactly one promoted. Broad autonomous runtime work remains separately gated by the runtime-to-factory capability boundary.",
+  "deferredCapabilities": [
+    {
+      "stage": "4C.6",
+      "title": "Deterministic design-intelligence catalogue",
+      "reason": "No component asks \"which reviewed design patterns fit this project?\". BrandSpec reads the knowledge pack's own brand observations, ArtDirectionPlan reads config/layout-patterns.json, and the Presentation Registry is compiled from what the template renders. A catalogue built now would have one producer and no reader.",
+      "revivesWhen": "A real 4D consumer cannot answer a project/industry/intent pattern question from deterministic config. Then document that consumer first, and implement only the smallest lexical (BM25/keyword) catalogue it needs — no vector store, no embeddings, no generic design corpus.",
+      "recordedAt": "2026-08-26"
+    }
+  ]
 }

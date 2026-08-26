@@ -1,6 +1,6 @@
 # Phase 4C Execution Plan
 
-Status: **active**.
+Status: **complete**, closed 2026-08-26. 4C.6 is conditionally deferred rather than delivered; see below.
 
 Phase 4C starts only after the genuine-business gate passed. This document turns the broader design-intelligence plan into an implementation order that preserves the repository's existing authorities and the behavioural-consumer invariant from issue #58.
 
@@ -273,14 +273,44 @@ A `missing-page-opening` rule was written and dropped: every composed page opens
 so it could never fire. An `action-label-contrast` rule was dropped for restating the input
 gate. Neither belonged; a rule nothing can fail is not a rule.
 
-## 4C.6 — Design-intelligence catalogue
+## 4C.6 — Design-intelligence catalogue — conditionally deferred
 
-Introduce `packages/design-intelligence` only when there is a consumer ready to query it. Start with reviewed deterministic data and BM25-style keyword retrieval; vector infrastructure is not justified at the planned catalogue size.
+`packages/design-intelligence` was **not** built, and the stage is recorded in
+`config/factory-status.json` under `deferredCapabilities` rather than under `completedStages`.
 
-Retrieval informs BrandSpec/ArtDirectionPlan. It never becomes project design authority.
+The rule this stage was written with is that the catalogue is introduced only when a consumer is
+ready to query it. Nothing here is. BrandSpec resolves its two inputs from the knowledge pack's own
+`brand` observations; ArtDirectionPlan reads the intent declared per layout pattern in
+`config/layout-patterns.json`; the Presentation Registry is compiled from the components the template
+actually renders. None of them has a question that a pattern catalogue would answer, so building one
+now would produce a package with a producer and no reader — which is exactly the failure the
+behavioural-consumer invariant exists to prevent.
 
-## 4C completion gate
+What would revive it is a real component asking "which reviewed design patterns fit this
+project/industry/intent?" and deterministic config being unable to answer. When that happens the
+consumer is documented first, and only the smallest lexical catalogue it needs is implemented: BM25 or
+keyword retrieval, no vector store, no embedding infrastructure, no broad generic design corpus.
+Retrieval would inform BrandSpec and ArtDirectionPlan; it would never become project design authority.
 
-Phase 4C is not complete merely because schemas/registries exist. It is complete when the main design declarations used by the product have real deterministic consumers, the portable design contract survives generated-repo handoff, presentation selection is registry-backed without fictional entries, DesignLint participates in evidence, and the behaviour is protected by focused tests.
+Deferring it is the successful outcome of a conditional stage, not an omission.
 
-Phase 4D remains the place for reference analysis, multiple art-direction candidates, visual critic promotion/rejection and comparison canvas work.
+## 4C completion gate — satisfied
+
+Phase 4C is not complete merely because schemas/registries exist. It is complete when the main design
+declarations used by the product have real deterministic consumers, the portable design contract
+survives generated-repo handoff, presentation selection is registry-backed without fictional entries,
+DesignLint participates in evidence, and the behaviour is protected by focused tests.
+
+Each clause is met by 4C.1–4C.5:
+
+| gate clause | met by |
+| --- | --- |
+| design declarations have real deterministic consumers | 4C.1 renders CSS through the compiler IR; 4C.3 gives every art-direction and motion dimension a token the template reads |
+| the portable design contract survives generated-repo handoff | 4C.2 — `.product/design-system.json`, written by the same writer that renders the stylesheet, with no `@app-builder/*` dependency reaching the generated package |
+| presentation selection is registry-backed without fictional entries | 4C.4 — compilation fails closed both ways, and the audit refuses a build whose section presentation cannot be satisfied |
+| DesignLint participates in evidence | 4C.5 — the report travels inside `RenderedEvidence` |
+| behaviour is protected by focused tests | `tooling/design-system-portability.test.mjs`, `tooling/art-direction.test.mjs`, `tooling/presentation-registry.test.mjs`, `tooling/design-lint.test.mjs` |
+
+Phase 4D is the place for reference analysis, multiple art-direction candidates, responsive
+composition, visual critic promotion/rejection and comparison canvas work. Its implementation order is
+`docs/PHASE_4D_EXECUTION.md`.

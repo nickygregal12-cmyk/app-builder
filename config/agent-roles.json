@@ -145,10 +145,10 @@
       "status": "planned"
     },
     "RenderedEvidence": {
-      "description": "Screenshots, interaction states and responsive captures proving what the build actually renders.",
+      "description": "Browser captures of what a build actually renders, at desktop, tablet and mobile plus the critical interaction states the build has. Visual evidence only: it shows what a state looks like and never proves a journey completes, and every state it cannot establish is recorded as uncovered with the reason.",
       "deterministic": false,
-      "schema": null,
-      "status": "planned"
+      "schema": "schemas/rendered-evidence.schema.json",
+      "status": "available"
     },
     "RuntimeDiagnostics": {
       "description": "Console errors, network traces, runtime state and performance traces explaining browser behaviour.",

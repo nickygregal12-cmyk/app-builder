@@ -137,10 +137,27 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByLabel('Content value')).toHaveCount(0);
   await page.getByRole('button', { name: 'Close' }).click();
 
+  // Rendered evidence: capture what the build actually renders, from the same
+  // preview that was just reviewed.
+  const evidencePanel = page.getByLabel('Rendered evidence');
+  await evidencePanel.getByRole('button', { name: 'Capture evidence' }).click();
+  await expect(page.getByText('evidence · captured')).toBeVisible({ timeout: 90_000 });
+  await expect(evidencePanel.getByText('9 captures')).toBeVisible();
+  await expect(evidencePanel.getByRole('img').first()).toBeVisible();
+
+  // Every viewport is captured, and the panel says what these pictures are not
+  // evidence of rather than implying full coverage.
+  for (const viewportName of ['desktop', 'tablet', 'mobile']) {
+    await evidencePanel.getByRole('group', { name: 'Evidence viewport' }).getByRole('button', { name: viewportName }).click();
+    await expect(evidencePanel.getByRole('img')).toHaveCount(3);
+  }
+  await expect(evidencePanel.getByText(/state\(s\) these captures do not claim/)).toBeVisible();
+
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
-  // 11 build/quality/preview events, one source governance decision, and the
-  // save and revert of one content edit.
-  await expect(page.getByLabel('Project metrics').getByText('14', { exact: true })).toBeVisible();
+  // 11 build/quality/preview events, one source governance decision, the save
+  // and revert of one content edit, and the start and completion of one
+  // evidence capture.
+  await expect(page.getByLabel('Project metrics').getByText('16', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

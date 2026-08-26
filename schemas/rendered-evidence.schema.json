@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/rendered-evidence.schema.json",
+  "title": "App Builder Rendered Evidence",
+  "description": "What a build actually renders, captured from a real browser against a real preview. A compiling build is not evidence that a visual change is correct, so this is a first-class artifact with its own identity rather than a folder of screenshots. It is visual evidence only: a capture can show what a state looks like and can never prove that a journey completes. States a screenshot cannot establish are recorded as uncovered, with the reason, rather than left out.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "projectId", "buildRef", "compositionHash", "capturedAt", "viewports", "captures", "uncovered", "setHash"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "pattern": "^evidence-[a-f0-9]{16}$"},
+    "projectId": {"type": "string", "minLength": 1},
+    "buildRef": {"type": "string", "minLength": 1, "description": "The generated workspace this evidence was captured from."},
+    "checkpointId": {"type": ["string", "null"]},
+    "taskId": {"type": ["string", "null"]},
+    "compositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "capturedAt": {"type": "string", "minLength": 1},
+    "viewports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "width", "height", "deviceScaleFactor"],
+        "properties": {
+          "name": {"enum": ["desktop", "tablet", "mobile"]},
+          "width": {"type": "integer", "minimum": 320},
+          "height": {"type": "integer", "minimum": 320},
+          "deviceScaleFactor": {"type": "number", "minimum": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "captures": {"type": "array", "items": {"$ref": "#/$defs/capture"}},
+    "uncovered": {
+      "type": "array",
+      "description": "Every state the deterministic state matrix names that this evidence deliberately does not claim, each with the reason. Silence here would read as complete coverage.",
+      "items": {
+        "type": "object",
+        "required": ["route", "axis", "state", "risk", "reason"],
+        "properties": {
+          "route": {"type": "string", "pattern": "^/"},
+          "axis": {"type": "string", "minLength": 1},
+          "state": {"type": "string", "minLength": 1},
+          "risk": {"enum": ["low", "medium", "high"]},
+          "reason": {"enum": ["not-visually-provable", "needs-a-deterministic-fixture", "capability-not-installed"]},
+          "detail": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "setHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "capture": {
+      "type": "object",
+      "required": ["id", "evidenceKind", "pageId", "route", "viewport", "state", "file", "contentHash", "byteSize", "elementRefs"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-{1,2}[a-z0-9]+)*$"},
+        "evidenceKind": {
+          "const": "visual",
+          "description": "Fixed. A rendered capture is visual evidence; journey completion is proved by executable evidence and never by a picture of a page."
+        },
+        "pageId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "route": {"type": "string", "pattern": "^/"},
+        "viewport": {"enum": ["desktop", "tablet", "mobile"]},
+        "state": {
+          "type": "object",
+          "required": ["axis", "state", "risk", "proves"],
+          "properties": {
+            "axis": {"type": "string", "minLength": 1},
+            "state": {"type": "string", "minLength": 1},
+            "risk": {"enum": ["low", "medium", "high"]},
+            "interaction": {"type": ["string", "null"], "description": "The deterministic interaction from the closed registry that produced this state, or null for the page as first rendered."},
+            "proves": {"type": "string", "minLength": 1, "description": "What this capture is evidence of, stated so it cannot be read as more."}
+          },
+          "additionalProperties": false
+        },
+        "file": {"type": "string", "pattern": "^captures/[A-Za-z0-9._-]+\\.png$"},
+        "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "byteSize": {"type": "integer", "minimum": 1},
+        "elementRefs": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true,
+          "description": "Element identity refs this capture shows, so visual evidence and Builder Element Identity address the same things."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

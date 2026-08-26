@@ -68,6 +68,18 @@ export function createFactoryHttpServer({ service }) {
         const body = await readJson(request);
         return send(response, 200, service.resolveElement(route.projectId, body.ref ?? body));
       }
+      if (request.method === 'GET' && route.action === 'evidence') return send(response, 200, { evidence: service.listRenderedEvidence(route.projectId) });
+      if (request.method === 'POST' && route.action === 'evidence/capture') {
+        const result = await service.captureRenderedEvidence(route.projectId);
+        return send(response, 200, { evidence: result?.evidence ?? null, failures: result?.failures ?? [] });
+      }
+      const captureRoute = route.action?.match(/^evidence\/([^/]+)\/captures\/([^/]+)$/);
+      if (request.method === 'GET' && captureRoute) {
+        const found = service.readRenderedCapture(route.projectId, decodeURIComponent(captureRoute[1]), decodeURIComponent(captureRoute[2]));
+        if (!found) return send(response, 404, { error: 'unknown-capture' });
+        response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store', 'content-length': found.bytes.length });
+        return response.end(found.bytes);
+      }
       if (request.method === 'GET' && route.action === 'overrides') return send(response, 200, service.readOverrides(route.projectId));
       if (request.method === 'PUT' && route.action === 'overrides') {
         const body = await readJson(request);
@@ -105,7 +117,7 @@ export function createFactoryHttpServer({ service }) {
       // "source" would also match internal failures and hide a real 500.
       const clientError = [
         /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
-        /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Sources cannot reference/, /Only http\(s\) source URLs/,
+        /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Rendered evidence (needs|is captured)/, /Sources cannot reference/, /Only http\(s\) source URLs/,
         /^Source \w+ (is required|must be)/, /Uploaded source/, /maxPages must be/,
         /Every source must be/, /exceeds the .* limit/,
         /dependencies are not installed/, /no generated workspace/,

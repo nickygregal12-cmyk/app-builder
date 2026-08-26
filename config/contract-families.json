@@ -89,6 +89,14 @@
       "boundary": "Builder Element Identity derived at generation time, written beside the composition and resolved by the service before any direct-manipulation edit.",
       "schemaHash": "096399b408aa810d285b9f0867a577b980730e5ad9476e4b010559a19f111016",
       "typesHash": "4f1910e0d7d30ce28cdb03f23dfdc6d4353e9c765d0083f0dd1c5903f60be502"
+    },
+    {
+      "id": "rendered-evidence",
+      "schema": "rendered-evidence.schema.json",
+      "typeName": "AppBuilderRenderedEvidence",
+      "boundary": "Browser captures of what a build renders, written by the service and read by the Console.",
+      "schemaHash": "e0e2694b969db73b985d7b1094db58b003ad58d9c8df180ed864121ee6202524",
+      "typesHash": "351462ef6e6b09b9aec0dc93b92d6c66135aba99e863037e66b9ec4c9dd896ef"
     }
   ],
   "pending": [

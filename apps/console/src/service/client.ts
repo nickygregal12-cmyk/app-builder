@@ -170,6 +170,42 @@ export type ElementResolution = {
   projectId: string;
 };
 
+/** Mirrors schemas/rendered-evidence.schema.json. Visual evidence only: a
+ * capture shows what a state looks like and never proves a journey completes. */
+export type RenderedCapture = {
+  id: string;
+  evidenceKind: 'visual';
+  pageId: string;
+  route: string;
+  viewport: 'desktop' | 'tablet' | 'mobile';
+  state: { axis: string; state: string; risk: 'low' | 'medium' | 'high'; interaction?: string | null; proves: string };
+  file: string;
+  contentHash: string;
+  byteSize: number;
+  elementRefs: string[];
+};
+
+export type UncoveredState = {
+  route: string;
+  axis: string;
+  state: string;
+  risk: 'low' | 'medium' | 'high';
+  reason: 'not-visually-provable' | 'needs-a-deterministic-fixture' | 'capability-not-installed';
+  detail?: string;
+};
+
+export type RenderedEvidence = {
+  id: string;
+  projectId: string;
+  buildRef: string;
+  compositionHash: string;
+  capturedAt: string;
+  viewports: Array<{ name: string; width: number; height: number; deviceScaleFactor: number }>;
+  captures: RenderedCapture[];
+  uncovered: UncoveredState[];
+  setHash: string;
+};
+
 export type CompositionSummary = {
   compositionHash: string;
   input?: { manifestVersion: number; knowledgePackHash: string | null };
@@ -191,6 +227,7 @@ export type WorkspaceSnapshot = {
   knowledge: KnowledgeSummary | null;
   checkpoints: Checkpoint[];
   overrides: ContentOverride[];
+  evidence: RenderedEvidence[];
 };
 
 const API_ROOT = '/api';
@@ -240,6 +277,22 @@ export async function resolveElement(projectId: string, target: { pageId: string
   );
 }
 
+export async function listRenderedEvidence(projectId: string) {
+  return (await request<{ evidence: RenderedEvidence[] }>(`/projects/${encodeURIComponent(projectId)}/evidence`)).evidence;
+}
+
+export async function captureRenderedEvidence(projectId: string) {
+  return await request<{ evidence: RenderedEvidence | null; failures: Array<{ id: string; message: string }> }>(
+    `/projects/${encodeURIComponent(projectId)}/evidence/capture`,
+    { method: 'POST' },
+  );
+}
+
+/** The service streams the PNG; the Console only needs the address of it. */
+export function renderedCaptureUrl(projectId: string, evidenceId: string, captureId: string) {
+  return `${API_ROOT}/projects/${encodeURIComponent(projectId)}/evidence/${encodeURIComponent(evidenceId)}/captures/${encodeURIComponent(captureId)}`;
+}
+
 export async function updateSourceGovernance(projectId: string, sourceId: string, decision: SourceGovernanceDecision) {
   return await request<{ source: SourceReference; project: ProjectSummary }>(
     `/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}/governance`,
@@ -265,7 +318,7 @@ export async function stopPreview(projectId: string) {
 
 export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapshot> {
   const id = encodeURIComponent(projectId);
-  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult] = await Promise.all([
+  const [projectResult, manifestResult, tasksResult, eventsResult, metricsResult, checkpointResult, previewResult, compositionResult, integrationsResult, knowledgeResult, checkpointsResult, overridesResult, evidenceResult] = await Promise.all([
     request<{ project: ProjectSummary }>(`/projects/${id}`),
     request<{ manifest: AppBuilderProjectManifest }>(`/projects/${id}/manifest`),
     request<{ tasks: ControlTask[] }>(`/projects/${id}/tasks`),
@@ -278,6 +331,7 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     request<{ knowledge: KnowledgeSummary | null }>(`/projects/${id}/sources`),
     request<{ checkpoints: Checkpoint[] }>(`/projects/${id}/checkpoints`),
     request<{ overrides: ContentOverride[] }>(`/projects/${id}/overrides`),
+    request<{ evidence: RenderedEvidence[] }>(`/projects/${id}/evidence`),
   ]);
   const manifestWithSources = manifestResult.manifest as AppBuilderProjectManifest & { inputs?: { sources?: SourceReference[] } };
   return {
@@ -293,5 +347,6 @@ export async function loadWorkspace(projectId: string): Promise<WorkspaceSnapsho
     knowledge: knowledgeResult.knowledge,
     checkpoints: checkpointsResult.checkpoints,
     overrides: overridesResult.overrides,
+    evidence: evidenceResult.evidence,
   };
 }

@@ -437,6 +437,9 @@ Delivered:
   the Console reports selections to it;
 - Console selection inspection: the resolved identity of whatever was clicked,
   with editing offered only where the template declares an editable property;
+- **RenderedEvidence**: browser captures of every route at desktop, tablet and
+  mobile plus the critical interaction states a build has, with the states a
+  capture cannot establish recorded as uncovered rather than omitted;
 - text editing with provenance awareness — an edited binding becomes `human`,
   keeps what it replaced in `overriddenFrom`, and can be reverted to the
   generated value;
@@ -483,10 +486,33 @@ today, because text editing is the only durable mutation the factory can
 currently perform. Component, asset and design edits widen those declarations
 in 4B.3–4B.5 rather than being inferred.
 
+**RenderedEvidence is in place (4B.2).** `npm run check` and a green build say
+a project compiles; they say nothing about what it looks like. Capturing
+evidence points a real browser at the service-managed preview — the same
+rendering a person reviews — and records desktop, tablet and mobile captures of
+every route, plus the critical interaction states the build actually has, as a
+durable artifact under the `rendered-evidence` contract.
+
+Two rules keep it honest. A capture is visual evidence and nothing else: each
+one states what it proves, and nothing in the pipeline lets a picture answer a
+journey step that `deriveJourneys` marks as needing executable evidence. And
+coverage is stated rather than implied: every state Phase 3.8K's state matrix
+names either has a capture or appears in `uncovered` with the reason —
+`not-visually-provable` for a write succeeding, `needs-a-deterministic-fixture`
+for an empty or long-content state, `capability-not-installed` where the
+section does not exist on that route. `applyEvidenceToStateMatrix` raises only
+the viewport axis, because that is the one axis where the picture is the proof.
+
+Interactions come from a closed registry rather than arbitrary scripting; it
+holds one entry today, the enquiry form's failed-submission appearance, which
+exists only on builds that have that section.
+
+Evidence lives in service state, never inside the generated repository, so the
+portable output stays a product rather than a product plus its review history.
+`APP_BUILDER_BROWSER_EXECUTABLE` points capture at an existing Chromium where a
+host has one.
+
 Remaining:
-- **RenderedEvidence** as a first-class artifact: desktop/tablet/mobile
-  captures plus critical interaction states, because a compiling build is not
-  evidence that a visual change is correct;
 - asset manager: replacement, crop and focal-point selection;
 - marking assets approved, suggested, generated, rejected or "do not use" from
   the Console rather than at ingestion;

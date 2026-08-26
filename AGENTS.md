@@ -90,4 +90,12 @@ npm run check
 npm run build
 ```
 
+For a same-repository branch updated by AI/automation, do **not** assume the push or pull-request event created CI. After the final push, explicitly dispatch `.github/workflows/ci.yml` against the exact branch unless a fresh automatic run is already attached to the current head SHA. For example:
+
+```bash
+gh workflow run ci.yml --repo nickygregal12-cmyk/app-builder --ref "$(git branch --show-current)"
+```
+
+If `gh` is unavailable, use the GitHub Actions UI or the workflow-dispatch REST endpoint with approved credentials. Before merge, the current head SHA must have successful `verify` and `database-security` check runs; a green run for an older SHA does not count. Automated writers must report a missing dispatch capability as a block rather than silently treating local checks as hosted CI.
+
 Any exception must be explicit and temporary.

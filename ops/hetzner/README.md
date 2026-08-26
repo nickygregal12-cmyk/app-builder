@@ -57,7 +57,7 @@ The preflight makes **no changes**. It reports:
 - CPU, RAM and disk capacity;
 - whether the required systemd model is available;
 - collisions with an existing `appbuilder` user, `/srv/app-builder` tree or resource slice;
-- whether ports `4310` or `5173` are already in use;
+- whether factory/Console ports `4310`/`5173` or the planned App Builder OpenCode port `4097` are already in use;
 - whether Podman/Docker/global Node are already present;
 - conservative CPU and memory limits derived from the server's capacity.
 
@@ -108,6 +108,7 @@ The installer:
 - does not replace the server's existing `/usr/bin/node` or `/usr/local/bin/node`;
 - supports x64 and arm64 hosts;
 - installs rootless Podman prerequisites for future disposable workspaces;
+- allocates subordinate UID/GID ranges without overlapping ranges already present on the shared host;
 - creates `app-builder-runtime.slice` with CPU/memory/task limits;
 - creates `app-builder-run`, the bounded launcher future service/runtime commands can use;
 - writes `/etc/app-builder-host.json` recording that SSH, firewall and global Node were not taken over;
@@ -124,13 +125,15 @@ sudo bash ops/hetzner/verify-host.sh
 The check verifies that:
 
 - the `appbuilder` account exists and has no sudo authority;
-- it has no SSH authorized key;
+- it has no inbound SSH authorized key;
 - App Builder directories are owned by that account;
 - its own Node satisfies the repository's `>=22.13` requirement;
+- subordinate UID/GID ranges do not overlap another host user;
 - rootless-container tooling is callable;
 - the resource slice is syntactically valid;
 - the bounded launcher exists;
-- factory/Console ports `4310` and `5173` are not bound publicly;
+- App Builder ports are never publicly bound;
+- optional service units, if installed, are valid and OpenCode remains loopback-only;
 - the installation record says host SSH, firewall and global Node were left untouched.
 
 It deliberately does not judge or rewrite unrelated host firewall/SSH configuration because another application already lives on the machine.
@@ -180,9 +183,11 @@ sudo bash ops/hetzner/install-service-units.sh
 This installs but does **not** enable or start:
 
 - `app-builder-factory.service` — the existing factory service, expected to bind on loopback port `4310`;
-- `app-builder-opencode.service` — `opencode serve` bound explicitly to `127.0.0.1:4096`.
+- `app-builder-opencode.service` — `opencode serve` bound explicitly to `127.0.0.1:4097` by default.
 
-Both run as `appbuilder`, inherit `app-builder-runtime.slice`, use restrictive umasks/no-new-privileges controls, and are separate from Predictor services. The installer creates a random local OpenCode HTTP Basic Auth password at `/etc/app-builder/opencode-server.env`; it contains no model/provider credential.
+OpenCode itself normally defaults to port `4096`; App Builder intentionally uses `4097` so it does not compete with the existing Predictor OpenCode runtime. Override with `APP_BUILDER_OPENCODE_PORT` only if the preflight shows `4097` is unavailable.
+
+Both units run as `appbuilder`, inherit `app-builder-runtime.slice`, use restrictive umasks/no-new-privileges controls, and are separate from Predictor services. The installer creates a random local OpenCode HTTP Basic Auth password at `/etc/app-builder/opencode-server.env`; it contains no model/provider credential.
 
 The OpenCode server exists only as a local runtime endpoint for the future `AgentRuntimeAdapter`. Starting it does not grant autonomous permissions or production authority.
 
@@ -210,13 +215,13 @@ Do not run long-lived OpenCode workers directly as root or as the existing Predi
 
 ## 8. Network exposure
 
-The current factory service, Console and OpenCode server should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173`, `4096` or arbitrary preview ports.
+The current factory service, Console and OpenCode server should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173`, `4097` or arbitrary preview ports.
 
 When intentionally running the stack later, access it through the server's existing secure administration path, for example SSH local forwarding:
 
 ```bash
 ssh \
-  -L 4096:127.0.0.1:4096 \
+  -L 4097:127.0.0.1:4097 \
   -L 4310:127.0.0.1:4310 \
   -L 5173:127.0.0.1:5173 \
   YOUR_EXISTING_ADMIN_USER@SERVER_IP

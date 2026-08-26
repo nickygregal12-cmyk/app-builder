@@ -106,6 +106,40 @@ Every candidate is generated, installed, verified, built and photographed from i
 at the same three viewports over the same routes, with the same DesignLint pass. A comparison between
 a candidate photographed at three widths and one photographed at one is not a comparison.
 
+## Where the evidence is, and how a reviewer reaches it
+
+`npm run acceptance:visual-candidates` leaves ordinary factory state behind at
+`.app-builder/visual-review` — `service/` (the durable project, candidate set, review
+packets and captured PNGs), `workspaces/` (the built candidates), `report.json` and
+`review-packets.json`. It is deliberately not `.tmp/`: a reviewer told the only copy of
+the evidence is under a build temp directory has been told to go hunting.
+
+`npm run review:visual-candidates` points the ordinary Builder Console at exactly that
+state. Open `http://127.0.0.1:5173/builder`, choose the project, and switch the stage
+from **preview** to **compare**.
+
+The comparison renders in the builder stage rather than the activity sidebar. That is
+not cosmetic. Two full-page captures cropped into a 330px column are not a comparison,
+and the surface that could not do the job was the narrow one, not the ordinary one — so
+the fix is the width the Console already has, not a canvas. The stage shows, for both
+candidates at once:
+
+- the direction, its id, its purpose and its asset strategy;
+- the same route in both, switchable across the six routes and desktop/tablet/mobile,
+  each capture scrollable at full page height rather than cropped to its fold;
+- the structural axes that actually differ, computed rather than left to be spotted;
+- the responsive plan field by field — mobile hero, navigation, mobile section order,
+  density and motion — rather than the signature's packed comparison string;
+- every DesignLint finding at every severity, with what the rule said, and the warnings
+  the reviewer must speak to by rule id;
+- the frozen truth every candidate shares, with the baseline composition hash;
+- the directions this project was refused, and why;
+- the scoped critic criteria from the review packet, stated as the questions they are.
+
+Nothing there is a second design authority. The axes, the responsive plan, the lint
+findings, the frozen truth and the criteria are all read from the candidate set and the
+review packet that 4D.1, 4D.6 and 4D.8 already produce.
+
 ## 4D.8 — the independent critic — contract done, verdict outstanding
 
 `visualReviewPacket` hands a critic what the rules already settled, the warnings it must address, and
@@ -130,8 +164,15 @@ workspace renamed. Every candidate workspace is removed afterwards, the promoted
 Section 17 of the stage brief says to prove the ordinary Console first. It was, and it can: the
 candidate panel shows every candidate side by side, switches route and viewport over captured
 evidence, names the axes that actually differ, shows the deterministic gate and what the reviewer must
-address, and promotes exactly one. No usability problem remains that a canvas would solve. tldraw was
-not installed, because a dependency bought against a problem nobody has is a dependency that stays.
+address, exposes the scoped critic criteria, and promotes exactly one. tldraw was not installed,
+because a dependency bought against a problem nobody has is a dependency that stays.
+
+One usability failure was found and fixed, and it is worth recording precisely because it is the kind
+of finding that gets read as an argument for a canvas. The panel rendered in the 330px activity
+sidebar, which cropped two full-page captures into roughly 150px columns. That is not a comparison.
+The failing surface was the narrow column, not the ordinary Console — the same panel in the builder
+stage does the job — so the answer was the width the Console already had. A canvas would have bought a
+dependency to solve a layout problem.
 
 ## 4D exit gate
 

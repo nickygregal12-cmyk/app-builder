@@ -8,11 +8,38 @@ const e2e = process.argv.includes('--e2e');
 const root = process.cwd();
 const servicePort = 4310;
 const consolePort = e2e ? 4173 : 5173;
+
+function option(name) {
+  const index = process.argv.indexOf(`--${name}`);
+  return index === -1 ? null : process.argv[index + 1] ?? null;
+}
+
+/**
+ * Which factory the Console is looking at.
+ *
+ * The default is the ordinary local factory, and that stays the default. The
+ * override exists because a run that produced evidence somebody else has to
+ * look at is useless if the only way to reach it is to know the directory
+ * layout: `--state-root` points the ordinary Console at the ordinary factory
+ * state a named run left behind, so reviewing is opening a page rather than
+ * reading a build tree.
+ */
+const explicitStateRoot = option('state-root');
+const explicitWorkspacesRoot = option('workspaces-root');
 const runtimeRoot = path.resolve(root, e2e ? '.tmp/console-e2e' : '.app-builder/local');
-const stateRoot = path.join(runtimeRoot, 'service');
-const workspacesRoot = path.join(runtimeRoot, 'workspaces');
+const stateRoot = explicitStateRoot ? path.resolve(root, explicitStateRoot) : path.join(runtimeRoot, 'service');
+const workspacesRoot = explicitWorkspacesRoot ? path.resolve(root, explicitWorkspacesRoot) : path.join(runtimeRoot, 'workspaces');
+
+// An explicit root that is not there is a mistake worth naming. Booting an
+// empty factory instead would show a reviewer an empty project list and let
+// them conclude the run never happened.
+if (explicitStateRoot && !fs.existsSync(stateRoot)) {
+  console.error(`No factory state at ${stateRoot}. Produce it first, then point the stack at it again.`);
+  process.exit(2);
+}
 if (e2e) fs.rmSync(runtimeRoot, { recursive: true, force: true });
-fs.mkdirSync(runtimeRoot, { recursive: true });
+fs.mkdirSync(stateRoot, { recursive: true });
+fs.mkdirSync(workspacesRoot, { recursive: true });
 
 function child(command, args, env = {}) {
   return spawn(command, args, {

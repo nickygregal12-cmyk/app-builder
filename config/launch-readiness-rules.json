@@ -154,6 +154,13 @@
       "owningRole": "research-agent",
       "title": "The factory proposed a surface it had no content for",
       "guidance": "A default surface with no source-backed content is not published. Supply source material for it, or accept that this project does not need that page."
+    },
+    "declared-proof-missing": {
+      "category": "content",
+      "severity": "major",
+      "owningRole": "research-agent",
+      "title": "Proof the operator declared has no source behind it",
+      "guidance": "The intake said this kind of evidence exists. Ingest it, or the site ships with a proof section it cannot fill. It is never published as a claim on its own."
     }
   },
   "opportunityRules": {

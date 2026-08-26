@@ -142,3 +142,53 @@ test('custom and unresolved capability intent survives as composition warnings',
   assert.ok(composition.warnings.includes('custom-capability:billing'));
   assert.ok(composition.warnings.includes('unresolved-capability:search'));
 });
+
+test('declared trust signals are an inventory, never published as proof', () => {
+  // "What proof can we use?" is a closed intake enum. Rendering it produced a
+  // proof card reading "case studies" on the nbm build — configuration shown as
+  // content, and an unsupported claim in the section that exists for claims.
+  const composition = composeProject({ manifest: marketingManifest({
+    company: { identity: { name: 'Northbridge Surveying' }, services: ['Cost consultancy'], locations: ['Glasgow'], contactDetails: { phone: '0141 555 0101' }, trustSignals: ['case studies', 'awards'], conversionGoals: ['call'] },
+  }) });
+  const rendered = JSON.stringify(composition.sections);
+  assert.ok(!rendered.includes('case studies'), 'a proof kind must not be rendered as the proof');
+  assert.ok(!rendered.includes('awards'));
+  assert.ok(!composition.sections.some((section) => section.type === 'proof-grid'),
+    'a proof section with nothing to prove is not composed');
+  // The declaration is not discarded: it is why the gap is reportable.
+  assert.ok(composition.warnings.includes('declared-proof-missing:case studies'));
+  assert.ok(composition.warnings.includes('declared-proof-missing:awards'));
+});
+
+test('proof the sources actually carry is published and raises no gap', () => {
+  const pack = knowledgePack();
+  pack.companyProfile.testimonials = [{ id: 't1', quote: 'Clear and reliable', customer: 'J Smith', sourceId: 's1', provenance: 'user-supplied', verification: 'user-provided' }];
+  pack.companyProfile.projects = [{ id: 'p1', name: 'Riverside Refurbishment', sourceId: 's1', provenance: 'user-supplied', verification: 'user-provided' }];
+  const composition = composeProject({
+    manifest: marketingManifest({ company: { identity: { name: 'Northbridge Surveying' }, services: ['Cost consultancy'], locations: ['Glasgow'], contactDetails: { phone: '0141 555 0101' }, trustSignals: ['testimonials', 'case studies'], conversionGoals: ['call'] } }),
+    knowledgePack: pack,
+  });
+  assert.ok(composition.sections.some((section) => section.type === 'proof-grid'));
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('declared-proof-missing:')), []);
+});
+
+test('"none" is an answer, not a missing proof gap', () => {
+  const composition = composeProject({ manifest: marketingManifest({
+    company: { identity: { name: 'Northbridge Surveying' }, services: ['Cost consultancy'], locations: ['Glasgow'], contactDetails: { phone: '0141 555 0101' }, trustSignals: ['none'], conversionGoals: ['call'] },
+  }) });
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('declared-proof-missing:')), []);
+});
+
+test('the closing call to action does not repeat the same sentence on every page', () => {
+  const composition = composeProject({ manifest: marketingManifest({
+    majorSurfaces: ['Home', 'Services', 'About'],
+    company: { identity: { name: 'Northbridge Surveying' }, services: ['Cost consultancy', 'Project management'], locations: ['Glasgow'], contactDetails: { phone: '0141 555 0101' }, trustSignals: [], conversionGoals: ['call'] },
+  }) });
+  const bodies = composition.sections
+    .filter((section) => section.type === 'cta')
+    .map((section) => section.bindings.find((binding) => binding.key === 'body')?.value)
+    .filter(Boolean);
+  assert.equal(bodies.length, 1, 'only the entry page carries the summary sentence');
+  assert.ok(composition.sections.filter((section) => section.type === 'cta').length > 1,
+    'secondary pages still offer the action');
+});

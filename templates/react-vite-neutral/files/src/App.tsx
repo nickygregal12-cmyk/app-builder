@@ -119,9 +119,17 @@ function itemTitle(value: unknown) {
   return text(record.name ?? record.title ?? record.quote ?? record.value ?? record.label) || 'Item';
 }
 
+// Fields that hold the item's own sentence read as that sentence. Everything
+// else is an attribute and is clearer with its name in front of it: "Price:
+// 250" is helpful, "description: Chartered quantity surveying across the
+// project lifecycle." is a field name leaking onto a client's website.
+const PROSE_FIELDS = ['description', 'summary', 'detail', 'details', 'body', 'excerpt'];
+
 function itemDetail(value: unknown) {
   const entries = primitiveEntries(value).filter(([key]) => !['name', 'title', 'quote', 'value', 'label'].includes(key));
-  return entries.map(([key, item]) => `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`);
+  return entries.map(([key, item]) => (PROSE_FIELDS.includes(key.toLowerCase())
+    ? String(item)
+    : `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`));
 }
 
 type SocialProfile = { platform?: string; url?: string; value?: string };
@@ -349,6 +357,7 @@ export default function App() {
   const activePage = composed.pages.find((page) => page.path === pathname) ?? composed.pages[0];
   useBuilderBridge(pathname, activePage?.id ?? '');
   useEffect(() => { initializeRecipes(project); }, []);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const onPopState = () => setPathname(window.location.pathname || '/');
     window.addEventListener('popstate', onPopState);
@@ -368,10 +377,25 @@ export default function App() {
   };
 
   const navigation = [...composed.pages].filter((page) => page.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order);
+  const followLink = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    setMenuOpen(false);
+    navigate(event, href);
+  };
   return <div className={`site-frame ${design.shellClass}`} data-scenario={currentScenario}>
     <header className="site-header">
-      <a className="site-brand" href="/" onClick={(event) => navigate(event, '/')}>{project.name}</a>
-      <nav aria-label="Primary navigation">{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={page.path} onClick={(event) => navigate(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
+      <a className="site-brand" href="/" onClick={(event) => followLink(event, '/')}>{project.name}</a>
+      {/* A site with more than a handful of surfaces wraps its navigation over
+          three or four rows on a phone, which is collapsed rather than
+          designed. The toggle is CSS-hidden above the breakpoint, so wide
+          screens keep the single row they already had. */}
+      <button
+        type="button"
+        className="nav-toggle"
+        aria-expanded={menuOpen}
+        aria-controls="primary-navigation"
+        onClick={() => setMenuOpen((open) => !open)}
+      >{menuOpen ? 'Close' : 'Menu'}</button>
+      <nav id="primary-navigation" aria-label="Primary navigation" data-open={menuOpen ? 'true' : 'false'}>{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={page.path} onClick={(event) => followLink(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
     </header>
     <main className="app-shell" data-page-id={currentPage.id}>
       {currentPage.sectionIds.map((sectionId) => sectionMap.get(sectionId)).filter((section): section is SectionSpec => Boolean(section)).map((section) => <Section key={section.id} section={section} navigate={navigate} />)}

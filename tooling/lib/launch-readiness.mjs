@@ -238,7 +238,10 @@ function auditWarnings(composition, rules, findings) {
       findings.push(finding(rules, direct, 'composition', `Composer reported "${warning}".`));
       continue;
     }
-    if (warning.startsWith('unfillable-surface:')) {
+    if (warning.startsWith('declared-proof-missing:')) {
+      findings.push(finding(rules, 'declared-proof-missing', 'proof',
+        `Intake declared "${warning.slice('declared-proof-missing:'.length)}" as available proof and no ingested source backs it.`));
+    } else if (warning.startsWith('unfillable-surface:')) {
       findings.push(finding(rules, 'unfillable-surface', 'surfaces',
         `The factory proposed a "${warning.slice('unfillable-surface:'.length)}" surface and had no content to put on it, so it was not published.`));
     } else if (warning.startsWith('unresolved-capability:')) {

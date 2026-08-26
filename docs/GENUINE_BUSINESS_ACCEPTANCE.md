@@ -180,3 +180,55 @@ the hard way — before the check existed, an evidence file naming
 reached the site.
 
 A passing validator result is necessary but not sufficient to close Phase 3.8E: the evidence must come from an actual business trial. After the trial, observed shortcomings should be fixed in the deterministic composer/templates/recipes where possible, then the same business should be regenerated and re-reviewed before the stage is marked complete.
+
+## What Phase 3.8E still needs
+
+`config/factory-status.json` is the machine-readable authority; this is the
+operator-facing form of the same two gates. Everything else the stage was
+blocked on is closed: the list-question typing defect (#62), the preview that
+escaped the Console boundary (#63), and the intake that could not be replayed
+(#70).
+
+**1. An execution environment that can reach the public web as the Factory
+runtime user.**
+
+The nbm site has to be crawled through the factory's own source-ingestion path.
+An out-of-band scrape pasted into a file is not acceptance evidence — the gate
+cross-checks every declared source against the knowledge pack the run produced,
+and a page the crawler never fetched has no `contentHash` to match. Two
+environments have now failed this: the original trial host denied every public
+host, and the session that closed #62/#63/#70 was behind an egress proxy that
+answers 403 to `CONNECT www.nbm.bz:443`. Before rerunning, confirm from the
+factory host, as the user the service runs as:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' https://www.nbm.bz/
+```
+
+Then run the trial from the committed baseline rather than re-keying anything:
+
+```bash
+npm run dev
+# Builder → Rerun an approved intake → examples/genuine-business/nbm-approved-intake.v1.json
+```
+
+The bundle already carries the site as a `reference-only` source and the
+approved workbook as the publishable one, so source governance starts from the
+rights position the owner actually granted.
+
+**2. The human product review.**
+
+No agent may issue it, and no agent may pre-fill it. Take the packet:
+
+```bash
+npm run acceptance:genuine-business:packet -- --project <projectId> --out <dir>
+```
+
+Judge the five checks, count the meaningful edits, complete the draft, rename it
+to `evidence.json` and validate. Until that happens the stage stays open, and
+`productReview` must not appear in any evidence file the factory wrote.
+
+Anything a rerun exposes that a future project would hit again is a factory
+defect: fix the factory, add regression coverage, regenerate from the same
+bundle, and record the finding in `docs/TRIAL_FINDINGS.md`. Do not hand-edit
+generated output to move the number.

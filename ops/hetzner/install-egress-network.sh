@@ -129,20 +129,24 @@ NFT
 
 # The host's own global addresses are public addresses and still off limits:
 # reaching the factory host from its own sandbox is the bypass, whichever
-# address it wears.
-host_rules=""
-for address in $(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]}'); do
-  host_rules="${host_rules}    ip daddr ${address} counter drop\n"
-done
-if [[ -n "$host_rules" ]]; then
-  printf 'INFO  dropping the host'"'"'s own global addresses: %s\n' "$(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]}' | tr '\n' ' ')"
-  # Append into both chains, keeping the file readable rather than clever.
-  python3 - "$RULES" <<PY
+# address it wears. Build the dynamic lines in Python from argv so shell command
+# substitution cannot strip the final newline and fuse the last rule to `}`.
+host_addresses=()
+while IFS= read -r address; do
+  [[ -n "$address" ]] && host_addresses+=("$address")
+done < <(ip -4 -o addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]}')
+
+if (( ${#host_addresses[@]} > 0 )); then
+  printf 'INFO  dropping the host'"'"'s own global addresses: %s\n' "${host_addresses[*]}"
+  python3 - "$RULES" "${host_addresses[@]}" <<'PY'
 import sys
+
 path = sys.argv[1]
+addresses = sys.argv[2:]
 text = open(path).read()
-extra = """$(printf '%b' "$host_rules")"""
-text = text.replace("    ip6 daddr @forbidden6 counter drop\n", "    ip6 daddr @forbidden6 counter drop\n" + extra)
+needle = "    ip6 daddr @forbidden6 counter drop\n"
+extra = "".join(f"    ip daddr {address} counter drop\n" for address in addresses)
+text = text.replace(needle, needle + extra)
 open(path, "w").write(text)
 PY
 fi
@@ -166,9 +170,9 @@ Environment=PATH=${RUNTIME_PATH}
 Environment=XDG_RUNTIME_DIR=${RUNTIME_DIR}
 WorkingDirectory=/tmp
 ExecStartPre=-/usr/bin/podman rm --force app-builder-egress-anchor
-ExecStart=/usr/bin/podman run --rm --name app-builder-egress-anchor \\
-  --network=${NETWORK} --pid=private --ipc=private --uts=private --cgroupns=private \\
-  --security-opt=no-new-privileges --cap-drop=ALL --read-only --memory=64m --pids-limit=16 \\
+ExecStart=/usr/bin/podman run --rm --name app-builder-egress-anchor \
+  --network=${NETWORK} --pid=private --ipc=private --uts=private --cgroupns=private \
+  --security-opt=no-new-privileges --cap-drop=ALL --read-only --memory=64m --pids-limit=16 \
   ${ANCHOR_IMAGE} sleep infinity
 ExecStartPost=/bin/sh -c 'sleep 2; /usr/bin/podman unshare --rootless-netns /usr/sbin/nft -f ${RULES}'
 ExecStop=-/usr/bin/podman stop --time 5 app-builder-egress-anchor

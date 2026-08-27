@@ -154,17 +154,51 @@ What it would cost:
 Revisit only if curated visual regression contracts (Phase 4D) prove they need per-component
 isolation that rendered evidence over a real build cannot provide.
 
-### Stage Q4 — performance and payload budgets (alongside Phase 4.2/Phase 6)
+### Stage Q4 — payload budgets ✅ delivered (bytes, documents and requests); lab metrics still open
 
-Measure before optimising; no speculative performance work.
+`npm run audit:payload` (`tooling/payload-budget.mjs` over `tooling/lib/payload-budget.mjs`)
+generates a canonical project per class, **installs and builds it as an ordinary repository**, and
+measures what the build asks a visitor to download. Building is the point: a payload budget measured
+from source is a budget on the wrong number. It is not in `npm run check` — six installs and six
+builds is minutes, and a gate that slow in the inner loop gets skipped — so it has its own command
+and writes `.app-builder/payload/report.json`.
 
-Budget dimensions: Core Web Vitals, JS payload, CSS payload, image payload, font payload,
-per-route payload, critical rendering path and request count. Budgets are **per project class**: a
-static marketing site and an authenticated data-heavy internal tool do not share a number.
+**The measured baseline, recorded before any threshold was written** (2026-08-27, canonical fixtures):
 
-Add bundle analysis for the Console, generated template families, registry component dependencies
-and the design-system runtime, so a specialist or design addition cannot silently inflate every
-generated app.
+| class | renderer | js | css | route documents | max requests/route |
+| --- | --- | --- | --- | --- | --- |
+| marketing-site | static | **0** | 22,403 | 4 | 1 |
+| content-site | static | **0** | 22,403 | 3 | 1 |
+| b2b-saas | application | **426,670** | 23,753 | 1 | 2 |
+| consumer-app | application | 426,013 | 23,766 | 1 | 2 |
+| internal-tool | application | 424,720 | 23,753 | 1 | 2 |
+| ai-app | application | 425,796 | 23,753 | 1 | 2 |
+
+Two numbers are worth saying out loud. The static renderer genuinely ships **zero** client
+JavaScript, so `maxBytes.js: 0` is now what enforces the 4.2A claim rather than a sentence in a
+document — an island that needs a script is a reviewed change to that line. And the application shell
+is **426KB of JavaScript before a project adds anything**: framework, router and generated modules.
+That is a finding rather than a comfortable number, recorded so the next thing to inflate it has to
+say so; tightening it is Phase 6 work with a real profile behind it, not a guess today.
+
+`config/payload-budgets.json` holds, per class, what was measured, what budget was set and the
+**headroom sentence** saying what allowed the gap. Budgets cover only what a class controls — shared
+js and css, one document at a time, requests per route, and a floor on route documents. Total bytes
+and total HTML scale with how many pages a project has, which is the project's property and not the
+class's, so a class budget on them would punish a large site and excuse a small one. The floor is why
+a static class emitting one document fails: that is an application shell wearing a static renderer.
+
+`performance-budgets` is now a **registered gate producer**. `npm run gates:evidence` installs and
+builds the nbm project and the `performance` gate's only deterministic check is answered from that
+build — the first gate evidence in the repository that required a real build to exist.
+
+**Still open:** Core Web Vitals and other lab metrics, image and font budgets with real assets behind
+them (both fixtures currently ship neither), and bundle analysis for the Console itself. Each needs a
+consumer before it needs a threshold.
+
+`tooling/payload-budget.test.mjs` plants a regression for every dimension — including the one that
+catches a static class rendering as a shell — asserts every committed budget sits above the
+measurement it names, and asserts the two renderers are budgeted as the different shapes they are.
 
 ### Stage Q5 — design-token enforcement ✅ delivered (colour and token resolution)
 

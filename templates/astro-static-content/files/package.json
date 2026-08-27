@@ -14,5 +14,5 @@
     "check":"npm run test && npm run typecheck && npm run lint"
   },
   "dependencies": {"astro":"7.2.7"},
-  "devDependencies": {"@astrojs/check":"^0.9.5","oxlint":"^1.71.0","typescript":"~5.9.3"}
+  "devDependencies": {"@astrojs/check":"0.9.10","oxlint":"1.80.0","typescript":"5.9.3"}
 }

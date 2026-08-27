@@ -3,7 +3,7 @@
   "extends": [
     "config:recommended"
   ],
-  "rangeStrategy": "replace",
+  "rangeStrategy": "pin",
   "dependencyDashboard": true,
   "minimumReleaseAge": "3 days",
   "packageRules": [

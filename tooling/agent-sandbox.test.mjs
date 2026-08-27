@@ -179,12 +179,13 @@ test('the podman argv carries every isolation flag and none of the escapes', () 
     '--security-opt=no-new-privileges',
     '--cap-drop=ALL',
     '--read-only',
-    '--userns=keep-id',
+    '--userns=keep-id:uid=1000,gid=1000',
     `--memory=${DEFAULT_LIMITS.memoryMb}m`,
     `--pids-limit=${DEFAULT_LIMITS.pidsMax}`,
   ]) {
     assert.ok(args.includes(expected), `argv must contain ${expected}`);
   }
+  assert.ok(!args.includes('--userns=keep-id'), 'a bare keep-id mapping depends on the host account also being uid 1000');
   assert.ok(args.some((value) => value.startsWith('--tmpfs=/tmp:') && value.includes('noexec')));
   assert.ok(args.some((value) => value.endsWith('/run/app-builder/broker.sock:rw,Z')));
   assert.ok(args.includes(`APP_BUILDER_AGENT_BROKER_SOCKET=/run/app-builder/broker.sock`));

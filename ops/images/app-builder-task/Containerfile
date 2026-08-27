@@ -33,6 +33,11 @@ RUN set -eux; \
     # setuid and setgid bit means a future base-image change that ships one
     # cannot quietly reintroduce an escalation route.
     find / -xdev -perm /6000 -type f -exec chmod a-s {} + || true; \
+    # The Debian base carries `su` even though this image has exactly one task
+    # identity. It is useless here and the image contract deliberately excludes
+    # privilege-escalation helpers rather than relying on their failure at run
+    # time. Keep the absence explicit and host-verifiable.
+    rm -f /bin/su /usr/bin/su; \
     # A task never installs a package. npm's own network reach is one more
     # thing an attempt could be steered into using.
     npm config --global set audit false; \
@@ -47,8 +52,9 @@ RUN set -eux; \
     chown -R 1000:1000 /workspace /scratch
 
 # node:22 already ships uid/gid 1000 as `node`. Reusing it keeps the image
-# compatible with the spec's `--user 1000:1000` without inventing a second
-# unprivileged identity.
+# compatible with the spec's fixed container identity. The Podman translation
+# maps the host runtime account onto this identity explicitly, so host UID
+# allocation is not required to equal 1000 for bind-mounted workspaces to work.
 USER 1000:1000
 WORKDIR /workspace
 

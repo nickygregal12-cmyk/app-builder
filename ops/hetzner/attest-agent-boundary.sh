@@ -6,12 +6,13 @@
 #
 # The verifier remains read-only. This wrapper is the only persistence step:
 # it removes any previous attestation before revalidation, captures the exact
-# task-image digest it expects the verifier to prove, runs that proof, and only
-# then writes /etc/app-builder/agent-boundary.json.
+# task-image digest it expects the verifier to prove, requires the verifier to
+# echo that exact digest back as its proof result, and only then writes
+# /etc/app-builder/agent-boundary.json.
 #
-# If the verifier fails, aborts, or the repository changes the image digest
-# during the proof, no attestation survives. A stale or mismatched proof cannot
-# therefore keep a later model-canary preflight green.
+# If the verifier fails, aborts, proves another image, or the repository changes
+# the image digest during the proof, no attestation survives. A stale or
+# mismatched proof cannot therefore keep a later model-canary preflight green.
 set -euo pipefail
 
 RUNTIME_USER="${APP_BUILDER_RUNTIME_USER:-appbuilder}"
@@ -25,6 +26,7 @@ MANIFEST="${REPOSITORY}/config/task-images.json"
 
 [[ -r "$MANIFEST" ]] || { printf 'FAIL  cannot read %s\n' "$MANIFEST" >&2; exit 1; }
 [[ -r "$VERIFIER" ]] || { printf 'FAIL  cannot read %s\n' "$VERIFIER" >&2; exit 1; }
+[[ "$MAX_AGE_DAYS" =~ ^[1-9][0-9]*$ ]] || { printf 'FAIL  APP_BUILDER_BOUNDARY_ATTESTATION_DAYS must be a positive integer\n' >&2; exit 1; }
 
 image_reference="$(jq -r --arg id "$IMAGE_ID" '.images[$id].reference // ""' "$MANIFEST")"
 image_digest="$(jq -r --arg id "$IMAGE_ID" '.images[$id].digest // ""' "$MANIFEST")"
@@ -43,12 +45,24 @@ printf '== App Builder agent boundary attestation ==\n'
 printf 'expected image: %s\n' "$pinned_image"
 printf 'attestation: %s\n\n' "$ATTESTATION"
 
+proof_output="$(mktemp)"
+trap 'rm -f "$proof_output"' EXIT
+
 APP_BUILDER_RUNTIME_USER="$RUNTIME_USER" \
 APP_BUILDER_REPOSITORY="$REPOSITORY" \
 APP_BUILDER_SERVICE_PORT="$FACTORY_PORT" \
 APP_BUILDER_TASK_IMAGE_ID="$IMAGE_ID" \
 APP_BUILDER_EXPECTED_TASK_IMAGE_DIGEST="$image_digest" \
-  bash "$VERIFIER"
+  bash "$VERIFIER" | tee "$proof_output"
+
+proved_digest="$(sed -n 's/^BOUNDARY_PROOF_IMAGE_DIGEST=//p' "$proof_output" | tail -n 1)"
+if [[ "$proved_digest" != "$image_digest" ]]; then
+  printf 'FAIL  verifier did not attest the expected image digest.\n' >&2
+  printf '      expected: %s\n' "$image_digest" >&2
+  printf '      proved:   %s\n' "${proved_digest:-none}" >&2
+  printf '      No attestation was written.\n' >&2
+  exit 1
+fi
 
 # Defend the tiny check/write gap. The verifier was bound to image_digest via
 # APP_BUILDER_EXPECTED_TASK_IMAGE_DIGEST; if the checked-in authority moved
@@ -60,7 +74,14 @@ if [[ "$current_digest" != "$image_digest" ]]; then
   exit 1
 fi
 
-repository_commit="$(git -C "$REPOSITORY" rev-parse HEAD 2>/dev/null || echo unknown)"
+# Read repository provenance as the account that owns the checkout. Running Git
+# as root would trigger the correct dubious-ownership refusal; do not weaken
+# Git's safe.directory protection just to fill this field.
+if ! repository_commit="$(runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" git -C "$REPOSITORY" rev-parse HEAD 2>/dev/null)" \
+  || [[ ! "$repository_commit" =~ ^[0-9a-f]{40}$ ]]; then
+  printf 'FAIL  cannot determine repository commit as runtime owner %s; no attestation was written.\n' "$RUNTIME_USER" >&2
+  exit 1
+fi
 verified_at="$(date -Is)"
 
 install -d -m 0755 "$(dirname "$ATTESTATION")"
@@ -80,11 +101,12 @@ cat > "$ATTESTATION" <<JSON
   "repositoryCommit": "${repository_commit}",
   "verifier": "ops/hetzner/verify-agent-boundary.sh",
   "attester": "ops/hetzner/attest-agent-boundary.sh",
-  "note": "Written only after the exact digest-pinned task image passes the hosted boundary verifier. Re-running this command invalidates old evidence before proving the current image."
+  "note": "Written only after the exact digest-pinned task image passes the hosted boundary verifier and the verifier reports that exact digest back to this wrapper. Re-running this command invalidates old evidence before proving the current image."
 }
 JSON
 chmod 0644 "$ATTESTATION"
 
 printf '\nAgent boundary attestation written to %s.\n' "$ATTESTATION"
 printf 'image digest: %s\n' "$image_digest"
+printf 'repository commit: %s\n' "$repository_commit"
 printf 'valid for: %s days\n' "$MAX_AGE_DAYS"

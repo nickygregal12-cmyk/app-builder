@@ -42,3 +42,27 @@ test('the hosted image proof exercises a bind mount through the real uid mapping
   assert.match(source, /:\/workspace:rw,Z/);
   assert.doesNotMatch(source, /--tmpfs=\/workspace:rw/);
 });
+
+test('the hosted boundary verifier proves the exact reviewed task image rather than a generic probe image', () => {
+  const source = fs.readFileSync('ops/hetzner/verify-agent-boundary.sh', 'utf8');
+  assert.ok(source.includes('EXPECTED_IMAGE_DIGEST="${APP_BUILDER_EXPECTED_TASK_IMAGE_DIGEST:-}"'));
+  assert.ok(source.includes('PINNED_IMAGE="${image_reference}@${image_digest}"'));
+  assert.ok(source.includes('podman image inspect "$PINNED_IMAGE"'));
+  assert.ok(source.includes('--userns=keep-id:uid=1000,gid=1000'));
+  assert.ok(source.includes('--user 1000:1000'));
+  assert.ok(source.includes('--entrypoint node'));
+  assert.ok(source.includes('Agent boundary acceptance passed for exact image %s.'));
+  assert.ok(!source.includes('APP_BUILDER_PROBE_IMAGE'));
+  assert.ok(!source.includes('docker.io/library/alpine:3.21'));
+});
+
+test('the boundary attester persists only a proof that reports the same pinned image and real repository provenance', () => {
+  const source = fs.readFileSync('ops/hetzner/attest-agent-boundary.sh', 'utf8');
+  assert.ok(source.includes('rm -f "$ATTESTATION"'), 'old evidence must disappear before revalidation');
+  assert.ok(source.includes('APP_BUILDER_EXPECTED_TASK_IMAGE_DIGEST="$image_digest"'));
+  assert.ok(source.includes('| tee "$proof_output"'));
+  assert.ok(source.includes('proved_image='));
+  assert.ok(source.includes('if [[ "$proved_image" != "$pinned_image" ]]'));
+  assert.ok(source.includes('runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" git -C "$REPOSITORY" rev-parse HEAD'));
+  assert.ok(!source.includes('echo unknown'), 'repository provenance must fail closed rather than becoming unknown');
+});

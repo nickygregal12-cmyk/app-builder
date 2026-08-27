@@ -26,6 +26,20 @@ test('egress reconfiguration invalidates durable evidence before mutating the pr
   assert.ok(invalidate < unitWrite, 'old evidence must be gone before the anchor unit can change');
 });
 
+test('egress anchor uses the runtime user UID instead of the system manager UID', () => {
+  assert.match(installer, /RUNTIME_UID="\$\(id -u "\$RUNTIME_USER"\)"/);
+  assert.match(installer, /RUNTIME_DIR="\/run\/user\/\$\{RUNTIME_UID\}"/);
+  assert.match(installer, /XDG_RUNTIME_DIR="\$RUNTIME_DIR"/);
+  assert.match(installer, /After=network-online\.target user-runtime-dir@\$\{RUNTIME_UID\}\.service/);
+  assert.match(installer, /Requires=user-runtime-dir@\$\{RUNTIME_UID\}\.service/);
+  assert.match(installer, /Environment=XDG_RUNTIME_DIR=\$\{RUNTIME_DIR\}/);
+  assert.doesNotMatch(
+    installer,
+    /Environment=XDG_RUNTIME_DIR=\/run\/user\/%U/,
+    'system-unit %U resolves to the system manager UID (root), not User=appbuilder',
+  );
+});
+
 test('every egress verification attempt invalidates old evidence before any early refusal', () => {
   assert.match(verifier, /APP_BUILDER_EGRESS_ATTESTATION_FILE:-\/etc\/app-builder\/egress-profile\.json/);
 

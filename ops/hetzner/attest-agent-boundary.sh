@@ -6,8 +6,8 @@
 #
 # The verifier remains read-only. This wrapper is the only persistence step:
 # it removes any previous attestation before revalidation, captures the exact
-# task-image digest it expects the verifier to prove, requires the verifier to
-# echo that exact digest back as its proof result, and only then writes
+# task-image digest it expects the verifier to prove, requires the verifier's
+# success result to name that exact pinned image, and only then writes
 # /etc/app-builder/agent-boundary.json.
 #
 # If the verifier fails, aborts, proves another image, or the repository changes
@@ -55,11 +55,15 @@ APP_BUILDER_TASK_IMAGE_ID="$IMAGE_ID" \
 APP_BUILDER_EXPECTED_TASK_IMAGE_DIGEST="$image_digest" \
   bash "$VERIFIER" | tee "$proof_output"
 
-proved_digest="$(sed -n 's/^BOUNDARY_PROOF_IMAGE_DIGEST=//p' "$proof_output" | tail -n 1)"
-if [[ "$proved_digest" != "$image_digest" ]]; then
-  printf 'FAIL  verifier did not attest the expected image digest.\n' >&2
-  printf '      expected: %s\n' "$image_digest" >&2
-  printf '      proved:   %s\n' "${proved_digest:-none}" >&2
+# A zero exit is not sufficient evidence: the verifier must explicitly report
+# the same immutable image identity the attester intends to persist. This would
+# have refused the historical Alpine-probe false attestation even though that
+# generic isolation probe itself passed.
+proved_image="$(sed -n 's/^Agent boundary acceptance passed for exact image \(.*\)\.$/\1/p' "$proof_output" | tail -n 1)"
+if [[ "$proved_image" != "$pinned_image" ]]; then
+  printf 'FAIL  verifier did not attest the expected pinned image.\n' >&2
+  printf '      expected: %s\n' "$pinned_image" >&2
+  printf '      proved:   %s\n' "${proved_image:-none}" >&2
   printf '      No attestation was written.\n' >&2
   exit 1
 fi
@@ -101,7 +105,7 @@ cat > "$ATTESTATION" <<JSON
   "repositoryCommit": "${repository_commit}",
   "verifier": "ops/hetzner/verify-agent-boundary.sh",
   "attester": "ops/hetzner/attest-agent-boundary.sh",
-  "note": "Written only after the exact digest-pinned task image passes the hosted boundary verifier and the verifier reports that exact digest back to this wrapper. Re-running this command invalidates old evidence before proving the current image."
+  "note": "Written only after the exact digest-pinned task image passes the hosted boundary verifier and the verifier reports that exact pinned image back to this wrapper. Re-running this command invalidates old evidence before proving the current image."
 }
 JSON
 chmod 0644 "$ATTESTATION"

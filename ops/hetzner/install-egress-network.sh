@@ -34,6 +34,8 @@
 set -euo pipefail
 
 RUNTIME_USER="${APP_BUILDER_RUNTIME_USER:-appbuilder}"
+RUNTIME_UID="$(id -u "$RUNTIME_USER")"
+RUNTIME_DIR="/run/user/${RUNTIME_UID}"
 RUNTIME_PATH="/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin"
 NETWORK="${APP_BUILDER_EGRESS_NETWORK:-app-builder-egress}"
 SUBNET="${APP_BUILDER_EGRESS_SUBNET:-10.89.240.0/24}"
@@ -42,7 +44,7 @@ RULES="/etc/app-builder/egress.nft"
 ATTESTATION="${APP_BUILDER_EGRESS_ATTESTATION_FILE:-/etc/app-builder/egress-profile.json}"
 
 as_runtime() {
-  ( cd /tmp && runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" XDG_RUNTIME_DIR="/run/user/$(id -u "$RUNTIME_USER")" "$@" )
+  ( cd /tmp && runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" XDG_RUNTIME_DIR="$RUNTIME_DIR" "$@" )
 }
 
 printf '== App Builder egress network install ==\n'
@@ -151,8 +153,9 @@ printf 'PASS  wrote %s\n' "$RULES"
 cat > /etc/systemd/system/app-builder-egress-anchor.service <<UNIT
 [Unit]
 Description=App Builder egress network anchor (keeps the rootless network namespace and its egress filter alive)
-After=network-online.target
+After=network-online.target user-runtime-dir@${RUNTIME_UID}.service
 Wants=network-online.target
+Requires=user-runtime-dir@${RUNTIME_UID}.service
 
 [Service]
 Type=simple
@@ -160,7 +163,7 @@ User=${RUNTIME_USER}
 Slice=app-builder-runtime.slice
 Environment=HOME=/home/${RUNTIME_USER}
 Environment=PATH=${RUNTIME_PATH}
-Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=XDG_RUNTIME_DIR=${RUNTIME_DIR}
 WorkingDirectory=/tmp
 ExecStartPre=-/usr/bin/podman rm --force app-builder-egress-anchor
 ExecStart=/usr/bin/podman run --rm --name app-builder-egress-anchor \\

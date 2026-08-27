@@ -263,6 +263,7 @@ Mutation testing answers "would a plausible weakening escape the tests?". It is 
 | --- | --- |
 | `packages/control-plane/src/capabilities.js` | grant verification, environment scoping, approval, attempt budget |
 | `packages/control-plane/src/egress-policy.js` | which destinations count as the public internet |
+| `packages/control-plane/src/index.js` | ChangeSet scope enforcement, loop-guard budgets, the policy check — AGENTS.md principles 13 and 15 *are* these functions |
 | `packages/control-plane/src/data-change.js` | Stage Q12 production data-change refusals |
 
 **No tool was adopted.** `tooling/lib/mutation-harness.mjs` is about 160 lines: it generates
@@ -297,13 +298,28 @@ its line and its weakening, and the command fails while any survivor is unaccoun
   octet exactly one past its range both had to stay names rather than becoming addresses.
 - **a `.localhost` subdomain and `ip6-localhost`** were classified as loopback by code no test read.
 
-Each was closed with a test rather than by adjusting the operator set. All three targets now kill
-every mutation the registry does not account for.
+`index.js` was added as a fourth target afterwards and answered worse: **32 of 78 survived**. The
+ChangeSet path guard is a chain of `or`s, and a chain is only proven by the input that trips each
+link — one representative escape had been tested and the rest of the chain had not, so every
+individual spelling (absolute, UNC, drive-lettered, `..`, `.`, doubled separator, trailing
+separator, embedded null) was closed one at a time. So were all five loop-guard budget boundaries,
+each from both sides; every branch of `assertAgentActionAllowed`, which had been checked through one
+field at a time rather than as a whole verdict; a `NaN` budget, which is not finite *and* not less
+than the minimum, so a guard requiring both would pass it and every later comparison against it
+would quietly answer false; an event payload that is a string or an array; a missing ledger file,
+where swallowing every error rather than only `ENOENT` would turn a corrupt ledger into an empty
+one; and a trust promotion — `provenance: 'user-supplied'` raising trust for a *kind* the function
+does not recognise (AGENTS.md principle 11).
 
-**Equivalent mutations are recorded, not suppressed.** Seven are listed in
+Each was closed with a test rather than by adjusting the operator set. All four targets now kill
+every mutation the registry does not account for: 278 generated, zero unaccounted survivors.
+
+**Equivalent mutations are recorded, not suppressed.** Ten are listed in
 `tooling/lib/mutation-targets.mjs`, each with the reason it cannot change behaviour — an unreachable
 defensive branch, a loop bound whose extra iteration reads past a string and exits, a comparison
-whose widening reassigns a value to itself. `tooling/mutation-strength.test.mjs` requires every
+whose widening reassigns a value to itself. Three of them are defence in depth rather than holes: a
+path that slips the leading-separator disjunct still splits into an empty segment, and the segment
+check below refuses it anyway. That is worth recording precisely because it looks like a gap. `tooling/mutation-strength.test.mjs` requires every
 recorded id to still be a real mutation site, so an equivalence cannot outlive the line it excused
 and hand its exemption to whatever lands there next.
 

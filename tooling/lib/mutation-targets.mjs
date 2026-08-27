@@ -77,6 +77,20 @@ export const MUTATION_TARGETS = Object.freeze([
     ],
   },
   {
+    id: 'agent-broker',
+    file: 'apps/service/src/agent-broker.js',
+    why: 'The one place a grant is actually presented and an operation actually dispatched. capabilities.js decides; this is where the decision is obeyed.',
+    tests: [
+      'tooling/agent-capability-boundary.test.mjs',
+    ],
+    equivalent: [
+      {
+        id: 'agent-broker:212:false-to-true#1',
+        why: 'The decision entry for a caller whose grant did not verify is built and then dropped: it has no project to be filed under, so nothing reads the field this changes. The refusal itself is the 403, which is asserted.',
+      },
+    ],
+  },
+  {
     id: 'data-change',
     file: 'packages/control-plane/src/data-change.js',
     why: 'Stage Q12 production data-change refusals: destructive classification, environment identity, recovery evidence and approval.',

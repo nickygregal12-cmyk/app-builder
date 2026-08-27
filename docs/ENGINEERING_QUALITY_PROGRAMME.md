@@ -264,6 +264,7 @@ Mutation testing answers "would a plausible weakening escape the tests?". It is 
 | `packages/control-plane/src/capabilities.js` | grant verification, environment scoping, approval, attempt budget |
 | `packages/control-plane/src/egress-policy.js` | which destinations count as the public internet |
 | `packages/control-plane/src/index.js` | ChangeSet scope enforcement, loop-guard budgets, the policy check — AGENTS.md principles 13 and 15 *are* these functions |
+| `apps/service/src/agent-broker.js` | where a grant is presented and an operation dispatched — the decision obeyed rather than made |
 | `packages/control-plane/src/data-change.js` | Stage Q12 production data-change refusals |
 
 **No tool was adopted.** `tooling/lib/mutation-harness.mjs` is about 160 lines: it generates
@@ -312,9 +313,10 @@ one; and a trust promotion — `provenance: 'user-supplied'` raising trust for a
 does not recognise (AGENTS.md principle 11).
 
 Each was closed with a test rather than by adjusting the operator set. All four targets now kill
-every mutation the registry does not account for: 278 generated, zero unaccounted survivors.
+every mutation the registry does not account for: 305 generated across five targets, zero
+unaccounted survivors.
 
-**Equivalent mutations are recorded, not suppressed.** Ten are listed in
+**Equivalent mutations are recorded, not suppressed.** Eleven are listed in
 `tooling/lib/mutation-targets.mjs`, each with the reason it cannot change behaviour — an unreachable
 defensive branch, a loop bound whose extra iteration reads past a string and exits, a comparison
 whose widening reassigns a value to itself. Three of them are defence in depth rather than holes: a
@@ -333,22 +335,46 @@ inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather tha
 own verdict, so a mutant's fate depended on how the harness happened to be started. The child
 environment is now sanitised. A verdict is not allowed to be a property of its caller.
 
-**The next three targets, measured but not yet closed.** Each was run once, read-only, so the work
-they represent is a number rather than a guess:
+**The broker, closed.** `apps/service/src/agent-broker.js` was the fifth target and the most
+important of the three that had been measured: `capabilities.js` decides, and this is the one place
+the decision is obeyed. Ten of 27 survived, and what they were is the point:
 
-| candidate | killed | survived | why it is worth doing |
-| --- | --- | --- | --- |
-| `apps/service/src/agent-broker.js` | 17 | **10** of 27 | `capabilities.js` decides; this is the one place the decision is obeyed. Two survivors are the request-size and grant-header boundaries, and two turn a refusal into an allowance. |
-| `packages/control-plane/src/execution-environment.js` | 41 | **17** of 58 | The isolation shape a hostile task runs inside. The cluster at the mount and network checks is the one that matters: several `&&` chains where each conjunct is a separate way a sandbox stops being one. |
-| `packages/control-plane/src/risk.js` | 13 | **10** of 23 | What buys adversarial review. The survivors are the segment- and word-boundary matchers, which is where over-matching makes every styling change expensive and under-matching lets an auth change through on ordinary review. |
+- **the request-body limit had never been exercised.** It is 48MB, so no test was ever going to
+  reach it. It is now injectable per broker and asserted at the byte it names — a limit nobody can
+  reach is a limit nobody has tested.
+- **the `after` sequence guard** accepted `1.5` and `'abc'`, because a fraction is not an integer and
+  is also not negative, so a guard requiring both would pass both. (`NaN` and `Infinity` are *not*
+  in that test: JSON cannot carry them, they arrive as `null` and read as zero, which is a transport
+  fact rather than a guard this code owns.)
+- **the project-scoped/unscoped split** was untested from either side. It is now asserted with one
+  unbounded identifier put to both halves — a grant scoped to `../elsewhere` is internally
+  consistent, so that list is the only thing between it and a project-scoped handler.
+- **the durable-record path.** A decision must not be filed under a project the service cannot
+  resolve, and a write that failed must be *retried* rather than reported as done: a failed write
+  reporting success would leave the one dispatch with no durable record of who asked for it. Both
+  are now asserted by counting the writes, not by reading the response.
 
-None was added to the registry, because adding a target whose survivors are not closed leaves
-`npm run mutation:strength` red, and a gate that is expected to be red is not a gate. They are the
-next Q8 slice, in that order — the broker first, because it is the enforcement point rather than the
-decision.
+One survivor is recorded as equivalent: the decision entry for a caller whose grant did not verify
+is built and then dropped, because it has no project to be filed under, so nothing reads the field
+it changes. The refusal itself is the 403, which is asserted.
 
-The two runtime files sit beside the hosted-runtime lane's own work. The change each needs is
-test-only, but the order matters: close them when that lane is not moving underneath them.
+**Two targets remain measured but not closed:**
+
+| candidate | killed | survived |
+| --- | --- | --- |
+| `packages/control-plane/src/execution-environment.js` | 41 | **17** of 58 |
+| `packages/control-plane/src/risk.js` | 13 | **10** of 23 |
+
+Neither is in the registry, because adding a target whose survivors are not closed leaves
+`npm run mutation:strength` red, and a gate that is expected to be red is not a gate.
+`execution-environment.js` is the isolation shape a hostile task runs inside, and its survivors
+cluster on the mount and network checks — `&&` chains where each conjunct is a separate way a sandbox
+stops being one. `risk.js` decides what buys adversarial review, and its survivors are the segment-
+and word-boundary matchers, where over-matching makes every styling change expensive and
+under-matching lets an auth change through on ordinary review.
+
+`execution-environment.js` sits beside the hosted-runtime lane's own work. The change it needs is
+test-only, but it is better closed when that lane is not moving underneath it.
 
 ### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 

@@ -32,7 +32,7 @@ import {
 
 import { FACTORY_TOOLS } from '../apps/service/src/tool-contract.js';
 import { MCP_TOOL_BINDINGS } from '../apps/mcp/src/mcp-server.js';
-import { BROKER_ENDPOINT, BROKER_OPERATIONS, GRANT_HEADER, assertBrokerCoversRegistry, createAgentBroker } from '../apps/service/src/agent-broker.js';
+import { BROKER_ENDPOINT, BROKER_OPERATIONS, GRANT_HEADER, MAX_REQUEST_BYTES, assertBrokerCoversRegistry, createAgentBroker } from '../apps/service/src/agent-broker.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 
@@ -561,11 +561,11 @@ function brokerRequest(socketPath, { token, body, endpoint = BROKER_ENDPOINT, me
   });
 }
 
-async function withBroker(run) {
+async function withBroker(run, brokerOptions = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-capability-'));
   const store = new FactoryStore({ stateRoot: path.join(root, 'state') });
   const service = new FactoryService({ store, workspacesRoot: path.join(root, 'workspaces') });
-  const broker = createAgentBroker({ service, registry: REGISTRY, secret: SECRET });
+  const broker = createAgentBroker({ service, registry: REGISTRY, secret: SECRET, ...brokerOptions });
   const socketPath = await broker.listen(path.join(root, 'broker.sock'));
   try {
     return await run({ service, store, broker, socketPath, root });
@@ -755,5 +755,145 @@ test('an attempt may create only the project its grant names, and the creation i
     assert.equal(allowed.length, 1, 'the creation must be recorded even though the project did not exist when it was authorised');
     assert.equal(allowed[0].payload.operation, 'project.create');
     assert.equal(allowed[0].payload.attemptId.startsWith('attempt-'), true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Mutation-driven coverage of the broker (Stage Q8).
+//
+// `capabilities.js` decides; this file is the one place the decision is
+// obeyed. Ten weakenings survived its first mutation run, and each test below
+// exists because one of them did.
+// ---------------------------------------------------------------------------
+
+test('the request-body limit refuses at the byte it names', async () => {
+  // The real limit is 48MB, which no test is going to send. It is injectable so the boundary can be
+  // proven at all — a limit nobody can reach is a limit nobody has tested.
+  assert.equal(MAX_REQUEST_BYTES, 48 * 1024 * 1024);
+  await withBroker(async ({ socketPath }) => {
+    const { token } = grantFor({ capabilities: ['project.list'] });
+    const padTo = (bytes) => {
+      const envelope = JSON.stringify({ operation: 'project.list', arguments: { pad: '' } });
+      return { operation: 'project.list', arguments: { pad: 'x'.repeat(Math.max(0, bytes - envelope.length)) } };
+    };
+
+    const atLimit = await brokerRequest(socketPath, { token, body: padTo(512) });
+    assert.notEqual(atLimit.status, 400, 'a body exactly at the limit is inside it');
+
+    const overLimit = await brokerRequest(socketPath, { token: grantFor({ capabilities: ['project.list'] }).token, body: padTo(513) });
+    assert.equal(overLimit.status, 400);
+    assert.match(overLimit.body.message, /exceeds the broker limit/);
+  }, { maxRequestBytes: 512 });
+});
+
+test('a sequence argument that is not a whole non-negative number is refused', async () => {
+  await withBroker(async ({ service, socketPath }) => {
+    const project = service.createProject({ id: 'project-boundary', manifest: manifest('boundary-events') });
+    const call = (after) => brokerRequest(socketPath, {
+      token: grantFor({ capabilities: ['project.events.read'], projectId: project.id }).token,
+      body: { operation: 'project.events.read', projectId: project.id, arguments: { after } },
+    });
+
+    // `1.5` is not an integer and is also not negative; `abc` reads as NaN, which is neither. A
+    // guard that required both conditions would let each of them through into a ledger query.
+    // `NaN` and `Infinity` are not in this list because JSON cannot carry them: they arrive as
+    // `null` and read as zero, which is a transport fact rather than a guard this code owns.
+    for (const after of [1.5, -1, 'abc', '2.5', -0.5]) {
+      const refused = await call(after);
+      assert.equal(refused.status, 500, `${String(after)}: ${JSON.stringify(refused.body)}`);
+      assert.match(refused.body.message, /non-negative integer/, String(after));
+    }
+    // Zero is a whole non-negative number, and reading from the start is the ordinary case.
+    assert.equal((await call(0)).status, 200);
+  });
+});
+
+test('exactly two operations address no project, and every other one must name a bounded one', async () => {
+  // The same unbounded identifier, put to both halves of the split. A grant scoped to it is
+  // internally consistent — the authorisation check compares the grant against itself and passes —
+  // so the only thing standing between `../elsewhere` and a project-scoped handler is this list.
+  await withBroker(async ({ socketPath }) => {
+    const escaping = { projectId: '../elsewhere' };
+    for (const operation of ['project.list', 'integration.status.read']) {
+      const response = await brokerRequest(socketPath, {
+        token: grantFor({ ...escaping, capabilities: [operation] }).token,
+        body: { operation },
+      });
+      assert.equal(response.status, 200, `${operation} addresses no project and must not need one: ${JSON.stringify(response.body)}`);
+    }
+
+    for (const operation of ['project.read', 'project.events.read', 'project.metrics.read', 'project.preview.read', 'project.manifest.read']) {
+      const response = await brokerRequest(socketPath, {
+        token: grantFor({ ...escaping, capabilities: [operation] }).token,
+        body: { operation },
+      });
+      assert.equal(response.status, 400, `${operation} must require a bounded project id: ${JSON.stringify(response.body)}`);
+      assert.match(response.body.message, /bounded project identifier/);
+    }
+  });
+});
+
+test('a refusal names the operation, or names nothing at all', async () => {
+  await withBroker(async ({ socketPath }) => {
+    const denied = await brokerRequest(socketPath, {
+      token: grantFor({ capabilities: [] }).token,
+      body: { operation: '' },
+    });
+    assert.equal(denied.status, 403);
+    // Never an empty string: a field that is present and blank reads as an operation nobody can
+    // look up, where `null` reads as the absence it is.
+    assert.equal(denied.body.operation, null);
+
+    const named = await brokerRequest(socketPath, {
+      token: grantFor({ capabilities: [] }).token,
+      body: { operation: 'project.read' },
+    });
+    assert.equal(named.body.operation, 'project.read');
+  });
+});
+
+test('a decision is never filed under a project the service cannot see', async () => {
+  // The ledger is project-scoped, so an entry whose project has gone is an entry with nowhere to
+  // go. The guard exists so the attempt is not made at all, rather than made and swallowed.
+  await withBroker(async ({ service, socketPath }) => {
+    const project = service.createProject({ id: 'project-boundary', manifest: manifest('boundary-missing') });
+    const attempts = [];
+    const real = service.recordOperationalEvent.bind(service);
+    service.recordOperationalEvent = async (...args) => { attempts.push(args[0]); return real(...args); };
+    const seen = service.getProject.bind(service);
+    service.getProject = (id) => (id === project.id ? undefined : seen(id));
+
+    const response = await brokerRequest(socketPath, {
+      token: grantFor({ capabilities: ['project.read'] }).token,
+      body: { operation: 'project.read', projectId: project.id },
+    });
+    // The operation itself still runs; only the filing is refused, and refused before it is tried.
+    assert.equal(response.status, 200);
+    assert.deepEqual(attempts, [], 'the broker tried to write into a project it could not resolve');
+  });
+});
+
+test('a durable record that failed to write is retried rather than assumed written', async () => {
+  // `recorded` is not decoration: it is what decides whether the entry is appended a second time
+  // after the operation has run. A failed write that reported success would leave the one dispatch
+  // with no durable record of who asked for it.
+  await withBroker(async ({ service, socketPath }) => {
+    const project = service.createProject({ id: 'project-boundary', manifest: manifest('boundary-retry') });
+    let attempts = 0;
+    const real = service.recordOperationalEvent.bind(service);
+    service.recordOperationalEvent = async (...args) => {
+      attempts += 1;
+      if (attempts === 1) throw new Error('ledger unavailable');
+      return real(...args);
+    };
+
+    const response = await brokerRequest(socketPath, {
+      token: grantFor({ capabilities: ['project.read'] }).token,
+      body: { operation: 'project.read', projectId: project.id },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(attempts, 2, 'the failed write was reported as done');
+    const recorded = service.listEvents(project.id).filter((event) => event.type === 'agent.operation.allowed');
+    assert.equal(recorded.length, 1, 'the retry must land exactly one entry, not zero and not two');
   });
 });

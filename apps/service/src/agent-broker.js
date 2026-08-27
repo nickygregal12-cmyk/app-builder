@@ -39,7 +39,13 @@ import { parseSourceRequests } from './ingestion.js';
 
 export const BROKER_ENDPOINT = '/operation';
 export const GRANT_HEADER = 'x-app-builder-grant';
-const MAX_REQUEST_BYTES = 48 * 1024 * 1024;
+/**
+ * The largest request body the broker will read.
+ *
+ * Exported, and overridable per broker, because a limit nobody can reach is a limit nobody has
+ * tested: proving this one refuses at the byte it names would otherwise mean sending 48MB.
+ */
+export const MAX_REQUEST_BYTES = 48 * 1024 * 1024;
 const PROJECT_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 /**
@@ -118,12 +124,12 @@ function send(response, status, value) {
   response.end(JSON.stringify(value));
 }
 
-async function readJson(request) {
+async function readJson(request, maxRequestBytes) {
   const chunks = [];
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > MAX_REQUEST_BYTES) throw new Error('Request body exceeds the broker limit.');
+    if (size > maxRequestBytes) throw new Error('Request body exceeds the broker limit.');
     chunks.push(chunk);
   }
   if (!chunks.length) return {};
@@ -152,7 +158,7 @@ export function assertBrokerCoversRegistry(registry) {
   return index;
 }
 
-export function createAgentBroker({ service, registry, secret, clock = () => new Date() }) {
+export function createAgentBroker({ service, registry, secret, clock = () => new Date(), maxRequestBytes = MAX_REQUEST_BYTES }) {
   const index = assertBrokerCoversRegistry(registry);
   const nonces = new GrantNonceRegistry();
   const spent = new Map();
@@ -209,7 +215,7 @@ export function createAgentBroker({ service, registry, secret, clock = () => new
 
     let body;
     try {
-      body = await readJson(request);
+      body = await readJson(request, maxRequestBytes);
     } catch (error) {
       return send(response, 400, { error: 'invalid-request', message: error.message });
     }

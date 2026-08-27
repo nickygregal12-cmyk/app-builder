@@ -53,6 +53,30 @@ export const MUTATION_TARGETS = Object.freeze([
     ],
   },
   {
+    id: 'control-plane-core',
+    file: 'packages/control-plane/src/index.js',
+    why: 'ChangeSet scope enforcement, the loop-guard budgets and the policy action check. AGENTS.md principles 13 and 15 are these functions.',
+    tests: [
+      'tooling/control-plane.test.mjs',
+      'tooling/change-set-scope.property.test.mjs',
+      'tooling/ledger-projection.test.mjs',
+    ],
+    equivalent: [
+      {
+        id: 'index:129:or-to-and#1',
+        why: 'Defence in depth rather than a hole: a single-leading-slash path that slipped this disjunct still splits into an empty first segment, and the segment check below refuses it. The drive-letter and UNC spellings are separate disjuncts and are unaffected.',
+      },
+      {
+        id: 'index:130:or-to-and#1',
+        why: 'Same shape: a trailing separator leaves an empty last segment and a doubled separator leaves an empty middle one, so the segment check below refuses both whichever way this line is joined.',
+      },
+      {
+        id: 'index:140:or-to-and#1',
+        why: 'The scope-rule twin of the same redundancy. A rule that slips this disjunct is refused a few lines later as an unsafe scope rule instead of an invalid one - a different message for the same refusal.',
+      },
+    ],
+  },
+  {
     id: 'data-change',
     file: 'packages/control-plane/src/data-change.js',
     why: 'Stage Q12 production data-change refusals: destructive classification, environment identity, recovery evidence and approval.',

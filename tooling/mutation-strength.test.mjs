@@ -31,9 +31,13 @@ test('the registry names real files, and real tests that actually import them', 
     for (const testFile of target.tests) {
       assert.ok(fs.existsSync(testFile), `${target.id} names a test file that does not exist: ${testFile}`);
       const text = fs.readFileSync(testFile, 'utf8');
-      assert.match(
-        text,
-        new RegExp(`control-plane/(src/)?${specifier}`),
+      // `index.js` is imported as the package itself rather than by file name, which is the same
+      // module reached by its other spelling.
+      const spellings = specifier === 'index'
+        ? [/@app-builder\/control-plane'/, /control-plane\/src\/index\.js/]
+        : [new RegExp(`control-plane/(src/)?${specifier}`)];
+      assert.ok(
+        spellings.some((pattern) => pattern.test(text)),
         `${testFile} is declared as covering ${target.file} but does not import it`,
       );
     }

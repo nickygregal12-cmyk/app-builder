@@ -74,6 +74,21 @@ packet.
 the record that explains it, opening from a `file://` URL with no script and no service. A review a
 second person cannot reach is not an independent review; it is a private one.
 
+### Recorded finding: reaching that view still costs a terminal
+
+The comparison surface is right and the evidence is durable, but the route to both still runs through
+a shell: clone or SSH, `npm install`, `npm run acceptance:visual-candidates`,
+`npm run review:visual-candidates`, then a localhost URL. The owner is the reviewer, and the reviewer
+is the one gate this phase waits on, so the cost of reaching the view is part of why the verdict stays
+open.
+
+The eventual shape is an ordinary secure browser surface: open it, pick the candidate or site, desktop
+and mobile evidence directly there, Pass / Rework / Reject, verdict recorded durably. That is a
+product-surface change and it is **not** in scope for the runtime lane; it is recorded here so the cost
+is written down where the gate lives rather than rediscovered. It does not change this phase's state —
+the verdict is outstanding for the reason it has always been outstanding, and no amount of review
+ergonomics closes that.
+
 ## Exit gate
 
 Phase 4D does not close until the factory can prove, on a real business rather than a synthetic

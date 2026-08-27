@@ -263,7 +263,10 @@ the code; it is not restated here. `config/factory-status.json` holds the machin
 - ◐ **Phase 4.5** — pre-agent hardening, landed ahead of its place in the sequence: the execution
   sandbox and its rootless implementation, secret/network/resource restrictions, the supervised attempt
   lifecycle, the pinned content-addressed task image with bounded public egress, and the deny-by-default
-  capability broker. **No role is `runtimeReady`**; items 6–7 above are what that costs.
+  capability broker. The registered specialist pipeline is now executable end to end with a
+  deterministic stand-in where the model will be (`npm run rehearse:pipeline`) — a rehearsal of the
+  control plane, not a build, not a runtime proof and not product evidence. **No role is
+  `runtimeReady`**; items 6–7 above are what that costs.
 
 ---
 

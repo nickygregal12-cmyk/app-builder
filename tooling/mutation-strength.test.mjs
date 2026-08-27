@@ -35,7 +35,7 @@ test('the registry names real files, and real tests that actually import them', 
       // module reached by its other spelling.
       const spellings = specifier === 'index'
         ? [/@app-builder\/control-plane'/, /control-plane\/src\/index\.js/]
-        : [new RegExp(`control-plane/(src/)?${specifier}`)];
+        : [new RegExp(`control-plane/(src/)?${specifier}`), new RegExp(`service/src/${specifier}\\.js`)];
       assert.ok(
         spellings.some((pattern) => pattern.test(text)),
         `${testFile} is declared as covering ${target.file} but does not import it`,

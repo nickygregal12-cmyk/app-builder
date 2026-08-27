@@ -15,6 +15,18 @@
  */
 export const MUTATION_TARGETS = Object.freeze([
   {
+    id: 'execution-environment',
+    file: 'packages/control-plane/src/execution-environment.js',
+    why: 'The isolation shape itself: which host paths a sandbox may never mount, whether its root is read-only, which of its paths are writable, its uid/gid translation and whether it can reach a network at all. The broker removes a task\'s authority; this removes its route.',
+    tests: [
+      'tooling/agent-sandbox.test.mjs',
+      'tooling/task-image-egress.test.mjs',
+      'tooling/task-image-host-proof-regression.test.mjs',
+      'tooling/model-canary.test.mjs',
+    ],
+    equivalent: [],
+  },
+  {
     id: 'capabilities',
     file: 'packages/control-plane/src/capabilities.js',
     why: 'Grant verification, environment scoping, approval and the attempt budget. Everything an agent has to get past to mutate anything.',

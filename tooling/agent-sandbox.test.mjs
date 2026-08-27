@@ -77,7 +77,29 @@ test('a task sandbox shares no host namespace and publishes no port', () => {
   assert.equal(environment.security.noNewPrivileges, true);
   assert.deepEqual(environment.security.capabilitiesDropped, ['ALL']);
   assert.deepEqual(environment.security.capabilitiesAdded, []);
+  // The two invariants nothing else states. A writable root lets a task replace
+  // the interpreter the next attempt runs; a workspace that outlives its
+  // attempt is durable state the ledger does not know about.
+  assert.equal(environment.security.readOnlyRootFilesystem, true);
+  assert.equal(environment.workspace.disposable, true);
   for (const [key, value] of Object.entries(environment.limits)) assert.ok(value > 0, `${key} must be bounded`);
+  // `/tmp` is a tmpfs rather than a limit, so `assertSpecIsolation`'s limit
+  // check never sees it and the only thing bounding it is `positive`.
+  assert.ok(environment.tmpfs.every((entry) => entry.sizeMb > 0), 'every tmpfs is bounded');
+});
+
+test('a limit that is not a positive number is refused where it is read, not where it lands', () => {
+  // `tmpfsMb` is the one `positive` call whose result no later check re-reads,
+  // so it is where the guard has to hold on its own. Zero, a non-number and an
+  // unbounded number are three separate ways past a single `||`.
+  for (const tmpfsMb of [0, -1, 'not-a-number', Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.throws(() => spec({ limits: { tmpfsMb } }), /tmpfsMb must be a positive number/, String(tmpfsMb));
+  }
+  // And the limits proper are refused twice over: by `positive` as they are
+  // built, naming the field, and by `assertSpecIsolation` if a spec arrives
+  // carrying one anyway.
+  assert.throws(() => spec({ limits: { cpus: 0 } }), /cpus must be a positive number/);
+  assert.throws(() => spec({ limits: { memoryMb: Number.NaN } }), /memoryMb must be a positive number/);
 });
 
 test('the only Factory reach is one socket, never a network origin', () => {
@@ -122,6 +144,8 @@ test('every widening of the spec is refused, not warned about', () => {
     [{ security: { ...base.security, capabilitiesAdded: ['NET_ADMIN'] } }, /added capabilities/],
     [{ network: { ...base.network, publishedPorts: [{ host: 4310, container: 4310 }] } }, /publishes no port/],
     [{ limits: { ...base.limits, pidsMax: 0 } }, /must be a positive bound/],
+    [{ security: { ...base.security, readOnlyRootFilesystem: false } }, /root filesystem must be read-only/],
+    [{ workspace: { ...base.workspace, disposable: false } }, /workspace must be disposable/],
     [{ factoryAccess: { ...base.factoryAccess, transport: 'http' } }, /never a network origin/],
   ];
   for (const [patch, pattern] of widenings) {
@@ -134,12 +158,92 @@ test('a mount that would hand the task the host is refused', () => {
   for (const source of ['/var/run/docker.sock', '/run/podman/podman.sock', '/srv/app-builder/state', '/etc/app-builder', '/']) {
     assert.throws(
       () => assertSpecIsolation({ ...base, mounts: [...base.mounts, { source, target: '/mnt/host', mode: 'rw' }] }),
-      /would hand the task|host root/,
+      // One message, including for the host root: `/` is an ordinary entry in
+      // the forbidden list and is matched exactly, so an alternative spelling
+      // of the same refusal would mean a second branch deciding it.
+      new RegExp(`mount of ${source.replace('/', '\\/')}.* would hand the task`),
       source,
     );
   }
   assert.throws(() => assertSpecIsolation({ ...base, mounts: [...base.mounts, { source: '/srv/app-builder/../../etc', target: '/mnt/x', mode: 'rw' }] }), /parent-directory/);
   assert.ok(FORBIDDEN_MOUNT_SOURCES.includes('/var/run/docker.sock'));
+
+  // A forbidden directory forbids what is under it. Only the exact paths were
+  // exercised, so the prefix half of that comparison was untested — and the
+  // interesting sources are exactly the ones beneath a directory rather than
+  // the directory itself.
+  for (const source of ['/etc/app-builder/agent-boundary.json', '/srv/app-builder/state/events.jsonl', '/dev/kmsg', '/proc/sys/kernel']) {
+    assert.throws(
+      () => assertSpecIsolation({ ...base, mounts: [...base.mounts, { source, target: '/mnt/host', mode: 'ro' }] }),
+      /would hand the task/,
+      source,
+    );
+  }
+  // `/` forbids the host root and nothing else: it must not turn every
+  // absolute path into a forbidden one.
+  assert.doesNotThrow(() => assertSpecIsolation({ ...base, mounts: [...base.mounts, { source: '/srv/app-builder-attempts/attempt-1/extra', target: '/mnt/extra', mode: 'ro' }] }));
+});
+
+test('the deliberate handles are exempt as pairs, so a target cannot be borrowed', () => {
+  const base = spec({ grantPath: '/run/app-builder/grant-attempt-1', modelSocketPath: '/run/app-builder/model-attempt-1.sock' });
+  const forbidden = '/etc/shadow';
+
+  // Each exemption is a (target, source) pair. Matching the target alone is
+  // how a hostile edit would smuggle a host file in under a handle's name, and
+  // matching the source alone would let a handle be mounted anywhere.
+  const borrowed = [
+    { target: base.factoryAccess.containerSocketPath, source: forbidden },
+    { target: base.factoryAccess.containerGrantPath, source: forbidden },
+    { target: base.modelAccess.containerSocketPath, source: forbidden },
+  ];
+  for (const mount of borrowed) {
+    assert.throws(
+      () => assertSpecIsolation({ ...base, mounts: [...base.mounts, { ...mount, mode: 'ro' }] }),
+      /would hand the task/,
+      mount.target,
+    );
+  }
+
+  // A spec with no grant file exempts no grant target, and one with no model
+  // lane exempts no model target — whether the lane is absent as `null` or
+  // missing from the spec altogether.
+  const noGrant = spec();
+  assert.equal(noGrant.factoryAccess.grantFile, null);
+  assert.throws(
+    () => assertSpecIsolation({ ...noGrant, mounts: [...noGrant.mounts, { source: forbidden, target: noGrant.factoryAccess.containerGrantPath, mode: 'ro' }] }),
+    /would hand the task/,
+  );
+  assert.equal(noGrant.modelAccess, null);
+  const modelTarget = base.modelAccess.containerSocketPath;
+  assert.throws(
+    () => assertSpecIsolation({ ...noGrant, mounts: [...noGrant.mounts, { source: forbidden, target: modelTarget, mode: 'ro' }] }),
+    /would hand the task/,
+  );
+  const { modelAccess, ...withoutLane } = noGrant;
+  assert.equal(modelAccess, null);
+  assert.throws(
+    () => assertSpecIsolation({ ...withoutLane, mounts: [...noGrant.mounts, { source: forbidden, target: modelTarget, mode: 'ro' }] }),
+    /would hand the task/,
+  );
+
+  // The exemption has to do real work in both directions, and the only inputs
+  // that show it are handles whose own source the forbidden list would
+  // otherwise catch. `/etc/app-builder` is the host's own configuration
+  // directory and is forbidden as a mount, so a gateway socket placed there is
+  // allowed at its own target and refused at any other.
+  const hosted = spec({ modelSocketPath: '/etc/app-builder/model.sock' });
+  assert.doesNotThrow(() => assertSpecIsolation(hosted));
+  assert.throws(
+    () => assertSpecIsolation({ ...hosted, mounts: [...hosted.mounts, { source: '/etc/app-builder/model.sock', target: '/mnt/model', mode: 'rw' }] }),
+    /would hand the task/,
+  );
+
+  // The real pairs still pass, and the grant still has to be read-only.
+  assert.doesNotThrow(() => assertSpecIsolation(base));
+  assert.throws(
+    () => assertSpecIsolation({ ...base, mounts: base.mounts.map((mount) => (mount.target === base.factoryAccess.containerGrantPath ? { ...mount, mode: 'rw' } : mount)) }),
+    /grant must be mounted read-only/,
+  );
 });
 
 test('a role gets the public internet only when its policy allows it outright', () => {

@@ -738,7 +738,21 @@ test('with the kill switch off, the gateway refuses the call from inside the san
   assert.equal(report.record.usage.costGbp, 0);
   assert.equal(report.ok, false);
   assert.equal(report.evidence.satisfied, false);
-  assert.equal(report.checks.find((check) => check.id === 'a-real-model-call-occurred').status, 'fail');
+
+  // Two refusals reach the same place by different routes, and which one wins
+  // is a matter of timing rather than of design. Either the worker asked the
+  // gateway and was refused — in which case the boundary grade exists and says
+  // so — or the switch watcher cancelled the attempt before it got that far,
+  // in which case there is no result to grade at all. Asserting the first was
+  // asserting one machine's scheduling: under load the second happens, the
+  // graded checks are absent, and the test failed reading a property of
+  // `undefined` while the boundary it exists to prove was intact.
+  const graded = report.checks.find((check) => check.id === 'a-real-model-call-occurred');
+  if (graded) assert.equal(graded.status, 'fail', 'a call cannot have occurred with the switch off');
+  else assert.equal(report.attempt.cancelledByKillSwitch, true, 'no boundary grade is only acceptable when the attempt was cancelled first');
+
+  // Disposal is on both routes, so it is asserted unconditionally: whichever
+  // refusal fired, the sandbox goes away and leaves nothing behind.
   assert.equal(report.checks.find((check) => check.id === 'sandbox-disposed-with-no-orphan').status, 'pass');
 });
 

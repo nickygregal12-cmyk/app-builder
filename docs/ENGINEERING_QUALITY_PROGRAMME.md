@@ -349,6 +349,15 @@ survivor and leave the file byte-identical afterwards.
 tests inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather than as runs with
 their own verdict. The child environment is now sanitised.
 
+**Nor of the machine it ran on.** The same failure in a different disguise cost a red `main`: the
+model-canary kill-switch test asserted a check that only exists when the worker reaches the gateway
+before the switch watcher cancels its attempt. Both routes refuse the call, which is the property
+under test, but only one of them produces a boundary grade — so on a loaded runner the assertion read
+a property of `undefined` while the boundary it exists to prove was intact. It now asserts what holds
+on both routes, and requires the absence of the grade to be explained by a recorded cancellation
+rather than tolerated. Reproduced deterministically with `node --test --test-concurrency=24`, which is
+worth remembering as the way to make a scheduling-dependent test admit it.
+
 **The last open target is closed.** `packages/control-plane/src/execution-environment.js` is in the
 registry: 55 generated, 55 killed, no recorded equivalences. Remeasured after the hosted task-image
 work it had 11 survivors rather than the 17 recorded earlier — that work killed six on its way past

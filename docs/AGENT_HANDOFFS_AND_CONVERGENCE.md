@@ -129,6 +129,46 @@ Rules the engine enforces:
 The loop therefore stops for exactly one of three deterministic reasons: it converged, a hard budget
 was exhausted, or it is blocked on something no role in the pipeline can resolve.
 
+## Where a gate result comes from
+
+Gate results used to be supplied by callers, which meant every one of them was `not-run` and the
+engine's refusal was the only thing the convergence contract had ever demonstrated. The translation
+from a producer's artifact to a gate status now lives in one place —
+`packages/control-plane/src/gate-evidence.js`, reading the registry in `config/gate-producers.json` —
+and `npm run gates:evidence` runs it over a real build of the frozen nbm intake.
+
+The registry names, per deterministic check, the real producer that answers it, the artifact that
+producer leaves, the field carrying that artifact's build reference, and which of the producer's
+findings fail the check. Four checks are registered today against three producers: the launch
+readiness audit answers `fact-provenance-check`, the asset-rights audit answers `asset-rights-check`,
+and the compiled DesignLint report answers both `design-lint` and `design-system-lint`. Ten declared
+checks have no producer and are listed as such.
+
+What the resolver refuses, all of it as `not-run` rather than a pass:
+
+- an artifact that is absent, unreadable, or has no findings array;
+- an artifact recording no build reference, so nothing ties it to a build;
+- an artifact whose build reference is not this build's — which is the same refusal as staleness;
+- an artifact produced for another project, refused before its contents are read, so another
+  project's defect is never this build's failure either;
+- a check no producer answers, and a gate that declares no deterministic check at all.
+
+Two things deterministic evidence may never buy. A gate declaring `requiresIndependentReviewer`
+stays `not-run` until a verdict exists however many of its checks pass, because rule 17 is not
+something evidence can settle. And a gate whose `requiredEvidence` is absent stays `not-run` too:
+there is nothing for the reviewer to look at.
+
+On the current nbm build, `provenance` is a genuine deterministic **pass** — the first required gate
+to reach a real status from real evidence — `design-system` and `visual` have every declared check
+answered and wait only on a verdict, and the remaining fourteen are `not-run`. Convergence is
+`false` with `gate-not-run`, which is correct and is expected to stay that way until the Phase 6
+quality programme gives the other checks producers.
+
+A pass over nothing is still a pass and hides that, so a check may declare the field where its
+producer records how many subjects it examined. The report prints it beside the status: the
+asset-rights pass on the nbm build is `over 0 assets published by this build`, which is true, weak,
+and visible.
+
 ## Relationship to spec-driven prior art
 
 The specify → plan → tasks → implement ordering, cross-artifact consistency analysis and the
@@ -158,7 +198,9 @@ makes a file outside `allowedFiles` a ChangeSet scope escape. And a stage record
 artifacts are no longer present is `stage-evidence-missing:*` — a hole in the record to be refused,
 not resumed onto.
 
-What is still planned is the rest of the wiring: gate results are supplied by callers today, and the
-Phase 6 quality programme is what makes every gate produce its own deterministic evidence. The
-rehearsal supplies none, which is why it always reports `converged: false` with `gate-not-run` even
-after promoting every stage.
+`resolveGateResults` and the producer registry are implemented and covered by
+`tooling/gate-evidence.test.mjs`; `npm run gates:evidence` composes them over a real build. What is
+still planned is the rest of the producers — ten declared checks have none, and the Phase 6 quality
+programme is what gives them one. The rehearsal supplies no gate results at all, which is why it
+still reports `converged: false` with `gate-not-run` after promoting every stage: it produces
+artifact identities rather than a build, and there is nothing for a producer to read.

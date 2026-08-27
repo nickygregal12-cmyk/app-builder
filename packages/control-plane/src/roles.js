@@ -134,8 +134,17 @@ export function evaluateHandoff(input, now = new Date().toISOString()) {
 
   const produced = referenceList(input?.producedArtifacts, 'Handoff producedArtifacts');
   const producedKinds = new Set(produced.map((entry) => entry.kind));
-  for (const kind of uniqueTextArray(stage.produces ?? [], 'Handoff stage produces')) {
+  const declaredKinds = uniqueTextArray(stage.produces ?? [], 'Handoff stage produces');
+  for (const kind of declaredKinds) {
     if (!producedKinds.has(kind)) blockers.push(`missing-artifact:${kind}`);
+  }
+  // The other half of the same rule. `produces` is a stage's declared output
+  // scope exactly as `allowedFiles` is a ChangeSet's declared file scope, and an
+  // artifact outside it would carry this stage's authority without any role
+  // having been given the right to write it here. Scope escapes fail closed.
+  const declared = new Set(declaredKinds);
+  for (const kind of producedKinds) {
+    if (!declared.has(kind)) blockers.push(`undeclared-artifact:${kind}`);
   }
 
   const availableKinds = new Set([

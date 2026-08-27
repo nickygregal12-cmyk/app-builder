@@ -441,6 +441,71 @@ not be read as one.
 - **no provider credential, schedule or autonomous loop is introduced.**
   `config/factory-status.json` is unchanged.
 
+### Validated pipeline-rehearsal milestone — 2026-08-27
+
+Every specialist primitive had a unit test and nothing composed them, so
+"intake -> research -> ... -> release, with independent review at every stage"
+was an architecture rather than something that had happened.
+`npm run rehearse:pipeline` runs it. It walks a registered pipeline from
+`config/agent-pipelines.json` with the real role registry, the real policy and
+capability projection, the real signed grant, the real handoff and convergence
+logic and the real budget guards. The only stand-in is the specialist itself —
+`tooling/lib/rehearsal-specialist.mjs`, a pure function producing artifact
+identities rather than artifact content, because content is what a model would
+contribute and inventing plausible content would make the evidence read like a
+build that happened.
+
+What one run establishes, on the `marketing-site` pipeline:
+
+- the pipeline is selected by project class, and the stage that may run next is
+  derived from durable artifacts and promoted handoffs rather than from position
+  or from a transcript;
+- all 23 stages run, each in its **own attempt** with its own attempt id, its own
+  signed grant fingerprint and its own bounded context packet — 23 disposable
+  sessions, not one conversation carried through a build;
+- every packet withholds artifact kinds the role does not declare it reads
+  (between 8 and 30 kinds withheld per stage), and no packet exceeds its role
+  ceiling;
+- capability reach is projected from the role's policy and mutation scopes, so a
+  reader role gets strictly fewer operations than `frontend-implementation` and
+  declares no ChangeSet scope;
+- the stub always claims to be finished and that claim never advances anything.
+
+And what it refuses. Six of the eight scenarios end in a refusal:
+a human-reviewed stage that has no human (`human-approval-required`); a stage
+whose declared input does not exist (`missing-prerequisite:*`, and the pipeline
+does not step over it); a verdict from a reviewer the pipeline did not register
+(`wrong-reviewer:*`); a specialist attempting to review its own stage or execute
+a stage it does not own (both refused at construction); an artifact written
+outside the stage's declared output scope (`undeclared-artifact:*`); and a
+reviewer that keeps returning work to its author (`no-progress-limit-reached`).
+A rework verdict routes backwards to the role that owns the fix and invalidates
+every stage after it; a verdict naming a role no stage owns stops rather than
+guessing.
+
+Session loss and resume is not a feature of the rehearsal but its only mode:
+every step re-reads the ledger and re-derives where the project is, so a second
+engine over the same state root *is* a restart. One scenario kills an attempt
+mid-flight, reconciles the orphan as `lost` on the next start, resumes from the
+last checkpoint, and finishes with a completed-stage list and artifact identities
+byte-identical to an uninterrupted run.
+
+It closes nothing. Every stage promoted is still `converged: false` with
+`gate-not-run`, because the rehearsal runs no deterministic gate; the durable
+task closes `blocked` with a named stop reason and never `succeeded`; no attempt
+is given a model socket, so nothing in the run could reach a provider even if the
+switch were on — and the command refuses to start while it is. `task-baseline`
+still has no digest, and the report says so as an operator action rather than
+inventing one. This is a rehearsal of the control plane: **not a build, not a
+runtime proof, and not product evidence.** The attempt lifecycle against a real
+isolated process remains `npm run runtime:canary`, and the hosted boundary
+remains `ops/hetzner/verify-agent-boundary.sh`.
+
+Coverage is `tooling/pipeline-rehearsal.test.mjs`, which asserts the refusals
+above, validates every verdict, handoff, checkpoint and convergence report the
+run writes against its registered schema, and fails if the scenario set ever
+becomes mostly happy paths.
+
 ### Recommended next bounded milestone: one low-risk real model canary
 
 Everything above is deliberately provider-free. The next milestone is the

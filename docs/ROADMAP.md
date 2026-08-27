@@ -1071,6 +1071,14 @@ deny-by-default evidence list a role must carry, and `packages/control-plane/src
 refuses a promotion without it. The requirements still unmet for every role are the pinned image's host
 build digest, the hosted egress attestation and one bounded real model-powered attempt.
 
+Landed since: the registered specialist pipeline is now executable end to end with a deterministic
+stand-in where the model will be (`npm run rehearse:pipeline`). It composes the primitives that
+already existed rather than adding an orchestrator, and it needed exactly one new control-plane
+function — `projectPipelineProgress`, which resolves the next stage from durable artifacts and
+promoted handoffs rather than from position. It promotes nothing, runs no gate, makes no provider
+call and is not product evidence; `docs/AGENT_RUNTIME.md` records what it does and does not
+establish.
+
 Still outstanding here:
 
 - the pinned task image's host build digest, and the hosted egress attestation;

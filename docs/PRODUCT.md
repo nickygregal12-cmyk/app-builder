@@ -43,4 +43,4 @@ For public websites, success also means the chosen output architecture is approp
 
 The Builder Console should become a real control surface over durable factory state: source intake, visual preview/editing, design variants, assets, environments, build progress, checkpoints, quality findings and deployment approvals all operate through the factory service rather than hidden browser-only state.
 
-The best-in-class capability backlog and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`. The ordered implementation plan lives in `docs/MASTER_PLAN.md` and `docs/ROADMAP.md`.
+The best-in-class capability backlog and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`. What "finished" means lives in `docs/MASTER_PLAN.md`; the order it is reached in lives in `docs/ROADMAP.md`.

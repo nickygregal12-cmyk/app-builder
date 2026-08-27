@@ -178,8 +178,8 @@ is runtime-ready, no loop is scheduled, and no phase claim advances.
 
 The broker removes a task's *authority* to invoke an internal operation. It does
 not by itself remove the *route*: a process sharing the host network namespace
-can open a socket to `127.0.0.1:4310` whatever the broker thinks. The second
-half of #55 is therefore an isolation contract.
+can open a socket to `127.0.0.1:4310` whatever the broker thinks. Removing the
+authority is therefore only half of it; the other half is an isolation contract.
 
 `packages/control-plane/src/execution-environment.js` defines it, provider-
 neutrally. An attempt runs rootless, with its own network, PID, IPC, UTS and

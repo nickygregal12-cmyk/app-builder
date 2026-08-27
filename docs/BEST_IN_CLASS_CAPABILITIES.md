@@ -59,22 +59,13 @@ Adopt only if it demonstrably reduces transport boilerplate while keeping `packa
 
 ## 3. Generated-product architecture — P1/P2
 
-### 3.1 Second static/content-oriented template — 10/10
+### 3.1 Second static/content-oriented template — 10/10 ✅ delivered
 
-One React/Vite SPA template is not the ideal output for every project class.
-
-Plan:
-- preserve the application-oriented React template for SaaS, consumer, internal-tool and AI-app modes;
-- add a genuinely different static/content-oriented template for marketing and content-heavy sites after the current composition contract is stable;
-- evaluate Astro first because static HTML is the default while React islands can still handle interactive sections;
-- prove the template contract with the same Manifest/PageSpec/SectionSpec inputs and independent acceptance gates;
-- keep output portable and host-adapter-neutral.
-
-Expected benefit:
-- better crawlability and page-level metadata;
-- smaller default JS payload;
-- easier build-time structured data/social assets/search;
-- clearer separation between content sites and application shells.
+Delivered as Phase 4.2A. The application-oriented React template stays for SaaS, consumer,
+internal-tool and AI-app modes; `templates/astro-static-content` serves marketing and content-heavy
+sites. Renderer selection is deterministic and fail-closed, and the enduring rule it proved is that the
+template contract must be satisfiable by more than one renderer — a single-renderer assumption is
+indistinguishable from no contract at all.
 
 ### 3.2 Static search with Pagefind — 8.5/10
 

@@ -39,6 +39,7 @@ NETWORK="${APP_BUILDER_EGRESS_NETWORK:-app-builder-egress}"
 SUBNET="${APP_BUILDER_EGRESS_SUBNET:-10.89.240.0/24}"
 ANCHOR_IMAGE="${APP_BUILDER_ANCHOR_IMAGE:-docker.io/library/alpine:3.21}"
 RULES="/etc/app-builder/egress.nft"
+ATTESTATION="${APP_BUILDER_EGRESS_ATTESTATION_FILE:-/etc/app-builder/egress-profile.json}"
 
 as_runtime() {
   ( cd /tmp && runuser -u "$RUNTIME_USER" -- env HOME="/home/${RUNTIME_USER}" PATH="$RUNTIME_PATH" XDG_RUNTIME_DIR="/run/user/$(id -u "$RUNTIME_USER")" "$@" )
@@ -46,6 +47,12 @@ as_runtime() {
 
 printf '== App Builder egress network install ==\n'
 printf 'host: %s\ndate: %s\n\n' "$(hostname)" "$(date -Is)"
+
+# Reconfiguring any part of the egress profile invalidates the previous proof.
+# Do this before even checking prerequisites so a failed or interrupted install
+# cannot leave an older attestation authorising a network state we just tried to
+# replace. Only a later passing verifier may restore durable evidence.
+rm -f "$ATTESTATION"
 
 as_runtime podman --version >/dev/null 2>&1 || { printf 'FAIL  rootless podman is not callable as %s\n' "$RUNTIME_USER" >&2; exit 1; }
 

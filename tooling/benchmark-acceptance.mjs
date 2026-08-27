@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { scoreBenchmark } from '../packages/control-plane/src/index.js';
+import { lintScopeIsReal, testsWereExecuted } from './lib/generated-gate-vacuity.mjs';
 
 const config = JSON.parse(fs.readFileSync('config/factory-benchmarks.json', 'utf8'));
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -14,10 +15,16 @@ const canonical = config.requiredProjectTypes.map((type) => {
   return item;
 });
 
-function runNpm(cwd, args) {
+function runNpm(cwd, args, { capture = false } = {}) {
   const started = Date.now();
-  const result = spawnSync(npm, args, { cwd, stdio: 'inherit', env: process.env });
-  return { ok: result.status === 0, durationMs: Date.now() - started, status: result.status };
+  const result = spawnSync(npm, args, { cwd, stdio: capture ? 'pipe' : 'inherit', encoding: 'utf8', env: process.env });
+  if (capture) process.stdout.write(result.stdout ?? '');
+  return {
+    ok: result.status === 0,
+    durationMs: Date.now() - started,
+    status: result.status,
+    output: capture ? `${result.stdout ?? ''}${result.stderr ?? ''}` : '',
+  };
 }
 
 const report = {
@@ -40,6 +47,11 @@ for (const definition of canonical) {
     build: false,
     portable: false,
     upgradeInventory: false,
+    // A green `check` is not evidence that the check did anything. These two ask the question the
+    // generated-app lint defect answered the hard way: could this gate pass while exercising
+    // nothing?
+    testsExecuted: false,
+    lintScope: false,
   };
   let durationMs = 0;
 
@@ -57,10 +69,24 @@ for (const definition of canonical) {
     const install = runNpm(directory, ['install', '--no-audit', '--no-fund']);
     durationMs += install.durationMs;
     gates.install = install.ok;
+    const lintScope = lintScopeIsReal(directory, pkg.scripts?.lint);
+    gates.lintScope = lintScope.ok;
+    if (!lintScope.ok) console.log(`  lint scope: ${lintScope.reason}`);
+
     if (install.ok) {
       const check = runNpm(directory, ['run', 'check']);
       durationMs += check.durationMs;
       gates.check = check.ok;
+
+      // Run the project's own tests again, this time reading what they reported. `node --test`
+      // against a glob that matches nothing exits 0, so the exit status of `check` cannot tell a
+      // passing suite from an absent one.
+      const tests = runNpm(directory, ['test'], { capture: true });
+      durationMs += tests.durationMs;
+      const executed = testsWereExecuted(tests.output);
+      gates.testsExecuted = tests.ok && executed.ok;
+      if (!gates.testsExecuted) console.log(`  tests: ${executed.reason ?? `the test script exited ${tests.status}`}`);
+
       const build = runNpm(directory, ['run', 'build']);
       durationMs += build.durationMs;
       gates.build = build.ok;

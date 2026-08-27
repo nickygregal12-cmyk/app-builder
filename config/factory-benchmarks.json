@@ -16,7 +16,9 @@
       "check": 2,
       "build": 2,
       "portable": 2,
-      "upgradeInventory": 1
+      "upgradeInventory": 1,
+      "testsExecuted": 1,
+      "lintScope": 1
     },
     "releaseQualityFuture": {
       "generate": 1,
@@ -29,7 +31,9 @@
       "security": 2,
       "accessibility": 1,
       "performance": 1,
-      "designContract": 1
+      "designContract": 1,
+      "testsExecuted": 1,
+      "lintScope": 1
     }
   },
   "cases": [

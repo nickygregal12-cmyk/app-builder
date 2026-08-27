@@ -16,6 +16,8 @@ Two rules govern everything below.
    can perform must not be paid for with model tokens.
 2. **A gate earns its place by catching something.** Adopt a tool when it removes repeated work or
    closes a correctness/security gap. Noisy heuristic output stays advisory until it is baselined.
+   And a gate must be shown failing before its passing means anything — see
+   [Could this gate pass without exercising anything?](#could-this-gate-pass-without-exercising-anything).
 
 ## Tool responsibility map
 
@@ -602,6 +604,41 @@ including the ones that lie: a restore that returns the rows but not the isolati
 fields awaiting a deployment coupling to enforce them against, and no runtime dispatches a mutation
 through this contract yet — nothing autonomously mutates a database today, which is why that is a
 sequencing item rather than a gap. The contract and its evidence are what had to exist first.
+
+## Could this gate pass without exercising anything?
+
+A gate that exercises nothing and a gate that passes look identical from outside. That is not a
+hypothetical: `npm run lint` in a generated app was green for a while because it was linting zero
+files, and nothing noticed. So every gate here carries a second question beside "does it pass".
+
+The three gates a generated repository ships were measured against the six canonical acceptance apps
+and answer differently:
+
+| gate | self-guarding? |
+| --- | --- |
+| `typecheck` | yes — `tsc` with no inputs is `error TS18003` and exit code 2 |
+| `lint` | today — `oxlint` with no matching path exits 1 with "No files found to lint" |
+| `test` | **no** — `node --test` against a glob that matches nothing exits 0 and reports `# tests 0` |
+
+`lint`'s answer is the uncomfortable one. It self-guards because of the behaviour of the current
+release of somebody else's tool, and that behaviour is precisely what was different when this defect
+last shipped. So both are checked in `tooling/lib/generated-gate-vacuity.mjs` and enforced as two
+benchmark gates in `npm run benchmark:acceptance`:
+
+- **`testsExecuted`** reads the project's own TAP summary rather than its exit status. Zero tests is
+  a failure, and so is a run that printed no summary at all — a runner that did not report is as
+  unproven as a run of nothing.
+- **`lintScope`** reads the paths out of the project's own `lint` script and counts lintable files
+  under each one, so the answer does not depend on a linter's release notes. Per path rather than in
+  total: a script naming `src` and `tooling` that finds files in only one of them has had its scope
+  silently halved while the total stayed positive, which is the shape the original defect took.
+
+Both were proven by planting the defect in a real generated app rather than only in a fixture:
+deleting `tooling/project.test.mjs` from the content-site app failed `content-canonical` on
+`testsExecuted`, and pointing the marketing-site app's lint script at its `docs/` directory failed
+`marketing-basic` on `lintScope`. `tooling/generated-gate-vacuity.test.mjs` covers the same rules
+against planted fixtures inside `npm run check`, including the one that would otherwise pass: an
+empty path among populated ones.
 
 ## Explicit non-adoptions
 

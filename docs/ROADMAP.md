@@ -115,7 +115,7 @@ case, framework rewrites, and anything wanted because it sounds impressive.
 - **Status:** open, and safe to do beside the visual gate.
 - **Why now:** each is cheaper before the surface it guards grows.
 - **Exit evidence:** the stage's own acceptance in `docs/ENGINEERING_QUALITY_PROGRAMME.md` — Q2 curated
-  visual contracts, Q3 component/state preview, Q4 performance/payload budgets, Q5 token enforcement,
+  visual contracts, Q3 component/state preview, Q4 performance/payload budgets,
   Q7 property tests, Q10 consumer assertions, Q12 production data-change safety (required before any
   autonomous mutation of real production data), and the remaining supply-chain hardening.
 - **Blocked by:** nothing. **Next:** they feed Phase 6.

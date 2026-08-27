@@ -333,6 +333,23 @@ inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather tha
 own verdict, so a mutant's fate depended on how the harness happened to be started. The child
 environment is now sanitised. A verdict is not allowed to be a property of its caller.
 
+**The next three targets, measured but not yet closed.** Each was run once, read-only, so the work
+they represent is a number rather than a guess:
+
+| candidate | killed | survived | why it is worth doing |
+| --- | --- | --- | --- |
+| `apps/service/src/agent-broker.js` | 17 | **10** of 27 | `capabilities.js` decides; this is the one place the decision is obeyed. Two survivors are the request-size and grant-header boundaries, and two turn a refusal into an allowance. |
+| `packages/control-plane/src/execution-environment.js` | 41 | **17** of 58 | The isolation shape a hostile task runs inside. The cluster at the mount and network checks is the one that matters: several `&&` chains where each conjunct is a separate way a sandbox stops being one. |
+| `packages/control-plane/src/risk.js` | 13 | **10** of 23 | What buys adversarial review. The survivors are the segment- and word-boundary matchers, which is where over-matching makes every styling change expensive and under-matching lets an auth change through on ordinary review. |
+
+None was added to the registry, because adding a target whose survivors are not closed leaves
+`npm run mutation:strength` red, and a gate that is expected to be red is not a gate. They are the
+next Q8 slice, in that order — the broker first, because it is the enforcement point rather than the
+decision.
+
+The two runtime files sit beside the hosted-runtime lane's own work. The change each needs is
+test-only, but the order matters: close them when that lane is not moving underneath them.
+
 ### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 
 The remaining exposure grows with external skills, MCP, generated repositories, secrets, deployments

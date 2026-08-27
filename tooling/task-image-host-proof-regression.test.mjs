@@ -8,14 +8,17 @@ import { podmanRunArgs } from './lib/sandbox-podman.mjs';
 const IMAGE = `localhost/app-builder-task@sha256:${'a'.repeat(64)}`;
 
 test('rootless Podman maps the host runtime account onto the fixed task uid', () => {
+  // These are neutral fixture paths, not real hosted paths. Ordinary task mounts
+  // deliberately cannot sit below /srv/app-builder because that tree contains
+  // the Factory's durable state; the broker socket is the sole narrow exception.
   const spec = createExecutionEnvironmentSpec({
     attemptId: 'uid-map',
     taskId: 'task',
     projectId: 'project',
     roleId: 'frontend-implementation',
     policyId: 'implementation',
-    workspacePath: '/srv/app-builder/workspaces/uid-map',
-    scratchPath: '/srv/app-builder/workspaces/uid-map-scratch',
+    workspacePath: '/tmp/app-builder-attempts/uid-map/workspace',
+    scratchPath: '/tmp/app-builder-attempts/uid-map/scratch',
     brokerSocketPath: '/srv/app-builder/runtime/agent-broker.sock',
   });
   const args = podmanRunArgs(spec, { image: IMAGE });

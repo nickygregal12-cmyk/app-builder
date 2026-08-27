@@ -178,63 +178,41 @@ directly. Decide by which mechanism can see the token contract, not by conventio
 
 ### Stage Q6 — dead code and orphan detection ✅ delivered (module reachability)
 
-Unused exports, unused dependencies, stale generated modules, abandoned recipes/components and dead
-registry entries all cost context and credit. The plan named `Knip`. Baselining came first, and the
-baseline changed the answer.
+`npm run orphans` (`tooling/orphan-modules.mjs` over `tooling/lib/module-graph.mjs`) runs inside
+`npm run check` and is **blocking from the first day** — a deliberate departure from "non-blocking
+until baselined", because that rule exists to stop a noisy first run teaching everyone to ignore the
+gate, and this first run was empty rather than noisy. A gate that starts at zero has nothing to
+absorb.
 
-**What the measurement found.** A read-only reachability pass over the whole repository, plus a
-dependency-reference pass over every workspace manifest, plus a path-integrity pass over
-`config/*.json`:
-
-| question | finding |
-| --- | --- |
-| factory modules nothing can reach | **0** (`npm run orphans` prints the current module and entry-point counts) |
-| workspace dependencies nothing references | **0** (the only hits were `@types/react` and `@types/react-dom`, which TypeScript resolves implicitly) |
-| registry paths naming a file that does not exist | **1**, `recipes/billing/` in `config/risk-surfaces.json` — a deliberate forward-looking security pattern, not drift |
-
-There was no dead code to clean up. What the pass produced instead was a precise account of how this
-repository reaches a module, which is the part a tool has to get right:
+The enduring part is how this repository reaches a module, which is the part a checker has to get
+right:
 
 1. `import` / `export … from`;
 2. `import()`;
 3. a **path literal** — `tooling/lib/canary-worker.mjs` and `tooling/lib/model-canary-worker.mjs` are
    spawned as subprocesses and imported by nothing;
-4. a **tool's own entry** — `vite.config.ts` is read by Vite, `apps/console/index.html` names the
+4. a **tool's own entry** — `vite.config.ts` is read by Vite, and `apps/console/index.html` names the
    Console's real entry module in a script tag.
 
-A naive checker reports (3) and (4) as dead, plus every `.d.ts` — 23 false positives against zero
-true ones when the baseline was taken.
+A naive checker reports (3) and (4) as dead, plus every `.d.ts`: 23 false positives against zero true
+ones at the baseline. `recipes/`, `templates/` and `adapters/` are out of scope — those files are
+copied into someone else's repository and are reachable from there; `npm run doctor` validates their
+manifests, and reporting them here would report that the factory does not import the code it ships.
 
-**`Knip` was evaluated and not adopted.** It handles most of this, but reaching the same answer here
-needs workspace entries, a production/test split, and configured exceptions for the path-spawned
-workers — configuration that encodes the same four rules the check below encodes directly, with a
-dependency and a config file on top. `AGENTS.md` principle 6 asks that a new package solve a problem
-the platform does not, and the measured problem was zero findings and four reference kinds.
+`tooling/orphan-modules.test.mjs` plants an orphan, plants an orphan that *imports a live module* (the
+case a reference count gets wrong), and plants each of the four reference kinds and each
+false-positive class. It asserts the repository's own zero alongside a floor on how many modules and
+entry points the walk found, because a checker that discovered nothing would also report no orphans.
 
-**Adopted instead:** `npm run orphans` (`tooling/orphan-modules.mjs` over
-`tooling/lib/module-graph.mjs`), inside `npm run check`. It is a pure function of a directory tree,
-so it can be run against planted fixtures rather than only against a clean repository.
+**`Knip` was evaluated and not adopted.** Reaching the same answer with it needs workspace entries, a
+production/test split and configured exceptions for the path-spawned workers — configuration encoding
+the same four rules the check encodes directly, with a dependency and a config file on top. Principle
+6 asks that a new package solve a problem the platform does not, and the measured problem was zero
+findings across four reference kinds.
 
-It is **blocking from the first day**, which is a deliberate departure from "non-blocking until
-baselined": the reason that rule exists is that a noisy first run teaches everyone to ignore the
-gate, and the first run was not noisy — it was empty. A gate that starts at zero has nothing to
-absorb.
-
-`recipes/`, `templates/` and `adapters/` are out of scope. Those files are copied into someone
-else's repository and are reachable from there; `npm run doctor` already validates their manifests,
-and reporting them here would report that the factory does not import the code it ships.
-
-`tooling/orphan-modules.test.mjs` plants an orphan and requires it to be reported, plants an orphan
-that *imports a live module* (the case a reference count gets wrong), and plants each of the four
-reference kinds and each false-positive class and requires them not to be reported. The repository's
-own zero is asserted alongside a floor on how many modules and entry points the walk found, because
-a checker that discovered nothing would also report no orphans.
-
-**Not covered, deliberately:** unused *exports within* a reachable module, and unused dependencies.
-The first needs real symbol resolution to avoid noise; the second measured clean and its only
-findings were implicit type packages, so a gate for it would be noise with no signal behind it.
-Neither is worth a tool today; both become worth revisiting if the reachability answer ever stops
-being zero.
+**Not covered, deliberately:** unused *exports within* a reachable module (needs real symbol
+resolution to avoid noise) and unused dependencies (measured clean; its only hits were implicit type
+packages). Both become worth revisiting if the reachability answer ever stops being zero.
 
 ### Stage Q7 — property-based testing (started; continue selectively)
 
@@ -254,10 +232,10 @@ Extend it only where the input space is broad and an invariant is precise:
 Do not use property tests where a handful of examples is clearer — ordinary UI components do not
 need generated input.
 
-### Stage Q8 — targeted mutation testing ✅ delivered (three safety targets)
+### Stage Q8 — targeted mutation testing ✅ delivered (six safety targets)
 
 Mutation testing answers "would a plausible weakening escape the tests?". It is expensive, so
-`npm run mutation:strength` runs against three modules and nothing else, in its own CI job:
+`npm run mutation:strength` runs against six modules and nothing else, in its own CI job:
 
 | target | why it is worth the runtime |
 | --- | --- |
@@ -269,123 +247,40 @@ Mutation testing answers "would a plausible weakening escape the tests?". It is 
 | `packages/control-plane/src/data-change.js` | Stage Q12 production data-change refusals |
 
 **No tool was adopted.** `tooling/lib/mutation-harness.mjs` is about 160 lines: it generates
-mutations from ten operators, each of which names a *weakening* rather than an arbitrary edit — an
-`&&` that becomes `||`, a comparison that widens by one, a required flag that stops being required —
-runs the target's own tests against each, and restores the file in a `finally`. Sites inside
-comments, strings, template literals and regular expressions are skipped, because a survivor that
-means nothing teaches the reader to skim the list. A mutation runner earns a dependency when it does
-something this cannot; for three files and ten operators, it did not.
+mutations from ten operators, each naming a *weakening* rather than an arbitrary edit — an `&&` that
+becomes `||`, a comparison that widens by one, a required flag that stops being required — runs the
+target's own tests against each, and restores the file in a `finally`. Sites inside comments,
+strings, template literals and regular expressions are skipped, because a survivor that means nothing
+teaches the reader to skim the list. A mutation runner earns a dependency when it does something this
+cannot; for six files and ten operators, it did not.
 
 **There is no score.** A percentage says nothing about severity: eighteen survivors in argument
 shuffling are fine and one survivor that widens a budget is a defect. Every survivor is printed with
-its line and its weakening, and the command fails while any survivor is unaccounted for.
+its line and its weakening, and the command fails while any survivor is unaccounted for. All six
+targets currently kill every mutation the registry does not account for: 328 generated, zero
+unaccounted survivors. The defects the runs exposed are closed by tests, in the tests — a chain of
+`or`s is only proven by the input that trips each link, a budget checked on two branches needs both
+branches exercised, and a limit nobody can reach is a limit nobody has tested.
 
-**What the first run found.** 200 mutations across the three targets; 19 survived in
-`capabilities.js` alone. The serious ones were real gaps, not noise:
+**Equivalent mutations are recorded, not suppressed.** Each entry in `tooling/lib/mutation-targets.mjs`
+carries the reason it cannot change behaviour. `tooling/mutation-strength.test.mjs` requires every
+recorded id to still be a real mutation site, so an equivalence cannot outlive the line it excused and
+hand its exemption to whatever lands there next. That test also runs inside `npm run check` and covers
+what would make a mutation run lie: a generator that quietly produces nothing, a registry naming tests
+that do not import their target, and a planted fixture where the harness must report exactly one
+survivor and leave the file byte-identical afterwards.
 
-- **the budget was enforced on one branch and not the other.** `authoriseAgentOperation` checks the
-  attempt budget twice — once on the approval-required path, once on the ordinary one. Only the
-  ordinary path was tested, so widening the approved path's comparison changed nothing any test
-  could see: an *approved* operation could spend one past its budget.
-- **a signature of the wrong length was never presented.** The length guard inside the constant-time
-  comparison is the only reason a truncated or padded signature cannot be offered — the comparison
-  itself throws on unequal lengths — and nothing exercised it. A guard that returned the wrong answer
-  there would have verified any signature of the wrong size.
-- **the validity window was never probed at its edges**, in either direction, at verification or at
-  dispatch, and neither was an approval's expiry.
-- **a correctly signed grant with an unparseable `expiresAt`** was refused only by accident: every
-  existing probe was unsigned and turned away at the signature, so the shape check behind it was
-  never reached. A grant whose expiry does not parse compares false against every clock.
-- **`ipv4Value` accepted more spellings than anything asserted.** A five-part address and a final
-  octet exactly one past its range both had to stay names rather than becoming addresses.
-- **a `.localhost` subdomain and `ip6-localhost`** were classified as loopback by code no test read.
-
-`index.js` was added as a fourth target afterwards and answered worse: **32 of 78 survived**. The
-ChangeSet path guard is a chain of `or`s, and a chain is only proven by the input that trips each
-link — one representative escape had been tested and the rest of the chain had not, so every
-individual spelling (absolute, UNC, drive-lettered, `..`, `.`, doubled separator, trailing
-separator, embedded null) was closed one at a time. So were all five loop-guard budget boundaries,
-each from both sides; every branch of `assertAgentActionAllowed`, which had been checked through one
-field at a time rather than as a whole verdict; a `NaN` budget, which is not finite *and* not less
-than the minimum, so a guard requiring both would pass it and every later comparison against it
-would quietly answer false; an event payload that is a string or an array; a missing ledger file,
-where swallowing every error rather than only `ENOENT` would turn a corrupt ledger into an empty
-one; and a trust promotion — `provenance: 'user-supplied'` raising trust for a *kind* the function
-does not recognise (AGENTS.md principle 11).
-
-Each was closed with a test rather than by adjusting the operator set. All four targets now kill
-every mutation the registry does not account for: 328 generated across six targets, zero unaccounted
-survivors.
-
-**Equivalent mutations are recorded, not suppressed.** Thirteen are listed in
-`tooling/lib/mutation-targets.mjs`, each with the reason it cannot change behaviour — an unreachable
-defensive branch, a loop bound whose extra iteration reads past a string and exits, a comparison
-whose widening reassigns a value to itself. Three of them are defence in depth rather than holes: a
-path that slips the leading-separator disjunct still splits into an empty segment, and the segment
-check below refuses it anyway. That is worth recording precisely because it looks like a gap. `tooling/mutation-strength.test.mjs` requires every
-recorded id to still be a real mutation site, so an equivalence cannot outlive the line it excused
-and hand its exemption to whatever lands there next.
-
-That test also runs inside `npm run check` and covers what would make a mutation run lie: a
-generator that quietly produces nothing, a registry naming tests that do not import their target,
-and — planted as a fixture — a module with one covered rule and one uncovered boundary, where the
-harness must report exactly one survivor and leave the file byte-identical afterwards.
-
-**A defect the harness found in itself.** Run from inside `node --test`, the mutant test runs
-inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather than as runs with their
-own verdict, so a mutant's fate depended on how the harness happened to be started. The child
-environment is now sanitised. A verdict is not allowed to be a property of its caller.
-
-**The broker, closed.** `apps/service/src/agent-broker.js` was the fifth target and the most
-important of the three that had been measured: `capabilities.js` decides, and this is the one place
-the decision is obeyed. Ten of 27 survived, and what they were is the point:
-
-- **the request-body limit had never been exercised.** It is 48MB, so no test was ever going to
-  reach it. It is now injectable per broker and asserted at the byte it names — a limit nobody can
-  reach is a limit nobody has tested.
-- **the `after` sequence guard** accepted `1.5` and `'abc'`, because a fraction is not an integer and
-  is also not negative, so a guard requiring both would pass both. (`NaN` and `Infinity` are *not*
-  in that test: JSON cannot carry them, they arrive as `null` and read as zero, which is a transport
-  fact rather than a guard this code owns.)
-- **the project-scoped/unscoped split** was untested from either side. It is now asserted with one
-  unbounded identifier put to both halves — a grant scoped to `../elsewhere` is internally
-  consistent, so that list is the only thing between it and a project-scoped handler.
-- **the durable-record path.** A decision must not be filed under a project the service cannot
-  resolve, and a write that failed must be *retried* rather than reported as done: a failed write
-  reporting success would leave the one dispatch with no durable record of who asked for it. Both
-  are now asserted by counting the writes, not by reading the response.
-
-One survivor is recorded as equivalent: the decision entry for a caller whose grant did not verify
-is built and then dropped, because it has no project to be filed under, so nothing reads the field
-it changes. The refusal itself is the 403, which is asserted.
-
-**`risk.js`, closed.** It decides what buys adversarial review, and 10 of its 23 weakenings
-survived. The path matcher is four separate comparisons — a directory pattern spelled with its
-separator, the same directory spelled without one, a file beneath it, and an exact path — and one
-representative match had left three of them untested. So had both kinds of file signal: a whole word
-(`session`), and a compound carrying its own separators (`api-key`). Each now has its match *and*
-its near miss, because the refusals are the expensive half: `sessions` is not `session`, `api` is
-not `api-key`, and `recipes/authorisation/` is not `recipes/auth/`. The sort was tested against a
-registry where declaration order, alphabetical order and severity order happened to agree, which
-proves nothing about a sort; a surface was added so that all three disagree.
-
-Two of its survivors are recorded as equivalent, and they are the same identity twice: a rank
-comparison only differs when the two ranks are equal, and equal ranks mean the same index in the
-severity order, which means the same severity string. Whichever side is kept, the value kept is
-identical.
+**A verdict is not allowed to be a property of its caller.** Run from inside `node --test`, mutant
+tests inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather than as runs with
+their own verdict. The child environment is now sanitised.
 
 **One target remains measured but not closed:**
-
-| candidate | killed | survived |
-| --- | --- | --- |
-| `packages/control-plane/src/execution-environment.js` | 41 | **17** of 58 |
-
-It is not in the registry, because adding a target whose survivors are not closed leaves
-`npm run mutation:strength` red, and a gate that is expected to be red is not a gate. It is the
-isolation shape a hostile task runs inside, and its survivors cluster on the mount and network
-checks — `&&` chains where each conjunct is a separate way a sandbox stops being one. The change it
-needs is test-only, but it sits beside the hosted-runtime lane's own work and is better closed when
-that lane is not moving underneath it.
+`packages/control-plane/src/execution-environment.js` — 41 killed, **17 of 58 survived**. It is not in
+the registry, because a target whose survivors are not closed leaves `npm run mutation:strength` red,
+and a gate expected to be red is not a gate. Its survivors cluster on the mount and network checks,
+where each conjunct of an `&&` chain is a separate way a sandbox stops being one. The change is
+test-only, but it sits beside the hosted-runtime lane and is better closed when that lane is not
+moving underneath it.
 
 ### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 
@@ -518,11 +413,9 @@ projection. That is only safe if the projection is recoverable rather than depen
 always succeeding together. A crash between ledger append and projection insert must not create two
 permanent truths.
 
-It did. `recordEvent` appended to the ledger and then inserted into SQLite, and a process that died
-between those two statements left an event that happened and a read model that had never heard of it.
-Reopening the store noticed nothing at all: two events in the ledger, one in the projection, and every
-later read, every cost total and every resume packet quietly short by one. It is reproducible in about
-fifteen lines, which is what it took to find.
+A crash between ledger append and projection insert did exactly that, and reopening the store noticed
+nothing: two events in the ledger, one in the projection, and every later read, cost total and resume
+packet quietly short by one.
 
 JSONL remains authoritative, and the stage's list is delivered:
 

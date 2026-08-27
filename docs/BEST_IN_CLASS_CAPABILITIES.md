@@ -4,67 +4,25 @@ Status: **planning authority for capability improvements**. This document record
 
 The governing rule remains: adopt a tool, library or product pattern only when it removes repeated work, closes a correctness/security gap, or materially improves generated-product quality. App Builder should not accumulate dependencies simply because leading builders use them.
 
-## 1. Immediate correctness work — P0
+## 1. Immediate correctness work — P0 ✅ delivered
 
-### 1.1 ChangeSet path/scope hardening — 10/10
+All four shipped as Phase 3.8A–3.8D. They are recorded here only so the register does not read as
+though they are still open; the acceptance each was held to is now a test.
 
-The current control-plane scope matcher is security-sensitive. Before autonomous mutation grows, replace prefix-like matching with normalized, segment-correct glob semantics and reject path traversal/absolute-path edge cases before matching.
-
-Plan:
-- normalize repository-relative paths before policy checks;
-- reject `..`, absolute paths, invalid separator tricks and ambiguous path forms;
-- prefer the Node 22 native glob matcher when it satisfies the required semantics rather than adding a dependency;
-- add adversarial unit tests for `src/**` vs `src2/**`, sibling-prefix collisions, Windows separators, repeated separators and overlapping allow/deny rules;
-- add `fast-check` property tests around allowed/forbidden/expected file matching;
-- keep fail-closed ChangeSet behavior.
-
-Acceptance: no path outside the declared file scope can be accepted because it shares a textual prefix with an allowed path.
-
-### 1.2 One contract source of truth — 10/10
-
-Manifest/build/service contracts must stop drifting between JSON Schema, handwritten TypeScript and handwritten runtime validators.
-
-Target architecture:
-
-`JSON Schema -> generated TypeScript contracts -> Ajv boundary validation`
-
-with **buildability/readiness kept separate from structural validity**.
-
-Plan:
-- make `/schemas` the canonical machine-readable contract source;
-- generate shared types into `packages/contracts`;
-- validate external/service/file boundaries with Ajv using the repository's JSON Schema dialect;
-- remove duplicated enums and validation logic from handwritten validators as migrations complete;
-- add `contracts:generate` and `contracts:check` so CI fails on generated-contract drift;
-- preserve the difference between valid user intent and currently supported implementation: a schema may represent a deployment/capability that the adapter registry later marks unavailable/custom-work.
-
-Candidate tooling:
-- `ajv`;
-- `json-schema-to-typescript` or an equivalent schema-to-TypeScript generator, selected after a small proof against the current schemas.
-
-### 1.3 Executed Supabase RLS tests — 10/10
-
-Static regex tests remain useful smoke checks, but they are not proof of tenant isolation.
-
-Plan:
-- run generated Supabase migrations in a local Supabase/Postgres test environment;
-- use pgTAP through `supabase test db`;
-- use Basejump Supabase test helpers where they materially simplify user creation/auth context;
-- prove user/org matrices by actually authenticating as specific users;
-- cover owner/admin/editor/member/viewer, unauthenticated access, cross-org reads/writes and update `WITH CHECK` behavior;
-- make executable RLS acceptance part of the recipe release gate for profiles/organisations/admin where relevant.
-
-Acceptance: a user from organisation A cannot read or mutate protected organisation B data in an executed database test.
-
-### 1.4 Accessibility baseline earlier than Phase 6 — 9/10
-
-Accessibility is deterministic and cheap enough to run during generated-app acceptance rather than waiting for the later autonomous-quality phase.
-
-Plan:
-- add `@axe-core/playwright` to canonical generated-app browser acceptance;
-- fail on agreed serious/critical violations first, then tighten the baseline as false positives are understood;
-- run responsive checks at representative desktop/mobile widths;
-- keep manual/AI accessibility judgement for issues that axe cannot establish.
+- **1.1 ChangeSet path/scope hardening** — normalized, segment-correct semantics with traversal,
+  absolute and ambiguous forms rejected before matching. *No path outside the declared file scope can
+  be accepted because it shares a textual prefix with an allowed path*, held by adversarial cases and
+  `fast-check` property tests.
+- **1.2 One contract source of truth** — `JSON Schema -> packages/contracts types -> Ajv boundary
+  validation`, with `npm run contracts:check` failing CI on generated-contract drift. Structural
+  validity stays separate from buildability: a schema may represent a capability the adapter registry
+  later marks unavailable or custom-work.
+- **1.3 Executed Supabase RLS tests** — pgTAP through `supabase test db`, authenticating as real
+  users. *A user from organisation A cannot read or mutate protected organisation B data in an
+  executed database test.*
+- **1.4 Accessibility baseline earlier than Phase 6** — `@axe-core/playwright` in canonical
+  generated-app browser acceptance, failing on serious/critical violations at representative desktop
+  and mobile widths. Manual and AI judgement stay for what axe cannot establish.
 
 ## 2. Interoperability and deterministic tool surface — P1
 
@@ -101,22 +59,13 @@ Adopt only if it demonstrably reduces transport boilerplate while keeping `packa
 
 ## 3. Generated-product architecture — P1/P2
 
-### 3.1 Second static/content-oriented template — 10/10
+### 3.1 Second static/content-oriented template — 10/10 ✅ delivered
 
-One React/Vite SPA template is not the ideal output for every project class.
-
-Plan:
-- preserve the application-oriented React template for SaaS, consumer, internal-tool and AI-app modes;
-- add a genuinely different static/content-oriented template for marketing and content-heavy sites after the current composition contract is stable;
-- evaluate Astro first because static HTML is the default while React islands can still handle interactive sections;
-- prove the template contract with the same Manifest/PageSpec/SectionSpec inputs and independent acceptance gates;
-- keep output portable and host-adapter-neutral.
-
-Expected benefit:
-- better crawlability and page-level metadata;
-- smaller default JS payload;
-- easier build-time structured data/social assets/search;
-- clearer separation between content sites and application shells.
+Delivered as Phase 4.2A. The application-oriented React template stays for SaaS, consumer,
+internal-tool and AI-app modes; `templates/astro-static-content` serves marketing and content-heavy
+sites. Renderer selection is deterministic and fail-closed, and the enduring rule it proved is that the
+template contract must be satisfiable by more than one renderer — a single-renderer assumption is
+indistinguishable from no contract at all.
 
 ### 3.2 Static search with Pagefind — 8.5/10
 
@@ -447,32 +396,36 @@ older equivalent, App Builder keeps its own.
 
 ### Mechanisms adopted
 
-| Mechanism | Score | Status after this audit | Home |
-| --- | --- | --- | --- |
-| Deterministic routing acceptance benchmarks with positive **and** negative triggers | 10/10 | **Implemented** | `config/agent-routing-benchmarks.json`, `schemas/routing-benchmark-case.schema.json`, `npm run agent:bench` |
-| First-orientation context ceilings (paths, authorities, roles, skills, packet bytes) | 10/10 | **Implemented** | `packet` in `config/agent-routing.json` |
-| Skill role/load budget — installed is not loaded | 10/10 | **Implemented** | `loadClass` + `skillLoadBudget`, enforced by doctor and tests |
-| Immutable external skill-source registry (pin, licence, security review, allowed roles) | 10/10 | Already landed in 3.8H | `config/external-sources.json` |
-| Skill evaluation with baseline-vs-candidate comparison | 10/10 | Lifecycle landed in 3.8H; harness planned | `config/skill-registry.json`, Phase 5.5 |
-| Journey Closure specialist and gate | 10/10 | **Registered**; workflow planned | `journey-closure` role/gate, Phase 4B |
-| State Matrix specialist and gate | 9.8/10 | **Registered**; workflow planned | `state-matrix` role/gate, Phase 4B |
-| Genuinely independent second opinion (different model/runtime) | 9.8/10 | **Registered**, and now bought automatically at critical severity; execution planned | `independent-second-opinion` role, Phase 5 |
-| Conditional differential review driven by risk classification | 9.8/10 | **Implemented** — a deterministic classifier selects the conditional reviewers | `config/risk-surfaces.json`, `packages/control-plane/src/risk.js` |
-| Architecture dependency gate | 9.7/10 | **Implemented** (`npm run architecture`); `dependency-cruiser` evaluated and not adopted | Stage Q1, delivered |
-| Curated visual regression contracts | 9.7/10 | **Newly planned** | Stage Q2, Phase 4C/4D |
-| Compound learning closeout | 9.6/10 | **Registered**; process planned | `compound-learning` role, Phase 5 |
-| Graph-assisted repository navigation | 9.5/10 | **Newly planned, deliberately later** | Phase 5 |
-| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | **Registered and now selectable** by the risk classifier; identity card planned | `environment-guardian` role, Phase 4E |
-| Tool responsibility map — one question per tool | 9.4/10 | **Implemented** | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
-| Product Opportunity Scout for broad prompts | 9.4/10 | **Registered**; workflow planned | `product-opportunity-scout` role, Phase 4B |
-| Lighthouse-style performance and payload budgets | 9.3/10 | **Newly planned** | Stage Q4, Phase 4.2/6 |
-| Component/state preview surface (evaluate Storybook) | 9.2/10 | **Newly planned, conditional** | Stage Q3, Phase 4C |
-| Supply-chain and workflow hardening, staged | 9.2/10 | **Newly planned** | Stage Q9 |
-| Design-token enforcement beyond DesignLint | 9/10 | **Newly planned** | Stage Q5, Phase 4C |
-| Dead-code/unused-dependency analysis (`Knip`) | 8.8/10 | Already noted; now staged and non-blocking until baselined | Stage Q6, Phase 4.5 |
-| Property-based testing (`fast-check`) | 8.7/10 | Adopted for ChangeSet scope; scope widened for the rest | Stage Q7 |
-| Targeted mutation testing | 8.4/10 | **Newly planned** | Stage Q8, Phase 4.5/6 |
-| Bundle analysis | 8.4/10 | **Newly planned** | Stage Q4 |
+Adopted from the prior art, with the home that owns each. **Delivery status is deliberately not
+recorded here** — `config/factory-status.json` and `docs/ROADMAP.md` own that, and a second status
+column is a second thing to keep true.
+
+| Mechanism | Score | Home |
+| --- | --- | --- |
+| Deterministic routing acceptance benchmarks with positive **and** negative triggers | 10/10 | `config/agent-routing-benchmarks.json`, `npm run agent:bench` |
+| First-orientation context ceilings (paths, authorities, roles, skills, packet bytes) | 10/10 | `packet` in `config/agent-routing.json` |
+| Skill role/load budget — installed is not loaded | 10/10 | `loadClass` + `skillLoadBudget` |
+| Immutable external skill-source registry (pin, licence, security review, allowed roles) | 10/10 | `config/external-sources.json` |
+| Skill evaluation with baseline-vs-candidate comparison | 10/10 | `config/skill-registry.json` |
+| Journey Closure specialist and gate | 10/10 | `journey-closure` role/gate |
+| State Matrix specialist and gate | 9.8/10 | `state-matrix` role/gate |
+| Genuinely independent second opinion (different model/runtime) | 9.8/10 | `independent-second-opinion` role |
+| Conditional differential review driven by risk classification | 9.8/10 | `config/risk-surfaces.json`, `packages/control-plane/src/risk.js` |
+| Architecture dependency gate | 9.7/10 | Stage Q1 |
+| Curated visual regression contracts | 9.7/10 | Stage Q2 |
+| Compound learning closeout | 9.6/10 | `compound-learning` role |
+| Graph-assisted repository navigation | 9.5/10 | `docs/AGENT_RUNTIME.md`, deliberately later |
+| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | `environment-guardian` role |
+| Tool responsibility map — one question per tool | 9.4/10 | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
+| Product Opportunity Scout for broad prompts | 9.4/10 | `product-opportunity-scout` role |
+| Lighthouse-style performance and payload budgets | 9.3/10 | Stage Q4 |
+| Component/state preview surface (evaluate Storybook) | 9.2/10 | Stage Q3, conditional |
+| Supply-chain and workflow hardening, staged | 9.2/10 | Stage Q9 |
+| Design-token enforcement beyond DesignLint | 9/10 | Stage Q5 |
+| Dead-code/unused-dependency analysis | 8.8/10 | Stage Q6 |
+| Property-based testing (`fast-check`) | 8.7/10 | Stage Q7 |
+| Targeted mutation testing | 8.4/10 | Stage Q8 |
+| Bundle analysis | 8.4/10 | Stage Q4 |
 
 ### Adaptations, not copies
 

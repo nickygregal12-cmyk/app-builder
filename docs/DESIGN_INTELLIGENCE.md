@@ -1,8 +1,10 @@
 # Design Intelligence, Element Identity and Rendered Evidence
 
-Status: **Phase 4C delivered; Phase 4D delivered except the visual verdict**. What was actually built, and what was deferred and why, is recorded in `docs/PHASE_4C_EXECUTION.md` and `docs/PHASE_4D_EXECUTION.md` — those are the implementation authority and this remains the specification. Three items specified below are deferred rather than built: the design-intelligence catalogue (section 1, no consumer), reference handling (section 4, no supplier) and MessagingPlan (section 5, no consumer). `config/factory-status.json` carries the reviving condition for each. This document specifies the design-side machinery the specialist
-roles exchange. It is a detail document under `docs/VISUAL_EXCELLENCE.md` and
-`docs/BEST_IN_CLASS_CAPABILITIES.md`.
+This document specifies the design-side machinery the specialist roles exchange. It is a detail
+document under `docs/VISUAL_EXCELLENCE.md` and `docs/BEST_IN_CLASS_CAPABILITIES.md`, and it is a
+specification rather than a delivery record: `config/factory-status.json` says what is built, deferred
+or outstanding, including the reviving condition for the design-intelligence catalogue (section 1) and
+MessagingPlan (section 5), which are specified here but deliberately not built.
 
 It is explicitly **not** a design authority. `DesignSystemSpec` and the existing Design Contract
 remain the only authorities for how a project looks. Everything here either feeds them, compiles from

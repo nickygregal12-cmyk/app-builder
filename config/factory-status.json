@@ -1,9 +1,20 @@
 {
   "schemaVersion": 1,
+  "$comment": "The machine-readable answer to 'what is happening now?'. It is not a historical database: completed stages are ids only, and the narrative for anything closed lives in Git. docs/ROADMAP.md sequences; this file states.",
   "currentPhase": "4D",
   "currentStage": "Phase 4D — Visual direction, responsive composition and candidate promotion",
-  "activeStage": "Phase 4D.8/4D.9 and Phase 4.2A are both waiting on the same thing: a visual verdict from someone who did not produce the work. The professional-output completeness gate in docs/VISUAL_EXCELLENCE.md §9 has been reduced to that one row — cross-browser visual portability, the cross-build anti-template diagnostic and the controlled bespoke-presentation lane are closed, with the portability lane having found and fixed a real defect (the site header was not sticky on any phone) on its first hosted run.",
   "status": "active",
+  "blockedBy": "An independent visual verdict. Rule 17 forbids the factory promoting its own output, no genuinely independent model runtime is enabled here, and restarting the same model is not independence. This is a person or a provider, so no amount of building closes it.",
+  "activeWork": [
+    "phase-4d-visual-review-verdict",
+    "phase-4-2a-static-visual-review"
+  ],
+  "outstandingProductGates": [
+    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review and `npm run review:visual-candidates` opens the Console over it. A reviewer who did not create the candidates must pass, rework or reject each one against the scoped criteria before Phase 4D closes.",
+    "phase-4-2a-static-visual-review: the genuine nbm business renders through the static/content renderer as an independent repository with zero client JavaScript and six route documents. `npm run acceptance:static-renderer` leaves the evidence at .app-builder/static-renderer and stops. A reviewer who did not produce it must say whether the static rendering is at least as good as the application-rendered one before 4.2A closes.",
+    "professional-output-independent-verdict: the one outstanding row in docs/VISUAL_EXCELLENCE.md §9. It is the same gate three times over, because a candidate set, a static rendering and any bespoke presentation each need a reviewer who did not produce the work."
+  ],
+  "nextStage": "The product-proof freeze and the varied real-business corpus in docs/GENUINE_BUSINESS_ACCEPTANCE.md, which opens when the independent verdict exists. Everything the freeze was waiting on that could be built has been built.",
   "completedPhases": [
     "0",
     "1",
@@ -32,16 +43,16 @@
     "4B.2",
     "4B.3a",
     "4B.3b",
+    "4B.3c",
     "4B.4",
     "4B.5",
     "4B.6",
-    "4B.3c",
+    "4C",
     "4C.1",
     "4C.2",
     "4C.3",
     "4C.4",
     "4C.5",
-    "4C",
     "4D.1",
     "4D.2",
     "4D.4",
@@ -49,23 +60,12 @@
     "4D.6",
     "4D.7"
   ],
-  "activeWork": [
-    "phase-4d-visual-direction",
-    "visual-candidate-promotion",
-    "behavioural-consumer-invariants",
-    "design-reference-input",
-    "phase-4-2a-static-renderer",
-    "bespoke-presentation-fulfilment",
-    "ledger-projection-reconciliation",
-    "managed-file-reconciliation",
-    "csp-baseline"
+  "recentlyCompleted": [
+    "4.2A implementation — static/content renderer; deterministic fail-closed renderer selection, six route documents and zero client JavaScript for the business the application renderer serves with one. Its independent visual review is outstanding above, so the stage is not closed",
+    "cross-browser visual portability lane; found and fixed a real defect on its first hosted run — the site header was not sticky on any phone",
+    "cross-build anti-template diagnostic; advisory by declaration, and it reports the cause of its own findings",
+    "controlled bespoke-presentation lane; project-local, token-only, section-scoped, durable across a rebuild and re-validated against the build it lands in"
   ],
-  "outstandingProductGates": [
-    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. The factory created them, so the factory cannot promote one. The evidence is now reviewer-reachable rather than buried in build output: `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review, `npm run review:visual-candidates` opens the ordinary Builder Console over exactly that state, and the stage's compare view shows both candidates at three widths over six routes with the differing axes, the responsive plan, every DesignLint finding, the frozen truth, the refused direction and the scoped critic criteria. A reviewer who did not create them still has to pass, rework or reject each candidate against those criteria before Phase 4D closes.",
-    "phase-4-2a-static-visual-review: the genuine nbm business now renders through the static/content renderer. It generates, installs, checks and builds as an independent repository with zero client JavaScript and six route documents against the application renderer's 218,118 bytes and one; it presents by the same promoted visual direction, carries the same shell classes and compiled tokens, passes DesignLint 0/0/0 and axe WCAG 2.1 A/AA at desktop and mobile, and is photographed at three widths over six routes plus the enquiry-failure state. `npm run acceptance:static-renderer` leaves that evidence at .app-builder/static-renderer and stops. What is outstanding is the same thing 4D is waiting on and for the same reason: the creator of a rendering may not pass its own visual review. A reviewer who did not produce it has to look at the captures and say whether the static nbm site is at least as good as the application-rendered one before 4.2A closes.",
-    "professional-output-independent-verdict: docs/VISUAL_EXCELLENCE.md §9 now has one outstanding row, and it is not a capability. Cross-browser visual portability, the cross-build anti-template diagnostic and the bespoke-presentation fulfilment lane are closed. What remains is a reviewer who did not produce the work — the same gate three times over, because the nbm candidate set, the static rendering of nbm and any bespoke presentation each need one. No genuinely independent model runtime is enabled in this repository, and restarting the same model is not independence. This is a person or a provider rather than a piece of engineering, so no amount of building closes it."
-  ],
-  "nextStage": "The corpus freeze in docs/GENUINE_BUSINESS_ACCEPTANCE.md, once the independent verdict exists. Everything the freeze was waiting on that could be built has been built: two renderer families with deterministic, fail-closed selection; a cross-engine portability lane whose aggregator refuses to call an unexercised check evidence; a cross-build anti-template diagnostic that is advisory by declaration and reports the cause of its own findings; and a bespoke-presentation lane that can fulfil a classified customPresentation requirement inside a bounded ChangeSet, project-local, token-only, section-scoped, durable across a rebuild and re-validated against the build it lands in. The anti-template diagnostic already names what the blocked verdict costs in practice: no ordinary build carries a promoted visual direction, so eight of eleven structural signals are uniform across every build the factory has made. That is not the factory answering different businesses the same way; it is the direction machinery being unused because nothing has ever been promoted.",
   "deferredCapabilities": [
     {
       "stage": "4C.6",
@@ -84,9 +84,16 @@
     {
       "stage": "4D-canvas",
       "title": "Visual comparison canvas",
-      "reason": "The ordinary Builder Console does the comparison. Its candidate panel shows every candidate side by side, switches route and viewport over the captured evidence, names the axes that actually differ rather than leaving them to be spotted, shows the responsive plan field by field, shows what the deterministic checks settled and what the reviewer must speak to, exposes the scoped critic criteria, and promotes exactly one. The one usability failure found was the 330px activity sidebar cropping two full-page captures into roughly 150px columns; the panel moved to the builder stage and the problem went with it. The failing surface was the narrow column, not the Console, so tldraw or an equivalent would still be a dependency bought against a layout problem.",
+      "reason": "The ordinary Builder Console does the comparison: its candidate panel shows every candidate side by side, switches route and viewport over the captured evidence, names the axes that actually differ, shows the responsive plan and every DesignLint finding, exposes the scoped critic criteria, and promotes exactly one. The single usability failure found was the 330px activity sidebar cropping two full-page captures into roughly 150px columns; moving the panel to the builder stage fixed it. The failing surface was the narrow column, not the Console, so a canvas dependency would be bought against a layout problem.",
       "revivesWhen": "A concrete comparison task proves the Console cannot do it — spatial arrangement of many more candidates, or freehand annotation a reviewer genuinely needs to hand back. Record the task first.",
       "recordedAt": "2026-08-26"
+    },
+    {
+      "stage": "4.2B-4.2E",
+      "title": "Static semantic icons, Pagefind search, richer typed structured data, deterministic OG imagery",
+      "reason": "Each needs a real consumer first. The structured data the static renderer emits today is exactly what the factory already supported — a WebSite object, emitted only when the site's own URL is known — because inventing typed entities from facts nothing supports would be a fabricated observation.",
+      "revivesWhen": "A corpus project needs one of them and the absence is a recorded defect rather than a missing feature on a list. Implement only the one that project needed.",
+      "recordedAt": "2026-08-27"
     }
   ]
 }

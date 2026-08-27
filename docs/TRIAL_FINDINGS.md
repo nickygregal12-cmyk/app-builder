@@ -114,43 +114,26 @@ governance rules exist to prevent. Ingestion now accepts a declared provenance.
 
 ## Fixes applied after trial 1
 
-- hero eyebrow carrying the project type: removed;
-- journeys rendered as published copy: suppressed for marketing and content
-  sites, retained for application types where a journey is a real feature;
-- factory diagnostics in the footer: moved behind `import.meta.env.DEV`, and the
-  published footer now carries company name, service areas, contact routes,
-  social links, footer navigation and a copyright line;
-- primary action pointing at the current page: dropped for that page;
-- journey-derived `#next` action fallback: removed, it was never a destination;
-- `contactBindings` field allowlist: `website` added, social profiles added as a
-  first-class contact route through `company.socialProfiles` in the manifest and
-  `companyProfile.socialProfiles` in the knowledge pack;
-- social profile links found in extracted HTML now become
-  `contact.social.<platform>` facts, so a business site's own footer links
-  populate the profile;
-- name-only item lists render as inline chips instead of tall empty cards;
-- imagery pipeline: the composer places approved assets on the hero and in a
-  gallery section, the generator copies the placed variants into the generated
-  repository's `public/assets/` with a typed asset manifest, and the template
-  renders them as `<picture>` with responsive `srcset` and the existing
-  hero/card/square crops. Only assets with `publishUseAllowed` are placed, so
-  rights state decides what reaches the site;
-- ingestion accepts a declared provenance, so stock and generated imagery stay
-  labelled as such through the pack, the composition and the rendered `<img>`
-  (`data-asset-provenance`);
-- where a business keeps its portfolio on social media, the gallery links out to
-  it rather than implying the few images on the site are the whole body of work;
-- external actions render with `target="_blank"` and `rel="noopener noreferrer"`;
-- `no-imagery-available` warning replaced with `no-publishable-imagery`, which
-  reflects what can actually be shown rather than what happens to be stored.
+F1–F9 were each closed in code; the per-finding entries above state what changed and the commits carry
+the diffs. Three consequences are worth keeping because they became rules rather than edits:
 
-The Acme regression fixture supplied a logo and a project photo without
-approving either, so it had no publishable imagery and the new warning fired.
-The fixture now approves them, which is what a business supplying its own logo
-would do, and CI exercises the imagery path as a result.
+- **rights state decides what reaches the site.** The composer places approved assets on the hero and
+  in a gallery, the generator copies the placed variants into the generated repository's
+  `public/assets/` with a typed asset manifest, and only assets with `publishUseAllowed` are placed.
+  The `no-imagery-available` warning became `no-publishable-imagery`, which reflects what can be shown
+  rather than what happens to be stored.
+- **declared provenance survives the whole pipeline.** Stock and generated imagery stay labelled
+  through the pack, the composition and the rendered `<img>` (`data-asset-provenance`).
+- **a business's own footer populates its profile.** Social profile links found in extracted HTML
+  become `contact.social.<platform>` facts, and where a business keeps its portfolio on social media
+  the gallery links out rather than implying the few images on the site are the whole body of work.
 
-The knowledge-pack half of F4 has a producer — extraction — but no trial has
-exercised it yet, because MGB Decor has no website to extract from.
+The Acme regression fixture supplied a logo and a project photo without approving either, so it had no
+publishable imagery and the new warning fired. The fixture now approves them — what a business
+supplying its own logo would do — and CI exercises the imagery path as a result.
+
+The knowledge-pack half of F4 has a producer (extraction) but no trial has exercised it, because MGB
+Decor has no website to extract from.
 
 ### F10 — The neutral template is flat, not merely unbranded — P1 ⚠️ Baseline raised
 

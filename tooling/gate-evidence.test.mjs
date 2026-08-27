@@ -215,13 +215,22 @@ test('an unreadable or wrongly shaped artifact is not-run, never a pass', () => 
 });
 
 test('a check with no registered producer keeps its gate not-run', () => {
+  // Chosen from the registry rather than named, so this keeps testing the
+  // property as producers are added — a gate that acquires one stops being the
+  // example and the next unanswered one takes its place.
+  const unanswered = Object.entries(GATES).find(([, gate]) =>
+    (gate.deterministicChecks ?? []).length > 0
+    && (gate.deterministicChecks ?? []).every((check) => !Object.hasOwn(REGISTRY.checks, check)));
+  assert.ok(unanswered, 'every declared check now has a producer, so this test has nothing left to prove and should be deleted');
+  const [gateId, gate] = unanswered;
+
   const { results, resolutions } = resolveGateResults({
-    gates: GATES, requiredGates: ['security'], registry: REGISTRY, artifacts: {}, build: BUILD,
+    gates: GATES, requiredGates: [gateId], registry: REGISTRY, artifacts: {}, build: BUILD,
   });
-  assert.equal(results.security.status, 'not-run');
+  assert.equal(results[gateId].status, 'not-run');
   assert.deepEqual(
     resolutions[0].checks.map((check) => check.reason),
-    ['no-registered-producer', 'no-registered-producer', 'no-registered-producer'],
+    gate.deterministicChecks.map(() => 'no-registered-producer'),
   );
 });
 

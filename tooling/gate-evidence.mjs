@@ -38,6 +38,8 @@ import { FactoryService } from '../apps/service/src/factory-service.js';
 import { auditLaunchReadiness } from './lib/launch-readiness.mjs';
 import { auditAssetRights } from './lib/asset-rights.mjs';
 import { evaluatePayloadBudgets, measureBuildPayload } from './lib/payload-budget.mjs';
+import { scanRepository } from './lib/secret-scan.mjs';
+import { auditCommittedSecrets, auditDependencyAdvisories } from './lib/security-evidence.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 const PIPELINE_ID = 'marketing-site';
@@ -55,6 +57,22 @@ const payloadBudgets = JSON.parse(fs.readFileSync('config/payload-budgets.json',
 
 function hashOf(value) {
   return `sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`;
+}
+
+/** How many text files the credential scan actually read, for its coverage line. */
+function countTextFiles(root) {
+  const ignored = new Set(['node_modules', '.git', 'dist', '.tmp', '.app-builder', 'coverage', 'test-results', 'playwright-report']);
+  let count = 0;
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ignored.has(entry.name)) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else count += 1;
+    }
+  };
+  walk(root);
+  return count;
 }
 
 /** Write a producer's artifact and describe it the way the resolver reads it. */
@@ -107,6 +125,25 @@ const payload = evaluatePayloadBudgets({
   compositionHash: buildRef,
 });
 
+// The two security questions a built repository can answer about itself. The
+// third — executed-rls-acceptance — needs a live Postgres with the generated
+// policies applied, which is the database-security CI job's and not a build
+// directory's, so it stays unregistered and the gate stays not-run.
+const scanned = countTextFiles(generated.workspace);
+const secrets = auditCommittedSecrets({
+  findings: scanRepository(generated.workspace),
+  filesScanned: scanned,
+  compositionHash: buildRef,
+});
+const audit = spawnSync('npm', ['audit', '--json'], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
+// `npm audit` exits non-zero when it finds something, so the exit status is not
+// the verdict: the report is. A body that will not parse is the one case with
+// no answer at all, and it is left to the resolver to refuse.
+let auditReport = null;
+try { auditReport = JSON.parse(audit.stdout || 'null'); } catch { auditReport = null; }
+if (auditReport === null) throw new Error(`npm audit produced no readable report:\n${(audit.stderr || audit.stdout || '').slice(0, 400)}`);
+const dependencies = auditDependencyAdvisories({ report: auditReport, compositionHash: buildRef });
+
 const assetsFile = path.join(generated.workspace, '.app-builder/assets.json');
 const published = fs.existsSync(assetsFile) ? JSON.parse(fs.readFileSync(assetsFile, 'utf8')) : { assets: {} };
 const assetRights = auditAssetRights({ assets: published.assets, compositionHash: buildRef });
@@ -116,6 +153,8 @@ const artifacts = {
   'design-lint': publish('design-lint', designLint, project.id),
   'asset-rights': publish('asset-rights', assetRights, project.id),
   'payload-budget': publish('payload-budget', payload, project.id),
+  'secret-scan': publish('secret-scan', secrets, project.id),
+  'dependency-audit': publish('dependency-audit', dependencies, project.id),
 };
 
 for (const [id, artifact] of Object.entries(artifacts)) {

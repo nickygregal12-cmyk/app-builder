@@ -49,6 +49,26 @@
       "artifact": ".app-builder/gate-evidence/payload-budget.json",
       "buildRefField": "compositionHash",
       "reads": "A built repository \u2014 installed and built as an ordinary project \u2014 held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
+    },
+    "secret-scan": {
+      "id": "secret-scan",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/security-evidence.mjs auditCommittedSecrets",
+      "artifactKind": "SecretScanReport",
+      "contract": "tooling/lib/secret-scan.mjs",
+      "artifact": ".app-builder/gate-evidence/secret-scan.json",
+      "buildRefField": "compositionHash",
+      "reads": "Every text file of the repository this build produced, through the same scanner npm run check runs over the factory. A generated project is an ordinary repository somebody will push, so a usable-looking value in it is usable."
+    },
+    "dependency-audit": {
+      "id": "dependency-audit",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/security-evidence.mjs auditDependencyAdvisories",
+      "artifactKind": "DependencyAuditReport",
+      "contract": "tooling/lib/security-evidence.mjs",
+      "artifact": ".app-builder/gate-evidence/dependency-audit.json",
+      "buildRefField": "compositionHash",
+      "reads": "npm audit --json over the tree the generated project actually installs. High and critical advisories fail; everything below is reported and does not block."
     }
   },
   "checks": {
@@ -116,6 +136,32 @@
       "why": "What a visitor is asked to download, per project class. The static and application renderers ship different shapes, so one number would be wrong for both and the budgets are per class.",
       "coverageField": "routeDocuments",
       "coverageLabel": "route documents in this build"
+    },
+    "secret-scan": {
+      "id": "secret-scan",
+      "gate": "security",
+      "producer": "secret-scan",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "committed-credential"
+      ],
+      "why": "Principle: a generated project leaves this factory as somebody else's repository. Every rule the scanner grows reports under one check id, so a new rule cannot land failing nothing.",
+      "coverageField": "filesScanned",
+      "coverageLabel": "files scanned in this build"
+    },
+    "dependency-audit": {
+      "id": "dependency-audit",
+      "gate": "security",
+      "producer": "dependency-audit",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "vulnerable-dependency"
+      ],
+      "why": "The generated project installs this tree on somebody else's machine. High and critical advisories block; moderate and below are recorded so the number is visible rather than absent.",
+      "coverageField": "dependencies",
+      "coverageLabel": "dependencies audited"
     }
   },
   "unregistered": {
@@ -125,8 +171,6 @@
       "axe-serious-critical",
       "seo-aeo-scanner",
       "executed-rls-acceptance",
-      "dependency-audit",
-      "secret-scan",
       "typecheck",
       "lint",
       "unit-tests"

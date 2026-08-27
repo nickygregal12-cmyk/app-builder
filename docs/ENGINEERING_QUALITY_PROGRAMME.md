@@ -348,22 +348,29 @@ checked *is* the text — a rule that only holds after a parser has normalised t
 about the parser. Comment stripping is quote-aware in both directions, so a `#` inside a `run:`
 string cannot hide the rest of the block and a pinned action's `# v7` note is not read as its ref.
 
-**2. Dependency review — deferred, with a reason and a prerequisite.** The repository is public, so
-GitHub's own `dependency-review-action` would work without Advanced Security, and it is the right
-shape: platform-native, no scanner to invent. It is deferred because it would not currently say
-much. It diffs a pull request's *declared* dependencies, and this repository's declarations float:
-`@playwright/test@^1.62.1`, `oxlint@^1.71.0`, `typescript@~7.0.2`, six ranges in the Console, and
-more in `templates/` and `recipes/` that generated projects inherit. `package-lock.json` is
-gitignored, so CI resolves those ranges fresh on every run and the exact tree that was tested is
-never the tree that was reviewed.
+**2. Exact versions ✅ delivered; dependency review next.** `package-lock.json` is deliberately not
+committed, so a range is resolved fresh on every install: the tree a contributor tested is not the
+tree CI installs, and neither is the tree the next contributor gets. The failure mode is quiet until
+it is not — a pull request in this programme passed `npm run check` locally against `oxlint@1.71`
+and failed hosted CI on a rule added in `1.80`, same declared dependency, different resolved
+version, one cycle lost. The supply-chain form of the same gap is worse than a lost cycle: a
+compromised patch release of any permitted range lands without anybody choosing it.
 
-That is the more valuable finding, and it is not theoretical: a pull request in this programme passed
-`npm run check` locally against `oxlint@1.71` and failed hosted CI on a rule added in `1.80`, on a
-run that installed a different version of the same declared dependency. The next Q9 item is
-therefore **exact versions across every workspace manifest, with a check that keeps them exact**,
-and dependency review after it, when a manifest diff means something. Pinning the ranges that reach
-`templates/` and `recipes/` changes what generated projects install and needs its own acceptance
-run, which is why it is a slice of its own rather than a paragraph in this one.
+Twenty ranges across four manifests are now exact — three in the root, six in the Console, and
+eleven in the two templates, which is where it matters most: `templates/` is copied into somebody
+else's repository, and a generated app that resolves its own toolchain fresh on every install is not
+the reproducible ordinary repository `AGENTS.md` principle 9 promises. `tooling/dependency-pinning.test.mjs`
+keeps them exact, and refuses a caret, a tilde, a wildcard, a tag, a comparator and a git specifier
+as planted fixtures — a `@app-builder/*` workspace link is the one spelling that cannot drift and is
+the only exemption. Renovate's `rangeStrategy` is now `pin`, so an update arrives as a proposed exact
+version in a diff rather than as a silent resolution.
+
+Proven by regenerating all six canonical acceptance apps from the pinned templates and running the
+full benchmark: 6/6 install, check and build at 100%.
+
+With declarations exact, a manifest diff now means something, so **GitHub's own
+`dependency-review-action` is the next item** — the repository is public, so it needs no Advanced
+Security, and it is the right shape: platform-native, no scanner to invent.
 
 **3. Secret-leakage scanning — not yet evaluated.** Nothing has been baselined, and the planted
 fixtures such a lane needs (guaranteed non-real secrets, never a live one) do not exist yet.

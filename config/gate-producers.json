@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "description": "Which real producer answers each deterministic gate check declared in config/agent-pipelines.json, and what turns that producer's artifact into a status. A check with no entry here has no producer, stays not-run, and keeps its gate not-run with it. packages/control-plane/src/gate-evidence.js is the code that reads this; nothing else may translate an artifact into a gate status.",
+  "rules": [
+    "A producer is something that leaves a machine-readable artifact. A command exiting zero is not a result: the status comes from named fields of the artifact, and an artifact that cannot be read is not-run rather than a pass by omission.",
+    "Evidence is bound to one build. Every producer names the field carrying its build reference, and an artifact whose reference does not match the build being assessed is refused as another build's evidence. Stale evidence is that same refusal.",
+    "A deterministic check never stands in for a person. A gate declaring requiresIndependentReviewer stays not-run until a verdict exists, however many of its checks pass.",
+    "A check declared here must be named by the gate it claims, and may be declared once. Both are refusals, because two producers disagreeing about one status would be decided by read order.",
+    "Registering a producer is a reviewed change, and so is removing one. A gate that used to be measured and is no longer becomes not-run, which is the honest report.",
+    "A pass over nothing is still a pass, and hides that. Where a producer records how many subjects it examined, the check declares that field so the number travels with the status."
+  ],
+  "producers": {
+    "launch-readiness": {
+      "id": "launch-readiness",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/launch-readiness.mjs auditLaunchReadiness",
+      "artifactKind": "LaunchReadinessReport",
+      "contract": "schemas/launch-readiness-report.schema.json",
+      "artifact": ".app-builder/gate-evidence/launch-readiness.json",
+      "buildRefField": "compositionHash",
+      "reads": "The composed product, against the rules in config/launch-readiness-rules.json. It cannot see rendered pixels and never claims a design is good."
+    },
+    "design-lint": {
+      "id": "design-lint",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/design-lint.mjs compileDesignLintReport",
+      "artifactKind": "DesignLintReport",
+      "contract": "schemas/design-contract.schema.json",
+      "artifact": ".app-builder/gate-evidence/design-lint.json",
+      "buildRefField": "compositionHash",
+      "reads": "The build's own compiled DesignSystemSpec and its own token source, not the factory's copies of either."
+    },
+    "asset-rights": {
+      "id": "asset-rights",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/asset-rights.mjs auditAssetRights",
+      "artifactKind": "AssetRightsReport",
+      "contract": "schemas/knowledge-pack.schema.json",
+      "artifact": ".app-builder/gate-evidence/asset-rights.json",
+      "buildRefField": "compositionHash",
+      "reads": "The assets this build actually published, from its own .app-builder/assets.json. Rights are decided upstream at ingestion; this only asks whether what shipped was cleared."
+    }
+  },
+  "checks": {
+    "fact-provenance-check": {
+      "id": "fact-provenance-check",
+      "gate": "provenance",
+      "producer": "launch-readiness",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "generated-claim-without-source",
+        "declared-proof-missing"
+      ],
+      "why": "Principle 7. A generated sentence that became a factual claim, and a proof the composition declared and does not have, are the two ways provenance is lost in composed output.",
+      "coverageField": "predictedManualEdits",
+      "coverageLabel": "predicted manual edits in this build"
+    },
+    "asset-rights-check": {
+      "id": "asset-rights-check",
+      "gate": "provenance",
+      "producer": "asset-rights",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "published-without-rights",
+        "published-while-rejected"
+      ],
+      "why": "Public visibility is not publication permission. An asset reached the build's public directory, so the question is whether its rights and approval status allowed that.",
+      "coverageField": "published",
+      "coverageLabel": "assets published by this build"
+    },
+    "design-lint": {
+      "id": "design-lint",
+      "gate": "visual",
+      "producer": "design-lint",
+      "findingsField": "findings",
+      "findingIdField": "severity",
+      "failOnFindings": [
+        "violation"
+      ],
+      "why": "A DesignLint violation is an invariant that broke \u2014 unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
+    },
+    "design-system-lint": {
+      "id": "design-system-lint",
+      "gate": "design-system",
+      "producer": "design-lint",
+      "findingsField": "findings",
+      "findingIdField": "severity",
+      "failOnFindings": [
+        "violation"
+      ],
+      "why": "The same report answers the design-system gate's own check. One producer, two gates that ask it different questions, and neither gate reads the other's result."
+    }
+  },
+  "unregistered": {
+    "description": "Deterministic checks named by a registered gate that no producer answers yet. They are listed so the gap is visible rather than discovered by a gate that never resolves. Nothing reads this list; it is documentation of what is still not-run.",
+    "checks": [
+      "e2e-tests",
+      "axe-serious-critical",
+      "performance-budgets",
+      "seo-aeo-scanner",
+      "executed-rls-acceptance",
+      "dependency-audit",
+      "secret-scan",
+      "typecheck",
+      "lint",
+      "unit-tests"
+    ]
+  }
+}

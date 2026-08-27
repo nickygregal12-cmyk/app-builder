@@ -128,6 +128,11 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
     }
   }
   writeJson(path.join(out, '.app-builder/composition.json'), composition);
+  // The same manifest the app imports, beside the composition, for the same
+  // reason the composition is written: a deterministic check over what this
+  // build actually published needs build truth in a form it can read, and a
+  // TypeScript module is not that form.
+  writeJson(path.join(out, '.app-builder/assets.json'), { compositionHash: composition.compositionHash ?? null, assets });
   fs.mkdirSync(path.join(out, 'src/generated'), { recursive: true });
   fs.writeFileSync(path.join(out, 'src/generated/composition.ts'), renderModule('composition', composition));
   fs.writeFileSync(path.join(out, 'src/generated/assets.ts'), renderModule('assets', assets));

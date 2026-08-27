@@ -271,6 +271,15 @@ export function assertSpecIsolation(spec) {
   if (!spec.security?.noNewPrivileges) fail('no-new-privileges must be set.');
   if (!(spec.security?.capabilitiesDropped ?? []).includes('ALL')) fail('all capabilities must be dropped.');
   if ((spec.security?.capabilitiesAdded ?? []).length > 0) fail(`added capabilities: ${spec.security.capabilitiesAdded.join(', ')}.`);
+  // A writable root is the same class of escape as the rest of this list. A
+  // task that can write `/usr/local/bin/node` replaces the interpreter the next
+  // attempt on that image runs, so the boundary has to be refused here rather
+  // than only stated by the image the attempt happens to name.
+  if (!spec.security?.readOnlyRootFilesystem) fail('the root filesystem must be read-only.');
+  // Principle 12: durable state is authoritative and sessions are disposable.
+  // A workspace that outlives its attempt is a second place an attempt's
+  // decisions can live, and the one the ledger does not know about.
+  if (!spec.workspace?.disposable) fail('the attempt workspace must be disposable.');
 
   for (const mount of spec.mounts ?? []) {
     const source = String(mount.source ?? '');
@@ -295,10 +304,13 @@ export function assertSpecIsolation(spec) {
       continue;
     }
     for (const forbidden of FORBIDDEN_MOUNT_SOURCES) {
+      // `/` is in the list and is matched exactly by the first comparison, so
+      // the host root needs no separate branch: mutation testing found the one
+      // that was here could only run in the iteration where the line above had
+      // already refused the same input.
       if (source === forbidden || (forbidden !== '/' && source.startsWith(`${forbidden}/`))) {
         fail(`mount of ${source} would hand the task ${forbidden}.`);
       }
-      if (forbidden === '/' && source === '/') fail('mount of the host root.');
     }
   }
 

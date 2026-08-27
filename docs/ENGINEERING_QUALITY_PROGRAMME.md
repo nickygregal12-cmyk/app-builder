@@ -200,15 +200,56 @@ consumer before it needs a threshold.
 catches a static class rendering as a shell — asserts every committed budget sits above the
 measurement it names, and asserts the two renderers are budgeted as the different shapes they are.
 
-### Stage Q5 — design-token enforcement (alongside Phase 4C)
+### Stage Q5 — design-token enforcement ✅ delivered (colour and token resolution)
 
-Once `DesignSystemSpec` compiles to tokens, deterministic rules should reject generated code that
-bypasses the approved system: arbitrary colours, off-scale spacing/radii, unapproved font sizes,
-ad-hoc z-index, unapproved motion durations/easing and raw hex values where a token exists.
+`npm run lint:design-system` (`tooling/design-system-lint.mjs` over `tooling/lib/design-system-lint.mjs`)
+runs inside `npm run check`. With no argument it lints what the factory ships into somebody else's
+repository — every stylesheet under `templates/` and `recipes/`; given a directory it lints a real
+generated project against that project's own compiled tokens.
 
-Use the tooling appropriate to the generated stack. Stylelint is one candidate; a repo-native
-DesignSystemLint over the compiled token set may be a better fit because it can read the spec
-directly. Decide by which mechanism can see the token contract, not by convention.
+**Measured before any rule was written**, which is what decided the scope: **eighteen** colour
+literals on the shipped surface and **two** references to custom properties nothing declared.
+Fifteen of the eighteen were one file. `recipes/auth/files/src/features/auth/auth.css` carried a
+complete parallel palette — a warm off-white page, a near-black primary button, five greys — so
+every generated project with sign-in showed its users a first screen in a brand the rest of the site
+had never heard of. It now reads `--color-accent` and `--color-accent-contrast` like everything else,
+which does change how that screen looks: it looks like the project.
+
+The other three were the template's own. A hero scrim written as two `rgb(10 12 14 / …)` literals is
+now `--color-scrim`, declared as channels so a section can set its own opacity. And the mobile
+disclosure nav referred to `--shadow-raised` and `--radius-md`, neither of which existed — so on
+every build ever generated, the inline fallback *was* the value and the token was decoration. Both
+are declared now, at exactly the values those fallbacks held, so nothing moved and a brand can reach
+them.
+
+**Two rules, and the second is why this is not Stylelint.**
+
+| rule | what it stops |
+| --- | --- |
+| `raw-colour` | a colour written into a rule rather than into a token — the same value whatever brand the build resolved |
+| `undeclared-token` | a `var(--x)` no stylesheet declares, which renders its fallback forever while looking like a token |
+
+`undeclared-token` is a question about *this repository's* token contract. A generic linter would
+have to be configured with the answer, which is the same fact stated twice — principle 6.
+
+**Where a colour may be written is the whole rule.** A literal is allowed inside a custom-property
+declaration and nowhere else, because that is what a token is: `--color-accent: #315b72` is the brand
+written down and `background: #315b72` is a rule deciding for itself. That needs no allowlist of
+blessed files, which matters because the file declaring a project's accent (`src/generated/brand.css`)
+is generated per project and would otherwise have to be guessed. `rgb(var(--color-scrim) / 24%)` is
+allowed for the same reason it has to be: it is the intended way to vary a token, and forbidding it
+would push authors back to the literal.
+
+**Deliberately not rules.** Font size and spacing. The scale is seven steps and the template
+legitimately sets `.74rem` on an eyebrow; flagging those would be wrong far more often than right,
+and a rule that is wrong a third of the time teaches the reader to skim. Nor does this judge *which*
+token a declaration should hold — whether a project-local property may exist at all is the
+bespoke-presentation lane's rule, and that lane already refuses one the compiled `DesignSystemSpec`
+does not emit.
+
+`tooling/design-system-lint.test.mjs` plants a violation and a near-miss for each rule — the
+near-miss being the expensive half — and asserts the shipped surface clean alongside a floor on how
+much of it was read, because a walk that found nothing would also report nothing.
 
 ### Stage Q6 — dead code and orphan detection ✅ delivered (module reachability)
 
@@ -290,8 +331,8 @@ cannot; for six files and ten operators, it did not.
 
 **There is no score.** A percentage says nothing about severity: eighteen survivors in argument
 shuffling are fine and one survivor that widens a budget is a defect. Every survivor is printed with
-its line and its weakening, and the command fails while any survivor is unaccounted for. All six
-targets currently kill every mutation the registry does not account for: 328 generated, zero
+its line and its weakening, and the command fails while any survivor is unaccounted for. All seven
+targets currently kill every mutation the registry does not account for: 383 generated, zero
 unaccounted survivors. The defects the runs exposed are closed by tests, in the tests — a chain of
 `or`s is only proven by the input that trips each link, a budget checked on two branches needs both
 branches exercised, and a limit nobody can reach is a limit nobody has tested.
@@ -308,13 +349,35 @@ survivor and leave the file byte-identical afterwards.
 tests inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather than as runs with
 their own verdict. The child environment is now sanitised.
 
-**One target remains measured but not closed:**
-`packages/control-plane/src/execution-environment.js` — 41 killed, **17 of 58 survived**. It is not in
-the registry, because a target whose survivors are not closed leaves `npm run mutation:strength` red,
-and a gate expected to be red is not a gate. Its survivors cluster on the mount and network checks,
-where each conjunct of an `&&` chain is a separate way a sandbox stops being one. The change is
-test-only, but it sits beside the hosted-runtime lane and is better closed when that lane is not
-moving underneath it.
+**The last open target is closed.** `packages/control-plane/src/execution-environment.js` is in the
+registry: 55 generated, 55 killed, no recorded equivalences. Remeasured after the hosted task-image
+work it had 11 survivors rather than the 17 recorded earlier — that work killed six on its way past
+— and closing the rest found four things, three of which are not tests:
+
+- **Two invariants nothing refused.** `readOnlyRootFilesystem` and `workspace.disposable` were set by
+  the spec and asserted by nothing, so `assertSpecIsolation` accepted a spec carrying a writable root
+  or a workspace that outlives its attempt. Both are the same class as the escapes already on that
+  list — a task that can write `/usr/local/bin/node` replaces the interpreter the next attempt runs —
+  so both are now refusals with their own planted widening.
+- **The exemption pairs were half-tested.** The broker socket, the grant file and the model gateway
+  socket are exempt from the forbidden-mount list as `(target, source)` *pairs*, and only the passing
+  half had been exercised. Borrowing a handle's target for `/etc/shadow` is refused, a spec with no
+  grant file exempts no grant target, and a spec with no model lane exempts no model target whether
+  the lane is absent as `null` or missing from the spec entirely.
+- **The forbidden list forbids what is under it**, and only its exact paths had been tested, so half
+  of that comparison was unproven. `/etc/app-builder/agent-boundary.json` and `/proc/sys/kernel` are
+  now refused, and an unrelated absolute path still is not.
+- **One branch was dead.** `/` is an ordinary entry in the forbidden list and is matched exactly by
+  the comparison above it, so the separate host-root branch could only run in the iteration where
+  that comparison had already refused the same input. Deleted; the refusal is unchanged and now has
+  one spelling rather than two.
+
+**The gate could pass doing nothing, and now cannot.** A kill is inferred from a failing exit status,
+so a target whose tests were *already* red kills every mutation and reports a perfect score for a file
+nothing is defending. It is reachable by ordinary means — break a test while editing the module — and
+it happened during this very run. The harness now runs the unmutated tests first and refuses the
+target if they do not pass, with the failing subtests in the message; `tooling/mutation-strength.test.mjs`
+plants a red fixture and requires the refusal, and requires the module to be untouched afterwards.
 
 ### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 

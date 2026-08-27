@@ -178,10 +178,26 @@ function applyMutation(source, mutation) {
  *
  * The original file is restored in a `finally` so an interrupted run never leaves a weakened safety
  * module on disk.
+ *
+ * The unmutated tests are run first, and this is not a formality. A kill is inferred from a failing
+ * exit status, so a target whose tests were *already* failing kills every mutation it is given and
+ * reports a perfect score for a file nothing is defending. That is precisely the shape stage Q11
+ * exists to refuse — a gate that passes doing nothing — and it is reachable by ordinary means: edit
+ * the target, break one of its tests, and the run that was supposed to tell you so congratulates
+ * you instead.
  */
 export function runMutationTesting({ root, target, onProgress = () => {} }) {
   const absolute = path.join(root, target.file);
   const original = fs.readFileSync(absolute, 'utf8');
+
+  const baseline = spawnSync(process.execPath, ['--test', ...target.tests], { cwd: root, encoding: 'utf8', timeout: 120_000, env: childEnvironment() });
+  if (baseline.status !== 0 || baseline.error !== undefined) {
+    const detail = baseline.error ? baseline.error.message : (baseline.stdout ?? '').split('\n').filter((line) => line.startsWith('not ok')).slice(0, 5).join('\n');
+    throw new Error(
+      `${target.file}: the unmutated tests do not pass, so every mutation would be reported killed and the result would mean nothing.\n${detail}`,
+    );
+  }
+
   const mutations = generateMutations(target.file, original);
   const ignored = new Map((target.equivalent ?? []).map((entry) => [entry.id, entry.why]));
   const killed = [];

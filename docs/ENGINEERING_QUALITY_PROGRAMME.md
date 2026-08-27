@@ -39,7 +39,7 @@ budgets and credit disappear.
 | Do invariants survive a broad input space? | property tests | domain verification |
 | Would a plausible mutation escape the tests? | `npm run mutation:strength` (Stage Q8 ✅) | targeted test-strength CI |
 | Is anything unused or orphaned? | `npm run orphans` (Stage Q6 ✅) | blocking hygiene CI |
-| Is the supply chain and workflow estate sound? | dependency review, secret scanning, SBOM, static analysis | security CI |
+| Is the workflow estate sound? | `tooling/lib/workflow-security.mjs` (Stage Q9 ✅) | blocking security CI |
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
 | Does this change need conditional review? | `RiskClassification` (`packages/control-plane/src/risk.js`) | deterministic review routing |
 | Is the generated product worth launching? | `npm run audit:launch` | generated-product quality |
@@ -315,19 +315,64 @@ inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather tha
 own verdict, so a mutant's fate depended on how the harness happened to be started. The child
 environment is now sanitised. A verdict is not allowed to be a property of its caller.
 
-### Stage Q9 — supply-chain and workflow hardening (staged across Phase 4.5/Phase 6)
+### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 
-The factory already pins dependencies and runs Renovate. The remaining exposure grows with external
-skills, MCP, generated repositories, secrets, deployments and eventually hosted autonomous agents.
+The remaining exposure grows with external skills, MCP, generated repositories, secrets, deployments
+and eventually hosted autonomous agents. Priority order, with where each one stands:
 
-Priority order:
+**1. GitHub Actions safety ✅ delivered.** `tooling/lib/workflow-security.mjs` holds seven rules,
+checked by `tooling/workflow-security.test.mjs` inside `npm run check`. Each names a real way a
+workflow becomes a way into the repository rather than a style preference:
 
-1. GitHub Actions safety — pinned actions, least-privilege tokens, workflow linting;
-2. dependency review on pull requests;
-3. secret-leakage prevention and scanning;
-4. dependency updates (already in place; keep them reviewed);
-5. SBOM/inventory generation for the factory and for generated repositories;
-6. static security analysis where it beats the existing deterministic doctor checks.
+| rule | what it stops |
+| --- | --- |
+| `action-not-pinned` | somebody else's mutable tag running with your token |
+| `checkout-persists-credentials` | the workflow token left in `.git/config` for every later step |
+| `permissions-not-declared` | inheriting whatever the repository default happens to be — a change that appears in no diff of this file |
+| `permissions-write-all` | a declaration that declares nothing |
+| `pull-request-target-used` | repository secrets on a fork-controlled trigger |
+| `untrusted-interpolation-in-run` | a branch name or PR title substituted into a shell command before the shell sees it |
+| `secret-interpolated-into-run` | a secret in the process table, in `set -x` output and in the echoed failure |
+
+The estate passed all seven on the first run, which is exactly why they were written now: a check
+adopted while everything passes costs nothing to satisfy, and one adopted after something has gone
+wrong arrives with a backlog and an exception list. So the evidence is the planted half — every rule
+has a fixture that violates it and must be reported, including the one the two existing rules never
+had: **remove an action's pin and the check fails**. A workflow gate that has only ever been run
+against sound workflows proves the workflows are sound and says nothing about the gate.
+
+The rules read text rather than parsed YAML, deliberately: no dependency, and the thing being
+checked *is* the text — a rule that only holds after a parser has normalised the file is a rule
+about the parser. Comment stripping is quote-aware in both directions, so a `#` inside a `run:`
+string cannot hide the rest of the block and a pinned action's `# v7` note is not read as its ref.
+
+**2. Dependency review — deferred, with a reason and a prerequisite.** The repository is public, so
+GitHub's own `dependency-review-action` would work without Advanced Security, and it is the right
+shape: platform-native, no scanner to invent. It is deferred because it would not currently say
+much. It diffs a pull request's *declared* dependencies, and this repository's declarations float:
+`@playwright/test@^1.62.1`, `oxlint@^1.71.0`, `typescript@~7.0.2`, six ranges in the Console, and
+more in `templates/` and `recipes/` that generated projects inherit. `package-lock.json` is
+gitignored, so CI resolves those ranges fresh on every run and the exact tree that was tested is
+never the tree that was reviewed.
+
+That is the more valuable finding, and it is not theoretical: a pull request in this programme passed
+`npm run check` locally against `oxlint@1.71` and failed hosted CI on a rule added in `1.80`, on a
+run that installed a different version of the same declared dependency. The next Q9 item is
+therefore **exact versions across every workspace manifest, with a check that keeps them exact**,
+and dependency review after it, when a manifest diff means something. Pinning the ranges that reach
+`templates/` and `recipes/` changes what generated projects install and needs its own acceptance
+run, which is why it is a slice of its own rather than a paragraph in this one.
+
+**3. Secret-leakage scanning — not yet evaluated.** Nothing has been baselined, and the planted
+fixtures such a lane needs (guaranteed non-real secrets, never a live one) do not exist yet.
+
+**4. Dependency updates.** Renovate is in place; keep them reviewed.
+
+**5. SBOM.** Worth generating deterministically for the factory and for a generated repository once
+versions are exact; an SBOM of floating ranges describes a build nobody performed.
+
+**6. Static security analysis.** Only where it beats the deterministic checks already here. Not
+evaluated.
 
 Do not install every tool at once. Each addition must name the exposure it closes.
 

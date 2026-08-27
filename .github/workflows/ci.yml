@@ -84,6 +84,33 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  # Stage Q8. Its own job because each mutation costs a full run of the target's tests, and its own
+  # job rather than a step inside `verify` so the several minutes it takes are spent in parallel
+  # rather than in front of everything else.
+  mutation-strength:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+
+      - name: Mutation strength of the safety logic
+        run: npm run mutation:strength
+
+      - name: Publish mutation report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mutation-strength-report
+          path: .app-builder/mutation-strength
+          if-no-files-found: warn
+          retention-days: 14
+
   database-security:
     runs-on: ubuntu-latest
     timeout-minutes: 20

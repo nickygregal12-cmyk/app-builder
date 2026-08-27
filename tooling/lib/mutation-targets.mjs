@@ -1,0 +1,78 @@
+/**
+ * Which modules are worth mutation testing, and what is supposed to be defending them.
+ *
+ * Separate from the runner so the registry can be read — and checked — without starting a run that
+ * takes minutes. `tooling/mutation-strength.test.mjs` reads it inside `npm run check`.
+ */
+
+/**
+ * The targets, and the tests that are supposed to be defending them.
+ *
+ * `equivalent` records the survivors that were examined and found unable to change behaviour. It is
+ * not a suppression list: each entry has to say why, and `tooling/mutation-strength.test.mjs`
+ * requires every id in it to still be a real mutation site, so an entry cannot outlive the line it
+ * describes.
+ */
+export const MUTATION_TARGETS = Object.freeze([
+  {
+    id: 'capabilities',
+    file: 'packages/control-plane/src/capabilities.js',
+    why: 'Grant verification, environment scoping, approval and the attempt budget. Everything an agent has to get past to mutate anything.',
+    tests: [
+      'tooling/agent-capability-boundary.test.mjs',
+      'tooling/agent-sandbox.test.mjs',
+      'tooling/model-canary.test.mjs',
+    ],
+    equivalent: [
+      {
+        id: 'capabilities:178:or-to-and#2',
+        why: 'Letting an array past the shape guard changes nothing: JSON cannot give an array a `version` property, so the very next check refuses it with the same `grant-malformed` reason.',
+      },
+      {
+        id: 'capabilities:314:or-to-and#1',
+        why: '`typeof x !== \'string\' && x === \'\'` can never be true, so the guard stops firing — and an empty or non-string operation then misses the registry and is refused as `unknown-operation` regardless. Same refusal, one branch later.',
+      },
+    ],
+  },
+  {
+    id: 'egress-policy',
+    file: 'packages/control-plane/src/egress-policy.js',
+    why: 'Which destinations count as the public internet. A private address misclassified as public is the boundary failing open.',
+    tests: [
+      'tooling/task-image-egress.test.mjs',
+    ],
+    equivalent: [
+      {
+        id: 'egress-policy:61:or-to-and#1',
+        why: 'A part is parsed from digits, hex or octal, so it can be unsafe-large but never negative. Requiring both conditions leaves the guard unreachable, and an oversized part is then refused by the range checks immediately below it instead.',
+      },
+      {
+        id: 'egress-policy:77:false-to-true#1',
+        why: 'The CIDR starts this compares against are literals in the forbidden table, all of them parseable, so the null branch is unreachable defence and its return value cannot be observed.',
+      },
+    ],
+  },
+  {
+    id: 'data-change',
+    file: 'packages/control-plane/src/data-change.js',
+    why: 'Stage Q12 production data-change refusals: destructive classification, environment identity, recovery evidence and approval.',
+    tests: [
+      'tooling/data-change-safety.test.mjs',
+      'tooling/data-recovery.test.mjs',
+    ],
+    equivalent: [
+      {
+        id: 'data-change:108:gt-widened#1',
+        why: 'Widening the comparison only reassigns `worst` to a candidate of the same rank, which is the value it already held. The classification it produces is identical for every input.',
+      },
+      {
+        id: 'data-change:140:lt-widened#1',
+        why: 'One extra iteration past the end of the source reads an empty slice, which matches neither comment delimiter, advances the cursor and exits. The statement split is unchanged.',
+      },
+      {
+        id: 'data-change:152:lt-widened#1',
+        why: 'One extra iteration past the end of the source compares undefined against the quote character, advances and exits, and the slice that follows is clamped to the string length either way.',
+      },
+    ],
+  },
+]);

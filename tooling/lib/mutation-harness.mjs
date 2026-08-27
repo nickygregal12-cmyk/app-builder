@@ -1,0 +1,209 @@
+/**
+ * Stage Q8 — a deterministic mutation harness for the safety logic, and nothing else.
+ *
+ * Mutation testing answers one question: would a plausible weakening of this code escape the
+ * tests? It is expensive, so this never runs across the monorepo. It runs against a named set of
+ * modules whose failure is severe — capability grants, approval rules, egress classification,
+ * ChangeSet scope, budgets, production data-change guards — and against the tests that actually
+ * cover them.
+ *
+ * There is no dependency here and no percentage. A score of "82% killed" says nothing about
+ * severity: eighteen surviving mutations in comment-adjacent code are fine and one surviving
+ * mutation that turns `approvalRequired` into `false` is a security defect. So every mutation is
+ * generated from an operator that names a *weakening* — an `&&` that becomes `||`, a comparison
+ * that widens, a boolean guard that inverts — and every survivor is reported individually with the
+ * line it changed.
+ *
+ * Mutations are generated rather than hand-picked. Hand-picking proves that the mutations the
+ * author thought of are killed, which is the same mistake as writing the tests in the first place.
+ *
+ * Equivalent mutations are not chased. When a survivor is genuinely equivalent — the mutated
+ * program cannot behave differently — it is recorded in the registry with the reason, so the record
+ * says what was examined rather than what was quietly excluded.
+ */
+
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+
+/**
+ * Each operator is a weakening, not an arbitrary edit.
+ *
+ * `>` to `>=` widens a budget or a boundary by one; `===` to `!==` inverts an environment or
+ * identity comparison; `&&` to `||` turns "every condition" into "any condition", which is how a
+ * permission check stops being one. Dropping a `!` inverts a guard.
+ */
+export const MUTATION_OPERATORS = Object.freeze([
+  { id: 'and-to-or', pattern: /&&/g, replacement: '||', why: 'every condition becomes any condition' },
+  { id: 'or-to-and', pattern: /\|\|/g, replacement: '&&', why: 'any condition becomes every condition' },
+  { id: 'strict-equal-inverted', pattern: /===/g, replacement: '!==', why: 'an identity or environment comparison inverts' },
+  { id: 'strict-not-equal-inverted', pattern: /!==/g, replacement: '===', why: 'a difference check inverts' },
+  { id: 'gte-widened', pattern: />=/g, replacement: '>', why: 'a boundary widens by one' },
+  { id: 'lte-widened', pattern: /<=/g, replacement: '<', why: 'a boundary widens by one' },
+  { id: 'gt-widened', pattern: /(?<![>=<!])>(?![>=])/g, replacement: '>=', why: 'a boundary widens by one' },
+  { id: 'lt-widened', pattern: /(?<![<=>!])<(?![<=])/g, replacement: '<=', why: 'a boundary widens by one' },
+  { id: 'true-to-false', pattern: /\btrue\b/g, replacement: 'false', why: 'a required flag stops being required' },
+  { id: 'false-to-true', pattern: /\bfalse\b/g, replacement: 'true', why: 'a refusal becomes an allowance' },
+]);
+
+/**
+ * Positions inside comments, string literals, template literals and regular expressions.
+ *
+ * Mutating them produces nonsense rather than a plausible weakening: a `<=` inside an error message
+ * is prose, and a `&&` inside a regular expression is a pattern. Skipping them is not leniency, it
+ * is the difference between a survivor that means something and noise.
+ */
+function maskedSource(source) {
+  const mask = Array.from({ length: source.length }, () => true);
+  let index = 0;
+  const hide = (from, to) => { for (let cursor = from; cursor < to && cursor < mask.length; cursor += 1) mask[cursor] = false; };
+
+  while (index < source.length) {
+    const pair = source.slice(index, index + 2);
+    if (pair === '//') {
+      const end = source.indexOf('\n', index);
+      const stop = end === -1 ? source.length : end;
+      hide(index, stop);
+      index = stop;
+      continue;
+    }
+    if (pair === '/*') {
+      const end = source.indexOf('*/', index + 2);
+      const stop = end === -1 ? source.length : end + 2;
+      hide(index, stop);
+      index = stop;
+      continue;
+    }
+    const character = source[index];
+    if (character === '"' || character === "'" || character === '`') {
+      let cursor = index + 1;
+      while (cursor < source.length) {
+        if (source[cursor] === '\\') { cursor += 2; continue; }
+        if (source[cursor] === character) { cursor += 1; break; }
+        cursor += 1;
+      }
+      hide(index, cursor);
+      index = cursor;
+      continue;
+    }
+    // A regular-expression literal, distinguished from division by what precedes it.
+    if (character === '/') {
+      const before = source.slice(0, index).trimEnd();
+      const previous = before.at(-1) ?? '';
+      if (previous === '' || '(,=:[!&|?{};+-*%~^<>'.includes(previous)) {
+        let cursor = index + 1;
+        let inClass = false;
+        while (cursor < source.length) {
+          const current = source[cursor];
+          if (current === '\\') { cursor += 2; continue; }
+          if (current === '[') inClass = true;
+          else if (current === ']') inClass = false;
+          else if (current === '/' && !inClass) { cursor += 1; break; }
+          else if (current === '\n') break;
+          cursor += 1;
+        }
+        hide(index, cursor);
+        index = cursor;
+        continue;
+      }
+    }
+    index += 1;
+  }
+  return mask;
+}
+
+function lineOf(source, offset) {
+  return source.slice(0, offset).split('\n').length;
+}
+
+/** Every mutation this operator set can make to one file, in source order. */
+export function generateMutations(file, source) {
+  const mask = maskedSource(source);
+  const mutations = [];
+  // One line can hold several sites for the same operator — `a || b || c` is two — and they are
+  // different mutations with different fates. The occurrence number keeps them distinct so that
+  // recording one as equivalent cannot silently excuse its neighbour.
+  const seen = new Map();
+  for (const operator of MUTATION_OPERATORS) {
+    for (const match of source.matchAll(operator.pattern)) {
+      const offset = match.index;
+      if (!mask[offset]) continue;
+      const line = lineOf(source, offset);
+      const key = `${line}:${operator.id}`;
+      const occurrence = (seen.get(key) ?? 0) + 1;
+      seen.set(key, occurrence);
+      mutations.push({
+        id: `${path.basename(file, '.js')}:${line}:${operator.id}#${occurrence}`,
+        file,
+        operator: operator.id,
+        why: operator.why,
+        line,
+        offset,
+        original: match[0],
+        replacement: operator.replacement,
+        source: source.slice(Math.max(0, source.lastIndexOf('\n', offset) + 1), source.indexOf('\n', offset) === -1 ? undefined : source.indexOf('\n', offset)).trim(),
+      });
+    }
+  }
+  return mutations.sort((left, right) => left.offset - right.offset || left.operator.localeCompare(right.operator));
+}
+
+/**
+ * The environment for a mutant's test run.
+ *
+ * `NODE_TEST_CONTEXT` is set by Node's own test runner in the processes it spawns. A child that
+ * inherits it reports itself as a nested test rather than as a run with its own verdict, and the
+ * mutant's exit status then depends on how the harness happened to be started — which is not a
+ * property a verdict may have. Removed, along with `NODE_OPTIONS`, so a mutant is judged the same
+ * way whether the harness was run from a shell or from inside a test.
+ */
+function childEnvironment() {
+  const environment = { ...process.env };
+  delete environment.NODE_TEST_CONTEXT;
+  delete environment.NODE_OPTIONS;
+  return environment;
+}
+
+function applyMutation(source, mutation) {
+  return source.slice(0, mutation.offset) + mutation.replacement + source.slice(mutation.offset + mutation.original.length);
+}
+
+/**
+ * Run one target's tests against every mutation of its source.
+ *
+ * A mutation is *killed* when the tests fail — that is the desired outcome and the reason the run
+ * is slow. A *survivor* is a weakening the tests did not notice, and each one is either a missing
+ * test or an equivalent mutation that the registry has to say so about.
+ *
+ * The original file is restored in a `finally` so an interrupted run never leaves a weakened safety
+ * module on disk.
+ */
+export function runMutationTesting({ root, target, onProgress = () => {} }) {
+  const absolute = path.join(root, target.file);
+  const original = fs.readFileSync(absolute, 'utf8');
+  const mutations = generateMutations(target.file, original);
+  const ignored = new Map((target.equivalent ?? []).map((entry) => [entry.id, entry.why]));
+  const killed = [];
+  const survived = [];
+  const skipped = [];
+
+  try {
+    for (const mutation of mutations) {
+      if (ignored.has(mutation.id)) {
+        skipped.push({ ...mutation, why: ignored.get(mutation.id) });
+        continue;
+      }
+      fs.writeFileSync(absolute, applyMutation(original, mutation));
+      const result = spawnSync(process.execPath, ['--test', ...target.tests], { cwd: root, encoding: 'utf8', timeout: 120_000, env: childEnvironment() });
+      // A timeout or a crash is a kill: the mutant did not survive undetected.
+      const detected = result.status !== 0 || result.error !== undefined;
+      (detected ? killed : survived).push(mutation);
+      onProgress({ mutation, detected, done: killed.length + survived.length, total: mutations.length - skipped.length });
+    }
+  } finally {
+    fs.writeFileSync(absolute, original);
+  }
+
+  return { target: target.file, total: mutations.length, killed, survived, skipped };
+}

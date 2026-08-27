@@ -10,6 +10,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -43,6 +44,19 @@ const POLICIES = read('config/agent-policies.json');
 const ROLES = read('config/agent-roles.json');
 const INDEX = indexCapabilityRegistry(REGISTRY);
 const SECRET = 'a'.repeat(48);
+
+/**
+ * A token signed with the real secret over an arbitrary payload.
+ *
+ * The minter refuses to produce a malformed grant, which is correct of it and leaves the
+ * verifier's own shape checks untested: an unsigned probe is turned away at the signature and never
+ * reaches them. This is how those checks get exercised.
+ */
+function signedToken(grant) {
+  const payload = canonicalGrantPayload(grant);
+  const signature = createHmac('sha256', SECRET).update(payload).digest();
+  return `${Buffer.from(payload).toString('base64url')}.${signature.toString('base64url')}`;
+}
 
 function grantFor(overrides = {}, secret = SECRET, now = new Date()) {
   return createCapabilityGrant(
@@ -239,6 +253,119 @@ test('a malformed or absent token fails closed', () => {
 
 test('a short signing secret is refused rather than accepted as a weak key', () => {
   assert.throws(() => createCapabilityGrant({ attemptId: 'a', taskId: 't', projectId: 'p', roleId: 'r', policyId: 'implementation', capabilities: [] }, 'short'), /at least 32 bytes/);
+  // Both sides of the boundary, because "at least 32" and "more than 32" are different rules and
+  // only one of them is written down. Mutation testing found this pair untested.
+  assert.throws(() => grantFor({}, 'a'.repeat(31)), /at least 32 bytes/);
+  assert.doesNotThrow(() => grantFor({}, 'a'.repeat(32)));
+  assert.doesNotThrow(() => grantFor({}, Buffer.alloc(32, 1)));
+  assert.throws(() => grantFor({}, Buffer.alloc(31, 1)), /at least 32 bytes/);
+});
+
+test('a signature of the wrong length is refused rather than compared as equal', () => {
+  // The length guard inside the constant-time comparison is the whole reason a truncated or padded
+  // signature cannot be presented: the comparison itself throws on unequal lengths, so a guard that
+  // returned the wrong answer here would verify any signature of the wrong size. Nothing exercised
+  // it until a mutation survived.
+  const { token } = grantFor();
+  const [payload, signature] = token.split('.');
+  for (const forged of [
+    `${payload}.${signature.slice(0, -4)}`,
+    `${payload}.${signature}AAAA`,
+    `${payload}.${Buffer.alloc(1).toString('base64url')}`,
+    `${payload}.${Buffer.alloc(64, 7).toString('base64url')}`,
+  ]) {
+    assert.throws(
+      () => verifyCapabilityGrant(forged, { secret: SECRET }),
+      (error) => error.reason === 'grant-signature-invalid',
+      `a signature of length ${forged.split('.').pop().length} must be refused`,
+    );
+  }
+});
+
+test('a payload that decodes to something other than a grant object is refused by shape', () => {
+  // Each malformed shape separately, not one representative. A chain of guards joined by `or` is
+  // only proven by the case that trips each link.
+  for (const payload of ['[]', '"a string"', 'null', '42', 'true', '{"version":2}']) {
+    const forged = `${Buffer.from(payload).toString('base64url')}.${Buffer.alloc(32).toString('base64url')}`;
+    assert.throws(
+      () => verifyCapabilityGrant(forged, { secret: SECRET }),
+      (error) => ['grant-malformed', 'grant-signature-invalid'].includes(error.reason),
+      `payload ${payload} must be refused`,
+    );
+  }
+  for (const token of ['.signature', 'payload.', '.']) {
+    assert.throws(() => verifyCapabilityGrant(token, { secret: SECRET }), (error) => error.reason === 'grant-malformed', `token "${token}" must be refused`);
+  }
+});
+
+test('a correctly signed grant whose validity window is not a pair of timestamps is still refused', () => {
+  // Signed properly on purpose. An unsigned probe never reaches the window check — it is turned
+  // away at the signature — so it proves nothing about the window check at all. This is the case a
+  // buggy minter produces rather than one an attacker forges: a grant with an unparseable expiry
+  // would otherwise compare false against every clock and never expire.
+  const { grant } = grantFor();
+  for (const broken of [{ expiresAt: 'never' }, { notBefore: 'whenever' }, { expiresAt: undefined }, { notBefore: undefined }, { expiresAt: null }]) {
+    const forged = signedToken({ ...grant, ...broken });
+    assert.throws(
+      () => verifyCapabilityGrant(forged, { secret: SECRET }),
+      (error) => error.reason === 'grant-malformed',
+      `${JSON.stringify(broken)} must be refused as malformed`,
+    );
+  }
+});
+
+test('a valid payload with an empty signature is malformed, not merely unsigned', () => {
+  // The two halves are checked separately, and the refusal names which one is missing. A token
+  // whose payload is real and whose signature is absent must not be reported as a bad signature:
+  // the caller sent half a token.
+  const { grant } = grantFor();
+  const payload = Buffer.from(canonicalGrantPayload(grant)).toString('base64url');
+  assert.throws(() => verifyCapabilityGrant(`${payload}.`, { secret: SECRET }), (error) => error.reason === 'grant-malformed');
+  assert.throws(() => verifyCapabilityGrant(`.${payload}`, { secret: SECRET }), (error) => error.reason === 'grant-malformed');
+});
+
+test('the validity window is closed at both ends, to the millisecond', () => {
+  // An expiry that is one millisecond generous is an expiry a caller can sit on. The boundaries are
+  // asserted on both sides so widening either comparison fails here rather than in production.
+  const issued = new Date('2026-01-01T00:00:00.000Z');
+  const { token } = grantFor({ ttlSeconds: 60 }, SECRET, issued);
+  const expiry = Date.parse('2026-01-01T00:01:00.000Z');
+  const skew = 1000;
+
+  assert.doesNotThrow(() => verifyCapabilityGrant(token, { secret: SECRET, now: new Date(expiry + skew - 1), clockSkewMs: skew }));
+  assert.throws(
+    () => verifyCapabilityGrant(token, { secret: SECRET, now: new Date(expiry + skew), clockSkewMs: skew }),
+    (error) => error.reason === 'grant-expired',
+    'the instant the window closes is outside it',
+  );
+
+  // A start well inside the grant's own lifetime, so this asserts the opening boundary rather than
+  // tripping over the closing one.
+  const later = grantFor({ notBefore: '2026-01-01T00:30:00.000Z', ttlSeconds: MAX_GRANT_TTL_SECONDS }, SECRET, issued).token;
+  const start = Date.parse('2026-01-01T00:30:00.000Z');
+  assert.throws(
+    () => verifyCapabilityGrant(later, { secret: SECRET, now: new Date(start - skew - 1), clockSkewMs: skew }),
+    (error) => error.reason === 'grant-not-yet-valid',
+  );
+  assert.doesNotThrow(() => verifyCapabilityGrant(later, { secret: SECRET, now: new Date(start - skew), clockSkewMs: skew }));
+});
+
+test('a grant lifetime of zero is as unmintable as one that is too long', () => {
+  assert.throws(() => grantFor({ ttlSeconds: 0 }), /ttlSeconds/);
+  assert.throws(() => grantFor({ ttlSeconds: -1 }), /ttlSeconds/);
+  assert.throws(() => grantFor({ ttlSeconds: Number.NaN }), /ttlSeconds/);
+  // The stated maximum is permitted. A bound nobody may reach is a different bound.
+  assert.doesNotThrow(() => grantFor({ ttlSeconds: MAX_GRANT_TTL_SECONDS }));
+});
+
+test('an operation budget must be a positive whole number, and one is positive', () => {
+  for (const maxOperations of [0, -1, Number.NaN]) {
+    assert.throws(() => grantFor({ maxOperations }), /maxOperations/, `maxOperations ${maxOperations} must be refused`);
+  }
+  assert.equal(grantFor({ maxOperations: 1 }).grant.maxOperations, 1);
+  // A fractional budget truncates downward rather than rounding up. Narrowing is the safe direction
+  // for a budget, and this pins the direction so a later `Math.round` would fail here.
+  assert.equal(grantFor({ maxOperations: 2.9 }).grant.maxOperations, 2);
 });
 
 test('a grant cannot be minted with an unbounded lifetime', () => {
@@ -343,6 +470,34 @@ test('the attempt operation budget is a hard stop', () => {
   const { grant } = grantFor({ capabilities: ['project.read'], maxOperations: 2 });
   assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.read', operationsSpent: 1 }).allowed, true);
   assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.read', operationsSpent: 2 }).reason, 'budget-exhausted');
+});
+
+test('the budget is a hard stop on the approved path too, not only the ordinary one', () => {
+  // An approval-required operation takes a different branch, with its own copy of the budget check.
+  // Only the ordinary branch was covered, so widening the approved branch's comparison changed
+  // nothing any test could see: an approved operation could spend one past its budget.
+  const approvals = [{ approvalId: 'approval-1', operation: 'project.sources.ingest', projectId: 'project-boundary', grantedBy: 'human', expiresAt: '2999-01-01T00:00:00.000Z' }];
+  const { grant } = grantFor({ capabilities: ['project.sources.ingest'], approvals, maxOperations: 2 });
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.sources.ingest', operationsSpent: 1 }).allowed, true);
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.sources.ingest', operationsSpent: 2 }).reason, 'budget-exhausted');
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.sources.ingest', operationsSpent: 3 }).reason, 'budget-exhausted');
+});
+
+test('an approval expires at its stated instant rather than shortly after it', () => {
+  const expiresAt = '2026-06-01T12:00:00.000Z';
+  const approvals = [{ approvalId: 'approval-1', operation: 'project.sources.ingest', projectId: 'project-boundary', grantedBy: 'human', expiresAt }];
+  const { grant } = grantFor({ capabilities: ['project.sources.ingest'], approvals, ttlSeconds: MAX_GRANT_TTL_SECONDS }, SECRET, new Date('2026-06-01T11:30:00.000Z'));
+  const moment = Date.parse(expiresAt);
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.sources.ingest', now: new Date(moment - 1) }).allowed, true);
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.sources.ingest', now: new Date(moment) }).reason, 'approval-expired');
+});
+
+test('a grant is spent at its expiry instant at dispatch, not a millisecond later', () => {
+  const issued = new Date('2026-01-01T00:00:00.000Z');
+  const { grant } = grantFor({ capabilities: ['project.read'], ttlSeconds: 60 }, SECRET, issued);
+  const expiry = Date.parse(grant.expiresAt);
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.read', now: new Date(expiry - 1) }).allowed, true);
+  assert.equal(authoriseAgentOperation({ grant, registry: INDEX, operation: 'project.read', now: new Date(expiry) }).reason, 'grant-expired');
 });
 
 test('an expired grant is refused at dispatch as well as at verification', () => {

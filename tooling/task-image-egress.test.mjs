@@ -69,13 +69,17 @@ test('the Containerfile pins its base by the digest the manifest records', () =>
 });
 
 test('an image with no recorded digest fails closed with the command that fixes it', () => {
-  // This is the repository\'s current state, and the failure has to be
-  // actionable rather than mysterious: nothing has been built on a host yet.
-  assert.equal(IMAGES.images['task-baseline'].digest, null);
-  assert.throws(() => resolveTaskImage(IMAGES, 'task-baseline'), /no recorded digest/);
-  assert.throws(() => resolveTaskImage(IMAGES, 'task-baseline'), /build-task-image\.sh/);
-  assert.throws(() => resolveTaskImage(IMAGES, 'task-baseline'), /Refusing rather than resolving a floating tag/);
-  assert.throws(() => resolveTaskImage(IMAGES, 'no-such-image'), /No task image no-such-image is declared/);
+  // The real baseline is now pinned from hosted proof. Keep exercising the
+  // unbuilt state synthetically so a future image can never fall back to a tag.
+  const unbuilt = {
+    images: {
+      'task-baseline': { ...IMAGES.images['task-baseline'], digest: null },
+    },
+  };
+  assert.throws(() => resolveTaskImage(unbuilt, 'task-baseline'), /no recorded digest/);
+  assert.throws(() => resolveTaskImage(unbuilt, 'task-baseline'), /build-task-image\.sh/);
+  assert.throws(() => resolveTaskImage(unbuilt, 'task-baseline'), /Refusing rather than resolving a floating tag/);
+  assert.throws(() => resolveTaskImage(unbuilt, 'no-such-image'), /No task image no-such-image is declared/);
 });
 
 test('a recorded digest resolves to a pinned identity the runtime accepts', () => {

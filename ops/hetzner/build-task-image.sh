@@ -10,8 +10,8 @@
 # repointing a tag underneath a proven boundary is precisely the thing the
 # digest pin exists to prevent.
 #
-# It changes nothing outside the runtime user's own image store, starts no
-# service and enables nothing.
+# It changes nothing outside the runtime user's own image store (apart from a
+# short-lived /tmp probe directory), starts no service and enables nothing.
 set -euo pipefail
 
 RUNTIME_USER="${APP_BUILDER_RUNTIME_USER:-appbuilder}"
@@ -75,6 +75,12 @@ failures=0
 check() { if eval "$2"; then printf 'PASS  %s\n' "$1"; else printf 'FAIL  %s\n' "$1" >&2; failures=$((failures + 1)); fi; }
 
 pinned="${reference}@${digest}"
+probe_workspace="$(as_runtime mktemp -d /tmp/app-builder-image-probe.XXXXXX)"
+cleanup_probe() {
+  as_runtime rm -rf "$probe_workspace" >/dev/null 2>&1 || true
+}
+trap cleanup_probe EXIT
+
 check "the image runs as a non-root user" \
   '[[ "$(as_runtime podman run --rm --network=none "$pinned" id -u)" == "1000" ]]'
 check "the image carries no container or podman client" \
@@ -85,8 +91,12 @@ check "the image carries no setuid binary" \
   '[[ -z "$(as_runtime podman run --rm --network=none "$pinned" sh -c "find / -xdev -perm /6000 -type f 2>/dev/null" | head -n 1)" ]]'
 check "the image starts with a read-only root filesystem" \
   'as_runtime podman run --rm --network=none --read-only --tmpfs=/tmp:rw,noexec,nosuid,nodev "$pinned" node --version >/dev/null'
-check "the workspace is writable when mounted" \
-  'as_runtime podman run --rm --network=none --read-only --tmpfs=/tmp:rw --tmpfs=/workspace:rw "$pinned" sh -c "printf x > /workspace/probe" >/dev/null'
+# Exercise the same UID translation and bind-mount shape the real execution
+# driver uses. A tmpfs mounted at /workspace is root-owned and would test Podman
+# defaults rather than whether the appbuilder-owned workspace a real attempt
+# receives is writable by the fixed container uid.
+check "the workspace is writable when mounted through the runtime UID mapping" \
+  'as_runtime podman run --rm --network=none --userns=keep-id:uid=1000,gid=1000 --user 1000:1000 --read-only --tmpfs=/tmp:rw,noexec,nosuid,nodev --volume "${probe_workspace}:/workspace:rw,Z" "$pinned" sh -c "printf x > /workspace/probe" >/dev/null && [[ "$(cat "$probe_workspace/probe")" == "x" ]]'
 
 printf '\n'
 if (( failures > 0 )); then

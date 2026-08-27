@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "description": "What a visitor is asked to download, per project class. Every number here was measured from a real build before it was written down; the headroom column says how much was allowed and why. tooling/lib/payload-budget.mjs is the code that measures and compares, and config/gate-producers.json is what connects the result to the performance convergence gate.",
+  "rules": [
+    "Measured before set. A budget is a recorded baseline plus stated headroom, never a round figure that sounded strict. Raising one is a diff that has to say what earned it.",
+    "Per class, because the renderers differ in kind. A static content build ships a document per route and no script; an application build ships one shell and one bundle. One number would be wrong for both.",
+    "Only what a class controls. Total bytes and total HTML scale with how many pages a project has, which is the project's property and not the class's, so the byte budgets cover the shared payload and one document at a time.",
+    "A class with no entry here is measured and reported and fails nothing. Silence about a class is not a pass, and the report says which it is."
+  ],
+  "baselineMeasuredAt": "2026-08-27",
+  "baselineSource": "npm run generate:acceptance, then npm install && npm run build in each generated project. The canonical fixtures, not a real business.",
+  "classes": {
+    "marketing-site": {
+      "renderer": "static",
+      "measured": {
+        "js": 0,
+        "css": 22403,
+        "maxRouteDocumentBytes": 8384,
+        "maxRouteRequests": 1,
+        "routeDocuments": 4
+      },
+      "maxBytes": {
+        "js": 0,
+        "css": 28000
+      },
+      "maxRouteDocumentBytes": 12000,
+      "maxRouteRequests": 4,
+      "minRouteDocuments": 2,
+      "headroom": "css +25% because the shared stylesheet grows with every section type the composer can emit; document +43% because copy length is the project's. js stays at 0: the static renderer's claim is zero client JavaScript, and an island that needs some is a reviewed change to this line rather than a quiet regression.",
+      "floor": "minRouteDocuments 2 rather than the measured 4 \u2014 page count is the project's, but a static build that emitted one document would be an application shell wearing a static renderer, and that is a class defect."
+    },
+    "content-site": {
+      "renderer": "static",
+      "measured": {
+        "js": 0,
+        "css": 22403,
+        "maxRouteDocumentBytes": 6493,
+        "maxRouteRequests": 1,
+        "routeDocuments": 3
+      },
+      "maxBytes": {
+        "js": 0,
+        "css": 28000
+      },
+      "maxRouteDocumentBytes": 12000,
+      "maxRouteRequests": 4,
+      "minRouteDocuments": 2,
+      "headroom": "Same shared stylesheet and the same reasoning as marketing-site; a content site is the class most likely to grow long documents, so the per-document budget is deliberately the same generous one."
+    },
+    "b2b-saas": {
+      "renderer": "application",
+      "measured": {
+        "js": 426670,
+        "css": 23753,
+        "maxRouteDocumentBytes": 456,
+        "maxRouteRequests": 2,
+        "routeDocuments": 1
+      },
+      "maxBytes": {
+        "js": 480000,
+        "css": 30000
+      },
+      "maxRouteDocumentBytes": 4000,
+      "maxRouteRequests": 6,
+      "minRouteDocuments": 1,
+      "headroom": "js +13%. The measured 426KB is the framework, router and generated modules before a project adds anything, and it is a finding rather than a comfortable number \u2014 recorded here so the next thing that inflates it has to say so. Tightening it is Phase 6 work with a real profile behind it, not a guess today."
+    },
+    "consumer-app": {
+      "renderer": "application",
+      "measured": {
+        "js": 426013,
+        "css": 23766,
+        "maxRouteDocumentBytes": 456,
+        "maxRouteRequests": 2,
+        "routeDocuments": 1
+      },
+      "maxBytes": {
+        "js": 480000,
+        "css": 30000
+      },
+      "maxRouteDocumentBytes": 4000,
+      "maxRouteRequests": 6,
+      "minRouteDocuments": 1,
+      "headroom": "As b2b-saas: the same shell, the same framework, and the same recorded starting point plus 13%."
+    },
+    "internal-tool": {
+      "renderer": "application",
+      "measured": {
+        "js": 424720,
+        "css": 23753,
+        "maxRouteDocumentBytes": 456,
+        "maxRouteRequests": 2,
+        "routeDocuments": 1
+      },
+      "maxBytes": {
+        "js": 480000,
+        "css": 30000
+      },
+      "maxRouteDocumentBytes": 4000,
+      "maxRouteRequests": 6,
+      "minRouteDocuments": 1,
+      "headroom": "As b2b-saas. An internal tool is the class where a large bundle costs least, and it still gets the same ceiling so a regression is visible everywhere it happens."
+    },
+    "ai-app": {
+      "renderer": "application",
+      "measured": {
+        "js": 425796,
+        "css": 23753,
+        "maxRouteDocumentBytes": 456,
+        "maxRouteRequests": 2,
+        "routeDocuments": 1
+      },
+      "maxBytes": {
+        "js": 480000,
+        "css": 30000
+      },
+      "maxRouteDocumentBytes": 4000,
+      "maxRouteRequests": 6,
+      "minRouteDocuments": 1,
+      "headroom": "As b2b-saas: the same application shell and the same recorded starting point. An AI feature's own payload arrives on top of this and is the project's, not the class's."
+    }
+  }
+}

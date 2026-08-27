@@ -39,6 +39,16 @@
       "artifact": ".app-builder/gate-evidence/asset-rights.json",
       "buildRefField": "compositionHash",
       "reads": "The assets this build actually published, from its own .app-builder/assets.json. Rights are decided upstream at ingestion; this only asks whether what shipped was cleared."
+    },
+    "payload-budget": {
+      "id": "payload-budget",
+      "command": "npm run audit:payload",
+      "implementation": "tooling/lib/payload-budget.mjs measureBuildPayload + evaluatePayloadBudgets",
+      "artifactKind": "PayloadReport",
+      "contract": "config/payload-budgets.json",
+      "artifact": ".app-builder/gate-evidence/payload-budget.json",
+      "buildRefField": "compositionHash",
+      "reads": "A built repository \u2014 installed and built as an ordinary project \u2014 held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
     }
   },
   "checks": {
@@ -91,6 +101,21 @@
         "violation"
       ],
       "why": "The same report answers the design-system gate's own check. One producer, two gates that ask it different questions, and neither gate reads the other's result."
+    },
+    "performance-budgets": {
+      "id": "performance-budgets",
+      "gate": "performance",
+      "producer": "payload-budget",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "payload-over-budget",
+        "requests-over-budget",
+        "route-documents-below-minimum"
+      ],
+      "why": "What a visitor is asked to download, per project class. The static and application renderers ship different shapes, so one number would be wrong for both and the budgets are per class.",
+      "coverageField": "routeDocuments",
+      "coverageLabel": "route documents in this build"
     }
   },
   "unregistered": {
@@ -98,7 +123,6 @@
     "checks": [
       "e2e-tests",
       "axe-serious-critical",
-      "performance-budgets",
       "seo-aeo-scanner",
       "executed-rls-acceptance",
       "dependency-audit",

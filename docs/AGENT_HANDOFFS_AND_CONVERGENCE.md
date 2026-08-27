@@ -139,10 +139,12 @@ and `npm run gates:evidence` runs it over a real build of the frozen nbm intake.
 
 The registry names, per deterministic check, the real producer that answers it, the artifact that
 producer leaves, the field carrying that artifact's build reference, and which of the producer's
-findings fail the check. Four checks are registered today against three producers: the launch
+findings fail the check. Five checks are registered today against four producers: the launch
 readiness audit answers `fact-provenance-check`, the asset-rights audit answers `asset-rights-check`,
-and the compiled DesignLint report answers both `design-lint` and `design-system-lint`. Ten declared
-checks have no producer and are listed as such.
+the compiled DesignLint report answers both `design-lint` and `design-system-lint`, and the payload
+budget answers `performance-budgets` — the one that needs the project installed and built, because a
+payload measured from source is a measurement of the wrong thing. Nine declared checks have no
+producer and are listed as such.
 
 What the resolver refuses, all of it as `not-run` rather than a pass:
 
@@ -159,10 +161,10 @@ something evidence can settle. And a gate whose `requiredEvidence` is absent sta
 there is nothing for the reviewer to look at.
 
 On the current nbm build, `provenance` is a genuine deterministic **pass** — the first required gate
-to reach a real status from real evidence — `design-system` and `visual` have every declared check
-answered and wait only on a verdict, and the remaining fourteen are `not-run`. Convergence is
-`false` with `gate-not-run`, which is correct and is expected to stay that way until the Phase 6
-quality programme gives the other checks producers.
+to reach a real status from real evidence — `design-system`, `visual` and `performance` have every
+declared check answered and wait only on a verdict, and the remaining thirteen are `not-run`.
+Convergence is `false` with `gate-not-run`, which is correct and is expected to stay that way until
+the Phase 6 quality programme gives the other checks producers.
 
 A pass over nothing is still a pass and hides that, so a check may declare the field where its
 producer records how many subjects it examined. The report prints it beside the status: the

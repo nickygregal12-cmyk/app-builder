@@ -24,6 +24,7 @@
  *              calls no model.
  */
 
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -36,6 +37,7 @@ import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { auditLaunchReadiness } from './lib/launch-readiness.mjs';
 import { auditAssetRights } from './lib/asset-rights.mjs';
+import { evaluatePayloadBudgets, measureBuildPayload } from './lib/payload-budget.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 const PIPELINE_ID = 'marketing-site';
@@ -49,6 +51,7 @@ const root = path.resolve(argument('--out') ?? '.app-builder/gate-evidence');
 const registry = JSON.parse(fs.readFileSync('config/gate-producers.json', 'utf8'));
 const pipelines = JSON.parse(fs.readFileSync('config/agent-pipelines.json', 'utf8'));
 const launchRules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
+const payloadBudgets = JSON.parse(fs.readFileSync('config/payload-budgets.json', 'utf8'));
 
 function hashOf(value) {
   return `sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`;
@@ -88,6 +91,22 @@ const manifest = service.getManifest(project.id);
 const launchReadiness = auditLaunchReadiness({ composition, rules: launchRules, manifest });
 const designLint = service.designLintReport(project.id);
 if (!designLint) throw new Error('The build produced no DesignLintReport, so the design gates have no producer output.');
+// The payload producer needs a built repository, not a composed one: a budget
+// measured from source is a budget on the wrong number. This is the one
+// expensive step in the command and it is what makes the performance gate's
+// check answerable at all.
+const build = spawnSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
+if (build.status !== 0) throw new Error(`The generated repository did not install:\n${(build.stderr || '').split('\n').slice(-6).join('\n')}`);
+const built = spawnSync('npm', ['run', 'build'], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
+if (built.status !== 0) throw new Error(`The generated repository did not build:\n${(built.stderr || '').split('\n').slice(-6).join('\n')}`);
+const projectType = manifest.project.type;
+const payload = evaluatePayloadBudgets({
+  measurement: measureBuildPayload(path.join(generated.workspace, 'dist')),
+  budget: payloadBudgets.classes[projectType],
+  projectType,
+  compositionHash: buildRef,
+});
+
 const assetsFile = path.join(generated.workspace, '.app-builder/assets.json');
 const published = fs.existsSync(assetsFile) ? JSON.parse(fs.readFileSync(assetsFile, 'utf8')) : { assets: {} };
 const assetRights = auditAssetRights({ assets: published.assets, compositionHash: buildRef });
@@ -96,6 +115,7 @@ const artifacts = {
   'launch-readiness': publish('launch-readiness', launchReadiness, project.id),
   'design-lint': publish('design-lint', designLint, project.id),
   'asset-rights': publish('asset-rights', assetRights, project.id),
+  'payload-budget': publish('payload-budget', payload, project.id),
 };
 
 for (const [id, artifact] of Object.entries(artifacts)) {

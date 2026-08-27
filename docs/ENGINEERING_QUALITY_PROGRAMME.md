@@ -372,8 +372,37 @@ With declarations exact, a manifest diff now means something, so **GitHub's own
 `dependency-review-action` is the next item** — the repository is public, so it needs no Advanced
 Security, and it is the right shape: platform-native, no scanner to invent.
 
-**3. Secret-leakage scanning — not yet evaluated.** Nothing has been baselined, and the planted
-fixtures such a lane needs (guaranteed non-real secrets, never a live one) do not exist yet.
+**3. Secret-leakage scanning ✅ delivered.** `tooling/model-execution-doctor.mjs` already asked this
+of the six files the model lane owns, by shape rather than by variable name, because the failure it
+catches is somebody pasting a working key into a config "just to test it". That reasoning was right
+and its scope was not: the same paste lands just as easily in a recipe, a template, a fixture or an
+adapter's `.env.example` — the files that get copied into somebody else's repository.
+
+`tooling/lib/secret-scan.mjs` asks it of the whole tree, and the design constraint is signal rather
+than coverage. Every rule matches a shape that is a credential and is not anything else: `AKIA`
+followed by sixteen uppercase characters is not a word, a PEM private-key banner is not a sentence.
+There is deliberately **no entropy heuristic and no `password =` rule** — both find hundreds of
+things in a real repository, and a scanner people learn to ignore is worse than none. Ordinary text
+that resembles a credential is asserted *not* to be a finding, alongside the planted ones.
+
+The rule that matters most here has no prefix to match on. A Supabase service-role key is an
+ordinary-looking JWT that bypasses row-level security, so it is found by base64-decoding the payload
+and reading what it claims — and the `anon` and `authenticated` keys a generated app is *supposed*
+to carry are asserted not to be findings, because a scanner that refuses the key the product needs
+is a scanner that gets turned off.
+
+A tracked `.env` file that is not `.env.example` is a finding, and `.env.example` carrying a value
+rather than a name is too: an example with a value in it is the shape a real one gets copied into.
+
+No tool was adopted. A scanner is regular expressions over files; the interesting part is which
+expressions, not whose package they arrived in — and none of the maintained options would have
+supplied the service-role rule, which is the one specific to this stack.
+
+Every rule has a planted fixture, **assembled from fragments at run time** so that no file in this
+repository ever contains a contiguous string shaped like a live credential. A single-line marker,
+`not-a-real-credential`, excuses its own line and nothing else — deliberately not a path allow-list,
+because a fixture should say so where a reviewer reading the diff sees it. The current tree scans
+clean.
 
 **4. Dependency updates.** Renovate is in place; keep them reviewed.
 

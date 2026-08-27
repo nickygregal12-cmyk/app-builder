@@ -31,7 +31,7 @@ REPOSITORY="${APP_BUILDER_REPOSITORY:-/srv/app-builder/repository}"
 NETWORK="${APP_BUILDER_EGRESS_NETWORK:-app-builder-egress}"
 PROBE_IMAGE="${APP_BUILDER_PROBE_IMAGE:-docker.io/library/alpine:3.21}"
 FACTORY_PORT="${APP_BUILDER_SERVICE_PORT:-4310}"
-ATTESTATION="/etc/app-builder/egress-profile.json"
+ATTESTATION="${APP_BUILDER_EGRESS_ATTESTATION_FILE:-/etc/app-builder/egress-profile.json}"
 MAX_AGE_DAYS="${APP_BUILDER_EGRESS_ATTESTATION_DAYS:-30}"
 
 pass() { printf 'PASS  %s\n' "$1"; }
@@ -43,6 +43,12 @@ as_runtime() {
 
 printf '== App Builder public-egress profile acceptance ==\n'
 printf 'host: %s\ndate: %s\nnetwork: %s\n\n' "$(hostname)" "$(date -Is)" "$NETWORK"
+
+# Every verification attempt supersedes the previous proof. Remove it before
+# any prerequisite check so an early exit (missing Podman/network, dead Factory,
+# or an unavailable policy generator) cannot leave stale evidence usable. Only
+# this verifier's all-probes-passed path may write the attestation back.
+rm -f "$ATTESTATION"
 
 as_runtime podman --version >/dev/null 2>&1 || { printf 'FAIL  rootless podman is not callable as %s\n' "$RUNTIME_USER" >&2; exit 1; }
 
@@ -140,13 +146,12 @@ done
 
 printf '\n'
 if (( failures > 0 )); then
-  rm -f "$ATTESTATION"
   printf 'Public-egress profile acceptance FAILED with %d problem(s). The attestation was not written,\n' "$failures" >&2
   printf 'so the execution driver will keep refusing the public-egress-only profile.\n' >&2
   exit 1
 fi
 
-install -d -m 0755 /etc/app-builder
+install -d -m 0755 "$(dirname "$ATTESTATION")"
 cat > "$ATTESTATION" <<JSON
 {
   "schemaVersion": 1,
@@ -158,7 +163,7 @@ cat > "$ATTESTATION" <<JSON
   "factoryPort": ${FACTORY_PORT},
   "forbiddenDestinations": ${#targets[@]},
   "verifier": "ops/hetzner/verify-egress-profile.sh",
-  "note": "Written only by a passing run of the verifier. The Podman execution driver refuses public-egress-only without a recent attestation, so a lapsed or re-run-failed filter fails closed."
+  "note": "Written only by a passing run of the verifier. Every install or verification attempt invalidates older evidence first, and the Podman execution driver refuses public-egress-only without a recent attestation."
 }
 JSON
 chmod 0644 "$ATTESTATION"

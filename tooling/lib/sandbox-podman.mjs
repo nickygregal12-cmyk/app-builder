@@ -70,7 +70,13 @@ export function podmanContainerArgs(spec, { image, command = [], name = null, ve
     verb,
     ...(verb === 'run' ? ['--rm'] : []),
     '--name', name ?? `app-builder-attempt-${spec.attemptId}`,
-    '--userns=keep-id',
+    // The container identity is fixed at uid/gid 1000, but the host runtime
+    // account is not. `keep-id` without an explicit target maps a host uid such
+    // as 1001 to container uid 1001, leaving the process at 1000 unable to write
+    // its appbuilder-owned bind mounts. Map the caller to the fixed task
+    // identity instead so workspace ownership is correct on every provisioned
+    // host while remaining rootless.
+    '--userns=keep-id:uid=1000,gid=1000',
     '--user', '1000:1000',
     ...networkArguments(spec),
     '--pid=private',

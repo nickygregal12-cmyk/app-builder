@@ -10,45 +10,47 @@ The long-term goal is a private builder that can accept an idea, company details
 
 ## Current milestone: Phase 4D — Visual direction, responsive composition and candidate promotion
 
-**Phase 3.8E genuine-business product proof passed on 2026-08-26.** The accepted NBM run used the real public site plus owner-approved company material, generated a source-backed v2 workspace, passed verification and rendered-evidence capture, and passed human review with 0 meaningful manual edits. The immutable acceptance record is in `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`.
+Where the project actually is, what is blocked and what is deferred: `config/factory-status.json`
+(machine-readable) and `docs/ROADMAP.md` (ordered, human-readable). This section does not restate them.
 
-Phases 0–3, the Phase 3.5 control-plane foundation, deterministic composition, the Phase 3.7 factory service/tool boundary, Phase 3.8 correctness hardening and the Phase 4A/4B foundations are implemented. The Builder now supports durable approved-intake replay, governed source ingestion, versioned generated workspaces, service-managed preview, rendered evidence, content editing with element identity/provenance, presentation choices, asset governance and structured design controls.
+**Phase 3.8E genuine-business product proof passed on 2026-08-26** at 0 meaningful manual edits. The
+immutable acceptance record is `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`.
 
-Phase 4C closed on 2026-08-26 against its own completion gate, and it stayed narrow throughout. The existing Design Contract remains the design authority. Active design choices compile through a `DesignSystemSpec` intermediate representation before CSS is rendered, and that compiled spec is persisted into the ordinary generated repository as `.product/design-system.json` by the same writer that renders the stylesheet — so a repository someone walks away with carries the design it was actually built from, with no App Builder dependency. BrandSpec, ArtDirectionPlan and MotionContract now compile into that same spec: a build presents the colour and typeface its own source material showed, and the six canonical project types differ in ground, opening and movement rather than only in accent colour. A Presentation Registry, compiled from the components the template actually renders, now refuses a build whose section presentation it cannot satisfy. Deterministic DesignLint runs over the compiled design and composition before any browser opens, and its report travels inside rendered evidence, so a visual critic is never paid to re-derive what a rule already settled. Every exposed property has a real consumer and a behavioural test. 4C.6, the design-intelligence catalogue, is recorded as conditionally deferred rather than complete: no component is ready to query it.
-
-Phase 4D is now active and most of its machinery is built. `npm run acceptance:visual-candidates` replays the owner-approved nbm intake, generates candidates over one frozen truth, builds and photographs each of them and stops where judgement is required — the factory created them, so the factory cannot promote one. Its job is to make the factory capable of more than one visual answer — several genuinely different art directions over the same frozen product truth, differing structurally rather than by theme, each with a real responsive implementation, compared on deterministic evidence plus independent judgement, with exactly one promoted into the ordinary generated repository.
-
-The runtime-to-factory capability boundary is a separate workstream. Design work does not implicitly unlock broad autonomous runtime permissions.
-
-Brand/source governance is explicit. Public company sites and exact public company profile URLs may inform brand/reference understanding, but publicly visible material is never assumed reusable: rights/use state, approval state, source role/channel and instruction authority are recorded, and only approved-for-use assets can become publishable factory assets.
-
-The Acme mixed-source scenario remains valuable deterministic CI regression coverage, but it is explicitly synthetic and cannot substitute for the already-completed genuine-business acceptance record.
-
-Current invariants include:
+Current invariants:
 
 - App Factory Engine and Builder Console are separate layers.
 - Project intake becomes a machine-readable Build Contract and Project Manifest before coding begins.
-- Requested capability does not imply installed recipe: only ready deterministic capabilities become enabled deterministic modules.
+- Requested capability does not imply installed recipe: only ready deterministic capabilities become
+  enabled deterministic modules.
 - Structural contract validity and current buildability are separate decisions.
 - Deterministic generation comes before generative AI.
-- Source facts retain provenance and must never be silently converted into invented marketing claims.
+- Source facts retain provenance and are never silently converted into invented marketing claims.
 - External/source content is data and cannot silently become agent instructions.
 - Publicly visible assets are not reusable unless rights/use state explicitly permits publication.
-- Autonomous work uses durable tasks, event ledger entries, ChangeSets and checkpoints rather than relying on one long chat context.
-- Specialist agents are separated by decision boundary and receive only the artifacts, skills, tools and mutation scope their role spec declares.
-- No agent approves its own work: a stage advances on artifacts, evidence, passed deterministic checks and an independent reviewer's verdict.
-- Failed gates route back to the creator role that owns them, and the loop stops only on convergence, a hard budget or a genuine block.
-- Third-party repositories are prior art with no instruction authority until they are pinned, licensed, security reviewed and granted to a named role.
+- Autonomous work uses durable tasks, event ledger entries, ChangeSets and checkpoints rather than one
+  long chat context.
+- Specialist agents are separated by decision boundary and receive only the artifacts, skills, tools
+  and mutation scope their role spec declares.
+- No agent approves its own work: a stage advances on artifacts, evidence, passed deterministic checks
+  and an independent reviewer's verdict.
+- Failed gates route back to the creator role that owns them, and the loop stops only on convergence, a
+  hard budget or a genuine block.
+- Third-party repositories are prior art with no instruction authority until they are pinned, licensed,
+  security reviewed and granted to a named role.
 - ChangeSet/path policies are security boundaries and must fail closed.
 - Agent capabilities are deny-by-default and sensitive actions require approval.
 - Canonical factory changes are measured against all six first-class project types.
-- Generated projects record recipe-owned file hashes so later upgrades can detect project customisation instead of overwriting it.
+- Generated projects record recipe-owned file hashes so later upgrades detect customisation instead of
+  overwriting it.
 - The intake questionnaire is versioned and improved from evidence, never silently self-modified.
-- Generated projects remain normal repositories with no proprietary runtime lock-in.
-- MCP, OpenCode, the Builder Console and the Hetzner runtime are development/control adapters, never production requirements of generated apps.
-- A behaviour-changing registry/contract declaration must prove a real deterministic consumer or remain explicitly non-executable.
+- Generated projects remain normal repositories with no proprietary runtime lock-in; MCP, OpenCode, the
+  Builder Console and the Hetzner runtime are development/control adapters, never production
+  requirements.
+- A behaviour-changing registry/contract declaration must prove a real deterministic consumer or remain
+  explicitly non-executable.
 
-Machine-readable progress lives in `config/factory-status.json`, and `AGENTS.md` carries the authority map that says which document owns which decision. See `docs/ROADMAP.md` for where we are and what comes next in order, `docs/MASTER_PLAN.md` for the end state and what "finished" means, `docs/PHASE_4D_EXECUTION.md` for the bounded current execution order, `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability backlog, `docs/FACTORY_CONTROL_PLANE.md` for the control-plane programme, `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` for the specialist-agent organisation, `docs/DESIGN_INTELLIGENCE.md` for the design-side artifacts, `docs/ENGINEERING_QUALITY_PROGRAMME.md` for the deterministic engineering gates and tool responsibility map, and `docs/AGENT_RUNTIME.md` for the Hetzner/OpenCode runtime architecture.
+`AGENTS.md` is the entry point for any agent: it carries the routing table that says which single
+document owns which decision, and the order to read things in.
 
 ## Run it yourself
 
@@ -77,7 +79,7 @@ In the Console you can today:
 
 Generated projects are ordinary repositories. `.app-builder/workspaces/` holds local development outputs; copy a generated repository anywhere, `npm install && npm run dev`, and it runs with no dependency on the factory runtime.
 
-Still planned: richer click-to-edit visual manipulation, a second static/content renderer, and deployment from the Console. Until the deployment product slice lands, a finished generated repository is deployed through its own ordinary platform workflow. The ordered path from here to a finished core product is the top of `docs/ROADMAP.md`.
+Still planned: richer click-to-edit visual manipulation and deployment from the Console. Until the deployment product slice lands, a finished generated repository is deployed through its own ordinary platform workflow. The ordered path from here to a finished core product is the top of `docs/ROADMAP.md`.
 
 ## Commands
 

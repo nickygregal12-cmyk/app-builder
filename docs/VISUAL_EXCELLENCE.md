@@ -410,37 +410,27 @@ Three consequences, stated so they cannot be argued away later:
 | Targeted Chromium/WebKit/Firefox visual portability smoke | **Satisfied.** `npm run test:e2e:portability` runs two critical routes and the states that differ across Chromium, Firefox, WebKit and an iPhone WebKit composition. It is assertions about defects rather than pixel baselines — three engines rasterise text differently and a diff that always fails teaches nobody anything — and each check names a defect a real engine produces: `100vw` including a classic scrollbar, a sticky header whose containing block a backdrop filter moves, `100vh` exceeding the viewport a phone visitor actually has, `object-fit`/`aspect-ratio` losing an image's box, a sub-16px control zooming iOS on focus and never zooming back, a transition surviving `prefers-reduced-motion`, and navigation that must be a disclosure on a phone. Full RenderedEvidence stays on the primary browser; the other engines produce targeted measurements and one capture per route. `tooling/portability-evidence.mjs` separates three states rather than two: a check that held, a check that failed, and a check that had nothing to measure — the imagery check on a build with no photographs is the third, and it is never reported as the first. An engine that did not run makes the lane incomplete rather than green. |
 | Anti-template diversity diagnostics across unrelated builds | **Satisfied as a diagnostic, which is what §8 asks for.** `npm run diagnose:anti-template` reads builds the factory already produced — the composition, the compiled design and the promoted direction, all of which an ordinary generated repository carries — and reports over the eleven signals §8 names. It reuses `structuralSignature`, so "structurally different" cannot mean one thing inside a candidate set and another across the corpus. Three readings, in descending order of what they mean: `identical` (two unrelated businesses whose every signal agrees — not a percentage, the definition of a template), `uniform` (a signal with one value across the whole set, so whatever decides it is not the business) and the least-different pairs. Nothing blocks: §8 asks for real corpus evidence before a threshold, and a percentage invented over a corpus of one is a number chosen to look rigorous. Its first run is recorded below. |
 
-### What the portability lane found on its first run
+### What the two diagnostics found on their first runs
 
-Two failures on `mobile-webkit`, on both routes, reproducible across a retry —
-and it was not a WebKit defect. Under `@media (max-width: 720px)` the shared
-header rule set `position: relative`, overriding the `position: sticky` it
-carries at every other width, so the navigation scrolled away with the page on
-**every phone in every engine**. It reproduced immediately in Chromium at 393px
-once anyone looked.
+Kept because each names an invariant a later agent would otherwise re-learn; the runs themselves are
+in Git and the rules are in tests.
 
-It had survived every previous suite because every browser project in every
-suite was 1280 wide: three engines agreed the page was fine, and none of them
-had loaded the half of the stylesheet that broke it. The fix is at the cause
-— `sticky` is already a positioned ancestor, so the `relative` bought nothing —
-and `tooling/portability.test.mjs` now holds it deterministically, along with
-the requirement that the lane keep a viewport the mobile breakpoint applies to.
+**Portability.** Two reproducible failures on `mobile-webkit`, and neither was a WebKit defect: under
+`@media (max-width: 720px)` the shared header set `position: relative`, overriding the `position:
+sticky` it carries at every other width, so the navigation scrolled away on **every phone in every
+engine**. It had survived every previous suite because every browser project in every suite was 1280
+wide — three engines agreed the page was fine, and none of them had loaded the half of the stylesheet
+that broke it. The invariant: *a suite whose projects share one viewport has not tested the
+breakpoints.* `tooling/portability.test.mjs` holds both the fix and the requirement that the lane keep
+a viewport the mobile breakpoint applies to.
 
-### What the anti-template diagnostic found on its first run
-
-Eight builds — the six canonical acceptance apps, the nbm static render and the acme synthetic
-mixed-source build — and eight of eleven signals were **uniform**. Only section sequence and layout
-pattern varied at all.
-
-The cause matters more than the count, and the diagnostic reports it rather than leaving it to be
-inferred: **no build in that set carries a promoted visual direction**, so every one of them signs from
-the default composition dimensions. The finding is therefore that the direction machinery 4D built is
-unused by ordinary builds — which is what the outstanding 4D verdict means in practice — and *not* that
-the factory answers different businesses the same way. That second claim needs a set where directions
-have actually been promoted, and no such set exists yet.
-
-This is the diagnostic working. Its first run named the thing the roadmap already knew was blocking,
-from the output rather than from the plan.
+**Anti-template.** Eight builds, and eight of eleven signals were **uniform**; only section sequence
+and layout pattern varied. The diagnostic reports the cause rather than leaving it to be inferred: no
+build in that set carries a promoted visual direction, so every one signs from the default composition
+dimensions. The finding is therefore that the direction machinery is *unused by ordinary builds* —
+which is what the outstanding 4D verdict means in practice — and **not** that the factory answers
+different businesses the same way. That second claim needs a set where directions have been promoted,
+and no such set exists yet.
 
 ### What this means for the freeze
 

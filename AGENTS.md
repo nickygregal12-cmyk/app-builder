@@ -1,6 +1,71 @@
 # App Builder agent rules
 
-This file is the root engineering authority for AI-assisted work in this repository.
+This file is the root engineering authority and the routing entry point for AI-assisted work in this
+repository. Read it first, then load exactly what the routing table below sends you to.
+
+## Start here
+
+For **any** task, in this order:
+
+1. **Read `config/factory-status.json`.** It is the only answer to what phase and stage are current,
+   what is blocked, what is outstanding and what is deliberately deferred. Two paragraphs, not a
+   document.
+2. **Classify the task** against the routing table below. `npm run agent:route -- "TASK"` does this
+   deterministically and prints the bounded packet; a prompt whose subsystem cannot be determined stays
+   unclassified and orients rather than guessing (principle 21).
+3. **Read exactly ONE narrow authority** — the one the table names for that task. Not two, not the
+   whole `docs/` directory.
+4. **Read the affected source, config and tests.** This is where the work is; the documents only say
+   what is allowed.
+5. **Read `docs/ROADMAP.md` only if the task changes sequence or status** — closing a stage, opening
+   one, reordering work, or reporting where the programme is.
+6. **Read `docs/MASTER_PLAN.md` only if the task changes end-state or product scope** — what v1 is,
+   what a class-maturity tier claims, what is deliberately outside v1.
+7. **Expand deliberately** only when the work itself proves a further authority is needed. Record the
+   reason in the task output. Expanding one task's context is correct; raising a global ceiling is not.
+
+An ordinary task should read **`AGENTS.md` + `config/factory-status.json` + one authority + the code**.
+If a task seems to need five documents, the routing is wrong or the task is really several tasks.
+
+### Routing table
+
+| If the task is about… | Read this one authority | Then work in |
+| --- | --- | --- |
+| Visual/brand quality, art direction, the professional-output gate | `docs/VISUAL_EXCELLENCE.md` | `templates/`, `packages/factory-core/`, visual tooling/tests |
+| Design machinery — tokens, DesignSystemSpec, DesignLint, element identity | `docs/DESIGN_INTELLIGENCE.md` | `templates/shared/presentation/`, `config/visual-*.json`, design tests |
+| Composition — pages, sections, bindings, provenance | `docs/COMPOSITION.md` | `packages/factory-core/`, composition tests |
+| Generated-app quality, security, release gates, CI gate stages | `docs/ENGINEERING_QUALITY_PROGRAMME.md` | the recipe/service/tooling the gate covers, plus its tests |
+| Hosted agent runtime, sandbox, capacity, runtime readiness | `docs/AGENT_RUNTIME.md` | `config/runtime-readiness.json`, `config/task-images.json`, `packages/control-plane/`, `ops/` |
+| Durable orchestration — tasks, ledger, ChangeSets, checkpoints, policy | `docs/FACTORY_CONTROL_PLANE.md` | `packages/control-plane/`, `schemas/`, `config/agent-policies.json` |
+| Specialist roles and decision boundaries | `docs/AGENT_SPECIALIST_ARCHITECTURE.md` | `config/agent-roles.json`, `config/agent-routing.json` |
+| Handoff, rework, promotion and convergence semantics | `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` | `config/agent-pipelines.json`, `packages/control-plane/src/roles.js` |
+| Real-business proof, corpus runs, trial evidence | `docs/GENUINE_BUSINESS_ACCEPTANCE.md` | `examples/genuine-business/`, acceptance tooling |
+| Source/content ingestion and knowledge packs | `docs/CONTENT_INTELLIGENCE.md` | `packages/content-intelligence/` |
+| Template/recipe generation mechanics | `docs/GENERATOR.md` | `templates/`, `recipes/`, `tooling/create-app.mjs` |
+| MCP surface | `docs/MCP_ADAPTER.md` | `apps/mcp/` |
+| The real-model canary | `docs/MODEL_CANARY.md` | `config/model-execution.json`, `config/task-images.json` |
+| A future capability not yet started (billing, CMS, localisation, connectors, deployment UX) | `docs/PLATFORM_PARITY_PROGRAMME.md` | specification only until the roadmap sequences it |
+| Whether a tool/library should be adopted at all | `docs/BEST_IN_CLASS_CAPABILITIES.md` | `config/external-sources.json` |
+| State/journey/release completeness | `docs/PRODUCTION_COMPLETENESS.md` | the surface being completed, plus its tests |
+| Credit and context economics | `docs/CREDIT-EFFICIENCY.md` | `config/agent-routing.json` |
+| Commercial or venture work (explicitly, not engineering) | `docs/POST_PRODUCT_*.md` | — |
+
+### Worked examples
+
+- **"Fix a generated-site responsive layout defect."** `AGENTS.md` → `config/factory-status.json` →
+  `docs/VISUAL_EXCELLENCE.md` → `templates/shared/presentation/`, `tooling/portability.test.mjs`.
+  Do **not** load the roadmap, the master plan, the control plane or the runtime.
+- **"Work on the hosted agent runtime."** `AGENTS.md` → `config/factory-status.json` →
+  `docs/AGENT_RUNTIME.md` → `config/runtime-readiness.json`, `config/task-images.json`,
+  `packages/control-plane/`. Do **not** load the visual or design authorities.
+- **"Add a future billing capability."** `AGENTS.md` → `config/factory-status.json` →
+  `docs/PLATFORM_PARITY_PROGRAMME.md` §3.2 → `docs/ROADMAP.md` only to confirm it is not yet sequenced.
+  Do **not** start implementing ahead of the sequence.
+- **"Investigate a Supabase security regression."** `AGENTS.md` → `config/factory-status.json` →
+  `docs/ENGINEERING_QUALITY_PROGRAMME.md` → `recipes/`, `tooling/supabase-security.test.mjs`. Routing
+  classifies this as a sensitive diff, so it buys the security and differential reviewers.
+- **"Continue the current roadmap."** `AGENTS.md` → `config/factory-status.json` → `docs/ROADMAP.md`
+  → the one authority the next item names. Nothing else.
 
 ## Purpose
 
@@ -72,27 +137,34 @@ these. Everything else references rather than restates.
 
 | Concern | Authority | Supporting detail |
 | --- | --- | --- |
-| Current phase, active stage, completed stages, outstanding gates, deferrals | `config/factory-status.json` | `docs/PHASE_<stage>_EXECUTION.md` for the stage being delivered |
+| Current phase, active stage, completed stages, outstanding gates, deferrals | `config/factory-status.json` | — |
 | What comes next, in what order, on what evidence | `docs/ROADMAP.md` | — |
 | What App Builder becomes, and what "finished" means | `docs/MASTER_PLAN.md` | `docs/PRODUCT.md`, `docs/ARCHITECTURE.md` |
 | Professional visual/product quality bar and its evidence | `docs/VISUAL_EXCELLENCE.md` | `docs/PRODUCTION_COMPLETENESS.md` for state/journey/release completeness |
 | Design machinery, contracts and decision process | `docs/DESIGN_INTELLIGENCE.md` | `docs/COMPOSITION.md`, `docs/GENERATOR.md` |
 | Deterministic quality, security and release gates | `docs/ENGINEERING_QUALITY_PROGRAMME.md` | — |
 | Durable orchestration and control-plane architecture | `docs/FACTORY_CONTROL_PLANE.md` | — |
-| Agent execution, sandbox, capacity, runtime security and readiness | `docs/AGENT_RUNTIME.md` | `config/runtime-readiness.json`, `config/task-images.json` |
+| Agent execution, sandbox, capacity, runtime security and readiness | `docs/AGENT_RUNTIME.md` | `config/runtime-readiness.json`, `config/task-images.json`, `docs/MODEL_CANARY.md` |
 | Specialist decision boundaries | `docs/AGENT_SPECIALIST_ARCHITECTURE.md` | `config/agent-roles.json` |
 | Handoff, rework and promotion semantics | `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md` | `config/agent-pipelines.json` |
 | Real-business proof and the frozen corpus protocol | `docs/GENUINE_BUSINESS_ACCEPTANCE.md` | `docs/TRIAL_FINDINGS.md` for per-trial evidence |
 | Later product-surface parity backlog | `docs/PLATFORM_PARITY_PROGRAMME.md` | `docs/BEST_IN_CLASS_CAPABILITIES.md` for the reviewed capability/tooling register |
+| Credit and context economics | `docs/CREDIT-EFFICIENCY.md` | `config/agent-routing.json` |
 | Complex-application north star | `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` | — |
-| Historical phase evidence | `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md` and closed `docs/PHASE_<stage>_EXECUTION.md` | — |
+| Historical phase evidence | `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`, `docs/TRIAL_FINDINGS.md` | — |
 
 **Which wins if two statements disagree.** Machine-readable state beats prose: `config/factory-status.json`
 and the registries decide what is done, active and outstanding. Among prose, the narrower authority beats
 the broader one on its own subject — `docs/VISUAL_EXCELLENCE.md` beats `docs/ROADMAP.md` on the visual
 bar, `docs/ROADMAP.md` beats `docs/MASTER_PLAN.md` on sequencing, `docs/MASTER_PLAN.md` beats everything
-on the end state. A closed `docs/PHASE_<stage>_EXECUTION.md` or acceptance record is historical evidence
-and never a current instruction. Fix the loser rather than living with the disagreement.
+on the end state. An acceptance record is historical evidence and never a current instruction. Fix the
+loser rather than living with the disagreement.
+
+**Completed work earns a shorter description.** A stage that closes is reduced to a one-line record in
+`docs/ROADMAP.md`; its implementation story stays in the commits, the merged pull requests, the tests
+and the code. Do not re-import a completed plan into an active document, and do not keep a per-stage
+execution document after its stage closes — Git preserves it, and a closed plan that still reads like an
+instruction is worse than no plan.
 
 `docs/POST_PRODUCT_*.md` are inactive commercial/venture planning. They are never ordinary engineering
 context and are loaded only when the task is explicitly commercial or venture work.

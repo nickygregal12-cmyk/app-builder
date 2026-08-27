@@ -4,67 +4,25 @@ Status: **planning authority for capability improvements**. This document record
 
 The governing rule remains: adopt a tool, library or product pattern only when it removes repeated work, closes a correctness/security gap, or materially improves generated-product quality. App Builder should not accumulate dependencies simply because leading builders use them.
 
-## 1. Immediate correctness work — P0
+## 1. Immediate correctness work — P0 ✅ delivered
 
-### 1.1 ChangeSet path/scope hardening — 10/10
+All four shipped as Phase 3.8A–3.8D. They are recorded here only so the register does not read as
+though they are still open; the acceptance each was held to is now a test.
 
-The current control-plane scope matcher is security-sensitive. Before autonomous mutation grows, replace prefix-like matching with normalized, segment-correct glob semantics and reject path traversal/absolute-path edge cases before matching.
-
-Plan:
-- normalize repository-relative paths before policy checks;
-- reject `..`, absolute paths, invalid separator tricks and ambiguous path forms;
-- prefer the Node 22 native glob matcher when it satisfies the required semantics rather than adding a dependency;
-- add adversarial unit tests for `src/**` vs `src2/**`, sibling-prefix collisions, Windows separators, repeated separators and overlapping allow/deny rules;
-- add `fast-check` property tests around allowed/forbidden/expected file matching;
-- keep fail-closed ChangeSet behavior.
-
-Acceptance: no path outside the declared file scope can be accepted because it shares a textual prefix with an allowed path.
-
-### 1.2 One contract source of truth — 10/10
-
-Manifest/build/service contracts must stop drifting between JSON Schema, handwritten TypeScript and handwritten runtime validators.
-
-Target architecture:
-
-`JSON Schema -> generated TypeScript contracts -> Ajv boundary validation`
-
-with **buildability/readiness kept separate from structural validity**.
-
-Plan:
-- make `/schemas` the canonical machine-readable contract source;
-- generate shared types into `packages/contracts`;
-- validate external/service/file boundaries with Ajv using the repository's JSON Schema dialect;
-- remove duplicated enums and validation logic from handwritten validators as migrations complete;
-- add `contracts:generate` and `contracts:check` so CI fails on generated-contract drift;
-- preserve the difference between valid user intent and currently supported implementation: a schema may represent a deployment/capability that the adapter registry later marks unavailable/custom-work.
-
-Candidate tooling:
-- `ajv`;
-- `json-schema-to-typescript` or an equivalent schema-to-TypeScript generator, selected after a small proof against the current schemas.
-
-### 1.3 Executed Supabase RLS tests — 10/10
-
-Static regex tests remain useful smoke checks, but they are not proof of tenant isolation.
-
-Plan:
-- run generated Supabase migrations in a local Supabase/Postgres test environment;
-- use pgTAP through `supabase test db`;
-- use Basejump Supabase test helpers where they materially simplify user creation/auth context;
-- prove user/org matrices by actually authenticating as specific users;
-- cover owner/admin/editor/member/viewer, unauthenticated access, cross-org reads/writes and update `WITH CHECK` behavior;
-- make executable RLS acceptance part of the recipe release gate for profiles/organisations/admin where relevant.
-
-Acceptance: a user from organisation A cannot read or mutate protected organisation B data in an executed database test.
-
-### 1.4 Accessibility baseline earlier than Phase 6 — 9/10
-
-Accessibility is deterministic and cheap enough to run during generated-app acceptance rather than waiting for the later autonomous-quality phase.
-
-Plan:
-- add `@axe-core/playwright` to canonical generated-app browser acceptance;
-- fail on agreed serious/critical violations first, then tighten the baseline as false positives are understood;
-- run responsive checks at representative desktop/mobile widths;
-- keep manual/AI accessibility judgement for issues that axe cannot establish.
+- **1.1 ChangeSet path/scope hardening** — normalized, segment-correct semantics with traversal,
+  absolute and ambiguous forms rejected before matching. *No path outside the declared file scope can
+  be accepted because it shares a textual prefix with an allowed path*, held by adversarial cases and
+  `fast-check` property tests.
+- **1.2 One contract source of truth** — `JSON Schema -> packages/contracts types -> Ajv boundary
+  validation`, with `npm run contracts:check` failing CI on generated-contract drift. Structural
+  validity stays separate from buildability: a schema may represent a capability the adapter registry
+  later marks unavailable or custom-work.
+- **1.3 Executed Supabase RLS tests** — pgTAP through `supabase test db`, authenticating as real
+  users. *A user from organisation A cannot read or mutate protected organisation B data in an
+  executed database test.*
+- **1.4 Accessibility baseline earlier than Phase 6** — `@axe-core/playwright` in canonical
+  generated-app browser acceptance, failing on serious/critical violations at representative desktop
+  and mobile widths. Manual and AI judgement stay for what axe cannot establish.
 
 ## 2. Interoperability and deterministic tool surface — P1
 

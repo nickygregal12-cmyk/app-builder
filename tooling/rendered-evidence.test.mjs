@@ -47,6 +47,34 @@ function fakeResults(plan) {
   return plan.captures.map((capture, index) => ({ id: capture.id, bytes: Buffer.from(`png-${capture.id}-${index}`) }));
 }
 
+// The evidence widths and the Console's preview widths are the same fact held
+// in two languages, so neither file can import the other. The invariant is
+// therefore asserted rather than shared: without this, changing one width
+// leaves the other silently behind and a reviewer approves a rendering nobody
+// photographed. The existing viewport tests do not catch that — they assert
+// viewport *names* and coverage, never dimensions.
+test('the Console previews at exactly the widths the factory photographs', () => {
+  const workspace = fs.readFileSync('apps/console/src/workspace/BuilderWorkspace.tsx', 'utf8');
+  const declaration = workspace.match(/const deviceWidth: Record<Device, number> = \{([^}]*)\}/);
+  assert.ok(declaration, 'BuilderWorkspace must declare deviceWidth for this invariant to be checkable');
+  const consoleWidths = Object.fromEntries(
+    declaration[1]
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .map((entry) => {
+        const [name, width] = entry.split(':').map((part) => part.trim());
+        return [name, Number(width)];
+      }),
+  );
+  const evidenceWidths = Object.fromEntries(VIEWPORTS.map((viewport) => [viewport.name, viewport.width]));
+  assert.deepEqual(
+    consoleWidths,
+    evidenceWidths,
+    'BuilderWorkspace deviceWidth drifted from VIEWPORTS: the preview someone reviews would not be the rendering the factory captured',
+  );
+});
+
 test('every route is planned at every viewport', () => {
   const { composition, plan } = planFor();
   assert.deepEqual(plan.viewports.map((viewport) => viewport.name), ['desktop', 'tablet', 'mobile']);

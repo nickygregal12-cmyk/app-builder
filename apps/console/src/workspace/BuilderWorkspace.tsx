@@ -52,7 +52,11 @@ type Device = 'desktop' | 'tablet' | 'mobile';
 type StageView = 'preview' | 'compare';
 type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | 'capture-evidence' | null;
 
-const deviceWidth: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
+// These must stay equal to VIEWPORTS in tooling/lib/rendered-evidence.mjs: the
+// evidence someone reviews and the preview they clicked through have to be the
+// same rendering, not two nearby ones. `console-preview-parity` in
+// tooling/rendered-evidence.test.mjs fails if these two drift apart.
+const deviceWidth: Record<Device, number> = { desktop: 1440, tablet: 768, mobile: 390 };
 
 function duration(ms: number) {
   if (ms < 1000) return `${Math.round(ms)} ms`;

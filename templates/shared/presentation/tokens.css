@@ -47,6 +47,10 @@
   --layout-max-width: 72rem;
   --layout-radius: 1rem;
   --radius-sm: 0.6rem;
+  /* Between the two, for controls that are neither a card nor a pill. The
+     disclosure nav's links were the only consumer and referred to it before it
+     existed, so they rendered their fallback. */
+  --radius-md: 0.625rem;
   --radius-pill: 999px;
   --space-unit: 0.25rem;
   --section-space: clamp(56px, 7vw, 104px);
@@ -57,6 +61,15 @@
 
   --shadow-soft: 0 10px 30px rgb(20 22 26 / 7%);
   --shadow-lifted: 0 24px 60px -20px rgb(20 22 26 / 26%);
+  /* The disclosure nav's own shadow. It was written inline as a fallback to a
+     property nothing declared, so the fallback was the value on every build and
+     the token was decoration. Same value, somewhere a brand can reach it. */
+  --shadow-raised: 0 12px 32px rgb(15 23 42 / 12%);
+
+  /* The scrim a photographic hero prints its text on. Declared as channels so
+     a section can set its own opacity without writing a second colour, and so
+     a build with a lighter inverse surface can move it. */
+  --color-scrim: 10 12 14;
 
   /* Art direction. How much a page changes ground as it scrolls, and how much
      room its opening claims, are decisions rather than template habits. */

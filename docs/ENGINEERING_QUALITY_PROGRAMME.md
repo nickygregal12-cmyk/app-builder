@@ -166,15 +166,56 @@ Add bundle analysis for the Console, generated template families, registry compo
 and the design-system runtime, so a specialist or design addition cannot silently inflate every
 generated app.
 
-### Stage Q5 — design-token enforcement (alongside Phase 4C)
+### Stage Q5 — design-token enforcement ✅ delivered (colour and token resolution)
 
-Once `DesignSystemSpec` compiles to tokens, deterministic rules should reject generated code that
-bypasses the approved system: arbitrary colours, off-scale spacing/radii, unapproved font sizes,
-ad-hoc z-index, unapproved motion durations/easing and raw hex values where a token exists.
+`npm run lint:design-system` (`tooling/design-system-lint.mjs` over `tooling/lib/design-system-lint.mjs`)
+runs inside `npm run check`. With no argument it lints what the factory ships into somebody else's
+repository — every stylesheet under `templates/` and `recipes/`; given a directory it lints a real
+generated project against that project's own compiled tokens.
 
-Use the tooling appropriate to the generated stack. Stylelint is one candidate; a repo-native
-DesignSystemLint over the compiled token set may be a better fit because it can read the spec
-directly. Decide by which mechanism can see the token contract, not by convention.
+**Measured before any rule was written**, which is what decided the scope: **eighteen** colour
+literals on the shipped surface and **two** references to custom properties nothing declared.
+Fifteen of the eighteen were one file. `recipes/auth/files/src/features/auth/auth.css` carried a
+complete parallel palette — a warm off-white page, a near-black primary button, five greys — so
+every generated project with sign-in showed its users a first screen in a brand the rest of the site
+had never heard of. It now reads `--color-accent` and `--color-accent-contrast` like everything else,
+which does change how that screen looks: it looks like the project.
+
+The other three were the template's own. A hero scrim written as two `rgb(10 12 14 / …)` literals is
+now `--color-scrim`, declared as channels so a section can set its own opacity. And the mobile
+disclosure nav referred to `--shadow-raised` and `--radius-md`, neither of which existed — so on
+every build ever generated, the inline fallback *was* the value and the token was decoration. Both
+are declared now, at exactly the values those fallbacks held, so nothing moved and a brand can reach
+them.
+
+**Two rules, and the second is why this is not Stylelint.**
+
+| rule | what it stops |
+| --- | --- |
+| `raw-colour` | a colour written into a rule rather than into a token — the same value whatever brand the build resolved |
+| `undeclared-token` | a `var(--x)` no stylesheet declares, which renders its fallback forever while looking like a token |
+
+`undeclared-token` is a question about *this repository's* token contract. A generic linter would
+have to be configured with the answer, which is the same fact stated twice — principle 6.
+
+**Where a colour may be written is the whole rule.** A literal is allowed inside a custom-property
+declaration and nowhere else, because that is what a token is: `--color-accent: #315b72` is the brand
+written down and `background: #315b72` is a rule deciding for itself. That needs no allowlist of
+blessed files, which matters because the file declaring a project's accent (`src/generated/brand.css`)
+is generated per project and would otherwise have to be guessed. `rgb(var(--color-scrim) / 24%)` is
+allowed for the same reason it has to be: it is the intended way to vary a token, and forbidding it
+would push authors back to the literal.
+
+**Deliberately not rules.** Font size and spacing. The scale is seven steps and the template
+legitimately sets `.74rem` on an eyebrow; flagging those would be wrong far more often than right,
+and a rule that is wrong a third of the time teaches the reader to skim. Nor does this judge *which*
+token a declaration should hold — whether a project-local property may exist at all is the
+bespoke-presentation lane's rule, and that lane already refuses one the compiled `DesignSystemSpec`
+does not emit.
+
+`tooling/design-system-lint.test.mjs` plants a violation and a near-miss for each rule — the
+near-miss being the expensive half — and asserts the shipped surface clean alongside a floor on how
+much of it was read, because a walk that found nothing would also report nothing.
 
 ### Stage Q6 — dead code and orphan detection ✅ delivered (module reachability)
 

@@ -1,1 +1,90 @@
-.auth-shell{min-height:100vh;display:grid;place-items:center;padding:28px;background:#f5f5f2}.auth-card{width:min(440px,100%);padding:32px;border:1px solid #d9d9d3;border-radius:20px;background:#fff;box-shadow:0 18px 60px rgba(20,20,15,.06)}.auth-card h1{font-size:clamp(2.2rem,8vw,4rem);margin:0 0 28px}.auth-kicker{margin:0 0 10px;color:#66665f;font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.auth-card form{display:grid;gap:16px}.auth-card label{display:grid;gap:7px;font-size:.82rem;font-weight:700}.auth-card input{width:100%;padding:13px 14px;border:1px solid #cfcfc8;border-radius:10px;background:#fff}.auth-card button{padding:13px 15px;border:1px solid #181816;border-radius:10px;background:#181816;color:#fff;font-weight:750;cursor:pointer}.auth-card button:disabled{opacity:.55;cursor:wait}.auth-card .auth-switch{width:100%;margin-top:12px;background:#fff;color:#181816;border-color:#d5d5cf}.auth-message{margin:0;padding:10px 12px;border-radius:9px;background:#f0f0ec;color:#4e4e48;font-size:.82rem;line-height:1.45}
+/* The sign-in surface, in the project's own design system.
+
+   It used to carry its own palette — a warm off-white page, a near-black
+   button, five greys — so every generated project's first screen ignored the
+   brand the rest of the site was built from. The values below are the same
+   shapes against the compiled tokens, so a build with a resolved brand signs
+   its users in with that brand. Nothing here is a colour; the type scale and
+   spacing stay local because this is one screen with its own proportions. */
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: var(--color-page);
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  padding: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--layout-radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.auth-card h1 {
+  font-size: var(--text-3xl);
+  margin: 0 0 28px;
+}
+
+.auth-kicker {
+  margin: 0 0 10px;
+  color: var(--color-text-muted);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.auth-card form { display: grid; gap: 16px }
+
+.auth-card label {
+  display: grid;
+  gap: 7px;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* The primary action is the accent, which is the one decision a brand always
+   supplies. `--color-accent-contrast` is the readable ink for it and is
+   compiled beside it rather than assumed to be white. */
+.auth-card button {
+  padding: 13px 15px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.auth-card button:disabled { opacity: .55; cursor: wait }
+
+.auth-card .auth-switch {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.auth-message {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: .82rem;
+  line-height: 1.45;
+}

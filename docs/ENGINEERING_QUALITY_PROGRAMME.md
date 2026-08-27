@@ -37,7 +37,7 @@ budgets and credit disappear.
 | Is the dependency direction legal? | `npm run architecture` | blocking architecture CI |
 | Is deterministic behaviour correct? | `node --test` unit/contract tests | CI |
 | Do invariants survive a broad input space? | property tests | domain verification |
-| Would a plausible mutation escape the tests? | mutation testing | test-strength verification |
+| Would a plausible mutation escape the tests? | `npm run mutation:strength` (Stage Q8 ✅) | targeted test-strength CI |
 | Is anything unused or orphaned? | `npm run orphans` (Stage Q6 ✅) | blocking hygiene CI |
 | Is the supply chain and workflow estate sound? | dependency review, secret scanning, SBOM, static analysis | security CI |
 | Is tenant isolation real? | executed Supabase/pgTAP RLS acceptance | database security CI |
@@ -252,20 +252,68 @@ Extend it only where the input space is broad and an invariant is precise:
 Do not use property tests where a handful of examples is clearer — ordinary UI components do not
 need generated input.
 
-### Stage Q8 — targeted mutation testing (Phase 4.5/Phase 6)
+### Stage Q8 — targeted mutation testing ✅ delivered (three safety targets)
 
-Mutation testing answers "would a plausible mutation escape the tests?". It is expensive and must
-stay targeted at logic whose failure is severe:
+Mutation testing answers "would a plausible weakening escape the tests?". It is expensive, so
+`npm run mutation:strength` runs against three modules and nothing else, in its own CI job:
 
-- ChangeSet scope safety;
-- control-plane approval rules and no-self-approval;
-- rights/provenance logic;
-- environment mutation guards;
-- routing predicates;
-- deployment safety checks;
-- security-sensitive validation.
+| target | why it is worth the runtime |
+| --- | --- |
+| `packages/control-plane/src/capabilities.js` | grant verification, environment scoping, approval, attempt budget |
+| `packages/control-plane/src/egress-policy.js` | which destinations count as the public internet |
+| `packages/control-plane/src/data-change.js` | Stage Q12 production data-change refusals |
 
-Run it scheduled, pre-release or on critical packages. Never across the whole monorepo on every PR.
+**No tool was adopted.** `tooling/lib/mutation-harness.mjs` is about 160 lines: it generates
+mutations from ten operators, each of which names a *weakening* rather than an arbitrary edit — an
+`&&` that becomes `||`, a comparison that widens by one, a required flag that stops being required —
+runs the target's own tests against each, and restores the file in a `finally`. Sites inside
+comments, strings, template literals and regular expressions are skipped, because a survivor that
+means nothing teaches the reader to skim the list. A mutation runner earns a dependency when it does
+something this cannot; for three files and ten operators, it did not.
+
+**There is no score.** A percentage says nothing about severity: eighteen survivors in argument
+shuffling are fine and one survivor that widens a budget is a defect. Every survivor is printed with
+its line and its weakening, and the command fails while any survivor is unaccounted for.
+
+**What the first run found.** 200 mutations across the three targets; 19 survived in
+`capabilities.js` alone. The serious ones were real gaps, not noise:
+
+- **the budget was enforced on one branch and not the other.** `authoriseAgentOperation` checks the
+  attempt budget twice — once on the approval-required path, once on the ordinary one. Only the
+  ordinary path was tested, so widening the approved path's comparison changed nothing any test
+  could see: an *approved* operation could spend one past its budget.
+- **a signature of the wrong length was never presented.** The length guard inside the constant-time
+  comparison is the only reason a truncated or padded signature cannot be offered — the comparison
+  itself throws on unequal lengths — and nothing exercised it. A guard that returned the wrong answer
+  there would have verified any signature of the wrong size.
+- **the validity window was never probed at its edges**, in either direction, at verification or at
+  dispatch, and neither was an approval's expiry.
+- **a correctly signed grant with an unparseable `expiresAt`** was refused only by accident: every
+  existing probe was unsigned and turned away at the signature, so the shape check behind it was
+  never reached. A grant whose expiry does not parse compares false against every clock.
+- **`ipv4Value` accepted more spellings than anything asserted.** A five-part address and a final
+  octet exactly one past its range both had to stay names rather than becoming addresses.
+- **a `.localhost` subdomain and `ip6-localhost`** were classified as loopback by code no test read.
+
+Each was closed with a test rather than by adjusting the operator set. All three targets now kill
+every mutation the registry does not account for.
+
+**Equivalent mutations are recorded, not suppressed.** Seven are listed in
+`tooling/lib/mutation-targets.mjs`, each with the reason it cannot change behaviour — an unreachable
+defensive branch, a loop bound whose extra iteration reads past a string and exits, a comparison
+whose widening reassigns a value to itself. `tooling/mutation-strength.test.mjs` requires every
+recorded id to still be a real mutation site, so an equivalence cannot outlive the line it excused
+and hand its exemption to whatever lands there next.
+
+That test also runs inside `npm run check` and covers what would make a mutation run lie: a
+generator that quietly produces nothing, a registry naming tests that do not import their target,
+and — planted as a fixture — a module with one covered rule and one uncovered boundary, where the
+harness must report exactly one survivor and leave the file byte-identical afterwards.
+
+**A defect the harness found in itself.** Run from inside `node --test`, the mutant test runs
+inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather than as runs with their
+own verdict, so a mutant's fate depended on how the harness happened to be started. The child
+environment is now sanitised. A verdict is not allowed to be a property of its caller.
 
 ### Stage Q9 — supply-chain and workflow hardening (staged across Phase 4.5/Phase 6)
 
@@ -516,7 +564,8 @@ sequencing item rather than a gap. The contract and its evidence are what had to
 - No `Knip`: the reachability baseline is zero and the four reference kinds this repository uses fit
   in a dependency-free check (Stage Q6).
 - No screenshot-everything visual suite.
-- No repository-wide mutation testing on every pull request.
+- No repository-wide mutation testing on every pull request, and no mutation-testing dependency: the
+  harness is three targets and ten weakening operators (Stage Q8).
 - No second design-system linter once `DesignSystemSpec` can be read directly.
 - No security tool adopted because it is well known rather than because it outperforms an existing
   deterministic check.

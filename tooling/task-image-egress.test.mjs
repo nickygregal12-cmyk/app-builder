@@ -167,6 +167,51 @@ test('a genuine IPv6 destination is not coerced into an IPv4 reading', () => {
   }
 });
 
+test('text that only resembles an IPv4 address is not read as one', () => {
+  // The inet_aton reading is deliberately generous, and generosity here is how a filter is walked
+  // around: anything the parser accepts, it also classifies, so a spelling it accepts loosely is a
+  // spelling that can be aimed somewhere. Each of these must stay a name, refused pending
+  // resolution, rather than becoming an address that happens to look public.
+  for (const destination of [
+    '1.2.3.4.0',      // five parts: the trailing zero must not be folded away
+    '8.8.8.256',      // final part exactly one past the range it is allowed to carry
+    '127.0.0.256',
+    '1.2.3.4.5',
+    '8.8.8.8.',
+    '.8.8.8.8',
+  ]) {
+    const verdict = classifyEgressDestination(destination);
+    assert.equal(verdict.classification, 'dns-name', destination);
+    assert.equal(verdict.allowed, false, destination);
+  }
+
+  // And the boundary from the other side: the largest value each shortened form may carry is still
+  // a real address, so the parser is not simply refusing everything near the edge.
+  assert.equal(classifyEgressDestination('127.0.0.255').classification, 'loopback');
+  assert.equal(classifyEgressDestination('8.8.8.255').classification, 'public');
+  assert.equal(classifyEgressDestination('2130706433').classification, 'loopback');
+});
+
+test('a loopback name is loopback however it is spelled', () => {
+  for (const name of ['localhost', 'LOCALHOST', 'foo.localhost', 'a.b.localhost', 'ip6-localhost']) {
+    const verdict = classifyEgressDestination(name);
+    assert.equal(verdict.classification, 'loopback', name);
+    assert.equal(verdict.allowed, false, name);
+    // Never `dns-name`: a destination that is known to be loopback must not be handed back with
+    // `resolutionRequired` and a second chance.
+    assert.equal(verdict.resolutionRequired, undefined, name);
+  }
+});
+
+test('an IPv6 address that merely starts with ffff is not an IPv4-mapped address', () => {
+  // `::ffff:a:b` is IPv4-mapped; `::ffff:1:2:3` is an ordinary global address that happens to share
+  // a prefix. Reading the second as the first would classify a real destination by the wrong rules.
+  assert.equal(classifyEgressDestination('::ffff:1:2:3').classification, 'public');
+  assert.equal(classifyEgressDestination('::ffff:1:2:3:4').classification, 'public');
+  assert.equal(classifyEgressDestination('::ffff:127.0.0.1').classification, 'loopback');
+  assert.equal(classifyEgressDestination('::ffff:7f00:1').classification, 'loopback');
+});
+
 test('a name is never allowed on its own, and is refused when it resolves somewhere private', () => {
   const verdict = classifyEgressDestination('registry.npmjs.org');
   assert.equal(verdict.classification, 'dns-name');

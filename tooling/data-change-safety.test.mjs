@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   DATA_CHANGE_CLASSES,
   DATA_CHANGE_REFUSALS,
+  DEFAULT_MAX_RECOVERY_AGE_MS,
+  DEFAULT_MAX_RESTORE_REHEARSAL_AGE_MS,
   classifySqlStatement,
   dataChangePlanDigest,
   dataChangeRequirements,
@@ -371,6 +373,121 @@ test('requirements tighten with class and environment rather than being one fixe
   }
   assert.equal(dataChangeRequirements('backfill', 'preview').impact, true);
   assert.equal(dataChangeRequirements('additive', 'preview').impact, false);
+});
+
+test('the plan digest is canonical: the same plan digests the same however its keys are ordered', () => {
+  // The digest an approval binds to has to be a function of what the plan *says*, not of the order
+  // its fields happened to be assembled in. `dataChangePlanDigest` is exported and can be handed a
+  // plan from anywhere, so this asserts the property directly rather than through `planDataChange`,
+  // which normalises key order on the way past and would hide the difference.
+  const target = { environment: 'production', databaseId: 'db-prod-1' };
+  const forwards = { id: 'm1', target, statements: [{ statement: 'drop table public.a' }] };
+  const reversed = {
+    statements: [{ statement: 'drop table public.a' }],
+    target: { databaseId: 'db-prod-1', environment: 'production' },
+    id: 'm1',
+  };
+  assert.equal(dataChangePlanDigest(reversed), dataChangePlanDigest(forwards));
+
+  // And it still distinguishes plans that differ, so order-independence has not become
+  // everything-independence.
+  assert.notEqual(dataChangePlanDigest({ ...forwards, id: 'm2' }), dataChangePlanDigest(forwards));
+  assert.notEqual(
+    dataChangePlanDigest({ ...forwards, target: { environment: 'preview', databaseId: 'db-prod-1' } }),
+    dataChangePlanDigest(forwards),
+  );
+  assert.notEqual(
+    dataChangePlanDigest({ ...forwards, statements: [{ statement: 'drop table public.b' }] }),
+    dataChangePlanDigest(forwards),
+  );
+  // A plan that names nothing still digests rather than throwing: the identity check is a refusal,
+  // not a crash.
+  assert.match(dataChangePlanDigest({ id: null, target: null, statements: [] }), /^[0-9a-f]{64}$/);
+});
+
+test('an empty statement list falls back to the SQL rather than becoming an empty plan', () => {
+  const plan = planDataChange({
+    ...safeProductionInput(),
+    statements: [],
+    sql: 'alter table public.profiles drop column legacy_nickname;',
+  });
+  assert.equal(plan.statements.length, 1);
+  assert.equal(plan.classification, 'destructive');
+});
+
+test('a backfill must still say what proves it worked, and what happens when that fails', () => {
+  // A backfill is reversible in principle and rewrites rows in practice. Requirements that keyed
+  // only off irreversibility would let it run with nothing to check afterwards.
+  const backfill = {
+    id: '20260826160000_backfill_handles',
+    proposedBy: 'implementation-agent',
+    sql: 'update public.profiles set handle = nickname;',
+    target: { environment: 'preview', databaseId: 'db-preview-1' },
+    impact: { rowsAffected: 4120 },
+    rollback: { strategy: 'forward-repair', detail: 'Re-run from the snapshot export.' },
+  };
+  const bare = evaluateDataChangeSafety({
+    plan: planDataChange(backfill),
+    runtime: { environment: 'preview', databaseId: 'db-preview-1' },
+    environmentRegistry: registry,
+    now: NOW,
+  });
+  assert.equal(bare.allowed, false);
+  assert.ok(bare.refusalReasons.includes('verification-missing'));
+  assert.ok(bare.refusalReasons.includes('verification-failure-response-missing'));
+
+  const complete = evaluateDataChangeSafety({
+    plan: planDataChange({ ...backfill, verification: ['handle populated for every row'], onVerificationFailure: 'halt' }),
+    runtime: { environment: 'preview', databaseId: 'db-preview-1' },
+    environmentRegistry: registry,
+    now: NOW,
+  });
+  assert.equal(complete.allowed, true, JSON.stringify(complete.refusals));
+});
+
+test('recovery evidence is refused for each missing part separately, not only when it is absent', () => {
+  const complete = safeProductionInput().recovery;
+  for (const missing of ['snapshotId', 'digest', 'capturedAt']) {
+    const result = evaluate(safeProductionInput({ recovery: { ...complete, [missing]: null } }));
+    assert.equal(result.allowed, false, missing);
+    assert.ok(result.refusalReasons.includes('recovery-evidence-missing'), `${missing}: ${result.refusalReasons.join(', ')}`);
+  }
+});
+
+test('every age and expiry boundary is closed at the instant it names', () => {
+  // A window that is generous by one millisecond is a window somebody can sit on. Each of these
+  // asserts the last acceptable moment and the first unacceptable one, so widening any comparison
+  // fails here rather than in a production migration.
+  const recovery = safeProductionInput().recovery;
+
+  const atLimit = evaluate(safeProductionInput({ recovery: { ...recovery, capturedAt: iso(-DEFAULT_MAX_RECOVERY_AGE_MS) } }));
+  assert.equal(atLimit.allowed, true, `a snapshot exactly at the limit is still current: ${atLimit.refusalReasons.join(', ')}`);
+  const pastLimit = evaluate(safeProductionInput({ recovery: { ...recovery, capturedAt: iso(-DEFAULT_MAX_RECOVERY_AGE_MS - 1) } }));
+  assert.ok(pastLimit.refusalReasons.includes('recovery-evidence-stale'));
+
+  const rehearsal = recovery.restoreRehearsal;
+  const rehearsalAtLimit = evaluate(safeProductionInput({
+    recovery: { ...recovery, restoreRehearsal: { ...rehearsal, rehearsedAt: iso(-DEFAULT_MAX_RESTORE_REHEARSAL_AGE_MS) } },
+  }));
+  assert.equal(rehearsalAtLimit.allowed, true, rehearsalAtLimit.refusalReasons.join(', '));
+  const rehearsalPastLimit = evaluate(safeProductionInput({
+    recovery: { ...recovery, restoreRehearsal: { ...rehearsal, rehearsedAt: iso(-DEFAULT_MAX_RESTORE_REHEARSAL_AGE_MS - 1) } },
+  }));
+  assert.ok(rehearsalPastLimit.refusalReasons.includes('restore-unproven'));
+
+  // A clock that has run ahead is tolerated to a point and no further, because a snapshot that
+  // claims the future has not been taken yet.
+  const slightlyAhead = evaluate(safeProductionInput({ recovery: { ...recovery, capturedAt: iso(60_000) } }));
+  assert.equal(slightlyAhead.allowed, true, slightlyAhead.refusalReasons.join(', '));
+  const clearlyAhead = evaluate(safeProductionInput({ recovery: { ...recovery, capturedAt: iso(60_001) } }));
+  assert.ok(clearlyAhead.refusalReasons.includes('recovery-evidence-mismatched'));
+
+  // An approval is spent at its stated instant.
+  const approval = safeProductionInput().approvals[0];
+  const live = evaluate(safeProductionInput({ approvals: [{ ...approval, expiresAt: iso(1) }] }));
+  assert.equal(live.allowed, true, live.refusalReasons.join(', '));
+  const lapsed = evaluate(safeProductionInput({ approvals: [{ ...approval, expiresAt: NOW.toISOString() }] }));
+  assert.ok(lapsed.refusalReasons.includes('approval-expired'));
 });
 
 test('an empty plan is refused rather than trivially allowed', () => {

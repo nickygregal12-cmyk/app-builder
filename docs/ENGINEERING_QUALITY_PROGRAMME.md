@@ -419,6 +419,23 @@ Apply it where a declaration is a behavioural claim:
 - operation and capability registries (Phase 5);
 - policy, routing and permission matrices.
 
+The second instance is the gate-producer registry, and it is the pattern applied to a registry the
+same week it landed. `config/gate-producers.json` makes five claims about things outside itself per
+entry — the module that implements a producer, the contract it validates against, the file it writes,
+the command that writes it, and the list of checks nothing answers — and four of them were prose.
+`tooling/gate-producer-consumers.test.mjs` resolves each: the implementation module must exist and
+export the symbols named, the contract path must exist, the artifact must be a JSON file under the
+evidence directory, the command must be a script `package.json` defines, and
+`tooling/gate-evidence.mjs` must actually publish every registered producer — a producer nothing
+publishes can only ever resolve to `artifact-missing`.
+
+The strongest of the five is the last. `unregistered.checks` is a list of *gaps*, and a list of gaps
+that drifts is worse than no list because it reads as a survey. It is now required to be exactly the
+declared checks with no producer, computed from the gate registry rather than compared against a
+second copy of the same opinion, and every deterministic check any gate declares has to appear on one
+side or the other. A check that is neither answered nor recorded as unanswered is a gap nobody knows
+about.
+
 The first executable instance is the agent capability boundary. `config/agent-capabilities.json`
 declares which internal Factory routes exist for the Console and are never agent operations, and each
 entry carries the literal fragment of `apps/service/src/http.js` that serves it;

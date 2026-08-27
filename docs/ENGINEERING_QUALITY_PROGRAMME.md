@@ -297,8 +297,8 @@ cannot; for six files and ten operators, it did not.
 
 **There is no score.** A percentage says nothing about severity: eighteen survivors in argument
 shuffling are fine and one survivor that widens a budget is a defect. Every survivor is printed with
-its line and its weakening, and the command fails while any survivor is unaccounted for. All six
-targets currently kill every mutation the registry does not account for: 328 generated, zero
+its line and its weakening, and the command fails while any survivor is unaccounted for. All seven
+targets currently kill every mutation the registry does not account for: 383 generated, zero
 unaccounted survivors. The defects the runs exposed are closed by tests, in the tests — a chain of
 `or`s is only proven by the input that trips each link, a budget checked on two branches needs both
 branches exercised, and a limit nobody can reach is a limit nobody has tested.
@@ -315,13 +315,35 @@ survivor and leave the file byte-identical afterwards.
 tests inherited `NODE_TEST_CONTEXT` and reported themselves as nested tests rather than as runs with
 their own verdict. The child environment is now sanitised.
 
-**One target remains measured but not closed:**
-`packages/control-plane/src/execution-environment.js` — 41 killed, **17 of 58 survived**. It is not in
-the registry, because a target whose survivors are not closed leaves `npm run mutation:strength` red,
-and a gate expected to be red is not a gate. Its survivors cluster on the mount and network checks,
-where each conjunct of an `&&` chain is a separate way a sandbox stops being one. The change is
-test-only, but it sits beside the hosted-runtime lane and is better closed when that lane is not
-moving underneath it.
+**The last open target is closed.** `packages/control-plane/src/execution-environment.js` is in the
+registry: 55 generated, 55 killed, no recorded equivalences. Remeasured after the hosted task-image
+work it had 11 survivors rather than the 17 recorded earlier — that work killed six on its way past
+— and closing the rest found four things, three of which are not tests:
+
+- **Two invariants nothing refused.** `readOnlyRootFilesystem` and `workspace.disposable` were set by
+  the spec and asserted by nothing, so `assertSpecIsolation` accepted a spec carrying a writable root
+  or a workspace that outlives its attempt. Both are the same class as the escapes already on that
+  list — a task that can write `/usr/local/bin/node` replaces the interpreter the next attempt runs —
+  so both are now refusals with their own planted widening.
+- **The exemption pairs were half-tested.** The broker socket, the grant file and the model gateway
+  socket are exempt from the forbidden-mount list as `(target, source)` *pairs*, and only the passing
+  half had been exercised. Borrowing a handle's target for `/etc/shadow` is refused, a spec with no
+  grant file exempts no grant target, and a spec with no model lane exempts no model target whether
+  the lane is absent as `null` or missing from the spec entirely.
+- **The forbidden list forbids what is under it**, and only its exact paths had been tested, so half
+  of that comparison was unproven. `/etc/app-builder/agent-boundary.json` and `/proc/sys/kernel` are
+  now refused, and an unrelated absolute path still is not.
+- **One branch was dead.** `/` is an ordinary entry in the forbidden list and is matched exactly by
+  the comparison above it, so the separate host-root branch could only run in the iteration where
+  that comparison had already refused the same input. Deleted; the refusal is unchanged and now has
+  one spelling rather than two.
+
+**The gate could pass doing nothing, and now cannot.** A kill is inferred from a failing exit status,
+so a target whose tests were *already* red kills every mutation and reports a perfect score for a file
+nothing is defending. It is reachable by ordinary means — break a test while editing the module — and
+it happened during this very run. The harness now runs the unmutated tests first and refuses the
+target if they do not pass, with the failing subtests in the message; `tooling/mutation-strength.test.mjs`
+plants a red fixture and requires the refusal, and requires the module to be untouched afterwards.
 
 ### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 

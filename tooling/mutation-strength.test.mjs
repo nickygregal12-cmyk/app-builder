@@ -131,6 +131,35 @@ test('a weakening the tests do not notice is reported, and one they do notice is
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('a target whose tests already fail is refused, not scored', () => {
+  // The failure this refuses is the one the harness cannot see from inside: a
+  // kill is inferred from a failing exit status, so a target whose tests were
+  // already red kills every mutation and reports a perfect score for a file
+  // nothing is defending. It is reachable by ordinary means — break a test
+  // while editing the module, and the run that should tell you so agrees with
+  // you instead.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-mutation-red-'));
+  fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'src/guard.js'), 'export function allowed(role) {\n  return role === "operator";\n}\n');
+  fs.writeFileSync(path.join(root, 'guard.test.mjs'), [
+    "import test from 'node:test';",
+    "import assert from 'node:assert/strict';",
+    "import { allowed } from './src/guard.js';",
+    "test('this assertion is wrong, and the module is not', () => {",
+    "  assert.equal(allowed('visitor'), true);",
+    '});',
+    '',
+  ].join('\n'));
+
+  assert.throws(
+    () => runMutationTesting({ root, target: { file: 'src/guard.js', tests: ['guard.test.mjs'] } }),
+    /unmutated tests do not pass/,
+  );
+  // Refused before anything was written, so the module is untouched.
+  assert.match(fs.readFileSync(path.join(root, 'src/guard.js'), 'utf8'), /return role === "operator";/);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
 test('the operator set only ever weakens', () => {
   for (const operator of MUTATION_OPERATORS) {
     assert.ok(operator.why?.trim(), `${operator.id} must name the weakening it represents`);

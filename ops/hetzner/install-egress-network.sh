@@ -121,6 +121,12 @@ table inet app_builder_egress {
   }
   chain output {
     type filter hook output priority filter; policy accept;
+    # Rootless Netavark uses a namespace-local tap transport for its DNS
+    # forwarder. Permit only DNS from that namespace-local transport. Task
+    # packets traverse `forward`, where the private-range drops remain strict,
+    # so this does not grant task traffic access to 10/8 or to the host.
+    oifname "tap0" udp dport 53 counter accept
+    oifname "tap0" tcp dport 53 counter accept
     ip daddr @forbidden4 counter drop
     ip6 daddr @forbidden6 counter drop
   }

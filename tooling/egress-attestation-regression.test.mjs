@@ -51,6 +51,29 @@ test('dynamic host-address nft rules stay newline-terminated before each chain c
   assert.doesNotMatch(installer, /printf '%b' "\$host_rules"/, 'command substitution strips trailing newlines');
 });
 
+test('rootless DNS transport is exempted only in namespace-local output, never task forwarding', () => {
+  const forwardStart = position(installer, '  chain forward {');
+  const outputStart = position(installer, '  chain output {');
+  const tableEnd = position(installer.slice(outputStart), '\n}\nNFT') + outputStart;
+  const forwardChain = installer.slice(forwardStart, outputStart);
+  const outputChain = installer.slice(outputStart, tableEnd);
+
+  assert.doesNotMatch(
+    forwardChain,
+    /oifname "tap0" .* dport 53 counter accept/,
+    'task packets traverse forward and must not receive the rootless DNS exception',
+  );
+
+  const udpDns = position(outputChain, 'oifname "tap0" udp dport 53 counter accept');
+  const tcpDns = position(outputChain, 'oifname "tap0" tcp dport 53 counter accept');
+  const privateDrop = position(outputChain, 'ip daddr @forbidden4 counter drop');
+
+  assert.ok(udpDns < privateDrop, 'namespace-local UDP DNS must be allowed before the 10/8 drop');
+  assert.ok(tcpDns < privateDrop, 'namespace-local TCP DNS must be allowed before the 10/8 drop');
+  assert.match(forwardChain, /ip daddr @forbidden4 counter drop/);
+  assert.match(forwardChain, /ip6 daddr @forbidden6 counter drop/);
+});
+
 test('every egress verification attempt invalidates old evidence before any early refusal', () => {
   assert.match(verifier, /APP_BUILDER_EGRESS_ATTESTATION_FILE:-\/etc\/app-builder\/egress-profile\.json/);
 

@@ -385,7 +385,7 @@ test('an attempt records whether it had a model lane at all', () => {
     role, policy: POLICIES[role.policyId], registry: REGISTRY,
     image: { reference: 'localhost/app-builder-task', digest: `sha256:${'a'.repeat(64)}` },
     workspacePath: '/srv/app-builder-attempts/a1/workspace', scratchPath: '/srv/app-builder-attempts/a1/scratch',
-    grantPath: '/srv/app-builder-attempts/a1/grant', brokerSocketPath: '/run/m.sock',
+    grantPath: '/srv/app-builder-attempts/a1/grant', brokerSocketPath: '/run/app-builder/broker.sock',
   };
   assert.equal(createAttemptPlan(base, GRANT_SECRET).attempt.modelLane, null);
   const withLane = createAttemptPlan({ ...base, modelSocketPath: '/run/m.sock' }, GRANT_SECRET);

@@ -40,6 +40,7 @@ import { auditAssetRights } from './lib/asset-rights.mjs';
 import { evaluatePayloadBudgets, measureBuildPayload } from './lib/payload-budget.mjs';
 import { scanRepository } from './lib/secret-scan.mjs';
 import { auditCommittedSecrets, auditDependencyAdvisories } from './lib/security-evidence.mjs';
+import { GENERATED_CHECKS, summariseGeneratedChecks } from './lib/generated-check-evidence.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 const PIPELINE_ID = 'marketing-site';
@@ -125,6 +126,17 @@ const payload = evaluatePayloadBudgets({
   compositionHash: buildRef,
 });
 
+// The generated repository's own verdict on itself, from its own scripts. The
+// portability claim is that these run without the Console, so running them here
+// is both the gate evidence and a check on that claim.
+const generatedChecks = summariseGeneratedChecks({
+  results: GENERATED_CHECKS.map((entry) => {
+    const result = spawnSync('npm', ['run', entry.script], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
+    return { script: entry.script, exitCode: result.status ?? 1, output: `${result.stdout ?? ''}${result.stderr ?? ''}` };
+  }),
+  compositionHash: buildRef,
+});
+
 // The two security questions a built repository can answer about itself. The
 // third — executed-rls-acceptance — needs a live Postgres with the generated
 // policies applied, which is the database-security CI job's and not a build
@@ -155,6 +167,7 @@ const artifacts = {
   'payload-budget': publish('payload-budget', payload, project.id),
   'secret-scan': publish('secret-scan', secrets, project.id),
   'dependency-audit': publish('dependency-audit', dependencies, project.id),
+  'generated-checks': publish('generated-checks', generatedChecks, project.id),
 };
 
 for (const [id, artifact] of Object.entries(artifacts)) {

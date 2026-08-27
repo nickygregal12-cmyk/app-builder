@@ -139,13 +139,18 @@ and `npm run gates:evidence` runs it over a real build of the frozen nbm intake.
 
 The registry names, per deterministic check, the real producer that answers it, the artifact that
 producer leaves, the field carrying that artifact's build reference, and which of the producer's
-findings fail the check. Seven checks are registered today against six producers: the launch
+findings fail the check. Ten checks are registered today against seven producers: the launch
 readiness audit answers `fact-provenance-check`, the asset-rights audit answers `asset-rights-check`,
 the compiled DesignLint report answers both `design-lint` and `design-system-lint`, the payload
-budget answers `performance-budgets`, the tree-wide credential scan answers `secret-scan`, and
-`npm audit` over the tree the project installs answers `dependency-audit`. The last three need the
-project installed and built, because a payload or a dependency tree measured from source is a
-measurement of the wrong thing. Seven declared checks have no producer and are listed as such.
+budget answers `performance-budgets`, the tree-wide credential scan answers `secret-scan`,
+`npm audit` over the tree the project installs answers `dependency-audit`, and the generated
+project's **own** `typecheck`, `lint` and `test` scripts answer the three checks named after them.
+The last four need the project installed and built, because a payload, a dependency tree or a test
+run measured from source is a measurement of the wrong thing. Four declared checks have no producer
+and are listed as such: `e2e-tests`, `axe-serious-critical`, `seo-aeo-scanner` and
+`executed-rls-acceptance`. The first two need a browser and a served build, which the Playwright
+lanes own; the third needs a scanner Phase 4.3 has not built; the fourth needs a live Postgres with
+the generated policies applied, which is the `database-security` CI job's.
 
 What the resolver refuses, all of it as `not-run` rather than a pass:
 
@@ -163,12 +168,15 @@ there is nothing for the reviewer to look at.
 
 On the current nbm build, `provenance` is a genuine deterministic **pass** — the first required gate
 to reach a real status from real evidence — `design-system`, `visual` and `performance` have every
-declared check answered and wait only on a verdict, and `security` has two of its three answered and
-is one producer short. `executed-rls-acceptance` is that producer: it needs a live Postgres with the
-generated policies applied, which is the `database-security` CI job's to run and not something a
-build directory can answer, so it stays unregistered and the gate stays honest about it. Convergence
-is `false` with `gate-not-run`, which is correct and is expected to stay that way until the Phase 6
-quality programme gives the other checks producers.
+declared check answered and wait only on a verdict, `security` has two of its three answered and
+`tests` three of its four, each one producer short of being decidable. Convergence is `false` with
+`gate-not-run`, which is correct and is expected to stay that way until the Phase 6 quality
+programme gives the remaining checks producers and a reviewer issues the verdicts.
+
+Two numbers in that report are worth reading rather than skimming. The asset-rights pass is over
+**0 assets published**, and the generated project's test suite is **1 test**. Both are true, both are
+weak, and both are visible because a check may declare where its producer records how many subjects
+it examined.
 
 A pass over nothing is still a pass and hides that, so a check may declare the field where its
 producer records how many subjects it examined. The report prints it beside the status: the

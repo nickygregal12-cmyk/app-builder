@@ -69,6 +69,16 @@
       "artifact": ".app-builder/gate-evidence/dependency-audit.json",
       "buildRefField": "compositionHash",
       "reads": "npm audit --json over the tree the generated project actually installs. High and critical advisories fail; everything below is reported and does not block."
+    },
+    "generated-checks": {
+      "id": "generated-checks",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/generated-check-evidence.mjs summariseGeneratedChecks",
+      "artifactKind": "GeneratedCheckReport",
+      "contract": "tooling/lib/generated-check-evidence.mjs",
+      "artifact": ".app-builder/gate-evidence/generated-checks.json",
+      "buildRefField": "compositionHash",
+      "reads": "The generated repository's own typecheck, lint and test scripts, run in that repository. Nothing is reimplemented here: the portability claim is that those scripts run without the Console, so they are what answers the gate."
     }
   },
   "checks": {
@@ -162,6 +172,41 @@
       "why": "The generated project installs this tree on somebody else's machine. High and critical advisories block; moderate and below are recorded so the number is visible rather than absent.",
       "coverageField": "dependencies",
       "coverageLabel": "dependencies audited"
+    },
+    "typecheck": {
+      "id": "typecheck",
+      "gate": "tests",
+      "producer": "generated-checks",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "typecheck-failed"
+      ],
+      "why": "The generated project's own tsc/astro check. A project that does not typecheck fails for whoever clones it, with no factory to explain it."
+    },
+    "lint": {
+      "id": "lint",
+      "gate": "tests",
+      "producer": "generated-checks",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "lint-failed"
+      ],
+      "why": "The generated project's own oxlint run, over its own sources, with its own configuration."
+    },
+    "unit-tests": {
+      "id": "unit-tests",
+      "gate": "tests",
+      "producer": "generated-checks",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "unit-tests-failed"
+      ],
+      "why": "The generated project's own test script. Exit zero is not the whole verdict \u2014 a suite that ran nothing exits zero too \u2014 so the TAP plan travels as the coverage number.",
+      "coverageField": "unitTests",
+      "coverageLabel": "tests in the generated project's own suite"
     }
   },
   "unregistered": {
@@ -170,10 +215,7 @@
       "e2e-tests",
       "axe-serious-critical",
       "seo-aeo-scanner",
-      "executed-rls-acceptance",
-      "typecheck",
-      "lint",
-      "unit-tests"
+      "executed-rls-acceptance"
     ]
   }
 }

@@ -385,7 +385,7 @@ test('an attempt records whether it had a model lane at all', () => {
     role, policy: POLICIES[role.policyId], registry: REGISTRY,
     image: { reference: 'localhost/app-builder-task', digest: `sha256:${'a'.repeat(64)}` },
     workspacePath: '/srv/app-builder-attempts/a1/workspace', scratchPath: '/srv/app-builder-attempts/a1/scratch',
-    grantPath: '/srv/app-builder-attempts/a1/grant', brokerSocketPath: '/run/app-builder/broker.sock',
+    grantPath: '/srv/app-builder-attempts/a1/grant', brokerSocketPath: '/run/m.sock',
   };
   assert.equal(createAttemptPlan(base, GRANT_SECRET).attempt.modelLane, null);
   const withLane = createAttemptPlan({ ...base, modelSocketPath: '/run/m.sock' }, GRANT_SECRET);
@@ -527,9 +527,14 @@ test('the preflight refuses today, and names every outstanding prerequisite at o
   const result = preflight({ root: ROOT, env: {} });
   assert.equal(result.ok, false, 'nothing is authorised yet, so the preflight must refuse');
   const ids = new Set(result.blocking.map((check) => check.id));
-  for (const expected of ['task-image-digest-recorded', 'task-image-present-on-host', 'kill-switch-enabled', 'provider-credential-configured', 'one-time-enable-decision']) {
+  for (const expected of ['task-image-present-on-host', 'kill-switch-enabled', 'provider-credential-configured', 'one-time-enable-decision']) {
     assert.ok(ids.has(expected), `the preflight must report ${expected} rather than failing on the first blocker`);
   }
+  assert.equal(
+    result.checks.find((check) => check.id === 'task-image-digest-recorded').status,
+    'pass',
+    'the proven hosted task image digest is now pinned in the repository',
+  );
   // Every blocker carries a remedy or is explicitly a host question. An
   // operator should never have to discover the next prerequisite by running
   // into it.

@@ -40,6 +40,17 @@ test('egress anchor uses the runtime user UID instead of the system manager UID'
   );
 });
 
+test('dynamic host-address nft rules stay newline-terminated before each chain closes', () => {
+  assert.match(installer, /host_addresses=\(\)/);
+  assert.match(installer, /python3 - "\$RULES" "\$\{host_addresses\[@\]\}" <<'PY'/);
+  assert.match(
+    installer,
+    /extra = ""\.join\(f"    ip daddr \{address\} counter drop\\n" for address in addresses\)/,
+  );
+  assert.doesNotMatch(installer, /host_rules=/, 'do not rebuild nft lines through shell command substitution');
+  assert.doesNotMatch(installer, /printf '%b' "\$host_rules"/, 'command substitution strips trailing newlines');
+});
+
 test('every egress verification attempt invalidates old evidence before any early refusal', () => {
   assert.match(verifier, /APP_BUILDER_EGRESS_ATTESTATION_FILE:-\/etc\/app-builder\/egress-profile\.json/);
 

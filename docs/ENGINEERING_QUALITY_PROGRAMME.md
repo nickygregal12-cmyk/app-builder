@@ -265,6 +265,7 @@ Mutation testing answers "would a plausible weakening escape the tests?". It is 
 | `packages/control-plane/src/egress-policy.js` | which destinations count as the public internet |
 | `packages/control-plane/src/index.js` | ChangeSet scope enforcement, loop-guard budgets, the policy check — AGENTS.md principles 13 and 15 *are* these functions |
 | `apps/service/src/agent-broker.js` | where a grant is presented and an operation dispatched — the decision obeyed rather than made |
+| `packages/control-plane/src/risk.js` | what buys adversarial review, and what does not |
 | `packages/control-plane/src/data-change.js` | Stage Q12 production data-change refusals |
 
 **No tool was adopted.** `tooling/lib/mutation-harness.mjs` is about 160 lines: it generates
@@ -313,10 +314,10 @@ one; and a trust promotion — `provenance: 'user-supplied'` raising trust for a
 does not recognise (AGENTS.md principle 11).
 
 Each was closed with a test rather than by adjusting the operator set. All four targets now kill
-every mutation the registry does not account for: 305 generated across five targets, zero
-unaccounted survivors.
+every mutation the registry does not account for: 328 generated across six targets, zero unaccounted
+survivors.
 
-**Equivalent mutations are recorded, not suppressed.** Eleven are listed in
+**Equivalent mutations are recorded, not suppressed.** Thirteen are listed in
 `tooling/lib/mutation-targets.mjs`, each with the reason it cannot change behaviour — an unreachable
 defensive branch, a loop bound whose extra iteration reads past a string and exits, a comparison
 whose widening reassigns a value to itself. Three of them are defence in depth rather than holes: a
@@ -358,23 +359,33 @@ One survivor is recorded as equivalent: the decision entry for a caller whose gr
 is built and then dropped, because it has no project to be filed under, so nothing reads the field
 it changes. The refusal itself is the 403, which is asserted.
 
-**Two targets remain measured but not closed:**
+**`risk.js`, closed.** It decides what buys adversarial review, and 10 of its 23 weakenings
+survived. The path matcher is four separate comparisons — a directory pattern spelled with its
+separator, the same directory spelled without one, a file beneath it, and an exact path — and one
+representative match had left three of them untested. So had both kinds of file signal: a whole word
+(`session`), and a compound carrying its own separators (`api-key`). Each now has its match *and*
+its near miss, because the refusals are the expensive half: `sessions` is not `session`, `api` is
+not `api-key`, and `recipes/authorisation/` is not `recipes/auth/`. The sort was tested against a
+registry where declaration order, alphabetical order and severity order happened to agree, which
+proves nothing about a sort; a surface was added so that all three disagree.
+
+Two of its survivors are recorded as equivalent, and they are the same identity twice: a rank
+comparison only differs when the two ranks are equal, and equal ranks mean the same index in the
+severity order, which means the same severity string. Whichever side is kept, the value kept is
+identical.
+
+**One target remains measured but not closed:**
 
 | candidate | killed | survived |
 | --- | --- | --- |
 | `packages/control-plane/src/execution-environment.js` | 41 | **17** of 58 |
-| `packages/control-plane/src/risk.js` | 13 | **10** of 23 |
 
-Neither is in the registry, because adding a target whose survivors are not closed leaves
-`npm run mutation:strength` red, and a gate that is expected to be red is not a gate.
-`execution-environment.js` is the isolation shape a hostile task runs inside, and its survivors
-cluster on the mount and network checks — `&&` chains where each conjunct is a separate way a sandbox
-stops being one. `risk.js` decides what buys adversarial review, and its survivors are the segment-
-and word-boundary matchers, where over-matching makes every styling change expensive and
-under-matching lets an auth change through on ordinary review.
-
-`execution-environment.js` sits beside the hosted-runtime lane's own work. The change it needs is
-test-only, but it is better closed when that lane is not moving underneath it.
+It is not in the registry, because adding a target whose survivors are not closed leaves
+`npm run mutation:strength` red, and a gate that is expected to be red is not a gate. It is the
+isolation shape a hostile task runs inside, and its survivors cluster on the mount and network
+checks — `&&` chains where each conjunct is a separate way a sandbox stops being one. The change it
+needs is test-only, but it sits beside the hosted-runtime lane's own work and is better closed when
+that lane is not moving underneath it.
 
 ### Stage Q9 — supply-chain and workflow hardening (priority 1 delivered)
 

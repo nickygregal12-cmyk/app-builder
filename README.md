@@ -86,6 +86,7 @@ npm install
 npm run doctor
 npm run agent:route -- "Signup does not work"
 npm run agent:bench
+npm run rehearse:pipeline
 npm test
 npm run generate:acceptance
 npm run benchmark:acceptance

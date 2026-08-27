@@ -202,6 +202,31 @@ policy, ChangeSet, checkpoint and event model; they do not get their own schedul
 permission system. See `docs/AGENT_SPECIALIST_ARCHITECTURE.md` and
 `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
 
+### Resolving the next stage from durable state
+
+`packages/control-plane/src/pipeline-state.js` adds the one primitive the rest of that set assumed
+somebody else owned. `nextStage` answers a positional question — what follows this stage in the
+registry — and that is not the question an orchestrator asks after a restart. `projectPipelineProgress`
+answers the durable one: given the artifact kinds that exist and the stages a promoted handoff was
+recorded for, which stage may run now, and if none may, exactly why not.
+
+It refuses in two directions. A stage whose declared inputs do not exist is `blocked` and the pipeline
+does **not** step over it to find one that can run — the ordering in `config/agent-pipelines.json` is
+the organisation's sequencing decision, and an orchestrator that reorders it to make progress has
+replaced that decision with its own. And a stage the record claims was promoted, whose artifacts are
+gone, is `stage-evidence-missing:*` rather than something to resume past.
+
+`assertStageAssignment` is the creator half of the reviewer-independence rule: a specialist may only
+execute the stage the registry assigns to it. `reworkStageForRole` turns a verdict's `returnToRole`
+into a stage, and reports `rework-role-owns-no-stage:*` rather than approximating with the nearest
+earlier one.
+
+The composition of all of this — durable state, pipeline registry, role registry, bounded context
+packet, capability projection, attempt boundary, specialist result, deterministic checks, independent
+review, handoff, rework, checkpoint — is executable as `npm run rehearse:pipeline`, with a
+deterministic stand-in where the model will be. It is a rehearsal of the control plane, not a build
+and not a runtime proof; `docs/AGENT_RUNTIME.md` records what it does and does not establish.
+
 ## Durable state model
 
 Every autonomous task should be reconstructible from:

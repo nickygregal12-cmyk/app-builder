@@ -160,6 +160,22 @@ Nothing there is a second design authority. The axes, the responsive plan, the l
 findings, the frozen truth and the criteria are all read from the candidate set and the
 review packet that 4D.1, 4D.6 and 4D.8 already produce.
 
+### Recorded finding: reaching that view still costs a terminal — 2026-08-27
+
+The comparison surface is right and the evidence is durable, but the route to both still
+runs through a shell: clone or SSH, `npm install`, `npm run acceptance:visual-candidates`,
+`npm run review:visual-candidates`, then a localhost URL. The owner is the reviewer, and
+the reviewer is the one gate this phase is waiting on, so the cost of reaching the view is
+part of why the verdict stays open.
+
+The eventual shape is an ordinary secure browser surface: open it, pick the candidate or
+site, desktop and mobile evidence directly there, Pass / Rework / Reject, verdict recorded
+durably. That is a product-surface change and it is **not** in scope for the runtime lane;
+it is recorded here so the cost is written down where the gate lives rather than
+rediscovered. It does not change this phase's state: the verdict is still outstanding for
+the reason it has always been outstanding — the factory made the candidates, so the factory
+cannot promote one — and no amount of review ergonomics closes that.
+
 ## 4D.8 — the independent critic — contract done, verdict outstanding
 
 `visualReviewPacket` hands a critic what the rules already settled, the warnings it must address, and

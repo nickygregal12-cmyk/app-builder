@@ -44,7 +44,8 @@ before the artifact is understood become drift, not authority.
 An agent saying it is finished does not advance a stage. `evaluateHandoff` promotes a stage only when
 every one of these holds:
 
-1. every artifact the stage declares in `produces` exists;
+1. every artifact the stage declares in `produces` exists, **and nothing outside it does** — `produces`
+   is an output scope, not a minimum;
 2. every prerequisite artifact the stage declares in `requires` is available;
 3. every required evidence item exists;
 4. every required deterministic check ran and passed — a `not-run` check blocks exactly like a
@@ -52,7 +53,8 @@ every one of these holds:
 5. an independent reviewer issued a passing verdict for this stage, or a human approved it where the
    pipeline names `human` as the reviewer.
 
-Any failure produces a typed blocker (`missing-artifact:*`, `missing-prerequisite:*`,
+Any failure produces a typed blocker (`missing-artifact:*`, `undeclared-artifact:*`,
+`missing-prerequisite:*`,
 `missing-evidence:*`, `check-not-run:*`, `check-failed:*`, `review-verdict-missing`,
 `wrong-reviewer:*`, `self-approval-rejected`, `verdict-stage-mismatch:*`, `verdict-blocked`,
 `human-approval-required`) and `nextStageId` stays null. A promoted handoff records who approved it.
@@ -140,6 +142,23 @@ competing authority.
 
 `evaluateHandoff`, `createReviewVerdict`, `assertReviewIndependence`, `evaluateConvergence`,
 `planRework`, `buildRoleContextPacket`, `assertMutationAllowed`, `selectPipeline` and `nextStage` are
-implemented and covered by `tooling/agent-architecture.test.mjs`. What is still planned is the wiring:
-gate results are supplied by callers today, and the Phase 6 quality programme is what makes every
-gate produce its own deterministic evidence.
+implemented and covered by `tooling/agent-architecture.test.mjs`.
+
+Those primitives are now also *composed*. `npm run rehearse:pipeline` walks a registered pipeline end
+to end with a deterministic stand-in where the specialist will be, so the ordering between them is
+something that has run rather than something the architecture asserts. Its evidence and its refusals
+are described in `docs/AGENT_RUNTIME.md`; the one control-plane primitive it needed and did not find
+is `projectPipelineProgress` in `packages/control-plane/src/pipeline-state.js`, which answers "which
+stage may run now, given what durably exists" — the question `nextStage` does not ask, because
+`nextStage` is positional and durable state is not.
+
+Two rules were tightened by walking it. A stage's `produces` is now an output *scope* rather than a
+minimum: an artifact outside it is an `undeclared-artifact:*` blocker, on the same reasoning that
+makes a file outside `allowedFiles` a ChangeSet scope escape. And a stage recorded as promoted whose
+artifacts are no longer present is `stage-evidence-missing:*` — a hole in the record to be refused,
+not resumed onto.
+
+What is still planned is the rest of the wiring: gate results are supplied by callers today, and the
+Phase 6 quality programme is what makes every gate produce its own deterministic evidence. The
+rehearsal supplies none, which is why it always reports `converged: false` with `gate-not-run` even
+after promoting every stage.

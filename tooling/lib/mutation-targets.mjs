@@ -91,6 +91,24 @@ export const MUTATION_TARGETS = Object.freeze([
     ],
   },
   {
+    id: 'risk-classification',
+    file: 'packages/control-plane/src/risk.js',
+    why: 'What buys adversarial review. Over-matching makes every styling change expensive; under-matching lets an auth change through on ordinary review.',
+    tests: [
+      'tooling/risk-classification.test.mjs',
+    ],
+    equivalent: [
+      {
+        id: 'risk:92:gte-widened#1',
+        why: 'The comparison only differs when the two ranks are equal, and equal ranks mean the same index in the severity order, which means the same severity string. Whichever side is kept, the value kept is identical.',
+      },
+      {
+        id: 'risk:111:gt-widened#1',
+        why: 'The same identity in the reduce that picks the highest severity: widening it only changes which of two equal ranks is carried forward, and two equal ranks are one severity.',
+      },
+    ],
+  },
+  {
     id: 'data-change',
     file: 'packages/control-plane/src/data-change.js',
     why: 'Stage Q12 production data-change refusals: destructive classification, environment identity, recovery evidence and approval.',

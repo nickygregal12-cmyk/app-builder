@@ -135,3 +135,102 @@ test('every surface severity is a declared severity level', () => {
     assert.ok(surface.label?.length > 0, `surface ${id} needs a label`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Mutation-driven coverage (Stage Q8).
+//
+// `npm run mutation:strength risk-classification` weakens each matcher and each
+// rank comparison one at a time. Ten survived the first run: every individual
+// form a path pattern can take, both kinds of file signal, and all three places
+// severity is compared. Each test below exists because one of them did.
+// ---------------------------------------------------------------------------
+
+const SYNTHETIC = {
+  severityOrder: ['low', 'elevated', 'high', 'critical'],
+  escalation: { independentSecondOpinionAtOrAbove: 'high' },
+  surfaces: {
+    directory: { label: 'Directory pattern', severity: 'elevated', pathPatterns: ['recipes/auth/'], reviewers: ['alpha'] },
+    exact: { label: 'Exact pattern', severity: 'high', pathPatterns: ['config/secrets.json'], reviewers: ['beta'] },
+    word: { label: 'Word signal', severity: 'elevated', fileSignals: ['session'], reviewers: ['gamma'] },
+    compound: { label: 'Compound signal', severity: 'high', fileSignals: ['api-key'], reviewers: ['delta'] },
+    // Named so that registry order, alphabetical order and severity order all disagree. A sort
+    // whose three inputs agree is a sort nothing can be proven about.
+    zeta: { label: 'Late but severe', severity: 'high', pathPatterns: ['zeta/'], reviewers: ['epsilon'] },
+  },
+  capabilityActions: {
+    'thing.low': { surface: 'shared', severity: 'elevated', reviewers: ['alpha'] },
+    'thing.high': { surface: 'shared', severity: 'critical', reviewers: ['beta'] },
+  },
+};
+
+const synthetic = (input) => classifyChangeSetRisk(input, SYNTHETIC);
+
+test('each form a path pattern can take matches, and each is a separate form', () => {
+  // A directory pattern with a trailing separator matches the directory itself as well as anything
+  // under it; a pattern without one matches that exact path and anything under it. Four cases, and
+  // the guard is four separate comparisons — one representative match leaves three untested.
+  assert.deepEqual(synthetic({ paths: ['recipes/auth/'] }).surfaces.map((entry) => entry.id), ['directory'], 'the directory itself, spelled with its separator');
+  assert.deepEqual(synthetic({ paths: ['recipes/auth'] }).surfaces.map((entry) => entry.id), ['directory'], 'the directory itself, spelled without one');
+  assert.deepEqual(synthetic({ paths: ['recipes/auth/files/x.tsx'] }).surfaces.map((entry) => entry.id), ['directory'], 'a file beneath it');
+  assert.deepEqual(synthetic({ paths: ['config/secrets.json'] }).surfaces.map((entry) => entry.id), ['exact'], 'an exact path pattern');
+  assert.deepEqual(synthetic({ paths: ['config/secrets.json/nested.ts'] }).surfaces.map((entry) => entry.id), ['exact'], 'a path beneath an exact pattern');
+
+  // And the near misses, or the matcher has become "matches everything nearby".
+  assert.deepEqual(synthetic({ paths: ['recipes/authorisation/x.ts'] }).surfaces, [], 'a sibling with a longer name');
+  assert.deepEqual(synthetic({ paths: ['config/secrets.json.bak'] }).surfaces, [], 'a path that merely starts with the pattern');
+  assert.deepEqual(synthetic({ paths: ['other/recipes/auth/x.ts'] }).surfaces, [], 'the pattern appearing later in the path');
+});
+
+test('a whole-word signal and a compound signal are different rules', () => {
+  assert.deepEqual(synthetic({ paths: ['src/session.ts'] }).surfaces.map((entry) => entry.id), ['word']);
+  assert.deepEqual(synthetic({ paths: ['src/session/index.ts'] }).surfaces.map((entry) => entry.id), ['word'], 'a directory segment is a word too');
+  assert.deepEqual(synthetic({ paths: ['src/api-key-store.ts'] }).surfaces.map((entry) => entry.id), ['compound'], 'a signal carrying its own separators matches inside the basename');
+
+  // The refusals this rule exists for. `sessions` is not `session`, and a compound signal must not
+  // decompose into words that match everything.
+  assert.deepEqual(synthetic({ paths: ['src/sessions.ts'] }).surfaces, [], 'a longer word is a different word');
+  assert.deepEqual(synthetic({ paths: ['src/api.ts'] }).surfaces, [], 'half of a compound signal is not the signal');
+  assert.deepEqual(synthetic({ paths: ['src/key.ts'] }).surfaces, [], 'the other half is not either');
+});
+
+test('two capability actions on one surface keep the higher severity, whichever order they arrive in', () => {
+  const rising = synthetic({ paths: [], capabilities: ['thing.low', 'thing.high'] });
+  const falling = synthetic({ paths: [], capabilities: ['thing.high', 'thing.low'] });
+  assert.equal(rising.severity, 'critical');
+  assert.equal(falling.severity, 'critical', 'the order actions are listed in must not decide the severity');
+  assert.deepEqual(rising.surfaces.map((entry) => entry.severity), ['critical']);
+});
+
+test('surfaces sort by severity first and by name only to break a tie', () => {
+  // Severity leads: `zeta` is declared last in the registry and sorts last alphabetically, and it
+  // still comes first because it is the more severe.
+  assert.deepEqual(
+    synthetic({ paths: ['recipes/auth/x.ts', 'zeta/x.ts'] }).surfaces.map((entry) => entry.id),
+    ['zeta', 'directory'],
+  );
+  // Name breaks the tie: `compound` and `exact` are equally severe and declared in the other order.
+  assert.deepEqual(
+    synthetic({ paths: ['config/secrets.json', 'src/api-key.ts'] }).surfaces.map((entry) => entry.id),
+    ['compound', 'exact'],
+  );
+  // And the result does not depend on the order the paths were declared in, or a classification
+  // would reorder between runs and nobody could diff it.
+  assert.deepEqual(
+    synthetic({ paths: ['src/api-key.ts', 'config/secrets.json'] }).surfaces.map((entry) => entry.id),
+    ['compound', 'exact'],
+  );
+  assert.deepEqual(
+    synthetic({ paths: ['src/session.ts', 'recipes/auth/x.ts'] }).surfaces.map((entry) => entry.id),
+    ['directory', 'word'],
+  );
+});
+
+test('severity is the highest matched surface, and the escalation threshold is at-or-above', () => {
+  assert.equal(synthetic({ paths: [] }).severity, 'low', 'nothing matched is the lowest declared level, not undefined');
+  assert.equal(synthetic({ paths: ['src/session.ts'] }).severity, 'elevated');
+  assert.equal(synthetic({ paths: ['src/session.ts', 'config/secrets.json'] }).severity, 'high', 'the highest, not the first and not the last');
+
+  // Exactly at the threshold buys independence; one below does not.
+  assert.ok(synthetic({ paths: ['config/secrets.json'] }).requiredReviewers.includes('independent-second-opinion'));
+  assert.ok(!synthetic({ paths: ['src/session.ts'] }).requiredReviewers.includes('independent-second-opinion'));
+});

@@ -523,11 +523,36 @@ test('exit code zero is not evidence', () => {
 // The preflight, and the fact that it refuses today.
 // ---------------------------------------------------------------------------
 
+/**
+ * A repository tree carrying the real configs with one file overridden.
+ *
+ * `preflight` reads five configs from its root, so the whole production path
+ * runs against the override rather than against a stub of it. This is how a
+ * state the repository has now moved past — an unbuilt image with no digest —
+ * stays covered after the digest is pinned.
+ */
+function withConfigOverride(overrides, run) {
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'model-preflight-'));
+  fs.mkdirSync(path.join(scratch, 'config'), { recursive: true });
+  for (const name of ['model-execution.json', 'agent-roles.json', 'agent-policies.json', 'agent-capabilities.json', 'task-images.json']) {
+    const relative = `config/${name}`;
+    const value = Object.hasOwn(overrides, relative)
+      ? JSON.stringify(overrides[relative])
+      : fs.readFileSync(path.join(ROOT, relative), 'utf8');
+    fs.writeFileSync(path.join(scratch, relative), value);
+  }
+  try {
+    return run(scratch);
+  } finally {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
 test('the preflight refuses today, and names every outstanding prerequisite at once', () => {
   const result = preflight({ root: ROOT, env: {} });
   assert.equal(result.ok, false, 'nothing is authorised yet, so the preflight must refuse');
   const ids = new Set(result.blocking.map((check) => check.id));
-  for (const expected of ['task-image-digest-recorded', 'task-image-present-on-host', 'kill-switch-enabled', 'provider-credential-configured', 'one-time-enable-decision']) {
+  for (const expected of ['task-image-present-on-host', 'kill-switch-enabled', 'provider-credential-configured', 'one-time-enable-decision']) {
     assert.ok(ids.has(expected), `the preflight must report ${expected} rather than failing on the first blocker`);
   }
   // Every blocker carries a remedy or is explicitly a host question. An
@@ -538,6 +563,31 @@ test('the preflight refuses today, and names every outstanding prerequisite at o
   }
   // A host question is never reported as a pass.
   assert.equal(result.checks.find((check) => check.id === 'task-image-present-on-host').status, 'unknown');
+});
+
+test('the recorded digest is what the preflight reports, and its absence is still a blocker', () => {
+  // The baseline image has been built and adversarially verified on the host,
+  // so this one prerequisite is now genuinely met. It is the only one.
+  const images = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/task-images.json'), 'utf8'));
+  const baseline = images.images['task-baseline'];
+  assert.match(baseline.digest ?? '', /^sha256:[0-9a-f]{64}$/, 'the pinned baseline must be a content digest, never a tag');
+
+  const pinned = preflight({ root: ROOT, env: {} }).checks.find((check) => check.id === 'task-image-digest-recorded');
+  assert.equal(pinned.status, 'pass', pinned.detail);
+  assert.ok(pinned.detail.includes(baseline.digest), 'the preflight must report the digest it resolved, not merely that one exists');
+
+  // An image that has not been built on a host yet still fails closed, with the
+  // command that fixes it. Pinning one image must never soften that for the next.
+  const unbuilt = { ...images, images: { ...images.images, 'task-baseline': { ...baseline, digest: null } } };
+  withConfigOverride({ 'config/task-images.json': unbuilt }, (root) => {
+    const result = preflight({ root, env: {} });
+    const check = result.checks.find((entry) => entry.id === 'task-image-digest-recorded');
+    assert.equal(check.status, 'fail');
+    assert.match(check.detail, /no recorded digest/);
+    assert.match(check.remedy, /build-task-image\.sh/);
+    assert.ok(result.blocking.some((entry) => entry.id === 'task-image-digest-recorded'));
+    assert.equal(result.ok, false);
+  });
 });
 
 test('the preflight confirms the chosen role is eligible even while the run is blocked', () => {

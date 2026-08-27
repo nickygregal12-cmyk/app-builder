@@ -17,6 +17,10 @@ import {
   reworkOverrides,
 } from './lib/visual-rework.mjs';
 
+// Independence is decided on vendor, so the critic in these fixtures is a
+// different vendor to the candidate creator — not just a different label.
+const CRITIC = { role: 'design-critic', vendor: 'openai', model: 'gpt-5.6' };
+
 const gate = loadVisualQualityGate(process.cwd());
 const criteria = reviewCriteriaFor({ projectType: 'marketing-site', publishesImagery: false });
 
@@ -49,7 +53,7 @@ function candidate(id, overrides = {}) {
     outcome: 'pending',
     rationale: null,
     reworkOwner: null,
-    provenance: { createdBy: 'visual-direction', reviewedBy: null, promotedBy: null, decidedAt: null },
+    provenance: { createdBy: { role: 'visual-direction', vendor: 'anthropic', model: 'claude-opus-5' }, reviewedBy: null, promotedBy: null, decidedAt: null },
     ...overrides,
   };
 }
@@ -103,7 +107,7 @@ test('a competent-but-not-good-enough candidate cannot be passed', () => {
   assert.throws(
     () => recordReview(candidate('candidate-a'), {
       verdict: 'pass',
-      reviewedBy: 'design-critic',
+      reviewedBy: CRITIC,
       addressedRules: [],
       criterionScores: scores(7.2),
     }, { qualityGate: gate, criteria }),
@@ -113,7 +117,7 @@ test('a competent-but-not-good-enough candidate cannot be passed', () => {
 
 test('a verdict with no scores at all cannot be a pass', () => {
   assert.throws(
-    () => recordReview(candidate('candidate-a'), { verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [] }, { qualityGate: gate, criteria }),
+    () => recordReview(candidate('candidate-a'), { verdict: 'pass', reviewedBy: CRITIC, addressedRules: [] }, { qualityGate: gate, criteria }),
     /carries no criterion scores/,
   );
 });
@@ -121,7 +125,7 @@ test('a verdict with no scores at all cannot be a pass', () => {
 test('the same candidate can be recorded as competent and returned for rework', () => {
   const reviewed = recordReview(candidate('candidate-a'), {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7.2, { distinctiveness: 5 }),
     failingCriteria: ['distinctiveness'],
@@ -134,19 +138,19 @@ test('the same candidate can be recorded as competent and returned for rework', 
 test('a candidate that clears the bar passes and can be promoted', () => {
   const passing = recordReview(candidate('candidate-a'), {
     verdict: 'pass',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(8.8),
   }, { qualityGate: gate, criteria });
   assert.equal(passing.review.thresholdMet, true);
   const rejected = recordReview(candidate('candidate-b'), {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7),
     failingCriteria: ['distinctiveness'],
   }, { qualityGate: gate, criteria });
-  const promoted = promoteCandidate(set([passing, rejected]), 'candidate-a', { promotedBy: 'design-critic', decidedAt: '2026-08-26T11:00:00.000Z' });
+  const promoted = promoteCandidate(set([passing, rejected]), 'candidate-a', { promotedBy: CRITIC, decidedAt: '2026-08-26T11:00:00.000Z' });
   assert.equal(promoted.promotedCandidateId, 'candidate-a');
   assert.equal(promoted.setOutcome, 'promoted');
 });
@@ -154,7 +158,7 @@ test('a candidate that clears the bar passes and can be promoted', () => {
 function reworked(id, overrides = {}) {
   return recordReview(candidate(id, overrides), {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7.5, { distinctiveness: 5, 'distinctive-moment': 5.5 }),
     failingCriteria: ['distinctiveness'],
@@ -170,7 +174,7 @@ test('a set where nothing is good enough can be sent back or closed, and never s
   assert.equal(summary.canReject, true);
   assert.deepEqual(summary.passing, []);
 
-  const rejected = decideCandidateSet(undecided, { outcome: 'rejected', decidedBy: 'design-critic', rationale: 'Both are competent. Neither clears the bar.', decidedAt: '2026-08-26T11:00:00.000Z' });
+  const rejected = decideCandidateSet(undecided, { outcome: 'rejected', decidedBy: CRITIC, rationale: 'Both are competent. Neither clears the bar.', decidedAt: '2026-08-26T11:00:00.000Z' });
   assert.equal(rejected.setOutcome, 'rejected');
   assert.equal(rejected.promotedCandidateId, null);
   assert.ok(rejected.candidates.every((entry) => entry.outcome === 'rejected'));
@@ -178,26 +182,35 @@ test('a set where nothing is good enough can be sent back or closed, and never s
 
 test('a set cannot be decided before somebody has looked at every candidate', () => {
   assert.throws(
-    () => decideCandidateSet(set([reworked('candidate-a'), candidate('candidate-b')]), { outcome: 'rejected', decidedBy: 'design-critic' }),
+    () => decideCandidateSet(set([reworked('candidate-a'), candidate('candidate-b')]), { outcome: 'rejected', decidedBy: CRITIC }),
     /has not been judged/,
   );
 });
 
 test('a set with a passing candidate has a winner rather than a set-level outcome', () => {
   const passing = recordReview(candidate('candidate-a'), {
-    verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [], criterionScores: scores(9),
+    verdict: 'pass', reviewedBy: CRITIC, addressedRules: [], criterionScores: scores(9),
   }, { qualityGate: gate, criteria });
   assert.throws(
-    () => decideCandidateSet(set([passing, reworked('candidate-b')]), { outcome: 'rejected', decidedBy: 'design-critic' }),
+    () => decideCandidateSet(set([passing, reworked('candidate-b')]), { outcome: 'rejected', decidedBy: CRITIC }),
     /has a winner to promote/,
   );
 });
 
 test('whoever created the candidates cannot close the book on them either', () => {
   const created = set([reworked('candidate-a'), reworked('candidate-b')]);
+
+  // The creator's own vendor, relabelled. Closing a set is a decision about
+  // work, so it is held to the same independence rule as promoting one.
+  assert.throws(
+    () => decideCandidateSet(created, { outcome: 'rejected', decidedBy: { role: 'design-critic', vendor: 'anthropic', model: 'claude-opus-5' } }),
+    /same vendor/,
+  );
+
+  // And an identity that cannot be checked cannot close it either.
   assert.throws(
     () => decideCandidateSet(created, { outcome: 'rejected', decidedBy: 'visual-direction' }),
-    /cannot also promote it/,
+    /declares no vendor/,
   );
 });
 
@@ -223,7 +236,7 @@ test('a rework targets what failed and names what must survive', () => {
 test('a weak mobile composition is answered by the responsive plan, not by the desktop one', () => {
   const parent = recordReview(candidate('candidate-a'), {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7.5, { 'responsive-quality': 5 }),
     failingCriteria: ['responsive-quality'],
@@ -235,7 +248,7 @@ test('a weak mobile composition is answered by the responsive plan, not by the d
 test('a failure this lane does not own is routed rather than absorbed', () => {
   const parent = recordReview(candidate('candidate-a'), {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7.5, { 'brand-fit': 5 }),
     failingCriteria: ['brand-fit'],
@@ -249,7 +262,7 @@ test('a failure this lane does not own is routed rather than absorbed', () => {
 test('a failure no registered presentation can answer classifies a bespoke requirement', () => {
   const parent = recordReview(candidate('candidate-a'), {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7.5, { 'distinctive-moment': 4 }),
     failingCriteria: ['distinctive-moment'],
@@ -269,7 +282,7 @@ test('an exhausted axis also classifies a bespoke requirement rather than repeat
   expressive.artDirection.dimensions.visualDistinctiveness = 'expressive';
   const parent = recordReview(expressive, {
     verdict: 'rework',
-    reviewedBy: 'design-critic',
+    reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7.5, { distinctiveness: 5 }),
     failingCriteria: ['distinctiveness'],
@@ -320,7 +333,7 @@ test('the rework loop has a ceiling and says so when it is reached', () => {
 
 test('a rework verdict that names no failing criterion is a request to start again, and is refused', () => {
   const parent = recordReview(candidate('candidate-a'), {
-    verdict: 'rework', reviewedBy: 'design-critic', addressedRules: [], criterionScores: scores(7),
+    verdict: 'rework', reviewedBy: CRITIC, addressedRules: [], criterionScores: scores(7),
   }, { qualityGate: gate, criteria });
   assert.throws(
     () => planVisualRework({ set: set([parent]), candidate: parent, gate, criteria, createdAt: '2026-08-26T11:00:00.000Z' }),
@@ -330,7 +343,7 @@ test('a rework verdict that names no failing criterion is a request to start aga
 
 test('only a rework verdict asks for a revision', () => {
   const passing = recordReview(candidate('candidate-a'), {
-    verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [], criterionScores: scores(9),
+    verdict: 'pass', reviewedBy: CRITIC, addressedRules: [], criterionScores: scores(9),
   }, { qualityGate: gate, criteria });
   assert.throws(
     () => planVisualRework({ set: set([passing]), candidate: passing, gate, criteria, createdAt: '2026-08-26T11:00:00.000Z' }),

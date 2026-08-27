@@ -89,7 +89,7 @@
       "required": ["outcome", "decidedBy"],
       "properties": {
         "outcome": {"enum": ["promoted", "rework-required", "rejected"]},
-        "decidedBy": {"type": "string", "minLength": 1},
+        "decidedBy": {"$ref": "#/$defs/runtimeIdentity"},
         "rationale": {"type": ["string", "null"]},
         "decidedAt": {"type": ["string", "null"]}
       },
@@ -103,9 +103,20 @@
   },
   "additionalProperties": false,
   "$defs": {
+    "runtimeIdentity": {
+      "type": "object",
+      "description": "Who acted, and what actually produced the act. `vendor` is load-bearing: independence is decided by comparing it, because a role name is chosen by the caller and the same model under a second label is the same opinion.",
+      "required": ["role", "vendor", "model"],
+      "properties": {
+        "role": {"type": "string", "minLength": 1},
+        "vendor": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
     "candidate": {
       "type": "object",
-      "required": ["candidateId", "directionId", "directionLabel", "state", "artDirection", "signature", "compositionHash", "assetStrategy", "gate", "outcome"],
+      "required": ["candidateId", "directionId", "directionLabel", "state", "artDirection", "signature", "compositionHash", "assetStrategy", "gate", "outcome", "provenance"],
       "properties": {
         "candidateId": {"type": "string", "pattern": "^candidate-[a-z0-9-]+$"},
         "directionId": {"type": "string", "minLength": 1},
@@ -212,9 +223,9 @@
           "type": "object",
           "required": ["createdBy"],
           "properties": {
-            "createdBy": {"type": "string", "minLength": 1},
-            "reviewedBy": {"type": ["string", "null"]},
-            "promotedBy": {"type": ["string", "null"]},
+            "createdBy": {"$ref": "#/$defs/runtimeIdentity"},
+            "reviewedBy": {"oneOf": [{"$ref": "#/$defs/runtimeIdentity"}, {"type": "null"}]},
+            "promotedBy": {"oneOf": [{"$ref": "#/$defs/runtimeIdentity"}, {"type": "null"}]},
             "decidedAt": {"type": ["string", "null"]}
           },
           "additionalProperties": false

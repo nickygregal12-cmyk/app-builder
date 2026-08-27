@@ -695,8 +695,8 @@ export async function readVisualCandidates(projectId: string) {
   return await request<{ set: VisualCandidateSet | null; summary: VisualCandidateSetSummary | null }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates`);
 }
 
-export async function generateVisualCandidates(projectId: string) {
-  return (await request<{ set: VisualCandidateSet }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates`, { method: 'POST', body: JSON.stringify({}) })).set;
+export async function generateVisualCandidates(projectId: string, createdBy: RuntimeIdentity) {
+  return (await request<{ set: VisualCandidateSet }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates`, { method: 'POST', body: JSON.stringify({ createdBy }) })).set;
 }
 
 export async function captureVisualCandidateEvidence(projectId: string) {
@@ -707,7 +707,7 @@ export async function readVisualReviewPacket(projectId: string, candidateId: str
   return (await request<{ packet: VisualReviewPacket }>(`/projects/${encodeURIComponent(projectId)}/visual-candidates/${encodeURIComponent(candidateId)}/packet`)).packet;
 }
 
-export async function decideVisualCandidateSet(projectId: string, decision: { outcome: 'rework-required' | 'rejected'; decidedBy: string; rationale: string }) {
+export async function decideVisualCandidateSet(projectId: string, decision: { outcome: 'rework-required' | 'rejected'; decidedBy: RuntimeIdentity; rationale: string }) {
   return (await request<{ set: VisualCandidateSet }>(
     `/projects/${encodeURIComponent(projectId)}/visual-candidates/decision`,
     { method: 'POST', body: JSON.stringify(decision) },
@@ -721,14 +721,16 @@ export async function reworkVisualCandidate(projectId: string, candidateId: stri
   );
 }
 
-export async function recordVisualReview(projectId: string, candidateId: string, review: { verdict: string; reviewedBy: string; addressedRules: string[]; rationale: string; criterionScores: Array<{ criterion: string; score: number }>; failingCriteria: string[] }) {
+export type RuntimeIdentity = { role: string; vendor: string; model: string };
+
+export async function recordVisualReview(projectId: string, candidateId: string, review: { verdict: string; reviewedBy: RuntimeIdentity; addressedRules: string[]; rationale: string; criterionScores: Array<{ criterion: string; score: number }>; failingCriteria: string[] }) {
   return (await request<{ set: VisualCandidateSet }>(
     `/projects/${encodeURIComponent(projectId)}/visual-candidates/${encodeURIComponent(candidateId)}/review`,
     { method: 'POST', body: JSON.stringify(review) },
   )).set;
 }
 
-export async function promoteVisualCandidate(projectId: string, candidateId: string, decision: { promotedBy: string; rationale: string }) {
+export async function promoteVisualCandidate(projectId: string, candidateId: string, decision: { promotedBy: RuntimeIdentity; rationale: string }) {
   return (await request<{ set: VisualCandidateSet }>(
     `/projects/${encodeURIComponent(projectId)}/visual-candidates/${encodeURIComponent(candidateId)}/promote`,
     { method: 'POST', body: JSON.stringify(decision) },

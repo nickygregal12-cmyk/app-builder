@@ -43,6 +43,27 @@ function argument(name) {
   return index === -1 ? null : process.argv[index + 1] ?? null;
 }
 
+/**
+ * The runtime driving this run, declared rather than assumed.
+ *
+ * Whatever generates a candidate set is barred from promoting it, so this is
+ * the fact the whole independence guarantee rests on. A default would be this
+ * script guessing which model is at the keyboard, and a wrong guess here does
+ * not fail loudly — it silently authorises the creator to approve itself.
+ */
+function runIdentity() {
+  const vendor = process.env.APP_BUILDER_RUNTIME_VENDOR;
+  const model = process.env.APP_BUILDER_RUNTIME_MODEL;
+  if (!vendor || !model) {
+    throw new Error(
+      'Set APP_BUILDER_RUNTIME_VENDOR and APP_BUILDER_RUNTIME_MODEL to the runtime driving this run '
+      + '(for example anthropic / claude-opus-5). Whatever generates these candidates cannot later promote '
+      + 'them, so the run refuses to guess who it is.',
+    );
+  }
+  return { role: 'visual-direction', vendor, model };
+}
+
 // Durable factory state, not build scratch. `.tmp` says "delete me", and a
 // reviewer told the only copy of the evidence is under a temp directory is
 // being told to hunt through build output. This is the same ordinary state
@@ -77,7 +98,10 @@ try {
   const baseline = await service.generateProject(project.id);
   console.log(`Canonical build: ${baseline.workspace}`);
 
-  const generated = await service.generateVisualCandidates(project.id, { createdBy: 'visual-direction' });
+  // The runtime driving this run has to name itself, because naming itself is
+  // what bars it from later promoting what it just produced. There is no
+  // default: a guessed vendor here would be a guess about independence.
+  const generated = await service.generateVisualCandidates(project.id, { createdBy: runIdentity() });
   console.log(`Candidate set ${generated.setId}: ${generated.candidates.map((entry) => entry.directionId).join(', ')}`);
   for (const refusal of generated.refusedDirections) console.log(`  refused ${refusal.directionId}: ${refusal.reason} — ${refusal.detail}`);
   if (!generated.diversity.distinct) throw new Error('The candidate set is not genuinely diverse, which should have been refused before generation.');

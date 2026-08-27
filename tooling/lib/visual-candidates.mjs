@@ -18,7 +18,8 @@
  *
  * **A creator cannot approve its own work.** AGENTS.md rule 17 is not softened
  * because the artifact is a picture. `assertIndependentReview` refuses a verdict
- * whose reviewer is the candidate's creator.
+ * from the vendor that produced the candidate — not merely from the same label,
+ * which is what it used to compare and which a rename defeated.
  *
  * **Exactly one candidate is promoted.** Not zero-or-more, not the least bad
  * one. Where no candidate clears its gate and its review, the answer is rework,
@@ -239,21 +240,79 @@ export function assertReviewAddressesGate(gate, review) {
 }
 
 /**
+ * A runtime identity: the role a caller played, and the model that played it.
+ *
+ * `vendor` is the load-bearing field. The rest is for the audit trail.
+ */
+export function runtimeIdentity({ role, vendor, model } = {}) {
+  if (!role) throw new Error('A runtime identity records the role it played.');
+  if (!vendor) throw new Error(`The ${role} identity records no vendor. Independence is decided on vendor, so an identity without one cannot be checked.`);
+  if (!model) throw new Error(`The ${role} identity records no model.`);
+  return Object.freeze({ role: String(role), vendor: String(vendor), model: String(model) });
+}
+
+export function describeIdentity(identity) {
+  if (!identity) return 'an unrecorded runtime';
+  if (typeof identity === 'string') return identity;
+  return `${identity.role} (${identity.vendor}/${identity.model})`;
+}
+
+/**
  * No self-approval, for pictures as much as for code.
  *
- * The creator of a candidate is recorded when the candidate is created rather
- * than asserted at review time, so this compares two durable facts instead of
- * trusting the reviewer's own account of who it is.
+ * The comparison is on **vendor**, not on the identity as written. A role
+ * string is chosen by whoever writes the call, so comparing two of them only
+ * catches a caller who reused one name: the same model answering to
+ * `design-critic` instead of `visual-direction` is a different string and the
+ * same opinion. That is precisely the failure rule 17 exists to prevent, and
+ * for most of this file's life the guard did not catch it.
+ *
+ * Model is deliberately not the axis either. One vendor's small model reviewing
+ * its large model's work shares training data, tokeniser and blind spots; it is
+ * a cheaper opinion, not a second one.
+ *
+ * Both sides must declare a vendor, and a candidate with no provenance at all is
+ * refused too. An unprovable independence claim and a false one are worth the
+ * same, so neither is waved through.
+ *
+ * **What this does not do.** `vendor` is a declared fact, not an attested one:
+ * this function compares what two callers said about themselves. A caller that
+ * lies — generating as `anthropic`, reviewing as `openai` — defeats it, and no
+ * comparison performed here can detect that. The guard is therefore a defence
+ * against drift, renaming and forgetfulness, which is how self-approval actually
+ * happens, and not against a caller forging its own provenance.
+ *
+ * The defence against forgery is upstream and structural: an adapter stamps its
+ * own identity from what it is rather than accepting one from its caller, so the
+ * Codex reviewer records `openai` because it is the thing that called Codex. Any
+ * new reviewer path must do the same. A path that takes `vendor` from request
+ * input is a path where this guard means nothing.
  */
 export function assertIndependentReview(candidate, review) {
   const creator = candidate?.provenance?.createdBy;
   const reviewer = review?.reviewedBy;
   if (!reviewer) throw new Error('A visual review must record who issued it.');
-  if (creator && reviewer === creator) {
-    throw new Error(`${reviewer} created this candidate and cannot also promote it. Stage promotion is always independent.`);
+  if (typeof reviewer === 'string' || !reviewer.vendor) {
+    throw new Error(`This review is issued by ${describeIdentity(reviewer)}, which declares no vendor. Independence is decided on vendor, so a review without one cannot be believed.`);
+  }
+  if (!creator) {
+    throw new Error(`Candidate ${candidate?.candidateId} records no creator, so nothing can be shown to be independent of it. A candidate without provenance cannot be reviewed.`);
+  }
+  if (typeof creator === 'string' || !creator.vendor) {
+    throw new Error(`Candidate ${candidate?.candidateId} records its creator as ${describeIdentity(creator)}, which declares no vendor. Its independence cannot be established, so it cannot be reviewed.`);
+  }
+  // Compared as the same vendor would be written by two different callers.
+  // `Anthropic`, `anthropic ` and `anthropic` are one vendor, and letting
+  // whitespace or a capital letter buy independence would make the guard a
+  // formatting check.
+  if (sameVendor(creator.vendor, reviewer.vendor)) {
+    throw new Error(`${describeIdentity(reviewer)} and ${describeIdentity(creator)} are the same vendor (${creator.vendor}). A relabelled runtime from the vendor that created this candidate cannot also promote it; stage promotion is always independent.`);
   }
   return true;
 }
+
+const normaliseVendor = (value) => String(value ?? '').trim().toLowerCase();
+export const sameVendor = (left, right) => normaliseVendor(left) === normaliseVendor(right);
 
 /**
  * Record a visual verdict against a candidate.
@@ -454,9 +513,14 @@ export function summariseCandidateSet(set, gate = null) {
  * candidates are the same build in other colours is refused rather than
  * rendered three times and compared by a person who then says so.
  */
-export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetReadiness, candidates, refusedDirections = [], createdBy = 'visual-direction' } = {}) {
+export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetReadiness, candidates, refusedDirections = [], createdBy } = {}) {
   if (!projectId) throw new Error('A visual candidate set belongs to a project.');
   if (!createdAt) throw new Error('A visual candidate set records when it was created.');
+  // No default. The runtime that drives a generation is the one that may not
+  // later promote it, and a default here would invent an identity for whoever
+  // forgot to declare one — which is exactly the candidate whose independence
+  // most needs establishing.
+  const creator = runtimeIdentity(createdBy);
   const entries = list(candidates);
   if (entries.length < 2) throw new Error(`A visual candidate set needs at least two candidates to be a choice; this one has ${entries.length}.`);
 
@@ -486,7 +550,7 @@ export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetRead
       outcome: 'pending',
       rationale: null,
       reworkOwner: null,
-      provenance: { createdBy, reviewedBy: null, promotedBy: null, decidedAt: null },
+      provenance: { createdBy: creator, reviewedBy: null, promotedBy: null, decidedAt: null },
     };
   });
 

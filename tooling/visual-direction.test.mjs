@@ -30,6 +30,15 @@ import {
 } from './lib/visual-candidates.mjs';
 
 const STYLES_CSS = fs.readFileSync('templates/shared/presentation/styles.css', 'utf8');
+
+// A runtime identity for a fixture. Independence is decided on `vendor`, so a
+// fixture that omits it is not a shortcut — it is a different test.
+const identity = (role, vendor = 'anthropic', model = 'claude-opus-5') => ({ role, vendor, model });
+
+// The reviewer in these fixtures is a different vendor to the creator, because
+// that is the only combination the guard permits. A fixture reviewer defaulting
+// to the creator's vendor would make every downstream test a test of the guard.
+const reviewer = (role = 'design-critic') => identity(role, 'openai', 'gpt-5.6');
 const APP_TSX = fs.readFileSync('templates/react-vite-neutral/files/src/App.tsx', 'utf8');
 const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
 const REGISTRY = loadVisualDirections();
@@ -218,6 +227,7 @@ test('two candidates that differ only in tokens are refused before anything is r
   assert.throws(() => buildCandidateSet({
     projectId: 'project-x',
     createdAt: '2026-08-26T00:00:00.000Z',
+    createdBy: identity('visual-direction'),
     frozenTruth: { projectType: 'marketing-site', manifestVersion: 2, knowledgePackHash: null, baselineCompositionHash: composition.compositionHash },
     assetReadiness: compileAssetReadiness({}),
     candidates: [
@@ -231,6 +241,7 @@ test('a set needs at least two candidates, because one candidate is not a choice
   assert.throws(() => buildCandidateSet({
     projectId: 'project-x',
     createdAt: '2026-08-26T00:00:00.000Z',
+    createdBy: identity('visual-direction'),
     frozenTruth: { projectType: 'marketing-site', manifestVersion: 2, knowledgePackHash: null, baselineCompositionHash: 'f'.repeat(64) },
     assetReadiness: compileAssetReadiness({}),
     candidates: [{ candidateId: 'candidate-a', directionId: 'structured-practice', directionLabel: 'A', signature: { axes: {}, sequence: [] }, compositionHash: 'f'.repeat(64) }],
@@ -315,8 +326,8 @@ test('a DesignLint violation blocks promotion and is not a matter for review', (
   assert.equal(gate.status, 'blocked');
   assert.deepEqual(gate.mustAddress, []);
 
-  const candidate = { candidateId: 'candidate-a', state: 'deterministic-blocked', gate, provenance: { createdBy: 'visual-direction' }, outcome: 'pending' };
-  assert.throws(() => recordReview(candidate, { verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [] }), /not a matter for review/);
+  const candidate = { candidateId: 'candidate-a', state: 'deterministic-blocked', gate, provenance: { createdBy: identity('visual-direction') }, outcome: 'pending' };
+  assert.throws(() => recordReview(candidate, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: [] }), /not a matter for review/);
   assert.throws(() => assertCandidateTransition('deterministic-blocked', 'promoted'), /cannot move from deterministic-blocked to promoted/);
 });
 
@@ -332,10 +343,10 @@ test('a warning lets a candidate reach review, and a review that ignores it is r
   assert.equal(gate.status, 'review-required');
   assert.deepEqual(gate.mustAddress, ['repetitive-section-presentation']);
 
-  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate, provenance: { createdBy: 'visual-direction' }, outcome: 'pending' };
-  assert.throws(() => recordReview(candidate, { verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [] }), /does not address the DesignLint warnings/);
+  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate, provenance: { createdBy: identity('visual-direction') }, outcome: 'pending' };
+  assert.throws(() => recordReview(candidate, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: [] }), /does not address the DesignLint warnings/);
 
-  const reviewed = recordReview(candidate, { verdict: 'pass', reviewedBy: 'design-critic', addressedRules: ['repetitive-section-presentation'], rationale: 'A list of services is a list.' });
+  const reviewed = recordReview(candidate, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: ['repetitive-section-presentation'], rationale: 'A list of services is a list.' });
   assert.equal(reviewed.state, 'reviewed');
 });
 
@@ -346,8 +357,137 @@ test('a recommendation never blocks anything', () => {
 });
 
 test('the creator of a candidate cannot promote it', () => {
-  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate: { status: 'clear', blocking: [], mustAddress: [] }, provenance: { createdBy: 'visual-direction' }, outcome: 'pending' };
-  assert.throws(() => recordReview(candidate, { verdict: 'pass', reviewedBy: 'visual-direction', addressedRules: [] }), /cannot also promote it/);
+  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate: { status: 'clear', blocking: [], mustAddress: [] }, provenance: { createdBy: identity('visual-direction') }, outcome: 'pending' };
+  assert.throws(() => recordReview(candidate, { verdict: 'pass', reviewedBy: identity('visual-direction'), addressedRules: [] }), /cannot also promote it/);
+});
+
+/**
+ * Independence is a property of the runtime that judged, not of the label it
+ * was given.
+ *
+ * A role string is chosen by whoever writes the call. Comparing two of them
+ * catches a caller who reuses one name and nothing else: the same model, told
+ * to answer to `design-critic` instead of `visual-direction`, is a different
+ * string and the same opinion. That is the failure rule 17 exists to prevent,
+ * so the comparison is on the vendor that actually produced the verdict.
+ *
+ * Model is deliberately not the axis. One vendor's small model reviewing its
+ * large model's work shares training, data and blind spots; it is a cheaper
+ * opinion, not a second one.
+ */
+test('a review from the creator\'s own vendor is refused however it labels itself', () => {
+  const candidate = {
+    candidateId: 'candidate-a',
+    state: 'deterministic-pass',
+    gate: { status: 'clear', blocking: [], mustAddress: [] },
+    provenance: { createdBy: { role: 'visual-direction', vendor: 'anthropic', model: 'claude-opus-5' } },
+    outcome: 'pending',
+  };
+
+  // Same vendor, same model, a different role label.
+  assert.throws(
+    () => recordReview(candidate, { verdict: 'pass', reviewedBy: { role: 'design-critic', vendor: 'anthropic', model: 'claude-opus-5' }, addressedRules: [] }),
+    /same vendor/,
+    'a role rename is not independence',
+  );
+
+  // Same vendor, a different model. Restarting a sibling is not a second opinion.
+  assert.throws(
+    () => recordReview(candidate, { verdict: 'pass', reviewedBy: { role: 'design-critic', vendor: 'anthropic', model: 'claude-haiku-4-5' }, addressedRules: [] }),
+    /same vendor/,
+    'a smaller model from the same vendor is not independence',
+  );
+
+  // The one permitted shape: a genuinely different vendor.
+  const reviewed = recordReview(candidate, { verdict: 'pass', reviewedBy: { role: 'design-critic', vendor: 'openai', model: 'gpt-5.6' }, addressedRules: [], rationale: 'Reads as the practice it is for.' });
+  assert.equal(reviewed.state, 'reviewed');
+});
+
+/**
+ * An unprovable independence claim and a false one are worth the same, so both
+ * sides must declare a vendor and neither may be a bare string.
+ *
+ * The string case is not hypothetical: every candidate written before this
+ * change recorded its creator as a role name. Those candidates cannot be shown
+ * to be independently reviewable, so they are refused rather than grandfathered
+ * — the alternative is a set of promotable artifacts whose independence nobody
+ * can establish.
+ */
+test('an identity that cannot be checked is refused on either side', () => {
+  const gate = { status: 'clear', blocking: [], mustAddress: [] };
+  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate, provenance: { createdBy: identity('visual-direction') }, outcome: 'pending' };
+
+  assert.throws(
+    () => recordReview(candidate, { verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [] }),
+    /declares no vendor/,
+    'a bare role string reviewing anything is refused',
+  );
+  assert.throws(
+    () => recordReview(candidate, { verdict: 'pass', reviewedBy: { role: 'design-critic', model: 'gpt-5.6' }, addressedRules: [] }),
+    /declares no vendor/,
+    'an identity missing its vendor is refused',
+  );
+
+  const legacy = { candidateId: 'candidate-legacy', state: 'deterministic-pass', gate, provenance: { createdBy: 'visual-direction' }, outcome: 'pending' };
+  assert.throws(
+    () => recordReview(legacy, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: [] }),
+    /cannot be established/,
+    'a candidate whose creator predates vendor recording cannot be reviewed at all',
+  );
+
+  const anonymous = { candidateId: 'candidate-anon', state: 'deterministic-pass', gate, outcome: 'pending' };
+  assert.throws(
+    () => recordReview(anonymous, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: [] }),
+    /records no creator/,
+    'a candidate with no provenance at all is refused, not treated as independent of everyone',
+  );
+});
+
+/**
+ * Two callers writing the same vendor differently are still the same vendor.
+ *
+ * Without this, independence is buyable with a capital letter — and the caller
+ * most likely to produce `Anthropic` rather than `anthropic` is a hand-written
+ * config or a second code path, which is exactly the drift this guard exists to
+ * catch.
+ */
+test('vendor comparison is not defeated by case or surrounding whitespace', () => {
+  const gate = { status: 'clear', blocking: [], mustAddress: [] };
+  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate, provenance: { createdBy: identity('visual-direction', 'anthropic') }, outcome: 'pending' };
+
+  for (const written of ['Anthropic', 'ANTHROPIC', ' anthropic ', 'AnThRoPiC']) {
+    assert.throws(
+      () => recordReview(candidate, { verdict: 'pass', reviewedBy: { role: 'design-critic', vendor: written, model: 'claude-opus-5' }, addressedRules: [] }),
+      /same vendor/,
+      `${JSON.stringify(written)} is the creator's vendor and must not buy independence`,
+    );
+  }
+});
+
+/**
+ * The guard has to bite at both gates.
+ *
+ * `recordVisualReview` and `promoteCandidate` are separate entry points, and a
+ * verdict recorded legitimately by one vendor must not become promotable by the
+ * vendor that built the thing. Testing only the review path would leave
+ * promotion as an unguarded second door.
+ */
+test('promotion applies the same vendor rule as review', () => {
+  const gate = { status: 'clear', blocking: [], mustAddress: [] };
+  const candidate = { candidateId: 'candidate-a', state: 'deterministic-pass', gate, provenance: { createdBy: identity('visual-direction') }, outcome: 'pending' };
+  const reviewed = recordReview(candidate, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: [], rationale: 'Good.' });
+  const set = { schemaVersion: 2, promotedCandidateId: null, candidates: [reviewed] };
+
+  assert.throws(
+    () => promoteCandidate(set, 'candidate-a', { promotedBy: identity('design-critic') }),
+    /same vendor/,
+    'the creating vendor cannot promote, even against someone else\'s passing verdict',
+  );
+  assert.throws(
+    () => promoteCandidate(set, 'candidate-a', { promotedBy: 'design-critic' }),
+    /declares no vendor/,
+    'a bare string cannot promote',
+  );
 });
 
 test('the critic is asked only what needs judgement, and only what applies', () => {
@@ -385,6 +525,7 @@ test('exactly one candidate is promoted, and the rest are closed rather than lef
   let set = buildCandidateSet({
     projectId: 'project-x',
     createdAt: '2026-08-26T00:00:00.000Z',
+    createdBy: identity('visual-direction'),
     frozenTruth: { projectType: 'marketing-site', manifestVersion: 2, knowledgePackHash: knowledgePack.packHash, baselineCompositionHash: baseline.compositionHash },
     assetReadiness: readiness,
     candidates,
@@ -402,16 +543,16 @@ test('exactly one candidate is promoted, and the rest are closed rather than lef
   set = {
     ...set,
     candidates: set.candidates.map((candidate) => (candidate.candidateId === 'candidate-editorial-authority'
-      ? recordReview(candidate, { verdict: 'pass', reviewedBy: 'design-critic', addressedRules: [], rationale: 'The typographic opening reads as the practice it is for.' })
-      : recordReview(candidate, { verdict: 'rework', reviewedBy: 'design-critic', addressedRules: [], rationale: 'Weaker hierarchy on the opening.' }))),
+      ? recordReview(candidate, { verdict: 'pass', reviewedBy: reviewer(), addressedRules: [], rationale: 'The typographic opening reads as the practice it is for.' })
+      : recordReview(candidate, { verdict: 'rework', reviewedBy: reviewer(), addressedRules: [], rationale: 'Weaker hierarchy on the opening.' }))),
   };
 
-  const promoted = promoteCandidate(set, 'candidate-editorial-authority', { promotedBy: 'design-critic', decidedAt: '2026-08-26T01:00:00.000Z' });
+  const promoted = promoteCandidate(set, 'candidate-editorial-authority', { promotedBy: reviewer(), decidedAt: '2026-08-26T01:00:00.000Z' });
   assert.equal(promoted.promotedCandidateId, 'candidate-editorial-authority');
   assert.equal(promoted.candidates.filter((candidate) => candidate.outcome === 'promoted').length, 1);
   assert.equal(promoted.candidates.filter((candidate) => candidate.outcome === 'pending').length, 0, 'a candidate left pending is how a set quietly gets two winners');
   assert.deepEqual(validateContract('visual-candidate-set', promoted), []);
-  assert.throws(() => promoteCandidate(promoted, 'candidate-structured-practice', { promotedBy: 'design-critic' }), /already promoted/);
+  assert.throws(() => promoteCandidate(promoted, 'candidate-structured-practice', { promotedBy: reviewer() }), /already promoted/);
 });
 
 test('a candidate with no passing review is never promoted, however few candidates are left', () => {
@@ -420,13 +561,14 @@ test('a candidate with no passing review is never promoted, however few candidat
     setId: 'candidates-0000000000000000',
     projectId: 'project-x',
     createdAt: '2026-08-26T00:00:00.000Z',
+    createdBy: identity('visual-direction'),
     candidates: [
-      { candidateId: 'candidate-a', state: 'reviewed', gate: { status: 'clear', blocking: [], mustAddress: [] }, review: { verdict: 'rework', reviewedBy: 'design-critic' }, provenance: { createdBy: 'visual-direction' }, outcome: 'pending' },
-      { candidateId: 'candidate-b', state: 'reviewed', gate: { status: 'clear', blocking: [], mustAddress: [] }, review: { verdict: 'reject', reviewedBy: 'design-critic' }, provenance: { createdBy: 'visual-direction' }, outcome: 'rejected' },
+      { candidateId: 'candidate-a', state: 'reviewed', gate: { status: 'clear', blocking: [], mustAddress: [] }, review: { verdict: 'rework', reviewedBy: reviewer() }, provenance: { createdBy: identity('visual-direction') }, outcome: 'pending' },
+      { candidateId: 'candidate-b', state: 'reviewed', gate: { status: 'clear', blocking: [], mustAddress: [] }, review: { verdict: 'reject', reviewedBy: reviewer() }, provenance: { createdBy: identity('visual-direction') }, outcome: 'rejected' },
     ],
     promotedCandidateId: null,
   };
-  assert.throws(() => promoteCandidate(set, 'candidate-a', { promotedBy: 'design-critic' }), /rework, not the least bad one/);
+  assert.throws(() => promoteCandidate(set, 'candidate-a', { promotedBy: reviewer() }), /rework, not the least bad one/);
 });
 
 test('promoting a direction is a durable design choice a rebuild replays', () => {

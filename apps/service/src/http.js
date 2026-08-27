@@ -227,7 +227,10 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
       }
       if (request.method === 'POST' && route.action === 'visual-candidates') {
         const body = await readJson(request);
-        return send(response, 200, { set: await service.generateVisualCandidates(route.projectId, { directions: Array.isArray(body.directions) ? body.directions : null }) });
+        // `createdBy` is required rather than defaulted. Whatever authored a
+        // candidate set is barred from reviewing it, so a default here would
+        // hand an undeclared caller an identity it could then out-run.
+        return send(response, 200, { set: await service.generateVisualCandidates(route.projectId, { directions: Array.isArray(body.directions) ? body.directions : null, createdBy: body.createdBy }) });
       }
       if (request.method === 'POST' && route.action === 'visual-candidates/capture') {
         return send(response, 200, { set: await service.captureVisualCandidateEvidence(route.projectId) });

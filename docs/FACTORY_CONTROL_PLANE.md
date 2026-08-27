@@ -51,30 +51,11 @@ A powerful agent is not a security boundary. File scope, environment identity, c
 
 ## Phase 3.5 delivery slices
 
-### 3.5A — Durable control primitives ✅
-
-- machine-readable factory status;
-- durable task contract;
-- Build/Event Ledger event contract;
-- ChangeSet and result-scope validation;
-- checkpoint contract;
-- context-item trust/instruction-authority contract;
-- agent capability policy registry;
-- loop budgets and deterministic stop reasons;
-- fresh-session resume packet builder;
-- benchmark registry spanning all six project types;
-- doctor/tests for control-plane invariants.
-
-### 3.5B — Evaluation and upgrade foundations ✅
-
-- runnable golden-build harness;
-- independently install/check/build all six canonical generated apps;
-- capability-intersection benchmark foundations;
-- baseline score record including deterministic failures, user interventions and execution cost/time;
-- recipe installed-version inventory;
-- upgrade proposal contract;
-- managed-file modification detection;
-- non-functional and Design Contract groundwork.
+3.5A (durable task, ledger, ChangeSet, checkpoint, trust and capability-policy contracts, loop budgets
+and the fresh-session resume packet) and 3.5B (golden-build harness over all six canonical apps,
+baseline scoring, recipe inventories, upgrade proposals, managed-file modification detection, NFR and
+Design Contract groundwork) are delivered. `docs/ROADMAP.md` carries the one-line records; the
+contracts themselves are in `schemas/` and `packages/control-plane/`.
 
 ### 3.5C — Sandbox and telemetry adapters ◐ Mostly landed early under Phase 4.5
 
@@ -140,39 +121,27 @@ Decisions — allows as well as denies — are appended to the project's durable
 event ledger as `agent.operation.allowed` / `agent.operation.denied`, so what an
 attempt asked for and what it was refused survives the session.
 
-## Phase 3.8 correctness addendum
+## Correctness boundaries the control plane owns
 
-The live audit identified boundaries that must be tightened before broad autonomous/Console surface area grows.
+Delivered as 3.8A–3.8C. Stated as invariants because they still govern every future change to these
+surfaces, not as a plan.
 
-### ChangeSet path normalization and glob semantics
+**The ChangeSet file-scope matcher is segment-correct, never prefix-correct.** `src/**` matches inside
+`src/` and not `src2/...`; `recipes/foo/**` does not match `recipes/foo-evil/...`; traversal, absolute
+paths and ambiguous normalized forms are rejected before matching; allow/forbid conflicts fail closed;
+and Windows and POSIX separator handling is deterministic. Held by adversarial cases plus `fast-check`
+property tests, and by mutation coverage over `packages/control-plane/src/index.js`.
 
-The file-scope matcher must be **segment-correct**, not merely prefix-correct.
+**Stable data contracts follow `JSON Schema -> generated TypeScript in packages/contracts -> Ajv
+boundary validation`.** Transport frameworks, handwritten `.d.ts` files and utility validators must not
+each become separate authorities. Buildability stays an explicit later check against the
+module/adapter/template registries — a request can be structurally valid while its selected capability
+is not ready.
 
-Required behavior:
-- `src/**` matches files inside `src/`;
-- `src/**` does not match `src2/...`;
-- `recipes/foo/**` does not match `recipes/foo-evil/...`;
-- traversal (`../`), absolute paths and ambiguous normalized forms are rejected before matching;
-- allow/forbid conflicts fail closed;
-- Windows and POSIX separator handling is deterministic.
-
-Prefer Node 22 native glob matching if it satisfies the contract. Use `fast-check` to generate adversarial path/rule cases after explicit examples are fixed.
-
-### Canonical contract boundary
-
-Stable data contracts should follow:
-
-`JSON Schema -> generated TypeScript in packages/contracts -> Ajv boundary validation`
-
-Do not let transport frameworks, handwritten `.d.ts` files and utility validators each become separate authorities.
-
-Buildability remains an explicit later check against module/adapter/template registries.
-
-### Executed database security
-
-Generated Supabase recipes must be exercised in a local database with authenticated test users. Regex/static SQL checks remain useful smoke tests but cannot be the final security acceptance gate.
-
-The database security matrix should become durable benchmark evidence alongside build/browser results.
+**Executed database security is the acceptance gate.** Generated Supabase recipes are exercised in a
+local database with authenticated test users; regex and static SQL checks remain smoke tests and cannot
+be the final security gate. The matrix becomes durable benchmark evidence alongside build and browser
+results.
 
 ## Phase 3.8H specialist-role addendum
 

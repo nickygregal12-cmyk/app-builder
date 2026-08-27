@@ -405,32 +405,36 @@ older equivalent, App Builder keeps its own.
 
 ### Mechanisms adopted
 
-| Mechanism | Score | Status after this audit | Home |
-| --- | --- | --- | --- |
-| Deterministic routing acceptance benchmarks with positive **and** negative triggers | 10/10 | **Implemented** | `config/agent-routing-benchmarks.json`, `schemas/routing-benchmark-case.schema.json`, `npm run agent:bench` |
-| First-orientation context ceilings (paths, authorities, roles, skills, packet bytes) | 10/10 | **Implemented** | `packet` in `config/agent-routing.json` |
-| Skill role/load budget — installed is not loaded | 10/10 | **Implemented** | `loadClass` + `skillLoadBudget`, enforced by doctor and tests |
-| Immutable external skill-source registry (pin, licence, security review, allowed roles) | 10/10 | Already landed in 3.8H | `config/external-sources.json` |
-| Skill evaluation with baseline-vs-candidate comparison | 10/10 | Lifecycle landed in 3.8H; harness planned | `config/skill-registry.json`, Phase 5.5 |
-| Journey Closure specialist and gate | 10/10 | **Registered**; workflow planned | `journey-closure` role/gate, Phase 4B |
-| State Matrix specialist and gate | 9.8/10 | **Registered**; workflow planned | `state-matrix` role/gate, Phase 4B |
-| Genuinely independent second opinion (different model/runtime) | 9.8/10 | **Registered**, and now bought automatically at critical severity; execution planned | `independent-second-opinion` role, Phase 5 |
-| Conditional differential review driven by risk classification | 9.8/10 | **Implemented** — a deterministic classifier selects the conditional reviewers | `config/risk-surfaces.json`, `packages/control-plane/src/risk.js` |
-| Architecture dependency gate | 9.7/10 | **Implemented** (`npm run architecture`); `dependency-cruiser` evaluated and not adopted | Stage Q1, delivered |
-| Curated visual regression contracts | 9.7/10 | **Newly planned** | Stage Q2, Phase 4C/4D |
-| Compound learning closeout | 9.6/10 | **Registered**; process planned | `compound-learning` role, Phase 5 |
-| Graph-assisted repository navigation | 9.5/10 | **Newly planned, deliberately later** | Phase 5 |
-| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | **Registered and now selectable** by the risk classifier; identity card planned | `environment-guardian` role, Phase 4E |
-| Tool responsibility map — one question per tool | 9.4/10 | **Implemented** | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
-| Product Opportunity Scout for broad prompts | 9.4/10 | **Registered**; workflow planned | `product-opportunity-scout` role, Phase 4B |
-| Lighthouse-style performance and payload budgets | 9.3/10 | **Newly planned** | Stage Q4, Phase 4.2/6 |
-| Component/state preview surface (evaluate Storybook) | 9.2/10 | **Newly planned, conditional** | Stage Q3, Phase 4C |
-| Supply-chain and workflow hardening, staged | 9.2/10 | **Newly planned** | Stage Q9 |
-| Design-token enforcement beyond DesignLint | 9/10 | **Newly planned** | Stage Q5, Phase 4C |
-| Dead-code/unused-dependency analysis (`Knip`) | 8.8/10 | Already noted; now staged and non-blocking until baselined | Stage Q6, Phase 4.5 |
-| Property-based testing (`fast-check`) | 8.7/10 | Adopted for ChangeSet scope; scope widened for the rest | Stage Q7 |
-| Targeted mutation testing | 8.4/10 | **Newly planned** | Stage Q8, Phase 4.5/6 |
-| Bundle analysis | 8.4/10 | **Newly planned** | Stage Q4 |
+Adopted from the prior art, with the home that owns each. **Delivery status is deliberately not
+recorded here** — `config/factory-status.json` and `docs/ROADMAP.md` own that, and a second status
+column is a second thing to keep true.
+
+| Mechanism | Score | Home |
+| --- | --- | --- |
+| Deterministic routing acceptance benchmarks with positive **and** negative triggers | 10/10 | `config/agent-routing-benchmarks.json`, `npm run agent:bench` |
+| First-orientation context ceilings (paths, authorities, roles, skills, packet bytes) | 10/10 | `packet` in `config/agent-routing.json` |
+| Skill role/load budget — installed is not loaded | 10/10 | `loadClass` + `skillLoadBudget` |
+| Immutable external skill-source registry (pin, licence, security review, allowed roles) | 10/10 | `config/external-sources.json` |
+| Skill evaluation with baseline-vs-candidate comparison | 10/10 | `config/skill-registry.json` |
+| Journey Closure specialist and gate | 10/10 | `journey-closure` role/gate |
+| State Matrix specialist and gate | 9.8/10 | `state-matrix` role/gate |
+| Genuinely independent second opinion (different model/runtime) | 9.8/10 | `independent-second-opinion` role |
+| Conditional differential review driven by risk classification | 9.8/10 | `config/risk-surfaces.json`, `packages/control-plane/src/risk.js` |
+| Architecture dependency gate | 9.7/10 | Stage Q1 |
+| Curated visual regression contracts | 9.7/10 | Stage Q2 |
+| Compound learning closeout | 9.6/10 | `compound-learning` role |
+| Graph-assisted repository navigation | 9.5/10 | `docs/AGENT_RUNTIME.md`, deliberately later |
+| Environment contract guardian and `EnvironmentIdentity` | 9.5/10 | `environment-guardian` role |
+| Tool responsibility map — one question per tool | 9.4/10 | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
+| Product Opportunity Scout for broad prompts | 9.4/10 | `product-opportunity-scout` role |
+| Lighthouse-style performance and payload budgets | 9.3/10 | Stage Q4 |
+| Component/state preview surface (evaluate Storybook) | 9.2/10 | Stage Q3, conditional |
+| Supply-chain and workflow hardening, staged | 9.2/10 | Stage Q9 |
+| Design-token enforcement beyond DesignLint | 9/10 | Stage Q5 |
+| Dead-code/unused-dependency analysis | 8.8/10 | Stage Q6 |
+| Property-based testing (`fast-check`) | 8.7/10 | Stage Q7 |
+| Targeted mutation testing | 8.4/10 | Stage Q8 |
+| Bundle analysis | 8.4/10 | Stage Q4 |
 
 ### Adaptations, not copies
 

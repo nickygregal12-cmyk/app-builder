@@ -4,17 +4,17 @@
   "currentPhase": "4D",
   "currentStage": "Phase 4D — Visual direction, responsive composition and candidate promotion",
   "status": "active",
-  "blockedBy": "An independent visual verdict. Rule 17 forbids the factory promoting its own output, no genuinely independent model runtime is enabled here, and restarting the same model is not independence. This is a person or a provider, so no amount of building closes it.",
+  "blockedBy": "Nothing external. The independent verdict exists — an OpenAI GPT-5 design-critic rejected both nbm candidates on 2026-08-28 — so Phase 4D is in bounded rework rather than waiting on a reviewer. What is left is the factory's own work: recapture the set on evidence that is now trustworthy, then earn a second verdict.",
   "activeWork": [
-    "phase-4d-visual-review-verdict",
+    "phase-4d-candidate-rework-v2",
     "phase-4-2a-static-visual-review"
   ],
   "outstandingProductGates": [
-    "phase-4d-visual-review-verdict: the nbm candidate set is generated, built and photographed, and no candidate is promoted. `npm run acceptance:visual-candidates` leaves durable factory state at .app-builder/visual-review and `npm run review:visual-candidates` opens the Console over it. A reviewer who did not create the candidates must pass, rework or reject each one against the scoped criteria before Phase 4D closes.",
+    "phase-4d-candidate-rework-v2: the first independent review rejected both candidates (structured-practice 5.21 mean, editorial-authority 4.66, against a required 8.5 mean and 6.5 floor; distinctive-moment weakest at 2.8 and 2.5). The verdict is kept verbatim at examples/genuine-business/nbm-visual-review-v1.verdicts.json. The route-capture defect behind part of that verdict is fixed and proved, so the set must be regenerated from the same frozen inputs, recaptured, and sent for a second independent verdict. The genuine design findings — a weak distinctive moment, thin credibility material, single-channel conversion — are not answered by the capture fix and are what the rework has to address.",
     "phase-4-2a-static-visual-review: the genuine nbm business renders through the static/content renderer as an independent repository with zero client JavaScript and six route documents. `npm run acceptance:static-renderer` leaves the evidence at .app-builder/static-renderer and stops. A reviewer who did not produce it must say whether the static rendering is at least as good as the application-rendered one before 4.2A closes.",
     "professional-output-independent-verdict: the one outstanding row in docs/VISUAL_EXCELLENCE.md §9. It is the same gate three times over, because a candidate set, a static rendering and any bespoke presentation each need a reviewer who did not produce the work."
   ],
-  "nextStage": "The product-proof freeze and the varied real-business corpus in docs/GENUINE_BUSINESS_ACCEPTANCE.md, which opens when the independent verdict exists. Everything the freeze was waiting on that could be built has been built.",
+  "nextStage": "The product-proof freeze and the varied real-business corpus in docs/GENUINE_BUSINESS_ACCEPTANCE.md, which opens when a candidate legitimately clears the visual bar. Everything the freeze was waiting on that could be built has been built.",
   "completedPhases": [
     "0",
     "1",
@@ -61,6 +61,8 @@
     "4D.7"
   ],
   "recentlyCompleted": [
+    "first independent Phase 4D visual verdict — an OpenAI GPT-5 design-critic reviewed the nbm candidate set an Anthropic runtime created, and rejected both. The quality system worked: it found a defect the creator had missed and nothing was promoted",
+    "route-capture root cause — the evidence server answered every prerendered route with the home document, because it served a path only when that path was itself a file and a prerendered build answers /services with services/index.html. Six routes per viewport were photographed as one page. Reproduced against the frozen nbm inputs, fixed in document resolution rather than by a per-project special case, and proved by six distinct captures whose rendered page identity matches the route requested",
     "4.2A implementation — static/content renderer; deterministic fail-closed renderer selection, six route documents and zero client JavaScript for the business the application renderer serves with one. Its independent visual review is outstanding above, so the stage is not closed",
     "cross-browser visual portability lane; found and fixed a real defect on its first hosted run — the site header was not sticky on any phone",
     "cross-build anti-template diagnostic; advisory by declaration, and it reports the cause of its own findings",

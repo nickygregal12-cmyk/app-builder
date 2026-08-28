@@ -1404,6 +1404,11 @@ export class FactoryService {
           compositionHash: composition.compositionHash,
           capturedAt,
           designLint,
+          // The degenerate-route check landed on the preview path and missed
+          // this one, which is the path whose evidence the first independent
+          // review actually rejected. A guard that is absent where the defect
+          // happened is not a guard.
+          composition,
         }));
         const directory = this.evidenceDirectory(projectId, evidence.id);
         fs.mkdirSync(path.join(directory, 'captures'), { recursive: true });

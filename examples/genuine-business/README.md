@@ -60,3 +60,34 @@ recorded as an accepted default rather than as something the operator said.
 `trust` is deliberately unanswered: the workbook forbids unsupported proof and
 withholds case studies, and finding F23 records intake trust answers being
 published as the company's own evidence.
+
+## `nbm-visual-review-v1.verdicts.json` — the first independent visual verdict
+
+The first genuinely independent Phase 4D visual review, recorded verbatim as the
+reviewer issued it on 2026-08-28. The reviewer was an OpenAI GPT-5 `design-critic`
+through the Codex path; the candidates were created by an Anthropic runtime, so
+creator and reviewer are different vendors and rule 17 holds.
+
+Both candidates were **rejected**: `structured-practice` scored a 5.21 mean and
+`editorial-authority` 4.66, against a required 8.5 mean and a 6.5 per-criterion
+floor. `distinctive-moment` was the weakest criterion in both, at 2.8 and 2.5.
+
+It is kept because a rejection is evidence. The sequence
+`candidate v1 -> independent reject -> findings -> factory fix -> candidate v2`
+is only attributable if the first verdict survives, and this file was otherwise
+about to be lost: it existed nowhere but one session's scratch directory, which
+is exactly the failure principle 12 names.
+
+**Read the verdict knowing the evidence it judged was partly invalid.** Both
+reviews lead with routes rendering as one page — "every named route, including
+the 404 route, renders essentially the same page with Home selected". That was
+true and it was a capture defect, not a design defect: all six route captures per
+viewport were byte-identical because the evidence server answered every
+prerendered route with the home document. The findings that depend on that
+observation — wayfinding, page-specific hierarchy, the broken-looking 404 —
+cannot be attributed to the design until the set is recaptured and rereviewed.
+The findings that do not depend on it — a weak distinctive moment, thin
+credibility material, single-channel conversion — stand on their own.
+
+Replaying it with `--verdicts` records two rejections and promotes nothing, which
+is what it says.

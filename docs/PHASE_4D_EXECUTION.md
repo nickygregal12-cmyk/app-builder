@@ -44,12 +44,30 @@ promotion contract, reference analysis, asset readiness, `ResponsiveCompositionP
 gate, comparable evidence, the scored review packet, the bounded rework plan and promotion — is built
 and exercised on a real business.
 
-**Outstanding: the independent visual verdict.** The packet scopes a critic to criteria that genuinely
-need judgement, scores each against `gates.visual` in `config/agent-pipelines.json`, refuses to record
-a below-bar score as a pass, allows a whole set to be sent back or rejected with nothing promoted, and
-turns a rework verdict into a bounded plan with lineage that is refused if the composition hash moved.
-No genuinely independent model runtime is enabled here, so no verdict has been issued. Restarting the
-same model is not independence and is not done.
+**The independent visual verdict has been issued, and it rejected both candidates.** The packet scopes
+a critic to criteria that genuinely need judgement, scores each against `gates.visual` in
+`config/agent-pipelines.json`, refuses to record a below-bar score as a pass, allows a whole set to be
+sent back or rejected with nothing promoted, and turns a rework verdict into a bounded plan with
+lineage that is refused if the composition hash moved. On 2026-08-28 an OpenAI GPT-5 `design-critic`
+reviewed the set an Anthropic runtime had created and rejected both candidates —
+`structured-practice` at a 5.21 mean, `editorial-authority` at 4.66, against a required 8.5 mean and a
+6.5 per-criterion floor. The verdict is kept verbatim at
+`examples/genuine-business/nbm-visual-review-v1.verdicts.json`.
+
+That is the machinery working rather than failing: an independent reviewer found a defect the creator
+had missed, and nothing was promoted.
+
+**What the rejection was partly about was invalid evidence.** Both reviews lead with every route
+rendering as the same page with Home selected. That was a capture defect. The candidates prerender to
+`services/index.html`, and the evidence server served a path only when that path was itself a file, so
+every route fell through to the shell and was photographed as the home document — 45 degenerate route
+pairs per candidate. It is fixed in document resolution and proved by six distinct captures whose
+rendered `data-page-id` matches the route requested.
+
+**What is outstanding is the design work the capture fix does not answer.** A weak distinctive moment
+(2.8 and 2.5), thin credibility material, and single-channel conversion are genuine findings about the
+output, not about the photograph of it. Phase 4D now closes on a second independent verdict over
+recaptured evidence, not on a first one existing.
 
 ## Where the evidence is, and how a reviewer reaches it
 
@@ -110,6 +128,10 @@ canonical app:
 14. no speculative design-intelligence catalogue was built without a real consumer;
 15. any unexecuted independence requirement is recorded honestly rather than faked.
 
-The nbm run proves clauses 1–6, 8, 10 and 12–14. Clause 7 has its contract and its packet but no
-verdict; clause 9 has its mechanism but nothing has been promoted; clause 11 is therefore incomplete;
-clause 15 is satisfied by recording the unexecuted independence rather than by executing it.
+The nbm run proves clauses 1–6, 10 and 12–14. Clause 7 is now exercised rather than only contracted:
+an independent critic scored the scoped criteria and rejected both candidates. Clause 8 is **not** yet
+proved — the captures were comparable in form but not in fact, because all six routes were the same
+document; it is re-earned when the set is recaptured. Clause 9 has its mechanism and has now
+demonstrated its harder half, that a set can be rejected with nothing promoted; a promotion still has
+to happen. Clause 11 is therefore incomplete. Clause 15 no longer applies to the visual verdict, which
+was executed, and remains the standing rule for anything else recorded as unexecuted.

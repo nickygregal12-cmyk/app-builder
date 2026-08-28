@@ -94,6 +94,32 @@ async function settleLazyImages(page) {
   await page.waitForFunction(() => [...document.images].every((image) => image.complete), null, { timeout: 10_000 }).catch(() => {});
 }
 
+/**
+ * Prove the page that rendered is the page that was asked for.
+ *
+ * The first independent visual review was handed eighteen captures of what were
+ * really three pages. Every request was correct — the URL was right and
+ * `location.pathname` really was `/services` — and every response was a 200 with
+ * a screenshot, so nothing downstream had any reason to doubt it. The server was
+ * answering each prerendered route with the home document, and "HTTP 200 and a
+ * picture exists" was the whole test.
+ *
+ * So the capture asserts identity before the screenshot becomes evidence. It
+ * does not invent a second route truth: `data-page-id` is the identity the
+ * template already renders and the Console already reads, and the expected value
+ * is the PageSpec id the plan was derived from. A capture that cannot establish
+ * which page it is looking at fails rather than publishing an unattributed
+ * picture.
+ */
+async function assertRenderedIdentity(page, capture) {
+  const rendered = await page.locator('main').getAttribute('data-page-id');
+  if (rendered === capture.pageId) return;
+  throw new Error(
+    `Capture ${capture.id} asked for ${capture.route} and photographed ${rendered ? `page ${rendered}` : 'a page that does not identify itself'}, not ${capture.pageId}. `
+    + 'A screenshot of the wrong route is not evidence of the right one.',
+  );
+}
+
 export async function captureEvidence({ plan, baseUrl, launch = null, onCapture = null, env = process.env } = {}) {
   if (!plan?.captures?.length) return { results: [], failures: [] };
   if (!launch) {
@@ -126,6 +152,7 @@ export async function captureEvidence({ plan, baseUrl, launch = null, onCapture 
           await perform(page, capture.state.interaction);
         }
         await settleLazyImages(page);
+        await assertRenderedIdentity(page, capture);
         const bytes = await page.screenshot({ fullPage: true, animations: 'disabled', type: 'png' });
         results.push({ id: capture.id, bytes });
         if (onCapture) onCapture(capture);

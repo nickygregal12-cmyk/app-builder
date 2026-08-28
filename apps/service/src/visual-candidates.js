@@ -102,6 +102,47 @@ const MIME = Object.freeze({
   '.woff2': 'font/woff2',
 });
 
+function isFile(candidate) {
+  try {
+    return fs.existsSync(candidate) && fs.statSync(candidate).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The document a static build serves for an address.
+ *
+ * The first version of this asked one question — is the resolved path a file? —
+ * which is only true of a single-document SPA. A prerendered build answers
+ * `/services` with `services/index.html` and `/404` with `404.html`, so every
+ * multi-document route resolved to a directory, failed the file test and fell
+ * through to the shell. Six routes were photographed as the home page and the
+ * capture reported success, because HTTP 200 and a screenshot were the whole
+ * test.
+ *
+ * So the lookup is the ordinary static-hosting one, in the order a host uses:
+ * the exact file, then the directory's index document, then the same address
+ * with `.html`. Only an address that matches none of those falls back to the
+ * shell, which is what a genuine SPA needs and what a prerendered build now
+ * never reaches.
+ */
+export function resolveBuildDocument(root, pathname) {
+  let resolved;
+  try {
+    resolved = path.resolve(root, `.${decodeURIComponent(pathname)}`);
+  } catch {
+    // A malformed address resolves to nothing rather than escaping the root.
+    return null;
+  }
+  if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) return null;
+  if (isFile(resolved)) return resolved;
+  for (const candidate of [path.join(resolved, 'index.html'), `${resolved}.html`]) {
+    if (isFile(candidate)) return candidate;
+  }
+  return null;
+}
+
 /**
  * Serve a candidate's built output for evidence capture.
  *
@@ -113,7 +154,7 @@ const MIME = Object.freeze({
  *
  * Bound to loopback and rooted at one directory. A request that resolves
  * outside `dist` is refused rather than served, and an address that matches no
- * file falls back to the app shell so the client-side router can answer it.
+ * document falls back to the app shell so a client-side router can answer it.
  */
 export function serveCandidateBuild(dist) {
   const root = path.resolve(dist);
@@ -124,8 +165,7 @@ export function serveCandidateBuild(dist) {
       let file = shell;
       try {
         const requested = new URL(request.url, 'http://127.0.0.1').pathname;
-        const resolved = path.resolve(root, `.${decodeURIComponent(requested)}`);
-        if ((resolved === root || resolved.startsWith(`${root}${path.sep}`)) && fs.existsSync(resolved) && fs.statSync(resolved).isFile()) file = resolved;
+        file = resolveBuildDocument(root, requested) ?? shell;
       } catch {
         // A malformed address gets the shell, which is what an unknown route gets.
       }

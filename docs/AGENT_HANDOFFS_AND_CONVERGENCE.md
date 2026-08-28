@@ -191,6 +191,52 @@ producer records how many subjects it examined. The report prints it beside the 
 asset-rights pass on the nbm build is `over 0 assets published by this build`, which is true, weak,
 and visible.
 
+## The copyback, and why it names no vendor
+
+A stage handoff is between *roles*. A copyback is between *workers* — the report a session ends with
+so that whoever picks the task up next can start without reconstructing anything.
+
+It has one design rule, and it is the same one that makes `assertReviewIndependence` possible: the
+worker is a variable. Claude Code is the current primary development agent, Codex CLI is the declared
+fallback when its allowance is exhausted (`ops/hetzner/README.md` §7a), and a gateway-driven
+specialist is a third. All three end a session by writing the same shape, because a report whose
+structure depends on who wrote it is a report the next worker has to translate before they can use it.
+
+```text
+Repository        starting main SHA -> ending main SHA
+Worktree/branch   where the work is, and whether it is finished with
+PRs               merged, open
+Stage             the current stage in the durable task record
+What changed      the claim
+Evidence          where that claim can be checked
+Tests             what ran, what passed, what did not
+Provider          which worker and model produced this
+Attempts          providers tried and why any were refused, if routed
+Cost              what it spent, if anything
+Since last        what moved since the previous copyback
+Blockers          what is in the way
+Next              the highest-value next action
+```
+
+Two of these rows are worth arguing for.
+
+**Provider and attempts** are recorded because "which model wrote this" is evidence about the work,
+in the way `assertIndependentReview` already depends on: a verdict from the runtime that produced the
+work is not independent of it, and a copyback that does not say who wrote it cannot be checked for
+that later. `Attempts` carries refusals as well as the call that succeeded — a task that fell through
+to a second provider, or waited because no eligible one was available, should say so, because a quiet
+downgrade is the failure mode worth being able to find afterwards. No attempt record may carry
+credential material; the gateway's journal takes the same position for the same reason.
+
+**Since last** exists because a copyback is read by someone who has the previous one. Restating the
+whole history each time buries the delta that is the actual news.
+
+What a copyback is *not* is an authority. It is a claim about a moving thing, written at a moment
+that has passed — the same hazard `docs/AGENT_RUNTIME.md` names about snapshots of hosted state. The
+branch, the durable task record and the ledger are the thing itself. A worker resuming from a
+copyback should read it for orientation and then go and look, and a copyback that disagrees with the
+repository is wrong by construction.
+
 ## Relationship to spec-driven prior art
 
 The specify → plan → tasks → implement ordering, cross-artifact consistency analysis and the

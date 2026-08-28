@@ -48,3 +48,64 @@ test('admin role uses trusted app metadata and auth checks a server-validated us
   assert.doesNotMatch(admin, /user_metadata/);
   assert.match(auth, /supabase\.auth\.getUser\(\)/);
 });
+
+/**
+ * The write boundary, enforced over EVERY recipe rather than the three that
+ * happen to exist today.
+ *
+ * A Supabase database applies `alter default privileges in schema public grant
+ * all on tables to anon, authenticated, service_role` before any recipe runs.
+ * So a recipe that creates a table and then writes `grant update (a, b)` has not
+ * narrowed anything: both roles already hold table-wide UPDATE, and the narrower
+ * grant only adds a column grant on top. Every identity and lifecycle column in
+ * this factory was writable by any signed-in user because of it — measured, not
+ * theorised, with `tooling/db-privilege-probe.sh`.
+ *
+ * The fix is one line per table and it is easy to forget, which is exactly why
+ * this is a rule rather than a convention. It is written against the recipe
+ * catalogue rather than a list of filenames, so a new recipe with a new table
+ * inherits it on the day it is added.
+ */
+test('every recipe table revokes inherited privileges before granting its own', () => {
+  const catalogue = JSON.parse(fs.readFileSync('config/recipes.json', 'utf8')).recipes;
+  const fragments = [];
+  for (const [recipeId, entry] of Object.entries(catalogue)) {
+    const definition = JSON.parse(fs.readFileSync(`${entry.path}/recipe.json`, 'utf8'));
+    for (const relative of definition.database?.fragments ?? []) {
+      fragments.push({ recipeId, file: `${entry.path}/${relative}`, sql: fs.readFileSync(`${entry.path}/${relative}`, 'utf8') });
+    }
+  }
+  assert.ok(fragments.length > 0, 'expected at least one recipe to contribute database SQL');
+
+  let tablesChecked = 0;
+  for (const fragment of fragments) {
+    const lower = fragment.sql.toLowerCase();
+    for (const match of lower.matchAll(/create table (?:if not exists )?public\.([a-z0-9_]+)/g)) {
+      const table = match[1];
+      tablesChecked += 1;
+
+      // Both roles, because `anon` inherits the same blanket grant and RLS is
+      // the only thing standing in its way otherwise.
+      const revoke = new RegExp(`revoke all on public\\.${table} from [^;]*\\banon\\b[^;]*\\bauthenticated\\b[^;]*;`);
+      assert.match(
+        lower,
+        revoke,
+        `${fragment.file}: public.${table} must "revoke all ... from anon, authenticated" before granting, or its column grants add privileges instead of limiting them`,
+      );
+
+      // Order is the whole point: revoking after granting would undo the grant.
+      const revokeAt = lower.search(revoke);
+      const grantAt = lower.search(new RegExp(`grant [^;]*on public\\.${table} to`));
+      if (grantAt !== -1) {
+        assert.ok(revokeAt < grantAt, `${fragment.file}: public.${table} grants before it revokes, which leaves the inherited privileges in place`);
+      }
+
+      assert.match(
+        lower,
+        new RegExp(`alter table public\\.${table} enable row level security`),
+        `${fragment.file}: public.${table} must enable row level security`,
+      );
+    }
+  }
+  assert.ok(tablesChecked >= 4, `expected the known recipe tables to be covered, checked ${tablesChecked}`);
+});

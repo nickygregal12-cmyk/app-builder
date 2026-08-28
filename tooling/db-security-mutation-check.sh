@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Proof of proof for the tenant-records security boundary.
+# Proof of proof for the generated database's security boundaries.
 #
 # A pgTAP suite that passes tells you the tests ran, not that they would notice
 # if the protection went away. This breaks each safeguard in turn, against a
@@ -7,10 +7,16 @@
 # FAIL each time. A mutation that leaves the suite green is a safeguard nothing
 # is actually testing.
 #
-# Deliberately not wired into `npm run check`: it needs a container runtime and
-# several minutes. Run it when the records policies change.
+# It covers two boundaries that are easy to confuse. Row level security decides
+# WHICH ROWS a caller may touch; column privileges decide WHICH FIELDS of them
+# may change. The second was decorative until the recipes started revoking the
+# blanket grant a Supabase database installs before any of them run, so the
+# mutations below break both kinds and require the suite to notice.
 #
-#   bash tooling/records-mutation-check.sh
+# Deliberately not wired into `npm run check`: it needs a container runtime and
+# several minutes. Run it when the policies or grants change.
+#
+#   bash tooling/db-security-mutation-check.sh
 #
 # Requires podman (or docker via CONTAINER_CLI) and network access to pull
 # supabase/postgres once.
@@ -152,12 +158,51 @@ mutate "role distinction flattened" \
 mutate "archive operation stops checking the organisation role" \
   "s|if not app_private.has_org_role(target.organisation_id, array\['owner', 'admin'\]) then|if false then|"
 
-# 6. The privileged column stops being privileged. Mutating the GRANT proves
-#    nothing on Supabase, whose default privileges already grant `authenticated`
-#    full UPDATE on every new public table; the trigger is what enforces this, so
-#    the trigger is what gets broken.
-mutate "archived_at column guard disabled" \
-  "s|if new.archived_at is distinct from old.archived_at|if false|"
+# 6. The privileged column, with its OTHER protection removed first.
+#
+#    This mutation is deliberately compound, and the reason is worth recording.
+#    Before the write boundary existed, disabling the trigger was enough to make
+#    `archived_at` writable and the suite caught it. Now the column carries no
+#    UPDATE grant either, so removing the trigger alone changes nothing — the
+#    privilege refuses the write first, the assertion still passes, and the
+#    mutation survives while looking like an untested safeguard.
+#
+#    Two mechanisms now guard one column, which is defence in depth rather than
+#    duplication: the grant stops today's client, and the trigger stops a future
+#    recipe author who adds `archived_at` to the grant list without thinking. To
+#    test the trigger, this grants the column back and leaves the trigger to do
+#    the work alone.
+mutate "archived_at granted back, leaving only the trigger" \
+  "s|^grant update (reference, title, summary, status) on public.records to authenticated;\$|grant update (reference, title, summary, status, archived_at) on public.records to authenticated;|; s|if new.archived_at is distinct from old.archived_at|if false|"
+
+# --- The write boundary: WHICH COLUMNS may change ------------------------------
+#
+# Each of these was reachable before the explicit revoke. They are the reason
+# the revoke exists, so each must be caught.
+
+# 7. The revoke itself. Without it every column grant below is additive, and a
+#    signed-in user regains table-wide UPDATE on records.
+mutate "records inherits blanket UPDATE again" \
+  "s|^revoke all on public.records from anon, authenticated;\$||"
+
+# 8. Authorship and tenancy become writable columns on records.
+mutate "records grants organisation_id and created_by" \
+  "s|^grant update (reference, title, summary, status) on public.records to authenticated;\$|grant update (reference, title, summary, status, organisation_id, created_by) on public.records to authenticated;|"
+
+# 9. The membership revoke, which is where the stakes are plainest: without it
+#    an admin can rewrite user_id and hand a membership to somebody else.
+mutate "organisation_memberships inherits blanket UPDATE again" \
+  "s|^revoke all on public.organisation_memberships from anon, authenticated;\$||"
+
+# 10. The organisations revoke. `organisations_delete_owner` keys off
+#     created_by, so a writable created_by is privilege escalation.
+mutate "organisations inherits blanket UPDATE again" \
+  "s|^revoke all on public.organisations from anon, authenticated;\$||"
+
+# 11. Profiles, the one table whose identity column RLS already protects — so
+#     this proves the lifecycle column is covered by the revoke and not by luck.
+mutate "profiles inherits blanket UPDATE again" \
+  "s|^revoke all on public.profiles from anon, authenticated;\$||"
 
 echo
 if [ "$failures" -eq 0 ]; then

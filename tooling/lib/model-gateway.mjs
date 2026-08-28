@@ -52,6 +52,7 @@ import {
   remainingModelBudget,
   verifyModelEnableDecision,
 } from '@app-builder/control-plane/model-execution';
+import { PROVIDER_REFUSAL_REASONS } from '@app-builder/control-plane/provider-routing';
 
 import { readModelKillSwitch } from './model-kill-switch.mjs';
 
@@ -101,6 +102,7 @@ export function createModelGateway({
   env = process.env,
   root = undefined,
   hostSwitchPath = null,
+  providerProfile = null,
   clock = () => new Date(),
 }) {
   if (typeof adapter?.complete !== 'function') throw new Error('A model gateway requires a provider adapter.');
@@ -117,7 +119,7 @@ export function createModelGateway({
   // point: there is no accessor, so no caller — including a test — can ask this
   // gateway for the key it is using.
   const readCredential = () => {
-    const state = readModelKillSwitch({ root, env, hostSwitchPath });
+    const state = readModelKillSwitch({ root, env, hostSwitchPath, providerProfile });
     const reference = state.providerSecret?.secretRef;
     return reference ? String(env[reference] ?? '') : '';
   };
@@ -157,7 +159,7 @@ export function createModelGateway({
     // The switch, re-read now. Not at construction, not cached: the whole
     // value of a kill switch is that it applies to the call that has not
     // happened yet.
-    const killSwitch = readModelKillSwitch({ root, env, hostSwitchPath });
+    const killSwitch = readModelKillSwitch({ root, env, hostSwitchPath, providerProfile });
 
     let decision = null;
     let decisionError = null;
@@ -230,6 +232,11 @@ export function createModelGateway({
     const apiKey = readCredential();
     if (!apiKey) return deny('provider-secret-missing', 'The credential reference resolved to nothing at dispatch time.');
 
+    // A transport attempt consumes the one-shot decision even when the
+    // provider refuses or fails. Otherwise a 429 or network error could be
+    // followed by another real call under permission that authorised one.
+    spentDecisionIds.add(decision.decisionId);
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), modelRequest.timeoutMs);
     if (timer.unref) timer.unref();
@@ -240,6 +247,7 @@ export function createModelGateway({
     } catch (error) {
       clearTimeout(timer);
       const message = error instanceof Error ? error.message : String(error);
+      const reason = PROVIDER_REFUSAL_REASONS.includes(error?.reason) ? error.reason : 'provider-error';
       await journalEvent(MODEL_EVENT_TYPES.failed, grant.projectId, grant.taskId, {
         attemptId: grant.attemptId,
         roleId: grant.roleId,
@@ -247,16 +255,12 @@ export function createModelGateway({
         decisionId: decision.decisionId,
         adapterId: adapter.id,
         stopReason: controller.signal.aborted ? 'timed-out' : 'error',
+        reason,
         message,
       });
-      return send(response, 502, { error: 'provider-failed', requestId: modelRequest.requestId, message });
+      return send(response, 502, { error: 'provider-failed', reason, requestId: modelRequest.requestId, message });
     }
     clearTimeout(timer);
-
-    // Spent on dispatch, not on success. A decision that authorised a call
-    // which then failed has been used: retrying under it would be a second
-    // call on a one-shot authorisation.
-    spentDecisionIds.add(decision.decisionId);
 
     try {
       spend = accountModelCall({ spend, usage: result.usage, pricingGbpPerMillionTokens: decision.pricingGbpPerMillionTokens });

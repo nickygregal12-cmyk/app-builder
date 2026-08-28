@@ -59,7 +59,7 @@ function readSwitchFile(file) {
  * the runner's environment — and so nothing here reaches for a variable name
  * that was not declared in the config.
  */
-export function readModelKillSwitch({ root = REPOSITORY_ROOT, env = process.env, hostSwitchPath = null } = {}) {
+export function readModelKillSwitch({ root = REPOSITORY_ROOT, env = process.env, hostSwitchPath = null, providerProfile = null } = {}) {
   const configPath = path.join(root, MODEL_EXECUTION_CONFIG);
   const repository = readSwitchFile(configPath);
   const config = repository.value ?? (() => {
@@ -77,10 +77,10 @@ export function readModelKillSwitch({ root = REPOSITORY_ROOT, env = process.env,
   // variable to answer "is it configured?" and never returns, logs or stores
   // what it found — the same shape `FactoryService.integrationStatus()` already
   // uses for the Factory's other providers.
-  const secretRef = config?.providerSecret?.secretRef ?? null;
+  const secretRef = providerProfile?.secretRef ?? config?.providerSecret?.secretRef ?? null;
   const providerSecret = secretRef
     ? describeProviderSecret({
-        providerId: config?.providerSecret?.providerId ?? config?.provider?.providerId ?? 'unknown',
+        providerId: providerProfile?.providerId ?? config?.providerSecret?.providerId ?? config?.provider?.providerId ?? 'unknown',
         secretRef,
         configured: typeof env[secretRef] === 'string' && env[secretRef].trim().length > 0,
       })

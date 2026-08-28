@@ -389,8 +389,52 @@ Do not repair the fixture. Repairing it destroys the measurement.
 
 The canary is the same one-time, single-use, budgeted decision as section 8: the
 kill switch must be on at both halves, and the run needs an authorised decision
-naming the role, model and ceilings. A `free-only` profile refuses to become a
-billable call, so an exhausted allowance fails rather than spends.
+naming Groq, the OpenAI-compatible adapter, the pinned model, role, task and
+ceilings. The provider is explicit in both commands; omitting it selects the
+older Anthropic canary and an Anthropic decision or adapter cannot service a
+Groq run. There is no fallback from this measurement. A `free-only` profile
+refuses to become a billable call, so a quota or billing response fails rather
+than spends, and no retry is made.
+
+The exact operator sequence for the first Groq run is:
+
+```bash
+# 1. Non-networked status. This reports presence only and prints no key.
+npm run providers:doctor
+
+# 2. In this temporary Hetzner shell only. Type the value locally.
+ export GROQ_API_KEY=<PASTE_KEY_LOCALLY_HERE>
+export APP_BUILDER_AGENT_GRANT_SECRET="$(head -c 48 /dev/urandom | base64)"
+export APP_BUILDER_MODEL_DECISION_SECRET="$(head -c 48 /dev/urandom | base64)"
+
+# 3. Through a reviewed change, set config/model-execution.json enabled: true.
+#    Then opt this host in independently.
+echo '{"enabled": true}' | sudo tee /etc/app-builder/model-execution.json
+
+# 4. Confirm every prerequisite. This makes no provider call.
+npm run runtime:model-canary -- --provider groq
+
+# 5. Mint one signed decision, explicitly for Groq.
+npm run runtime:model-canary -- --provider groq --authorise \
+  --by "your name" --reason "first Groq synthetic canary"
+
+# 6. Make exactly one real request against the fixed flawed-cart fixture.
+npm run runtime:model-canary -- --provider groq --run
+
+# 7. A human who did not create the artifact reviews the recorded evidence.
+npm run runtime:model-canary -- --review \
+  --record .app-builder/model-attempt-<id>.json \
+  --reviewer "your name" --verdict pass --rationale "why"
+
+# 8. Stop both halves and remove the temporary credentials.
+echo '{"enabled": false}' | sudo tee /etc/app-builder/model-execution.json
+unset GROQ_API_KEY APP_BUILDER_AGENT_GRANT_SECRET APP_BUILDER_MODEL_DECISION_SECRET
+```
+
+Return `config/model-execution.json` to `enabled: false` in the reviewed change
+that follows the run. Even a passing, human-reviewed record changes no provider
+profile: `ready`, `eligibleRoles`, `highRiskRolesApproved` and data policy move
+only in a later provider-promotion pull request.
 
 ### Recording what was earned
 

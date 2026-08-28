@@ -114,8 +114,11 @@ function renderPreflight(result) {
     if (check.status !== 'pass' && check.remedy) lines.push(`      → ${check.remedy}`);
   }
   lines.push('');
+  const runCommand = result.providerId === 'groq'
+    ? 'npm run runtime:model-canary -- --provider groq --run'
+    : 'npm run runtime:model-canary -- --run';
   lines.push(result.ok
-    ? 'Every prerequisite is satisfied. `npm run runtime:model-canary -- --run` will make one real provider call.'
+    ? `Every prerequisite is satisfied. \`${runCommand}\` will make one real provider call.`
     : `${result.blocking.length} prerequisite(s) outstanding. Nothing has been run and no credential has been used.`);
   lines.push('HOST entries can only be settled on the Hetzner host. They are not passes.');
   return lines.join('\n');
@@ -138,7 +141,9 @@ async function cli(argv) {
     return delegatePortableCli(argv);
   }
 
-  const result = settleHostImagePresence(preflight());
+  const providerIndex = argv.indexOf('--provider');
+  const providerId = providerIndex >= 0 ? argv[providerIndex + 1] : null;
+  const result = settleHostImagePresence(preflight({ providerId }));
   if (!argv.includes('--run')) {
     console.log(renderPreflight(result));
     return result.ok ? 0 : 1;
@@ -152,7 +157,7 @@ async function cli(argv) {
 
   const decisionPath = process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
   const stored = readJson(decisionPath);
-  const report = await runModelCanary({ decisionToken: stored.token });
+  const report = await runModelCanary({ decisionToken: stored.token, providerId });
   const target = path.join(REPOSITORY_ROOT, '.app-builder', `model-attempt-${report.record.recordId}.json`);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, `${JSON.stringify(report.record, null, 2)}\n`, 'utf8');

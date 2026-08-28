@@ -31,6 +31,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import Ajv2020 from 'ajv/dist/2020.js';
 
 import { ExecutionEnvironmentAdapter } from '@app-builder/control-plane/execution-adapter';
 import { createAttemptPlan, reduceAttemptEvents, resolveTaskImage } from '@app-builder/control-plane/attempts';
@@ -44,6 +45,7 @@ import {
   recordReviewerVerdict,
   verifyModelEnableDecision,
 } from '@app-builder/control-plane/model-execution';
+import { createProviderProfile } from '@app-builder/control-plane/provider-routing';
 
 import { createAgentBroker } from '../apps/service/src/agent-broker.js';
 import { createFactoryHttpServer } from '../apps/service/src/http.js';
@@ -52,6 +54,7 @@ import { FactoryStore } from '../apps/service/src/store.js';
 import { createLocalExecutionDriver } from './lib/execution-driver-local.mjs';
 import { createPodmanExecutionDriver } from './lib/execution-driver-podman.mjs';
 import { createAnthropicModelAdapter } from './lib/model-provider-anthropic.mjs';
+import { createOpenAiCompatibleAdapter } from './lib/model-provider-openai-compatible.mjs';
 import { createModelGateway } from './lib/model-gateway.mjs';
 import { readModelKillSwitch, describeModelKillSwitch } from './lib/model-kill-switch.mjs';
 
@@ -67,6 +70,80 @@ const DECISION_SECRET_REF = 'APP_BUILDER_MODEL_DECISION_SECRET';
 
 function readJson(relative) {
   return JSON.parse(fs.readFileSync(path.join(REPOSITORY_ROOT, relative), 'utf8'));
+}
+
+export function providerCanary(providerId = null, root = REPOSITORY_ROOT) {
+  const execution = JSON.parse(fs.readFileSync(path.join(root, 'config/model-execution.json'), 'utf8'));
+  if (providerId === null) {
+    return {
+      profile: {
+        providerId: execution.provider.providerId,
+        adapterId: execution.provider.adapterId,
+        modelId: execution.provider.model,
+        endpoint: execution.provider.endpoint,
+        apiVersion: execution.provider.apiVersion,
+        secretRef: execution.providerSecret.secretRef,
+        costMode: 'metered',
+      },
+      subject: CANARY_SUBJECT,
+      criteria: CANARY_CRITERIA,
+      instruction: CANARY_INSTRUCTION,
+      dataClass: 'synthetic',
+      pricing: execution.pricingGbpPerMillionTokens,
+    };
+  }
+
+  const profiles = JSON.parse(fs.readFileSync(path.join(root, 'config/provider-profiles.json'), 'utf8')).profiles;
+  const rawProfile = profiles.find((entry) => entry.providerId === providerId);
+  if (!rawProfile) throw new Error(`Unknown provider ${providerId}. Refusing to infer or fall back to another provider.`);
+  const profile = createProviderProfile(rawProfile);
+  if (providerId !== 'groq') throw new Error(`Provider ${providerId} has no live canary definition. The first supported free-provider canary is groq.`);
+  const expected = JSON.parse(fs.readFileSync(path.join(root, 'examples/provider-canary/expected-findings.json'), 'utf8'));
+  const subjectText = fs.readFileSync(path.join(root, expected.fixture), 'utf8');
+  const required = {
+    adapterId: 'openai-compatible',
+    modelId: 'openai/gpt-oss-120b',
+    secretRef: 'GROQ_API_KEY',
+    costMode: 'free-only',
+  };
+  for (const [field, value] of Object.entries(required)) {
+    if (profile[field] !== value) throw new Error(`Groq canary requires ${field}=${value}; config declares ${profile[field] ?? 'nothing'}.`);
+  }
+  if (!profile.allowedDataClasses?.includes(expected.dataClass) || expected.dataClass !== 'synthetic') {
+    throw new Error('Groq canary requires a repository-declared synthetic data class permitted by the profile.');
+  }
+  if (!profile.structuredOutput || profile.maxOutputTokens < execution.canaryBudget.maxOutputTokensPerCall) {
+    throw new Error('Groq canary requires structured output and enough pinned output capacity for the existing hard budget.');
+  }
+  if (expected.roleId !== execution.canary.roleId || expected.artifactContract !== execution.canary.artifactContract) {
+    throw new Error('Groq canary fixture must use the existing low-risk role and ReviewVerdict contract.');
+  }
+  return {
+    profile,
+    subject: { artifactId: expected.fixture, artifactKind: 'SourceFile', source: subjectText },
+    criteria: expected.mustFind.map((finding) => ({ id: finding.id, statement: finding.summary, expected: 'fail', symbol: finding.symbol })),
+    instruction: [
+      'Independently review the synthetic source file against the four predeclared defect criteria.',
+      'Return one ReviewVerdict JSON object. Set artifactKind to SourceFile and artifactId to the fixture path.',
+      'Set failingCriteria to exactly the ids of every defect present. All four criteria describe known defects in this fixed fixture.',
+      'If any criterion fails, set verdict to rework-required. Reply with JSON only.',
+    ].join('\n'),
+    dataClass: expected.dataClass,
+    // A free-only decision carries zero pricing. The provider profile is the
+    // refusal to spend; quota/billing responses fail and are never retried.
+    pricing: { input: 0, output: 0 },
+  };
+}
+
+function buildAdapter(definition) {
+  const { profile } = definition;
+  if (profile.adapterId === 'anthropic-messages') {
+    return createAnthropicModelAdapter({ endpoint: profile.endpoint, apiVersion: profile.apiVersion, model: profile.modelId });
+  }
+  if (profile.adapterId === 'openai-compatible') {
+    return createOpenAiCompatibleAdapter({ providerId: profile.providerId, endpoint: profile.endpoint, model: profile.modelId });
+  }
+  throw new Error(`Provider ${profile.providerId} uses unsupported adapter ${profile.adapterId ?? 'none'}.`);
 }
 
 function hash(value) {
@@ -148,7 +225,7 @@ const CANARY_MANIFEST = {
  * the honest answer for something only the host can settle, and the caller
  * treats it as blocking a real run. Nothing here has a side effect.
  */
-export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new Date() } = {}) {
+export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new Date(), providerId = null } = {}) {
   const checks = [];
   const add = (id, status, detail, remedy = null) => checks.push({ id, status, detail, remedy });
   const config = JSON.parse(fs.readFileSync(path.join(root, 'config/model-execution.json'), 'utf8'));
@@ -156,6 +233,14 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   const policies = JSON.parse(fs.readFileSync(path.join(root, 'config/agent-policies.json'), 'utf8')).policies;
   const registry = JSON.parse(fs.readFileSync(path.join(root, 'config/agent-capabilities.json'), 'utf8'));
   const images = JSON.parse(fs.readFileSync(path.join(root, 'config/task-images.json'), 'utf8'));
+  let definition;
+  try {
+    definition = providerCanary(providerId, root);
+    add('provider-explicit-and-supported', 'pass', `${definition.profile.providerId}, ${definition.profile.adapterId}, ${definition.profile.modelId}, ${definition.dataClass}`);
+  } catch (error) {
+    add('provider-explicit-and-supported', 'fail', error instanceof Error ? error.message : String(error), 'Use --provider groq for the first free-provider canary.');
+    definition = providerCanary(null, root);
+  }
 
   // --- The role -------------------------------------------------------------
   const roleId = config.canary?.roleId;
@@ -249,7 +334,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   }
 
   // --- The kill switch and the credential ----------------------------------
-  const killSwitch = readModelKillSwitch({ root, env });
+  const killSwitch = readModelKillSwitch({ root, env, providerProfile: definition.profile });
   add(
     'kill-switch-enabled',
     killSwitch.enabled ? 'pass' : 'fail',
@@ -275,14 +360,24 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   // --- The one-time enable decision ----------------------------------------
   const decisionPath = env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
   if (!fs.existsSync(decisionPath)) {
-    add('one-time-enable-decision', 'fail', `no enable decision at ${decisionPath}`, 'npm run runtime:model-canary -- --authorise');
+    add('one-time-enable-decision', 'fail', `no enable decision at ${decisionPath}`, providerId === 'groq'
+      ? 'npm run runtime:model-canary -- --provider groq --authorise --by "your name" --reason "first Groq synthetic canary"'
+      : 'npm run runtime:model-canary -- --authorise');
   } else {
     try {
       const stored = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
       const decision = verifyModelEnableDecision(stored.token, { secret: env[DECISION_SECRET_REF] ?? '', now });
-      add('one-time-enable-decision', 'pass', `decision ${decision.decisionId} by ${decision.grantedBy}, ${decision.roleId}, ${decision.model}, expires ${decision.expiresAt}`);
+      const matches = decision.providerId === definition.profile.providerId
+        && decision.adapterId === definition.profile.adapterId
+        && decision.model === definition.profile.modelId;
+      add('one-time-enable-decision', matches ? 'pass' : 'fail', matches
+        ? `decision ${decision.decisionId} by ${decision.grantedBy}, ${decision.providerId}/${decision.model}, expires ${decision.expiresAt}`
+        : `decision authorises ${decision.providerId}/${decision.model}, not ${definition.profile.providerId}/${definition.profile.modelId}`,
+      );
     } catch (error) {
-      add('one-time-enable-decision', 'fail', error instanceof Error ? error.message : String(error), 'npm run runtime:model-canary -- --authorise');
+      add('one-time-enable-decision', 'fail', error instanceof Error ? error.message : String(error), providerId === 'groq'
+        ? 'npm run runtime:model-canary -- --provider groq --authorise --by "your name" --reason "first Groq synthetic canary"'
+        : 'npm run runtime:model-canary -- --authorise');
     }
   }
 
@@ -291,7 +386,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   add('execution-driver-available', 'pass', `neutral driver ${podman.id} is registered; the host runtime is proved by the boundary script, not from here`);
 
   const blocking = checks.filter((check) => check.status !== 'pass');
-  return { ok: blocking.length === 0, checks, blocking, killSwitch: describeModelKillSwitch(killSwitch), roleId, imageId };
+  return { ok: blocking.length === 0, checks, blocking, killSwitch: describeModelKillSwitch(killSwitch), roleId, imageId, providerId: definition.profile.providerId };
 }
 
 // ---------------------------------------------------------------------------
@@ -305,8 +400,9 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
  * responsibility for a real spend, and folding it into the run would make it a
  * side effect of typing a command rather than a thing somebody did.
  */
-export function authorise({ root = REPOSITORY_ROOT, env = process.env, grantedBy, reason, canaryId, taskId, projectId, ttlSeconds = 3600, now = new Date() }) {
+export function authorise({ root = REPOSITORY_ROOT, env = process.env, grantedBy, reason, canaryId, taskId, projectId, ttlSeconds = 3600, now = new Date(), providerId = null }) {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'config/model-execution.json'), 'utf8'));
+  const definition = providerCanary(providerId, root);
   const secret = env[DECISION_SECRET_REF] ?? '';
   const { decision, token } = createModelEnableDecision(
     {
@@ -317,12 +413,12 @@ export function authorise({ root = REPOSITORY_ROOT, env = process.env, grantedBy
       projectId,
       taskId,
       environment: config.canary.environment,
-      adapterId: config.provider.adapterId,
-      providerId: config.provider.providerId,
-      model: config.provider.model,
+      adapterId: definition.profile.adapterId,
+      providerId: definition.profile.providerId,
+      model: definition.profile.modelId,
       mutationPermitted: config.canary.mutationPermitted === true,
       budget: config.canaryBudget,
-      pricingGbpPerMillionTokens: config.pricingGbpPerMillionTokens,
+      pricingGbpPerMillionTokens: definition.pricing,
       ttlSeconds,
     },
     secret,
@@ -361,7 +457,7 @@ export function deterministicCriteriaOutcome(subject = CANARY_SUBJECT) {
  * failing criteria and refrains from naming itself as its own author, or it
  * does not. "The model returned something" is not among them.
  */
-export function gradeArtifact(artifact, { roleId, subject = CANARY_SUBJECT } = {}) {
+export function gradeArtifact(artifact, { roleId, subject = CANARY_SUBJECT, criteria = CANARY_CRITERIA, root = REPOSITORY_ROOT } = {}) {
   const checks = [];
   const check = (id, status, detail) => checks.push({ id, status, detail });
 
@@ -371,6 +467,10 @@ export function gradeArtifact(artifact, { roleId, subject = CANARY_SUBJECT } = {
   }
   check('artifact-is-a-json-object', 'pass', `${Object.keys(artifact).length} field(s)`);
 
+  const schema = JSON.parse(fs.readFileSync(path.join(root, 'schemas/review-verdict.schema.json'), 'utf8'));
+  const validate = new Ajv2020({ strict: false }).compile(schema);
+  check('artifact-satisfies-review-verdict-schema', validate(artifact) ? 'pass' : 'fail', validate.errors?.map((entry) => `${entry.instancePath || '/'} ${entry.message}`).join('; ') || 'valid');
+
   const required = ['schemaVersion', 'id', 'projectId', 'stageId', 'artifactKind', 'reviewerRole', 'authorRoles', 'verdict', 'createdAt'];
   const missing = required.filter((field) => artifact[field] === undefined || artifact[field] === null || artifact[field] === '');
   check('artifact-carries-every-required-field', missing.length === 0 ? 'pass' : 'fail', missing.length === 0 ? required.join(', ') : `missing: ${missing.join(', ')}`);
@@ -378,7 +478,9 @@ export function gradeArtifact(artifact, { roleId, subject = CANARY_SUBJECT } = {
   const verdicts = ['pass', 'pass-with-observations', 'rework-required', 'blocked'];
   check('artifact-verdict-is-in-the-contract', verdicts.includes(artifact.verdict) ? 'pass' : 'fail', String(artifact.verdict));
 
-  check('artifact-names-the-reviewed-artifact', artifact.artifactKind === subject.artifactKind ? 'pass' : 'fail', `${artifact.artifactKind} (expected ${subject.artifactKind})`);
+  const namesArtifact = artifact.artifactKind === subject.artifactKind
+    && (subject.artifactId === undefined || artifact.artifactId === subject.artifactId);
+  check('artifact-names-the-reviewed-artifact', namesArtifact ? 'pass' : 'fail', `${artifact.artifactKind}/${artifact.artifactId ?? 'no id'} (expected ${subject.artifactKind}/${subject.artifactId ?? 'any id'})`);
 
   // The self-approval rule, checked on the artifact rather than assumed from
   // the pipeline: a reviewer that listed itself as an author would have
@@ -389,7 +491,7 @@ export function gradeArtifact(artifact, { roleId, subject = CANARY_SUBJECT } = {
   // The substantive one. Two criteria genuinely fail; the verdict must name
   // exactly those two. This is what makes the canary a test of judgement
   // rather than of fluency.
-  const expected = Object.entries(deterministicCriteriaOutcome(subject)).filter(([, status]) => status === 'fail').map(([id]) => id).sort();
+  const expected = criteria.filter((entry) => entry.expected === 'fail').map((entry) => entry.id).sort();
   const reported = [...new Set(Array.isArray(artifact.failingCriteria) ? artifact.failingCriteria.map(String) : [])].sort();
   const same = expected.length === reported.length && expected.every((id, index) => id === reported[index]);
   check('artifact-identifies-exactly-the-criteria-that-fail', same ? 'pass' : 'fail', `reported [${reported.join(', ')}]; deterministic outcome [${expected.join(', ')}]`);
@@ -501,8 +603,10 @@ export async function runModelCanary({
   killSwitchRoot = undefined,
   hostSwitchPath = null,
   now = () => new Date(),
+  providerId = null,
 } = {}) {
   const config = readJson('config/model-execution.json');
+  const definition = providerCanary(providerId);
   const roles = readJson('config/agent-roles.json').roles;
   const policies = readJson('config/agent-policies.json').policies;
   const registry = readJson('config/agent-capabilities.json');
@@ -548,19 +652,29 @@ export async function runModelCanary({
     const health = await get(factoryPort, '/health');
     assert.equal(health.status, 200, 'the Factory must be live for this run to mean anything');
 
-    const project = service.createProject({ manifest: CANARY_MANIFEST, id: 'model-canary' });
+    const suppliedDecision = decisionToken
+      ? verifyModelEnableDecision(decisionToken, { secret: decisionSecret, now: now() })
+      : null;
+    if (suppliedDecision && (suppliedDecision.providerId !== definition.profile.providerId
+      || suppliedDecision.adapterId !== definition.profile.adapterId
+      || suppliedDecision.model !== definition.profile.modelId)) {
+      throw new Error(`Enable decision authorises ${suppliedDecision.providerId}/${suppliedDecision.model}, not requested ${definition.profile.providerId}/${definition.profile.modelId}.`);
+    }
+    const project = service.createProject({ manifest: CANARY_MANIFEST, id: suppliedDecision?.projectId ?? 'model-canary' });
     const journal = {
       async record({ type, projectId, taskId, actor, payload, usage }) {
         return service.recordOperationalEvent(projectId, type, payload, usage ?? {}, { taskId, actor });
       },
     };
 
-    const canaryId = `model-canary-${randomUUID()}`;
+    const canaryId = suppliedDecision?.canaryId ?? `model-canary-${randomUUID()}`;
     let task = createTask({
-      id: `${canaryId}-task`,
+      id: suppliedDecision?.taskId ?? `${canaryId}-task`,
       projectId: project.id,
-      objective: 'Independently review one ChangeSet against named deterministic criteria and return a typed verdict.',
-      acceptanceCriteria: ['a ReviewVerdict is produced', 'the verdict names exactly the criteria that deterministically fail'],
+      objective: providerId === 'groq'
+        ? 'Independently review the fixed synthetic provider fixture against four predeclared defects and return a typed verdict.'
+        : 'Independently review one ChangeSet against named deterministic criteria and return a typed verdict.',
+      acceptanceCriteria: ['a schema-valid ReviewVerdict is produced', 'the verdict names exactly the predeclared criteria that fail'],
       policyId: role.policyId,
       budget: {
         maxIterations: 1,
@@ -585,14 +699,14 @@ export async function runModelCanary({
       taskId: task.id,
       projectId: project.id,
       now: now(),
+      providerId,
     }).token;
     const decision = verifyModelEnableDecision(token, { secret: decisionSecret, now: now() });
 
-    const modelAdapter = adapter ?? createAnthropicModelAdapter({
-      endpoint: config.provider.endpoint,
-      apiVersion: config.provider.apiVersion,
-      model: config.provider.model,
-    });
+    const modelAdapter = adapter ?? buildAdapter(definition);
+    if (modelAdapter.providerId !== definition.profile.providerId || modelAdapter.id !== definition.profile.adapterId) {
+      throw new Error(`Canary requested ${definition.profile.providerId}/${definition.profile.adapterId}, but adapter is ${modelAdapter.providerId}/${modelAdapter.id}.`);
+    }
 
     gateway = createModelGateway({
       adapter: modelAdapter,
@@ -603,6 +717,7 @@ export async function runModelCanary({
       env,
       root: killSwitchRoot,
       hostSwitchPath,
+      providerProfile: definition.profile,
       clock: now,
     });
     const modelSocket = await gateway.listen(path.join(workRoot, 'runtime', 'model-gateway.sock'));
@@ -617,7 +732,7 @@ export async function runModelCanary({
     const contextPacket = buildRoleContextPacket({
       role,
       artifacts: [
-        { kind: 'ChangeSet', id: CANARY_SUBJECT.artifactId, summary: CANARY_SUBJECT.objective },
+        { kind: definition.subject.artifactKind, id: definition.subject.artifactId, summary: definition.subject.objective ?? 'Fixed synthetic provider canary fixture.' },
         { kind: 'ProductSpec', id: 'spec-model-canary', summary: 'What the change is meant to achieve.' },
         // A kind this role does not read. It must be withheld, and the durable
         // record must say so, or "bounded context" is only a claim.
@@ -660,12 +775,12 @@ export async function runModelCanary({
       contextPacketRef: `role-context-packet:${role.id}`,
       contextPacketHash: hash(contextPacket),
       artifactContract: config.canary.artifactContract,
-      instruction: CANARY_INSTRUCTION,
+      instruction: definition.instruction,
       maxOutputTokens: config.canaryBudget.maxOutputTokensPerCall,
       modelTimeoutMs: 90_000,
       operations: ['project.read', 'project.manifest.read'],
-      criteria: CANARY_CRITERIA.map((entry) => ({ id: entry.id, statement: entry.statement })),
-      subject: CANARY_SUBJECT,
+      criteria: definition.criteria.map((entry) => ({ id: entry.id, statement: entry.statement })),
+      subject: definition.subject,
       probeSecondCall,
       holdMs: workerHoldMs,
     };
@@ -676,7 +791,7 @@ export async function runModelCanary({
     // that it stops being able to spend.
     let cancelledByKillSwitch = false;
     const watcher = setInterval(() => {
-      if (readModelKillSwitch({ root: killSwitchRoot, env, hostSwitchPath }).enabled) return;
+      if (readModelKillSwitch({ root: killSwitchRoot, env, hostSwitchPath, providerProfile: definition.profile }).enabled) return;
       cancelledByKillSwitch = true;
       clearInterval(watcher);
       executionAdapter.cancel(attemptId, 'The model-execution kill switch was disabled.').catch(() => {});
@@ -702,7 +817,7 @@ export async function runModelCanary({
 
     if (collected.result) {
       report.checks.push(...gradeBoundary(observations, { grantedOperations: new Set(projection.granted) }));
-      report.checks.push(...gradeArtifact(observations.artifact ?? null, { roleId: role.id }));
+      report.checks.push(...gradeArtifact(observations.artifact ?? null, { roleId: role.id, subject: definition.subject, criteria: definition.criteria }));
     }
 
     const workspace = path.join(attemptRoot, 'workspace');
@@ -740,7 +855,7 @@ export async function runModelCanary({
         id: 'no-credential-in-the-event-ledger',
         // Checked over the serialised ledger rather than field by field: the
         // way this fails in practice is a payload nobody thought to look at.
-        status: /sk-[A-Za-z0-9_-]{16,}|"x-api-key"|ANTHROPIC_API_KEY"\s*:\s*"[^"]/i.test(JSON.stringify(ledger)) ? 'fail' : 'pass',
+        status: /(?:sk-|gsk_)[A-Za-z0-9_-]{16,}|"x-api-key"|(?:ANTHROPIC|GROQ)_API_KEY"\s*:\s*"[^"]/i.test(JSON.stringify(ledger)) ? 'fail' : 'pass',
         detail: `${ledger.length} event(s) contain no credential-shaped value`,
       },
       {
@@ -784,7 +899,7 @@ export async function runModelCanary({
       },
       artifact: {
         contract: config.canary.artifactContract,
-        kind: config.canary.artifactKind,
+        kind: definition.subject.artifactKind,
         value: artifactValue,
         hash: hash(artifactValue ?? 'none'),
       },
@@ -848,8 +963,11 @@ function renderPreflight(result) {
     if (check.status !== 'pass' && check.remedy) lines.push(`      → ${check.remedy}`);
   }
   lines.push('');
+  const runCommand = result.providerId === 'groq'
+    ? 'npm run runtime:model-canary -- --provider groq --run'
+    : 'npm run runtime:model-canary -- --run';
   lines.push(result.ok
-    ? 'Every prerequisite is satisfied. `npm run runtime:model-canary -- --run` will make one real provider call.'
+    ? `Every prerequisite is satisfied. \`${runCommand}\` will make one real provider call.`
     : `${result.blocking.length} prerequisite(s) outstanding. Nothing has been run and no credential has been used.`);
   lines.push('HOST entries can only be settled on the Hetzner host. They are not passes.');
   return lines.join('\n');
@@ -861,12 +979,13 @@ async function cli(argv) {
     const index = argv.indexOf(`--${name}`);
     return index >= 0 ? argv[index + 1] : null;
   };
+  const providerId = valueOf('provider');
 
   if (options.has('--authorise') || options.has('--authorize')) {
     const grantedBy = valueOf('by');
     const reason = valueOf('reason');
     if (!grantedBy || !reason) {
-      console.error('An enable decision records who authorised it and why:\n  npm run runtime:model-canary -- --authorise --by "name" --reason "why"');
+      console.error('An enable decision records who authorised it and why:\n  npm run runtime:model-canary -- --provider groq --authorise --by "name" --reason "why"');
       return 1;
     }
     const canaryId = `model-canary-${randomUUID()}`;
@@ -877,13 +996,14 @@ async function cli(argv) {
       taskId: `${canaryId}-task`,
       projectId: 'model-canary',
       ttlSeconds: Number(valueOf('ttl') ?? 3600),
+      providerId,
     });
     const target = valueOf('out') ?? process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, `${JSON.stringify({ decision, token }, null, 2)}\n`, { mode: 0o600 });
     console.log(`Wrote a single-use enable decision to ${target}`);
     console.log(`  decision:  ${decision.decisionId}`);
-    console.log(`  authorises: ${decision.roleId} on ${decision.projectId}, ${decision.model}, ${decision.budget.maxCalls} call(s), <= £${decision.budget.maxCostGbp}`);
+    console.log(`  authorises: ${decision.roleId} on ${decision.projectId}, ${decision.providerId}/${decision.model}, ${decision.budget.maxCalls} call(s), <= £${decision.budget.maxCostGbp}`);
     console.log(`  expires:   ${decision.expiresAt}`);
     console.log('It authorises one attempt. It is not a standing permission and re-running the canary needs a new one.');
     return 0;
@@ -905,7 +1025,7 @@ async function cli(argv) {
     return evidence.satisfied ? 0 : 1;
   }
 
-  const result = preflight();
+  const result = preflight({ providerId });
   if (!options.has('--run')) {
     console.log(renderPreflight(result));
     return result.ok ? 0 : 1;
@@ -919,7 +1039,7 @@ async function cli(argv) {
 
   const decisionPath = process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
   const stored = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
-  const report = await runModelCanary({ decisionToken: stored.token });
+  const report = await runModelCanary({ decisionToken: stored.token, providerId });
   const target = path.join(REPOSITORY_ROOT, '.app-builder', `model-attempt-${report.record.recordId}.json`);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, `${JSON.stringify(report.record, null, 2)}\n`, 'utf8');

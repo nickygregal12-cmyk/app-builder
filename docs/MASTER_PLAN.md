@@ -147,7 +147,7 @@ Structured state is persisted at every material transition.
 # 6. Cost and usefulness targets
 
 The deterministic/generative target ratios and the credit-efficiency rules that hold them live once in
-`docs/CREDIT_EFFICIENCY.md`. Do not optimize percentages at the expense of quality. Stronger metrics
+`docs/CREDIT-EFFICIENCY.md`. Do not optimize percentages at the expense of quality. Stronger metrics
 are:
 - meaningful manual edits before acceptable launch;
 - deterministic gates passed without intervention;

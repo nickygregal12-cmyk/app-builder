@@ -106,7 +106,9 @@ one stage closes.
 
 ---
 
-# 4. First-class project modes
+# 4. Project classes and entry modes
+
+Project class determines the product/architecture defaults:
 
 1. **Marketing/business website** — public pages, company content, local SEO, leads, assets; future static-first default.
 2. **B2B SaaS** — organisations, roles, data, admin, uploads, integrations, optional billing/custom work.
@@ -117,11 +119,26 @@ one stage closes.
 
 Additional project types are added only when requirement/composition/architecture defaults are materially different.
 
+Separately, every class may enter through one of two **entry modes**:
+
+- **greenfield build** — no implementation is treated as authoritative; the ordinary intake/build lifecycle creates a new portable repository;
+- **existing-product adoption/improvement** — an existing repository and/or live URL is treated as evidence to understand before mutation. The factory freezes a baseline, maps current architecture/product/journeys, records what is known-good, diagnoses opportunities and defects, and proposes bounded changes that preserve history and are judged by before/after evidence.
+
+Entry mode must not become a second project-class taxonomy. An adopted marketing site is still a marketing site; an adopted B2B SaaS is still B2B SaaS. Existing-product mode also must not imply “rewrite using App Builder defaults”: the factory explicitly classifies findings into **keep / refactor / redesign / replace / remove / add**, and replacement requires evidence that preserving the existing implementation is the worse option.
+
 ---
 
 # 5. Target build lifecycle
 
+Greenfield lifecycle:
+
 `Input -> Intake -> Build Contract -> Approval -> Manifest -> Ingest/Knowledge Pack -> Deterministic Composition -> Template/Recipe/Presentation Resolution -> Deterministic Generation -> Novel AI Work -> Deterministic QA -> Targeted AI Review -> Preview/Direct Edit/Variant Selection -> Approval -> Production -> Monitor/Experiment -> Improve Factory`
+
+Existing-product lifecycle reuses the same contracts/gates after an adoption stage rather than bypassing them:
+
+`Repo/URL -> Baseline Evidence -> Product/Architecture/Journey Map -> Specialist Diagnosis -> Improvement Contract -> bounded branch/ChangeSet -> deterministic QA -> targeted independent review -> Before/After Evidence -> approval -> release -> monitor`
+
+The baseline should capture only evidence relevant to the product and requested improvement, but may include the exact source revision, deployed URL/revision where known, representative journeys and screenshots, architecture/contract findings, browser/runtime failures, accessibility, performance, security, visual/mobile quality, test status and current intervention/rework burden. A broad instruction such as “improve this product” routes to diagnosis/opportunity work first; it does not grant an implementation role permission to rewrite the repository.
 
 Structured state is persisted at every material transition.
 
@@ -130,7 +147,7 @@ Structured state is persisted at every material transition.
 # 6. Cost and usefulness targets
 
 The deterministic/generative target ratios and the credit-efficiency rules that hold them live once in
-`docs/CREDIT-EFFICIENCY.md`. Do not optimize percentages at the expense of quality. Stronger metrics
+`docs/CREDIT_EFFICIENCY.md`. Do not optimize percentages at the expense of quality. Stronger metrics
 are:
 - meaningful manual edits before acceptable launch;
 - deterministic gates passed without intervention;
@@ -138,6 +155,8 @@ are:
 - AI cost/tokens per accepted outcome;
 - elapsed work;
 - number and cause of retries/interventions.
+
+For existing-product work also record the delta from baseline: defects removed without regressions, journeys improved, architecture/quality findings retired, manual rework avoided and any metric that materially motivated the change. A change that increases code churn without improving the agreed baseline is not progress.
 
 The first genuine real-business acceptance target remains fewer than **20 meaningful manual edits**.
 
@@ -170,6 +189,7 @@ it does so at the declared quality:
   public visibility;
 - **portable generated repository** — an ordinary repository that clones, installs and builds with no App
   Builder dependency;
+- **existing-product adoption/improvement** — an existing repo/URL can be baselined, mapped and changed through isolated Git/ChangeSet work without erasing history or known-good behaviour, with before/after evidence showing whether the change actually improved the product;
 - **Builder Console preview, edit and version flow** — preview, direct edit with provenance, durable
   versions and checkpoint restore;
 - **core deployment** — a generated project reaches a real environment through the product, with explicit

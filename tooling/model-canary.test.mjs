@@ -158,11 +158,11 @@ test('the provider payload carries the credential in no field a record could cop
 });
 
 // ---------------------------------------------------------------------------
-// The kill switch: default off, and off in every failure mode.
+// The kill switch: one reviewed key on, and off in every incomplete state.
 // ---------------------------------------------------------------------------
 
-test('the committed kill switch is off, and is not runtimeReady wearing another name', () => {
-  assert.equal(CONFIG.enabled, false, 'config/model-execution.json must ship disabled');
+test('the repository opt-in authorises nothing without the independent host switch', () => {
+  assert.equal(CONFIG.enabled, true, 'config/model-execution.json must record the reviewed first-canary opt-in');
   const state = readModelKillSwitch({ root: ROOT, env: {} });
   assert.equal(state.enabled, false);
   // Different decisions, different files. A role being proven and the factory
@@ -179,8 +179,12 @@ test('both switches are required, and either one off refuses the lane', () => {
     fs.writeFileSync(hostOn, JSON.stringify({ enabled: true }));
     fs.writeFileSync(hostOff, JSON.stringify({ enabled: false, disabledReason: 'operator stopped the lane' }));
 
-    // Repository off (its committed state), host on -> still off.
-    assert.equal(readModelKillSwitch({ root: ROOT, env: {}, hostSwitchPath: hostOn }).enabled, false);
+    // Repository off, host on -> still off. Proved against a repository copy
+    // so the reviewed committed opt-in does not erase the refusal branch.
+    const disabledRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'model-repo-off-'));
+    fs.mkdirSync(path.join(disabledRoot, 'config'), { recursive: true });
+    fs.writeFileSync(path.join(disabledRoot, 'config/model-execution.json'), JSON.stringify({ ...CONFIG, enabled: false }));
+    assert.equal(readModelKillSwitch({ root: disabledRoot, env: {}, hostSwitchPath: hostOn }).enabled, false);
 
     // Repository on, host off -> still off. Proved against a repository copy
     // whose switch is enabled, so this is the real code path and not a stub.
@@ -194,6 +198,7 @@ test('both switches are required, and either one off refuses the lane', () => {
     assert.equal(readModelKillSwitch({ root: enabledRoot, env: {}, hostSwitchPath: path.join(scratch, 'nope.json') }).enabled, false);
     fs.writeFileSync(path.join(scratch, 'broken.json'), '{not json');
     assert.equal(readModelKillSwitch({ root: enabledRoot, env: {}, hostSwitchPath: path.join(scratch, 'broken.json') }).enabled, false);
+    fs.rmSync(disabledRoot, { recursive: true, force: true });
     fs.rmSync(enabledRoot, { recursive: true, force: true });
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true });

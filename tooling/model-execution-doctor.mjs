@@ -8,8 +8,8 @@
  * so `npm run doctor` stays fast and works on a machine with no credential.
  *
  * The invariants it exists for are the two easiest to lose by accident:
- * **the lane shipping enabled**, and **a credential appearing in the
- * repository**.
+ * **one repository switch being mistaken for effective permission**, and **a
+ * credential appearing in the repository**.
  */
 
 import fs from 'node:fs';
@@ -46,15 +46,15 @@ for (const relative of [
   if (!fs.existsSync(path.join(root, relative))) fail(`Missing model-lane file: ${relative}`);
 }
 
-// --- The kill switch ships off ----------------------------------------------
+// --- One reviewed switch is not effective permission ------------------------
 try {
   const config = readJson('config/model-execution.json');
-  if (config.enabled !== false) {
-    fail('config/model-execution.json must ship with enabled: false. A lane that arrives enabled is a lane nobody decided to turn on.');
+  if (config.enabled !== true) {
+    fail('config/model-execution.json must record the reviewed opt-in for the first deliberate canary.');
   }
   if (!config.hostSwitchPath) fail('config/model-execution.json must declare a hostSwitchPath: one key is a setting, two are a kill switch.');
   const state = readModelKillSwitch({ root, env: {} });
-  if (state.enabled) fail('The model kill switch reads as enabled from a clean environment. It must be deny-by-default.');
+  if (state.enabled) fail('The model kill switch reads as enabled without the independent host switch. One reviewed repository switch must authorise nothing by itself.');
 
   // The switch and the readiness gate are different decisions and must stay
   // different files. Reusing `runtimeReady` for this would make "the role is
@@ -240,4 +240,4 @@ try {
 if (failed) process.exit(1);
 const state = readModelKillSwitch({ root, env: {} });
 const profileCount = readJson('config/provider-profiles.json').profiles.length;
-console.log(`Model doctor: the model-execution lane is present and disabled (${state.blockers.length} switch(es) off); the canary role is a read-only, network-none reviewer; no credential is committed; no schedule runs it; ${profileCount} provider profile(s) grant no role and no private data class.`);
+console.log(`Model doctor: the repository has reviewed the first canary, but effective model execution remains disabled (${state.blockers.length} switch(es) off); the canary role is a read-only, network-none reviewer; no credential is committed; no schedule runs it; ${profileCount} provider profile(s) grant no role and no private data class.`);

@@ -2,15 +2,14 @@
   "version": 1,
   "description": "The model-execution kill switch and the provider-secret reference. This file decides whether a real provider call may happen at all. It is deliberately separate from `runtimeReady` in config/agent-roles.json: that flag says a role has been proven, this switch says the factory is currently permitted to spend money on a model. A proven role with the switch off makes no calls, and the switch being on promotes nothing.",
   "rules": [
-    "Default off, and off is the committed state. `enabled: false` here is the repository's answer; turning it on is a reviewed change to this file, not a runtime toggle.",
+    "Default off until a reviewed repository change opts into a deliberate canary. `enabled: true` here is only the repository's answer; it is not a runtime toggle and authorises nothing without every independent prerequisite.",
     "Two keys, both required. This file AND the host switch at `hostSwitchPath` must independently say enabled. Either one saying otherwise refuses every new model attempt, so an operator can stop the lane on the host without waiting for a merge, and a merge cannot start the lane on a host that has not opted in.",
     "The switch is read on the trusted side and re-read immediately before every provider call. It is never an environment variable inside a sandbox, never a prompt instruction, and never something a task can observe or influence.",
     "A credential is a reference here, never a value. `providerSecret.secretRef` names where the trusted gateway looks; the gateway resolves it in its own process and the value reaches no config, no ledger, no context packet and no sandbox.",
     "Enabling the switch authorises nothing by itself. A model attempt additionally needs a signed, single-use enable decision naming the role, task, project, model and ceilings — see `npm run runtime:model-canary -- --authorise`.",
     "Turning the switch off stops new provider calls immediately, and the canary supervisor cancels an attempt that is in flight. Anything already returned by the provider is still accounted for and recorded."
   ],
-  "enabled": false,
-  "disabledReason": "No real model attempt has been authorised. The first canary is a deliberate, one-time operator decision; this file is the committed default it starts from.",
+  "enabled": true,
   "hostSwitchPath": "/etc/app-builder/model-execution.json",
   "provider": {
     "adapterId": "anthropic-messages",

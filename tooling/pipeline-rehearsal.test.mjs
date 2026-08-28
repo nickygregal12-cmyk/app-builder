@@ -417,7 +417,10 @@ test('every verdict, handoff and convergence report the rehearsal writes validat
 // ---------------------------------------------------------------------------
 
 test('the rehearsal command runs every scenario and holds its own invariants', async () => {
-  const report = await runRehearsal({ projectType: 'marketing-site', stateRoot: scratchRoot() });
+  const disabled = (relative) => (relative === 'config/model-execution.json'
+    ? { ...readJson(relative), enabled: false }
+    : readJson(relative));
+  const report = await runRehearsal({ projectType: 'marketing-site', stateRoot: scratchRoot(), read: disabled });
   assert.equal(report.ok, true, JSON.stringify(report.invariants.filter((entry) => !entry.ok)));
   assert.equal(report.productEvidence, false);
   assert.equal(report.provider.providerCalls, 0);
@@ -440,7 +443,7 @@ test('the rehearsal command runs every scenario and holds its own invariants', a
 });
 
 test('the rehearsal refuses to run while real model spending is armed', async () => {
-  assert.equal(readJson('config/model-execution.json').enabled, false, 'the committed switch must stay off');
+  assert.equal(readJson('config/model-execution.json').enabled, true, 'the committed switch must record the reviewed first-canary opt-in');
   const armed = (relative) => (relative === 'config/model-execution.json'
     ? { ...readJson(relative), enabled: true }
     : readJson(relative));

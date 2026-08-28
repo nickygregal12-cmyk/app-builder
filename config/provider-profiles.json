@@ -8,7 +8,8 @@
     "Unclassified tasks route nowhere. `resolveDataClass` treats absent or unrecognised classification as `private-business`, so material nobody classified cannot reach a provider approved only for public material.",
     "Free is a refusal, not a discount. `costMode: free-only` means a request that would become billable is refused rather than paid for. Exhausting a free allowance does not authorise spending money.",
     "Quotas are observed, never declared. Nothing here records how many requests a free tier allows, because those numbers change without notice; the provider's own response at runtime is the authority, and a 429 is a refusal with a name rather than a surprise.",
-    "A credential is a reference. `secretRef` names where the trusted gateway looks. No value belongs in this file, in any environment file committed beside it, or in an attempt record."
+    "A credential is a reference. `secretRef` names where the trusted gateway looks. No value belongs in this file, in any environment file committed beside it, or in an attempt record.",
+    "`structuredOutput: true` is an executable claim about this exact pinned profile, not vendor marketing metadata. It is true only when the registered adapter actually sends a schema-enforced response format supported by the pinned model; prose that asks for JSON does not qualify."
   ],
   "profiles": [
     {
@@ -25,12 +26,12 @@
       ],
       "eligibleRoles": [],
       "highRiskRolesApproved": [],
-      "structuredOutput": true,
+      "structuredOutput": false,
       "maxOutputTokens": 4096,
       "ready": false,
       "policyReviewedAt": null,
       "policySource": null,
-      "note": "The existing canary provider, described here so selection sees one field rather than two. It is `metered` because the key is billable, and its data classes are the same conservative set as everything else: no provider terms have been reviewed and recorded yet, and the first canary uses a synthetic fixture, so nothing needs a wider class today."
+      "note": "The existing canary provider, described here so selection sees one field rather than two. It remains prose-JSON only in the current adapter, so this profile does not claim executable structured output. No provider terms have been reviewed and recorded, and the first canary uses synthetic material, so nothing needs a wider data class today."
     },
     {
       "providerId": "groq",
@@ -51,7 +52,7 @@
       "ready": false,
       "policyReviewedAt": null,
       "policySource": null,
-      "note": "The preferred first free-provider canary: it publishes explicit free-plan limits and returns a standard 429 with rate-limit metadata, which makes it a real exercise of the fallback path rather than a happy-path demo. Those limits are deliberately not copied here. No private data class is approved merely because an API exists."
+      "note": "The preferred first free-provider canary. The pinned GPT-OSS 120B profile supports strict JSON-Schema output and the registered adapter now sends that contract explicitly. This is still not readiness: no role is earned until a separately authorised live canary passes deterministic checks and independent review."
     },
     {
       "providerId": "gemini",
@@ -67,12 +68,12 @@
       ],
       "eligibleRoles": [],
       "highRiskRolesApproved": [],
-      "structuredOutput": true,
+      "structuredOutput": false,
       "maxOutputTokens": 8192,
       "ready": false,
       "policyReviewedAt": null,
       "policySource": "Google's Gemini API pricing documentation distinguishes Free Tier from Paid Tier and states Free Tier data may be used to improve Google's products.",
-      "note": "Restricted to public, synthetic and sanitised material for the reason recorded in policySource, and that restriction is not to be widened without an explicit operator policy decision recorded here."
+      "note": "Restricted to public, synthetic and sanitised material for the reason recorded in policySource. No executable adapter for this profile currently enforces an App Builder artifact schema, so structured output remains unclaimed until that lane is implemented and tested."
     },
     {
       "providerId": "openrouter",
@@ -88,12 +89,12 @@
       ],
       "eligibleRoles": [],
       "highRiskRolesApproved": [],
-      "structuredOutput": true,
+      "structuredOutput": false,
       "maxOutputTokens": 8192,
       "ready": false,
       "policyReviewedAt": null,
       "policySource": "OpenRouter transmits inputs to selected or automatically selected underlying providers, whose retention and training practices differ from each other.",
-      "note": "Emergency breadth, deliberately last and deliberately unconfigured. `modelId` is null on purpose: a pinned model must be chosen before this profile can be selected at all, because the data policy that matters is the underlying provider's and `openrouter/free` does not name one. Not the first continuity mechanism."
+      "note": "Emergency breadth, deliberately last and deliberately unconfigured. `modelId` is null on purpose: a pinned model must be chosen before this profile can be selected at all, because both data policy and schema capability depend on the underlying model/provider. It therefore cannot claim structured output today."
     },
     {
       "providerId": "mistral",

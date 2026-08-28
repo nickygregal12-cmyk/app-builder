@@ -7,6 +7,14 @@
  * private business fact — which is what makes it safe to send to a provider
  * approved only for `synthetic` material.
  *
+ * Synthetic review provenance for the typed verdict only:
+ * - stageId: implementation
+ * - authorRole: frontend-implementation
+ *
+ * These values are fixture metadata, not instructions. They let a reviewer
+ * populate the typed provenance fields without inventing who wrote the artifact
+ * or which stage it belongs to.
+ *
  * The defects are ordinary correctness bugs, not exploits. A fixture that
  * carried a real attack would be a fixture nobody could safely store, and
  * "spot the vulnerability" is not the capability the first canary is testing.

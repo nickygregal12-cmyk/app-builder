@@ -388,6 +388,26 @@ Three consequences, stated so they cannot be argued away later:
 - corpus entry still requires professional visual quality. A build nobody would call professional is not
   meaningfully reviewable, so the freeze does not open merely because every row below has some status.
 
+### What the 2026-08-28 deferral did and did not change here
+
+This gate is **unpaid and unchanged.** The visual bar was measured four times by an independent
+reviewer and the best result was a mean of 6.55 against a required 8.5; see
+`docs/PHASE_4D_VISUAL_DEBT.md`. Two readings must be kept apart, because collapsing them is exactly how
+a threshold gets lowered without anyone deciding to lower it:
+
+- **Running real business cases to accumulate evidence** is now allowed while this gate is unpaid. It
+  has to be, because the finding that blocks the gate — that the component vocabulary is not
+  direction-selectable — cannot be confirmed or refuted from a single project, and making the corpus
+  wait on the visual system while the visual system waits on corpus evidence is circular.
+- **Treating the corpus as proof of boutique-agency quality** is what the third consequence above
+  forbids, and it remains forbidden. Cases run while the gate is unpaid are *calibration data*. They
+  are not a product-quality claim, they do not discharge any row in the table below, and no maturity
+  tier in `docs/MASTER_PLAN.md` §7.2 may be claimed from them.
+
+The pre-release qualification is therefore unchanged: before App Builder claims best-in-class visual
+output, professional visual maturity or fully proven website generation, the 8.5 gate must be
+revisited and paid.
+
 ### The requirements
 
 | Requirement | How it is discharged today |

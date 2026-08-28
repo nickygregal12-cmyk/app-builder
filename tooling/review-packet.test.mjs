@@ -214,6 +214,7 @@ test('the reviewer gets the pictures, not a pointer at a running factory', async
       viewports: [{ name: 'desktop', width: 1280, height: 800, deviceScaleFactor: 1 }],
       captures: [{ id: 'capture-1', evidenceKind: 'visual', pageId: 'home', route: '/', viewport: 'desktop', state: { axis: 'viewport', state: 'desktop', risk: 'low', proves: 'How / renders at 1280px.' }, file: 'captures/home-desktop.png', contentHash: 'abc', byteSize: 3, elementRefs: [] }],
       uncovered: [{ route: '/', axis: 'data', state: 'empty', risk: 'low', reason: 'needs-a-deterministic-fixture' }],
+      renderingSource: { serverMode: 'built-artifact', artifact: 'dist', artifactHash: 'c'.repeat(64), fileCount: 4, depictsShippingArtifact: true, detail: 'Captured against the built artifact.' },
       setHash: 'set-hash',
     };
     service.listRenderedEvidence = () => [set];
@@ -230,6 +231,80 @@ test('the reviewer gets the pictures, not a pointer at a running factory', async
     // And what the pictures do not prove is named beside them.
     assert.match(review, /not\*\* proven by a picture/);
     assert.match(review, /needs-a-deterministic-fixture/);
+    // What was serving is the first thing a reviewer needs about a screenshot.
+    assert.match(review, /\*\*Captured against:\*\* built-artifact/);
+    assert.equal(packet.missing.some((entry) => /Rendered evidence/.test(entry)), false, 'built-artifact evidence is not a refusal');
+  } finally {
+    await service.close();
+    store.close();
+  }
+});
+
+/**
+ * The defect this guards is not hypothetical and cost a paid review.
+ *
+ * An independent critic reported "exposed generator metadata in the public
+ * footer" against the static rendering. The critic was reading the picture
+ * correctly: the strip renders under `import.meta.env.DEV` and appears in no
+ * built output at all. The evidence was captured from a development server, and
+ * nothing in the packet said so, so there was no way for the reviewer — or for
+ * anyone downstream — to know the picture was of something nobody ships.
+ */
+test('a review packet refuses evidence captured against a development server', async () => {
+  const dirs = roots('app-builder-review-packet-dev-capture-');
+  const store = new FactoryStore(dirs);
+  const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
+  try {
+    const project = service.createProject({ id: 'project-dev-capture', manifest: manifestFor() });
+    const set = {
+      id: 'evidence-dev', projectId: project.id, buildRef: 'build-1', compositionHash: 'hash', capturedAt: new Date().toISOString(),
+      viewports: [{ name: 'desktop', width: 1280, height: 800, deviceScaleFactor: 1 }],
+      captures: [{ id: 'capture-1', evidenceKind: 'visual', pageId: 'home', route: '/', viewport: 'desktop', state: { axis: 'viewport', state: 'desktop', risk: 'low', proves: 'How / renders at 1280px.' }, file: 'captures/home-desktop.png', contentHash: 'abc', byteSize: 3, elementRefs: [] }],
+      uncovered: [],
+      renderingSource: { serverMode: 'development', artifact: null, artifactHash: null, fileCount: null, depictsShippingArtifact: false, detail: 'Captured against a development server (npm run dev).' },
+      setHash: 'set-hash',
+    };
+    service.listRenderedEvidence = () => [set];
+    service.readRenderedCapture = () => ({ capture: set.captures[0], bytes: Buffer.from('png') });
+
+    const outDir = path.join(dirs.root, 'packet');
+    const packet = collectReviewPacket({ service, projectId: project.id, factoryCommit: '0'.repeat(40), outDir });
+    writeReviewPacket(service, packet);
+
+    const refusal = packet.missing.find((entry) => /evidence-dev/.test(entry));
+    assert.ok(refusal, 'a development capture must be listed among what this run cannot show');
+    assert.match(refusal, /development server/);
+    // The captures are still handed over. They are useful and they are not a
+    // claim about what ships, and the packet says which.
+    assert.match(fs.readFileSync(path.join(outDir, 'REVIEW.md'), 'utf8'), /This run cannot be validated yet/);
+    assert.match(fs.readFileSync(path.join(outDir, 'REVIEW.md'), 'utf8'), /\*\*Captured against:\*\* development/);
+  } finally {
+    await service.close();
+    store.close();
+  }
+});
+
+test('a review packet refuses evidence that cannot say what it photographed', async () => {
+  const dirs = roots('app-builder-review-packet-unmarked-');
+  const store = new FactoryStore(dirs);
+  const service = new FactoryService({ store, workspacesRoot: dirs.workspacesRoot, stateRoot: dirs.stateRoot });
+  try {
+    const project = service.createProject({ id: 'project-unmarked', manifest: manifestFor() });
+    // Evidence from before this field existed. "We do not know" is the one
+    // answer a promotion must never read as "the built artifact".
+    const set = {
+      id: 'evidence-old', projectId: project.id, buildRef: 'build-1', compositionHash: 'hash', capturedAt: new Date().toISOString(),
+      viewports: [{ name: 'desktop', width: 1280, height: 800, deviceScaleFactor: 1 }],
+      captures: [], uncovered: [], setHash: 'set-hash',
+    };
+    service.listRenderedEvidence = () => [set];
+    service.readRenderedCapture = () => null;
+
+    const outDir = path.join(dirs.root, 'packet');
+    const packet = collectReviewPacket({ service, projectId: project.id, factoryCommit: '0'.repeat(40), outDir });
+    writeReviewPacket(service, packet);
+
+    assert.ok(packet.missing.some((entry) => /evidence-old.*does not record what was serving/.test(entry)));
   } finally {
     await service.close();
     store.close();

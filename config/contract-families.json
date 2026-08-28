@@ -95,8 +95,8 @@
       "schema": "rendered-evidence.schema.json",
       "typeName": "AppBuilderRenderedEvidence",
       "boundary": "Browser captures of what a build renders, written by the service and read by the Console.",
-      "schemaHash": "a308164f84ced99c5c72e27accf628dad4f5e718b038a0cd78cc4575bfee04f0",
-      "typesHash": "06b0605e667fb9f8482ccb634c43e126e0dea6023cb4ad1186c8bbb864b3ae90"
+      "schemaHash": "21fad17cf3c5f2fc1f8231c4cb3fcbe51896db48a837e94d0ad7b89128ee4ccb",
+      "typesHash": "7d669d9e3d9897eb491a80664a11465349da5a5531d2710690fe13ceeb273496"
     },
     {
       "id": "asset-decision",

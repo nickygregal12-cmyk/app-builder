@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { evidenceShippingRefusals } from './rendering-source.mjs';
+
 /**
  * Assemble everything a genuine-business acceptance run can prove about itself,
  * and say plainly what is left for a person.
@@ -82,6 +84,19 @@ function journeysFrom({ events, intakeBundle, manifest, knowledgePack, compositi
   return { journeys, unproven };
 }
 
+/**
+ * Where the artifact a set claims to depict would be, from the set itself.
+ *
+ * `buildRef` is the workspace the captures came from and `renderingSource.artifact`
+ * is the served directory relative to it, so the two together address the build
+ * without the packet having to know which lane produced the evidence.
+ */
+function artifactOf(evidence) {
+  const artifact = evidence?.renderingSource?.artifact;
+  if (!artifact || !evidence.buildRef) return null;
+  return path.isAbsolute(artifact) ? artifact : path.resolve(evidence.buildRef, artifact);
+}
+
 /** The verification report the schema asks for, taken from what actually ran. */
 function verificationReport(events) {
   const relevant = events.filter((event) => event.type.startsWith('quality.'));
@@ -126,6 +141,25 @@ export function collectReviewPacket({ service, projectId, factoryCommit, outDir,
   if (!intakeBundle) missing.push('No approved intake bundle: this run cannot be replayed, and the intake journey cannot be evidenced.');
   if (!project.workspacePath) missing.push('No generated workspace: there is no repository to hand over.');
   if (!evidenceSets.length) missing.push('No rendered evidence: capture it before reviewing, so the review judges what the build actually rendered.');
+  // The packet is a claim about a product, so its pictures have to be of the
+  // product. A set captured against a development server is not: it can show a
+  // dev-only banner, an unminified graph, an inlined stylesheet — none of which
+  // a visitor receives. That already happened, and an independent critic
+  // correctly reported factory chrome in a footer that exists in no built
+  // output. The packet does not silently drop such evidence; it lists the
+  // refusal beside everything else the run cannot show, and `missing` is what
+  // makes the run un-validatable.
+  const reviewed = evidenceSets.at(-1);
+  if (reviewed) {
+    for (const refusal of evidenceShippingRefusals(reviewed, {
+      // Re-hashed from the set's OWN build reference and the artifact it named,
+      // not from the project's current workspace. Candidate evidence is
+      // captured in a candidate workspace, and checking it against a different
+      // build's `dist` would report a mismatch that says nothing.
+      dist: artifactOf(reviewed),
+      label: `Rendered evidence ${reviewed.id}`,
+    })) missing.push(refusal);
+  }
 
   const { journeys, unproven } = journeysFrom({ events, intakeBundle, manifest, knowledgePack, composition });
   for (const stage of unproven) missing.push(`Journey "${stage}" has no durable evidence that it ran.`);
@@ -294,6 +328,21 @@ function reviewMarkdown(packet, sourceNotes, renderedEvidence) {
       '',
       `Set \`${captures.id}\`: ${captures.captures.length} captures across ${captures.viewports.length} viewports.`,
       '',
+      // The first thing a reviewer needs to know about a screenshot is what was
+      // serving. One independent review reported factory chrome in a public
+      // footer; the strip renders only under `import.meta.env.DEV` and exists in
+      // no built output, so the reviewer was reading a picture of something
+      // nobody ships and had no way to tell.
+      ...(captures.renderingSource
+        ? [
+          `**Captured against:** ${captures.renderingSource.serverMode}`
+          + (captures.renderingSource.artifact ? ` — \`${captures.renderingSource.artifact}\`` : '')
+          + (captures.renderingSource.artifactHash ? ` (\`${captures.renderingSource.artifactHash.slice(0, 16)}…\`)` : ''),
+          '',
+          captures.renderingSource.detail,
+          '',
+        ]
+        : ['**Captured against:** not recorded. This set cannot say which artifact it photographed, so it is not evidence about what ships.', '']),
       ...captures.captures.map((capture) => {
         const file = fileFor.get(capture.id);
         const label = `${capture.route} · ${capture.viewport} · ${capture.state.axis}/${capture.state.state}`;

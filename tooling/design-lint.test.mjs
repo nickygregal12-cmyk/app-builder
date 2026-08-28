@@ -11,6 +11,24 @@ import { assertAccentColor, compileDesignSystemSpec, contrastRatio } from './lib
 import { generateComposedProject } from './lib/composed-generator.mjs';
 import { buildEvidenceSet } from './lib/rendered-evidence.mjs';
 
+/**
+ * Every evidence set has to declare what was serving when it was captured.
+ *
+ * These cases are about capture bookkeeping — hashing, dropping what failed,
+ * refusing degenerate routes — rather than about provenance, so they declare
+ * the honest thing a real run declares: a named, hashed built artifact.
+ * `tooling/rendering-source.test.mjs` is where the declaration itself is tested.
+ */
+const BUILT_ARTIFACT = Object.freeze({
+  serverMode: 'built-artifact',
+  artifact: 'dist',
+  artifactHash: 'b'.repeat(64),
+  fileCount: 2,
+  depictsShippingArtifact: true,
+  detail: 'Fixture: captured against a built artifact.',
+});
+
+
 const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
 const LAYOUTS = JSON.parse(fs.readFileSync('config/layout-patterns.json', 'utf8'));
 
@@ -150,7 +168,7 @@ test('the report travels with rendered evidence and satisfies its contract', () 
     projectId: 'project-lint',
     buildRef: '/workspaces/lint',
     compositionHash: composition.compositionHash,
-    capturedAt: '2026-08-26T00:00:00.000Z',
+    capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
     designLint: report,
   });
   assert.deepEqual(validateContract('rendered-evidence', evidence), []);
@@ -164,7 +182,7 @@ test('the report travels with rendered evidence and satisfies its contract', () 
     projectId: 'project-lint',
     buildRef: '/workspaces/lint',
     compositionHash: composition.compositionHash,
-    capturedAt: '2026-08-26T00:00:00.000Z',
+    capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
   });
   assert.deepEqual(validateContract('rendered-evidence', without), []);
   assert.equal(without.designLint, null);

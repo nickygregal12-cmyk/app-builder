@@ -144,19 +144,25 @@ export function resolveBuildDocument(root, pathname) {
 }
 
 /**
- * Serve a candidate's built output for evidence capture.
+ * Serve a build's own output for evidence capture.
  *
- * Static rather than the dev server, deliberately. Every candidate in a set is
- * then photographed from the same kind of rendering — the built one, which is
- * what a visitor would get — and a comparison is only worth making between like
- * and like. It also means a candidate cannot be compared on a rendering that
- * only exists while a dev server is running.
+ * Static rather than the dev server, deliberately. A candidate set is then
+ * photographed from the same kind of rendering — the built one, which is what a
+ * visitor would get — and a comparison is only worth making between like and
+ * like. It also means nothing is reviewed on a rendering that exists only while
+ * a dev server is running, which is the failure that had an independent critic
+ * reporting a development-only metadata strip as a defect in a public footer.
+ *
+ * Named for what it serves rather than for who first needed it: the ordinary
+ * project lane uses this too, through `captureRenderedEvidence(id, { against:
+ * 'built-artifact' })`, which is the compliant path for evidence a review may
+ * treat as a claim about what ships.
  *
  * Bound to loopback and rooted at one directory. A request that resolves
  * outside `dist` is refused rather than served, and an address that matches no
  * document falls back to the app shell so a client-side router can answer it.
  */
-export function serveCandidateBuild(dist) {
+export function serveBuiltArtifact(dist) {
   const root = path.resolve(dist);
   const shell = path.join(root, 'index.html');
   if (!fs.existsSync(shell)) throw new Error(`Candidate build has no index.html at ${root}. Build it before capturing evidence.`);

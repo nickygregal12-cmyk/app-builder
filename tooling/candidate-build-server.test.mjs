@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { resolveBuildDocument, serveCandidateBuild } from '../apps/service/src/visual-candidates.js';
+import { resolveBuildDocument, serveBuiltArtifact } from '../apps/service/src/visual-candidates.js';
 
 /**
  * What the evidence server hands a browser for an address.
@@ -70,7 +70,7 @@ test('an address that climbs out of the build is refused', () => {
 
 test('the server serves a distinct document per prerendered route', async () => {
   const root = fixture(PRERENDERED);
-  const server = await serveCandidateBuild(root);
+  const server = await serveBuiltArtifact(root);
   try {
     const read = async (route) => {
       const response = await fetch(new URL(route.replace(/^\/+/, ''), server.url));
@@ -102,7 +102,7 @@ test('the server serves a distinct document per prerendered route', async () => 
 
 test('an unknown address still falls back to the shell for a client-side router', async () => {
   const root = fixture(SPA);
-  const server = await serveCandidateBuild(root);
+  const server = await serveBuiltArtifact(root);
   try {
     const response = await fetch(new URL('deep/link', server.url));
     assert.equal(response.status, 200);

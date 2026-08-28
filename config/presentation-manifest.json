@@ -253,6 +253,25 @@
         "--color-accent",
         "--color-ink"
       ]
+    },
+    "organisation-files-section": {
+      "sectionType": "organisation-files",
+      "lifecycle": "ready",
+      "renderer": "recipe",
+      "purpose": "The files an organisation owns, with upload, open and a role-scoped remove. The recipe owns how it renders and how it reaches Supabase Storage; storage row level security owns who may see and change what.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens",
+        "recipe:uploads"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--radius-sm",
+        "--color-border-strong",
+        "--color-accent",
+        "--color-ink"
+      ]
     }
   }
 }

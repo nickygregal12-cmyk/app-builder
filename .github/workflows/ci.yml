@@ -147,8 +147,13 @@ jobs:
           npx --yes supabase@2.115.0 init --workdir .tmp/supabase-rls-acceptance
           npm run acceptance:supabase-rls:prepare
 
+      # `storage-api` is started here and the other excluded services are not.
+      # The organisation-files capability is the first thing in this repository
+      # that needs real object storage, and a journey that uploads to a mock
+      # would prove nothing about the policies it is meant to exercise. One
+      # extra container, added because a specific test needs it.
       - name: Start local Supabase for RLS acceptance
-        run: npx --yes supabase@2.115.0 start --workdir .tmp/supabase-rls-acceptance -x studio,imgproxy,mailpit,realtime,storage-api,postgres-meta,edge-runtime,logflare,vector,supavisor
+        run: npx --yes supabase@2.115.0 start --workdir .tmp/supabase-rls-acceptance -x studio,imgproxy,mailpit,realtime,postgres-meta,edge-runtime,logflare,vector,supavisor
 
       - name: Execute pgTAP security acceptance
         run: npx --yes supabase@2.115.0 test db --workdir .tmp/supabase-rls-acceptance

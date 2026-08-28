@@ -91,12 +91,35 @@ test('Netlify and lead-generation contracts include SPA routing and static form 
   assert.match(component, /fetch\('\/__forms\.html'/);
 });
 
-test('upload recipe owns a private bucket path and covers replace permissions safely', () => {
+test('upload recipe owns a private organisation bucket and derives the tenant from the object key', () => {
   const sql = fs.readFileSync('recipes/uploads/database/storage.sql', 'utf8').toLowerCase();
-  assert.match(sql, /'user-files', 'user-files', false/);
-  assert.match(sql, /storage\.foldername\(name\)\)\[1\] = \(select auth\.uid\(\)\)::text/);
+
+  // Private, and organisation-owned rather than user-owned. The previous
+  // version of this test asserted a `user-files` bucket keyed on `auth.uid()`,
+  // which was the consumer-product shape: it gave every person a private folder
+  // and gave an organisation no way to keep anything.
+  assert.match(sql, /'organisation-files', 'organisation-files', false/);
+
+  // The tenant is re-derived from the object's own key by a helper that returns
+  // null for a malformed one, so a policy can never raise on a bad path and
+  // `has_org_role(null, …)` is false.
+  assert.match(sql, /app_private\.storage_object_organisation/);
+  assert.match(sql, /app_private\.has_org_role\(app_private\.storage_object_organisation\(name\)/);
+  assert.doesNotMatch(sql, /\(select auth\.uid\(\)\)::text/, 'storage tenancy must not fall back to a per-user folder');
+
   assert.match(sql, /for select to authenticated/);
   assert.match(sql, /for insert to authenticated/);
-  assert.match(sql, /for update to authenticated[\s\S]*using[\s\S]*with check/);
   assert.match(sql, /for delete to authenticated/);
+
+  // The absence of an UPDATE policy is the design, not an oversight, so it is
+  // asserted rather than left to be re-broken by someone adding one for
+  // symmetry. Renaming an object is how a file would move between tenants: an
+  // identity belonging to two organisations could otherwise rewrite the tenant
+  // prefix and satisfy a membership check on both sides of the write.
+  assert.doesNotMatch(sql, /for update to authenticated/, 'an update policy would make an object reclassifiable between tenants');
+
+  // Supabase owns storage.objects and its API needs those grants, so PR #184's
+  // revoke-before-grant rule for factory-owned public tables must not be
+  // applied here. RLS is the whole boundary for storage.
+  assert.doesNotMatch(sql, /revoke all on storage\./, 'revoking Supabase storage grants breaks the Storage API rather than securing it');
 });

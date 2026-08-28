@@ -18,6 +18,7 @@
         "profiles",
         "organisations",
         "records",
+        "uploads",
         "admin",
         "analytics",
         "observability"

@@ -4,12 +4,33 @@
   "module": "uploads",
   "version": "1.0.0",
   "status": "ready",
-  "compatibleTemplates": ["react-vite-neutral"],
+  "compatibleTemplates": [
+    "react-vite-neutral"
+  ],
   "entry": "src/features/uploads/index.tsx",
-  "files": ["src/features/uploads/index.tsx"],
-  "requires": ["auth"],
-  "requiresAdapters": ["supabase"],
+  "files": [
+    "src/features/uploads/index.tsx",
+    "src/features/uploads/FilesContext.tsx",
+    "src/features/uploads/FilesSection.tsx",
+    "src/features/uploads/uploads.css"
+  ],
+  "requires": [
+    "auth",
+    "organisations"
+  ],
+  "requiresAdapters": [
+    "supabase"
+  ],
   "conflicts": [],
-  "database": {"fragments":["database/storage.sql"]},
-  "package": {"dependencies":{},"devDependencies":{},"scripts":{}}
+  "database": {
+    "adapter": "supabase",
+    "fragments": [
+      "database/storage.sql"
+    ]
+  },
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  }
 }

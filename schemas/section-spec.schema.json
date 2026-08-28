@@ -6,7 +6,7 @@
   "required":["id","type","purpose","bindings","actions","assetIds","variant"],
   "properties":{
     "id":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-    "type":{"enum":["hero","rich-text","item-grid","proof-grid","people-grid","location-list","contact-panel","entity-list","content-list","cta","gallery","enquiry-form","tenant-records"]},
+    "type":{"enum":["hero","rich-text","item-grid","proof-grid","people-grid","location-list","contact-panel","entity-list","content-list","cta","gallery","enquiry-form","tenant-records","organisation-files"]},
     "purpose":{"type":"string","minLength":1},
     "bindings":{"type":"array","items":{"$ref":"content-binding.schema.json"}},
     "actions":{"type":"array","items":{"type":"object","required":["label","href"],"properties":{"label":{"type":"string","minLength":1},"href":{"type":"string","minLength":1}},"additionalProperties":false}},

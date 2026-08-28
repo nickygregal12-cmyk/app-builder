@@ -4,43 +4,13 @@
   "title": "App Builder Launch Readiness Report",
   "description": "Deterministic audit of composed product before a human reviews it. Findings predict the meaningful manual edits a reviewer would otherwise make by hand, using the same category vocabulary as schemas/genuine-business-acceptance.schema.json so predicted and actual edits are directly comparable.",
   "type": "object",
-  "required": [
-    "schemaVersion",
-    "launchable",
-    "predictedManualEdits",
-    "summary",
-    "findings",
-    "evidenceGaps",
-    "stateMatrix",
-    "journeys",
-    "hardConstraints"
-  ],
+  "required": ["schemaVersion", "launchable", "predictedManualEdits", "summary", "findings", "evidenceGaps", "stateMatrix", "journeys", "hardConstraints"],
   "properties": {
-    "schemaVersion": {
-      "const": 1
-    },
-    "projectType": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "compositionHash": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "manifestVersion": {
-      "type": [
-        "integer",
-        "null"
-      ]
-    },
-    "launchable": {
-      "type": "boolean",
-      "description": "False while any blocker finding stands."
-    },
+    "schemaVersion": {"const": 1},
+    "projectType": {"type": ["string", "null"]},
+    "compositionHash": {"type": ["string", "null"]},
+    "manifestVersion": {"type": ["integer", "null"]},
+    "launchable": {"type": "boolean", "description": "False while any blocker finding stands."},
     "predictedManualEdits": {
       "type": "integer",
       "minimum": 0,
@@ -48,60 +18,38 @@
     },
     "summary": {
       "type": "object",
-      "required": [
-        "blocker",
-        "major",
-        "minor",
-        "byCategory",
-        "evidenceGaps",
-        "hardConstraints"
-      ],
+      "required": ["blocker", "major", "minor", "byCategory", "evidenceGaps", "hardConstraints"],
       "properties": {
-        "blocker": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "major": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "minor": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "byCategory": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "evidenceGaps": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "hardConstraints": {
-          "type": "object",
-          "description": "How many declared hard constraints ended in each coverage state. A build with no declared constraints reports zeroes, which is different from the field not being read.",
-          "additionalProperties": {
-            "type": "integer",
-            "minimum": 0
-          }
-        }
+        "blocker": {"type": "integer", "minimum": 0},
+        "major": {"type": "integer", "minimum": 0},
+        "minor": {"type": "integer", "minimum": 0},
+        "byCategory": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "evidenceGaps": {"type": "integer", "minimum": 0},
+        "hardConstraints": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}, "description": "How many declared hard constraints ended in each coverage state. A build with no declared constraints reports zeroes, which is different from the field not being read."}
       },
       "additionalProperties": false
     },
-    "findings": {
+    "hardConstraints": {
       "type": "array",
+      "description": "The requirement-coverage ledger for manifest.constraints.hard. One entry per declared constraint, naming the topic it classified as, the producer that verifies that topic, and whether this build can say the constraint is being met. A constraint that matches no topic is reported as unclassified rather than omitted.",
       "items": {
-        "$ref": "#/definitions/finding"
+        "type": "object",
+        "required": ["constraint", "topic", "status", "verifiedBy", "checks", "detail"],
+        "properties": {
+          "constraint": {"type": "string", "minLength": 1},
+          "topic": {"type": ["string", "null"]},
+          "status": {"enum": ["enforced", "breached", "needs-executable-evidence", "unenforced", "unclassified"]},
+          "verifiedBy": {"type": ["string", "null"], "description": "Producer id from config/gate-producers.json, or null when no producer verifies this topic yet."},
+          "checks": {"type": "array", "items": {"type": "string"}},
+          "detail": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
       }
     },
+    "findings": {"type": "array", "items": {"$ref": "#/definitions/finding"}},
     "evidenceGaps": {
       "type": "array",
-      "items": {
-        "$ref": "#/definitions/finding"
-      },
+      "items": {"$ref": "#/definitions/finding"},
       "description": "Reachable, meaningful states and journey steps that composition cannot prove. These need executable evidence, not a site edit."
     },
     "stateMatrix": {
@@ -109,52 +57,20 @@
       "description": "State axes each surface genuinely exposes. Deliberately small: impossible and speculative combinations are removed before ranking.",
       "items": {
         "type": "object",
-        "required": [
-          "page",
-          "axes",
-          "states"
-        ],
+        "required": ["page", "axes", "states"],
         "properties": {
-          "page": {
-            "type": "string"
-          },
-          "axes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
+          "page": {"type": "string"},
+          "axes": {"type": "array", "items": {"type": "string"}},
           "states": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": [
-                "axis",
-                "state",
-                "risk",
-                "evidence"
-              ],
+              "required": ["axis", "state", "risk", "evidence"],
               "properties": {
-                "axis": {
-                  "type": "string"
-                },
-                "state": {
-                  "type": "string"
-                },
-                "risk": {
-                  "enum": [
-                    "low",
-                    "medium",
-                    "high"
-                  ]
-                },
-                "evidence": {
-                  "enum": [
-                    "none",
-                    "fixture",
-                    "browser"
-                  ]
-                }
+                "axis": {"type": "string"},
+                "state": {"type": "string"},
+                "risk": {"enum": ["low", "medium", "high"]},
+                "evidence": {"enum": ["none", "fixture", "browser"]}
               },
               "additionalProperties": false
             }
@@ -168,98 +84,22 @@
       "description": "Journeys derived from composed output, with per-step closure status. A component existing is not journey completion.",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "entry",
-          "steps"
-        ],
+        "required": ["id", "entry", "steps"],
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "entry": {
-            "type": "string"
-          },
+          "id": {"type": "string"},
+          "entry": {"type": "string"},
           "steps": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": [
-                "step",
-                "status",
-                "detail"
-              ],
+              "required": ["step", "status", "detail"],
               "properties": {
-                "step": {
-                  "type": "string"
-                },
-                "status": {
-                  "enum": [
-                    "proven",
-                    "unproven",
-                    "needs-executable-evidence"
-                  ]
-                },
-                "detail": {
-                  "type": "string",
-                  "minLength": 1
-                }
+                "step": {"type": "string"},
+                "status": {"enum": ["proven", "unproven", "needs-executable-evidence"]},
+                "detail": {"type": "string", "minLength": 1}
               },
               "additionalProperties": false
             }
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "hardConstraints": {
-      "type": "array",
-      "description": "The requirement-coverage ledger for manifest.constraints.hard. One entry per declared constraint, naming the topic it classified as, the producer that verifies that topic, and whether this build can say the constraint is being met. A constraint that matches no topic is reported as unclassified rather than omitted.",
-      "items": {
-        "type": "object",
-        "required": [
-          "constraint",
-          "topic",
-          "status",
-          "verifiedBy",
-          "checks",
-          "detail"
-        ],
-        "properties": {
-          "constraint": {
-            "type": "string",
-            "minLength": 1
-          },
-          "topic": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "status": {
-            "enum": [
-              "enforced",
-              "breached",
-              "needs-executable-evidence",
-              "unenforced",
-              "unclassified"
-            ]
-          },
-          "verifiedBy": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "checks": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "detail": {
-            "type": "string",
-            "minLength": 1
           }
         },
         "additionalProperties": false
@@ -270,65 +110,19 @@
   "definitions": {
     "finding": {
       "type": "object",
-      "required": [
-        "check",
-        "category",
-        "severity",
-        "owningRole",
-        "title",
-        "guidance",
-        "where",
-        "detail"
-      ],
+      "required": ["check", "category", "severity", "owningRole", "title", "guidance", "where", "detail"],
       "properties": {
-        "check": {
-          "type": "string",
-          "minLength": 1
-        },
+        "check": {"type": "string", "minLength": 1},
         "category": {
-          "enum": [
-            "content",
-            "brand",
-            "imagery",
-            "layout",
-            "responsive",
-            "visual",
-            "behavior",
-            "integration",
-            "accessibility",
-            "data",
-            "other"
-          ],
+          "enum": ["content", "brand", "imagery", "layout", "responsive", "visual", "behavior", "integration", "accessibility", "data", "other"],
           "description": "Matches the Phase 3.8E manual-edit categories exactly."
         },
-        "severity": {
-          "enum": [
-            "minor",
-            "major",
-            "blocker"
-          ]
-        },
-        "owningRole": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Role id from config/agent-roles.json. A finding with no owner is a complaint."
-        },
-        "title": {
-          "type": "string",
-          "minLength": 1
-        },
-        "guidance": {
-          "type": "string",
-          "minLength": 1
-        },
-        "where": {
-          "type": "string",
-          "minLength": 1
-        },
-        "detail": {
-          "type": "string",
-          "minLength": 1
-        }
+        "severity": {"enum": ["minor", "major", "blocker"]},
+        "owningRole": {"type": "string", "minLength": 1, "description": "Role id from config/agent-roles.json. A finding with no owner is a complaint."},
+        "title": {"type": "string", "minLength": 1},
+        "guidance": {"type": "string", "minLength": 1},
+        "where": {"type": "string", "minLength": 1},
+        "detail": {"type": "string", "minLength": 1}
       },
       "additionalProperties": false
     }

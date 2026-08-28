@@ -36,6 +36,8 @@ budgets and credit disappear.
 | Are there serious/critical accessibility failures? | `@axe-core/playwright` | accessibility CI |
 | Which exact symbol calls this? | symbol/code intelligence | semantic navigation |
 | Which subsystems does this change touch? | graph-assisted navigation | architecture orientation |
+| Which approved requirement has no implementation consumer or proof? | derived requirement coverage | release integrity |
+| What should this ChangeSet verify first? | deterministic change-impact map | change planning |
 | Is the dependency direction legal? | `npm run architecture` | blocking architecture CI |
 | Is deterministic behaviour correct? | `node --test` unit/contract tests | CI |
 | Do invariants survive a broad input space? | property tests | domain verification |
@@ -147,8 +149,8 @@ What it would cost:
   template's own Vite build;
 - stories per component per variant, which is a **second declaration of what a component renders**
   beside the template and the registry — the exact duplication this stage warns against;
-- a preview surface showing components against fixture content, next to a preview surface showing
-  the real build against real source-backed content. Two answers to "what does this look like",
+- a preview surface showing components against fixture content, next to a preview surface showing the
+  real build against real source-backed content. Two answers to "what does this look like",
   and the fixture one is the less true.
 
 Revisit only if curated visual regression contracts (Phase 4D) prove they need per-component
@@ -503,6 +505,51 @@ Apply it where a declaration is a behavioural claim:
 - operation and capability registries (Phase 5);
 - policy, routing and permission matrices.
 
+The higher-level form of the same failure exists at the product boundary: a requirement can survive
+intake into the Build Contract/Manifest and still never acquire an implementation consumer or a piece
+of executable proof. That is the class exposed by `manifest.constraints.hard`: preserving a string in
+machine-readable state is necessary and still not evidence that the build obeys it.
+
+#### Derived requirement coverage
+
+Extend Q10 into a **derived Requirement Coverage Ledger** for approved requirements where the product
+claims behavioural effect. It is not a second requirements document and must not be hand-maintained.
+Derive it from the existing Build Contract/Manifest requirement identities plus the contracts,
+capability/architecture decisions, ChangeSets, consumers and gate/journey evidence that already exist.
+
+For each material requirement, the derived view should be able to distinguish at least:
+
+- **proven** — a real implementation consumer exists and named executable evidence demonstrates the
+  relevant behaviour;
+- **implemented-unproven** — a consumer exists but the required evidence is absent, stale or did not
+  exercise the declared behaviour;
+- **unconsumed** — the requirement is preserved but no implementation/planning consumer can be found;
+- **not-applicable** — the approved architecture made the requirement irrelevant to this generated
+  surface, with that decision attributable rather than inferred after the fact.
+
+A must-have/hard requirement that is `unconsumed` or `implemented-unproven` cannot be presented as
+satisfied merely because the project builds or an agent says it handled it. Existing Build Contract
+severity/approval semantics decide whether that state blocks release; the coverage mechanism does not
+invent a second priority vocabulary.
+
+Traceability should be useful in both directions:
+
+`requirement -> architecture/capability/implementation consumer -> tests/gates/journeys -> evidence`
+
+and:
+
+`changed consumer/evidence -> which approved requirements may have lost proof?`
+
+Do not require every wording-level preference to acquire a dedicated test. Start with hard constraints,
+security/data/auth requirements, critical journeys, selected product capabilities and other requirements
+whose omission would materially change the delivered product. Expand only when real builds show a
+class of requirement is being dropped silently.
+
+The first acceptance should plant both failure classes: one hard requirement with no consumer and one
+with a consumer but vacuous/missing evidence. The gate must report different states, then become green
+only when the real consumer/evidence is added. `manifest.constraints.hard` is a natural first real
+consumer case; do not create a synthetic coverage system while that known gap remains unresolved.
+
 The second instance is the gate-producer registry, and it is the pattern applied to a registry the
 same week it landed. `config/gate-producers.json` makes five claims about things outside itself per
 entry — the module that implements a producer, the contract it validates against, the file it writes,
@@ -528,6 +575,37 @@ requires every declared capability to name a real operation in the service tool 
 handler in the broker, so a capability nobody can perform fails rather than reassures. Follow that
 shape — declaration names its consumer, test checks the consumer exists — rather than inventing a
 new mechanism per registry.
+
+### Stage Q10b — deterministic change-impact map (Phase 5/6; activate on a real complex/brownfield consumer)
+
+Graph-assisted navigation should eventually answer more than “which files are nearby?”. Before a
+material ChangeSet, derive a conservative **Change Impact Map** from facts the factory already owns:
+changed paths/symbols, module/import relationships, contract/schema ownership, capability/recipe
+registries, route/page/journey identities, risk surfaces and registered gate/test producers.
+
+The useful output is not an omniscient dependency graph. It is a bounded answer to:
+
+- which subsystems/contracts/capabilities are plausibly affected;
+- which approved requirements or protected journeys depend on those consumers;
+- which fast deterministic checks should run during the inner repair loop;
+- which browser/database/state fixtures are relevant;
+- which specialist/independent reviews the existing risk policy requires;
+- which impacts remain unknown and therefore require broader verification.
+
+For example, changing an authoritative scoring/settlement module in a Predictor-class product should
+be able to pull in settlement invariants, standings/points journeys and the relevant database/domain
+tests without loading the entire repository into the implementation agent. Conversely, a typography
+change should not buy database/security work merely because those systems exist in the same project.
+
+Fail conservative: an unknown edge broadens the verification set; it never silently removes a required
+gate. The map accelerates development and improves context selection, but it **does not replace** the
+full merge/release suite the project's risk and Build Contract require.
+
+Do not build a separate semantic graph platform up front. Start from the module graph, existing
+registries and durable product identities already present; add richer symbol/code intelligence only
+when a real benchmark demonstrates that path/import-level impact is too coarse. The first worthwhile
+benchmark is the existing-product Predictor mode, where the success metric is fewer unnecessary files
+tokens/tests per bounded change **without** an increase in regressions or missed required evidence.
 
 ### Stage Q11 — ledger and projection reconciliation ✅ delivered
 

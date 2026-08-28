@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "authority": "brownfield-baseline",
+  "subject": {
+    "path": "/home/predictor/Euro-2028-Predictor/.claude/worktrees/bridge-cse_014oHyxGS7d5WU5H1EoxghH6",
+    "name": "bridge-cse_014oHyxGS7d5WU5H1EoxghH6",
+    "remote": "https://github.com/nickygregal12-cmyk/Euro-2028-Predictor.git"
+  },
+  "revision": "9e88437f9b85bd1a45c802606bd8553464c010f7",
+  "workingTreeClean": true,
+  "profiledAt": "2026-08-28T17:23:45.642Z",
+  "profileHash": "775fcf932921b2ceb9446b0c1c9ad36fb874781cab57260c250c495ce77ac7dc",
+  "shape": {
+    "filesExamined": 3263,
+    "framework": "React on Vite",
+    "language": "TypeScript",
+    "applications": 1,
+    "libraries": null,
+    "routeLocations": null,
+    "serverBoundaries": 3,
+    "migrations": 218,
+    "securityPolicyFiles": 69,
+    "unitTestFiles": 719,
+    "e2eTestFiles": 55,
+    "databaseTestFiles": 188,
+    "ciWorkflows": 67,
+    "componentDirectories": 2,
+    "dependencyCount": 47
+  },
+  "protects": [
+    "The repository is identified by an exact revision, so a later change can be diffed against what was actually read.",
+    "The shape counts above. A route location, migration, policy file, test file or CI workflow that disappears is visible as a number that moved."
+  ],
+  "doesNotProtect": [
+    "Behaviour. Nothing was executed, so no journey, test result or build outcome is recorded and none may be assumed to have passed.",
+    "Rendered experience. No page was loaded and no capture was taken, so how this product looks and behaves is not part of this baseline.",
+    "Data safety. Policy files were located, never run. Whether they are correct is a live-database question.",
+    "Meaning. A count that did not move does not prove the thing behind it is unchanged."
+  ],
+  "usable": true,
+  "refusals": []
+}

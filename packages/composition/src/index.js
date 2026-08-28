@@ -466,6 +466,21 @@ function tenantRecordsSection(pageId, manifest) {
   ]);
 }
 
+/**
+ * The files an organisation keeps, on the surface it is worked in.
+ *
+ * Placed beside the records section and for the same reason: the composer
+ * decides the section belongs on this page, and the uploads recipe owns what it
+ * looks like and how it reaches storage. The tenancy it enforces is storage's,
+ * not this section's.
+ */
+function organisationFilesSection(pageId, manifest) {
+  if (manifest?.modules?.uploads !== true) return null;
+  return section(`${pageId}-files`, 'organisation-files', 'Keep and retrieve the files this organisation owns', [
+    manifestBinding('title', 'Files'),
+  ]);
+}
+
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
   const profiles = socialProfileBinding(pack, manifest);
@@ -599,6 +614,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
     // cupboard. `sectionsForPage` dedupes by id, so a project whose surfaces
     // include both still gets one.
     if (/workspace|record/.test(lower)) output.push(tenantRecordsSection(pageId, manifest));
+    if (/workspace|file|document/.test(lower)) output.push(organisationFilesSection(pageId, manifest));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
   } else {

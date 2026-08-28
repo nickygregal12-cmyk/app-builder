@@ -1,6 +1,6 @@
 begin;
 
-select plan(60);
+select plan(71);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.profiles'::regclass),
@@ -524,6 +524,133 @@ select results_eq(
   $$with changed as (update public.profiles set display_name = 'Owner A renamed' where id = '10000000-0000-0000-0000-000000000001' returning 1) select count(*)::bigint from changed$$,
   array[1::bigint],
   'the write boundary does not stop an intended profile edit'
+);
+
+
+-- ===========================================================================
+-- Organisation-owned file storage.
+--
+-- These assertions act on `storage.objects` directly, as the `authenticated`
+-- role with a real JWT subject, so what is tested is the policy set the Storage
+-- API runs under. They deliberately do NOT claim to test the Storage HTTP API:
+-- signed URLs, multipart upload and the service's own checks are above this
+-- layer and are proved by the generated-application browser journey instead.
+-- What is settled here is the question SQL can answer - which objects a caller
+-- may see, create and remove.
+--
+-- Seeded as the owner, because seeding is not something a tenant does.
+--
+-- WHAT IS NOT ASSERTED HERE, and why. A real Supabase deployment installs a
+-- trigger on `storage.objects` that refuses direct DELETE and UPDATE outright:
+-- "Direct deletion from storage tables is not allowed. Use the Storage API
+-- instead." So the remove boundary and the rename-between-tenants boundary
+-- cannot be expressed in SQL at all, and an earlier draft of this file that
+-- tried passed locally only because the bare postgres image carries no such
+-- trigger — a less faithful environment quietly permitting what the real one
+-- forbids. Those two boundaries are proved through the Storage HTTP API in
+-- `tooling/storage-boundary-acceptance.mjs`, which is where they are reachable.
+-- ===========================================================================
+
+reset role;
+-- Only the columns every storage schema version carries. `public` and
+-- `file_size_limit` are added by the Storage service's own migrations, so a
+-- bare PostgreSQL image has neither; what is under test here is the policy set,
+-- not the bucket's flags, and naming a column that may not exist would make
+-- this suite fail for a reason it is not about.
+insert into storage.buckets (id, name) values ('organisation-files', 'organisation-files')
+  on conflict (id) do nothing;
+insert into storage.objects (bucket_id, name, owner, metadata) values
+  ('organisation-files', '20000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-00000000000a-report.pdf', '10000000-0000-0000-0000-000000000001', '{"size": 12}'::jsonb),
+  ('organisation-files', '20000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-00000000000b-secret.pdf', '10000000-0000-0000-0000-000000000006', '{"size": 12}'::jsonb);
+
+select ok(
+  (select relrowsecurity from pg_class where oid = 'storage.objects'::regclass),
+  'storage objects have RLS enabled'
+);
+-- The tenant helper must refuse a key it cannot parse rather than raise, or a
+-- malformed path would turn every policy evaluation into an error.
+select is(
+  app_private.storage_object_organisation('not-a-uuid/file.pdf'),
+  null,
+  'a storage key whose first segment is not an organisation id belongs to no organisation'
+);
+select is(
+  app_private.storage_object_organisation('20000000-0000-0000-0000-000000000001/x-report.pdf'),
+  '20000000-0000-0000-0000-000000000001'::uuid,
+  'the organisation is derived from the first segment of the object key'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
+-- editor-a: a contributor in organisation A only.
+-- Deliberately not member-a: the write-boundary block above demotes that
+-- identity to viewer while proving an admin may change a role, so reusing it
+-- here would test the wrong thing and look like a storage failure.
+select results_eq(
+  $$select count(*)::bigint from storage.objects where bucket_id = 'organisation-files'$$,
+  array[1::bigint],
+  'an editor of organisation A sees only organisation A files, never organisation B files'
+);
+select results_eq(
+  $$with created as (insert into storage.objects (bucket_id, name, owner) values ('organisation-files', '20000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-00000000000c-editor.pdf', '10000000-0000-0000-0000-000000000003') returning 1) select count(*)::bigint from created$$,
+  array[1::bigint],
+  'an editor of organisation A can upload into their own organisation'
+);
+-- Forging the tenant prefix gets the caller nothing: membership is re-derived
+-- from the very path they supplied.
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name, owner) values ('organisation-files', '20000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-00000000000d-forged.pdf', '10000000-0000-0000-0000-000000000003')$$,
+  '42501',
+  null,
+  'an editor of organisation A cannot upload into organisation B by naming its id'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000005', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
+-- viewer-a: read-only in organisation A
+select results_eq(
+  $$select count(*)::bigint from storage.objects where bucket_id = 'organisation-files'$$,
+  array[2::bigint],
+  'a viewer in organisation A can see its files'
+);
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name, owner) values ('organisation-files', '20000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-00000000000e-viewer.pdf', '10000000-0000-0000-0000-000000000005')$$,
+  '42501',
+  null,
+  'a viewer in organisation A cannot upload a file'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000007', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000007","role":"authenticated"}', true);
+-- dual-ab: a contributor in BOTH organisations
+-- The identity that makes the namespace question real. They may legitimately
+-- see both tenants' files, and must still not be able to reclassify one into
+-- the other. There is no UPDATE policy at all, so the rename that would move a
+-- file between organisations is refused for everybody.
+select results_eq(
+  $$select count(*)::bigint from storage.objects where bucket_id = 'organisation-files'$$,
+  array[3::bigint],
+  'an identity in both organisations sees both organisations files'
+);
+
+reset role;
+set local role anon;
+select results_eq(
+  $$select count(*)::bigint from storage.objects where bucket_id = 'organisation-files'$$,
+  array[0::bigint],
+  'anonymous callers see no organisation files'
+);
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name) values ('organisation-files', '20000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-00000000000f-anon.pdf')$$,
+  '42501',
+  null,
+  'anonymous callers cannot upload an organisation file'
 );
 
 reset role;

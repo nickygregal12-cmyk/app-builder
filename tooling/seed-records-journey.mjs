@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Deterministic identities and tenants for the generated-application browser
- * journey, created through the real Supabase APIs.
+ * Deterministic identities, tenants, records and files for the
+ * generated-application browser journeys, created through the real Supabase APIs.
  *
  * The same six identities the pgTAP acceptance uses, in the same two
  * organisations, so the browser journey and the database acceptance are talking
@@ -95,4 +95,21 @@ sql(`insert into public.records (id, organisation_id, reference, title, summary,
   ('30000000-0000-0000-0000-000000000004', '${ORGANISATIONS.b.id}', 'REC-B1', 'Organisation B confidential record', 'Must never appear to organisation A.', 'active', '${ORGANISATIONS.b.createdBy}')
   on conflict (id) do nothing;`);
 
-console.log('seeded   2 organisations, 4 identities, 2 records');
+// One file owned by organisation B, so the uploads journey can prove that
+// organisation A never sees it. Uploaded with the service key, because seeding
+// is not something a tenant does — and because the point is that a legitimately
+// present object in another tenant stays invisible, not that it was never there.
+const CONFIDENTIAL = 'Organisation B confidential file. Organisation A must never see this.\n';
+const objectKey = `${ORGANISATIONS.b.id}/40000000-0000-0000-0000-0000000000b1-organisation-b-confidential.txt`;
+const upload = await fetch(`${url}/storage/v1/object/organisation-files/${objectKey}`, {
+  method: 'POST',
+  headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'text/plain', 'x-upsert': 'true' },
+  body: CONFIDENTIAL,
+});
+if (!upload.ok) {
+  const detail = await upload.text();
+  throw new Error(`Could not seed the organisation B file: ${upload.status} ${detail}`);
+}
+console.log('seeded   organisation B file for the cross-tenant assertion');
+
+console.log('seeded   2 organisations, 4 identities, 2 records, 1 file');

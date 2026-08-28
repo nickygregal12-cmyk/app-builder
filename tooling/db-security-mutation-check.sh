@@ -62,6 +62,11 @@ start_database() {
 # Returns 0 when the suite passes, 1 when any assertion fails.
 run_suite() {
   local migration="$1"
+  # A bare image's storage schema predates the columns the Storage service adds,
+  # so bring it up to shape before applying the uploads fragment. Local
+  # approximation only; CI runs the real service.
+  "$CLI" cp "$ROOT/tooling/lib/storage-schema-bootstrap.sql" "$NAME:/tmp/boot.sql" >/dev/null
+  "$CLI" exec "$NAME" psql -U postgres -v ON_ERROR_STOP=1 -f /tmp/boot.sql >/dev/null 2>&1
   "$CLI" cp "$migration" "$NAME:/tmp/m.sql" >/dev/null
   if ! "$CLI" exec "$NAME" psql -U postgres -v ON_ERROR_STOP=1 -f /tmp/m.sql >/dev/null 2>&1; then
     echo "        (schema did not apply)"
@@ -203,6 +208,42 @@ mutate "organisations inherits blanket UPDATE again" \
 #     this proves the lifecycle column is covered by the revoke and not by luck.
 mutate "profiles inherits blanket UPDATE again" \
   "s|^revoke all on public.profiles from anon, authenticated;\$||"
+
+
+# --- Organisation-owned storage ------------------------------------------------
+#
+# Storage has no column-privilege boundary available: Supabase owns
+# `storage.objects` and its API needs those grants, so RLS is the whole of it.
+# That makes these policies load-bearing in a way the public-table ones are not,
+# and each one is broken here to prove the suite would notice.
+
+# 12. Tenant predicate on reading files: every member sees every tenant's files.
+mutate "storage read predicate drops the organisation check" \
+  "s|and app_private.has_org_role(app_private.storage_object_organisation(name), null)|and true|"
+
+# 13. Tenant predicate on upload: a caller may write into any organisation's
+#     namespace by naming it, which is the forgery case.
+mutate "storage upload accepts any tenant prefix" \
+  "s|and app_private.has_org_role(app_private.storage_object_organisation(name), array\['owner', 'admin', 'editor', 'member'\])|and true|"
+
+# 14. Membership replaced by mere authentication — the classic wrong fix, and
+#     the one that looks most like security while being none.
+mutate "storage read requires only a signed-in caller" \
+  "s|and app_private.has_org_role(app_private.storage_object_organisation(name), null)|and (select auth.uid()) is not null|"
+
+# The storage DELETE policy is deliberately NOT mutated here, and the gap is
+# worth stating rather than hiding. A real Supabase deployment forbids direct
+# DELETE on storage.objects, so this suite — which is pure SQL — cannot assert
+# the remove boundary and therefore cannot notice it being broken. That boundary
+# is proved instead by tooling/storage-boundary-acceptance.mjs against the real
+# Storage API in CI. It is proved; it is not mutation-covered. Making it so
+# would mean teaching this harness to run a full Supabase stack, which is a
+# larger change than this capability earns.
+
+# 16. The tenant helper stops parsing, so every key resolves to one organisation
+#     and the namespace collapses.
+mutate "storage tenant helper returns a fixed organisation" \
+  "s|then ((storage.foldername(object_name))\[1\])::uuid|then '20000000-0000-0000-0000-000000000001'::uuid|"
 
 echo
 if [ "$failures" -eq 0 ]; then

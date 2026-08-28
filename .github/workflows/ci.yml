@@ -147,8 +147,13 @@ jobs:
           npx --yes supabase@2.115.0 init --workdir .tmp/supabase-rls-acceptance
           npm run acceptance:supabase-rls:prepare
 
+      # `storage-api` is started here and the other excluded services are not.
+      # The organisation-files capability is the first thing in this repository
+      # that needs real object storage, and a journey that uploads to a mock
+      # would prove nothing about the policies it is meant to exercise. One
+      # extra container, added because a specific test needs it.
       - name: Start local Supabase for RLS acceptance
-        run: npx --yes supabase@2.115.0 start --workdir .tmp/supabase-rls-acceptance -x studio,imgproxy,mailpit,realtime,storage-api,postgres-meta,edge-runtime,logflare,vector,supavisor
+        run: npx --yes supabase@2.115.0 start --workdir .tmp/supabase-rls-acceptance -x studio,imgproxy,mailpit,realtime,postgres-meta,edge-runtime,logflare,vector,supavisor
 
       - name: Execute pgTAP security acceptance
         run: npx --yes supabase@2.115.0 test db --workdir .tmp/supabase-rls-acceptance
@@ -165,6 +170,18 @@ jobs:
         run: |
           SERVICE_KEY="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json | jq -r '.SERVICE_ROLE_KEY')"
           node tooling/seed-records-journey.mjs --url http://127.0.0.1:54321 --service-key "$SERVICE_KEY"
+
+      # The half of the boundary SQL cannot reach. A real Supabase deployment
+      # forbids direct DELETE and UPDATE on storage.objects, so the remove
+      # boundary and the role distinction are proved against the Storage HTTP
+      # API with real per-identity tokens.
+      - name: Storage API boundary acceptance
+        run: |
+          STATUS="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json)"
+          node tooling/storage-boundary-acceptance.mjs \
+            --url http://127.0.0.1:54321 \
+            --anon-key "$(jq -r '.ANON_KEY' <<<"$STATUS")" \
+            --service-key "$(jq -r '.SERVICE_ROLE_KEY' <<<"$STATUS")"
 
       - run: npx playwright install --with-deps chromium
 

@@ -369,10 +369,11 @@ Governing rules, enforced by the control-plane doctor and `tooling/agent-archite
   repositories ship their own master design document or workflow engine; those parts are recorded in
   `doNotAdopt` precisely because installing them wholesale would create a competing authority.
 
-Current registry state: 35 sources, of which seven are candidates (`vercel-labs/agent-skills`,
-`style-dictionary`, `microsoft/playwright-mcp`, `ChromeDevTools/chrome-devtools-mcp`,
-`GoogleChrome/lighthouse-ci`, `tldraw`, `quickdrawjs/quickdraw`) and the remainder are reference-only.
-Nothing is adopted or loadable by any role today.
+Current registry state: 45 sources, of which fifteen are candidates — the seven agent/tooling
+candidates (`vercel-labs/agent-skills`, `style-dictionary`, `microsoft/playwright-mcp`,
+`ChromeDevTools/chrome-devtools-mcp`, `GoogleChrome/lighthouse-ci`, `tldraw`,
+`quickdrawjs/quickdraw`) and the eight implementation/skill candidates recorded in §8.6 — and the
+remainder are reference-only. Nothing is adopted or loadable by any role today.
 
 ## 8.5 Internal prior-art audit: the development-agent operating system
 
@@ -454,6 +455,152 @@ column is a second thing to keep true.
 - **Multi-persona review presented as independence.** Independence requires a different model or
   runtime; when none is available the skip is reported.
 
+## 8.6 External implementation libraries and specialist skills
+
+A parallel capability-candidate audit on 2026-08-28 assessed ten external sources and registered them
+in `config/external-sources.json`. It changed no generated-project dependency, no template, no recipe
+default and no roadmap sequence. The point is that the factory knows **what to evaluate when a real
+project creates the need**, not that anything is now adopted: registration is not adoption, installed
+is not loaded, and real-product evidence earns expansion.
+
+None of these may be fetched from a mutable branch at run time, and all carry
+`instructionAuthority: none` like every other registered source.
+
+### 8.6.1 Accessible primitives — one foundation, chosen on evidence
+
+`radix-ui/primitives` and `mui/base-ui` are **competing** candidate foundations for the accessible
+behaviour under application-class components — keyboard operation, focus management, ARIA state — kept
+separate from the visual identity the Presentation Registry owns.
+
+Do not adopt both globally. One becomes the default primitive foundation, or neither does.
+
+The benchmark that would justify a choice, run on a real project that needs a dialog, menu, popover,
+tabs and a listbox: build the same five Presentation Registry entries twice and compare axe and manual
+accessibility results, keyboard and screen-reader behaviour at the widths the visual gate already
+checks, bundle cost per primitive, transitive dependency count, generated LOC, the DesignLint findings
+each produces, and how much markup control each leaves. API and release maturity is a criterion, not an
+assumption — Base UI is the younger line and must be re-checked at the pin.
+
+Project-specific selection is allowed only if that benchmark shows neither foundation wins across
+project classes. A per-project choice is a cost — two sets of registry entries to maintain — and needs
+evidence, not preference.
+
+### 8.6.2 Forms — React Hook Form is an optional complex-form capability
+
+A small contact, newsletter or single-step form must not acquire a form dependency. The threshold
+where `react-hook-form` becomes worth evaluating is a form that has at least one of:
+
+- more than roughly ten fields, or multiple steps with preserved state;
+- field arrays or repeatable groups;
+- dependent or conditional fields whose validity depends on other answers;
+- per-keystroke validation on a surface where re-render cost is measurable;
+- a resolver shared with the same schema the server validates against.
+
+Below that threshold the comparison is against ordinary React state and native constraint validation,
+and the platform default wins by dependency count alone. Client validation never replaces server
+validation, and a resolver schema never becomes a second contract authority beside
+`packages/contracts`.
+
+### 8.6.3 Server state — TanStack Query for application data only
+
+`TanStack/query` is an optional capability for `b2b-saas`, `consumer-app`, `internal-tool` and
+`ai-app`. It is explicitly **not** for `marketing-site` or `content-site`: those renderers must remain
+able to ship zero client JavaScript, which 4.2A proved they can.
+
+Evaluate it against the simplest suitable data layer the project already has, on: correctness under
+concurrent mutation and refetch, staleness and invalidation defects avoided, bundle and runtime cost,
+generated LOC, and how much hand-written effect code it removes. Adopt only when a project has enough
+data reads that the simplest layer has actually started producing defects.
+
+### 8.6.4 Tables — TanStack Table for data-heavy application surfaces
+
+`TanStack/table` is optional and headless, which is the only reason it is evaluable at all: it owns
+the row/column model and leaves markup to the Presentation Registry. Compare it against a bespoke
+accessible table on sorting/filtering/grouping/pagination correctness, accessibility of the resulting
+markup, bundle cost, generated LOC and maintainability, only once a bespoke table on a real project
+has failed. A static list or a small fixed comparison table never justifies it.
+
+### 8.6.5 Motion — only past the Web Platform
+
+`motiondivision/motion` is used only when an approved `MotionContract` needs interaction or animation
+that CSS transitions, scroll-driven animations and view transitions do not reasonably solve. The
+Design Contract already carries motion intensity and a reduced-motion requirement; fades, reveals and
+hover/press states are Web Platform work.
+
+The comparison is Motion versus CSS/Web Platform on the specific approved contract: whether the
+behaviour is expressible at all, interruption correctness, reduced-motion compliance, bundle cost,
+generated LOC and portability of the generated repository.
+
+### 8.6.6 Component distribution — shadcn as prior art
+
+`shadcn-ui/ui` is registered as the distribution and ownership model behind §4.1: source copied into
+the project and owned by it, versioned registry entries describing files, dependencies, tokens and
+targets. It is **not** a mandatory generated-app dependency, its styling stack is not the generated
+visual identity, and no registry item is resolved from a public endpoint at generation or run time.
+The Presentation Registry stays private and factory-side.
+
+### 8.6.7 Anthropic frontend-design versus the incumbent skills
+
+`anthropics/skills` carries a `skills/frontend-design` skill under its own Apache-2.0 licence; the
+repository root has no licence file, so only per-skill licensing is usable. It is a candidate
+*comparison* for the local `frontend-implementation` and `art-direction` skills, not a replacement to
+install wholesale, and it never becomes a design authority beside `DesignSystemSpec` and the
+`ArtDirectionPlan`.
+
+Benchmark cases, run against the same approved product truth: one marketing-site page set, one
+application surface with real states, and one project whose brand direction is deliberately
+unfashionable. Compare on output quality against the visual gate criteria, genericness measured by the
+existing anti-template diagnostic, accessibility results, model tokens, model iterations, wall-clock,
+manual edits afterwards, and whether the output respects the Design Contract or quietly invents a
+second design system. The incumbent stays unless the candidate wins on quality *and* does not regress
+genericness or token cost.
+
+### 8.6.8 Accessibility — AccessLint as a specialist layer
+
+`AccessLint/skills` (the repository the audit was given as `accesslint/claude-marketplace`, which now
+redirects there) complements rather than replaces the deterministic Playwright + axe baseline. What is
+worth borrowing is methodology: separating locate / assess / remediate / guard, grading every finding
+on severity *and* evidence basis including explicitly human-required, WCAG-EM style sampling for a
+whole-site audit, and regression diffing so a change reports only what it introduced or fixed.
+
+Two things block adoption today and both are recorded on the source: the default branch carries no
+licence file, and its skills shell out to an external CLI and an MCP server, making any adoption a
+factory-side tool decision with a network and supply-chain review — never a generated-app dependency.
+The comparison, when a real project provides the consumer, is specialist review versus the current
+pipeline on findings the baseline missed, false-positive rate, tokens, runtime and manual rework.
+
+### 8.6.9 Mantine — deferred, not a candidate
+
+`mantinedev/mantine` is a plausible rapid internal-tool path and is registered reference-only. Broad
+adoption is rejected: a fully styled library carries its own visual identity and a large theming
+runtime, which is the opposite of the anti-template bar in `docs/VISUAL_EXCELLENCE.md`. Adopting it
+across project classes would over-constrain generated visual identity — every project would look like
+the same library — and that identity is the product for marketing, content and consumer classes.
+
+What is worth keeping is its component breadth as a coverage checklist for what an internal tool
+actually needs. Revisit only if a real `internal-tool` project shows that speed of assembly rather
+than identity is the binding constraint, and then only for that class.
+
+### 8.6.10 Evaluation hypotheses
+
+No benchmark below runs now. The live roadmap provides no consumer for them: Phase 4D is blocked on an
+independent visual verdict and the next stage is the product-proof freeze. Each activates when a real
+project makes its absence a recorded defect rather than a missing feature on a list.
+
+Every comparison is measured on the same axes: output quality, correctness, accessibility,
+bundle/runtime cost, dependency count, generated LOC, model tokens, model iterations, implementation
+time, manual edits, portability and maintainability.
+
+| Hypothesis | Incumbent | Activates when |
+| --- | --- | --- |
+| Radix beats Base UI, or neither wins across classes | bespoke accessible components | a real project needs dialog, menu, popover, tabs and listbox |
+| React Hook Form beats native/simple React forms | React state + constraint validation | a form crosses the §8.6.2 threshold |
+| TanStack Query beats the simplest suitable data layer | the project's existing data layer | an application-class project's data layer produces staleness or invalidation defects |
+| TanStack Table beats a bespoke table | bespoke accessible table | a bespoke table fails on a real data-heavy surface |
+| Motion beats CSS/Web Platform motion | CSS transitions, scroll-driven animation, view transitions | an approved MotionContract is not expressible on the Web Platform |
+| `frontend-design` beats the incumbent frontend/art-direction skills | `frontend-implementation`, `art-direction` | the incumbent skills are authored and have a baseline to compare against |
+| AccessLint specialist review beats the current pipeline | Playwright + axe baseline, `accessibility-review` | a real project ships an accessibility defect the baseline did not catch |
+
 ## 9. Tooling decisions explicitly not made
 
 Do **not** adopt these by default merely because they appeared in research:
@@ -469,7 +616,16 @@ Do **not** adopt these by default merely because they appeared in research:
 - a graph/index tool as a required dependency, CI gate or repository authority;
 - a second memory/lessons documentation tree;
 - multi-persona review on one model presented as an independent second opinion;
-- repository-wide mutation testing, or any blocking gate whose output has not been baselined.
+- repository-wide mutation testing, or any blocking gate whose output has not been baselined;
+- both Radix and Base UI as global primitive defaults; at most one foundation becomes the default;
+- a form library for a small contact, newsletter or single-step form;
+- TanStack Query in `marketing-site` or `content-site` project classes;
+- a table library before a bespoke accessible table has failed on a real project;
+- a motion library for what CSS transitions, scroll-driven animations and view transitions cover;
+- shadcn as a mandatory generated-app dependency, or its styling stack as the generated identity;
+- the upstream `frontend-design` skill installed wholesale in place of the local frontend/art-direction skills;
+- AccessLint replacing the deterministic axe baseline, or its CLI/MCP server as a generated-app dependency;
+- Mantine, or any fully styled component library, as a broad default across project classes.
 
 ## 10. Priority bands
 

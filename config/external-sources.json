@@ -891,6 +891,294 @@
       "evaluationStatus": "not-evaluated",
       "instructionAuthority": "none",
       "notes": "Monitored only. Do not add a canvas dependency before Phase 4D contracts exist."
+    },
+    "shadcn-ui": {
+      "id": "shadcn-ui",
+      "repository": "shadcn-ui/ui",
+      "url": "https://github.com/shadcn-ui/ui",
+      "adoption": "reference-only",
+      "rating": 9.5,
+      "useFor": [
+        "Presentation Registry distribution and component-ownership prior art"
+      ],
+      "borrowedIdeas": [
+        "source is copied into the project and owned by it rather than imported from a runtime package",
+        "a versioned registry entry describes files, dependencies, tokens and generated targets",
+        "a component namespace the project may edit without forking a library"
+      ],
+      "doNotAdopt": [
+        "shadcn as a mandatory generated-app dependency or CLI",
+        "its styling stack as the generated visual identity",
+        "resolving registry items from a public endpoint at generation or run time"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "The distribution model named in section 4.1. The Presentation Registry stays private and factory-side; generated repositories receive owned source files, never a registry client."
+    },
+    "radix-ui-primitives": {
+      "id": "radix-ui-primitives",
+      "repository": "radix-ui/primitives",
+      "url": "https://github.com/radix-ui/primitives",
+      "adoption": "candidate",
+      "rating": 9,
+      "useFor": [
+        "candidate accessible headless primitive foundation for application project classes"
+      ],
+      "borrowedIdeas": [
+        "unstyled primitives whose keyboard, focus-management and ARIA behaviour is separate from visual identity",
+        "controlled and uncontrolled state contracts for dialog, menu, popover, tabs and listbox patterns"
+      ],
+      "doNotAdopt": [
+        "adopting Radix and Base UI both as global defaults",
+        "primitives in marketing-site or content-site renderers that need no interactive widget",
+        "letting a primitive's DOM structure become the Presentation Registry contract"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "One of two competing primitive foundations. The benchmark in docs/BEST_IN_CLASS_CAPABILITIES.md section 8.6.1 decides; project-specific selection is only allowed if that benchmark shows neither wins across project classes."
+    },
+    "mui-base-ui": {
+      "id": "mui-base-ui",
+      "repository": "mui/base-ui",
+      "url": "https://github.com/mui/base-ui",
+      "adoption": "candidate",
+      "rating": 8.5,
+      "useFor": [
+        "competing accessible headless primitive foundation evaluated against Radix"
+      ],
+      "borrowedIdeas": [
+        "headless primitives with explicit accessibility behaviour and no imposed styling",
+        "a part-based composition API that keeps rendered markup under the consumer's control"
+      ],
+      "doNotAdopt": [
+        "adopting Radix and Base UI both as global defaults",
+        "pulling in the wider MUI styling or theming stack alongside the primitives",
+        "adopting it before its API and release maturity have been re-checked at the pin"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "The younger of the two foundations, so API stability and breaking-change cadence are benchmark criteria rather than assumptions. Exactly one primitive foundation may become the default."
+    },
+    "react-hook-form": {
+      "id": "react-hook-form",
+      "repository": "react-hook-form/react-hook-form",
+      "url": "https://github.com/react-hook-form/react-hook-form",
+      "adoption": "candidate",
+      "rating": 7.5,
+      "useFor": [
+        "optional complex-form capability for application project classes"
+      ],
+      "borrowedIdeas": [
+        "uncontrolled-first field registration that avoids a re-render per keystroke",
+        "resolver-based validation shared with the declared server contract",
+        "field arrays, dependent fields and multi-step form state as library concerns"
+      ],
+      "doNotAdopt": [
+        "a form dependency for a contact, newsletter or single-step form",
+        "client validation presented as a replacement for server validation",
+        "a resolver schema becoming a second contract authority beside packages/contracts"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Optional by construction. The threshold that would justify it is recorded in docs/BEST_IN_CLASS_CAPABILITIES.md section 8.6.2; below that threshold the platform form handling stays."
+    },
+    "tanstack-query": {
+      "id": "tanstack-query",
+      "repository": "TanStack/query",
+      "url": "https://github.com/TanStack/query",
+      "adoption": "candidate",
+      "rating": 8,
+      "useFor": [
+        "optional server-state capability for b2b-saas, consumer-app, internal-tool and ai-app project classes"
+      ],
+      "borrowedIdeas": [
+        "server cache treated as a separate concern from client state, with explicit staleness, invalidation and refetch rules",
+        "deduplication, retry and background revalidation as declared policy rather than hand-written effects",
+        "mutation lifecycle with optimistic update and rollback"
+      ],
+      "doNotAdopt": [
+        "any use in marketing-site or content-site project classes",
+        "adding it before a project has more data reads than the simplest suitable data layer handles",
+        "cache keys becoming the data model"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "An application-data capability, never a default. Static and marketing renderers must remain able to ship zero client JavaScript."
+    },
+    "tanstack-table": {
+      "id": "tanstack-table",
+      "repository": "TanStack/table",
+      "url": "https://github.com/TanStack/table",
+      "adoption": "candidate",
+      "rating": 8,
+      "useFor": [
+        "optional data-heavy table capability for internal-tool, b2b-saas and admin surfaces"
+      ],
+      "borrowedIdeas": [
+        "a headless row and column model separated from markup, so the Presentation Registry keeps ownership of the visual identity",
+        "sorting, filtering, grouping, pagination and column visibility expressed as state rather than bespoke code",
+        "the same model driving server-side pagination and sorting"
+      ],
+      "doNotAdopt": [
+        "a table dependency for a static list or a small fixed comparison table",
+        "its example markup as the generated design system",
+        "adopting it before an accessible bespoke table has actually failed on a real project"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Headless by design, which is why it can be evaluated at all: a styled table library would compete with the Presentation Registry."
+    },
+    "motiondivision-motion": {
+      "id": "motiondivision-motion",
+      "repository": "motiondivision/motion",
+      "url": "https://github.com/motiondivision/motion",
+      "adoption": "candidate",
+      "rating": 7,
+      "useFor": [
+        "optional animation capability where an approved MotionContract exceeds CSS and Web Platform motion"
+      ],
+      "borrowedIdeas": [
+        "declarative enter, exit and layout transitions with interruption handling",
+        "spring and gesture-driven motion as a described contract rather than hand-tuned keyframes",
+        "reduced-motion handling as a first-class concern"
+      ],
+      "doNotAdopt": [
+        "a motion dependency for fades, reveals, hover and press states that CSS transitions, scroll-driven animations and view transitions already cover",
+        "animation added for its own sake against the anti-template quality bar",
+        "any motion that ignores the MotionContract reduced-motion rule"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "The Design Contract already carries motion intensity and a reduced-motion requirement. A dependency is only justified when an approved MotionContract cannot be expressed on the Web Platform, and then only in the renderer that needs it."
+    },
+    "anthropics-skills": {
+      "id": "anthropics-skills",
+      "repository": "anthropics/skills",
+      "url": "https://github.com/anthropics/skills",
+      "adoption": "candidate",
+      "rating": 8.5,
+      "useFor": [
+        "candidate comparison for the local frontend-implementation and art-direction skills (skills/frontend-design)"
+      ],
+      "borrowedIdeas": [
+        "a frontend and art-direction skill expressed as one small bounded SKILL.md",
+        "explicit anti-generic direction written as instructions rather than adjectives"
+      ],
+      "doNotAdopt": [
+        "installing the upstream skill wholesale or in place of the local frontend and art-direction skills",
+        "a third-party skill acting as a design authority beside DesignSystemSpec and the ArtDirectionPlan",
+        "fetching the mutable default branch at run time"
+      ],
+      "pinnedRef": null,
+      "license": "Apache-2.0 (skills/frontend-design only; the repository root carries no LICENSE)",
+      "allowedRoles": [],
+      "contextTokensEstimate": 2100,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Checked 2026-08-28: skills/frontend-design is a single ~8 KB SKILL.md under its own Apache-2.0 licence, so only per-skill licensing is usable. The comparison against the incumbent skills is recorded in docs/BEST_IN_CLASS_CAPABILITIES.md section 8.6.7 and must run before anything is pinned."
+    },
+    "accesslint-skills": {
+      "id": "accesslint-skills",
+      "repository": "AccessLint/skills",
+      "url": "https://github.com/AccessLint/skills",
+      "adoption": "candidate",
+      "rating": 8.5,
+      "useFor": [
+        "candidate specialist accessibility layer above the deterministic Playwright and axe baseline"
+      ],
+      "borrowedIdeas": [
+        "separating locate, assess, remediate and guard into distinct accessibility responsibilities",
+        "grading every finding on severity and evidence basis, including explicitly human-required",
+        "WCAG-EM style scope and sampling for a whole-site audit rather than a per-page pass",
+        "regression diffing against a baseline so a change reports only what it introduced or fixed"
+      ],
+      "doNotAdopt": [
+        "replacing the deterministic axe baseline in generated-app acceptance",
+        "its MCP server or CLI as a generated-project dependency",
+        "presenting automated output as WCAG conformance",
+        "fetching the mutable default branch at run time"
+      ],
+      "pinnedRef": null,
+      "license": "review-required",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "manual-pin-bump",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Registered under its current name: accesslint/claude-marketplace now redirects to AccessLint/skills. Checked 2026-08-28, the default branch carries no LICENSE file, which blocks adoption on its own. Its skills shell out to an external CLI and an MCP server, so any adoption is a factory-side tool decision with a network and supply-chain review, never a generated-app dependency."
+    },
+    "mantine": {
+      "id": "mantine",
+      "repository": "mantinedev/mantine",
+      "url": "https://github.com/mantinedev/mantine",
+      "adoption": "reference-only",
+      "rating": 6,
+      "useFor": [
+        "rapid internal-tool implementation prior art; deferred rather than under evaluation"
+      ],
+      "borrowedIdeas": [
+        "the breadth of application components an internal tool actually needs — data tables, date and time inputs, notifications, modals — as a coverage checklist",
+        "a theming contract that carries colour scales, spacing, radius and typography in one object"
+      ],
+      "doNotAdopt": [
+        "broad adoption across project classes",
+        "any use in marketing-site, content-site or consumer-app classes where a distinct visual identity is the product",
+        "a component library's own visual identity standing in for BrandSpec and the ArtDirectionPlan"
+      ],
+      "pinnedRef": null,
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "not-required",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Deferred, not a candidate. A fully styled library carries its own visual identity and a large theming runtime, which is the opposite of the anti-template bar in docs/VISUAL_EXCELLENCE.md, so broad adoption would over-constrain generated identity. Revisit only if a real internal-tool project shows that speed of assembly rather than identity is the binding constraint, and then only for that class."
     }
   }
 }

@@ -53,21 +53,69 @@ test('one presentation contract, two implementations of it', () => {
   // the same versions with the same binding roles and the same variants, so a
   // section's identity, its editable properties and the presentations a person
   // may choose between do not depend on which renderer built the project.
-  assert.deepEqual(Object.keys(STATIC.presentation.components).sort(), Object.keys(APPLICATION.presentation.components).sort());
-  for (const [sectionType, component] of Object.entries(APPLICATION.presentation.components)) {
-    assert.deepEqual(STATIC.presentation.components[sectionType], component, `${sectionType} must be the same contract in both renderers`);
+  // Parity holds over what both renderers declare, and a difference has to be
+  // earned rather than allowed.
+  //
+  // Requiring identical SETS was the original rule and it was right while every
+  // component was a content surface. It cannot survive an authenticated
+  // application area: `tenant-records` belongs to a recipe whose
+  // `compatibleTemplates` names only the application template, and any project
+  // enabling it is moved to the application renderer by the capability override
+  // in `config/renderers.json` before composition begins. Declaring it on the
+  // static template to keep the sets equal would declare a component that
+  // renderer can never be asked to render.
+  //
+  // So: every shared component is contract-identical, and every unshared one
+  // must be owned by a recipe that is genuinely incompatible with the other
+  // template. That keeps "not two design systems" intact and stops the gap
+  // being used as a place to hide a divergent implementation.
+  const applicationTypes = Object.keys(APPLICATION.presentation.components);
+  const staticTypes = Object.keys(STATIC.presentation.components);
+  for (const sectionType of applicationTypes.filter((type) => staticTypes.includes(type))) {
+    assert.deepEqual(
+      STATIC.presentation.components[sectionType],
+      APPLICATION.presentation.components[sectionType],
+      `${sectionType} must be the same contract in both renderers`,
+    );
+  }
+
+  const manifestComponents = loadPresentationManifest().components;
+  const recipes = JSON.parse(fs.readFileSync('config/recipes.json', 'utf8')).recipes;
+  for (const [templateLabel, mine, theirs, templateId] of [
+    ['application', applicationTypes, staticTypes, STATIC.id],
+    ['static-content', staticTypes, applicationTypes, APPLICATION.id],
+  ]) {
+    for (const sectionType of mine.filter((type) => !theirs.includes(type))) {
+      const componentId = (templateLabel === 'application' ? APPLICATION : STATIC).presentation.components[sectionType].id;
+      const owning = (manifestComponents[componentId]?.runtimeRequirements ?? [])
+        .filter((requirement) => requirement.startsWith('recipe:'))
+        .map((requirement) => requirement.slice('recipe:'.length));
+      assert.ok(owning.length > 0, `${sectionType} is declared only by the ${templateLabel} renderer, so the manifest must name the recipe that owns it`);
+      for (const recipeId of owning) {
+        const definition = JSON.parse(fs.readFileSync(path.join(recipes[recipeId].path, 'recipe.json'), 'utf8'));
+        assert.ok(
+          !definition.compatibleTemplates.includes(templateId),
+          `${sectionType} is missing from ${templateId}, but recipe ${recipeId} claims to support it — implement the component or drop the claim`,
+        );
+      }
+    }
   }
   assert.deepEqual(STATIC.presentation.elementRoles, APPLICATION.presentation.elementRoles);
   assert.equal(STATIC.presentation.version, APPLICATION.presentation.version);
 
-  // And the registry the factory compiles is the same registry, because it is
-  // compiled from one manifest against each template.
+  // And where both renderers carry a component, the registry the factory
+  // compiles for each is the same registry, because it is compiled from one
+  // manifest against each template. Compared over the shared components for the
+  // same reason the declarations are: a component only one renderer implements
+  // is absent from the other's registry, and that absence is the point.
   const manifest = loadPresentationManifest();
   const application = compilePresentationRegistry({ template: APPLICATION, manifest });
   const staticContent = compilePresentationRegistry({ template: STATIC, manifest });
+  const shared = Object.keys(application.components).filter((type) => Object.hasOwn(staticContent.components, type));
+  assert.ok(shared.length >= Object.keys(staticContent.components).length, 'the static renderer must not carry a component the application renderer lacks');
   assert.deepEqual(
-    Object.fromEntries(Object.entries(staticContent.components).map(([type, entry]) => [type, { ...entry, componentVersion: entry.componentVersion }])),
-    Object.fromEntries(Object.entries(application.components).map(([type, entry]) => [type, { ...entry, componentVersion: entry.componentVersion }])),
+    Object.fromEntries(shared.map((type) => [type, staticContent.components[type]])),
+    Object.fromEntries(shared.map((type) => [type, application.components[type]])),
   );
 });
 

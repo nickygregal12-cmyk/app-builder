@@ -152,3 +152,37 @@ jobs:
 
       - name: Execute pgTAP security acceptance
         run: npx --yes supabase@2.115.0 test db --workdir .tmp/supabase-rls-acceptance
+
+      # The other half of the tenancy proof. pgTAP settles what the database
+      # refuses; this settles whether a person can use the product sitting on
+      # it, and whether what the policies decided is what reaches the screen.
+      # It runs in this job because the stack it needs is already up.
+      - name: Apply the generated schema to the running stack
+        run: |
+          for fragment in .tmp/generated-acceptance-b2b-saas/supabase/schema/*.sql; do
+            psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f "$fragment"
+          done
+
+      - name: Seed deterministic tenants and identities
+        run: |
+          SERVICE_KEY="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json | jq -r '.SERVICE_ROLE_KEY')"
+          node tooling/seed-records-journey.mjs --url http://127.0.0.1:54321 --service-key "$SERVICE_KEY"
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Generated-application records journey
+        env:
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+        run: |
+          export VITE_SUPABASE_PUBLISHABLE_KEY="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json | jq -r '.ANON_KEY')"
+          npm --prefix .tmp/generated-acceptance-b2b-saas install --no-audit --no-fund
+          npm run test:e2e:generated-app
+
+      - name: Publish generated-application journey evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: generated-app-records-journey
+          path: test-results
+          if-no-files-found: warn
+          retention-days: 14

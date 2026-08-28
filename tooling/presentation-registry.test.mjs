@@ -8,6 +8,7 @@ import {
   compilePresentationRegistry,
   loadPresentationManifest,
   readyPresentation,
+  undeclaredComponents,
   unmetPresentationRequirements,
   unresolvableTokens,
 } from './lib/presentation-registry.mjs';
@@ -17,6 +18,7 @@ import { buildGenerationPlan, loadCatalog } from './lib/generator.mjs';
 import { componentVariants } from '../apps/service/src/section-variants.js';
 
 const TEMPLATE = JSON.parse(fs.readFileSync('templates/react-vite-neutral/template.json', 'utf8'));
+const STATIC_TEMPLATE = JSON.parse(fs.readFileSync('templates/astro-static-content/template.json', 'utf8'));
 const MANIFEST = loadPresentationManifest();
 const TOKENS_CSS = fs.readFileSync('templates/shared/presentation/tokens.css', 'utf8');
 const REGISTRY = compilePresentationRegistry({ template: TEMPLATE, manifest: MANIFEST });
@@ -38,11 +40,30 @@ test('the registry is seeded only from components the factory actually renders',
     assert.equal(entry.componentVersion, TEMPLATE.presentation.components[sectionType].version);
   }
 
-  // A catalogue of components nobody renders is exactly what this refuses.
-  assert.throws(
-    () => compilePresentationRegistry({ template: TEMPLATE, manifest: { components: { ...MANIFEST.components, 'pricing-comparison-section': { sectionType: 'pricing-comparison', lifecycle: 'ready', renderer: 'template', runtimeRequirements: [], tokens: [] } } } }),
-    /does not render. Seed the registry from components that exist/,
+  // A catalogue of components nobody renders is still refused — but "nobody" is
+  // a question about every template at once, not about whichever one is being
+  // compiled.
+  //
+  // This used to throw during compilation, which silently required every
+  // template to render every described component. That held only while both
+  // templates rendered identical sets, and it makes a renderer-specific surface
+  // impossible: `tenant-records` is an authenticated application area, the
+  // static/content renderer has no implementation of it and never will, and
+  // declaring one there to satisfy a per-template check would put a component in
+  // the registry that nothing renders — precisely the catalogue this guards.
+  //
+  // So compilation skips what this template does not render, and the orphan
+  // check moved to `undeclaredComponents`, which the doctor runs across every
+  // registered template.
+  const withForeign = { components: { ...MANIFEST.components, 'pricing-comparison-section': { sectionType: 'pricing-comparison', lifecycle: 'ready', renderer: 'template', runtimeRequirements: [], tokens: [] } } };
+  const compiled = compilePresentationRegistry({ template: TEMPLATE, manifest: withForeign });
+  assert.ok(!Object.hasOwn(compiled.components, 'pricing-comparison'), 'a component this template does not render must not enter its registry');
+  assert.deepEqual(
+    undeclaredComponents(withForeign, [TEMPLATE]),
+    ['pricing-comparison-section'],
+    'a described component no template renders is still a catalogue entry, and is still refused',
   );
+  assert.deepEqual(undeclaredComponents(MANIFEST, [TEMPLATE, STATIC_TEMPLATE]), [], 'every described component is rendered by at least one template');
   const { 'hero-section': _dropped, ...withoutHero } = MANIFEST.components;
   assert.throws(() => compilePresentationRegistry({ template: TEMPLATE, manifest: { components: withoutHero } }), /the template renders hero-section but the manifest does not describe them/);
   assert.throws(

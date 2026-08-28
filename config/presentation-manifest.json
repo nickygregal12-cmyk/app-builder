@@ -234,6 +234,25 @@
         "--color-accent",
         "--color-ink"
       ]
+    },
+    "tenant-records-section": {
+      "sectionType": "tenant-records",
+      "lifecycle": "ready",
+      "renderer": "recipe",
+      "purpose": "The records an organisation owns, with create, edit, delete and a bounded archive operation. The recipe owns how it renders and how it reaches the database; row level security owns who may see what.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens",
+        "recipe:records"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--radius-sm",
+        "--color-border-strong",
+        "--color-accent",
+        "--color-ink"
+      ]
     }
   }
 }

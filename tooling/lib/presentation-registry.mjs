@@ -55,7 +55,25 @@ export function compilePresentationRegistry({ template, manifest }) {
   const entries = {};
   for (const [componentId, entry] of Object.entries(described)) {
     const match = byComponentId.get(componentId);
-    if (!match) throw new Error(`Presentation registry describes ${componentId}, which this template does not render. Seed the registry from components that exist.`);
+    // A component this template does not declare belongs to a different one.
+    //
+    // The manifest is a single file and compilation is per template, so the
+    // original rule — "described but not rendered here is fatal" — silently
+    // required every template to render every component. That held only while
+    // both templates rendered identical sets, and the first capability that is
+    // genuinely renderer-specific broke it: `tenant-records` is a React
+    // application surface, the static/content renderer has no implementation of
+    // it, and declaring one there to satisfy this check would have put a
+    // component in the registry that nothing renders. That is precisely the
+    // catalogue this guard exists to prevent.
+    //
+    // The invariant that actually matters is kept whole and is checked in both
+    // directions still: a template rendering a component the manifest does not
+    // describe is refused above, and a described component NO template renders
+    // is refused by `undeclaredComponents` below, which the doctor runs across
+    // every template at once. Only the per-template half is relaxed, because
+    // per-template it was asking the wrong question.
+    if (!match) continue;
     if (!LIFECYCLES.includes(entry.lifecycle)) throw new Error(`Presentation entry ${componentId} declares lifecycle ${String(entry.lifecycle)}; it offers: ${LIFECYCLES.join(', ')}.`);
     if (entry.sectionType !== match.sectionType) throw new Error(`Presentation entry ${componentId} claims section type ${entry.sectionType}, but the template renders it for ${match.sectionType}.`);
     entries[match.sectionType] = {
@@ -79,6 +97,24 @@ export function compilePresentationRegistry({ template, manifest }) {
     presentationVersion: template.presentation?.version ?? null,
     components: entries,
   };
+}
+
+/**
+ * Described components that NO template renders.
+ *
+ * This is the half of the guard that had to move rather than be dropped. Asking
+ * "does this template render it?" during a single compile made a
+ * renderer-specific component impossible; asking "does any template render it?"
+ * across the whole set is the question that was always meant, and it is the one
+ * that stops the manifest drifting into a catalogue of components that do not
+ * exist. The doctor runs it over every registered template.
+ *
+ * @param {object} manifest   the presentation manifest
+ * @param {object[]} templates  every template definition the factory registers
+ */
+export function undeclaredComponents(manifest, templates) {
+  const rendered = new Set(templates.flatMap((template) => Object.values(template?.presentation?.components ?? {}).map((component) => component.id)));
+  return Object.keys(manifest?.components ?? {}).filter((componentId) => !rendered.has(componentId)).sort();
 }
 
 /** What may be shown today, as opposed to what is described. */

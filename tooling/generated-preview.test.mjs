@@ -36,9 +36,16 @@ test('every harness that starts a generated project reads that project\'s declar
 
   for (const config of starting) {
     const source = read(config);
+    // Either the declared environment alone, or the declared environment spread
+    // FIRST and then added to. The spread form is what a harness needs when the
+    // generated project also requires configuration the template cannot declare
+    // — the records journey supplies the address of the Supabase stack it runs
+    // against — and requiring the spread to come first is what keeps this
+    // strict: the declared preview environment is the base, so an addition can
+    // only ever add, and `env: {}` still fails.
     assert.match(
       source,
-      /env:\s*generatedPreviewEnv\(/,
+      /env:\s*(?:generatedPreviewEnv\(|\{\s*\.\.\.generatedPreviewEnv\()/,
       `${config} starts a generated project but does not pass its declared preview environment. Use generatedPreviewEnv() from tooling/lib/generated-preview.mjs.`,
     );
     assert.match(

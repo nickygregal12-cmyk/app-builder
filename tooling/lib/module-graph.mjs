@@ -251,6 +251,17 @@ export function analyseModuleGraph({ root }) {
     if (/(?:^|\/)[\w.-]*\.config\.(mjs|js|ts)$/.test(file)) addEntry(file);
   }
 
+  // A workflow step that runs a module is a caller, exactly like a package
+  // script is. Without this, a tool invoked only by CI reads as dead code — and
+  // the honest options were to delete something CI depends on or to add it to an
+  // exception list, which is what this checker's own message tells you not to do.
+  for (const file of allFiles.filter((candidate) => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(candidate))) {
+    const text = fs.readFileSync(path.join(root, file), 'utf8');
+    for (const match of text.matchAll(/(?:^|\s)(?:node|npx tsx|tsx)\s+([\w@./-]+\.(?:mjs|js|ts))/g)) {
+      addEntry(match[1].replace(/^\.\//, ''));
+    }
+  }
+
   // An HTML entry names its real module in a script tag; Vite starts there.
   for (const file of allFiles.filter((candidate) => candidate.endsWith('.html') && owned(candidate))) {
     const text = fs.readFileSync(path.join(root, file), 'utf8');

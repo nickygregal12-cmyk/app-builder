@@ -1,6 +1,6 @@
 begin;
 
-select plan(75);
+select plan(71);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.profiles'::regclass),
@@ -539,6 +539,16 @@ select results_eq(
 -- may see, create and remove.
 --
 -- Seeded as the owner, because seeding is not something a tenant does.
+--
+-- WHAT IS NOT ASSERTED HERE, and why. A real Supabase deployment installs a
+-- trigger on `storage.objects` that refuses direct DELETE and UPDATE outright:
+-- "Direct deletion from storage tables is not allowed. Use the Storage API
+-- instead." So the remove boundary and the rename-between-tenants boundary
+-- cannot be expressed in SQL at all, and an earlier draft of this file that
+-- tried passed locally only because the bare postgres image carries no such
+-- trigger — a less faithful environment quietly permitting what the real one
+-- forbids. Those two boundaries are proved through the Storage HTTP API in
+-- `tooling/storage-boundary-acceptance.mjs`, which is where they are reachable.
 -- ===========================================================================
 
 reset role;
@@ -596,17 +606,6 @@ select throws_ok(
   null,
   'an editor of organisation A cannot upload into organisation B by naming its id'
 );
-select results_eq(
-  $$with removed as (delete from storage.objects where name like '20000000-0000-0000-0000-000000000002/%' returning 1) select count(*)::bigint from removed$$,
-  array[0::bigint],
-  'an editor of organisation A cannot delete an organisation B file'
-);
--- Role distinction: a member contributes but does not remove.
-select results_eq(
-  $$with removed as (delete from storage.objects where name like '20000000-0000-0000-0000-000000000001/%report.pdf' returning 1) select count(*)::bigint from removed$$,
-  array[0::bigint],
-  'an editor of organisation A cannot remove an organisation file'
-);
 
 reset role;
 set local role authenticated;
@@ -638,22 +637,6 @@ select results_eq(
   $$select count(*)::bigint from storage.objects where bucket_id = 'organisation-files'$$,
   array[3::bigint],
   'an identity in both organisations sees both organisations files'
-);
-select results_eq(
-  $$with moved as (update storage.objects set name = '20000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-00000000000a-report.pdf' where name like '20000000-0000-0000-0000-000000000001/%report.pdf' returning 1) select count(*)::bigint from moved$$,
-  array[0::bigint],
-  'an identity in both organisations cannot move a file from one into the other'
-);
-
-reset role;
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
-select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
--- owner-a: the role entitled to remove
-select results_eq(
-  $$with removed as (delete from storage.objects where name like '20000000-0000-0000-0000-000000000001/%report.pdf' returning 1) select count(*)::bigint from removed$$,
-  array[1::bigint],
-  'an owner of organisation A can remove one of its files'
 );
 
 reset role;

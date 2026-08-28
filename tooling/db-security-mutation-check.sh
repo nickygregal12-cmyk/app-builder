@@ -231,9 +231,14 @@ mutate "storage upload accepts any tenant prefix" \
 mutate "storage read requires only a signed-in caller" \
   "s|and app_private.has_org_role(app_private.storage_object_organisation(name), null)|and (select auth.uid()) is not null|"
 
-# 15. The remove privilege stops being owner/admin.
-mutate "storage delete loses its role restriction" \
-  "s|and app_private.has_org_role(app_private.storage_object_organisation(name), array\['owner', 'admin'\])|and app_private.has_org_role(app_private.storage_object_organisation(name), null)|"
+# The storage DELETE policy is deliberately NOT mutated here, and the gap is
+# worth stating rather than hiding. A real Supabase deployment forbids direct
+# DELETE on storage.objects, so this suite — which is pure SQL — cannot assert
+# the remove boundary and therefore cannot notice it being broken. That boundary
+# is proved instead by tooling/storage-boundary-acceptance.mjs against the real
+# Storage API in CI. It is proved; it is not mutation-covered. Making it so
+# would mean teaching this harness to run a full Supabase stack, which is a
+# larger change than this capability earns.
 
 # 16. The tenant helper stops parsing, so every key resolves to one organisation
 #     and the namespace collapses.

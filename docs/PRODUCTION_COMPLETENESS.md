@@ -114,6 +114,25 @@ For each important journey/surface, derive the **relevant** state matrix and pro
 - reduced motion;
 - browser navigation/back/refresh/deep-link behaviour where the journey depends on it.
 
+### Privacy-safe scenario data
+
+A state matrix is only useful when the test environment can actually realise the states it names. For data-backed projects, Phase 6 should therefore gain a deterministic **scenario-data factory** that derives fixtures from the project's existing schemas, domain contracts, role/tenant model and lifecycle/state requirements rather than inventing a second data model.
+
+Use it where realistic relational state is otherwise expensive to set up repeatedly, for example:
+
+- empty / one-record / large-data states;
+- multiple users, roles, organisations or tenants;
+- cross-tenant records that make isolation tests non-vacuous;
+- pre-lock / locked / completed / expired lifecycle states;
+- stale, corrected, provisional or failed-provider states when the domain supports them;
+- validation boundary values and intentionally invalid relationship attempts.
+
+The same named scenario and seed should reproduce the same relevant state. Scenario data is test evidence, not source truth: do not copy production PII merely to make fixtures realistic, and do not let generated names/content become publishable company facts. When production-like shape is needed, synthesize or transform data under an explicit privacy policy.
+
+For backend-backed projects, scenario setup should target the disposable/preview environment bound to the candidate revision, not a shared production database. A scenario that cannot establish the state it claims must fail as `unproven`; a test must not pass because its second tenant, failure state or large-data condition was never actually created.
+
+The first consumers should be the complex-app benchmark and any corpus project whose StateMatrix currently needs hand-written setup. Do not build a general synthetic-data platform before those consumers exist.
+
 ### Forms and mutations
 
 Any generated form or user mutation that the factory calls ready must have a complete lifecycle appropriate to its risk:

@@ -83,10 +83,19 @@ for each row execute function app_private.guard_record_columns();
 
 alter table public.records enable row level security;
 
--- Column-level grants are the first boundary and are deliberately narrow.
--- `organisation_id` is absent from the UPDATE grant, so a row cannot be moved
--- between tenants even by someone who belongs to both; `archived_at` is absent
--- so the privileged operation is the only way to reach the archived state.
+-- The write boundary: WHICH COLUMNS may change, as opposed to which rows.
+--
+-- `revoke` first, and it is not ceremony. A Supabase database applies
+-- `alter default privileges in schema public grant all on tables to anon,
+-- authenticated, service_role` before any recipe runs, so by the time this file
+-- executes both roles already hold table-wide UPDATE on this table. A narrower
+-- `grant update (...)` after that ADDS a column grant to a role that can already
+-- write every column: it reads like a restriction and is not one. Measured, not
+-- assumed - `tooling/db-privilege-probe.sh` prints the effective model.
+--
+-- Revoking first is what makes the grant below mean what it says. Row level
+-- security still decides which rows; this decides which fields of them.
+revoke all on public.records from anon, authenticated;
 grant select, insert, delete on public.records to authenticated;
 grant update (reference, title, summary, status) on public.records to authenticated;
 

@@ -44,6 +44,26 @@ grant execute on function app_private.has_org_role(uuid, text[]) to authenticate
 alter table public.organisations enable row level security;
 alter table public.organisation_memberships enable row level security;
 
+-- The write boundary: WHICH COLUMNS may change, as opposed to which rows.
+--
+-- `revoke` first, and it is not ceremony. A Supabase database applies
+-- `alter default privileges in schema public grant all on tables to anon,
+-- authenticated, service_role` before any recipe runs, so by the time this file
+-- executes both roles already hold table-wide UPDATE on this table. A narrower
+-- `grant update (...)` after that ADDS a column grant to a role that can already
+-- write every column: it reads like a restriction and is not one. Measured, not
+-- assumed - `tooling/db-privilege-probe.sh` prints the effective model.
+--
+-- Revoking first is what makes the grant below mean what it says. Row level
+-- security still decides which rows; this decides which fields of them.
+--
+-- For memberships the stakes are plainest: an admin is meant to change a
+-- member's ROLE. Without the revoke they could also rewrite `user_id`, handing
+-- the membership to somebody else, or `organisation_id`, moving it to another
+-- tenant - neither of which any policy clause tests, because both policies only
+-- ever look at the organisation and the role.
+revoke all on public.organisations from anon, authenticated;
+revoke all on public.organisation_memberships from anon, authenticated;
 grant select, insert, delete on public.organisations to authenticated;
 grant update (name, slug) on public.organisations to authenticated;
 grant select, insert, delete on public.organisation_memberships to authenticated;

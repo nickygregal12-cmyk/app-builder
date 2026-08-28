@@ -1,6 +1,6 @@
 begin;
 
-select plan(44);
+select plan(60);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.profiles'::regclass),
@@ -29,7 +29,8 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('10000000-0000-0000-0000-000000000003', 'editor-a@test.local', '{"test_identifier":"editor-a"}'::jsonb),
   ('10000000-0000-0000-0000-000000000004', 'member-a@test.local', '{"test_identifier":"member-a"}'::jsonb),
   ('10000000-0000-0000-0000-000000000005', 'viewer-a@test.local', '{"test_identifier":"viewer-a"}'::jsonb),
-  ('10000000-0000-0000-0000-000000000006', 'owner-b@test.local', '{"test_identifier":"owner-b"}'::jsonb);
+  ('10000000-0000-0000-0000-000000000006', 'owner-b@test.local', '{"test_identifier":"owner-b"}'::jsonb),
+  ('10000000-0000-0000-0000-000000000007', 'dual-ab@test.local', '{"test_identifier":"dual-ab"}'::jsonb);
 
 insert into public.profiles (id, display_name) values
   ('10000000-0000-0000-0000-000000000001', 'Owner A'),
@@ -37,7 +38,8 @@ insert into public.profiles (id, display_name) values
   ('10000000-0000-0000-0000-000000000003', 'Editor A'),
   ('10000000-0000-0000-0000-000000000004', 'Member A'),
   ('10000000-0000-0000-0000-000000000005', 'Viewer A'),
-  ('10000000-0000-0000-0000-000000000006', 'Owner B');
+  ('10000000-0000-0000-0000-000000000006', 'Owner B'),
+  ('10000000-0000-0000-0000-000000000007', 'Dual AB');
 insert into public.organisations (id, name, slug, created_by) values
   ('20000000-0000-0000-0000-000000000001', 'Organisation A', 'organisation-a', '10000000-0000-0000-0000-000000000001'),
   ('20000000-0000-0000-0000-000000000002', 'Organisation B', 'organisation-b', '10000000-0000-0000-0000-000000000006');
@@ -47,7 +49,9 @@ insert into public.organisation_memberships (organisation_id, user_id, role) val
   ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000003', 'editor'),
   ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000004', 'member'),
   ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000005', 'viewer'),
-  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000006', 'owner');
+  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000006', 'owner'),
+  ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000007', 'editor'),
+  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000007', 'editor');
 
 -- Organisation-owned domain records. Two tenants with real rows, because a
 -- tenant-isolation test with one tenant proves nothing: every query returns
@@ -383,6 +387,143 @@ select throws_ok(
   '42501',
   null,
   'anonymous users cannot invoke the archive operation'
+);
+
+
+-- ===========================================================================
+-- The write boundary: WHICH COLUMNS, as opposed to which rows.
+--
+-- Row level security decides which rows a caller may touch. It says nothing
+-- about which FIELDS of those rows may change, and every recipe here has been
+-- relying on a narrow `grant update (...)` to draw that second line. A Supabase
+-- database applies `alter default privileges in schema public grant all on
+-- tables to anon, authenticated, service_role` before any recipe runs, so the
+-- narrower grant ADDS a column grant to a role that already holds table-wide
+-- UPDATE. It reads like a restriction and is not one.
+--
+-- Everything below is an identity or lifecycle column that no caller should be
+-- able to rewrite. Each was reachable before the explicit revoke was added.
+-- ===========================================================================
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000007', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000007","role":"authenticated"}', true);
+-- dual-ab: a contributor in BOTH organisations
+-- Tenant hand-off. The records recipe claimed that omitting organisation_id
+-- from the update grant prevented this; it did not, and for a caller entitled
+-- in both organisations RLS passes on both sides of the write.
+select throws_ok(
+  $$update public.records set organisation_id = '20000000-0000-0000-0000-000000000002' where id = '30000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a contributor in two organisations cannot move a record between them'
+);
+select throws_ok(
+  $$update public.records set created_by = '10000000-0000-0000-0000-000000000007' where id = '30000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a contributor cannot reassign authorship of a record'
+);
+select throws_ok(
+  $$update public.records set id = '30000000-0000-0000-0000-0000000000ff' where id = '30000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a contributor cannot rewrite a record primary key'
+);
+select throws_ok(
+  $$update public.records set created_at = now() - interval '5 years' where id = '30000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a contributor cannot backdate a record'
+);
+-- And the edit a contributor is supposed to make still works.
+select results_eq(
+  $$with changed as (update public.records set title = 'Edited by a dual-organisation contributor' where id = '30000000-0000-0000-0000-000000000001' returning 1) select count(*)::bigint from changed$$,
+  array[1::bigint],
+  'the write boundary does not stop an intended record edit'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000002', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
+-- admin-a: organisation admin, not its owner
+-- Privilege escalation. `organisations_delete_owner` keys off created_by, so a
+-- non-owner able to rewrite created_by can grant themselves the owner-only
+-- delete right.
+select throws_ok(
+  $$update public.organisations set created_by = '10000000-0000-0000-0000-000000000002' where id = '20000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'an organisation admin cannot make themselves its creator'
+);
+select throws_ok(
+  $$update public.organisations set created_at = now() - interval '5 years' where id = '20000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'an organisation admin cannot backdate the organisation'
+);
+select throws_ok(
+  $$update public.organisations set id = '20000000-0000-0000-0000-0000000000ff' where id = '20000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'an organisation admin cannot rewrite the organisation primary key'
+);
+select results_eq(
+  $$with changed as (update public.organisations set name = 'Organisation A renamed by admin' where id = '20000000-0000-0000-0000-000000000001' returning 1) select count(*)::bigint from changed$$,
+  array[1::bigint],
+  'the write boundary does not stop an intended organisation edit'
+);
+
+-- Membership identity. Changing a role is an admin's job; changing WHOSE
+-- membership it is, or WHICH organisation it belongs to, is not.
+select throws_ok(
+  $$update public.organisation_memberships set user_id = '10000000-0000-0000-0000-000000000007' where organisation_id = '20000000-0000-0000-0000-000000000001' and user_id = '10000000-0000-0000-0000-000000000004'$$,
+  '42501',
+  null,
+  'an admin cannot reassign a membership to a different user'
+);
+select throws_ok(
+  $$update public.organisation_memberships set organisation_id = '20000000-0000-0000-0000-000000000002' where organisation_id = '20000000-0000-0000-0000-000000000001' and user_id = '10000000-0000-0000-0000-000000000004'$$,
+  '42501',
+  null,
+  'an admin cannot move a membership into another organisation'
+);
+select throws_ok(
+  $$update public.organisation_memberships set created_at = now() - interval '5 years' where organisation_id = '20000000-0000-0000-0000-000000000001' and user_id = '10000000-0000-0000-0000-000000000004'$$,
+  '42501',
+  null,
+  'an admin cannot backdate a membership'
+);
+-- The one membership field an admin is meant to change still changes.
+select results_eq(
+  $$with changed as (update public.organisation_memberships set role = 'viewer' where organisation_id = '20000000-0000-0000-0000-000000000001' and user_id = '10000000-0000-0000-0000-000000000004' returning 1) select count(*)::bigint from changed$$,
+  array[1::bigint],
+  'the write boundary does not stop an intended membership role change'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+-- owner-a: editing their own profile
+select throws_ok(
+  $$update public.profiles set created_at = now() - interval '5 years' where id = '10000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a user cannot backdate their own profile'
+);
+select throws_ok(
+  $$update public.profiles set id = '10000000-0000-0000-0000-000000000004' where id = '10000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a user cannot rewrite a profile identity onto another user'
+);
+select results_eq(
+  $$with changed as (update public.profiles set display_name = 'Owner A renamed' where id = '10000000-0000-0000-0000-000000000001' returning 1) select count(*)::bigint from changed$$,
+  array[1::bigint],
+  'the write boundary does not stop an intended profile edit'
 );
 
 reset role;

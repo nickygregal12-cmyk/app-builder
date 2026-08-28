@@ -67,11 +67,30 @@ Purpose: prove App Builder can architect and build a Predictor-class product fro
 
 Pixel-identical reproduction is not required. A cleaner architecture, clearer product or stronger visual result is preferred when supported by the requirements.
 
-### B. Existing-repository adoption
+### B. Existing-repository adoption and improvement
 
-Once existing-repository adoption is implemented, ingest the real Predictor repository and map its authorities, design system, domain boundaries, database contracts, tests and deployment without regenerating it.
+Once the brownfield entry mode in `docs/PLATFORM_PARITY_PROGRAMME.md` §5 is implemented, ingest the real Predictor repository **and** inspect a representative deployed URL. Map its authorities, design system, domain boundaries, database contracts, tests, runtime/deployment shape and critical user journeys without regenerating it.
 
-Purpose: prove App Builder can safely understand and improve mature complex software.
+Purpose: prove App Builder can safely understand and measurably improve mature complex software rather than only generating clean new projects.
+
+Before mutation, freeze a baseline tied to an exact source revision and, where determinable, deployed revision. The baseline should include the evidence relevant to the chosen improvement programme, such as:
+
+- critical journeys/states and current failures;
+- architecture/source-of-truth findings;
+- database/security/release findings;
+- representative desktop/mobile captures and independent visual/product scores;
+- accessibility/performance/browser evidence;
+- current tests and non-vacuity gaps;
+- known-good behaviours that must not regress;
+- intervention/rework burden for the same class of change.
+
+Use the live URL and repository as complementary evidence: the repository explains implementation; the deployed product proves what users experience. Do not infer architecture from screenshots alone or user success from source code alone.
+
+A broad instruction such as **“substantially improve this product”** should therefore produce diagnosis before implementation. Findings should be classified into keep/refactor/redesign/replace/remove/add, then converted into bounded improvement ChangeSets owned by the relevant specialist roles. The benchmark fails if App Builder simply rewrites the Predictor into its preferred stack or visual template.
+
+Each accepted improvement slice must preserve its baseline and record before/after evidence. A successful PR/merge is insufficient: protected journeys must not regress, the intended architectural/product/visual outcome must improve measurably, and independent reviewers must accept the result.
+
+This mode should deliberately test whether App Builder can discover and solve the kinds of problems that historically took repeated manual prompting and late audits to uncover, while creating fewer new regressions and materially less rework.
 
 ## Representative greenfield journeys
 
@@ -97,9 +116,13 @@ Full parity with every reference-product feature is not required initially. Incr
 
 A Predictor-class application must not go directly from questionnaire to bulk implementation.
 
-Expected path:
+Expected greenfield path:
 
 `intake -> Build Contract -> domain/invariant specification -> lifecycle/state matrix -> data model + RLS plan -> journeys -> integration/freshness policy -> DesignSystemSpec + ArtDirectionPlan -> implementation plan -> deterministic recipes -> bounded custom AI work -> executed database/domain/browser tests -> RenderedEvidence -> independent review -> preview -> explicit release approval`
+
+Expected brownfield path:
+
+`repo + URL -> baseline evidence -> architecture/product/journey map -> specialist diagnosis -> improvement contract -> isolated branch/worktree + bounded ChangeSets -> deterministic gates -> RenderedEvidence -> independent review -> before/after comparison -> approval -> merge/release`
 
 A rule that is merely declared but has no authoritative consumer/test is a benchmark failure even if the UI appears correct.
 
@@ -127,9 +150,13 @@ The output should feel like a premium consumer football product: strong hierarch
 
 The reference product is a quality floor and learning source, not a design to copy. App Builder should be capable of generating a better visual/product direction where evidence supports it.
 
+For brownfield improvement, visual work must be judged against the frozen current product as well as the absolute quality bar. A redesign that is prettier but makes a journey less understandable, changes domain behaviour or introduces mobile regressions fails.
+
 ## Success criteria
 
-Long-run success means a competent operator can provide a bounded product brief/source pack, answer a manageable set of product questions and receive a credible Predictor-class application without reproducing months of accidental trial-and-error.
+Long-run greenfield success means a competent operator can provide a bounded product brief/source pack, answer a manageable set of product questions and receive a credible Predictor-class application without reproducing months of accidental trial-and-error.
+
+Long-run brownfield success means the same operator can connect the existing Predictor repo and URL, give a high-level improvement objective, and receive a defensible programme of architectural/product/visual improvements that preserves known-good behaviour, requires materially less manual prompting/rework than the historical development process, and is proven by before/after evidence rather than agent confidence.
 
 Judge the benchmark on:
 
@@ -146,10 +173,19 @@ Judge the benchmark on:
 - portable standalone repository output;
 - reusable factory improvements rather than Predictor-specific hacks.
 
+For brownfield mode additionally record:
+
+- baseline vs final protected-journey results;
+- baseline vs final relevant visual/mobile/accessibility/performance/security measures;
+- architectural/contract findings retired versus introduced;
+- regressions found during implementation;
+- meaningful manual prompts/edits and rework avoided;
+- whether the change remained bounded or expanded into unjustified rewrite churn.
+
 ## Relationship to other benchmarks
 
 The real-world website corpus (NBM, MGB Decor and later varied businesses) proves that App Builder can create excellent, launch-ready websites.
 
-This benchmark proves something different: that App Builder can design, architect, implement, verify and release a genuinely complex application.
+This benchmark proves something different: that App Builder can design, architect, implement, verify and release a genuinely complex application — and, in brownfield mode, safely take responsibility for improving an existing one.
 
 Both are required before the factory can reasonably claim a best-in-class general website/application builder standard.

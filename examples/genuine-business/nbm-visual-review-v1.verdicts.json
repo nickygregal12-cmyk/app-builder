@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "setId": "candidates-e2c4f1d0baa30005",
+  "projectId": "project-ee8ae265-e4d8-406f-b845-ce5fe28f64c7",
+  "reviewedAt": "2026-08-28T08:50:55.289Z",
+  "reviews": [
+    {
+      "candidateId": "candidate-structured-practice",
+      "verdict": "reject",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The restrained typography and blue-grey palette are broadly appropriate, but the result feels like a generic one-page template rather than a considered professional-practice website. Every named route, including the 404 route, renders essentially the same page with Home selected, while the mobile layout arbitrarily changes the content order; these are severe credibility, hierarchy, and wayfinding failures.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.2,
+          "note": "The sober palette and sturdy typography suit a cost consultancy, but the presentation communicates little specific expertise, history, or regional character."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 5.8,
+          "note": "The hero leads clearly, but every route presents the same hierarchy and active Home state; mobile inexplicably prioritizes Contact and the CTA before Services and Locations."
+        },
+        {
+          "criterion": "coherence",
+          "score": 6.4,
+          "note": "Cards, rules, colors, and typography are internally consistent, yet the oversized desktop spacing, compact cards, detached CTA, and mobile section reordering do not feel like one resolved system."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.2,
+          "note": "This reads as a standard corporate landing-page kit with numbered cards and an inverted CTA panel, without a memorable idea tied to quantity surveying or construction."
+        },
+        {
+          "criterion": "credibility",
+          "score": 4.8,
+          "note": "Basic company details are present, but there is no visible project evidence, credentials, people, methodology, client proof, or meaningful route-specific content; the broken-looking 404 and identical routes further undermine trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 6,
+          "note": "Call buttons are visible, but calling is the only offered action, the phone number is not incorporated into the button label, and there is no enquiry, email, project-discussion, or service-specific path."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 5.5,
+          "note": "The layouts avoid overflow and cards stack cleanly, but tablet navigation wraps awkwardly and mobile feels mechanically rearranged, with an unjustified content order that differs from desktop."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 2.8,
+          "note": "No convincing distinctive moment is visible; the dark Get in touch panel is conventional and does not express anything particular to this practice."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "visual-hierarchy",
+        "coherence",
+        "distinctiveness",
+        "credibility",
+        "conversion-clarity",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Create genuinely distinct Services, About, Contact, and Locations pages with correct active navigation states.",
+        "Replace the supposed 404 rendering with an actual not-found message and a clear recovery action.",
+        "Resolve the mobile information order so it reflects visitor priorities rather than placing Contact and the CTA before the service offering.",
+        "Add substantive credibility material such as project experience, professional credentials, named expertise, process, or client evidence.",
+        "Improve conversion paths beyond repeated generic Call buttons.",
+        "Introduce a business-specific visual or editorial idea strong enough to distinguish the practice from a generic professional-services template."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-structured-practice",
+        "compositionHash": "458259599c48c4c2857ea24c1e2a90e457931e02a954aee7d95d23df3a77c300",
+        "captureCount": 18,
+        "captureDigest": "4242c2d7dc4e7e52a3192aaa6504acf27e16702a85ce47fabbbb1e0ecc512c93"
+      }
+    },
+    {
+      "candidateId": "candidate-editorial-authority",
+      "verdict": "reject",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "Every captured route, including the 404, renders essentially the same one-page composition, so the site provides no visible page-specific hierarchy or evidence of a functioning information architecture. The typography is competent, but the excessive empty space, generic numbered lists, weak calls to action, and broken-looking mobile navigation fall well short of professional editorial authority.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 5.8,
+          "note": "The restrained palette and sober typography suit a cost consultancy, but the presentation is too generic and sparse to express specialist construction expertise."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 5.2,
+          "note": "The opening headline is clear, but every route gives the same content equal priority, while huge vertical gaps weaken scanning and prevent page-specific destinations from leading."
+        },
+        {
+          "criterion": "coherence",
+          "score": 6.2,
+          "note": "Color, typography, rules, and alternating backgrounds are consistent, but the oversized hero, dense list rows, card-based contact block, and detached dark CTA do not form a convincing editorial rhythm."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 3.8,
+          "note": "This reads as a restrained landing-page template with numbered lists and an accent color, not a considered identity for a construction cost consultancy."
+        },
+        {
+          "criterion": "credibility",
+          "score": 4.6,
+          "note": "The company details add legitimacy, but there are no visible people, projects, credentials, sector experience, case studies, or substantive service explanations; identical normal and 404 pages further undermine trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 5,
+          "note": "Call buttons are visible, but the label is vague, there is no email or enquiry path shown, and long stretches of the page offer no contextually relevant next action."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 4.2,
+          "note": "Sections stack acceptably, but mobile is largely a narrowed desktop layout; the header navigation is visibly clipped or overflowing and the CTA panel retains awkward inset geometry."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 2.5,
+          "note": "No distinctive editorial moment lands: the large headline, blue rule, numbered rows, and dark CTA are familiar devices without business-specific content or visual tension."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "visual-hierarchy",
+        "coherence",
+        "distinctiveness",
+        "credibility",
+        "conversion-clarity",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Create genuinely distinct content and hierarchy for Services, About, Contact, and Locations rather than serving the same composition on every route.",
+        "Replace the identical 404 rendering with an explicit not-found state and a clear recovery action.",
+        "Fix the clipped and overflowing mobile navigation.",
+        "Add credible business-specific proof such as project experience, service detail, qualifications, sectors, team information, or testimonials.",
+        "Strengthen conversion paths with explicit telephone, email, and enquiry actions placed near relevant content.",
+        "Reduce excessive empty space and establish a more deliberate editorial rhythm across viewport sizes.",
+        "Introduce a distinctive, business-relevant visual or content moment rather than relying on generic numbered lists and color blocking."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-editorial-authority",
+        "compositionHash": "458259599c48c4c2857ea24c1e2a90e457931e02a954aee7d95d23df3a77c300",
+        "captureCount": 18,
+        "captureDigest": "2f2b5ba43f5eed2715dcc70899aa7ad63c5aed4ea11c0afa58ac20617d29c0cd"
+      }
+    }
+  ],
+  "skipped": []
+}

@@ -13,14 +13,17 @@ disagree the status file wins. What "finished" means is `docs/MASTER_PLAN.md` §
 
 **Phase 4D — Visual direction, responsive composition and candidate promotion.** Active.
 
-**One thing blocks advancement, and it is not a capability**: a visual verdict from someone who did not
-produce the work. Rule 17 forbids the factory promoting its own output, no genuinely independent model
-runtime is enabled here, and restarting the same model is not independence. It is a person or a
-provider, so **no amount of building closes it**. It appears as three outstanding gates in
-`config/factory-status.json` because a candidate set, a static rendering and a bespoke presentation each
-need one.
+**The independent verdict exists, and it rejected both candidates.** An OpenAI GPT-5 `design-critic`
+reviewed the nbm candidate set an Anthropic runtime created and rejected both — 5.21 and 4.66 against a
+required 8.5 mean and 6.5 floor. Phase 4D is therefore in **bounded rework**, not waiting on a reviewer.
 
-Everything the blocker does not touch has been built. The professional-output completeness gate in
+Part of that verdict was earned by invalid evidence: the evidence server answered every prerendered
+route with the home document, so six routes per viewport were photographed as one page. That root cause
+is found, fixed and proved. The rest of the verdict is about the output — a weak distinctive moment,
+thin credibility material, single-channel conversion — and is what the rework has to answer.
+
+A static rendering and a bespoke presentation still need a reviewer who did not produce them, so
+`config/factory-status.json` keeps those gates open. The professional-output completeness gate in
 `docs/VISUAL_EXCELLENCE.md` §9 is down to that single row.
 
 **Safe parallel work while it is blocked** — none of it is a prerequisite for the corpus:

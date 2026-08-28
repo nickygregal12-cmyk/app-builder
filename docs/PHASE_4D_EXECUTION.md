@@ -44,12 +44,44 @@ promotion contract, reference analysis, asset readiness, `ResponsiveCompositionP
 gate, comparable evidence, the scored review packet, the bounded rework plan and promotion — is built
 and exercised on a real business.
 
-**Outstanding: the independent visual verdict.** The packet scopes a critic to criteria that genuinely
-need judgement, scores each against `gates.visual` in `config/agent-pipelines.json`, refuses to record
-a below-bar score as a pass, allows a whole set to be sent back or rejected with nothing promoted, and
-turns a rework verdict into a bounded plan with lineage that is refused if the composition hash moved.
-No genuinely independent model runtime is enabled here, so no verdict has been issued. Restarting the
-same model is not independence and is not done.
+**The independent visual verdict has been issued, and it rejected both candidates.** The packet scopes
+a critic to criteria that genuinely need judgement, scores each against `gates.visual` in
+`config/agent-pipelines.json`, refuses to record a below-bar score as a pass, allows a whole set to be
+sent back or rejected with nothing promoted, and turns a rework verdict into a bounded plan with
+lineage that is refused if the composition hash moved. On 2026-08-28 an OpenAI GPT-5 `design-critic`
+reviewed the set an Anthropic runtime had created and rejected both candidates —
+`structured-practice` at a 5.21 mean, `editorial-authority` at 4.66, against a required 8.5 mean and a
+6.5 per-criterion floor. The verdict is kept verbatim at
+`examples/genuine-business/nbm-visual-review-v1.verdicts.json`.
+
+That is the machinery working rather than failing: an independent reviewer found a defect the creator
+had missed, and nothing was promoted.
+
+**What the rejection was partly about was invalid evidence.** Both reviews lead with every route
+rendering as the same page with Home selected. That was a capture defect. The candidates prerender to
+`services/index.html`, and the evidence server served a path only when that path was itself a file, so
+every route fell through to the shell and was photographed as the home document — 45 degenerate route
+pairs per candidate. It is fixed in document resolution and proved by six distinct captures whose
+rendered `data-page-id` matches the route requested.
+
+**The second verdict is in, and it separates the two.** The same critic reviewed the same candidates from
+the same frozen inputs over recaptured evidence and returned **rework on both**: 6.14 and 5.91, still
+short of the 8.5 mean and the 6.5 floor. Kept at `nbm-visual-review-v2.verdicts.json` beside v1, because
+the pair is the measurement and either alone is misleading.
+
+What the capture fix recovered, with no design work at all: visual-hierarchy 5.8→7.1 and 5.2→7.5,
+credibility 4.8→6.2 and 4.6→6.7, coherence 6.4→7.3 and 6.2→7.2. Those were the criteria whose v1
+complaints were the capture defect restated — "every route presents the same hierarchy", "no meaningful
+route-specific content" — and they now clear the floor.
+
+What it did not touch, and what Phase 4D actually owes: **distinctiveness** (4.2→4.8, 3.8→4.8),
+**distinctive-moment** (2.8→4.6, 2.5→3.5) and **responsive-quality** (5.5→5.9, 4.2→4.6, +0.4 in both,
+which is noise). All three still fail in both candidates. The reviewer names them concretely rather than
+as taste: clipped mobile navigation, a mobile content order that puts a generic CTA before page-specific
+information, skeletal secondary pages, and no focal moment tied to quantity surveying.
+
+Phase 4D closes on a candidate that clears the bar, and none does. The gate is no longer an absent
+reviewer or a broken camera; it is the design.
 
 ## Where the evidence is, and how a reviewer reaches it
 
@@ -110,6 +142,10 @@ canonical app:
 14. no speculative design-intelligence catalogue was built without a real consumer;
 15. any unexecuted independence requirement is recorded honestly rather than faked.
 
-The nbm run proves clauses 1–6, 8, 10 and 12–14. Clause 7 has its contract and its packet but no
-verdict; clause 9 has its mechanism but nothing has been promoted; clause 11 is therefore incomplete;
-clause 15 is satisfied by recording the unexecuted independence rather than by executing it.
+The nbm run proves clauses 1–6, 10 and 12–14. Clause 7 is now exercised rather than only contracted:
+an independent critic scored the scoped criteria and rejected both candidates. Clause 8 is **not** yet
+proved — the captures were comparable in form but not in fact, because all six routes were the same
+document; it is re-earned when the set is recaptured. Clause 9 has its mechanism and has now
+demonstrated its harder half, that a set can be rejected with nothing promoted; a promotion still has
+to happen. Clause 11 is therefore incomplete. Clause 15 no longer applies to the visual verdict, which
+was executed, and remains the standing rule for anything else recorded as unexecuted.

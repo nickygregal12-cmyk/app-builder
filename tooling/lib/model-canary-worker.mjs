@@ -33,7 +33,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 
-const SECRET_PATTERNS = ['SECRET', 'TOKEN', 'PASSWORD', 'API_KEY', 'CREDENTIAL', 'ANTHROPIC', 'OPENAI', 'SUPABASE', 'NETLIFY'];
+const SECRET_PATTERNS = ['SECRET', 'TOKEN', 'PASSWORD', 'API_KEY', 'CREDENTIAL', 'ANTHROPIC', 'GROQ', 'OPENAI', 'SUPABASE', 'NETLIFY'];
 
 function socketCall(socketPath, endpoint, grant, payload, timeoutMs = 120_000) {
   return new Promise((resolve) => {
@@ -124,7 +124,7 @@ export async function runModelCanaryWorker({ env = process.env, argv = process.a
   observations.modelSocketIsSocket = Boolean(modelSocket && (() => {
     try { return fs.statSync(modelSocket).isSocket(); } catch { return false; }
   })());
-  observations.modelEnvironmentKeys = Object.keys(env).filter((name) => /MODEL|PROVIDER|ANTHROPIC|OPENAI/i.test(name)).sort();
+  observations.modelEnvironmentKeys = Object.keys(env).filter((name) => /MODEL|PROVIDER|ANTHROPIC|GROQ|OPENAI/i.test(name)).sort();
 
   const brokerSocket = env.APP_BUILDER_AGENT_BROKER_SOCKET ?? null;
   observations.brokerSocket = brokerSocket;

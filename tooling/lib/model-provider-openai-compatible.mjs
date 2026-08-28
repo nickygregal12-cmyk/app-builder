@@ -44,6 +44,11 @@ export class ProviderCallError extends Error {
   }
 }
 
+function safeProviderDetail(value, credential) {
+  const detail = String(value ?? '').slice(0, 400);
+  return credential ? detail.split(credential).join('[redacted]') : detail;
+}
+
 const STOP_REASONS = Object.freeze({
   stop: 'stop',
   length: 'length',
@@ -157,7 +162,7 @@ export function createOpenAiCompatibleAdapter({ providerId, endpoint, model, fet
         const reason = classifyHttpFailure(response.status, { body: detail, headers: response.headers });
         // Truncated, because a provider error body can echo request content and
         // this string reaches an operator's terminal.
-        throw new ProviderCallError(reason, `${provider} returned ${response.status}: ${detail.slice(0, 400)}`);
+        throw new ProviderCallError(reason, `${provider} returned ${response.status}: ${safeProviderDetail(detail, apiKey)}`);
       }
 
       let body;

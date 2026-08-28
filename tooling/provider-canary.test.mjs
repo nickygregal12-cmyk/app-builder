@@ -149,8 +149,9 @@ test('an unreachable provider is an error with a reason, not a raw throw', async
 
 test('no credential appears in an adapter error message', async () => {
   const planted = 'gsk_PLANTEDCANARYSECRET0123456789';
-  const error = await adapter(failing(429, 'Rate limit reached')).complete({ request: REQUEST, apiKey: planted }).catch((caught) => caught);
+  const error = await adapter(failing(429, `Rate limit reached for ${planted}`)).complete({ request: REQUEST, apiKey: planted }).catch((caught) => caught);
   assert.ok(!String(error.message).includes(planted));
+  assert.match(String(error.message), /\[redacted\]/);
   // Error bodies can echo the request; the truncation is bounded on purpose.
   assert.ok(String(error.message).length < 500);
 });

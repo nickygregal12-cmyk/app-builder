@@ -46,13 +46,16 @@ import { createLocalExecutionDriver } from './lib/execution-driver-local.mjs';
 import { podmanRunArgs } from './lib/sandbox-podman.mjs';
 import { readModelKillSwitch } from './lib/model-kill-switch.mjs';
 import { buildAnthropicPayload, createAnthropicModelAdapter } from './lib/model-provider-anthropic.mjs';
+import { ProviderCallError } from './lib/model-provider-openai-compatible.mjs';
 import {
   CANARY_CRITERIA,
   CANARY_SUBJECT,
+  authorise,
   deterministicCriteriaOutcome,
   gradeArtifact,
   gradeBoundary,
   preflight,
+  providerCanary,
   runModelCanary,
 } from './model-canary.mjs';
 
@@ -60,6 +63,7 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const GRANT_SECRET = 'model-canary-grant-signing-key-not-a-production-secret';
 const DECISION_SECRET = 'model-canary-decision-signing-key-not-a-production-secret';
 const FAKE_KEY = 'sk-ant-test-not-a-real-credential-0000000000';
+const FAKE_GROQ_KEY = 'gsk_test-not-a-real-credential-0000000000';
 
 const ROLES = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/agent-roles.json'), 'utf8')).roles;
 const POLICIES = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/agent-policies.json'), 'utf8')).policies;
@@ -597,6 +601,33 @@ test('the preflight confirms the chosen role is eligible even while the run is b
   }
 });
 
+test('the explicit Groq canary is pinned to its profile and fixed synthetic evidence', () => {
+  const definition = providerCanary('groq');
+  assert.equal(definition.profile.providerId, 'groq');
+  assert.equal(definition.profile.adapterId, 'openai-compatible');
+  assert.equal(definition.profile.modelId, 'openai/gpt-oss-120b');
+  assert.equal(definition.profile.secretRef, 'GROQ_API_KEY');
+  assert.equal(definition.profile.costMode, 'free-only');
+  assert.equal(definition.dataClass, 'synthetic');
+  assert.deepEqual(definition.criteria.map((entry) => entry.id), [
+    'missing-input-validation', 'missing-await', 'swallowed-error', 'unbounded-allocation',
+  ]);
+  assert.match(definition.subject.source, /function expandBundle/);
+  assert.throws(() => providerCanary('anthropic'), /no live canary definition/);
+  assert.throws(() => providerCanary('does-not-exist'), /Unknown provider/);
+});
+
+test('Groq preflight resolves only GROQ_API_KEY and remains distinct from readiness', () => {
+  const result = preflight({ providerId: 'groq', env: { GROQ_API_KEY: FAKE_GROQ_KEY, ANTHROPIC_API_KEY: FAKE_KEY } });
+  const provider = result.checks.find((check) => check.id === 'provider-explicit-and-supported');
+  const credential = result.checks.find((check) => check.id === 'provider-credential-configured');
+  assert.match(provider.detail, /groq, openai-compatible, openai\/gpt-oss-120b, synthetic/);
+  assert.equal(credential.status, 'pass');
+  const profiles = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/provider-profiles.json'), 'utf8'));
+  assert.deepEqual(profiles.profiles.find((entry) => entry.providerId === 'groq').eligibleRoles, []);
+  assert.equal(profiles.profiles.find((entry) => entry.providerId === 'groq').ready, false);
+});
+
 // ---------------------------------------------------------------------------
 // The whole lane, end to end, with a stub provider and no credential.
 // ---------------------------------------------------------------------------
@@ -619,6 +650,30 @@ function stubAdapter({ answer, usage = { inputTokens: 900, outputTokens: 220 }, 
   };
 }
 
+function groqStubAdapter({ answer, onCall = null } = {}) {
+  let calls = 0;
+  return {
+    id: 'openai-compatible',
+    providerId: 'groq',
+    async complete({ request, apiKey }) {
+      calls += 1;
+      assert.equal(apiKey, FAKE_GROQ_KEY);
+      assert.equal(request.model, 'openai/gpt-oss-120b');
+      if (onCall) onCall({ calls, request, apiKey });
+      return { text: answer, usage: { inputTokens: 700, outputTokens: 260 }, stopReason: 'stop', providerStopReason: 'stop', model: 'openai/gpt-oss-120b', durationMs: 10 };
+    },
+  };
+}
+
+const CORRECT_GROQ_ANSWER = JSON.stringify({
+  schemaVersion: 1, id: 'groq-verdict-1', projectId: 'model-canary', taskId: 'groq-task', stageId: 'verification',
+  artifactId: 'examples/provider-canary/flawed-cart.js', artifactKind: 'SourceFile', reviewerRole: 'code-reviewer',
+  authorRoles: ['fixture-author'], verdict: 'rework-required', severity: 'major',
+  failingCriteria: ['missing-input-validation', 'missing-await', 'swallowed-error', 'unbounded-allocation'],
+  requiredChanges: ['fix the four declared defects'], observations: [], returnToRole: 'fixture-author',
+  createdAt: '2026-08-28T00:00:00.000Z',
+});
+
 const CORRECT_ANSWER = JSON.stringify({
   schemaVersion: 1, id: 'verdict-canary-1', projectId: 'model-canary', taskId: 'task-1', stageId: 'verification',
   artifactId: CANARY_SUBJECT.artifactId, artifactKind: 'ChangeSet', reviewerRole: 'code-reviewer',
@@ -635,6 +690,7 @@ const LANE_ENV = {
   APP_BUILDER_MODEL_DECISION_SECRET: DECISION_SECRET,
   ANTHROPIC_API_KEY: FAKE_KEY,
 };
+const GROQ_LANE_ENV = { ...LANE_ENV, GROQ_API_KEY: FAKE_GROQ_KEY };
 
 /**
  * The switch, enabled for the duration of one test, in a temporary tree.
@@ -697,6 +753,91 @@ test('the whole lane runs one bounded attempt, and every boundary holds', { time
       assert.equal(report.ok, true, `failed: ${(report.failed ?? []).join(', ')}`);
     }
   });
+});
+
+test('the explicit Groq canary reuses the bounded lane and grades all predeclared findings', { timeout: 180_000 }, async () => {
+  await withEnabledSwitch(async ({ killSwitchRoot, hostSwitchPath }) => {
+    let calls = 0;
+    const report = await runModelCanary({
+      providerId: 'groq',
+      env: GROQ_LANE_ENV,
+      adapter: groqStubAdapter({ answer: CORRECT_GROQ_ANSWER, onCall: ({ calls: count }) => { calls = count; } }),
+      probeSecondCall: true,
+      isolation: null,
+      killSwitchRoot,
+      hostSwitchPath,
+    });
+    assert.equal(calls, 1, 'the second probe must be refused before the adapter');
+    assert.equal(report.ok, true, `failed: ${(report.failed ?? []).join(', ')}`);
+    assert.equal(report.record.runtime.providerId, 'groq');
+    assert.equal(report.record.runtime.adapterId, 'openai-compatible');
+    assert.equal(report.record.runtime.model, 'openai/gpt-oss-120b');
+    assert.equal(report.record.usage.calls, 1);
+    assert.equal(report.record.usage.costGbp, 0, 'a free-only canary records no invented price');
+    assert.equal(report.record.artifact.kind, 'SourceFile');
+    assert.equal(report.record.reviewerVerdict, null, 'deterministic success is evidence, not promotion');
+    assert.equal(report.evidence.satisfied, false, 'human review remains mandatory');
+    assert.equal(JSON.stringify(report).includes(FAKE_GROQ_KEY), false);
+  });
+});
+
+test('a separately minted Groq decision binds the run to Groq and its authorised task', { timeout: 180_000 }, async () => {
+  await withEnabledSwitch(async ({ killSwitchRoot, hostSwitchPath }) => {
+    const { decision, token } = authorise({
+      providerId: 'groq', env: GROQ_LANE_ENV, grantedBy: 'operator', reason: 'first Groq canary',
+      canaryId: 'groq-authorised-canary', taskId: 'groq-authorised-task', projectId: 'model-canary',
+    });
+    assert.equal(decision.providerId, 'groq');
+    assert.equal(decision.adapterId, 'openai-compatible');
+    assert.equal(decision.model, 'openai/gpt-oss-120b');
+    const report = await runModelCanary({
+      providerId: 'groq', env: GROQ_LANE_ENV, decisionToken: token,
+      adapter: groqStubAdapter({ answer: CORRECT_GROQ_ANSWER }), probeSecondCall: false,
+      isolation: null, killSwitchRoot, hostSwitchPath,
+    });
+    assert.equal(report.record.canaryId, 'groq-authorised-canary');
+    assert.equal(report.record.taskId, 'groq-authorised-task');
+    assert.equal(report.record.decisionId, decision.decisionId);
+    assert.equal(report.ok, true, `failed: ${(report.failed ?? []).join(', ')}`);
+  });
+});
+
+test('an Anthropic adapter cannot service an explicitly requested Groq canary', async () => {
+  await assert.rejects(
+    () => runModelCanary({ providerId: 'groq', env: GROQ_LANE_ENV, adapter: stubAdapter({ answer: CORRECT_GROQ_ANSWER }), probeSecondCall: false, isolation: null }),
+    /requested groq\/openai-compatible, but adapter is anthropic\/anthropic-messages/,
+  );
+});
+
+test('a Groq rate limit keeps its taxonomy and is never retried', { timeout: 180_000 }, async () => {
+  await withEnabledSwitch(async ({ killSwitchRoot, hostSwitchPath }) => {
+    let calls = 0;
+    const rateLimited = {
+      id: 'openai-compatible', providerId: 'groq',
+      async complete() { calls += 1; throw new ProviderCallError('rate-limited', 'groq returned 429'); },
+    };
+    const report = await runModelCanary({
+      providerId: 'groq', env: GROQ_LANE_ENV, adapter: rateLimited, probeSecondCall: true,
+      isolation: null, killSwitchRoot, hostSwitchPath,
+    });
+    assert.equal(calls, 1);
+    assert.equal(report.ok, false);
+    assert.equal(report.record.usage.calls, 0);
+    assert.equal(report.record.reviewerVerdict, null);
+  });
+});
+
+test('missing Groq findings fail deterministic acceptance', () => {
+  const definition = providerCanary('groq');
+  const incomplete = JSON.parse(CORRECT_GROQ_ANSWER);
+  incomplete.failingCriteria = incomplete.failingCriteria.slice(0, 3);
+  const checks = gradeArtifact(incomplete, { roleId: 'code-reviewer', subject: definition.subject, criteria: definition.criteria });
+  assert.equal(checks.find((check) => check.id === 'artifact-identifies-exactly-the-criteria-that-fail').status, 'fail');
+});
+
+test('malformed Groq output is not a typed artifact', () => {
+  const checks = gradeArtifact(null, { roleId: 'code-reviewer' });
+  assert.equal(checks.find((check) => check.id === 'artifact-is-a-json-object').status, 'fail');
 });
 
 test('no credential appears anywhere in the run report or the durable record', { timeout: 180_000 }, async () => {

@@ -121,11 +121,6 @@ function renderPreflight(result) {
   return lines.join('\n');
 }
 
-function valueOf(argv, name) {
-  const index = argv.indexOf(`--${name}`);
-  return index >= 0 ? argv[index + 1] : null;
-}
-
 function delegatePortableCli(argv) {
   const delegated = spawnSync(process.execPath, [PORTABLE_CANARY, ...argv], {
     env: process.env,

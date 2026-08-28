@@ -13,6 +13,10 @@
   ],
   "filesRoot": "files",
   "renderer": "application",
+  "document": {
+    "file": "index.html",
+    "reason": "A client application serves one document, so this head is the only head a crawler, an answer engine or a link preview ever receives. The generator writes the project's own title and description into it rather than leaving the scaffold placeholder for the seo recipe to replace after hydration."
+  },
   "sharedFiles": [
     {
       "from": "presentation/tokens.css",

@@ -7,8 +7,8 @@
       "schema": "project-manifest.schema.json",
       "typeName": "AppBuilderProjectManifest",
       "boundary": "Service project creation, generator input and manifest file reads.",
-      "typesHash": "ae8b75621a2ed2daf13530bc4528c1493373cc417e0438858fa59962ad6cba0e",
-      "schemaHash": "1e2578080d3d3d6d74135f201924c1a8fc0b02b2ff63ed64ecf44ef81fb3e04c"
+      "typesHash": "729a81e6d4068282a531f0acdfd8bef85dc6c77634a962ecf5c1fa72a250993e",
+      "schemaHash": "c4c2e37e3007953dd74e0839868dd631229fe879551bc7ae816bbc48988cd28e"
     },
     {
       "id": "build-contract",
@@ -127,7 +127,7 @@
       "schema": "approved-intake-bundle.schema.json",
       "typeName": "AppBuilderApprovedIntakeBundle",
       "boundary": "Durable approved-intake persistence and the service replay/import path.",
-      "typesHash": "8d90d4d0bd9667d02c1bae1a47435621b64b84f3afcf215058e252355efd35b3",
+      "typesHash": "9d8d35d4074b5da5c2d003990117f3f80e647f8991caaa5823a600b395a9ee49",
       "schemaHash": "43410f0bb6480ac471026f749df7f481d71b294b866caac7454cfff814e8ebfe"
     },
     {

@@ -34,7 +34,8 @@
       "path": null,
       "contextTokensBudget": 5000,
       "priorArt": [
-        "kreerc-accessibility-md"
+        "kreerc-accessibility-md",
+        "accesslint-skills"
       ],
       "supersedes": null,
       "evaluation": {
@@ -87,7 +88,8 @@
       "contextTokensBudget": 6000,
       "priorArt": [
         "leonxlnx-taste-skill",
-        "pbakaus-impeccable"
+        "pbakaus-impeccable",
+        "anthropics-skills"
       ],
       "supersedes": null,
       "evaluation": {
@@ -328,7 +330,9 @@
       "priorArt": [
         "style-dictionary",
         "apurvkhare-design-system-skill",
-        "storybookjs-mcp"
+        "storybookjs-mcp",
+        "radix-ui-primitives",
+        "mui-base-ui"
       ],
       "supersedes": null,
       "evaluation": {
@@ -429,7 +433,8 @@
       "path": null,
       "contextTokensBudget": 6000,
       "priorArt": [
-        "addyosmani-agent-skills"
+        "addyosmani-agent-skills",
+        "anthropics-skills"
       ],
       "supersedes": null,
       "evaluation": {
@@ -767,7 +772,8 @@
       "contextTokensBudget": 5000,
       "priorArt": [
         "21st-dev-registry",
-        "storybookjs-mcp"
+        "storybookjs-mcp",
+        "shadcn-ui"
       ],
       "supersedes": null,
       "evaluation": {

@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "description": "The providers the factory may consider, and what each is permitted to receive. `packages/control-plane/src/provider-routing.js` is the code that reads this; `config/model-execution.json` is still the switch that decides whether any provider call may happen at all. This file narrows a field, it does not open a lane: every profile here is refused while the kill switch is off, and a profile with `ready: false` is refused regardless.",
+  "rules": [
+    "Deny-by-default, twice over. A profile grants nothing until it names the data classes it may receive AND the roles it has earned. An empty `eligibleRoles` is the committed state for every provider whose canary has not run, and it means the provider cannot be selected for anything.",
+    "`allowedDataClasses` is a ceiling set by policy review, not by capability. A provider does not become eligible for private material because it is technically capable of receiving it, and widening this list is a reviewed change to this file with `policyReviewedAt` and `policySource` filled in.",
+    "A high-risk role is a separate grant. `eligibleRoles` may approve a provider for cheap bounded work; security, release promotion, destructive-change review, architecture sign-off and visual promotion additionally require the role in `highRiskRolesApproved`. One list would make that guard cosmetic, because whatever edit granted the cheap role would have granted the dangerous one too.",
+    "Unclassified tasks route nowhere. `resolveDataClass` treats absent or unrecognised classification as `private-business`, so material nobody classified cannot reach a provider approved only for public material.",
+    "Free is a refusal, not a discount. `costMode: free-only` means a request that would become billable is refused rather than paid for. Exhausting a free allowance does not authorise spending money.",
+    "Quotas are observed, never declared. Nothing here records how many requests a free tier allows, because those numbers change without notice; the provider's own response at runtime is the authority, and a 429 is a refusal with a name rather than a surprise.",
+    "A credential is a reference. `secretRef` names where the trusted gateway looks. No value belongs in this file, in any environment file committed beside it, or in an attempt record."
+  ],
+  "profiles": [
+    {
+      "providerId": "anthropic",
+      "adapterId": "anthropic-messages",
+      "modelId": "claude-haiku-4-5-20251001",
+      "endpoint": "https://api.anthropic.com/v1/messages",
+      "secretRef": "ANTHROPIC_API_KEY",
+      "costMode": "metered",
+      "allowedDataClasses": [
+        "public",
+        "synthetic",
+        "sanitised"
+      ],
+      "eligibleRoles": [],
+      "highRiskRolesApproved": [],
+      "structuredOutput": true,
+      "maxOutputTokens": 4096,
+      "ready": false,
+      "policyReviewedAt": null,
+      "policySource": null,
+      "note": "The existing canary provider, described here so selection sees one field rather than two. It is `metered` because the key is billable, and its data classes are the same conservative set as everything else: no provider terms have been reviewed and recorded yet, and the first canary uses a synthetic fixture, so nothing needs a wider class today."
+    },
+    {
+      "providerId": "groq",
+      "adapterId": "openai-compatible",
+      "modelId": "openai/gpt-oss-120b",
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "secretRef": "GROQ_API_KEY",
+      "costMode": "free-only",
+      "allowedDataClasses": [
+        "public",
+        "synthetic",
+        "sanitised"
+      ],
+      "eligibleRoles": [],
+      "highRiskRolesApproved": [],
+      "structuredOutput": true,
+      "maxOutputTokens": 8192,
+      "ready": false,
+      "policyReviewedAt": null,
+      "policySource": null,
+      "note": "The preferred first free-provider canary: it publishes explicit free-plan limits and returns a standard 429 with rate-limit metadata, which makes it a real exercise of the fallback path rather than a happy-path demo. Those limits are deliberately not copied here. No private data class is approved merely because an API exists."
+    },
+    {
+      "providerId": "gemini",
+      "adapterId": "google-generative-language",
+      "modelId": "gemini-2.0-flash",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
+      "secretRef": "GEMINI_API_KEY",
+      "costMode": "free-only",
+      "allowedDataClasses": [
+        "public",
+        "synthetic",
+        "sanitised"
+      ],
+      "eligibleRoles": [],
+      "highRiskRolesApproved": [],
+      "structuredOutput": true,
+      "maxOutputTokens": 8192,
+      "ready": false,
+      "policyReviewedAt": null,
+      "policySource": "Google's Gemini API pricing documentation distinguishes Free Tier from Paid Tier and states Free Tier data may be used to improve Google's products.",
+      "note": "Restricted to public, synthetic and sanitised material for the reason recorded in policySource, and that restriction is not to be widened without an explicit operator policy decision recorded here."
+    },
+    {
+      "providerId": "openrouter",
+      "adapterId": "openai-compatible",
+      "modelId": null,
+      "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+      "secretRef": "OPENROUTER_API_KEY",
+      "costMode": "free-only",
+      "allowedDataClasses": [
+        "public",
+        "synthetic",
+        "sanitised"
+      ],
+      "eligibleRoles": [],
+      "highRiskRolesApproved": [],
+      "structuredOutput": true,
+      "maxOutputTokens": 8192,
+      "ready": false,
+      "policyReviewedAt": null,
+      "policySource": "OpenRouter transmits inputs to selected or automatically selected underlying providers, whose retention and training practices differ from each other.",
+      "note": "Emergency breadth, deliberately last and deliberately unconfigured. `modelId` is null on purpose: a pinned model must be chosen before this profile can be selected at all, because the data policy that matters is the underlying provider's and `openrouter/free` does not name one. Not the first continuity mechanism."
+    },
+    {
+      "providerId": "mistral",
+      "adapterId": null,
+      "modelId": null,
+      "endpoint": null,
+      "secretRef": "MISTRAL_API_KEY",
+      "costMode": "free-only",
+      "allowedDataClasses": [],
+      "eligibleRoles": [],
+      "highRiskRolesApproved": [],
+      "structuredOutput": false,
+      "maxOutputTokens": null,
+      "ready": false,
+      "policyReviewedAt": null,
+      "policySource": null,
+      "note": "An explicit extension point, not a supported provider. No adapter, no endpoint and no approved data class, so it is refused as not-configured. It is recorded here rather than omitted so that adding it later is filling in a profile rather than rediscovering the shape of one. The continuity programme does not wait for it."
+    }
+  ]
+}

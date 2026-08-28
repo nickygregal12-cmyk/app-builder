@@ -115,6 +115,44 @@ try {
       console.error(`Stage ${entry.stage} is recorded as both completed and deferred.`);
       failed = true;
     }
+
+    // Two different things are called "deferred". Most entries here are
+    // capabilities nobody built because nothing reads them yet. A few are
+    // stages that WERE built, WERE measured against a real gate and FAILED,
+    // and are being set down so unrelated work can proceed. The second kind is
+    // the dangerous one to record loosely, because "deferred" is one careless
+    // edit away from reading as "fine", so it has to carry its own numbers.
+    if (entry.unpaidGate) {
+      const gate = entry.unpaidGate;
+      for (const field of ['gate', 'threshold', 'bestMean', 'finding', 'record']) {
+        if (gate[field] === undefined || gate[field] === null) {
+          console.error(`Deferred stage ${entry.stage} declares an unpaid gate and must record ${field}.`);
+          failed = true;
+        }
+      }
+      if (!Array.isArray(gate.evidence) || gate.evidence.length === 0) {
+        console.error(`Deferred stage ${entry.stage} declares an unpaid gate with no evidence. A failed measurement that cites nothing is an opinion.`);
+        failed = true;
+      }
+      for (const relative of gate.evidence ?? []) {
+        if (!fs.existsSync(path.join(root, relative))) {
+          console.error(`Deferred stage ${entry.stage} cites missing gate evidence: ${relative}`);
+          failed = true;
+        }
+      }
+      if (gate.record && !fs.existsSync(path.join(root, gate.record))) {
+        console.error(`Deferred stage ${entry.stage} cites a missing durable record: ${gate.record}`);
+        failed = true;
+      }
+      // The check that actually earns its place: a deferral may not quietly
+      // become a pass. If the recorded best result reaches the threshold, the
+      // stage is not deferred debt — it is either passed or the numbers have
+      // been edited, and both need a human rather than a green doctor.
+      if (typeof gate.bestMean === 'number' && typeof gate.threshold === 'number' && gate.bestMean >= gate.threshold) {
+        console.error(`Deferred stage ${entry.stage} records bestMean ${gate.bestMean} at or above its threshold ${gate.threshold}. A met threshold is not deferred debt.`);
+        failed = true;
+      }
+    }
   }
 
   // The drift this catches is the one that costs a later agent a day: a stage

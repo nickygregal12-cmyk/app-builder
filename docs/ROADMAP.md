@@ -11,87 +11,102 @@ disagree the status file wins. What "finished" means is `docs/MASTER_PLAN.md` §
 
 ## Current position
 
-**Phase 4D — Visual direction, responsive composition and candidate promotion.** Active.
+**Phase 4.3 — mature website-builder capabilities, with the real-business corpus open beside it.** Active.
 
-**The independent verdict exists, and it rejected both candidates.** An OpenAI GPT-5 `design-critic`
-reviewed the nbm candidate set an Anthropic runtime created and rejected both — 5.21 and 4.66 against a
-required 8.5 mean and 6.5 floor. Phase 4D is therefore in **bounded rework**, not waiting on a reviewer.
+### The sequencing change of 2026-08-28
 
-Part of that verdict was earned by invalid evidence: the evidence server answered every prerendered
-route with the home document, so six routes per viewport were photographed as one page. That root cause
-is found, fixed and proved. The rest of the verdict is about the output — a weak distinctive moment,
-thin credibility material, single-channel conversion — and is what the rework has to answer.
+Phase 4D visual excellence **failed its gate and is now deferred rather than treated as a global
+dependency.** This is a change of sequencing, not of standard:
 
-A static rendering and a bespoke presentation still need a reviewer who did not produce them, so
-`config/factory-status.json` keeps those gates open. The professional-output completeness gate in
-`docs/VISUAL_EXCELLENCE.md` §9 is down to that single row.
+- it is **not** passed, **not** waived, and its threshold is **unchanged** at 8.5 mean / 6.5 floor;
+- four independent reviews recorded a best mean of **6.55**, and every verdict is preserved;
+- the debt, the architectural finding and the **revival conditions** are in
+  `docs/PHASE_4D_VISUAL_DEBT.md`, with the machine-readable form in `config/factory-status.json`
+  under `deferredCapabilities`;
+- **Phase 4.2A**'s static-renderer *visual parity* is deferred the same way and for a related reason:
+  it was reviewed at mean 5.38, but against the **default presentation shell**, because no direction
+  has ever been promoted for it to present by.
 
-**Safe parallel work while it is blocked** — none of it is a prerequisite for the corpus:
+Why it was deferred rather than iterated again: the finding is that the **Presentation Registry** is
+the ceiling — art direction owns tokens and section presentations and does not own the component
+vocabulary — so distinctiveness never moved off ~4.8 through four rounds of intervention. Fixing that
+means letting a direction select component implementations, which is a design-system change that
+would be **badly designed from one thinly-evidenced business**. It needs the corpus and application
+evidence that the stages below produce. Iterating CSS against a fixed vocabulary was returning less
+each round while blocking work that does not depend on it.
 
-- the runtime-readiness evidence in `config/runtime-readiness.json` (items 6–7 below);
-- the deterministic gate stages still open in `docs/ENGINEERING_QUALITY_PROGRAMME.md` (item 8);
-- specification-only work for Phase 4.3/4.4 capabilities, in their own authorities.
+**What this does and does not unblock.** Items 4, 5, 9 and 10 below no longer wait on the visual
+verdict. Security, data-loss, durability and production boundaries are untouched and retain veto
+power — nothing in this change makes them deferrable. Before App Builder claims best-in-class visual
+output, professional visual maturity or fully proven website generation, the 8.5 gate must be
+revisited and paid; that pre-release qualification is revival condition C and is mandatory.
+
+**The one genuine blocker in the active stage is owner-only** and stops nothing else: the corpus needs
+a second real business, and what is missing is an explicit asset-level rights approval, not code. See
+item 4.
 
 ---
 
 ## Immediate programme
 
-### 1. Independent visual verdict on the Phase 4D candidate set
+### 1–3. Phase 4D visual excellence and Phase 4.2A visual parity — deferred, unpaid
 
-- **Status:** blocked, machinery complete.
-- **Why now:** nothing in the product path advances past it. No ordinary build carries a promoted
-  visual direction, so the direction machinery 4D built is unused — which is what the anti-template
-  diagnostic reported on its first run.
-- **Exit evidence:** a scored verdict against `gates.visual` in `config/agent-pipelines.json` for every
-  candidate in the set. `npm run acceptance:visual-candidates` produces the evidence;
-  `npm run review:visual-candidates` opens the Console over it.
-- **Blocked by:** a reviewer who did not create the work.
-- **Next:** promote or rework per the verdict.
+- **Status:** **measured, failed, deferred.** Not passed, not waived, threshold unchanged. These three
+  items were the chain that blocked everything below them, and they no longer do.
+- **What was measured:** four independent `design-critic` verdicts on the candidate set (best mean
+  **6.55** against 8.5, best floor 4.8 against 6.5) and one on the static rendering (**5.38**, floor
+  2.0). Every verdict file is committed under `examples/genuine-business/`. The reviewer requirement
+  was satisfied — all three surfaces have now been reviewed by someone who did not produce them — so
+  what is outstanding is the **quality**, not the reviewer.
+- **Why deferred rather than iterated:** the ceiling is the Presentation Registry, not the art
+  direction. See `docs/PHASE_4D_VISUAL_DEBT.md` for the finding, the full score history and the four
+  revival conditions.
+- **Revives when:** corpus evidence shows the convergence is cross-project; or a later capability needs
+  direction-selectable component implementations; or **before any public claim of visual maturity**
+  (mandatory); or genuinely new benchmark evidence appears. **Not** because another CSS pass might add
+  0.3 points.
+- **Next:** nothing waits on these. Items 4–10 proceed.
 
-### 2. Independent visual verdict on the static rendering of nbm
+### 4. Product-proof corpus — real businesses, running now rather than after the visual gate
 
-- **Status:** blocked, evidence complete.
-- **Why now:** it closes Phase 4.2A and makes the two-renderer claim real rather than asserted.
-- **Exit evidence:** a reviewer states whether the static nbm site is at least as good as the
-  application-rendered one. `npm run acceptance:static-renderer` leaves the captures at
-  `.app-builder/static-renderer` and stops.
-- **Blocked by:** the same reviewer as item 1.
-- **Next:** Phase 4.2A closes.
-
-### 3. Close Phase 4D
-
-- **Status:** waiting on items 1–2.
-- **Why now:** the exit gate is otherwise satisfied.
-- **Exit evidence:** every clause of the Phase 4D exit gate discharged, with 4D.3 (MessagingPlan) and
-  the comparison canvas recorded as deferred rather than done.
-- **Blocked by:** items 1–2.
-- **Next:** the product-proof freeze opens.
-
-### 4. Product-proof freeze — the first varied real-business corpus
-
-- **Status:** next major evidence checkpoint. Opens when item 1 closes.
-- **Why now:** the output machinery is complete enough that further extension is speculation. Principle
-  22: real product evidence, not roadmap enthusiasm, chooses what expands next.
-- **Exit evidence:** deliberately varied real businesses run through the same product path under
-  `docs/GENUINE_BUSINESS_ACCEPTANCE.md`, with per-project measurements and the anti-template diversity
-  diagnostic owned by `docs/VISUAL_EXCELLENCE.md` §8. Includes MGB Decor (issue #60).
-- **Blocked by:** item 1.
-- **Next:** item 5.
+- **Status:** **open**, and deliberately no longer a freeze that waits on item 1. The corpus is partly
+  what is needed to solve the visual system intelligently later, so making it wait on the visual system
+  was circular.
+- **Why now:** one project cannot distinguish a factory defect from a source ceiling. Principle 22:
+  real product evidence, not roadmap enthusiasm, chooses what expands next.
+- **First calibrated case — done and frozen:** nbm, a thin-assets / professional-service /
+  provenance-stress case. Frozen intake, KnowledgePack `e7c387bc`, 9 sources, 22 facts, source hashes,
+  rights limitations, five independent verdicts, responsive and launch-readiness results. **Do not
+  regenerate it** unless a reusable factory change needs regression testing.
+- **Blocked by — OWNER INPUT ONLY, and it blocks nothing else:** a second genuine business. The nearest
+  candidate is MGB Decor (issue #60), which already has owner-supplied first-party source *locations*.
+  It is not usable yet: issue #60 states explicitly that authoritative source locations grant **no**
+  republication rights to any photograph, customer image, logo or third-party asset, and no
+  asset-level approval exists in the repository. **The precise owner action needed** is an explicit
+  asset-level rights approval plus the owner-supplied facts, frozen in the shape
+  `examples/genuine-business/nbm-approved-intake.v1.json` already defines. Do not crawl those profiles.
+  Do not infer approval from a URL being public. Never fabricate owner approval.
+- **Exit evidence:** deliberately varied real businesses through the same product path under
+  `docs/GENUINE_BUSINESS_ACCEPTANCE.md`, with per-case measurements and the anti-template diversity
+  diagnostic owned by `docs/VISUAL_EXCELLENCE.md` §8.
+- **Next:** item 5. Per-case metrics accumulate as data; **no Factory Intelligence dashboard** is built
+  on one case.
 
 **Allowed during the freeze:** a reusable defect the corpus exposed; a deterministic check for a real
 observed failure; a contract, recipe, renderer or presentation improvement real output proved
 insufficient; a security, data-loss, durability or runtime blocker; a measured cost, latency or
-intervention bottleneck. **Paused during the freeze:** new orchestration frameworks, further role
+intervention bottleneck. **Paused while the corpus runs:** new orchestration frameworks, further role
 proliferation, a new project class without corpus evidence, provider integrations with no live use
 case, framework rewrites, and anything wanted because it sounds impressive.
 
 ### 5. Fix only the reusable defects the corpus exposes, then rerun the frozen inputs
 
-- **Status:** waiting on item 4.
+- **Status:** waiting on item 4 producing a second case.
 - **Exit evidence:** the same frozen briefs and source packs rerun and compared; per-class maturity
   tiers (`docs/MASTER_PLAN.md` §7.2) earned from what the corpus recorded. No class is claimed at any
   tier today.
-- **Blocked by:** item 4.
+- **Blocked by:** item 4, which is owner-blocked. This does **not** propagate to items 9–10 any more:
+  capability work with a real consumer today proceeds without waiting for the corpus to name it.
 - **Next:** items 9–11 sequence by what the corpus measured.
 
 ### 6. Pinned task-image host digest and hosted egress attestation
@@ -123,23 +138,36 @@ case, framework rewrites, and anything wanted because it sounds impressive.
   autonomous mutation of real production data), and the remaining supply-chain hardening.
 - **Blocked by:** nothing. **Next:** they feed Phase 6.
 
-### 9. Phase 4.3 — mature website-builder capabilities
+### 9. Phase 4.3 — mature website-builder capabilities — **ACTIVE**
 
-- **Status:** planned, specified. **Why now:** only after the corpus says which of them real projects
-  actually needed.
-- **Exit evidence:** per-capability acceptance in `docs/PLATFORM_PARITY_PROGRAMME.md` §8 and §5.
-  Covers CMS/content collections, localisation, Figma/design import, existing-repository adoption,
-  the deterministic SEO/AEO scanner and mature source-upload transport.
-- **Blocked by:** item 5. **Next:** item 10.
+- **Status:** **active.** This is the current stage.
+- **Why now:** the corpus can no longer say which capabilities are needed on its own timetable, because
+  it is owner-blocked on a second business. The rule that replaces "wait for the corpus" is narrower
+  and still evidence-bound: **implement the capability that has a real consumer today**, not the whole
+  §13 table because it is listed.
+- **What the inventory found (2026-08-28):** most of the table is genuinely absent rather than partly
+  built — no localisation beyond one NFR schema field, no content collections beyond a questionnaire,
+  no Figma import, no brownfield reader. **The exception with a real consumer is the deterministic
+  SEO/AEO scanner:** `config/gate-producers.json` lists `seo-aeo-scanner` under `unregistered`, meaning
+  a registered gate names the check and no producer answers it, so that gate can never resolve on it.
+  Close that first. Read-first brownfield profiling (`docs/PLATFORM_PARITY_PROGRAMME.md` §5.1) is the
+  next strongest candidate and is strategically valuable for the later Predictor-class benchmark.
+- **Exit evidence:** per-capability acceptance in `docs/PLATFORM_PARITY_PROGRAMME.md` §8 and §5. A
+  capability is not claimed because a dependency or a plan exists.
+- **Blocked by:** nothing. **Next:** item 10.
 
 ### 10. Phase 4.4 — high-value application capabilities
 
-- **Status:** planned, specified. **Why now:** these separate a generated brochure site from a
-  generated product.
+- **Status:** planned, specified, and **no longer gated behind item 5.** **Why now:** these separate a
+  generated brochure site from a generated product, and a serious application benchmark is what
+  produces the application evidence the deferred visual work needs (revival condition A/B).
+- **Dependency order:** auth / organisations / RBAC → database + RLS → profiles/admin → email →
+  uploads → notifications → webhooks → jobs/retries → billing → realtime if earned. Not one PR.
 - **Exit evidence:** the integration acceptance standard in `docs/PLATFORM_PARITY_PROGRAMME.md` §3, §4
   and §14 — transactional email, notifications, webhooks, jobs/cron/queues, realtime, billing, and
-  `IntegrationSpec` with the connection manager. None may be claimed first-class without it.
-- **Blocked by:** item 5. **Next:** item 11.
+  `IntegrationSpec` with the connection manager. None may be claimed first-class without it, and a
+  package dependency existing is not evidence.
+- **Blocked by:** the 4.3 capabilities that a chosen benchmark actually consumes. **Next:** item 11.
 
 ---
 
@@ -277,8 +305,18 @@ the code; it is not restated here. `config/factory-status.json` holds the machin
 
 `config/factory-status.json` `deferredCapabilities` is the only backlog for conditionally deferred
 work, and it is the sole place a reviving condition is recorded. No document keeps a second one.
-Currently deferred: the design-intelligence catalogue (4C.6), MessagingPlan (4D.3) and the visual
-comparison canvas.
+Currently deferred: the design-intelligence catalogue (4C.6), MessagingPlan (4D.3), the visual
+comparison canvas, the four 4.2B–4.2E static extras — and, since 2026-08-28, **Phase 4D visual
+excellence** and **Phase 4.2A static-renderer visual parity**.
+
+Those last two are a different kind of entry and are marked as such in the status file by an
+`unpaidGate` block. Everything else here is a capability nobody built because nothing reads it yet.
+4D and 4.2A were built, were measured against `gates.visual` by an independent reviewer, and
+**failed** — best mean 6.55 and 5.38 against a required 8.5. They are set down so unrelated work can
+proceed, not resolved. `config/factory-status.json` carries their thresholds, their measured results
+and their cited evidence; `tooling/deferred-gate-honesty.test.mjs` and `npm run control-plane:doctor`
+refuse a deferral whose recorded best result reaches its threshold, so this distinction cannot be
+edited away quietly. The narrative is in `docs/PHASE_4D_VISUAL_DEBT.md`.
 
 Two conditional decisions are not stages and live here:
 

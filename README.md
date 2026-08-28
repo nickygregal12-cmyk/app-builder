@@ -8,10 +8,19 @@ App Builder is designed around one rule:
 
 The long-term goal is a private builder that can accept an idea, company details, URLs, documents, spreadsheets, screenshots, logos, images, design references and existing repositories; turn them into a reviewed Build Contract; compose real pages and application surfaces from proven capabilities and trusted source material; use AI only for genuinely novel work; test and visually review the result; and deploy an ordinary portable repository.
 
-## Current milestone: Phase 4D — Visual direction, responsive composition and candidate promotion
+## Current milestone: Phase 4.3 — mature website-builder capabilities, with the real-business corpus open beside it
 
 Where the project actually is, what is blocked and what is deferred: `config/factory-status.json`
 (machine-readable) and `docs/ROADMAP.md` (ordered, human-readable). This section does not restate them.
+
+**Phase 4D visual excellence is unpaid quality debt, not a completed stage.** It was measured against
+an independent reviewer four times and failed: best mean 6.55 against a required 8.5, which is
+unchanged. On 2026-08-28 it was deliberately deferred so that it no longer blocks unrelated website,
+application, environment, runtime and deterministic-quality work — deferred, not passed and not
+waived. The same applies to Phase 4.2A's static-renderer visual parity. The threshold, the measured
+result, the architectural finding and the conditions that revive the work are in
+`docs/PHASE_4D_VISUAL_DEBT.md`. No claim of visual maturity or proven website generation may be made
+while that gate is unpaid.
 
 **Phase 3.8E genuine-business product proof passed on 2026-08-26** at 0 meaningful manual edits. The
 immutable acceptance record is `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`.

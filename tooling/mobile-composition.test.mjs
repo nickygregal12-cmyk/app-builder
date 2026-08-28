@@ -77,42 +77,42 @@ test('the ask placement reaches the shell so the stylesheet can tell the two apa
 });
 
 /**
- * The scrolling navigation row.
+ * The wrapping navigation row.
  *
- * The review found it "visibly clipped". The cause was two omissions rather
- * than a width: a flex item will not shrink below its longest word unless it
- * is told it may, so the brand set the width of the bar; and the scrollbar was
- * removed with nothing put in its place, so a row that continued looked like a
- * row that had ended.
+ * This was a scrolling row twice and an independent reviewer called it clipped
+ * both times — the second time as navigation "visibly clipped at mobile width
+ * across pages, including a partially obscured Locations item". A header
+ * scroller asks the reader to drag a row that looks like it has already ended,
+ * and no fade fixes a half-cut word. So the row wraps: every destination is
+ * laid out, and none is off-screen to be discovered.
  */
-test('a scrolling navigation row gets its own width instead of competing with the brand', () => {
-  // Measured, not assumed: sharing the row left three of five destinations
-  // hidden at 375px even after the brand was allowed to shrink, because a flex
-  // item stops at its longest word. Giving each its own row left one.
-  const header = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header.nav-inline-scroll')).join('\n');
+test('the visible navigation treatment gets its own width instead of competing with the brand', () => {
+  // A flex item will not shrink below its longest word, so sharing the row let
+  // "Consultants" set the width of the bar.
+  const header = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header.nav-inline-wrap')).join('\n');
   assert.match(header, /flex-wrap:\s*wrap/, 'the header must be allowed to put the row on its own line');
-  const brand = STYLES_CSS.split('\n').find((line) => line.includes('.site-header.nav-inline-scroll .site-brand'));
-  const nav = STYLES_CSS.split('\n').find((line) => line.includes('.site-header.nav-inline-scroll nav {'));
+  const brand = STYLES_CSS.split('\n').find((line) => line.includes('.site-header.nav-inline-wrap .site-brand'));
+  const nav = STYLES_CSS.split('\n').find((line) => line.includes('.site-header.nav-inline-wrap nav {'));
   assert.match(brand, /flex:\s*1 1 100%/, 'the brand takes its own row');
   assert.match(nav, /flex:\s*1 1 100%/, 'the destinations take the full measure rather than what is left of it');
 });
 
-test('a scrolling navigation row shows that it continues', () => {
-  const nav = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header.nav-inline-scroll nav')).join('\n');
-  assert.match(nav, /overflow-x:\s*auto/);
-  assert.match(nav, /scrollbar-width:\s*none/);
-  // Hiding the scrollbar is only legitimate if something replaces it.
-  assert.match(nav, /mask-image/, 'a row that hides its scrollbar must give the reader another cue that it scrolls');
-  assert.match(nav, /min-width:\s*0/, 'the row itself must be allowed to shrink so it can scroll rather than push');
+test('the visible navigation treatment wraps rather than scrolling out of view', () => {
+  const nav = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header.nav-inline-wrap nav')).join('\n');
+  assert.match(nav, /flex-wrap:\s*wrap/, 'destinations wrap onto as many lines as they need');
+  // The whole defect was a destination the reader could not see. Anything that
+  // moves part of the row off-screen brings it straight back.
+  assert.doesNotMatch(nav, /overflow-x:\s*auto|overflow-x:\s*scroll/, 'a header scroller reads as a truncated row, however it is faded');
+  assert.doesNotMatch(nav, /mask-image/, 'a fade is an apology for clipping, not a navigation pattern');
+  assert.doesNotMatch(nav, /flex-wrap:\s*nowrap/, 'nowrap is what forced the row to overflow');
 });
 
-test('every destination stays in the document, so the row is scrolled rather than truncated', () => {
+test('every destination stays in the document and stays visible', () => {
   // The failure mode this forbids is "fix the clipping by rendering fewer
   // links", which would look correct in a screenshot and lose the pages.
-  // The scrollbar itself is allowed to be hidden — the mask replaces it. What
-  // must never be hidden is a destination.
   const nav = STYLES_CSS.split('\n')
-    .filter((line) => line.includes('nav-inline-scroll') && !line.includes('::-webkit-scrollbar'))
+    .filter((line) => line.includes('nav-inline-wrap'))
     .join('\n');
   assert.doesNotMatch(nav, /display:\s*none/, 'destinations must not be hidden to make the row fit');
+  assert.doesNotMatch(nav, /visibility:\s*hidden/, 'destinations must not be made invisible to make the row fit');
 });

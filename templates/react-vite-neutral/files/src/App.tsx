@@ -438,11 +438,11 @@ export default function App() {
   };
   // Two navigation treatments, because a phone is where a direction's decision
   // about navigation actually shows. `disclosure` collapses behind a toggle;
-  // `inline-scroll` keeps every destination visible in one scrolling row, which
+  // `inline-wrap` keeps every destination visible by wrapping the row, which
   // suits a site whose surfaces are few and whose register is editorial. The
-  // toggle is not rendered at all under `inline-scroll` rather than hidden: a
+  // toggle is not rendered at all under `inline-wrap` rather than hidden: a
   // control that is present, focusable and does nothing is worse than absent.
-  const disclosureNav = NAVIGATION_TREATMENT !== 'inline-scroll';
+  const disclosureNav = NAVIGATION_TREATMENT !== 'inline-wrap';
   return <div className={`site-frame ${SHELL_CLASSES}`} data-scenario={currentScenario}>
     <header className={`site-header nav-${NAVIGATION_TREATMENT}`}>
       <a className="site-brand" href={siteHref('/')} onClick={(event) => followLink(event, '/')}>{project.name}</a>

@@ -266,15 +266,50 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   font-weight: 700;
   letter-spacing: .08em;
 }
+/* The card form used to put the plate in the top-right corner at --text-sm,
+   which is decoration: it painted a glyph and changed no layout. When richer
+   content moved services from a list to cards the index stopped being the
+   thing you notice, and the review that followed reported no distinctive
+   moment at all. A moment has to survive the variant its content earns, so
+   the card reserves a ruled plate column exactly as the list reserves a
+   gutter. */
 .moment-figure-index .section-item-grid .item-grid { counter-reset: plate }
-.moment-figure-index .section-item-grid .content-card { position: relative; counter-increment: plate }
+.moment-figure-index .section-item-grid .content-card {
+  position: relative;
+  counter-increment: plate;
+  padding-top: 58px;
+}
 .moment-figure-index .section-item-grid .content-card::after {
   content: counter(plate, decimal-leading-zero);
   position: absolute;
-  right: 20px;
-  top: 20px;
+  left: 26px;
+  right: 26px;
+  top: 22px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-accent);
   color: var(--color-accent);
-  font-size: var(--text-sm);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1;
+}
+
+/* The feature form had no implementation at all, so a direction that declared
+   figure-index and composed a features grid lost its moment silently. The
+   rule the variant already draws becomes the plate's spine. */
+.moment-figure-index .section-item-grid .feature-list { counter-reset: plate }
+.moment-figure-index .section-item-grid .feature-list li {
+  position: relative;
+  counter-increment: plate;
+  padding-left: 54px;
+}
+.moment-figure-index .section-item-grid .feature-list li::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  color: var(--color-accent);
+  font-size: var(--text-base);
   font-weight: 700;
   letter-spacing: .08em;
 }
@@ -328,40 +363,28 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      inheriting desktop with fewer columns. Every rule below is driven by a
      class the factory compiled from the plan. */
 
-  /* Navigation. One scrolling row of destinations, which works where a site
-     has few surfaces and reads badly where it has many — which is exactly why
-     it is a direction's decision and not a default.
+  /* Navigation, for a direction that wants its destinations visible rather
+     than behind a trigger. That intent is what distinguishes it from
+     `disclosure`, and it is worth keeping; the row that expressed it was not.
 
-     It previously read badly everywhere. An independent review found the row
-     "visibly clipped": the brand took its own natural width, wrapping to four
-     lines and leaving the row about two destinations wide, and the scrollbar
-     was hidden with nothing put in its place. Three of five destinations were
-     invisible with no cue that they existed, which is not a scrolling row —
-     it is a truncated one.
+     This was a scrolling row twice, and an independent reviewer called it
+     clipped both times. The first attempt lost three of five destinations
+     behind a hidden scrollbar. The second gave the row its own line and added
+     a fade to say it continued, and the next review still reported navigation
+     "visibly clipped at mobile width across pages, including a partially
+     obscured Locations item, making the composition look unfinished".
 
-     So the brand is made to yield, and the row says it continues. The fade is
-     the affordance; it is applied only while the row actually overflows, so a
-     site whose destinations do fit is not told to scroll for nothing. */
-  /* Sharing one row with the brand was the mistake. A flex item will not go
-     below its longest word, so "Consultants" wrapped the brand to four lines
-     and still left the row about two destinations wide; shrinking the brand
-     only bought back pixels the longest word took straight back.
-
-     So the row stops competing for width and takes its own. Brand above,
-     destinations beneath across the full measure — a title bar over a section
-     nav, which is a pattern rather than a squeeze. */
-  .site-header.nav-inline-scroll { flex-wrap: wrap; gap: 0; row-gap: 10px; align-items: center }
-  .site-header.nav-inline-scroll .site-brand { flex: 1 1 100%; min-width: 0; font-size: 1rem; line-height: 1.3 }
-  .site-header.nav-inline-scroll nav { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; justify-content: flex-start; margin: 0 -4px; padding: 0 4px; overscroll-behavior-x: contain }
-  .site-header.nav-inline-scroll nav::-webkit-scrollbar { display: none }
-  /* The trailing edge softens so the row reads as continuing rather than as
-     ending. Destinations stay in document order, so the row starts where
-     reading starts. */
-  /* `currentColor` rather than a literal: a mask reads alpha only, so any
-     opaque colour behaves identically, and this keeps the surface inside the
-     token system the design-system lint enforces. */
-  .site-header.nav-inline-scroll nav { mask-image: linear-gradient(to right, currentColor calc(100% - 28px), transparent 100%) }
-  .site-header.nav-inline-scroll nav a { flex: 0 0 auto; padding: 9px 11px }
+     The lesson is not that the fade was too subtle. A horizontal scroller in a
+     header asks the reader to discover destinations by dragging a row that
+     looks like it has already ended, and a partially cut word reads as a bug
+     however it is faded. So the row stops scrolling and starts wrapping: every
+     destination is laid out, on as many lines as it takes, and nothing is
+     off-screen to be found. Wrapping costs a few pixels of header height on
+     the smallest widths and buys a navigation that looks finished. */
+  .site-header.nav-inline-wrap { flex-wrap: wrap; gap: 0; row-gap: 10px; align-items: center }
+  .site-header.nav-inline-wrap .site-brand { flex: 1 1 100%; min-width: 0; font-size: 1rem; line-height: 1.3 }
+  .site-header.nav-inline-wrap nav { display: flex; flex: 1 1 100%; min-width: 0; flex-wrap: wrap; gap: 6px; justify-content: flex-start; margin: 0 -4px; padding: 0 4px }
+  .site-header.nav-inline-wrap nav a { flex: 0 0 auto; padding: 9px 11px }
 
   /* Content order. A trade business is found on a phone by someone who wants
      to call it, so a conversion-first direction puts contact directly under

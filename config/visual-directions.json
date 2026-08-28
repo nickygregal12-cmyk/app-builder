@@ -2,18 +2,68 @@
   "version": 1,
   "description": "Named visual directions. A direction is a coherent set of art-direction decisions that differ STRUCTURALLY from the others — hero strategy, grid family, section order, heading treatment, responsive composition — not by palette, radius or token values. Every field here has a renderer or composer consumer; a dimension nothing reads would be a knob on a picture of a machine. `assetAppetite` is checked against Visual Asset Readiness before a direction may become a candidate, so 'no publishable imagery' is an art-direction input rather than a late defect.",
   "projectTypeCandidates": {
-    "marketing-site": ["structured-practice", "editorial-authority", "immersive-lead"],
-    "content-site": ["editorial-authority", "structured-practice", "immersive-lead"],
-    "b2b-saas": ["dense-utility", "structured-practice"],
-    "consumer-app": ["structured-practice", "dense-utility"],
-    "internal-tool": ["dense-utility", "structured-practice"],
-    "ai-app": ["dense-utility", "structured-practice"]
+    "marketing-site": [
+      "structured-practice",
+      "editorial-authority",
+      "immersive-lead"
+    ],
+    "content-site": [
+      "editorial-authority",
+      "structured-practice",
+      "immersive-lead"
+    ],
+    "b2b-saas": [
+      "dense-utility",
+      "structured-practice"
+    ],
+    "consumer-app": [
+      "structured-practice",
+      "dense-utility"
+    ],
+    "internal-tool": [
+      "dense-utility",
+      "structured-practice"
+    ],
+    "ai-app": [
+      "dense-utility",
+      "structured-practice"
+    ]
+  },
+  "distinctiveMoments": {
+    "__doc": "What each declared distinctive moment is, and which section presentations carry it. A moment is an art-direction commitment, not a lucky selector: for every section type listed here the moment must have an implementation for EVERY variant that section can compile to, and each implementation must reserve layout rather than only paint a mark. tooling/distinctive-moment.test.mjs derives the variant list from the template component manifest, so adding a variant to a section immediately fails any moment that has not answered it.",
+    "figure-index": {
+      "purpose": "An index over what the practice offers. A business with no photography still has services, and numbering them says considered set rather than list that happened to be that long.",
+      "carriedBy": {
+        "item-grid": "all-variants",
+        "gallery": "no-variants"
+      }
+    },
+    "lead-statement": {
+      "purpose": "The opening claim set as a statement against a rule, rather than as body copy that happens to be first.",
+      "carriedBy": {
+        "hero": "all-variants"
+      }
+    },
+    "full-bleed-lead": {
+      "purpose": "The work breaks the measure and runs the width of the screen. The one place an imagery-led direction stops behaving like a document.",
+      "carriedBy": {
+        "gallery": "no-variants"
+      }
+    },
+    "none": {
+      "purpose": "No distinctive moment. A deliberate declaration for a register whose whole point is restraint, not an absence to be filled in later. A direction that carries none is judged on rhythm and density instead.",
+      "carriedBy": {}
+    }
   },
   "directions": {
     "structured-practice": {
       "label": "Structured practice",
       "purpose": "An architectural, professional register. A regular grid, a split opening, and a rule above every section heading. Credibility comes from order and detail rather than from scale.",
-      "design": { "density": "comfortable", "maxWidth": "72rem", "radius": "0.625rem" },
+      "design": {
+        "density": "comfortable",
+        "maxWidth": "72rem",
+        "radius": "0.625rem"
+      },
       "artDirection": {
         "layoutVariance": "alternating",
         "motionIntensity": "subtle",
@@ -25,7 +75,14 @@
         "gridFamily": "symmetric",
         "headingTreatment": "ruled",
         "ctaPlacement": "closing",
-        "sectionOrder": ["item-grid", "gallery", "proof-grid", "people-grid", "location-list", "contact-panel"],
+        "sectionOrder": [
+          "item-grid",
+          "gallery",
+          "proof-grid",
+          "people-grid",
+          "location-list",
+          "contact-panel"
+        ],
         "distinctiveMoment": "figure-index"
       },
       "assetAppetite": "imagery-optional",
@@ -40,7 +97,11 @@
     "editorial-authority": {
       "label": "Editorial authority",
       "purpose": "Typography-led. The opening is a statement set in type with no picture beside it, items read as indexed rows rather than cards, and the page behaves like a document. Distinctive through hierarchy and restraint.",
-      "design": { "density": "relaxed", "maxWidth": "68rem", "radius": "0rem" },
+      "design": {
+        "density": "relaxed",
+        "maxWidth": "68rem",
+        "radius": "0rem"
+      },
       "artDirection": {
         "layoutVariance": "varied",
         "motionIntensity": "subtle",
@@ -52,13 +113,20 @@
         "gridFamily": "editorial-rows",
         "headingTreatment": "ruled",
         "ctaPlacement": "closing",
-        "sectionOrder": ["proof-grid", "item-grid", "people-grid", "gallery", "location-list", "contact-panel"],
+        "sectionOrder": [
+          "proof-grid",
+          "item-grid",
+          "people-grid",
+          "gallery",
+          "location-list",
+          "contact-panel"
+        ],
         "distinctiveMoment": "lead-statement"
       },
       "assetAppetite": "typographic",
       "responsive": {
         "mobileHero": "copy-only",
-        "navigation": "inline-scroll",
+        "navigation": "inline-wrap",
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "as-desktop",
         "mobileMotion": "as-desktop"
@@ -67,7 +135,11 @@
     "immersive-lead": {
       "label": "Immersive lead",
       "purpose": "Imagery-led. The lead photograph carries the opening, the work appears before the words about it, and the closing action sits mid-page so the page ends on contact. Requires publishable photography.",
-      "design": { "density": "comfortable", "maxWidth": "72rem", "radius": "1rem" },
+      "design": {
+        "density": "comfortable",
+        "maxWidth": "72rem",
+        "radius": "1rem"
+      },
       "artDirection": {
         "layoutVariance": "alternating",
         "motionIntensity": "moderate",
@@ -79,7 +151,14 @@
         "gridFamily": "asymmetric",
         "headingTreatment": "plain",
         "ctaPlacement": "mid-page",
-        "sectionOrder": ["gallery", "item-grid", "proof-grid", "people-grid", "location-list", "contact-panel"],
+        "sectionOrder": [
+          "gallery",
+          "item-grid",
+          "proof-grid",
+          "people-grid",
+          "location-list",
+          "contact-panel"
+        ],
         "distinctiveMoment": "full-bleed-lead"
       },
       "assetAppetite": "imagery-required",
@@ -94,7 +173,11 @@
     "dense-utility": {
       "label": "Dense utility",
       "purpose": "A surface that is worked in rather than read. A compact opening with the action on the same line, one ground throughout, and no decoration that costs vertical space.",
-      "design": { "density": "dense", "maxWidth": "96rem", "radius": "0.625rem" },
+      "design": {
+        "density": "dense",
+        "maxWidth": "96rem",
+        "radius": "0.625rem"
+      },
       "artDirection": {
         "layoutVariance": "uniform",
         "motionIntensity": "subtle",

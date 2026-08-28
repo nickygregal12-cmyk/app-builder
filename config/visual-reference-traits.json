@@ -206,8 +206,8 @@
       "describe": "Navigation stays visible and scrolls sideways on a small screen.",
       "opposite": "disclosure-navigation",
       "consumer": "direction.navigation",
-      "adopt": {"prefer": {"navigation": "inline-scroll"}},
-      "avoid": {"refuse": {"navigation": ["inline-scroll"]}}
+      "adopt": {"prefer": {"navigation": "inline-wrap"}},
+      "avoid": {"refuse": {"navigation": ["inline-wrap"]}}
     },
     "dark-ground": {
       "label": "Dark full-page ground",

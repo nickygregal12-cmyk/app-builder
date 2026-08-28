@@ -44,7 +44,7 @@ export const DISTINCTIVE_MOMENTS = Object.freeze(['lead-statement', 'full-bleed-
 export const ASSET_APPETITES = Object.freeze(['imagery-required', 'imagery-optional', 'typographic']);
 
 export const MOBILE_HERO = Object.freeze(['copy-first', 'image-first', 'copy-only']);
-export const MOBILE_NAVIGATION = Object.freeze(['disclosure', 'inline-scroll']);
+export const MOBILE_NAVIGATION = Object.freeze(['disclosure', 'inline-wrap']);
 export const MOBILE_SECTION_ORDER = Object.freeze(['as-desktop', 'conversion-first']);
 export const MOBILE_DENSITY = Object.freeze(['as-desktop', 'tighter']);
 export const MOBILE_MOTION = Object.freeze(['as-desktop', 'reduced']);

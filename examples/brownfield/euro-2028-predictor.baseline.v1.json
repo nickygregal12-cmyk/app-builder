@@ -8,8 +8,8 @@
   },
   "revision": "9e88437f9b85bd1a45c802606bd8553464c010f7",
   "workingTreeClean": true,
-  "profiledAt": "2026-08-28T17:23:45.642Z",
-  "profileHash": "775fcf932921b2ceb9446b0c1c9ad36fb874781cab57260c250c495ce77ac7dc",
+  "profiledAt": "2026-08-28T17:41:54.443Z",
+  "profileHash": "59c142c897b9d9cc4194ded584515d37d30a64325dd26655832074b9b7666271",
   "shape": {
     "filesExamined": 3263,
     "framework": "React on Vite",

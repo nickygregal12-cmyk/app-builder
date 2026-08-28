@@ -204,6 +204,60 @@ test('environment variables are named and never read', () => {
   }
 });
 
+// --- A scaffold does not get to say what the repository is -----------------------------
+
+/**
+ * The defect a cross-check found, which is what cross-checks are for.
+ *
+ * Pooling dependencies from every nested `package.json` reported a factory
+ * whose console is React on Vite as an **Astro** project, at status
+ * `demonstrated`, because one scaffold template it ships declares `astro`. A
+ * false positive at the strongest status is worse than an unproven field.
+ */
+test('a scaffold template does not decide the repository\'s framework', () => {
+  const root = fixtureRepository();
+  try {
+    // A template this repository ships for other people to build from. It is
+    // not claimed by `workspaces`, and it declares a different framework.
+    write(root, 'templates/static-scaffold/files/package.json', JSON.stringify({ name: 'scaffold', dependencies: { astro: '5.0.0' } }, null, 2));
+    write(root, 'templates/static-scaffold/files/src/pages/index.astro', '<h1>scaffold</h1>\n');
+
+    const profile = profileRepositoryTree(root);
+    assert.equal(profile.stack.framework.value, 'React on Vite', 'a shipped scaffold renamed the repository\'s framework');
+    for (const evidence of profile.stack.framework.evidence) {
+      assert.ok(!evidence.path.includes('templates/'), `framework evidence cites ${evidence.path}, which is scaffold rather than this repository`);
+    }
+
+    // The scaffold's routes are not this product's routes either.
+    assert.ok(
+      !JSON.stringify(profile.architecture.routeLocations).includes('static-scaffold'),
+      'a scaffold\'s pages were counted as this repository\'s route locations',
+    );
+
+    // Excluded, and said so. Silence would look identical to it not existing.
+    assert.deepEqual(profile.coverage.excludedNestedProjects, ['templates/static-scaffold/files']);
+    assert.match(profile.coverage.exclusionNote, /not claimed by any workspace glob/);
+    // And it is still reported as present, because it is.
+    assert.ok(profile.workspace.packages.value.some((entry) => entry.directory === 'templates/static-scaffold/files'));
+  } finally {
+    cleanup(root);
+  }
+});
+
+test('with no workspace definition, only the root manifest speaks', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'brownfield-unclaimed-'));
+  try {
+    write(root, 'package.json', JSON.stringify({ name: 'host', dependencies: { express: '4.21.0' } }, null, 2));
+    write(root, 'vendor-sample/package.json', JSON.stringify({ name: 'sample', dependencies: { next: '15.0.0' } }, null, 2));
+
+    const profile = profileRepositoryTree(root);
+    assert.equal(profile.stack.framework.value, 'Express', 'an unclaimed vendored project renamed the host repository');
+    assert.deepEqual(profile.coverage.excludedNestedProjects, ['vendor-sample']);
+  } finally {
+    cleanup(root);
+  }
+});
+
 // --- What it refuses to claim ---------------------------------------------------------
 
 test('a suggestive name proves nothing', () => {

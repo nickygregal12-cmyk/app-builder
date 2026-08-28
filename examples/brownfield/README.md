@@ -51,6 +51,32 @@ matched `e2e` anywhere in a path: it excluded
 are unit tests *about* end-to-end gating and run under the unit runner. The
 split now matches a path segment, and the count agrees with an independent one.
 
+### The second defect, found by profiling a different repository
+
+One mature repository is one shape. Running the profiler against a structurally
+different one — a Node factory whose console is React on Vite, with a monorepo
+and shipped scaffold templates — reported its framework as **Astro**, at status
+`demonstrated`.
+
+It was reading `templates/astro-static-content/files/package.json`: a scaffold
+this repository *ships for other people to build from*, not its own stack. The
+profiler pooled dependencies from every nested `package.json` it found, so a
+template got to rename the repository. A false positive at the strongest status
+is worse than an unproven field — it is precisely the failure the evidence
+vocabulary exists to prevent.
+
+A manifest is now only this repository's own when the root claims it through a
+workspace glob. Anything else is a scaffold, fixture or vendored sample: still
+reported under `workspace.packages` because it exists, and excluded from the
+stack, architecture and design-system readings. `coverage.excludedNestedProjects`
+names every one, because excluding them silently would look identical to their
+not existing. With no workspace definition at all, only the root manifest speaks.
+
+The cross-check repository now reads `React on Vite`, and its route locations
+correctly return to `unproven` — the Astro pages it was counting were the
+scaffold's. The counts for the repository below are unchanged: it is a
+single-package repository with no nested manifests, so nothing was excluded.
+
 ### What it correctly refused to claim
 
 Four fields are not established, and each is right to be:

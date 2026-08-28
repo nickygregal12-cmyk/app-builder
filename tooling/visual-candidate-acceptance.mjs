@@ -37,6 +37,11 @@ import { designReferenceSummary } from '../apps/service/src/visual-references.js
 import { captureInventory, writeVisualReviewPacket } from './lib/visual-review-report.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
+// The frozen half of the same truth. The bundle carries approved intent; this
+// carries the material that intent was approved over, ingested once and
+// committed so every candidate in a set - and every later rerun - is composed
+// from identical bytes rather than from whatever the business published today.
+const KNOWLEDGE = 'examples/genuine-business/nbm-approved-knowledge.v1.json';
 
 function argument(name) {
   const index = process.argv.indexOf(name);
@@ -90,8 +95,10 @@ const service = new FactoryService({ store, workspacesRoot, factoryRoot: process
 
 try {
   const bundle = JSON.parse(fs.readFileSync(BUNDLE, 'utf8'));
-  const { project } = await service.replayIntakeBundle(bundle);
+  const knowledgePack = JSON.parse(fs.readFileSync(KNOWLEDGE, 'utf8'));
+  const { project } = await service.replayIntakeBundle(bundle, { knowledgePack });
   console.log(`Replayed ${bundle.bundleId} as ${project.id}.`);
+  console.log(`Frozen knowledge pack ${knowledgePack.packHash}: ${knowledgePack.sources.length} source(s), ${knowledgePack.facts.length} fact(s).`);
 
   // The canonical build first. A candidate set is a choice over a project that
   // already has an answer, not a substitute for having one.

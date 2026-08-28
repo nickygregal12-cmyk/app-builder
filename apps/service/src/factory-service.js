@@ -144,6 +144,35 @@ function hashOf(value) {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
 }
 
+/**
+ * Refuse to mint candidate evidence over a starved product truth.
+ *
+ * Every Phase 4D candidate that has ever been independently scored was composed
+ * with no knowledge pack, because the candidate lane replayed an approved intake
+ * and went straight to generation. The reviews that came back called the output
+ * thin, and some of what they asked for was sitting in the business's own
+ * approved sources, unread. A score against that build measures the lane, not
+ * the factory.
+ *
+ * The trigger is the manifest declaring real source material. A business that
+ * says "here are my documents and my website" and then composes from bare
+ * manifest values is the defect; a synthetic fixture that declares no sources
+ * legitimately has no pack and is left alone.
+ */
+function assertCandidateTruthIsSourceBacked(project, composition, frozenTruth) {
+  const declared = project.manifest?.inputs?.sources ?? [];
+  if (!declared.length) return;
+  if (frozenTruth.knowledgeSource !== 'approved-manifest-only') return;
+  const warning = composition.warnings.includes('knowledge-pack-not-provided')
+    ? 'knowledge-pack-not-provided'
+    : 'approved-manifest-only';
+  throw new Error(
+    `Refusing to generate visual candidates for ${project.name}: its manifest declares ${declared.length} approved source(s) `
+    + `but the composition is ${warning}, so a reviewer would be judging an incomplete product truth. `
+    + 'Replay the intake bundle with its frozen knowledge pack, or ingest the declared sources, before generating candidates.',
+  );
+}
+
 export class FactoryService {
   constructor({ store, workspacesRoot, stateRoot, factoryRoot = process.cwd(), env = process.env }) {
     this.store = store;
@@ -188,18 +217,36 @@ export class FactoryService {
    * comes back is a new project in `ready` state with its own identity: no
    * workspace, no build, no evidence and no checkpoint is carried across, so
    * approved intent is reused and generated output never is.
+   *
+   * `knowledgePack` accepts a pack that was ingested once and frozen beside the
+   * bundle. A replayed run has approved intent but no ingested material, and for
+   * a business whose bundle declares real sources that is a starved product
+   * truth rather than a complete one: composition falls back to bare manifest
+   * values and the result is a shadow of what the factory would really build.
+   * Passing the frozen pack replays the source-backed truth without making the
+   * run depend on a live crawl, so several candidates can be compared against
+   * one another and against an earlier run.
    */
-  async replayIntakeBundle(bundle) {
+  async replayIntakeBundle(bundle, { knowledgePack = null } = {}) {
     const replayed = replayApprovedIntake(bundle);
     const project = this.createProject({
       manifest: replayed.projectManifest,
+      knowledgePack,
       intakeBundle: bundleForReplayedRun(bundle, replayed),
     });
     await this.store.recordEvent(createEvent({
       projectId: project.id,
       type: 'intake.replayed',
       actor: 'factory-service',
-      payload: { fromBundleId: bundle.bundleId, reused: replayed.reused, drift: replayed.drift },
+      payload: {
+        fromBundleId: bundle.bundleId,
+        reused: replayed.reused,
+        drift: replayed.drift,
+        // Which truth this run replayed, not just which intent. Without it a
+        // starved run and a source-backed one leave the same event behind.
+        knowledgePackHash: knowledgePack?.packHash ?? null,
+        knowledgeSourceCount: knowledgePack?.sources?.length ?? 0,
+      },
     }));
     return { project, reused: replayed.reused, drift: replayed.drift };
   }
@@ -1258,6 +1305,7 @@ export class FactoryService {
       throw new Error(`Project ${projectId} already has an undecided candidate set (${existing.setId}). Promote or abandon it before generating another.`);
     }
     const { composition, frozenTruth } = this.frozenProductTruth(projectId);
+    assertCandidateTruthIsSourceBacked(project, composition, frozenTruth);
     const assetDecisions = this.readAssetDecisions(projectId).decisions;
     const assetReadiness = compileAssetReadiness({ knowledgePack: project.knowledgePack, assetDecisions });
     const registry = loadVisualDirections(this.factoryRoot);

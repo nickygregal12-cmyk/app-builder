@@ -1,0 +1,3784 @@
+{
+  "schemaVersion": 1,
+  "intelligenceVersion": "1.2.0",
+  "project": null,
+  "sources": [
+    {
+      "id": "source-c383304bb60cfc62",
+      "kind": "spreadsheet",
+      "label": "Owner-approved nbm acceptance workbook",
+      "uri": null,
+      "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "sizeBytes": 10990,
+      "provenance": "user-supplied",
+      "purpose": "Verified public facts, services, offices and the acceptance intent the build must satisfy.",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "contentHash": "b3a98cd20f594d33b401c845fb28487aac251dcdf6b7fa2310cf2ae302f01ad9",
+      "cacheKey": "3c0336d3dd28f42fc83e3df36906657b7c1ff53fe891b1091b11273ee9c93cfe",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "xlsx",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-f19d64ac4fa91009",
+      "kind": "url",
+      "label": "https://www.nbm.bz/",
+      "uri": "https://www.nbm.bz/",
+      "mimeType": "text/html",
+      "sizeBytes": 22090,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "cdead04ce63df89074073318b685a9aa373bc583da67f3b12b72ff7f563c7c31",
+      "cacheKey": "c59dd9d14d58b9ccae235384e583a53df939cc4529b2620d431f2abbf3eb697c",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-4ab6a89f71caa78d",
+      "kind": "url",
+      "label": "https://www.nbm.bz/about",
+      "uri": "https://www.nbm.bz/about",
+      "mimeType": "text/html",
+      "sizeBytes": 19537,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "a53f85519a37388f5dfc7d4ace651425b3ecf65b32d1a3984fb74cd65d1cc5fc",
+      "cacheKey": "ac9170efad2afb01a6e57474de629e128cd05f4607719b81161682a881c3edfe",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-b2f2bdd39330ca84",
+      "kind": "url",
+      "label": "https://www.nbm.bz/our-team",
+      "uri": "https://www.nbm.bz/our-team",
+      "mimeType": "text/html",
+      "sizeBytes": 23222,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "3e716e3a2058b02fe049fa2940f2c223257fd971a966094eb442865acc1e2d44",
+      "cacheKey": "e55742946f4aba62c727025f11481c8e918e2ce556a6bccf7af4939410e711a4",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-5ef254552c079e8e",
+      "kind": "url",
+      "label": "https://www.nbm.bz/services",
+      "uri": "https://www.nbm.bz/services",
+      "mimeType": "text/html",
+      "sizeBytes": 18046,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "28c21d3a8623cbd3f46b3772880b4732c43422ee1add422b48cabe43f2408d84",
+      "cacheKey": "456079b068bb23eca1ceef8d0799a813a596a36d601208945c103cc26da67a0a",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-a1aafa910656718a",
+      "kind": "url",
+      "label": "https://www.nbm.bz/projects",
+      "uri": "https://www.nbm.bz/projects",
+      "mimeType": "text/html",
+      "sizeBytes": 52310,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "c1de4e5e7b0973ec1e52583b888872f3ffcf3b92a5fbfc1c5ef827dcf15d24d5",
+      "cacheKey": "1a73b3bbba13752e900fd4aa15aaf209a9260d195e27bf5f8de52eb510d03e5a",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-285bb499c2df68de",
+      "kind": "url",
+      "label": "https://www.nbm.bz/nbm-news",
+      "uri": "https://www.nbm.bz/nbm-news",
+      "mimeType": "text/html",
+      "sizeBytes": 25782,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "98762ee47b7fc26181d74ce944723bc692aeb54aa8a94bfa35220950629ac87b",
+      "cacheKey": "86de708370899163c457e5cbabc7f8310a4743b584ec9bad9fbbc75b3d418917",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-225fbe320a0d9dc1",
+      "kind": "url",
+      "label": "https://www.nbm.bz/contact",
+      "uri": "https://www.nbm.bz/contact",
+      "mimeType": "text/html",
+      "sizeBytes": 15418,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "50ab1c0b2ce31956819dcfc8a14d76bf9e32c2940d24f860921a53cd8f2b7c0c",
+      "cacheKey": "edd08a54f48b22764795f155141c32dd95816f3d7ed8182439f9a279854097ed",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    },
+    {
+      "id": "source-d33e8556df74796f",
+      "kind": "url",
+      "label": "https://www.nbm.bz/works/refurbishment-of-the-met-hotel-leeds",
+      "uri": "https://www.nbm.bz/works/refurbishment-of-the-met-hotel-leeds",
+      "mimeType": "text/html",
+      "sizeBytes": 18429,
+      "provenance": "existing-site",
+      "purpose": "Cross-check the facts the workbook records. Reference only: public visibility is not a republication right.",
+      "rightsStatus": "reference-only",
+      "assetStatus": "do-not-use",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "website",
+      "instructionAuthority": "none",
+      "publishUseAllowed": false,
+      "contentHash": "d639331b6a4a0087e9e7546b1e78b565a6b386e2da81532ed35d4070c490e014",
+      "cacheKey": "03fafa7c93f2bb66f2d27c4eca2d57223d4401c10ac016109e5efba660de0afe",
+      "extractorVersion": "1.1.0",
+      "extractionSummary": {
+        "type": "html",
+        "truncated": false
+      },
+      "variantCount": 0
+    }
+  ],
+  "facts": [
+    {
+      "id": "fact-9e4d86d95de76af7",
+      "path": "identity.name",
+      "value": "nbm Construction Cost Consultants",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-262b3eb20b8e3770",
+      "path": "identity.legalName",
+      "value": "NBM CONSTRUCTION COST CONSULTANTS LIMITED",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-6271fcb7c32936a6",
+      "path": "contact.address",
+      "value": "9 Woodside Crescent, Glasgow, G3 7UL",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-c85b380fc5c7da53",
+      "path": "contact.website",
+      "value": "https://www.nbm.bz/",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-f1914394a584f13e",
+      "path": "contact.phone",
+      "value": "0141 333 1836",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-79c089bfb703af81",
+      "path": "serviceAreas",
+      "value": "Glasgow",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-3a8c17f5c8efa0e0",
+      "path": "serviceAreas",
+      "value": "Edinburgh",
+      "sourceId": "source-c383304bb60cfc62",
+      "provenance": "user-supplied",
+      "confidence": 1,
+      "verification": "user-provided",
+      "evidence": [
+        {
+          "sourceId": "source-c383304bb60cfc62",
+          "provenance": "user-supplied",
+          "confidence": 1,
+          "verification": "user-provided"
+        }
+      ]
+    },
+    {
+      "id": "fact-25173377ea517f01",
+      "path": "contact.email",
+      "value": "info@nbm.bz",
+      "sourceId": "source-f19d64ac4fa91009",
+      "provenance": "existing-site",
+      "confidence": 0.96,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-f19d64ac4fa91009",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-4ab6a89f71caa78d",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-b2f2bdd39330ca84",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-5ef254552c079e8e",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-a1aafa910656718a",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-285bb499c2df68de",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-d33e8556df74796f",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-c9704617f56fdf70",
+      "path": "contact.phone",
+      "value": "0 141 333 1836",
+      "sourceId": "source-f19d64ac4fa91009",
+      "provenance": "existing-site",
+      "confidence": 0.82,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-f19d64ac4fa91009",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-4ab6a89f71caa78d",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-b2f2bdd39330ca84",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-5ef254552c079e8e",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-a1aafa910656718a",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-285bb499c2df68de",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-d33e8556df74796f",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-f66cf3e11bac2253",
+      "path": "contact.phone",
+      "value": "0 131 287 7525",
+      "sourceId": "source-f19d64ac4fa91009",
+      "provenance": "existing-site",
+      "confidence": 0.82,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-f19d64ac4fa91009",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-4ab6a89f71caa78d",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-b2f2bdd39330ca84",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-5ef254552c079e8e",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-a1aafa910656718a",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-285bb499c2df68de",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-d33e8556df74796f",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-cec878486d208626",
+      "path": "contact.social.linkedin",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-f19d64ac4fa91009",
+      "provenance": "existing-site",
+      "confidence": 0.9,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-f19d64ac4fa91009",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-4ab6a89f71caa78d",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-b2f2bdd39330ca84",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-5ef254552c079e8e",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-a1aafa910656718a",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-285bb499c2df68de",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        },
+        {
+          "sourceId": "source-d33e8556df74796f",
+          "provenance": "existing-site",
+          "confidence": 0.9,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-53998948e197e273",
+      "path": "identity.nameCandidate",
+      "value": "nbm Construction Cost Consultants | Chartered Quantity Surveyors & Cost Consultants – Glasgow & Edinburgh | Building Surveyor Services",
+      "sourceId": "source-f19d64ac4fa91009",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-f19d64ac4fa91009",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-db445242382d7144",
+      "path": "identity.nameCandidate",
+      "value": "Expert Cost Consultancy and QS services in Glasgow & Edinburgh",
+      "sourceId": "source-4ab6a89f71caa78d",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-4ab6a89f71caa78d",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-53ceac27f782964c",
+      "path": "identity.nameCandidate",
+      "value": "nbm Team | Quantity Surveying & Project Management Specialists",
+      "sourceId": "source-b2f2bdd39330ca84",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-b2f2bdd39330ca84",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-40101b8c653a3a11",
+      "path": "identity.nameCandidate",
+      "value": "Services – Chartered Quantity Surveyors & Cost Consultants | nbm UK",
+      "sourceId": "source-5ef254552c079e8e",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-5ef254552c079e8e",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-b0f303f901a1b70b",
+      "path": "identity.nameCandidate",
+      "value": "nbm Projects | Quantity Surveying & Project Management Specialists",
+      "sourceId": "source-a1aafa910656718a",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-a1aafa910656718a",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-65a0a36572d37cfd",
+      "path": "identity.nameCandidate",
+      "value": "Latest News | nbm Chartered Quantity Surveyors & Cost Consultants",
+      "sourceId": "source-285bb499c2df68de",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-285bb499c2df68de",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-46f4cd237b1f9bbe",
+      "path": "contact.phone",
+      "value": "44 (0)141 333 1836",
+      "sourceId": "source-225fbe320a0d9dc1",
+      "provenance": "existing-site",
+      "confidence": 0.82,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-0b96315fabc33827",
+      "path": "contact.phone",
+      "value": "44 (0)131 287 7525",
+      "sourceId": "source-225fbe320a0d9dc1",
+      "provenance": "existing-site",
+      "confidence": 0.82,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.82,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-db64874b0c05ce28",
+      "path": "identity.nameCandidate",
+      "value": "Contact | nbm QS Services & Cost Consultants, Glasgow, Edinburgh, Scotland and UK",
+      "sourceId": "source-225fbe320a0d9dc1",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-225fbe320a0d9dc1",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-60917ccbaf69dfa5",
+      "path": "contact.email",
+      "value": "neil.simpson@nbm.bz",
+      "sourceId": "source-d33e8556df74796f",
+      "provenance": "existing-site",
+      "confidence": 0.96,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-d33e8556df74796f",
+          "provenance": "existing-site",
+          "confidence": 0.96,
+          "verification": "candidate"
+        }
+      ]
+    },
+    {
+      "id": "fact-a1e2fd6e2c6731f1",
+      "path": "identity.nameCandidate",
+      "value": "Refurbishment of The Met Hotel Leeds | nbm Construction Cost Consultants",
+      "sourceId": "source-d33e8556df74796f",
+      "provenance": "existing-site",
+      "confidence": 0.55,
+      "verification": "candidate",
+      "evidence": [
+        {
+          "sourceId": "source-d33e8556df74796f",
+          "provenance": "existing-site",
+          "confidence": 0.55,
+          "verification": "candidate"
+        }
+      ]
+    }
+  ],
+  "companyProfile": {
+    "identity": {
+      "name": {
+        "value": "nbm Construction Cost Consultants",
+        "factId": "fact-9e4d86d95de76af7",
+        "verification": "user-provided",
+        "confidence": 1
+      },
+      "legalName": {
+        "value": "NBM CONSTRUCTION COST CONSULTANTS LIMITED",
+        "factId": "fact-262b3eb20b8e3770",
+        "verification": "user-provided",
+        "confidence": 1
+      },
+      "description": null
+    },
+    "contact": {
+      "email": {
+        "value": "info@nbm.bz",
+        "factId": "fact-25173377ea517f01",
+        "verification": "candidate",
+        "confidence": 0.96
+      },
+      "phone": {
+        "value": "0141 333 1836",
+        "factId": "fact-f1914394a584f13e",
+        "verification": "user-provided",
+        "confidence": 1
+      },
+      "website": {
+        "value": "https://www.nbm.bz/",
+        "factId": "fact-c85b380fc5c7da53",
+        "verification": "user-provided",
+        "confidence": 1
+      },
+      "address": {
+        "value": "9 Woodside Crescent, Glasgow, G3 7UL",
+        "factId": "fact-6271fcb7c32936a6",
+        "verification": "user-provided",
+        "confidence": 1
+      }
+    },
+    "socialProfiles": [
+      {
+        "platform": "linkedin",
+        "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+        "factId": "fact-cec878486d208626",
+        "verification": "candidate"
+      }
+    ],
+    "serviceAreas": [
+      {
+        "value": "Glasgow",
+        "factId": "fact-79c089bfb703af81",
+        "verification": "user-provided"
+      },
+      {
+        "value": "Edinburgh",
+        "factId": "fact-3a8c17f5c8efa0e0",
+        "verification": "user-provided"
+      }
+    ],
+    "services": [
+      {
+        "id": "service-7ca2f09d8c780f4e",
+        "name": "Cost Consultancy and Quantity Surveying",
+        "description": "Chartered quantity surveying and construction cost management across the project lifecycle.",
+        "sourceId": "source-c383304bb60cfc62",
+        "provenance": "user-supplied",
+        "verification": "user-provided"
+      },
+      {
+        "id": "service-d68c0a1f5de57d5d",
+        "name": "Employer's Agent",
+        "description": "Employer's Agent duties on design-and-build contracts.",
+        "sourceId": "source-c383304bb60cfc62",
+        "provenance": "user-supplied",
+        "verification": "user-provided"
+      },
+      {
+        "id": "service-30b0c9932259e275",
+        "name": "Project Management",
+        "description": "Construction project management for client-side delivery.",
+        "sourceId": "source-c383304bb60cfc62",
+        "provenance": "user-supplied",
+        "verification": "user-provided"
+      },
+      {
+        "id": "service-a81d7d05061eb964",
+        "name": "Building Surveying and Defect Analysis",
+        "description": "Building surveying services including defect analysis and condition reporting.",
+        "sourceId": "source-c383304bb60cfc62",
+        "provenance": "user-supplied",
+        "verification": "user-provided"
+      }
+    ],
+    "people": [],
+    "projects": [],
+    "testimonials": [],
+    "accreditations": []
+  },
+  "brand": {
+    "colors": [],
+    "fontFamilies": [],
+    "titles": [
+      {
+        "value": "nbm Construction Cost Consultants | Chartered Quantity Surveyors & Cost Consultants – Glasgow & Edinburgh | Building Surveyor Services",
+        "sourceId": "source-f19d64ac4fa91009"
+      },
+      {
+        "value": "Expert Cost Consultancy and QS services in Glasgow & Edinburgh",
+        "sourceId": "source-4ab6a89f71caa78d"
+      },
+      {
+        "value": "nbm Team | Quantity Surveying & Project Management Specialists",
+        "sourceId": "source-b2f2bdd39330ca84"
+      },
+      {
+        "value": "Services – Chartered Quantity Surveyors & Cost Consultants | nbm UK",
+        "sourceId": "source-5ef254552c079e8e"
+      },
+      {
+        "value": "nbm Projects | Quantity Surveying & Project Management Specialists",
+        "sourceId": "source-a1aafa910656718a"
+      },
+      {
+        "value": "Latest News | nbm Chartered Quantity Surveyors & Cost Consultants",
+        "sourceId": "source-285bb499c2df68de"
+      },
+      {
+        "value": "Contact | nbm QS Services & Cost Consultants, Glasgow, Edinburgh, Scotland and UK",
+        "sourceId": "source-225fbe320a0d9dc1"
+      },
+      {
+        "value": "Refurbishment of The Met Hotel Leeds | nbm Construction Cost Consultants",
+        "sourceId": "source-d33e8556df74796f"
+      }
+    ],
+    "sourceCandidates": [
+      {
+        "sourceId": "source-f19d64ac4fa91009",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-4ab6a89f71caa78d",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-b2f2bdd39330ca84",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-5ef254552c079e8e",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-a1aafa910656718a",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-285bb499c2df68de",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-225fbe320a0d9dc1",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      },
+      {
+        "sourceId": "source-d33e8556df74796f",
+        "role": "primary-brand",
+        "channel": "website",
+        "rightsStatus": "reference-only",
+        "publishUseAllowed": false
+      }
+    ],
+    "logoCandidates": [],
+    "screenshotCandidates": [],
+    "publishableAssetIds": [],
+    "referenceOnlyAssetIds": [],
+    "generatedBrandClaims": []
+  },
+  "assets": [],
+  "content": [
+    {
+      "id": "content-05e94ecfc2f7f6e3",
+      "sourceId": "source-c383304bb60cfc62",
+      "kind": "xlsx",
+      "text": "[A. Verified public facts]\nField\tValue\tSource\tVerification\nBusiness name\tnbm Construction Cost Consultants\tPublic website www.nbm.bz\tsearch-corroborated\nLegal name\tNBM CONSTRUCTION COST CONSULTANTS LIMITED\tCompanies House register SC228801\towner-supplied\nCompany number\tSC228801\tCompanies House register SC228801\towner-supplied\nCompany status\tActive\tCompanies House register SC228801\towner-supplied\nIncorporated on\t6 March 2002\tCompanies House register SC228801\towner-supplied\nRegistered office\t9 Woodside Crescent, Glasgow, G3 7UL\tCompanies House register SC228801\towner-supplied\nPrincipal activity\tQuantity surveying activities\tCompanies House register SC228801\towner-supplied\nWebsite\thttps://www.nbm.bz/\tPublic website www.nbm.bz\tsearch-corroborated\nTelephone\t0141 333 1836\tPublic website www.nbm.bz\tsearch-corroborated\n[A. Services]\nService\tDescription\tSource\tVerification\nCost Consultancy and Quantity Surveying\tChartered quantity surveying and construction cost management across the project lifecycle.\tPublic website www.nbm.bz\tsearch-corroborated\nEmployer's Agent\tEmployer's Agent duties on design-and-build contracts.\tPublic website www.nbm.bz\tsearch-corroborated\nProject Management\tConstruction project management for client-side delivery.\tPublic website www.nbm.bz\tsearch-corroborated\nBuilding Surveying and Defect Analysis\tBuilding surveying services including defect analysis and condition reporting.\tPublic website www.nbm.bz\tsearch-corroborated\n[A. Offices]\nLocation\tAddress\tPhone\tSource\tVerification\nGlasgow\t9 Woodside Crescent, Glasgow, G3 7UL\t0141 333 1836\tCompanies House register SC228801; public website\towner-supplied\nEdinburgh\t\t\tPublic website www.nbm.bz\tsearch-corroborated\n[B. Acceptance intent]\nItem\tIntent\nTarget impression\tCredible, premium, established professional consultancy.\nAvoid\tGeneric SaaS/startup styling, novelty for novelty’s sake, excessive animation.\nPrioritise\tServices, evidence of experience and projects, trust, clear contact conversion, careers where appropriate.\nDevices\tDesktop and mobile both matter; mobile must feel designed rather than collapsed.\nSector character\tConstruction/property-sector character should be visible without becoming clichéd.\nDesign preference\tRestrained modern design preferred over generic corporate template output.\nImagery\tImagery must be genuinely relevant and rights-safe.\nProhibited claims\tNo unsupported performance, client, award, accreditation or experience claims.\n[B. Rights declaration]\nStatement\nThe business owner approves this operator-authored spreadsheet as source material for the App Builder acceptance exercise.\nThat approval covers the factual and operator-authored content in this workbook only.\nIt is NOT approval to republish nbm website photographs, logo files, staff photographs, client or project photography, or any third-party mark.\nThe public nbm website remains reference-only. Public visibility does not grant republication rights.\nProject and case-study names are deliberately omitted because they could not be re-verified through source ingestion in this run.",
+      "headings": [],
+      "tables": [
+        {
+          "name": "A. Verified public facts",
+          "rows": [
+            [
+              "Field",
+              "Value",
+              "Source",
+              "Verification"
+            ],
+            [
+              "Business name",
+              "nbm Construction Cost Consultants",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ],
+            [
+              "Legal name",
+              "NBM CONSTRUCTION COST CONSULTANTS LIMITED",
+              "Companies House register SC228801",
+              "owner-supplied"
+            ],
+            [
+              "Company number",
+              "SC228801",
+              "Companies House register SC228801",
+              "owner-supplied"
+            ],
+            [
+              "Company status",
+              "Active",
+              "Companies House register SC228801",
+              "owner-supplied"
+            ],
+            [
+              "Incorporated on",
+              "6 March 2002",
+              "Companies House register SC228801",
+              "owner-supplied"
+            ],
+            [
+              "Registered office",
+              "9 Woodside Crescent, Glasgow, G3 7UL",
+              "Companies House register SC228801",
+              "owner-supplied"
+            ],
+            [
+              "Principal activity",
+              "Quantity surveying activities",
+              "Companies House register SC228801",
+              "owner-supplied"
+            ],
+            [
+              "Website",
+              "https://www.nbm.bz/",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ],
+            [
+              "Telephone",
+              "0141 333 1836",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ]
+          ],
+          "truncated": false
+        },
+        {
+          "name": "A. Services",
+          "rows": [
+            [
+              "Service",
+              "Description",
+              "Source",
+              "Verification"
+            ],
+            [
+              "Cost Consultancy and Quantity Surveying",
+              "Chartered quantity surveying and construction cost management across the project lifecycle.",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ],
+            [
+              "Employer's Agent",
+              "Employer's Agent duties on design-and-build contracts.",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ],
+            [
+              "Project Management",
+              "Construction project management for client-side delivery.",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ],
+            [
+              "Building Surveying and Defect Analysis",
+              "Building surveying services including defect analysis and condition reporting.",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ]
+          ],
+          "truncated": false
+        },
+        {
+          "name": "A. Offices",
+          "rows": [
+            [
+              "Location",
+              "Address",
+              "Phone",
+              "Source",
+              "Verification"
+            ],
+            [
+              "Glasgow",
+              "9 Woodside Crescent, Glasgow, G3 7UL",
+              "0141 333 1836",
+              "Companies House register SC228801; public website",
+              "owner-supplied"
+            ],
+            [
+              "Edinburgh",
+              "",
+              "",
+              "Public website www.nbm.bz",
+              "search-corroborated"
+            ]
+          ],
+          "truncated": false
+        },
+        {
+          "name": "B. Acceptance intent",
+          "rows": [
+            [
+              "Item",
+              "Intent"
+            ],
+            [
+              "Target impression",
+              "Credible, premium, established professional consultancy."
+            ],
+            [
+              "Avoid",
+              "Generic SaaS/startup styling, novelty for novelty’s sake, excessive animation."
+            ],
+            [
+              "Prioritise",
+              "Services, evidence of experience and projects, trust, clear contact conversion, careers where appropriate."
+            ],
+            [
+              "Devices",
+              "Desktop and mobile both matter; mobile must feel designed rather than collapsed."
+            ],
+            [
+              "Sector character",
+              "Construction/property-sector character should be visible without becoming clichéd."
+            ],
+            [
+              "Design preference",
+              "Restrained modern design preferred over generic corporate template output."
+            ],
+            [
+              "Imagery",
+              "Imagery must be genuinely relevant and rights-safe."
+            ],
+            [
+              "Prohibited claims",
+              "No unsupported performance, client, award, accreditation or experience claims."
+            ]
+          ],
+          "truncated": false
+        },
+        {
+          "name": "B. Rights declaration",
+          "rows": [
+            [
+              "Statement"
+            ],
+            [
+              "The business owner approves this operator-authored spreadsheet as source material for the App Builder acceptance exercise."
+            ],
+            [
+              "That approval covers the factual and operator-authored content in this workbook only."
+            ],
+            [
+              "It is NOT approval to republish nbm website photographs, logo files, staff photographs, client or project photography, or any third-party mark."
+            ],
+            [
+              "The public nbm website remains reference-only. Public visibility does not grant republication rights."
+            ],
+            [
+              "Project and case-study names are deliberately omitted because they could not be re-verified through source ingestion in this run."
+            ]
+          ],
+          "truncated": false
+        }
+      ],
+      "metadata": {
+        "sheetCount": 5
+      },
+      "truncated": false
+    }
+  ],
+  "chunks": [
+    {
+      "id": "chunk-49e19829786f438c",
+      "contentHash": "49e19829786f438cf34c22809c1b1af65b2ec7470c35c64495a726b85c2ccb7b",
+      "text": "[A. Verified public facts]\nField\tValue\tSource\tVerification\nBusiness name\tnbm Construction Cost Consultants\tPublic website www.nbm.bz\tsearch-corroborated\nLegal name\tNBM CONSTRUCTION COST CONSULTANTS LIMITED\tCompanies House register SC228801\towner-supplied\nCompany number\tSC228801\tCompanies House register SC228801\towner-supplied\nCompany status\tActive\tCompanies House register SC228801\towner-supplied\nIncorporated on\t6 March 2002\tCompanies House register SC228801\towner-supplied\nRegistered office\t9 Woodside Crescent, Glasgow, G3 7UL\tCompanies House register SC228801\towner-supplied\nPrincipal activity\tQuantity surveying activities\tCompanies House register SC228801\towner-supplied\nWebsite\thttps://www.nbm.bz/\tPublic website www.nbm.bz\tsearch-corroborated\nTelephone\t0141 333 1836\tPublic website www.nbm.bz\tsearch-corroborated\n[A. Services]\nService\tDescription\tSource\tVerification\nCost Consultancy and Quantity Surveying\tChartered quantity surveying and construction cost management across the project lifecycle.\tPublic website www.nbm.bz\tsearch-corroborated\nEmployer's Agent\tEmployer's Agent duties on design-and-build contracts.\tPublic website www.nbm.bz\tsearch-corroborated\nProject Management\tConstruction project management for client-side delivery.\tPublic website www.nbm.bz\tsearch-corroborated\nBuilding Surveying and Defect Analysis\tBuilding surveying services including defect analysis and condition reporting.\tPublic website www.nbm.bz\tsearch-corroborated\n[A. Offices]\nLocation\tAddress\tPhone\tSource\tVerification\nGlasgow\t9 Woodside Crescent, Glasgow, G3 7UL\t0141 333 1836\tCompanies House register SC228801; public website\towner-supplied\nEdinburgh\t\t\tPublic website www.nbm.bz\tsearch-corroborated\n[B. Acceptance intent]\nItem\tIntent\nTarget impression\tCredible, premium, established professional consultancy.\nAvoid\tGeneric SaaS/startup styling, novelty for novelty’s sake, excessive animation.\nPrioritise\tServices, evidence of experience and projects, trust, clear contact conversion, careers where appropriate.\nDevices\tDesktop and mobile both matter; mobile must feel designed rather than collapsed.\nSector character\tConstruction/property-sector character should be visible without becoming clichéd.\nDesign preference\tRestrained modern design preferred over generic corporate template output.\nImagery\tImagery must be genuinely relevant and rights-safe.\nProhibited claims\tNo unsupported performance, client, award, accreditation or experience claims.\n[B. Rights declaration]\nStatement\nThe business owner approves this operator-authored spreadsheet as source material for the App Builder acceptance exercise.\nThat approval covers the factual and operator-authored content in this workbook only.\nIt is NOT approval to republish nbm website photographs, logo files, staff photographs, client or project photography, or any third-party mark.\nThe public nbm website remains reference-only. Public visibility does not grant republication rights.\nProject and case-study names are deliberately omitted because they could not be re-verified through source ingestion in this run.",
+      "sourceIds": [
+        "source-c383304bb60cfc62"
+      ],
+      "provenance": "user-supplied",
+      "approxTokens": 767
+    }
+  ],
+  "references": [
+    {
+      "id": "reference-40e7e26e010545c3",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-16279e39b7b12bbe",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-474ba0db31b71dfd",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-78aad1348b3cf67b",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-82e8871c965ba3fc",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f1d8cdc9ffc1eb52",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-d1b3109c46f06b73",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-50edeefebb2b5b00",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-7bf1bc9b9c4363ed",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-78aad1348b3cf67b",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-c404bb743f1fa21d",
+      "type": "link",
+      "value": "/works/refurbishment-of-the-met-hotel-leeds",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-d1d0abafce360136",
+      "type": "link",
+      "value": "/works/new-build-affordable-housing-development-curries-yard-locharbriggs",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f9e1a083a492d019",
+      "type": "link",
+      "value": "/works/refurbishment-rebranding-of-the-existing-hotel-at-twickenham-stadium",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-1ec28f5ccea0b825",
+      "type": "link",
+      "value": "/works/internal-public-areas-refurbishment-crieff-hydro-perthshire",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-8ca07d43b0a8a2cc",
+      "type": "link",
+      "value": "/works/new-build-residential-development-pitlethie-road-leuchars-fife",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-48ffe05374afbfc4",
+      "type": "link",
+      "value": "/works/refurbishment-and-rebranding-of-the-kings-hotel-brighton-into-a-four-point-flex-by-sheraton",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f1d8cdc9ffc1eb52",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f1d8cdc9ffc1eb52",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f1d8cdc9ffc1eb52",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f1d8cdc9ffc1eb52",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f5b0d044e2ee2288",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-474ba0db31b71dfd",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-78aad1348b3cf67b",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f1d8cdc9ffc1eb52",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-d1b3109c46f06b73",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-50edeefebb2b5b00",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-f5b0d044e2ee2288",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-7bf1bc9b9c4363ed",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-3e3744fa031c6afe",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-3e3744fa031c6afe",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-ee9cb6ae8c477dd3",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-24c5618b5be2bd10",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-109c80310f31f273",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-c35632d0d9962ca0",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-e37f2d96c5ce3170",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-b07763aac014cab6",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f552db48b47c0bae58e07b_cost_conssultancy_new2-01-01.svg",
+      "label": "icon depicting cost consultancy",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-3c53fb6133b38707",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f54f47066bc6cd9f5c54c6_employers_agent_new-01.svg",
+      "label": "icon depicting employers agent",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-2165dda4401d0ba3",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f5538905cc216a7aee926b_project_management-01.svg",
+      "label": "icon depicting services\n",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-8a83cf5a7adbfc9d",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f55801fc55bdad87e39297_building_surveying.svg",
+      "label": "icon depicting building surveying\n",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-17b29c91cff940e6",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-6f78a9d06e659d7c",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-47bf94326c4be46a",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-f19d64ac4fa91009"
+    },
+    {
+      "id": "reference-2c1ae6b9c76cac92",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/about",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-f598bf90fd65e714",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-e84fe6bce78c101c",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-aca93cef980c655c",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-e4ea996f280269c9",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-6979370f4432b229",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-d37e630526094d2a",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-c66c481c7044a7d1",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-bf3209a03007d2f3",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-e4ea996f280269c9",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-e84fe6bce78c101c",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-aca93cef980c655c",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-6979370f4432b229",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-d37e630526094d2a",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-c66c481c7044a7d1",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-cadba21e75a83f0e",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-bf3209a03007d2f3",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-82f50ca78f278bde",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-82f50ca78f278bde",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-3cd63605a44654b2",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-6ffb93715612d5c4",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-62987db39736d27f",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-f79c238d86094c2f",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-c7056046ae8e06da",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-be20dbf44a5f63dd",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c5655f7927357b13454_Citizen-M.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-cfab1493cf06e8d1",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c5637d8e0032d8840f9_Marriott.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-56074b12be2bd78b",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56b88e35163c9aad5a_Holiday-Inn.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-23985bb74a3927e1",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56cb68be0e777e84d2_Hilton.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-7fa8c3fafe9b91bc",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56fd2ca9b6dde2fbce_double-tree.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-f445923a79833a4c",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c568eb160b7939ab2c9_Hampton.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-5ac4a01a7e13dc52",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56e9e4ff2af100d379_Radisson.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-ad7f3f53a0479e02",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56b88e35163c9aad90_Point-A.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-012a6e0af89d1b55",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c571c37f36fc8fb6cf7_w-hotels.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-a92476b4188ee646",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c566904acf1035cab53_Crowne-Plaza.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-8520095c23bc4673",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c57b88e35163c9aade1_RBH.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-fff78001529d8b5b",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/6731fb8ec74252540fcecca6_logosKimpton.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-17ec4ade3d0e75bd",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56fd59f1e53339b1c0_nobu-hotels.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-08738c5c73aad28d",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56580abe1aff902369_HFD.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-fe170a8d0607384e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f913566904acf1036311ef_residence-inn.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-797d8d8b28fac9ad",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f914196904acf10363ca9b_unite-the-union.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-ea99b5b31a814306",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c5684d7c61a48a65c00_Linkgroup.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-b324199f004a71da",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56cb68be0e777e8502_home-group.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-ae1759c412454eaf",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c561fcb5490168d9ab4_Sanctury-Group.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-dbc0f920da1d150e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c57b88e35163c9aaddd_SSE.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-d22c22e6612a5ac8",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c5731bbec4cdf4dc013_Unit-students.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-cf4efac86e53854d",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56cf08f79f80800521_New-Gorbals.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-99bba56b7cface4a",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c5637d8e0032d8840e1_Ayrshire-housing.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-82801fb1bab82d5b",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f91655e9e4ff2af10a3fdc_Parkhead-housing-assoc-mono.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-de3b374bf3f0e704",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c57cf08f79f8080058f_Southside-housing.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-19f05bf48950773e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/6731fbe78d026f28cfbd3c1d_logosmolohotel.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-a813e0f7b36780a2",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/66f90c56580abe1aff901fad_Caledonia-Housing.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-3474b7b55f0cdb40",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/6731fbda47d75de471063829_logosAimbridge.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-6cf2e0fec18b0e30",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/6731fbca3c41597f4eba29b9_logosCiel-Capital.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-713e77ce007d146d",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/6731fbb3d0ea51d9c6b64a53_logosStarwood.png",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-3cecaab2ea54ce9c",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-c81b2a41933d95a5",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-218e54daa00eacaf",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-4ab6a89f71caa78d"
+    },
+    {
+      "id": "reference-366ca336b96e297e",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/our-team",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-6505be3cf9aa5146",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-14bcd4e3446ccbfb",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-26b81823526a927c",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-55c521b43b556931",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-c600ae559fdc55c9",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-9a8c96ccd22679e4",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-0a2e7b98de5e5732",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-2f4e6611a3a23f4b",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-536b3f000ab046f9",
+      "type": "link",
+      "value": "/team/steve-pollock",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-d92395d6cccbf19c",
+      "type": "link",
+      "value": "/team/paul-howarth",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-0f89cdba85646480",
+      "type": "link",
+      "value": "/team/scott-bradshaw",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-7c7e56de14db1e33",
+      "type": "link",
+      "value": "/team/john-hill",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-b1faa77896eaaed4",
+      "type": "link",
+      "value": "/team/neil-simpson",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-3cfee84e7fd48000",
+      "type": "link",
+      "value": "/team/ross-macanespie",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-d064955f5cd13d74",
+      "type": "link",
+      "value": "/team/robert-maclachlan",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-03f77991714fd125",
+      "type": "link",
+      "value": "/team/ian-rutherford",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-075ce26704cc2ca7",
+      "type": "link",
+      "value": "/team/chris-paton",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-9d3c6987331d77a3",
+      "type": "link",
+      "value": "/team/billy-mclean",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-8acbc28024fe0d3e",
+      "type": "link",
+      "value": "/team/matthew-gibson",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-d39c348a948d636d",
+      "type": "link",
+      "value": "/team/david-mcfadyen-bsc-hons-assocrics",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-c7f77dd216b29817",
+      "type": "link",
+      "value": "/team/ally-borthwick-bsc-hons-mrics",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-09a2315160d9add4",
+      "type": "link",
+      "value": "/team/alasdair-cowie-bsc-hons-mrics",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-2f4e6611a3a23f4b",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-14bcd4e3446ccbfb",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-26b81823526a927c",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-c600ae559fdc55c9",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-9a8c96ccd22679e4",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-0a2e7b98de5e5732",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-e1ce6956080adc03",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-2f4e6611a3a23f4b",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-390c410e0ee8e599",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-390c410e0ee8e599",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-aae6c14d0e408c0e",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-daf4c78cc8921d49",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-766e41c82ebf543f",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-6d75b97176fabab0",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-4f73b7d7fba48b5e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-adfd02b27ca76a4c",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/61ef301913352e2fcd1b6a7f_Steve_Pollock.jpg",
+      "label": "Steve Pollock MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-adb565355b86fb11",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/61f06fe22412489e83b2e589_Paul_Howarth.jpg",
+      "label": "Paul Howarth  PGc BSc (Hons) MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-9a04d21dcc7b3d51",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/61ef4d7e0a0d897236979d54_Scott_Bradshaw.jpg",
+      "label": "Scott Bradshaw BSc (Hons) MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-05f194ddf638308e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/66bf2dc943768e8369660370_John_Hill.jpg",
+      "label": "John Hill BSc MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-3f8b455821128279",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/66bf4b11cad1bcfb1347a7a1_Neil_Simpson.jpg",
+      "label": "Neil Simpson BSc (Hons) MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-be1c1c2729abd554",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/681a03623e325c325f34857c_Ross%20Macanespie-1000x1050.jpg",
+      "label": "Ross MacAnespie MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-ecdf03bd761461fb",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/66bf8475c0b6e68392c82dc8_Robert_MacLachlan.jpg",
+      "label": "Robert MacLachlan FRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-03a8ff297a831c13",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/66bf8da1e93da409a67603ff_Ian_Rutherford.jpg",
+      "label": "Ian Rutherford MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-ed373dae36fe5c85",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/6a1608484749444917532faa_Chris%20Paton%20-1000x1050px.png",
+      "label": "Chris Paton BSc (Hons)",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-2ff67df4189990aa",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/67e143e436220ce31619f843_Billy%20McLean%201000x1050.jpg",
+      "label": "Billy McLean MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-96d34130899540d4",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/66cdd6a7874731d04f132fcb_Matthew_Gibson.jpg",
+      "label": "Matthew Gibson BSc (Hons) MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-8ccc1c5db75f94e0",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/6a16063c234be95f61c669c4_David-McF%201000x1050px.jpg",
+      "label": "David McFadyen BSc (Hons) AssocRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-20b40ccacbb938f7",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/6a16075885f5215ab6e92db2_Ally%20B-1000x1050px.png",
+      "label": "Ally Borthwick BSc (Hons) MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-64892be1bdac0dcc",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/6a1604c155c55917f340ced5_Ally%20Cowie-1000x1050px.jpg",
+      "label": "Alasdair Cowie BSc (Hons) MRICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-c8cb356bc1c3514a",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-5c8c50fa629524b8",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-25ecea884776bd01",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-b2f2bdd39330ca84"
+    },
+    {
+      "id": "reference-5c0fe864a03fed85",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/services",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-2a8f7ee30d91075b",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-1c559a86b12080be",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-2e66a73e04dc6d81",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-37ca55f1e5584b48",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-4c549e5876fb418c",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-c25af6e2d6d808fc",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-ae1a5c83bf76925e",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-3536100cb4b7dbd3",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-1cbbb3a528992c08",
+      "type": "link",
+      "value": "mailto:info@nbm.bz?subject=enquiry%20from%20website",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-2a8f7ee30d91075b",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-1c559a86b12080be",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-37ca55f1e5584b48",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-4c549e5876fb418c",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-c25af6e2d6d808fc",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-9a9b91020fb1cf73",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-ae1a5c83bf76925e",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-a15b509a7304fd05",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-a15b509a7304fd05",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-31f85b5bceb84faa",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-2d0f951a85867c78",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-fb795a135b7ce57d",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-eeeb940af5b55735",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-9589e9d2cbf20004",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-8e8ca8666ada4dff",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-7594fa2e75e6f30f",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-c2f99adcda4c6e27",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-5ef254552c079e8e"
+    },
+    {
+      "id": "reference-d2cf7af29efb2e41",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/projects",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-ac56bccd6047429b",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-26c033139b34ea86",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-dd0774b71020aec3",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-12a1125deaa690c3",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-520b9870e99eb9e4",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-6e6971ef9848799c",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-72186a1da9624ea2",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0f04cabd684f08cc",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-e6a6951f5339efde",
+      "type": "link",
+      "value": "/works/refurbishment-of-the-met-hotel-leeds",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-435f8b32d28c187e",
+      "type": "link",
+      "value": "/works/new-build-affordable-housing-development-curries-yard-locharbriggs",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-a2a87983b87b8314",
+      "type": "link",
+      "value": "/works/refurbishment-rebranding-of-the-existing-hotel-at-twickenham-stadium",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-ab3df0a1a19ca0e3",
+      "type": "link",
+      "value": "/works/internal-public-areas-refurbishment-crieff-hydro-perthshire",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-845a13ed31270ded",
+      "type": "link",
+      "value": "/works/new-build-residential-development-pitlethie-road-leuchars-fife",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0fcaf017496c9e26",
+      "type": "link",
+      "value": "/works/refurbishment-and-rebranding-of-the-kings-hotel-brighton-into-a-four-point-flex-by-sheraton",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-799af73a0a0e1673",
+      "type": "link",
+      "value": "/works/larkfield-early-learning-centre-greenock",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-510c780ea396b556",
+      "type": "link",
+      "value": "/works/fair-isle-bird-observation-trust-fair-isle",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-63c2ae320eb27617",
+      "type": "link",
+      "value": "/works/tennents-brewery-visitor-experience",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-83e7a72d71e70d24",
+      "type": "link",
+      "value": "/works/new-build-residential-development-mount-pleasant-old-kilpatrick",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c84791b158cf3fc4",
+      "type": "link",
+      "value": "/works/new-build-housing-phase-1a-laurieston2",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f3307e47f709c08b",
+      "type": "link",
+      "value": "/works/urban-rest-serviced-apartments-camden-london",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-22516a7b9407b5c9",
+      "type": "link",
+      "value": "/works/queens-quay-clydebank",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-b630b61ab8af229e",
+      "type": "link",
+      "value": "/works/10-year-ppms-for-national-logistics-company",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-afc7ae3f79ee6e10",
+      "type": "link",
+      "value": "/works/inverlochy-castle-hotel",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-a8725a7190bef155",
+      "type": "link",
+      "value": "/works/c-p-docklands",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-594f1b66c16ce969",
+      "type": "link",
+      "value": "/works/unit-g3-westway-renfrew",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-d051655d35a30b32",
+      "type": "link",
+      "value": "/works/new-gorbals-housing-association-new-build-office-development",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c43751b3487c08e7",
+      "type": "link",
+      "value": "/works/new-linburn-centre-new-build-sports-hall-and-housing-linburn",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-174c5a7cf266b0de",
+      "type": "link",
+      "value": "/works/unite-the-union-office-refurbishments-and-extensions-preston-slough-belfast-limerick-and-waterford",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-b3654fadb367b654",
+      "type": "link",
+      "value": "/works/refurbishment-rebrand-of-bloomsbury-mercer-and-bond-street-hotels-london",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-cfd73952a5af3385",
+      "type": "link",
+      "value": "/works/conversion-of-existing-apartments-into-a-residence-inn-by-marriott-hotel",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-2fe1b767cbd3b1b9",
+      "type": "link",
+      "value": "/works/refurbishment-brand-conversion-park-inn-by-radisson-heathrow-airport",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-fa1fa6f7c9089e0f",
+      "type": "link",
+      "value": "/works/new-build-accor-tribe-hotel-manchester-airport",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0a5e6ab63756e6d6",
+      "type": "link",
+      "value": "/works/point-a-hotels-new-build-and-conversion-projects",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-095073667b695b20",
+      "type": "link",
+      "value": "/works/doubletree-by-hilton-bedroom-extensions-edinburgh-airport-coventry-bristol",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-dfde6f9934675292",
+      "type": "link",
+      "value": "/works/new-build-hotels-ihg-indigo-kimpton-and-intercontinental-in-turks-caicos",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-47d22a48912ceb69",
+      "type": "link",
+      "value": "/works/four-point-by-sheraton-haymarket-edinburgh",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-d19ee8b1e82416ec",
+      "type": "link",
+      "value": "/works/muir-road-bellsmyre",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-2e506d450a1bc7a7",
+      "type": "link",
+      "value": "/works/watson-street-glasgow",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f3a1df3b1c0662e5",
+      "type": "link",
+      "value": "/works/hamiltonhill-green-infrastructure-works",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f1b5fba803f75ce1",
+      "type": "link",
+      "value": "/works/highland-park-retail-unit-kirkwall-orkney",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-5c3c25c339f12123",
+      "type": "link",
+      "value": "/works/rainbow-early-learning-centre-expansion",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f2b3e3118afe527b",
+      "type": "link",
+      "value": "/works/cambo-stables-glasshouses",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f2a790d82b306e4c",
+      "type": "link",
+      "value": "/works/niddrie-road",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-91d09181ca0d2850",
+      "type": "link",
+      "value": "/works/kelvingrove-bandstand-amphitheatre",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-bb8d71abb2308bf9",
+      "type": "link",
+      "value": "/works/hampton-by-hilton-hamilton-park-racecourse",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-e6a6951f5339efde",
+      "type": "link",
+      "value": "/works/refurbishment-of-the-met-hotel-leeds",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-ab3df0a1a19ca0e3",
+      "type": "link",
+      "value": "/works/internal-public-areas-refurbishment-crieff-hydro-perthshire",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-b3654fadb367b654",
+      "type": "link",
+      "value": "/works/refurbishment-rebrand-of-bloomsbury-mercer-and-bond-street-hotels-london",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-cfd73952a5af3385",
+      "type": "link",
+      "value": "/works/conversion-of-existing-apartments-into-a-residence-inn-by-marriott-hotel",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-2fe1b767cbd3b1b9",
+      "type": "link",
+      "value": "/works/refurbishment-brand-conversion-park-inn-by-radisson-heathrow-airport",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-fa1fa6f7c9089e0f",
+      "type": "link",
+      "value": "/works/new-build-accor-tribe-hotel-manchester-airport",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0a5e6ab63756e6d6",
+      "type": "link",
+      "value": "/works/point-a-hotels-new-build-and-conversion-projects",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-095073667b695b20",
+      "type": "link",
+      "value": "/works/doubletree-by-hilton-bedroom-extensions-edinburgh-airport-coventry-bristol",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-a2a87983b87b8314",
+      "type": "link",
+      "value": "/works/refurbishment-rebranding-of-the-existing-hotel-at-twickenham-stadium",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-dfde6f9934675292",
+      "type": "link",
+      "value": "/works/new-build-hotels-ihg-indigo-kimpton-and-intercontinental-in-turks-caicos",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-47d22a48912ceb69",
+      "type": "link",
+      "value": "/works/four-point-by-sheraton-haymarket-edinburgh",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-bb8d71abb2308bf9",
+      "type": "link",
+      "value": "/works/hampton-by-hilton-hamilton-park-racecourse",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-435f8b32d28c187e",
+      "type": "link",
+      "value": "/works/new-build-affordable-housing-development-curries-yard-locharbriggs",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-845a13ed31270ded",
+      "type": "link",
+      "value": "/works/new-build-residential-development-pitlethie-road-leuchars-fife",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-83e7a72d71e70d24",
+      "type": "link",
+      "value": "/works/new-build-residential-development-mount-pleasant-old-kilpatrick",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c84791b158cf3fc4",
+      "type": "link",
+      "value": "/works/new-build-housing-phase-1a-laurieston2",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-d19ee8b1e82416ec",
+      "type": "link",
+      "value": "/works/muir-road-bellsmyre",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-2e506d450a1bc7a7",
+      "type": "link",
+      "value": "/works/watson-street-glasgow",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f3a1df3b1c0662e5",
+      "type": "link",
+      "value": "/works/hamiltonhill-green-infrastructure-works",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-22516a7b9407b5c9",
+      "type": "link",
+      "value": "/works/queens-quay-clydebank",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c43751b3487c08e7",
+      "type": "link",
+      "value": "/works/new-linburn-centre-new-build-sports-hall-and-housing-linburn",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-174c5a7cf266b0de",
+      "type": "link",
+      "value": "/works/unite-the-union-office-refurbishments-and-extensions-preston-slough-belfast-limerick-and-waterford",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f1b5fba803f75ce1",
+      "type": "link",
+      "value": "/works/highland-park-retail-unit-kirkwall-orkney",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-63c2ae320eb27617",
+      "type": "link",
+      "value": "/works/tennents-brewery-visitor-experience",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0fcaf017496c9e26",
+      "type": "link",
+      "value": "/works/refurbishment-and-rebranding-of-the-kings-hotel-brighton-into-a-four-point-flex-by-sheraton",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f2b3e3118afe527b",
+      "type": "link",
+      "value": "/works/cambo-stables-glasshouses",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f2a790d82b306e4c",
+      "type": "link",
+      "value": "/works/niddrie-road",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-91d09181ca0d2850",
+      "type": "link",
+      "value": "/works/kelvingrove-bandstand-amphitheatre",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-f3307e47f709c08b",
+      "type": "link",
+      "value": "/works/urban-rest-serviced-apartments-camden-london",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-b630b61ab8af229e",
+      "type": "link",
+      "value": "/works/10-year-ppms-for-national-logistics-company",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-afc7ae3f79ee6e10",
+      "type": "link",
+      "value": "/works/inverlochy-castle-hotel",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-a8725a7190bef155",
+      "type": "link",
+      "value": "/works/c-p-docklands",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-594f1b66c16ce969",
+      "type": "link",
+      "value": "/works/unit-g3-westway-renfrew",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-510c780ea396b556",
+      "type": "link",
+      "value": "/works/fair-isle-bird-observation-trust-fair-isle",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-d051655d35a30b32",
+      "type": "link",
+      "value": "/works/new-gorbals-housing-association-new-build-office-development",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-799af73a0a0e1673",
+      "type": "link",
+      "value": "/works/larkfield-early-learning-centre-greenock",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-26c033139b34ea86",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-dd0774b71020aec3",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-520b9870e99eb9e4",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-6e6971ef9848799c",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-72186a1da9624ea2",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-1598930ddd62e2d9",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0f04cabd684f08cc",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c35b5b1f037da28a",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c35b5b1f037da28a",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-7bac2a23069c5449",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-8170bc1634c5c955",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-66162838a0b3136c",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-0f9855d54cd72b40",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-c5a6de70a908a26f",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-243d1947fe5eac9e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-957c2092dc263689",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-49bd3d4140a72da4",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-a1aafa910656718a"
+    },
+    {
+      "id": "reference-350324411c614379",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/nbm-news",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-05d5e6bfebd0c152",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-94f44bedd61e0a0b",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-9389659d952ebd7b",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-750bc0ecd9c066b9",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-76258bacb528e031",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-ff5d0e74ef74d604",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-07584a0358c37ccd",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-180a05c055d58584",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-94f44bedd61e0a0b",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-12d3b19e4cf0b82e",
+      "type": "link",
+      "value": "/news/welcome-to-the-team-2",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-653fad9375d81b7e",
+      "type": "link",
+      "value": "/news/scott-bradshaw-achieves-frics",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-c9cdd6427340a37c",
+      "type": "link",
+      "value": "/news/national-apprenticeship-week",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-a2c5d49f8c20b441",
+      "type": "link",
+      "value": "/news/learning-places-scotland-conference-2025-key-insights",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-955bd05aacdcf136",
+      "type": "link",
+      "value": "/news/glasgow-city-council-sets-new-housing-design-standards",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-8d16eb9678cc49d9",
+      "type": "link",
+      "value": "/news/welcoming-our-new-apprentice-to-the-team",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-98fb46750035e97f",
+      "type": "link",
+      "value": "/news/building-forward-at-caledonia-road",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-7777ba3a3ff36afa",
+      "type": "link",
+      "value": "/news/building-the-future-how-nbm-is-supporting-tomorrows-quantity-surveyors",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-8f2a66d146781b40",
+      "type": "link",
+      "value": "/news/crieff-hydro-completes-ps5m-dining-transformation-with-nbms-support",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-e557136112b52910",
+      "type": "link",
+      "value": "/news/nbm-supporting-the-redevelopment-of-summerlee-museum",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-936b0b68e11416d1",
+      "type": "link",
+      "value": "/news/nbm-at-the-step-into-future-jobs-events---scottish-apprenticeship-week",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-bf372ed30d9a0ae5",
+      "type": "link",
+      "value": "/news/nbm-partner-with-crieff-hydro-for-landmark-investment",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-d9bca8372aad1cc1",
+      "type": "link",
+      "value": "/news/maryhill-housing-development",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-9e7bfba5d58aa0c2",
+      "type": "link",
+      "value": "/news/glasgow-meat-market-transformation",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-52464c2d42989486",
+      "type": "link",
+      "value": "/news/nbm-promotions",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-bacd24091d7898c9",
+      "type": "link",
+      "value": "/news/charity-five-a-side-event",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-57fadff84c469bef",
+      "type": "link",
+      "value": "/news/wheatley-handovers-refresher",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-94f44bedd61e0a0b",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-9389659d952ebd7b",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-76258bacb528e031",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-ff5d0e74ef74d604",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-07584a0358c37ccd",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-7d3c83d2bc34a6ab",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-180a05c055d58584",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-6beb3411757d1fd1",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-6beb3411757d1fd1",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-a26349d7ccc7027f",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-38532f3203672b4f",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-996cfe3daf6f0bfd",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-809078597447553c",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-0bbe3fde1296008e",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-501b19909d31ce66",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-cec005115c335c12",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-21076df31c91d346",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-285bb499c2df68de"
+    },
+    {
+      "id": "reference-b62f5f7fb0173582",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/contact",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-5883368505958a54",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-d5a74a28ce2c2ea4",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-0ba9e5c76e6fbaff",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-52c347d6406b441e",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-a8151d2f31498b68",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-7107382a068db6c1",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-074c79213c9d173f",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-58cedd936fa21eef",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-f10c7ccecd811c52",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-19d90bc7c2ca6a09",
+      "type": "link",
+      "value": "mailto:info@nbm.bz?subject=New%20Website%20Enquiry%20-%20nbm%20Construction%20Cost%20Consultants%20Ltd",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-3f803fc50727d774",
+      "type": "link",
+      "value": "https://maps.app.goo.gl/tgcAanwD6RiEGXBY6",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-f10c7ccecd811c52",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-19d90bc7c2ca6a09",
+      "type": "link",
+      "value": "mailto:info@nbm.bz?subject=New%20Website%20Enquiry%20-%20nbm%20Construction%20Cost%20Consultants%20Ltd",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-535e7cc2ebe5973b",
+      "type": "link",
+      "value": "https://maps.app.goo.gl/h2B9hGZpETsqDX668",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-f10c7ccecd811c52",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-1dd1bb784349b3b2",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-19d90bc7c2ca6a09",
+      "type": "link",
+      "value": "mailto:info@nbm.bz?subject=New%20Website%20Enquiry%20-%20nbm%20Construction%20Cost%20Consultants%20Ltd",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-d5a74a28ce2c2ea4",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-0ba9e5c76e6fbaff",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-a8151d2f31498b68",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-7107382a068db6c1",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-074c79213c9d173f",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-bfb94b3d8cbecf59",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-58cedd936fa21eef",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-f10c7ccecd811c52",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-f10c7ccecd811c52",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-845ac1fa123a7e50",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-b3991d279a57dbee",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-1dd1bb784349b3b2",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-67dc1ac7216cab6d",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-e0e94d551c02ba5b",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-1b437d640cf5bc0b",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-8e710d2728792340",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-7bdccf377962740d",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-225fbe320a0d9dc1"
+    },
+    {
+      "id": "reference-f5e1842c1b41d350",
+      "type": "source-url",
+      "value": "https://www.nbm.bz/works/refurbishment-of-the-met-hotel-leeds",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-4c6e548fb9f421db",
+      "type": "link",
+      "value": "#Top",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-55372443dfb67ebb",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-f2e78deb39576b9e",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-69ca1bebcae15b64",
+      "type": "link",
+      "value": "/our-team",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-4dc5f4f78d440842",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-947f1b34449dc90f",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-a1961b27e9df0fd2",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-525063a46b7a20d8",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-947f1b34449dc90f",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-91afd360d7b99251",
+      "type": "link",
+      "value": "mailto:neil.simpson@nbm.bz?subject=New%20Website%20Enquiry%20-%20nbm%20Construction%20Cost%20Consultants%20Ltd",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-e2a3fb8849244f61",
+      "type": "link",
+      "value": "/works/new-build-affordable-housing-development-curries-yard-locharbriggs",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-183034d778675091",
+      "type": "link",
+      "value": "/works/refurbishment-rebranding-of-the-existing-hotel-at-twickenham-stadium",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-369c65ecb68b7023",
+      "type": "link",
+      "value": "/works/highland-park-retail-unit-kirkwall-orkney",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-55372443dfb67ebb",
+      "type": "link",
+      "value": "/",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-f2e78deb39576b9e",
+      "type": "link",
+      "value": "/about",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-4dc5f4f78d440842",
+      "type": "link",
+      "value": "/services",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-947f1b34449dc90f",
+      "type": "link",
+      "value": "/projects",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-a1961b27e9df0fd2",
+      "type": "link",
+      "value": "/nbm-news",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-5fb2f9b813d486fd",
+      "type": "link",
+      "value": "/vacancies-at-nbm",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-525063a46b7a20d8",
+      "type": "link",
+      "value": "/contact",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-1613daf052e8d108",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-1613daf052e8d108",
+      "type": "link",
+      "value": "tel:01413331836",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-6f4c4ce0a800f4ac",
+      "type": "link",
+      "value": "https://www.linkedin.com/company/nbm-construction-cost-consultants-limited",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-627b3867e48736df",
+      "type": "link",
+      "value": "https://www.rics.org/uk/",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-49ed5fd382603aab",
+      "type": "link",
+      "value": "/privacy-policy",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-8471be406ab98540",
+      "type": "link",
+      "value": "https://www.stuncreative.co.uk",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-377f93eb7c8e3952",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/68c17b02c2d50f2f9920426f_NBM_Logo-no%20tagline.png",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-e2af851f8f2c0cf4",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/69f26a8ccdf0245458a6fcbd_Met%20Hotel%20exterior-1-medium.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-07a4503bfc48efb6",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/69f26c503c71ce020870d0f3_Met%20Hotel-bar.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-557b0126080cfbab",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/69f26aa843123c070a3546f4_Met%20Hotel-lounge.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-78c31304d994d15c",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/69f26ebe92b36f08d18c09ae_Met%20Hotel-bedroom.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-1e5f641ec3155bd8",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/69f26f10bcc9506616aa3194_Met%20Hotel-ballroom.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-4ffe9a07c2778001",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/69f26c68fb27403baa942654_Met%20Hotel%20exterior-2-medium.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-5defcab150eb81e0",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be3815aaed189be/66bf8e6e7bb05df5b7ca753c_Neil_Simpson_Avatar.jpg",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-89aa0db4355189c9",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e5d31d7be3813e99d18a3d_linkedin-icon.svg",
+      "label": "LinkedIn",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-291b3b13aecf7e3c",
+      "type": "image-reference",
+      "value": "https://cdn.prod.website-files.com/61e5d31d7be38126ecd18987/61e898c1e4710151adde18d9_RICS-Logo.png",
+      "label": "RICS",
+      "sourceId": "source-d33e8556df74796f"
+    },
+    {
+      "id": "reference-8bc25ce46dec1e7c",
+      "type": "image-reference",
+      "value": "https://px.ads.linkedin.com/collect/?pid=9556266&fmt=gif",
+      "sourceId": "source-d33e8556df74796f"
+    }
+  ],
+  "requirements": [],
+  "research": [
+    {
+      "id": "research-a3c296f75df8f567",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-f19d64ac4fa91009",
+      "title": "nbm Construction Cost Consultants | Chartered Quantity Surveyors & Cost Consultants – Glasgow & Edinburgh | Building Surveyor Services",
+      "description": "nbm are Scotland&#x27;s Leading Quantity Surveyor and ranks as one of the largest QS practices in Scotland, with offices in Edinburgh and Glasgow. We offer expert Quantity Surveying, Cost Management, and Project Management services tailored to your needs.",
+      "canonical": "",
+      "h1Count": 1,
+      "imageCount": 8,
+      "imagesMissingAlt": 2,
+      "jsonLdTypes": [],
+      "issues": [
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-334d7e463ee2690d",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-4ab6a89f71caa78d",
+      "title": "Expert Cost Consultancy and QS services in Glasgow & Edinburgh",
+      "description": "With over 40 years of expertise, we provide customised solutions from feasibility to project completion, prioritising quality and client care.",
+      "canonical": "",
+      "h1Count": 3,
+      "imageCount": 34,
+      "imagesMissingAlt": 32,
+      "jsonLdTypes": [],
+      "issues": [
+        "multiple-h1",
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-0b419b2ffce1a4b4",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-b2f2bdd39330ca84",
+      "title": "nbm Team | Quantity Surveying & Project Management Specialists",
+      "description": "Meet our experienced team of Chartered Quantity Surveyors and Cost Consultants, delivering expert project management and consultancy services across the UK.",
+      "canonical": "",
+      "h1Count": 2,
+      "imageCount": 18,
+      "imagesMissingAlt": 2,
+      "jsonLdTypes": [],
+      "issues": [
+        "multiple-h1",
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-75e62bf33888d433",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-5ef254552c079e8e",
+      "title": "Services – Chartered Quantity Surveyors & Cost Consultants | nbm UK",
+      "description": "Expert Chartered Quantity Surveying, Cost Consultancy, Project Management, Building Surveying &amp; Principal Designer services for UK construction projects from £100K to over £75M. Trusted for over 40 years.",
+      "canonical": "",
+      "h1Count": 1,
+      "imageCount": 4,
+      "imagesMissingAlt": 2,
+      "jsonLdTypes": [],
+      "issues": [
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-05f2df859a107a4a",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-a1aafa910656718a",
+      "title": "nbm Projects | Quantity Surveying & Project Management Specialists",
+      "description": "Explore nbm’s project portfolio highlighting Quantity Surveying, Cost Consultancy, and Project Management expertise across commercial, residential, and public sector developments in the UK.",
+      "canonical": "",
+      "h1Count": 1,
+      "imageCount": 4,
+      "imagesMissingAlt": 2,
+      "jsonLdTypes": [],
+      "issues": [
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-f901434a8e17ef3f",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-285bb499c2df68de",
+      "title": "Latest News | nbm Chartered Quantity Surveyors & Cost Consultants",
+      "description": "Stay updated with the latest news and developments from nbm construction cost consultants. experts in Chartered Quantity Surveying and Project Management across the UK.",
+      "canonical": "",
+      "h1Count": 2,
+      "imageCount": 4,
+      "imagesMissingAlt": 2,
+      "jsonLdTypes": [],
+      "issues": [
+        "multiple-h1",
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-e8024afbda6aa6c4",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-225fbe320a0d9dc1",
+      "title": "Contact | nbm QS Services & Cost Consultants, Glasgow, Edinburgh, Scotland and UK",
+      "description": "Get in touch with nbm for QS, Quantity Surveyor, Cost Management and Project Management services. Offices in Glasgow and Edinburgh, available for UK and European projects.",
+      "canonical": "",
+      "h1Count": 0,
+      "imageCount": 4,
+      "imagesMissingAlt": 2,
+      "jsonLdTypes": [],
+      "issues": [
+        "missing-h1",
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-5b0224565dbc6883",
+      "type": "existing-site-seo-snapshot",
+      "sourceId": "source-d33e8556df74796f",
+      "title": "Refurbishment of The Met Hotel Leeds | nbm Construction Cost Consultants",
+      "description": "NBM provided Project Management and Quantity Surveying services on the major refurbishment of The Met Hotel Leeds, a 125-bedroom landmark hotel in the heart of the city centre. Originally opened in 1899, the project involved the transformation and repositioning of the hotel, combining the restoration of its historic character with new interiors, refreshed public areas, upgraded meeting and event facilities, and the introduction of Gott’s Bar &amp; Kitchen.",
+      "canonical": "",
+      "h1Count": 0,
+      "imageCount": 11,
+      "imagesMissingAlt": 9,
+      "jsonLdTypes": [],
+      "issues": [
+        "missing-h1",
+        "missing-canonical",
+        "images-missing-alt"
+      ]
+    },
+    {
+      "id": "research-2d910c89b4a06383",
+      "type": "seo-summary",
+      "pageCount": 8,
+      "pagesWithIssues": 8,
+      "issueCounts": {
+        "missing-canonical": 8,
+        "images-missing-alt": 8,
+        "multiple-h1": 3,
+        "missing-h1": 2
+      }
+    },
+    {
+      "id": "research-0aba1bf45985698c",
+      "type": "local-seo-inputs",
+      "addressFactId": "fact-6271fcb7c32936a6",
+      "phoneFactId": "fact-f1914394a584f13e",
+      "serviceAreas": [
+        "Glasgow",
+        "Edinburgh"
+      ],
+      "generatedLocations": []
+    },
+    {
+      "id": "research-8a9362386224b590",
+      "type": "lead-generation-inputs",
+      "contactMethods": [
+        "email",
+        "phone",
+        "website"
+      ],
+      "serviceCount": 4,
+      "testimonialCount": 0,
+      "accreditationCount": 0,
+      "inventedClaimsAllowed": false
+    }
+  ],
+  "generatedCopy": [],
+  "packHash": "e7c387bc40db2a2070e65d1d1206f6dab51597854b4823e4e4635d60ab836657"
+}

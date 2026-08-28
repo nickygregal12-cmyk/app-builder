@@ -155,6 +155,20 @@
       "title": "The factory proposed a surface it had no content for",
       "guidance": "A default surface with no source-backed content is not published. Supply source material for it, or accept that this project does not need that page."
     },
+    "hard-constraint-breached": {
+      "category": "behavior",
+      "severity": "blocker",
+      "owningRole": "product-specification",
+      "title": "A constraint the project declared is not being met",
+      "guidance": "The operator set this as a hard constraint and a check that binds it is reporting in this build. Fix the underlying finding, or take the constraint out of intake — it is not a preference the build gets to weigh against something else."
+    },
+    "hard-constraint-unenforced": {
+      "category": "behavior",
+      "severity": "major",
+      "owningRole": "product-specification",
+      "title": "A declared hard constraint has nothing enforcing it here",
+      "guidance": "Either the evidence belongs to a producer this audit cannot see, or nothing in the factory checks this topic at all. It is reported rather than assumed satisfied: a constraint nobody verifies is the state manifest.constraints.hard was in before anything read it."
+    },
     "declared-conversion-unsupported": {
       "category": "behavior",
       "severity": "major",

@@ -862,6 +862,18 @@ export class FactoryService {
   }
 
   /**
+   * The topics that say which check binds a declared hard constraint.
+   *
+   * Absent, the audit reports no constraint coverage at all rather than
+   * reporting every constraint as satisfied. A missing registry must not read
+   * as a clean bill of health.
+   */
+  hardConstraintTopics() {
+    const file = path.resolve(process.cwd(), 'config/hard-constraint-topics.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  }
+
+  /**
    * What the live build needs, and what is worth proving about it.
    *
    * The state matrix and journey ledger are Phase 3.8K's derivations, read
@@ -874,7 +886,12 @@ export class FactoryService {
     const rules = this.launchReadinessRules();
     if (!composition || !rules) return null;
 
-    const audit = auditLaunchReadiness({ composition, rules, manifest: this.getManifest(projectId) });
+    const audit = auditLaunchReadiness({
+      composition,
+      rules,
+      manifest: this.getManifest(projectId),
+      hardConstraintTopics: this.hardConstraintTopics(),
+    });
     const evidence = this.listRenderedEvidence(projectId).at(-1) ?? null;
     const stateMatrix = evidence ? applyEvidenceToStateMatrix(audit.stateMatrix, evidence) : audit.stateMatrix;
 

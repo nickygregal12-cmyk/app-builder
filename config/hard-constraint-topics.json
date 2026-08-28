@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "description": [
+    "answers.hard_constraints reaches manifest.constraints.hard and, until this file existed, stopped there. Four nbm constraints were carried through intake, the Build Contract and the manifest, and nothing in the factory read one of them.",
+    "A hard constraint is free text, so nothing here pretends to understand it. What this registry does is name the deterministic check that already binds each topic a constraint can be about, so a constraint is matched to its enforcement rather than interpreted. A constraint that matches no topic is reported as unenforceable rather than assumed satisfied, which is the whole point: the honest answer to 'is this being enforced?' is sometimes no.",
+    "`verifiedBy.producer` is a producer id from config/gate-producers.json. When it is launch-readiness the audit can answer now, because those checks run in the same pass. Any other producer means the evidence exists somewhere the audit cannot see, and the constraint is reported as needing that evidence rather than silently marked clean.",
+    "Add a topic when a real constraint on a real project matches nothing. Do not add match terms to make a specific sentence classify; a topic that only ever matches one project's wording is a hard-coded answer wearing a registry's clothes."
+  ],
+  "topics": [
+    {
+      "id": "unsupported-claims",
+      "title": "Nothing is published as fact that no source backs",
+      "match": [
+        "unsupported",
+        "unverified",
+        "unsubstantiated",
+        "no claims",
+        "performance claim",
+        "client claim",
+        "experience claim",
+        "award",
+        "accreditation",
+        "testimonial",
+        "case stud",
+        "exaggerat",
+        "invent"
+      ],
+      "verifiedBy": {
+        "producer": "launch-readiness",
+        "checks": [
+          "generated-claim-without-source"
+        ]
+      },
+      "why": "Principle 7. generated-claim-without-source is the check that fires when a deterministic default became a sentence a reader would take as a fact about the business, which is exactly what a no-unsupported-claims constraint forbids."
+    },
+    {
+      "id": "asset-rights",
+      "title": "Only imagery the business may publish is published",
+      "match": [
+        "photograph",
+        "photo",
+        "image",
+        "imagery",
+        "picture",
+        "logo",
+        "rights",
+        "licen",
+        "copyright",
+        "republish",
+        "republication",
+        "stock"
+      ],
+      "verifiedBy": {
+        "producer": "asset-rights",
+        "gate": "provenance",
+        "checks": [
+          "asset-rights-check"
+        ]
+      },
+      "why": "Publication rights are decided per asset and proven by the asset-rights producer, not by composed output. The launch audit can see that a section expects a photograph; it cannot see whether the business is allowed to publish the one that landed there."
+    },
+    {
+      "id": "responsive-composition",
+      "title": "The composition is designed at small widths, not squeezed",
+      "match": [
+        "mobile",
+        "phone",
+        "handset",
+        "responsive",
+        "tablet",
+        "breakpoint",
+        "small screen",
+        "collapsed",
+        "viewport"
+      ],
+      "verifiedBy": {
+        "producer": "generated-checks",
+        "gate": "responsive",
+        "checks": [
+          "rendered-evidence"
+        ]
+      },
+      "why": "Whether a phone layout feels designed or collapsed is a claim about rendered pixels at a declared width. Composition cannot answer it, and a composition-time guess would be the kind of self-assessment rule 17 exists to prevent."
+    },
+    {
+      "id": "hosting-and-data-location",
+      "title": "Where the site and its data are allowed to run",
+      "match": [
+        "hosting",
+        "hosted",
+        "data residency",
+        "on-premise",
+        "on premise",
+        "self-host",
+        "gdpr",
+        "region",
+        "eu only",
+        "uk only"
+      ],
+      "verifiedBy": {
+        "producer": null,
+        "gate": "deployment"
+      },
+      "why": "Recorded as a real topic with no deterministic check behind it yet. A constraint matching this is reported as unenforced, which is the truthful answer while nothing verifies deployment region."
+    }
+  ]
+}

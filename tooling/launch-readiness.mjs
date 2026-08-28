@@ -40,7 +40,10 @@ const rules = JSON.parse(fs.readFileSync(path.join(root, 'config/launch-readines
 const manifestPath = path.join(projectRoot, '.app-builder/manifest.json');
 const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, 'utf8')) : null;
 
-const report = auditLaunchReadiness({ composition, rules, manifest });
+const topicsPath = path.join(root, 'config/hard-constraint-topics.json');
+const hardConstraintTopics = fs.existsSync(topicsPath) ? JSON.parse(fs.readFileSync(topicsPath, 'utf8')) : null;
+
+const report = auditLaunchReadiness({ composition, rules, manifest, hardConstraintTopics });
 
 if (args.includes('--json')) {
   console.log(JSON.stringify(report, null, 2));
@@ -56,6 +59,13 @@ if (args.includes('--json')) {
   }
   if (report.evidenceGaps.length > 0) {
     console.log(`  ${report.evidenceGaps.length} state/journey step(s) need executable evidence; run browser acceptance to close them.`);
+  }
+  if (report.hardConstraints.length > 0) {
+    console.log(`  declared hard constraints: ${report.hardConstraints.length}`);
+    for (const entry of report.hardConstraints) {
+      console.log(`      [${entry.status}] ${entry.constraint}`);
+      console.log(`          ${entry.detail}`);
+    }
   }
 }
 

@@ -14,7 +14,9 @@
  * that judgement stays with rendered evidence and the design critic.
  */
 
-const PLACEHOLDER = /\b(lorem ipsum|tbd|to be decided|coming soon|your company|your business|example\.com|placeholder|xxx+)\b/i;
+import { coverHardConstraints, coverageSummary } from './requirement-coverage.mjs';
+
+const PLACEHOLDER =/\b(lorem ipsum|tbd|to be decided|coming soon|your company|your business|example\.com|placeholder|xxx+)\b/i;
 const NOT_FOUND = /(^|\/)(404|not-found)$/;
 
 /**
@@ -430,7 +432,7 @@ export function deriveJourneys(composition, rules) {
   return journeys;
 }
 
-export function auditLaunchReadiness({ composition, rules, manifest = null } = {}) {
+export function auditLaunchReadiness({ composition, rules, manifest = null, hardConstraintTopics = null } = {}) {
   if (!composition?.pages) throw new Error('Launch readiness requires a composition with pages.');
   if (!rules?.checks) throw new Error('Launch readiness requires a rule registry.');
 
@@ -466,6 +468,26 @@ export function auditLaunchReadiness({ composition, rules, manifest = null } = {
     }
   }
 
+  // Hard constraints are read last, on purpose: a constraint is breached when a
+  // check that binds it is already reporting, so this needs the findings the
+  // rest of the audit produced rather than a second opinion about the same
+  // composition.
+  const hardConstraints = hardConstraintTopics
+    ? coverHardConstraints({ manifest, topics: hardConstraintTopics.topics ?? hardConstraintTopics, findings })
+    : [];
+  for (const entry of hardConstraints) {
+    if (entry.status === 'breached') {
+      findings.push(finding(rules, 'hard-constraint-breached', 'constraints',
+        `The project declares "${entry.constraint}". ${entry.detail}`));
+    } else if (entry.status === 'unclassified' || entry.status === 'unenforced') {
+      evidenceGaps.push(finding(rules, 'hard-constraint-unenforced', 'constraints',
+        `The project declares "${entry.constraint}". ${entry.detail}`));
+    } else if (entry.status === 'needs-executable-evidence') {
+      evidenceGaps.push(finding(rules, 'hard-constraint-unenforced', 'constraints',
+        `The project declares "${entry.constraint}". ${entry.detail}`));
+    }
+  }
+
   const order = rules.severityOrder ?? ['minor', 'major', 'blocker'];
   findings.sort((a, b) => order.indexOf(b.severity) - order.indexOf(a.severity)
     || a.category.localeCompare(b.category) || a.check.localeCompare(b.check));
@@ -487,10 +509,15 @@ export function auditLaunchReadiness({ composition, rules, manifest = null } = {
     launchable: counts.blocker === 0,
     // Only defects predict an edit. Blockers and majors are what a reviewer would actually change.
     predictedManualEdits: counts.blocker + counts.major,
-    summary: { ...counts, byCategory, evidenceGaps: evidenceGaps.length },
+    summary: { ...counts, byCategory, evidenceGaps: evidenceGaps.length, hardConstraints: coverageSummary(hardConstraints) },
     findings,
     evidenceGaps,
     stateMatrix,
     journeys,
+    // The requirement-coverage ledger for this build. It is reported whole
+    // rather than only as findings, because "two of your four constraints are
+    // enforced and here is what enforces them" is the answer, and a list of
+    // complaints is only half of it.
+    hardConstraints,
   };
 }

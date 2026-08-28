@@ -402,3 +402,120 @@ test('only a section that actually writes creates write states to prove', () => 
   assert.ok(!about.axes.includes('write'),
     'a call-to-action panel submits nothing, so it must not demand submitting/succeeded/failed evidence');
 });
+
+// ---------------------------------------------------------------------------
+// Declared hard constraints
+//
+// answers.hard_constraints reached manifest.constraints.hard and stopped. The
+// four constraints on the frozen nbm project survived intake, the Build
+// Contract and the manifest, and nothing in the factory read one of them.
+// These cover the consumer, and — more importantly — cover the cases where the
+// honest answer is "nothing is enforcing this", because a ledger that can only
+// report success is the silent drop again with better manners.
+// ---------------------------------------------------------------------------
+
+const topics = readJson('config/hard-constraint-topics.json');
+const withConstraints = (hard, overrides = {}) => auditLaunchReadiness({
+  composition: composition(overrides),
+  rules,
+  manifest: { schemaVersion: 2, constraints: { hard } },
+  hardConstraintTopics: topics,
+});
+
+test('every declared hard constraint appears in the coverage ledger', () => {
+  // The real nbm constraints, verbatim.
+  const report = withConstraints([
+    'No unsupported performance, client, award, accreditation or experience claims',
+    'No republication of nbm website photographs, logo files or staff photographs',
+    'Imagery must be genuinely relevant and rights-safe',
+    'Mobile must feel designed rather than collapsed',
+  ]);
+
+  // The planted failure: before a consumer existed this was `undefined`.
+  assert.equal(report.hardConstraints.length, 4, 'every declared constraint is accounted for');
+  assert.deepEqual(report.summary.hardConstraints,
+    { enforced: 1, breached: 0, 'needs-executable-evidence': 3, unenforced: 0, unclassified: 0 });
+
+  // Each one names the check that binds it rather than being merely echoed.
+  for (const entry of report.hardConstraints) {
+    assert.ok(entry.topic, `"${entry.constraint}" classified as nothing`);
+    assert.ok(entry.detail.length > 0);
+  }
+  const claims = report.hardConstraints.find((entry) => entry.topic === 'unsupported-claims');
+  assert.deepEqual(claims.checks, ['generated-claim-without-source']);
+  assert.equal(claims.verifiedBy, 'launch-readiness');
+});
+
+test('a hard constraint is breached when a check that binds it is reporting', () => {
+  // A generated sentence that reads as a fact about the business, in a section
+  // whose job is to prove things, is exactly what "no unsupported claims"
+  // forbids — and the audit already detects it.
+  const base = composition();
+  base.sections.push({
+    id: 'proof', type: 'proof-grid', purpose: 'Prove', variant: 'primary', assetIds: ['a'], actions: [],
+    bindings: [{ key: 'stat', value: 'Trusted by 400 businesses', origin: 'generated', sourceIds: [], factIds: [], entityIds: [], generated: true }],
+  });
+  base.pages[0].sectionIds.push('proof');
+  const report = auditLaunchReadiness({
+    composition: base,
+    rules,
+    manifest: { schemaVersion: 2, constraints: { hard: ['No unsupported performance or client claims'] } },
+    hardConstraintTopics: topics,
+  });
+
+  assert.ok(checks(report).includes('generated-claim-without-source'), 'the underlying check must fire for this test to mean anything');
+  const entry = report.hardConstraints[0];
+  assert.equal(entry.status, 'breached');
+  const finding = report.findings.find((item) => item.check === 'hard-constraint-breached');
+  assert.ok(finding, 'a breached hard constraint is a finding, not a note');
+  assert.equal(finding.severity, 'blocker');
+  // The operator's own words are quoted back, so the report says which
+  // constraint is broken rather than only which check failed.
+  assert.match(finding.detail, /No unsupported performance or client claims/);
+  assert.equal(report.launchable, false);
+});
+
+test('a hard constraint nothing can check is reported, never assumed satisfied', () => {
+  const report = withConstraints(['The site must be finished before the trade show in March']);
+  assert.equal(report.hardConstraints[0].status, 'unclassified');
+  assert.equal(report.hardConstraints[0].topic, null);
+  const gap = report.evidenceGaps.find((item) => item.check === 'hard-constraint-unenforced');
+  assert.ok(gap, 'an unenforceable constraint is surfaced as an evidence gap');
+  // It is not a defect somebody edits the site to fix, so it must not inflate
+  // the Phase 3.8E manual-edit prediction.
+  assert.ok(!checks(report).includes('hard-constraint-unenforced'));
+});
+
+test('a constraint whose evidence belongs to another producer is routed, not marked clean', () => {
+  const report = withConstraints(['Mobile must feel designed rather than collapsed']);
+  const entry = report.hardConstraints[0];
+  assert.equal(entry.status, 'needs-executable-evidence');
+  assert.equal(entry.verifiedBy, 'generated-checks');
+  assert.ok(!report.findings.some((item) => item.check === 'hard-constraint-breached'),
+    'an audit that cannot see the evidence must not claim the constraint is broken either');
+});
+
+test('a missing topic registry reports no coverage rather than a clean bill of health', () => {
+  const report = auditLaunchReadiness({
+    composition: composition(),
+    rules,
+    manifest: { schemaVersion: 2, constraints: { hard: ['No unsupported claims'] } },
+    hardConstraintTopics: null,
+  });
+  assert.deepEqual(report.hardConstraints, []);
+  assert.deepEqual(report.summary.hardConstraints,
+    { enforced: 0, breached: 0, 'needs-executable-evidence': 0, unenforced: 0, unclassified: 0 });
+});
+
+test('every topic names a producer the gate registry declares, or none at all', () => {
+  const producers = new Set(Object.keys(readJson('config/gate-producers.json').producers));
+  for (const topic of topics.topics) {
+    const producer = topic.verifiedBy?.producer ?? null;
+    if (producer === null) continue;
+    assert.ok(producers.has(producer), `topic ${topic.id} names unknown producer ${producer}`);
+  }
+  // A topic that matches nothing on any real project is a rule nobody uses.
+  for (const topic of topics.topics) {
+    assert.ok(Array.isArray(topic.match) && topic.match.length > 0, `topic ${topic.id} matches nothing`);
+  }
+});

@@ -157,12 +157,10 @@ jobs:
       # refuses; this settles whether a person can use the product sitting on
       # it, and whether what the policies decided is what reaches the screen.
       # It runs in this job because the stack it needs is already up.
-      - name: Apply the generated schema to the running stack
-        run: |
-          for fragment in .tmp/generated-acceptance-b2b-saas/supabase/schema/*.sql; do
-            psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f "$fragment"
-          done
-
+      # No schema step: `supabase start` already applied the generated fragments,
+      # because `acceptance:supabase-rls:prepare` writes them into this
+      # project's migrations before the stack comes up. Applying them again
+      # fails on the first `create policy`, which has no `if not exists`.
       - name: Seed deterministic tenants and identities
         run: |
           SERVICE_KEY="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json | jq -r '.SERVICE_ROLE_KEY')"

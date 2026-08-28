@@ -224,3 +224,118 @@ test('the not-found route is not audited as a journey entry or a missing photogr
   assert.ok(!report.journeys.some((journey) => journey.entry === '/404'),
     'a 404 is where a journey goes wrong, not where one starts');
 });
+
+// ---------------------------------------------------------------------------
+// Declared conversion goals
+//
+// The defect these cover is recorded in config/factory-status.json: composition
+// resolved one action for the whole site and returned on the first goal that
+// matched, so a pack declaring call, email and contact form shipped one
+// identical Call button everywhere and lost the other two without saying so.
+// Both independent nbm reviews named the symptom. The rule being asserted is
+// the same one `declaredProofGap` already enforces for proof — a declared
+// requirement is satisfied, or reported as unsatisfied, and never dropped.
+// ---------------------------------------------------------------------------
+
+/** Every action anywhere in the product, wherever composition placed it. */
+function placedChannels(composition) {
+  const hrefs = [
+    ...composition.pages.flatMap((page) => (page.primaryAction ? [page.primaryAction.href] : [])),
+    ...composition.sections.flatMap((section) => section.actions.map((action) => action.href)),
+  ];
+  return new Set(hrefs.map((href) => (href.startsWith('tel:') ? 'call' : href.startsWith('mailto:') ? 'email' : 'route')));
+}
+
+test('every declared conversion goal the sources can back reaches the product', () => {
+  const manifest = marketingManifest({
+    company: {
+      ...marketingManifest().company,
+      contactDetails: { phone: '0141 333 1836', email: 'hello@example.com' },
+      conversionGoals: ['call', 'email', 'contact form'],
+    },
+  });
+  const composition = composeProject({ manifest });
+
+  // The planted failure. Before the fix this set was exactly {'call'}: the first
+  // matching goal won and the other two were discarded in silence.
+  assert.deepEqual([...placedChannels(composition)].sort(), ['call', 'email', 'route'],
+    'a declared conversion goal that can be backed must reach the product');
+
+  // And nothing was quietly reported as a gap instead of being placed.
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('declared-conversion-unsupported:')), []);
+});
+
+test('a declared conversion goal the sources cannot back is reported, not dropped', () => {
+  // nbm's real shape: call, email and contact form declared, and no approved
+  // email address anywhere in the pack.
+  const manifest = marketingManifest({
+    company: {
+      ...marketingManifest().company,
+      contactDetails: { phone: '0141 333 1836' },
+      conversionGoals: ['call', 'email', 'contact form'],
+    },
+  });
+  const composition = composeProject({ manifest });
+
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('declared-conversion-unsupported:')),
+    ['declared-conversion-unsupported:email']);
+  // The goal is missing because the fact is missing, so nothing may invent one.
+  assert.ok(!composition.sections.some((section) => section.actions.some((action) => action.href.startsWith('mailto:'))),
+    'an unsupported email goal must never be satisfied with an invented address');
+  // The two that are supported still ship.
+  assert.deepEqual([...placedChannels(composition)].sort(), ['call', 'route']);
+
+  const rules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
+  const report = auditLaunchReadiness({ composition, rules });
+  const finding = report.findings.find((item) => item.check === 'declared-conversion-unsupported');
+  assert.ok(finding, 'the launch audit reports the gap as an owned finding, not an unrecognised warning string');
+  assert.equal(finding.severity, 'major');
+});
+
+test('conversion channels are placed by context rather than printed on every section', () => {
+  const manifest = marketingManifest({
+    company: {
+      ...marketingManifest().company,
+      contactDetails: { phone: '0141 333 1836', email: 'hello@example.com' },
+      conversionGoals: ['call', 'email', 'contact form'],
+    },
+  });
+  const composition = composeProject({ manifest });
+  const section = (id) => composition.sections.find((item) => item.id === id);
+
+  // Hero: one appropriate primary action.
+  assert.equal(section('page-home-hero').actions.length, 1);
+  // Closing CTA: the primary plus one genuinely different route, never a wall.
+  assert.equal(section('page-home-cta').actions.length, 2);
+  assert.ok(new Set(section('page-home-cta').actions.map((action) => action.href)).size === 2);
+  // The contact route is where somebody goes to choose a channel, so it offers
+  // every supported one.
+  assert.equal(section('page-contact-hero').actions.length, 2);
+
+  // No action anywhere links to the page it is already on.
+  for (const page of composition.pages) {
+    for (const id of page.sectionIds) {
+      for (const action of section(id).actions) {
+        assert.notEqual(action.href, page.path, `${id} links to the page it is on`);
+      }
+    }
+  }
+});
+
+test('a phone action carries the number a visitor is about to ring', () => {
+  const manifest = marketingManifest({
+    company: { ...marketingManifest().company, contactDetails: { phone: '0141 333 1836' }, conversionGoals: ['call'] },
+  });
+  const composition = composeProject({ manifest });
+  assert.deepEqual(composition.pages[0].primaryAction, { label: 'Call 0141 333 1836', href: 'tel:01413331836' });
+});
+
+test('a manifest that declares no conversion goal still gets one route to the business', () => {
+  const manifest = marketingManifest({
+    company: { ...marketingManifest().company, contactDetails: { email: 'hello@example.com' }, conversionGoals: [] },
+  });
+  const composition = composeProject({ manifest });
+  // Unchanged fallback: the contact surface first, then email, then phone.
+  assert.deepEqual(composition.pages[0].primaryAction, { label: 'Contact', href: '/contact' });
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('declared-conversion-unsupported:')), []);
+});

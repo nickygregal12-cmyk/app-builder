@@ -220,18 +220,123 @@ function companyNameBinding(pack, manifest) {
     ?? manifestBinding('title', manifest?.company?.identity?.name ?? manifest?.project?.name ?? 'Project');
 }
 
-function primaryAction(manifest, surfaces, pack) {
-  const goals = list(manifest?.company?.conversionGoals).map((item) => String(item).toLowerCase());
+/**
+ * The ways a visitor can be handed to the business, in the order a goal can be
+ * matched to one.
+ *
+ * `matches` is tried in this order, so a goal naming two channels — "telephone
+ * enquiry" — resolves to the more specific one rather than to whichever regular
+ * expression happened to be written first.
+ */
+const CONVERSION_CHANNELS = [
+  {
+    id: 'call',
+    matches: (goal) => /\bcall\b|phone|telephone|\bring\b/.test(goal),
+    unmet: 'no approved telephone number',
+    // The number belongs in the label. A column of identical "Call" buttons is
+    // what both nbm reviews named, and somebody deciding whether to ring a
+    // practice wants to read the number before committing to the tap.
+    resolve: ({ contact }) => {
+      const phone = String(contact.phone ?? '').trim();
+      return phone ? { label: `Call ${phone}`, href: `tel:${phone.replace(/\s+/g, '')}` } : null;
+    },
+  },
+  {
+    id: 'email',
+    matches: (goal) => /e-?mail/.test(goal),
+    unmet: 'no approved email address',
+    resolve: ({ contact }) => {
+      const email = String(contact.email ?? '').trim();
+      return email ? { label: `Email ${email}`, href: `mailto:${email}` } : null;
+    },
+  },
+  {
+    id: 'enquiry',
+    matches: (goal) => /form|enquir|inquir|quote|book|appointment|message|contact/.test(goal),
+    unmet: 'no contact, quote or booking surface to send the visitor to',
+    resolve: ({ contactSurface, goal }) => {
+      if (!contactSurface) return null;
+      const label = /quote/.test(goal) ? 'Request a quote'
+        : /book|appointment/.test(goal) ? 'Book an appointment'
+        : /form|enquir|inquir|message/.test(goal) ? 'Send an enquiry'
+        : 'Contact';
+      return { label, href: `/${slugify(contactSurface)}` };
+    },
+  },
+];
+
+/**
+ * Resolve every declared conversion goal against what the approved truth backs.
+ *
+ * This replaced `primaryAction`, which answered the question once for the whole
+ * site: it returned on the first goal that matched, so a pack declaring call,
+ * email and contact form published one identical Call button on every page and
+ * discarded the other two without recording that it had. Two declared
+ * requirements reached the manifest and left no trace in the product — the same
+ * silent-drop shape as `constraints.hard`.
+ *
+ * A goal now lands in exactly one of two places. Either it is satisfied, and
+ * composition can put that channel where it belongs, or it is unsupported and
+ * carries the reason it could not be met, which `warningsFor` publishes the way
+ * `declaredProofGap` publishes a proof kind that was promised and never
+ * arrived. What a goal may not do is disappear.
+ *
+ * Resolving is not the same as rendering. This returns what is *available*;
+ * where each channel appears is a composition decision, and putting all of them
+ * on every section would answer one review finding by creating a worse one.
+ */
+function conversionPlan(manifest, surfaces, pack) {
+  const declared = list(manifest?.company?.conversionGoals).map((item) => String(item).trim()).filter(Boolean);
   const contact = Object.fromEntries(contactBindings(pack, manifest).map((item) => [item.key, item.value]));
-  if (goals.some((goal) => goal.includes('call')) && contact.phone) return { label: 'Call', href: `tel:${String(contact.phone).replace(/\s+/g, '')}` };
-  if (goals.some((goal) => goal.includes('email')) && contact.email) return { label: 'Email', href: `mailto:${contact.email}` };
-  const contactSurface = surfaces.find((surface) => /contact|quote|book/i.test(surface));
-  if (contactSurface) return { label: goals.some((goal) => goal.includes('quote')) ? 'Request a quote' : 'Contact', href: `/${slugify(contactSurface)}` };
-  if (contact.email) return { label: 'Email', href: `mailto:${contact.email}` };
-  if (contact.phone) return { label: 'Call', href: `tel:${String(contact.phone).replace(/\s+/g, '')}` };
+  const contactSurface = surfaces.find((surface) => /contact|quote|book/i.test(surface)) ?? null;
+  const context = { contact, contactSurface };
+  const actions = [];
+  const unsupported = [];
+
+  for (const declaredGoal of declared) {
+    const goal = declaredGoal.toLowerCase();
+    const channel = CONVERSION_CHANNELS.find((entry) => entry.matches(goal));
+    if (!channel) {
+      unsupported.push({ goal: declaredGoal, reason: 'no conversion channel implements this goal' });
+      continue;
+    }
+    // Two goals can name one channel — "email" and "email enquiry". The channel
+    // is placed once, and the duplicate is neither a second button nor a gap.
+    if (actions.some((entry) => entry.channel === channel.id)) continue;
+    const action = channel.resolve({ ...context, goal });
+    if (action) actions.push({ goal: declaredGoal, channel: channel.id, ...action });
+    else unsupported.push({ goal: declaredGoal, reason: channel.unmet });
+  }
+
+  // Declaring nothing is not the same as wanting nothing: a manifest that never
+  // answered the conversion question still needs somewhere for a visitor to go.
+  // This is the old fallback chain, unchanged, and it runs only when the
+  // operator expressed no preference at all.
+  if (!declared.length) {
+    for (const id of ['enquiry', 'email', 'call']) {
+      const channel = CONVERSION_CHANNELS.find((entry) => entry.id === id);
+      const action = channel.resolve({ ...context, goal: '' });
+      if (!action) continue;
+      actions.push({ goal: null, channel: id, ...action });
+      break;
+    }
+  }
+
   // Deliberately no journey fallback: a journey is an internal acceptance item
   // and "#next" was never a real destination.
-  return null;
+  return { actions, unsupported };
+}
+
+/**
+ * A placed action carries only what a section spec may hold.
+ *
+ * `schemas/section-spec.schema.json` closes the action object to label and
+ * href, and the channel and goal a plan entry also knows are working state, not
+ * published content. Stripping here rather than at every call site keeps a
+ * plan entry from reaching a composition by accident.
+ */
+function placedAction({ label, href }) {
+  return { label, href };
 }
 
 // Items with nothing but a name are a list, not a grid of tall empty cards. The
@@ -249,7 +354,7 @@ function section(id, type, purpose, bindings, actions = [], assetIds = [], varia
   return { id, type, purpose, bindings: bindings.filter(Boolean), actions, assetIds: unique(assetIds), variant };
 }
 
-function hero(pageId, surface, index, manifest, pack, action, assetDecisions) {
+function hero(pageId, surface, index, manifest, pack, actions, assetDecisions) {
   const title = index === 0 ? companyNameBinding(pack, manifest) : manifestBinding('title', surface);
   // A secondary page says what it is in its heading. "Work for MGB Decor."
   // adds nothing and reads as unfinished.
@@ -258,7 +363,7 @@ function hero(pageId, surface, index, manifest, pack, action, assetDecisions) {
   // Build Contract field — "marketing site" — as a caption above the business
   // name on every page.
   const lead = index === 0 ? leadAsset(pack, assetDecisions) : null;
-  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], action ? [action] : [], lead ? [lead.id] : [], index === 0 ? 'primary' : 'compact');
+  return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], actions, lead ? [lead.id] : [], index === 0 ? 'primary' : 'compact');
 }
 
 function servicesSection(pageId, pack, manifest) {
@@ -409,23 +514,28 @@ function contentSection(pageId, pack) {
   ], [], [], 'list');
 }
 
-function ctaSection(pageId, pack, manifest, action, index) {
-  if (!action) return null;
+// The closing panel leads with the primary conversion route and offers one
+// genuinely different way to reach the business beside it. Two is the limit on
+// purpose: a declared goal that reaches composition must not be silently
+// dropped, but answering that by printing every channel in every panel would
+// replace one review finding with a worse one.
+function ctaSection(pageId, pack, manifest, actions, index) {
+  if (!actions.length) return null;
   const goals = list(manifest?.company?.conversionGoals).map((item) => String(item).toLowerCase());
   const title = goals.some((goal) => goal.includes('quote')) ? 'Get a quote'
     : goals.some((goal) => goal.includes('book') || goal.includes('appointment')) ? 'Book an appointment'
     : 'Get in touch';
   // The same summary sentence on every page reads as a template rather than a
-  // site. The entry page carries it; the rest carry the action alone.
+  // site. The entry page carries it; the rest carry the actions alone.
   return section(`${pageId}-cta`, 'cta', 'Provide the primary next action', [
     defaultBinding('title', title),
     index === 0 ? summaryFromDeclaredFacts(pack, manifest) : null,
-  ], [action]);
+  ], actions);
 }
 
-function sectionsForPage({ surface, pageId, index, manifest, pack, action, assetDecisions }) {
+function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, ctaActions, assetDecisions }) {
   const lower = surface.toLowerCase();
-  const output = [hero(pageId, surface, index, manifest, pack, action, assetDecisions)];
+  const output = [hero(pageId, surface, index, manifest, pack, heroActions, assetDecisions)];
   const isHome = index === 0 || lower === 'home';
 
   if (isHome) {
@@ -462,7 +572,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, action, asset
     output.push(entitiesSection(pageId, manifest));
   }
 
-  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, action, index));
+  if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, ctaActions, index));
   const unique = output.filter(Boolean).filter((item, position, all) => all.findIndex((candidate) => candidate.id === item.id) === position);
   return dropRepeatedHeading(unique);
 }
@@ -513,7 +623,7 @@ function isEmptyBindingValue(value) {
   return true;
 }
 
-function warningsFor(manifest, pack, assetDecisions) {
+function warningsFor(manifest, pack, assetDecisions, plan) {
   const warnings = [];
   if (manifest?.schemaVersion !== 2) warnings.push('manifest-v2-not-provided');
   if (!pack) warnings.push('knowledge-pack-not-provided');
@@ -526,6 +636,11 @@ function warningsFor(manifest, pack, assetDecisions) {
     if (!publishableAssets(pack, assetDecisions).length) warnings.push('no-publishable-imagery');
   }
   for (const signal of declaredProofGap(manifest, pack)) warnings.push(`declared-proof-missing:${signal}`);
+  // A conversion goal the approved truth cannot back is reported, never
+  // dropped. nbm declares call, email and contact form and has no approved
+  // email address, so "email" is a real gap in the sources and not a defect the
+  // composer can design its way around.
+  for (const gap of plan.unsupported) warnings.push(`declared-conversion-unsupported:${gap.goal}`);
   for (const capability of list(manifest?.constraints?.customCapabilities)) warnings.push(`custom-capability:${capability}`);
   for (const capability of list(manifest?.constraints?.unresolvedCapabilities)) warnings.push(`unresolved-capability:${capability}`);
   return unique(warnings);
@@ -562,7 +677,7 @@ function notFoundPage(order) {
 export function composeProject({ manifest, knowledgePack = null, assetDecisions = [] } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
   const surfaces = surfacesFor(manifest);
-  const projectAction = primaryAction(manifest, surfaces.map((surface) => surface.name), knowledgePack);
+  const plan = conversionPlan(manifest, surfaces.map((surface) => surface.name), knowledgePack);
   const sections = [];
   const unfillable = [];
   const pages = [];
@@ -572,8 +687,18 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
     const path = index === 0 ? '/' : `/${slug}`;
     // A call to action that links to the page the visitor is already on is a
     // dead end, so it is dropped for that page rather than rendered.
-    const action = projectAction && projectAction.href === path ? null : projectAction;
-    const pageSections = sectionsForPage({ surface: surface.name, pageId, index, manifest, pack: knowledgePack, action, assetDecisions });
+    const available = plan.actions.filter((entry) => entry.href !== path).map(placedAction);
+    // Where the conversion channels belong is a per-route decision, which is
+    // the half `primaryAction` never had. The contact surface is the page
+    // somebody opened in order to choose a channel, so it offers all of them.
+    // Every other page leads with one and closes with at most two.
+    const isContactSurface = /contact|quote|book/i.test(surface.name);
+    const heroActions = isContactSurface ? available : available.slice(0, 1);
+    const pageSections = sectionsForPage({
+      surface: surface.name, pageId, index, manifest, pack: knowledgePack, assetDecisions,
+      heroActions,
+      ctaActions: available.slice(0, 2),
+    });
     // The home page always ships: dropping it would leave the site with no entry.
     if (index > 0 && !surface.declared && !carriesContent(pageSections)) {
       unfillable.push(surface.name);
@@ -588,7 +713,11 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       // unfillable surface never reshuffles the ones that remain.
       purpose: index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface.name} surface for ${manifest.project.name}.`,
       navigation: { label: surface.name, order: index, visible: true },
-      primaryAction: action,
+      // Still exactly one: `page.primaryAction` is what the launch audit walks a
+      // journey from, and a page with several entry points is several journeys
+      // only if something asks for them. The rest of the channels are on the
+      // sections, where the audit already reads them.
+      primaryAction: available[0] ?? null,
       sectionIds: pageSections.map((item) => item.id),
     });
   });
@@ -607,7 +736,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
     input: { manifestVersion: manifest.schemaVersion ?? 1, knowledgePackHash: knowledgePack?.packHash ?? null, assetDecisionsHash: assetDecisionsHash(assetDecisions) },
     pages,
     sections,
-    warnings: [...warningsFor(manifest, knowledgePack, assetDecisions), ...unfillable.map((name) => `unfillable-surface:${name}`)],
+    warnings: [...warningsFor(manifest, knowledgePack, assetDecisions, plan), ...unfillable.map((name) => `unfillable-surface:${name}`)],
   };
   return { ...base, compositionHash: hash(base) };
 }

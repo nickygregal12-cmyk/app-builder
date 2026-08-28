@@ -23,6 +23,7 @@ import {
   evaluateModelLane,
 } from '@app-builder/control-plane/model-execution';
 import { createExecutionEnvironmentSpec } from '@app-builder/control-plane/execution-environment';
+import { createProviderProfile } from '@app-builder/control-plane/provider-routing';
 
 import { readModelKillSwitch } from './lib/model-kill-switch.mjs';
 
@@ -202,6 +203,41 @@ try {
   fail(error instanceof Error ? error.message : String(error));
 }
 
+// --- The provider profiles grant nothing ---------------------------------------
+//
+// Same two invariants as the lane itself, one level up. The way a provider
+// router fails in practice is not a bug in the selection code — it is a profile
+// that quietly acquired a role or a data class in a config edit nobody read as
+// a policy change. So the committed state is asserted here, where it runs in
+// `npm run check` on every branch.
+try {
+  const config = readJson('config/provider-profiles.json');
+  if (!Array.isArray(config.profiles) || config.profiles.length === 0) {
+    fail('config/provider-profiles.json must declare the providers the router may consider.');
+  }
+  for (const raw of config.profiles ?? []) {
+    const profile = createProviderProfile(raw);
+    if (profile.eligibleRoles.length > 0) {
+      fail(`Provider ${profile.providerId} ships with an earned role. A role is earned by a recorded canary, not by editing config.`);
+    }
+    if (profile.ready) fail(`Provider ${profile.providerId} ships ready. Readiness is evidence, not a default.`);
+    if (profile.highRiskRolesApproved.length > 0) {
+      fail(`Provider ${profile.providerId} ships approved for ${profile.highRiskRolesApproved.join(', ')}. Security, release and architecture sign-off are earned separately or not at all.`);
+    }
+    for (const dataClass of profile.allowedDataClasses) {
+      if (!['public', 'synthetic', 'sanitised'].includes(dataClass)) {
+        fail(`Provider ${profile.providerId} is approved for ${dataClass}, which needs a recorded policy review in policyReviewedAt/policySource.`);
+      }
+    }
+    if (profile.secretRef && /^(sk-|sk_|gsk_|ghp_|xox)/i.test(profile.secretRef)) {
+      fail(`Provider ${profile.providerId} carries something credential-shaped in secretRef.`);
+    }
+  }
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
+}
+
 if (failed) process.exit(1);
 const state = readModelKillSwitch({ root, env: {} });
-console.log(`Model doctor: the model-execution lane is present and disabled (${state.blockers.length} switch(es) off); the canary role is a read-only, network-none reviewer; no credential is committed; no schedule runs it.`);
+const profileCount = readJson('config/provider-profiles.json').profiles.length;
+console.log(`Model doctor: the model-execution lane is present and disabled (${state.blockers.length} switch(es) off); the canary role is a read-only, network-none reviewer; no credential is committed; no schedule runs it; ${profileCount} provider profile(s) grant no role and no private data class.`);

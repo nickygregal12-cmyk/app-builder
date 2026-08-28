@@ -85,6 +85,23 @@ test('a secondary page heading is not padded out with filler copy', () => {
   assert.equal(secondaryHero.bindings.some((entry) => entry.key === 'body'), false, '"Services for X." says nothing the heading has not');
 });
 
+test('no page prints the same copy twice', () => {
+  const composition = composeProject({ manifest: marketingManifest() });
+  // The About surface used to bind the company description into its hero and
+  // again into the rich-text section directly beneath it. Two independent
+  // reviews read that as repeated registration text and a padded, thin page.
+  // Stated as an invariant rather than as a fact about About, because any
+  // future surface that owns a section and a hero can make the same mistake.
+  for (const page of composition.pages) {
+    const bodies = page.sectionIds
+      .map((id) => composition.sections.find((section) => section.id === id))
+      .flatMap((section) => section.bindings.filter((entry) => entry.key === 'body'))
+      .map((entry) => JSON.stringify(entry.value));
+    const seen = new Set(bodies);
+    assert.equal(seen.size, bodies.length, `${page.id} repeats a body: ${bodies.find((body, index) => bodies.indexOf(body) !== index)}`);
+  }
+});
+
 test('the owner\'s primary goal is never published as visitor-facing copy', () => {
   const manifest = marketingManifest();
   const composition = composeProject({ manifest });

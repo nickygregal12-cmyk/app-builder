@@ -37,6 +37,7 @@ import { generateComposedProject } from './lib/composed-generator.mjs';
 import { loadCatalog } from './lib/generator.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
+const KNOWLEDGE = 'examples/genuine-business/nbm-approved-knowledge.v1.json';
 const ACCEPTANCE_ROOT = '.app-builder/static-renderer';
 
 function argument(name) {
@@ -137,8 +138,14 @@ const service = new FactoryService({ store, workspacesRoot, factoryRoot: process
 
 try {
   const bundle = JSON.parse(fs.readFileSync(BUNDLE, 'utf8'));
-  const { project } = await service.replayIntakeBundle(bundle);
+  // The same frozen truth the candidate lane composes from. This run asks
+  // whether the static renderer preserves a composition, which only means
+  // something if it is handed the composition the application renderer is
+  // actually judged on rather than a manifest-only shadow of it.
+  const knowledgePack = JSON.parse(fs.readFileSync(KNOWLEDGE, 'utf8'));
+  const { project } = await service.replayIntakeBundle(bundle, { knowledgePack });
   console.log(`Replayed ${bundle.bundleId} as ${project.id}.`);
+  console.log(`Frozen knowledge pack ${knowledgePack.packHash}: ${knowledgePack.sources.length} source(s), ${knowledgePack.facts.length} fact(s).`);
 
   if (direction) {
     // Supplied, not promoted. The run needs a build that presents by the

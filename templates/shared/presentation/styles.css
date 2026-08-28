@@ -350,31 +350,87 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   background: transparent;
   box-shadow: none;
 }
+/* Explicit placement, not source order. A grid lays its children out in the
+   order they appear, and `::after` is the last child — so the plate a schedule
+   puts first landed in the trailing column, and the name was pushed into the
+   narrow leading one where it wrapped a word at a time into the description
+   beside it. Naming each cell is what makes the row read left to right. */
+.grid-schedule-rows .section-item-grid .content-card h3 { grid-column: 1; margin: 0; font-size: var(--text-lg) }
+.grid-schedule-rows .section-item-grid .content-card p { grid-column: 2; margin: 0; font-size: var(--text-base) }
 .grid-schedule-rows .section-item-grid .content-card:last-child { border-bottom: 1px solid var(--color-border) }
-.grid-schedule-rows .section-item-grid .content-card h3 { margin: 0; font-size: var(--text-lg) }
-.grid-schedule-rows .section-item-grid .content-card p { margin: 0; font-size: var(--text-base) }
 .grid-schedule-rows .plain-list { display: block }
 .grid-schedule-rows .plain-list li { border: 0; border-top: 1px solid var(--color-border); border-radius: 0; background: transparent; box-shadow: none }
 
-/* The moment adapts to the grid rather than fighting it. On a schedule the
+/* The moment adapts to the grid rather than fighting it. On a card
+   figure-index reserves a ruled plate above the copy; on a schedule row the
    plate belongs at the head of the row, which is where a numbered schedule
-   puts it, instead of above the copy as it does on a card. */
+   puts it. */
 .grid-schedule-rows.moment-figure-index .section-item-grid .content-card {
-  grid-template-columns: 4.5rem minmax(0, 16rem) minmax(0, 1fr);
+  grid-template-columns: 4.5rem minmax(0, 18rem) minmax(0, 1fr);
   padding-top: 22px;
 }
 .grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after {
+  grid-column: 1;
+  grid-row: 1;
   position: static;
   border-bottom: 0;
   padding-bottom: 0;
   font-size: var(--text-lg);
 }
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card h3 { grid-column: 2 }
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card p { grid-column: 3 }
+
+/* A register is a register on every section, not only the one the direction
+   was designed around. Two reviews called the secondary content sparse and
+   repetitive, and a schedule that reverts to cards for locations and contact
+   details is exactly that: the grammar announced at the top of the page and
+   abandoned below it. Locations and contact rows are the same ruled row as a
+   service, so a reader who has learned to read one has learned the page. */
+.grid-schedule-rows .section-location-list .plain-list li,
+.grid-schedule-rows .section-entity-list .plain-list li,
+.grid-schedule-rows .section-content-list .plain-list li { padding: 18px 0 18px 54px }
+.grid-schedule-rows .section-location-list .plain-list li::before,
+.grid-schedule-rows .section-entity-list .plain-list li::before,
+.grid-schedule-rows .section-content-list .plain-list li::before { display: none }
+.grid-schedule-rows .section-location-list .plain-list,
+.grid-schedule-rows .section-entity-list .plain-list,
+.grid-schedule-rows .section-content-list .plain-list { counter-reset: place }
+.grid-schedule-rows .section-location-list .plain-list li::after,
+.grid-schedule-rows .section-entity-list .plain-list li::after,
+.grid-schedule-rows .section-content-list .plain-list li::after {
+  content: counter(place, decimal-leading-zero);
+  counter-increment: place;
+  position: absolute;
+  left: 0;
+  top: 18px;
+  color: var(--color-accent);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.grid-schedule-rows .contact-grid { display: block }
+.grid-schedule-rows .contact-grid > a, .grid-schedule-rows .contact-grid > div {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  gap: 8px 40px;
+  align-items: baseline;
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.grid-schedule-rows .contact-grid > :last-child { border-bottom: 1px solid var(--color-border) }
+.grid-schedule-rows .contact-grid > a:hover { border-color: var(--color-border); background: var(--color-surface-muted) }
 
 /* Numbered headings. A contents page rather than a rule: each section states
    its place in the document. */
 .headings-numbered .app-shell { counter-reset: surface-section }
-.headings-numbered .page-section:not(.hero-section) > h2 { counter-increment: surface-section; display: flex; align-items: baseline; gap: 16px }
-.headings-numbered .page-section:not(.hero-section) > h2::before {
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > h2,
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > .section-heading > h2 { counter-increment: surface-section; display: flex; align-items: baseline; gap: 16px }
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > h2::before,
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > .section-heading > h2::before {
   content: counter(surface-section, decimal-leading-zero);
   flex: 0 0 auto;
   padding-bottom: 4px;

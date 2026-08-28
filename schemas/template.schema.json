@@ -53,6 +53,25 @@
         "type": "string"
       }
     },
+    "document": {
+      "type": "object",
+      "description": "The HTML document this template ships whose head the generator owns. A template declares this when it serves a document that is not itself generated per route, so project metadata has to be written into the scaffold at generation time rather than patched in after hydration. A per-route renderer declares nothing here: it emits a head per document and has no single head to substitute.",
+      "required": [
+        "file",
+        "reason"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "presentation": {
       "type": "object",
       "description": "How this template renders a composed section, declared by the template that owns the rendering rather than inferred from its DOM. Builder Element Identity is derived from this plus the composition, so a template without it can be generated but cannot be edited by direct manipulation.",

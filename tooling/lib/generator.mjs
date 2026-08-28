@@ -6,6 +6,7 @@ import { artDirectionIntent, compileArtDirectionPlan } from './art-direction.mjs
 import { compileBrandSpec } from './brand-spec.mjs';
 import { compileVisualDirection } from './visual-direction.mjs';
 import { loadRenderers, resolveRendererVariant, selectRenderer } from './renderer-selection.mjs';
+import { applyDocumentHead, composeDocumentHead } from './document-head.mjs';
 
 export function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 export function writeJson(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n'); }
@@ -414,6 +415,33 @@ function rendererRecord(plan) {
   };
 }
 
+/**
+ * Write this project's own metadata into the document it ships.
+ *
+ * The generator copies a template tree verbatim and substitutes only under
+ * `src/generated`, which is exactly why `index.html` had never been
+ * project-specific: no step owned it. This is that step, and it is declared by
+ * the template rather than assumed of every template — a renderer that emits a
+ * document per route has a head per route and nothing here to substitute, so it
+ * declares no `document` and this is a no-op for it.
+ *
+ * The evidence file beside it records what was emitted, what was withheld and
+ * why, so "the canonical is absent" is a stated position with a reason rather
+ * than a gap someone has to interpret.
+ */
+function writeDocumentHead(projectDir, manifest, template) {
+  const declared = template.document;
+  if (!declared?.file) return null;
+  const documentPath = safeResolve(projectDir, declared.file);
+  if (!fs.existsSync(documentPath)) {
+    throw new Error(`Template ${template.id} declares document ${declared.file}, and the generated project has no such file.`);
+  }
+  const head = composeDocumentHead({ project: manifest.project });
+  fs.writeFileSync(documentPath, applyDocumentHead(fs.readFileSync(documentPath, 'utf8'), head));
+  writeJson(path.join(projectDir, '.app-builder/document-head.json'), { ...head, document: declared.file, reason: declared.reason });
+  return head;
+}
+
 function writeGeneratedState(projectDir, manifest, plan, templatePackage, packageManaged, databaseFragments) {
   const generatedRoot = plan.template.generated?.root ?? 'src/generated';
   const generated = safeResolve(projectDir, generatedRoot);
@@ -552,6 +580,7 @@ export function generateProject(manifest, outputDir, { factoryRoot = process.cwd
   packageJson = mergePackage(packageJson, [...plan.adapters, ...plan.recipes], templatePackage);
   const packageManaged = packageJson.__appBuilderManaged;
   writeJson(packagePath, publicPackage(packageJson));
+  writeDocumentHead(out, manifest, plan.template);
   writeGeneratedState(out, manifest, plan, templatePackage, packageManaged, databaseFragments);
   writeHandover(out, manifest, plan, databaseFragments);
   writeReadme(out, manifest, plan);

@@ -64,10 +64,24 @@ every route fell through to the shell and was photographed as the home document 
 pairs per candidate. It is fixed in document resolution and proved by six distinct captures whose
 rendered `data-page-id` matches the route requested.
 
-**What is outstanding is the design work the capture fix does not answer.** A weak distinctive moment
-(2.8 and 2.5), thin credibility material, and single-channel conversion are genuine findings about the
-output, not about the photograph of it. Phase 4D now closes on a second independent verdict over
-recaptured evidence, not on a first one existing.
+**The second verdict is in, and it separates the two.** The same critic reviewed the same candidates from
+the same frozen inputs over recaptured evidence and returned **rework on both**: 6.14 and 5.91, still
+short of the 8.5 mean and the 6.5 floor. Kept at `nbm-visual-review-v2.verdicts.json` beside v1, because
+the pair is the measurement and either alone is misleading.
+
+What the capture fix recovered, with no design work at all: visual-hierarchy 5.8→7.1 and 5.2→7.5,
+credibility 4.8→6.2 and 4.6→6.7, coherence 6.4→7.3 and 6.2→7.2. Those were the criteria whose v1
+complaints were the capture defect restated — "every route presents the same hierarchy", "no meaningful
+route-specific content" — and they now clear the floor.
+
+What it did not touch, and what Phase 4D actually owes: **distinctiveness** (4.2→4.8, 3.8→4.8),
+**distinctive-moment** (2.8→4.6, 2.5→3.5) and **responsive-quality** (5.5→5.9, 4.2→4.6, +0.4 in both,
+which is noise). All three still fail in both candidates. The reviewer names them concretely rather than
+as taste: clipped mobile navigation, a mobile content order that puts a generic CTA before page-specific
+information, skeletal secondary pages, and no focal moment tied to quantity surveying.
+
+Phase 4D closes on a candidate that clears the bar, and none does. The gate is no longer an absent
+reviewer or a broken camera; it is the design.
 
 ## Where the evidence is, and how a reviewer reaches it
 

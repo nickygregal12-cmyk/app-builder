@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "setId": "candidates-d327b6b8623bb866",
+  "projectId": "project-d5bca322-7ce6-4f95-9dc6-ce7ff1d10c84",
+  "reviewedAt": "2026-08-28T09:55:30.725Z",
+  "reviews": [
+    {
+      "candidateId": "candidate-structured-practice",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clean and consistent, but it feels like a generic professional-services template rather than a distinctive construction cost consultancy. Excessive empty space, repetitive page structures, thin service and location content, and awkward mobile reordering keep it below studio-quality.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.4,
+          "note": "The sober palette and sturdy typography are appropriate, but there is almost no visual or editorial character specific to construction, surveying, Glasgow, or Edinburgh."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.1,
+          "note": "Headings and calls to action are immediately visible, but oversized empty regions make several pages feel unfinished and give minor content disproportionate space."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7.3,
+          "note": "Typography, cards, colors, and spacing are internally consistent, though the mobile section reordering and detached dark CTA panels disrupt the otherwise predictable system."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.8,
+          "note": "The pill navigation, pale panels, numbered cards, and dark CTA block are familiar template devices with little bespoke expression."
+        },
+        {
+          "criterion": "credibility",
+          "score": 6.2,
+          "note": "The restrained presentation is competent, but sparse copy, repeated company-registration text, empty-feeling pages, and the absence of projects, credentials, people, or evidence weaken trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 6.8,
+          "note": "The Call action is consistently prominent and the enquiry form is clear, but nearly every CTA says only \"Call,\" with no contextual alternative or persuasive lead-in; the failed-submit message is also visually understated."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 5.9,
+          "note": "Nothing visibly overflows, but mobile largely stacks the desktop components and sometimes moves the Get in touch panel ahead of the service or location content, producing an unnatural reading order."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 4.6,
+          "note": "The numbered service grid and black Get in touch panel are the only candidates, but neither creates a memorable or business-specific moment."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "distinctiveness",
+        "credibility",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Develop a recognizably bespoke visual and editorial identity tied to quantity surveying and the firm's Scottish practice.",
+        "Replace excessive empty space and skeletal secondary pages with useful proof such as expertise, project experience, credentials, process, or location detail.",
+        "Correct the mobile content order so page-specific information precedes the generic Get in touch panel.",
+        "Give the service grid and other key modules more informative content and clearer interaction cues.",
+        "Make form failure feedback more prominent and actionable while preserving the user's entered data.",
+        "Create a genuinely distinctive focal moment instead of relying on a generic dark CTA card."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-structured-practice",
+        "compositionHash": "458259599c48c4c2857ea24c1e2a90e457931e02a954aee7d95d23df3a77c300",
+        "captureCount": 21,
+        "captureDigest": "c04639911dd61e8355b88ae07430421a3e1587520ee2499a02d7007567c42587"
+      }
+    },
+    {
+      "candidateId": "candidate-editorial-authority",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clean and broadly credible, but it feels like a restrained generic template rather than a distinctive expression of an authoritative construction consultancy. Mobile navigation is visibly clipped, the repeated sparse layouts lack editorial depth, and the vague reliance on “Call” weakens conversion clarity.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.8,
+          "note": "The sober typography and muted palette suit professional consultancy, but little specifically evokes construction, surveying, or this firm's expertise."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.5,
+          "note": "Large headings and orderly lists establish clear priority, although excessive empty space makes several inner pages feel unfinished."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7.2,
+          "note": "Typography, colors, lists, cards, and calls to action are consistent, but the homepage is substantially richer than the repetitive and underdeveloped inner pages."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.8,
+          "note": "The design relies on familiar oversized headings, numbered rows, neutral bands, and dark CTA panels without a business-specific visual idea."
+        },
+        {
+          "criterion": "credibility",
+          "score": 6.7,
+          "note": "Company registration, address, phone details, and restrained styling help, but the thin content, repeated company description, and lack of evidence such as projects or credentials limit authority."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 6.2,
+          "note": "Calls to action are visible, but the repeated label “Call” is vague, the phone number is not presented beside most buttons, and service and location rows offer no clear onward path."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 4.6,
+          "note": "Content columns generally stack cleanly, but the mobile header visibly overflows and clips navigation items and active states across multiple pages."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 3.5,
+          "note": "No convincing distinctive moment is visible; the dark “Get in touch” panel is merely a standard CTA block and does not express editorial authority."
+        }
+      ],
+      "failingCriteria": [
+        "distinctiveness",
+        "conversion-clarity",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Replace the horizontally clipped mobile navigation with a deliberately designed mobile navigation pattern.",
+        "Develop a recognizable editorial device or content-led signature specific to quantity surveying and construction consultancy.",
+        "Strengthen trust with substantive evidence such as experience, project work, sector expertise, qualifications, or client outcomes.",
+        "Replace vague repeated “Call” actions with contextual labels and visible contact information.",
+        "Give inner pages enough useful content and structure to avoid the appearance of unfinished template shells."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-editorial-authority",
+        "compositionHash": "458259599c48c4c2857ea24c1e2a90e457931e02a954aee7d95d23df3a77c300",
+        "captureCount": 21,
+        "captureDigest": "478faad8b9bd6f5574391ff5e4f3718720f09fea625a963ce574dbb7308eac14"
+      }
+    }
+  ],
+  "skipped": []
+}

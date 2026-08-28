@@ -5,6 +5,7 @@
     "marketing-site": [
       "structured-practice",
       "editorial-authority",
+      "schedule-register",
       "immersive-lead"
     ],
     "content-site": [
@@ -193,6 +194,44 @@
         "distinctiveMoment": "none"
       },
       "assetAppetite": "typographic",
+      "responsive": {
+        "mobileHero": "copy-only",
+        "navigation": "disclosure",
+        "mobileSectionOrder": "as-desktop",
+        "mobileDensity": "tighter",
+        "mobileMotion": "reduced"
+      }
+    },
+    "schedule-register": {
+      "label": "Schedule register",
+      "purpose": "A document register rather than a brochure. Sections are numbered like a contents page, item sets are ruled full-width rows read across instead of cards read down, and the measure is wide and flat. For a practice whose credibility is in structured, checkable detail rather than in photography - the register is a general typographic form, not one industry.",
+      "design": {
+        "density": "compact",
+        "maxWidth": "78rem",
+        "radius": "0rem"
+      },
+      "artDirection": {
+        "layoutVariance": "uniform",
+        "motionIntensity": "none",
+        "visualDistinctiveness": "expressive",
+        "restraintLevel": "medium"
+      },
+      "composition": {
+        "heroStrategy": "utility",
+        "gridFamily": "schedule-rows",
+        "headingTreatment": "numbered",
+        "ctaPlacement": "mid-page",
+        "sectionOrder": [
+          "item-grid",
+          "proof-grid",
+          "location-list",
+          "people-grid",
+          "gallery",
+          "contact-panel"
+        ],
+        "distinctiveMoment": "figure-index"
+      },
+      "assetAppetite": "imagery-optional",
       "responsive": {
         "mobileHero": "copy-only",
         "navigation": "disclosure",

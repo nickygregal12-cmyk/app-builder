@@ -37,8 +37,8 @@ import { DEFAULT_ART_DIRECTION, LAYOUT_VARIANCE_ORDER, RESTRAINT_LEVELS, VISUAL_
 import { MOTION_INTENSITY_ORDER } from './motion-contract.mjs';
 
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
-export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows']);
-export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled']);
+export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows']);
+export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled', 'numbered']);
 export const CTA_PLACEMENTS = Object.freeze(['closing', 'mid-page']);
 export const DISTINCTIVE_MOMENTS = Object.freeze(['lead-statement', 'full-bleed-lead', 'figure-index', 'none']);
 export const ASSET_APPETITES = Object.freeze(['imagery-required', 'imagery-optional', 'typographic']);

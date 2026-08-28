@@ -330,6 +330,61 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   letter-spacing: .09em;
 }
 
+/* Schedule rows. ------------------------------------------------------------
+   An item set read across as ruled rows rather than down as cards. Cards give
+   every item the same box whatever it has to say; a schedule gives each one a
+   line, a number and a column for what it is, which is how structured
+   information is actually published. For a practice whose credibility is in
+   checkable detail rather than photography, this is a register rather than a
+   brochure. */
+.grid-schedule-rows .item-grid { display: block }
+.grid-schedule-rows .section-item-grid .content-card {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: 8px 40px;
+  align-items: baseline;
+  padding: 22px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.grid-schedule-rows .section-item-grid .content-card:last-child { border-bottom: 1px solid var(--color-border) }
+.grid-schedule-rows .section-item-grid .content-card h3 { margin: 0; font-size: var(--text-lg) }
+.grid-schedule-rows .section-item-grid .content-card p { margin: 0; font-size: var(--text-base) }
+.grid-schedule-rows .plain-list { display: block }
+.grid-schedule-rows .plain-list li { border: 0; border-top: 1px solid var(--color-border); border-radius: 0; background: transparent; box-shadow: none }
+
+/* The moment adapts to the grid rather than fighting it. On a schedule the
+   plate belongs at the head of the row, which is where a numbered schedule
+   puts it, instead of above the copy as it does on a card. */
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card {
+  grid-template-columns: 4.5rem minmax(0, 16rem) minmax(0, 1fr);
+  padding-top: 22px;
+}
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after {
+  position: static;
+  border-bottom: 0;
+  padding-bottom: 0;
+  font-size: var(--text-lg);
+}
+
+/* Numbered headings. A contents page rather than a rule: each section states
+   its place in the document. */
+.headings-numbered .app-shell { counter-reset: surface-section }
+.headings-numbered .page-section:not(.hero-section) > h2 { counter-increment: surface-section; display: flex; align-items: baseline; gap: 16px }
+.headings-numbered .page-section:not(.hero-section) > h2::before {
+  content: counter(surface-section, decimal-leading-zero);
+  flex: 0 0 auto;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
 /* Layout variance, visual distinctiveness and motion intensity. -------------
    These three are declared by every direction, recorded in the candidate
    signature and counted by the diversity gate. Until now none of them reached

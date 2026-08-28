@@ -11,7 +11,7 @@ disagree the status file wins. What "finished" means is `docs/MASTER_PLAN.md` §
 
 ## Current position
 
-**Phase 4.3 — mature website-builder capabilities, with the real-business corpus open beside it.** Active.
+**Phase 4.4 — high-value application capabilities, opened on the dependency that is already proven rather than on the whole 4.3 table.** Active.
 
 ### The sequencing change of 2026-08-28
 
@@ -138,36 +138,62 @@ case, framework rewrites, and anything wanted because it sounds impressive.
   autonomous mutation of real production data), and the remaining supply-chain hardening.
 - **Blocked by:** nothing. **Next:** they feed Phase 6.
 
-### 9. Phase 4.3 — mature website-builder capabilities — **ACTIVE**
+### 9. Phase 4.3 — mature website-builder capabilities — **PARTLY CLOSED, no longer the active stage**
 
-- **Status:** **active.** This is the current stage.
+- **Status:** **not active, and not complete.** Two capabilities closed with acceptance; three remain
+  genuinely unbuilt and are recorded as deferred rather than done. See item 10 for why the stage was
+  left before the table was emptied.
 - **Why now:** the corpus can no longer say which capabilities are needed on its own timetable, because
   it is owner-blocked on a second business. The rule that replaces "wait for the corpus" is narrower
   and still evidence-bound: **implement the capability that has a real consumer today**, not the whole
   §13 table because it is listed.
-- **What the inventory found (2026-08-28):** most of the table is genuinely absent rather than partly
-  built — no localisation beyond one NFR schema field, no content collections beyond a questionnaire,
-  no Figma import, no brownfield reader. **The exception with a real consumer is the deterministic
-  SEO/AEO scanner:** `config/gate-producers.json` lists `seo-aeo-scanner` under `unregistered`, meaning
-  a registered gate names the check and no producer answers it, so that gate can never resolve on it.
-  Close that first. Read-first brownfield profiling (`docs/PLATFORM_PARITY_PROGRAMME.md` §5.1) is the
-  next strongest candidate and is strategically valuable for the later Predictor-class benchmark.
+- **Closed with acceptance (2026-08-28):** the deterministic **SEO/AEO scanner**, which now answers
+  `gates.seo` from built documents; **application-renderer document metadata**, fixed at the generator
+  seam and measured on real `dist` output, with the route-crawlability decision recorded in
+  `docs/RENDERER_SELECTION.md`; and **read-first brownfield profiling**
+  (`docs/PLATFORM_PARITY_PROGRAMME.md` §5.1), proved on a mature outside repository with zero mutations
+  and its counts checked by hand against source.
+- **Still genuinely unbuilt, and deferred rather than claimed:** CMS/content collections, localisation
+  (one unread NFR schema field is not a partial implementation) and Figma import of any kind. Each is in
+  `config/factory-status.json` under `deferredCapabilities` with its own revival condition. **None of
+  them is a prerequisite for application work**, which is why the stage could be left.
 - **Exit evidence:** per-capability acceptance in `docs/PLATFORM_PARITY_PROGRAMME.md` §8 and §5. A
   capability is not claimed because a dependency or a plan exists.
-- **Blocked by:** nothing. **Next:** item 10.
+- **Blocked by:** nothing. **Next:** item 10, which is now active.
 
-### 10. Phase 4.4 — high-value application capabilities
+### 10. Phase 4.4 — high-value application capabilities — **ACTIVE**
 
-- **Status:** planned, specified, and **no longer gated behind item 5.** **Why now:** these separate a
+- **Status:** **active from 2026-08-28.** **Why now:** these separate a
   generated brochure site from a generated product, and a serious application benchmark is what
   produces the application evidence the deferred visual work needs (revival condition A/B).
+- **Why the stage opened before item 9's table was emptied:** the same rule that deferred Phase 4D —
+  progression is about the dependencies the next real work needs, not about every optional parity
+  feature being finished. Nothing in CMS, localisation or Figma import is depended on by auth, tenancy,
+  database security or application state.
+- **What is already proven, and is the reason the first slice is not auth:** reading the dependency
+  order literally would send the next session to build authentication. **Auth already exists.** Ten
+  recipes are ready including auth, profiles, organisations, admin and uploads, and the
+  `database-security` CI job generates the canonical `b2b-saas` app, loads **its own generated schema
+  fragments** into a real local Postgres and runs 18 pgTAP assertions over **6 deterministic identities
+  and 2 organisations** — owner reads and updates their organisation, a second organisation's rows are
+  invisible, profile RLS exposes only the current user's profile, and the anonymous role is denied
+  outright. That is executable multi-tenant database security on generated output, in automation, across
+  more than one tenant.
+- **What is actually missing, and it is narrower than the list implies:** there is **no tenant-scoped
+  domain entity** anywhere in the recipe catalogue — no table, no policy, no UI, no assertion. So
+  "organisation A cannot see organisation B's records" is unprovable for the plain reason that no
+  records exist. The current acceptance isolates organisations and profiles, which are the tenancy
+  primitives themselves rather than a product's data inside them. **The first 4.4 slice is a
+  tenant-scoped records capability** carried through the same pgTAP acceptance the tenancy primitives
+  already pass, plus a browser journey and the ordinary standalone generated-repo acceptance.
 - **Dependency order:** auth / organisations / RBAC → database + RLS → profiles/admin → email →
   uploads → notifications → webhooks → jobs/retries → billing → realtime if earned. Not one PR.
 - **Exit evidence:** the integration acceptance standard in `docs/PLATFORM_PARITY_PROGRAMME.md` §3, §4
   and §14 — transactional email, notifications, webhooks, jobs/cron/queues, realtime, billing, and
   `IntegrationSpec` with the connection manager. None may be claimed first-class without it, and a
   package dependency existing is not evidence.
-- **Blocked by:** the 4.3 capabilities that a chosen benchmark actually consumes. **Next:** item 11.
+- **Blocked by:** nothing. The 4.3 capabilities a benchmark would actually consume — auth,
+  organisations, profiles, admin, database and RLS — are the ones that exist. **Next:** item 11.
 
 ---
 

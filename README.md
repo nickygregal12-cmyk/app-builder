@@ -8,7 +8,7 @@ App Builder is designed around one rule:
 
 The long-term goal is a private builder that can accept an idea, company details, URLs, documents, spreadsheets, screenshots, logos, images, design references and existing repositories; turn them into a reviewed Build Contract; compose real pages and application surfaces from proven capabilities and trusted source material; use AI only for genuinely novel work; test and visually review the result; and deploy an ordinary portable repository.
 
-## Current milestone: Phase 4.3 — mature website-builder capabilities, with the real-business corpus open beside it
+## Current milestone: Phase 4.4 — high-value application capabilities, opened on the dependency that is already proven rather than on the whole 4.3 table
 
 Where the project actually is, what is blocked and what is deferred: `config/factory-status.json`
 (machine-readable) and `docs/ROADMAP.md` (ordered, human-readable). This section does not restate them.

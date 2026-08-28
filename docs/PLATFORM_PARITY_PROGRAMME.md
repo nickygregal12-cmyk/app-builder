@@ -277,9 +277,74 @@ Every connector must be permission-scoped and observable; convenience must not c
 
 ---
 
-# 5. Phase 4.3 / 4E — Git-native project workflow and existing-repository parity
+# 5. Phase 4.3 / 4E — existing-product adoption/improvement and Git-native workflow
 
-Existing-repository adoption is already planned. Extend it into a complete bidirectional Git workflow.
+Existing-repository adoption is not only an import feature. It is the brownfield entry mode defined in `docs/MASTER_PLAN.md`: understand an existing product before changing it, then use the same bounded specialist, ChangeSet, evidence and review machinery to improve it without forcing it through greenfield defaults.
+
+When an existing repository and/or live URL is supplied, the first significant mutation should be preceded by a **baseline and adoption map**. The exact evidence is risk/project dependent, but may include:
+
+- repository identity and exact source revision;
+- live/deployed URL and deployed revision when it can be established;
+- framework, dependency, architecture, design-system, backend, data/auth and deployment shape;
+- current source-of-truth/contract boundaries and known duplication/drift;
+- representative user journeys and their current pass/fail/state coverage;
+- desktop/mobile rendered evidence for relevant routes/states;
+- browser/runtime console/network failures where relevant;
+- accessibility, performance, security and SEO evidence where the requested improvement touches them;
+- current tests/build/gates and obvious vacuity or missing-evidence risks;
+- known-good behaviours that must be preserved;
+- existing owner goals, complaints and accepted debt.
+
+The URL and repository are complementary evidence. The repository explains implementation and architecture; the rendered product explains what a user actually experiences. A URL alone must not be used to invent deep architectural conclusions, and a repository alone must not be treated as proof that the shipped user journey works.
+
+## 5.1 Diagnosis before mutation
+
+A broad instruction such as “improve this site”, “take this product to the next level” or “fix this app properly” must route through product/opportunity diagnosis before implementation. Specialist findings are classified as:
+
+- **keep** — current implementation/experience is sound and should be protected;
+- **refactor** — behaviour is good but architecture/maintainability is weak;
+- **redesign** — product behaviour is worth keeping but UX/visual presentation is weak;
+- **replace** — an existing implementation is demonstrably worse than a bounded replacement;
+- **remove** — capability/code no longer earns its complexity or harms the product;
+- **add** — evidence supports a genuinely missing product capability.
+
+This classification is a decision aid, not a licence for churn. “Replace” needs stronger evidence than “refactor”, and an adopted project must never be rewritten merely because the factory has a preferred template, library or recipe.
+
+The specialist architecture should be used by decision boundary: product/IA/UX/design/architecture/security/performance agents receive only the evidence relevant to their question, and creators do not approve their own work. An architectural finding does not become a visual rewrite by accident, and a visual redesign cannot silently change domain rules.
+
+## 5.2 Improvement Contract and bounded execution
+
+Before material implementation, turn the approved diagnosis into a bounded improvement contract using existing project/task/Build Contract/ChangeSet primitives rather than inventing a second task system. It should identify:
+
+- the baseline revision/evidence it compares against;
+- intended outcomes and explicit non-goals;
+- behaviours/invariants that must remain unchanged;
+- accepted findings and their owning specialist/rework role;
+- the files/capabilities/environments expected to change;
+- the deterministic and independent-review evidence required before promotion;
+- rollback/recovery expectations for risky changes.
+
+Implementation uses isolated branches/worktrees and small ChangeSets. Large redesigns or architecture programmes are decomposed into reviewable slices with an executable journey or measurable product outcome, not one repository-wide autonomous rewrite.
+
+## 5.3 Before/after evidence and convergence
+
+Every accepted improvement slice should retain its baseline and record the delta. Compare only metrics relevant to the change, for example:
+
+- critical journeys passed and state completeness;
+- visual/mobile review scores and responsive evidence;
+- accessibility violations;
+- performance/bundle/Core Web Vitals evidence;
+- security/architecture findings retired or introduced;
+- source-of-truth/contract duplication removed;
+- test non-vacuity and coverage of important invariants;
+- manual edits/interventions/retries;
+- elapsed time and AI/tool cost;
+- changed LOC/dependency cost where useful;
+- regressions against protected known-good behaviour.
+
+“More code”, “new framework” or “agent says better” are not improvement metrics. A slice converges when its agreed outcome is better than or intentionally unchanged from baseline, required gates pass, and independent review accepts the result. Failed attempts remain attributable rather than being overwritten by the eventual pass.
+
+## 5.4 Git-native workflow
 
 The Console should eventually support:
 
@@ -297,6 +362,14 @@ The Console should eventually support:
 Generated new projects should be able to opt into the same Git lifecycle after their initial materialisation.
 
 The durable Factory ledger remains product execution evidence; Git is the source-code collaboration/history layer. Do not create two competing task truths.
+
+## 5.5 Acceptance
+
+Existing-product parity is not proven by successfully cloning a repository. A representative adoption must show:
+
+`connect repo + URL -> freeze baseline -> map product/architecture/journeys -> specialist diagnosis -> approved improvement contract -> isolated ChangeSet -> preview -> deterministic gates -> independent review -> before/after evidence -> PR/merge -> release`
+
+The long-horizon complex benchmark for this mode is the Existing-repository adoption path in `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`. It should prove that App Builder can find and safely improve the kinds of architectural, product and visual problems that otherwise accumulate through repeated prompt-led iteration, without introducing equivalent regressions or Predictor-specific factory hacks.
 
 ---
 
@@ -511,6 +584,7 @@ Do not prioritize this before the core build/edit/deploy/integration experience 
 | Drag/reorder/component swap/responsive visual editing | Phase 4B/4D |
 | CMS editing surface + content operations | Phase 4.3 |
 | Localization workflow | Phase 4.3 |
+| Existing-product baseline, diagnosis and improvement contract | Phase 4.3 |
 | Existing repo import/adoption + bidirectional Git workflow | Phase 4.3/4E |
 | Payment/billing recipe | Phase 4.4 |
 | Email/notifications/webhooks/jobs/queues/realtime | Phase 4.4 |
@@ -532,7 +606,7 @@ capability breadth in this table, not after it: the corpus is what tells us whic
 real projects actually need.
 
 What this programme does own is the dependency between its own items: connections before connectors,
-environment identity before release promotion, Git adoption before bidirectional workflow, and a real
+environment identity before release promotion, baseline/adoption mapping before existing-product mutation, Git adoption before bidirectional workflow, and a real
 egress proof before any research agent reaches the public web.
 
 Do not delay the first real-project corpus until every late platform feature exists. Use maturity tiers: a project class can be proven for marketing/content sites before every SaaS integration capability is proven. But do not claim broad “best app builder” parity while common auth/billing/integration/deployment workflows still require bespoke manual glue.
@@ -553,7 +627,9 @@ A capability appearing in a plan is not parity. Before claiming App Builder is i
 
 ### Existing project
 
-`connect repository -> inspect/adopt -> isolated branch -> AI change -> preview -> diff/review -> PR/merge -> deploy`
+`connect repository + live URL -> freeze baseline -> inspect/adopt -> product/architecture/journey diagnosis -> approved improvement contract -> isolated branch/ChangeSet -> AI change -> preview -> deterministic gates -> independent review -> before/after evidence -> PR/merge -> deploy`
+
+The pass is not “the repository imported” or “the PR merged”. Representative protected journeys must not regress, and the agreed outcome must be measurably better than the frozen baseline. For complex application adoption, use `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` rather than inventing a second brownfield benchmark.
 
 ### Autonomous build
 
@@ -572,5 +648,7 @@ Measure:
 - integration setup failures;
 - generated-repository portability;
 - operator confidence in understanding what changed and why.
+
+For existing products also record the **before/after delta** and any regression against protected known-good behaviour; absolute scores without a baseline do not prove an improvement workflow.
 
 The competitive target is not feature-count equality. It is that the common high-value journeys feel equally complete while App Builder retains stronger provenance, explainability, portability and bounded autonomy.

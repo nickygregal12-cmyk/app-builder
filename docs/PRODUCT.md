@@ -33,6 +33,8 @@ App Builder should eventually accept:
 
 Inputs are normalised into facts, brand, assets, content, references, requirements and research before build agents run.
 
+A project may enter as a **greenfield build** or as an **existing-product adoption/improvement**. The latter is an entry mode, not a separate project class: a marketing site, SaaS product, consumer app or internal tool can all be adopted. When a repository and/or live URL already exists, the factory first freezes a baseline, maps the current product/architecture and user journeys, and separates what should be kept, refactored, redesigned, replaced, removed or added before it proposes mutation. Improvement is judged against before/after evidence rather than by whether the new code merely builds.
+
 ## Success definition
 
 For a standard commercial website, most work should be deterministic composition. For a custom SaaS, AI should focus on unique product logic and design decisions rather than setup already solved by the factory.
@@ -40,6 +42,8 @@ For a standard commercial website, most work should be deterministic composition
 A project is not complete because it compiles. It must satisfy its Build Contract and relevant design, security, accessibility, environment and quality contracts.
 
 For public websites, success also means the chosen output architecture is appropriate to the product: marketing/content sites should not inherit a heavy application shell merely because the factory's first template used one.
+
+For an adopted product, success additionally means preserving known-good behaviour and history while measurably improving the agreed baseline: architecture, journeys, visual/mobile quality, correctness, accessibility, performance, security, maintainability and intervention cost are compared where relevant. A broad instruction such as “improve this product” routes through diagnosis/opportunity work before implementation rather than becoming an automatic rewrite or redesign.
 
 The Builder Console should become a real control surface over durable factory state: source intake, visual preview/editing, design variants, assets, environments, build progress, checkpoints, quality findings and deployment approvals all operate through the factory service rather than hidden browser-only state.
 

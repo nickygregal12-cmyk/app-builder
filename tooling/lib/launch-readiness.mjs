@@ -244,6 +244,9 @@ function auditWarnings(composition, rules, findings) {
     if (warning.startsWith('declared-proof-missing:')) {
       findings.push(finding(rules, 'declared-proof-missing', 'proof',
         `Intake declared "${warning.slice('declared-proof-missing:'.length)}" as available proof and no ingested source backs it.`));
+    } else if (warning.startsWith('declared-conversion-unsupported:')) {
+      findings.push(finding(rules, 'declared-conversion-unsupported', 'conversion',
+        `Intake declared "${warning.slice('declared-conversion-unsupported:'.length)}" as a way to convert a visitor and nothing in the approved truth can back it.`));
     } else if (warning.startsWith('unfillable-surface:')) {
       findings.push(finding(rules, 'unfillable-surface', 'surfaces',
         `The factory proposed a "${warning.slice('unfillable-surface:'.length)}" surface and had no content to put on it, so it was not published.`));

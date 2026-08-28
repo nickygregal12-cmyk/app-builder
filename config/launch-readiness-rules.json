@@ -155,6 +155,13 @@
       "title": "The factory proposed a surface it had no content for",
       "guidance": "A default surface with no source-backed content is not published. Supply source material for it, or accept that this project does not need that page."
     },
+    "declared-conversion-unsupported": {
+      "category": "behavior",
+      "severity": "major",
+      "owningRole": "product-specification",
+      "title": "A declared conversion goal has nothing behind it",
+      "guidance": "Intake named this as a way visitors should reach the business and the approved truth cannot back it — usually a missing contact detail or a missing contact surface. Supply what the channel needs, or drop the goal from intake. It is never silently discarded, and the site never invents the address or number it would need."
+    },
     "declared-proof-missing": {
       "category": "content",
       "severity": "major",

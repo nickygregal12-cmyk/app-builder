@@ -37,7 +37,28 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
 
+      # Who created these candidates, declared because the run refuses to guess.
+      #
+      # This is the same identity the Console stamps when a person clicks
+      # Generate — `FACTORY_AUTHOR` in `apps/console/src/workspace/BuilderWorkspace.tsx`
+      # — and it is deliberately not a second answer to a question the repository
+      # has already settled. Candidate generation is entirely deterministic:
+      # `generateVisualCandidates` compiles committed directions from
+      # `config/visual-directions.json` over a frozen intake bundle, and no model
+      # executes on this runner. The factory is the author on both paths, so the
+      # hosted run and the desk run produce evidence a reviewer can treat alike.
+      #
+      # Naming the runner instead — `github-actions` — would make provenance
+      # depend on where a build happened rather than on what authored it, and two
+      # identical candidate sets would then disagree about who may review them.
+      #
+      # This job supplies no `--verdicts` and promotes nothing; the identity is
+      # the durable provenance stamped on the evidence, which is what a later
+      # reviewer's independence is checked against.
       - name: Generate genuine-business visual review evidence
+        env:
+          APP_BUILDER_RUNTIME_VENDOR: app-builder
+          APP_BUILDER_RUNTIME_MODEL: deterministic-composition
         run: npm run acceptance:visual-candidates
 
       # The packet is the reviewer's surface, so it is what travels.

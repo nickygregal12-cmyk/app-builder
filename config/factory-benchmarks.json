@@ -144,11 +144,20 @@
     "targetMaximum": 20,
     "ceilings": {
       "marketing-site": 7,
-      "b2b-saas": 4,
+      "b2b-saas": 5,
       "consumer-app": 5,
       "internal-tool": 5,
       "content-site": 3,
       "ai-app": 5
-    }
+    },
+    "recalibrations": [
+      {
+        "projectType": "b2b-saas",
+        "from": 4,
+        "to": 5,
+        "recordedAt": "2026-08-28",
+        "reason": "Raised because the generated product got BIGGER, not worse, and the distinction is checkable. The b2b-saas project type declares a Workspace surface, and every generated B2B SaaS application had been silently shipping without it: `sectionsForPage` matched `work` unbounded, so `Workspace` was routed to the portfolio branch, given a gallery and a project list it could never fill, and then dropped by `carriesContent` as unfillable. Restoring it adds exactly one finding, `hero section has no asset bound to it` - the same finding already recorded for all three surviving pages, because this acceptance manifest supplies no knowledge pack and no assets at all. The other four predicted edits are unchanged. This is the one case the ceilings' own rule did not anticipate: a defect fix that legitimately adds a page cannot leave the count where a missing page left it. Do NOT raise this again for a change that makes an existing page worse."
+      }
+    ]
   }
 }

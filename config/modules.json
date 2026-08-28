@@ -5,6 +5,7 @@
     "profiles": {"description":"User profiles and account settings","status":"ready","defaultEnabled":false},
     "organisations": {"description":"Multi-tenant organisations, memberships and roles","status":"ready","defaultEnabled":false},
     "admin": {"description":"Generic admin/back-office foundation","status":"ready","defaultEnabled":false},
+    "records": {"description":"Organisation-owned domain records with role-differentiated access and a bounded archive operation","status":"ready","defaultEnabled":false},
     "billing": {"description":"Subscriptions, plans and entitlement abstraction","status":"planned","defaultEnabled":false},
     "email": {"description":"Transactional email abstraction and templates","status":"planned","defaultEnabled":false},
     "notifications": {"description":"In-app/email/push notification abstraction","status":"planned","defaultEnabled":false},

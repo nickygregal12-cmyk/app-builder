@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
+import { loadPresentationManifest, undeclaredComponents } from './lib/presentation-registry.mjs';
 
 const root = process.cwd();
 const required = [
@@ -85,13 +86,24 @@ try {
     if (!entry || entry.status !== 'ready') { console.error(`Renderer ${rendererId} names template ${String(renderer.template)}, which is not a ready template.`); failed = true; continue; }
     if (entry.renderer !== rendererId) { console.error(`Renderer ${rendererId} names template ${renderer.template}, which declares it implements ${String(entry.renderer)}.`); failed = true; }
   }
+  const templateDefinitions = [];
   for (const [templateId, entry] of Object.entries(templates.templates ?? {})) {
     if (entry.renderer && !rendererIds.has(entry.renderer)) { console.error(`Template ${templateId} implements unknown renderer ${entry.renderer}.`); failed = true; }
     const definition = JSON.parse(fs.readFileSync(path.join(root, entry.path, 'template.json'), 'utf8'));
+    templateDefinitions.push(definition);
     if (definition.renderer !== entry.renderer) { console.error(`Template ${templateId} declares renderer ${String(definition.renderer)} but the registry records ${String(entry.renderer)}.`); failed = true; }
     for (const shared of definition.sharedFiles ?? []) {
       if (!fs.existsSync(path.join(root, 'templates/shared', shared.from))) { console.error(`Template ${templateId} declares missing shared presentation file: ${shared.from}`); failed = true; }
     }
+  }
+  // The presentation manifest is one file compiled per template, so "nobody
+  // renders this" is a question about every template at once. Compilation asks
+  // the per-template half; this asks the half that keeps the manifest from
+  // becoming a catalogue of components that do not exist.
+  const orphanComponents = undeclaredComponents(loadPresentationManifest(root), templateDefinitions);
+  if (orphanComponents.length) {
+    console.error(`Presentation manifest describes component(s) no template renders: ${orphanComponents.join(', ')}.`);
+    failed = true;
   }
   for (const override of renderers.capabilityOverrides ?? []) {
     if (!rendererIds.has(override.renderer)) { console.error(`Renderer capability override targets unknown renderer ${String(override.renderer)}.`); failed = true; }

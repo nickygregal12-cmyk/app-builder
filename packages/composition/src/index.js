@@ -451,6 +451,21 @@ function enquiryFormSection(pageId, manifest) {
   ]);
 }
 
+/**
+ * The workspace surface where an application keeps its own records.
+ *
+ * Placed only where the capability is actually installed, like the enquiry
+ * form. The composer decides the section belongs on this page; the records
+ * recipe owns what it looks like and how it reaches the database, and the
+ * tenancy it enforces is the database's, not this section's.
+ */
+function tenantRecordsSection(pageId, manifest) {
+  if (manifest?.modules?.records !== true) return null;
+  return section(`${pageId}-records`, 'tenant-records', 'Work with the records this organisation owns', [
+    manifestBinding('title', 'Records'),
+  ]);
+}
+
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
   const profiles = socialProfileBinding(pack, manifest);
@@ -560,7 +575,14 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
     output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)]));
     output.push(peopleSection(pageId, pack));
     output.push(proofSection(pageId, pack));
-  } else if (/work|gallery|portfolio|project/.test(lower)) {
+  } else if (/\bworks?\b|gallery|portfolio|project/.test(lower)) {
+    // `work` is bounded deliberately. Unbounded, it also matched **Workspace** —
+    // the b2b-saas application surface — which routed it to the portfolio branch,
+    // gave it a gallery and a project list it could never fill, and left it
+    // carrying no content. `carriesContent` then dropped it as unfillable, so
+    // every generated B2B SaaS application has silently shipped without the one
+    // surface its own project type declares it is worked in. A marketing site's
+    // "Work" and "Our works" still match; "Workspace" no longer does.
     output.push(gallerySection(pageId, pack, manifest, assetDecisions));
     output.push(projectsSection(pageId, pack));
   } else if (/location|area/.test(lower)) {
@@ -571,6 +593,12 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
   } else if (/content|article|post|news|detail/.test(lower)) {
     output.push(contentSection(pageId, pack));
   } else if (/dashboard|workspace|record|experience|input|result|history|admin|setting|profile/.test(lower)) {
+    // The records surface goes on the workspace rather than on every
+    // application page: a dashboard summarises, a workspace is worked in, and
+    // putting a full CRUD panel behind Settings would be a filing cabinet in a
+    // cupboard. `sectionsForPage` dedupes by id, so a project whose surfaces
+    // include both still gets one.
+    if (/workspace|record/.test(lower)) output.push(tenantRecordsSection(pageId, manifest));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
   } else {

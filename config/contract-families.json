@@ -39,7 +39,7 @@
       "schema": "composition.schema.json",
       "typeName": "DeterministicProjectComposition",
       "boundary": "Composer output and generated .app-builder/composition.json reads.",
-      "typesHash": "b58220a66dbc9fc7aeeccfd5fdcbdd557cac38449bf89d7721710669a35a847c",
+      "typesHash": "39e0243a09d063019f05b5c4bb394db405dafc82c6d46c7e774cf2fc9b4caf5d",
       "schemaHash": "beb9db5a816da43549906f853a8e0697377a0e60eba2a63f4de3723c44c4b282"
     },
     {

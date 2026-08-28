@@ -26,8 +26,18 @@
       "describe": "The opening is sized like the point of the page.",
       "opposite": "restrained-display-type",
       "consumer": "art-direction.visualDistinctiveness",
-      "adopt": {"prefer": {"visualDistinctiveness": "expressive"}},
-      "avoid": {"refuse": {"visualDistinctiveness": ["expressive"]}}
+      "adopt": {
+        "prefer": {
+          "visualDistinctiveness": "expressive"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "visualDistinctiveness": [
+            "expressive"
+          ]
+        }
+      }
     },
     "restrained-display-type": {
       "label": "Restrained display typography",
@@ -35,8 +45,18 @@
       "describe": "The opening behaves like any other section.",
       "opposite": "oversized-display-type",
       "consumer": "art-direction.visualDistinctiveness",
-      "adopt": {"prefer": {"visualDistinctiveness": "restrained"}},
-      "avoid": {"refuse": {"visualDistinctiveness": ["restrained"]}}
+      "adopt": {
+        "prefer": {
+          "visualDistinctiveness": "restrained"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "visualDistinctiveness": [
+            "restrained"
+          ]
+        }
+      }
     },
     "generous-whitespace": {
       "label": "Generous whitespace",
@@ -44,8 +64,18 @@
       "describe": "Sections stand a long way apart and nothing is crowded.",
       "opposite": "dense-information",
       "consumer": "design.density",
-      "adopt": {"prefer": {"density": "relaxed"}},
-      "avoid": {"refuse": {"density": ["relaxed"]}}
+      "adopt": {
+        "prefer": {
+          "density": "relaxed"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "density": [
+            "relaxed"
+          ]
+        }
+      }
     },
     "dense-information": {
       "label": "Dense information",
@@ -53,8 +83,19 @@
       "describe": "A surface worked in rather than read, with no decoration that costs vertical space.",
       "opposite": "generous-whitespace",
       "consumer": "design.density",
-      "adopt": {"prefer": {"density": "dense"}},
-      "avoid": {"refuse": {"density": ["dense", "compact"]}}
+      "adopt": {
+        "prefer": {
+          "density": "dense"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "density": [
+            "dense",
+            "compact"
+          ]
+        }
+      }
     },
     "narrow-reading-measure": {
       "label": "Narrow reading measure",
@@ -62,8 +103,18 @@
       "describe": "Text is set in a column narrow enough to read like a document.",
       "opposite": "wide-canvas",
       "consumer": "design.maxWidth",
-      "adopt": {"prefer": {"maxWidth": "64rem"}},
-      "avoid": {"refuse": {"maxWidth": ["64rem"]}}
+      "adopt": {
+        "prefer": {
+          "maxWidth": "64rem"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "maxWidth": [
+            "64rem"
+          ]
+        }
+      }
     },
     "wide-canvas": {
       "label": "Wide canvas",
@@ -71,8 +122,18 @@
       "describe": "The page uses the whole width of a large screen.",
       "opposite": "narrow-reading-measure",
       "consumer": "design.maxWidth",
-      "adopt": {"prefer": {"maxWidth": "96rem"}},
-      "avoid": {"refuse": {"maxWidth": ["96rem"]}}
+      "adopt": {
+        "prefer": {
+          "maxWidth": "96rem"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "maxWidth": [
+            "96rem"
+          ]
+        }
+      }
     },
     "asymmetric-composition": {
       "label": "Asymmetric composition",
@@ -80,8 +141,18 @@
       "describe": "Items are laid out on an uneven grid rather than in equal columns.",
       "opposite": "symmetric-grid",
       "consumer": "direction.gridFamily",
-      "adopt": {"prefer": {"gridFamily": "asymmetric"}},
-      "avoid": {"refuse": {"gridFamily": ["asymmetric"]}}
+      "adopt": {
+        "prefer": {
+          "gridFamily": "asymmetric"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "gridFamily": [
+            "asymmetric"
+          ]
+        }
+      }
     },
     "symmetric-grid": {
       "label": "Symmetric grid",
@@ -89,17 +160,38 @@
       "describe": "A regular grid of equal columns.",
       "opposite": "asymmetric-composition",
       "consumer": "direction.gridFamily",
-      "adopt": {"prefer": {"gridFamily": "symmetric"}},
-      "avoid": {"refuse": {"gridFamily": ["symmetric"]}}
+      "adopt": {
+        "prefer": {
+          "gridFamily": "symmetric"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "gridFamily": [
+            "symmetric"
+          ]
+        }
+      }
     },
     "indexed-rows": {
       "label": "Indexed editorial rows",
       "useFor": "layout",
-      "describe": "A set of items reads as numbered rows rather than as cards.",
+      "describe": "A set of items reads as numbered rows rather than as cards, whether as editorial rows or as a schedule.",
       "opposite": "symmetric-grid",
       "consumer": "direction.gridFamily",
-      "adopt": {"prefer": {"gridFamily": "editorial-rows"}},
-      "avoid": {"refuse": {"gridFamily": ["editorial-rows"]}}
+      "adopt": {
+        "prefer": {
+          "gridFamily": "editorial-rows"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "gridFamily": [
+            "editorial-rows",
+            "schedule-rows"
+          ]
+        }
+      }
     },
     "imagery-led-opening": {
       "label": "Imagery-led opening",
@@ -107,8 +199,18 @@
       "describe": "A photograph carries the opening rather than the words about it.",
       "opposite": "typographic-opening",
       "consumer": "direction.heroStrategy",
-      "adopt": {"prefer": {"heroStrategy": "immersive"}},
-      "avoid": {"refuse": {"heroStrategy": ["immersive"]}}
+      "adopt": {
+        "prefer": {
+          "heroStrategy": "immersive"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "heroStrategy": [
+            "immersive"
+          ]
+        }
+      }
     },
     "typographic-opening": {
       "label": "Typographic opening",
@@ -116,8 +218,18 @@
       "describe": "The opening is a statement set in type, with no picture beside it.",
       "opposite": "imagery-led-opening",
       "consumer": "direction.heroStrategy",
-      "adopt": {"prefer": {"heroStrategy": "editorial"}},
-      "avoid": {"refuse": {"heroStrategy": ["editorial"]}}
+      "adopt": {
+        "prefer": {
+          "heroStrategy": "editorial"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "heroStrategy": [
+            "editorial"
+          ]
+        }
+      }
     },
     "split-opening": {
       "label": "Split opening",
@@ -125,8 +237,18 @@
       "describe": "The opening puts the claim beside the supporting material.",
       "opposite": "typographic-opening",
       "consumer": "direction.heroStrategy",
-      "adopt": {"prefer": {"heroStrategy": "split"}},
-      "avoid": {"refuse": {"heroStrategy": ["split"]}}
+      "adopt": {
+        "prefer": {
+          "heroStrategy": "split"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "heroStrategy": [
+            "split"
+          ]
+        }
+      }
     },
     "expressive-motion": {
       "label": "Expressive motion",
@@ -134,8 +256,20 @@
       "describe": "The page moves as it is read, and the movement is part of the effect.",
       "opposite": "restrained-motion",
       "consumer": "art-direction.motionIntensity",
-      "adopt": {"prefer": {"motionIntensity": "expressive", "restraintLevel": "low"}},
-      "avoid": {"refuse": {"motionIntensity": ["expressive", "moderate"]}}
+      "adopt": {
+        "prefer": {
+          "motionIntensity": "expressive",
+          "restraintLevel": "low"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "motionIntensity": [
+            "expressive",
+            "moderate"
+          ]
+        }
+      }
     },
     "restrained-motion": {
       "label": "Restrained motion",
@@ -143,8 +277,19 @@
       "describe": "Movement is feedback only. Nothing performs.",
       "opposite": "expressive-motion",
       "consumer": "art-direction.motionIntensity",
-      "adopt": {"prefer": {"motionIntensity": "subtle", "restraintLevel": "high"}},
-      "avoid": {"refuse": {"motionIntensity": ["subtle"]}}
+      "adopt": {
+        "prefer": {
+          "motionIntensity": "subtle",
+          "restraintLevel": "high"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "motionIntensity": [
+            "subtle"
+          ]
+        }
+      }
     },
     "alternating-section-ground": {
       "label": "Alternating section ground",
@@ -152,8 +297,19 @@
       "describe": "The page changes ground as it scrolls so a long read is broken into passages.",
       "opposite": "single-ground",
       "consumer": "art-direction.layoutVariance",
-      "adopt": {"prefer": {"layoutVariance": "varied"}},
-      "avoid": {"refuse": {"layoutVariance": ["varied", "alternating"]}}
+      "adopt": {
+        "prefer": {
+          "layoutVariance": "varied"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "layoutVariance": [
+            "varied",
+            "alternating"
+          ]
+        }
+      }
     },
     "single-ground": {
       "label": "One ground throughout",
@@ -161,8 +317,18 @@
       "describe": "Every section sits on the same ground.",
       "opposite": "alternating-section-ground",
       "consumer": "art-direction.layoutVariance",
-      "adopt": {"prefer": {"layoutVariance": "uniform"}},
-      "avoid": {"refuse": {"layoutVariance": ["uniform"]}}
+      "adopt": {
+        "prefer": {
+          "layoutVariance": "uniform"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "layoutVariance": [
+            "uniform"
+          ]
+        }
+      }
     },
     "ruled-section-headings": {
       "label": "Ruled section headings",
@@ -170,8 +336,18 @@
       "describe": "A rule sits above each section heading.",
       "opposite": "plain-section-headings",
       "consumer": "direction.headingTreatment",
-      "adopt": {"prefer": {"headingTreatment": "ruled"}},
-      "avoid": {"refuse": {"headingTreatment": ["ruled"]}}
+      "adopt": {
+        "prefer": {
+          "headingTreatment": "ruled"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "headingTreatment": [
+            "ruled"
+          ]
+        }
+      }
     },
     "plain-section-headings": {
       "label": "Plain section headings",
@@ -179,8 +355,18 @@
       "describe": "Section headings carry no rule or ornament.",
       "opposite": "ruled-section-headings",
       "consumer": "direction.headingTreatment",
-      "adopt": {"prefer": {"headingTreatment": "plain"}},
-      "avoid": {"refuse": {"headingTreatment": ["plain"]}}
+      "adopt": {
+        "prefer": {
+          "headingTreatment": "plain"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "headingTreatment": [
+            "plain"
+          ]
+        }
+      }
     },
     "mobile-simplification": {
       "label": "Simplified on a phone",
@@ -188,8 +374,19 @@
       "describe": "The phone rendering is tightened and reordered rather than being the desktop one with fewer columns.",
       "opposite": null,
       "consumer": "direction.responsive",
-      "adopt": {"prefer": {"mobileDensity": "tighter", "mobileSectionOrder": "conversion-first"}},
-      "avoid": {"refuse": {"mobileDensity": ["tighter"]}}
+      "adopt": {
+        "prefer": {
+          "mobileDensity": "tighter",
+          "mobileSectionOrder": "conversion-first"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "mobileDensity": [
+            "tighter"
+          ]
+        }
+      }
     },
     "disclosure-navigation": {
       "label": "Disclosure navigation",
@@ -197,8 +394,18 @@
       "describe": "Navigation collapses behind a control on a small screen.",
       "opposite": "inline-navigation",
       "consumer": "direction.navigation",
-      "adopt": {"prefer": {"navigation": "disclosure"}},
-      "avoid": {"refuse": {"navigation": ["disclosure"]}}
+      "adopt": {
+        "prefer": {
+          "navigation": "disclosure"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "navigation": [
+            "disclosure"
+          ]
+        }
+      }
     },
     "inline-navigation": {
       "label": "Inline navigation",
@@ -206,8 +413,18 @@
       "describe": "Navigation stays visible and scrolls sideways on a small screen.",
       "opposite": "disclosure-navigation",
       "consumer": "direction.navigation",
-      "adopt": {"prefer": {"navigation": "inline-scroll"}},
-      "avoid": {"refuse": {"navigation": ["inline-scroll"]}}
+      "adopt": {
+        "prefer": {
+          "navigation": "inline-wrap"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "navigation": [
+            "inline-wrap"
+          ]
+        }
+      }
     },
     "dark-ground": {
       "label": "Dark full-page ground",
@@ -216,8 +433,12 @@
       "opposite": "light-ground",
       "consumer": null,
       "unconsumedReason": "Every visual direction the factory offers composes on the light ground the design system compiles, and the accent comes from the company's own material rather than from a reference. Recording this preference is honest; claiming it changed a build would not be.",
-      "adopt": {"prefer": {}},
-      "avoid": {"refuse": {}}
+      "adopt": {
+        "prefer": {}
+      },
+      "avoid": {
+        "refuse": {}
+      }
     },
     "light-ground": {
       "label": "Light ground",
@@ -226,8 +447,12 @@
       "opposite": "dark-ground",
       "consumer": null,
       "unconsumedReason": "The factory already composes every direction on a light ground, so this preference is already satisfied and changes nothing.",
-      "adopt": {"prefer": {}},
-      "avoid": {"refuse": {}}
+      "adopt": {
+        "prefer": {}
+      },
+      "avoid": {
+        "refuse": {}
+      }
     },
     "sticky-navigation": {
       "label": "Sticky navigation",
@@ -236,8 +461,12 @@
       "opposite": null,
       "consumer": null,
       "unconsumedReason": "The template's navigation treatment is a responsive decision between disclosure and inline scrolling; whether the header sticks is not a decision any current direction, plan or token expresses.",
-      "adopt": {"prefer": {}},
-      "avoid": {"refuse": {}}
+      "adopt": {
+        "prefer": {}
+      },
+      "avoid": {
+        "refuse": {}
+      }
     },
     "horizontal-ticker": {
       "label": "Horizontal ticker",
@@ -246,8 +475,12 @@
       "opposite": null,
       "consumer": null,
       "unconsumedReason": "No presentation in the registry scrolls itself, so the factory could not produce one to avoid. Recorded so a reviewer can see the preference was heard.",
-      "adopt": {"prefer": {}},
-      "avoid": {"refuse": {}}
+      "adopt": {
+        "prefer": {}
+      },
+      "avoid": {
+        "refuse": {}
+      }
     }
   },
   "phrases": {

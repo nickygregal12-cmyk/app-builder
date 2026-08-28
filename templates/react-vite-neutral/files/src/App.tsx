@@ -349,11 +349,6 @@ function SiteFooter({ navigation, navigate }: { navigation: readonly PageSpec[];
     <nav className="footer-nav" aria-label="Footer navigation">
       {navigation.map((page) => <a href={siteHref(page.path)} onClick={(event) => navigate(event, page.path)} key={page.id}>{page.navigation.label}</a>)}
     </nav>
-    {import.meta.env.DEV && <div className="factory-meta" data-development-only="true">
-      <span>{design.label}</span>
-      <span>{installedRecipes.length} deterministic capabilities</span>
-      <span>{composed.warnings.length ? `${composed.warnings.length} composition warnings` : 'Composition complete'}</span>
-    </div>}
   </footer>;
 }
 
@@ -438,11 +433,11 @@ export default function App() {
   };
   // Two navigation treatments, because a phone is where a direction's decision
   // about navigation actually shows. `disclosure` collapses behind a toggle;
-  // `inline-scroll` keeps every destination visible in one scrolling row, which
+  // `inline-wrap` keeps every destination visible by wrapping the row, which
   // suits a site whose surfaces are few and whose register is editorial. The
-  // toggle is not rendered at all under `inline-scroll` rather than hidden: a
+  // toggle is not rendered at all under `inline-wrap` rather than hidden: a
   // control that is present, focusable and does nothing is worse than absent.
-  const disclosureNav = NAVIGATION_TREATMENT !== 'inline-scroll';
+  const disclosureNav = NAVIGATION_TREATMENT !== 'inline-wrap';
   return <div className={`site-frame ${SHELL_CLASSES}`} data-scenario={currentScenario}>
     <header className={`site-header nav-${NAVIGATION_TREATMENT}`}>
       <a className="site-brand" href={siteHref('/')} onClick={(event) => followLink(event, '/')}>{project.name}</a>

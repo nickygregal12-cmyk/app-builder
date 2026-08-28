@@ -37,14 +37,14 @@ import { DEFAULT_ART_DIRECTION, LAYOUT_VARIANCE_ORDER, RESTRAINT_LEVELS, VISUAL_
 import { MOTION_INTENSITY_ORDER } from './motion-contract.mjs';
 
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
-export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows']);
-export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled']);
+export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows']);
+export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled', 'numbered']);
 export const CTA_PLACEMENTS = Object.freeze(['closing', 'mid-page']);
 export const DISTINCTIVE_MOMENTS = Object.freeze(['lead-statement', 'full-bleed-lead', 'figure-index', 'none']);
 export const ASSET_APPETITES = Object.freeze(['imagery-required', 'imagery-optional', 'typographic']);
 
 export const MOBILE_HERO = Object.freeze(['copy-first', 'image-first', 'copy-only']);
-export const MOBILE_NAVIGATION = Object.freeze(['disclosure', 'inline-scroll']);
+export const MOBILE_NAVIGATION = Object.freeze(['disclosure', 'inline-wrap']);
 export const MOBILE_SECTION_ORDER = Object.freeze(['as-desktop', 'conversion-first']);
 export const MOBILE_DENSITY = Object.freeze(['as-desktop', 'tighter']);
 export const MOBILE_MOTION = Object.freeze(['as-desktop', 'reduced']);
@@ -323,6 +323,15 @@ export function visualDirectionClasses({ id = null, artDirection = null, shellCl
     // touch" above the services. Two declarations contradicting each other is
     // not a responsive decision, so the stylesheet is told which one this is.
     `cta-${dimensions.ctaPlacement}`,
+    // These three were recorded in the candidate signature and counted by the
+    // diversity gate, and never reached the stylesheet in any form. Two
+    // candidates could therefore be certified "structurally different" on
+    // planes a visitor cannot see, which is most of why two directions kept
+    // arriving as the same professional-services template. A declared axis
+    // either renders or it must not count.
+    `variance-${dimensions.layoutVariance}`,
+    `distinct-${dimensions.visualDistinctiveness}`,
+    `motion-${dimensions.motionIntensity}`,
     `mobile-hero-${responsive.mobileHero}`,
     `mobile-order-${responsive.mobileSectionOrder}`,
     // No `mobile-density-*` class: that decision compiles to

@@ -122,7 +122,6 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
    so without a wrap it competes with the three real columns and squeezes
    them. Rendered evidence is captured from the dev preview, so a footer that
    only looks like that in development would be photographed as the product. */
-.factory-meta { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 16px; border-top: 1px dashed var(--color-border); font-size: .74rem }
 
 /* Rich text and evidence ------------------------------------------------ */
 .section-rich-text .section-copy { max-width: 62ch; font-size: var(--text-xl) }
@@ -266,15 +265,50 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   font-weight: 700;
   letter-spacing: .08em;
 }
+/* The card form used to put the plate in the top-right corner at --text-sm,
+   which is decoration: it painted a glyph and changed no layout. When richer
+   content moved services from a list to cards the index stopped being the
+   thing you notice, and the review that followed reported no distinctive
+   moment at all. A moment has to survive the variant its content earns, so
+   the card reserves a ruled plate column exactly as the list reserves a
+   gutter. */
 .moment-figure-index .section-item-grid .item-grid { counter-reset: plate }
-.moment-figure-index .section-item-grid .content-card { position: relative; counter-increment: plate }
+.moment-figure-index .section-item-grid .content-card {
+  position: relative;
+  counter-increment: plate;
+  padding-top: 58px;
+}
 .moment-figure-index .section-item-grid .content-card::after {
   content: counter(plate, decimal-leading-zero);
   position: absolute;
-  right: 20px;
-  top: 20px;
+  left: 26px;
+  right: 26px;
+  top: 22px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-accent);
   color: var(--color-accent);
-  font-size: var(--text-sm);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1;
+}
+
+/* The feature form had no implementation at all, so a direction that declared
+   figure-index and composed a features grid lost its moment silently. The
+   rule the variant already draws becomes the plate's spine. */
+.moment-figure-index .section-item-grid .feature-list { counter-reset: plate }
+.moment-figure-index .section-item-grid .feature-list li {
+  position: relative;
+  counter-increment: plate;
+  padding-left: 54px;
+}
+.moment-figure-index .section-item-grid .feature-list li::after {
+  content: counter(plate, decimal-leading-zero);
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  color: var(--color-accent);
+  font-size: var(--text-base);
   font-weight: 700;
   letter-spacing: .08em;
 }
@@ -295,7 +329,191 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   letter-spacing: .09em;
 }
 
+/* Enquiry outcome. --------------------------------------------------------
+   A failure used to be a sentence in the same grey as a success, which an
+   independent review called visually understated on every candidate it saw. A
+   visitor whose enquiry has just been lost is the last person who should have
+   to notice a line of body copy, so the failure takes a panel with a rule
+   against the submit control it belongs to. There is no status colour in the
+   token set and inventing one here would make this file a second design
+   authority, so it is built from the tokens that exist. */
+.enquiry-status { margin: 0 }
+.enquiry-status-pending { color: var(--color-text-muted) }
+.enquiry-status-sent { padding: 10px 14px; border-left: 3px solid var(--color-accent); background: var(--color-accent-soft); color: var(--color-ink); font-weight: 600 }
+.enquiry-status-failed {
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-left: 4px solid var(--color-ink);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.enquiry-actions { align-items: flex-start }
+
+/* Schedule rows. ------------------------------------------------------------
+   An item set read across as ruled rows rather than down as cards. Cards give
+   every item the same box whatever it has to say; a schedule gives each one a
+   line, a number and a column for what it is, which is how structured
+   information is actually published. For a practice whose credibility is in
+   checkable detail rather than photography, this is a register rather than a
+   brochure. */
+.grid-schedule-rows .item-grid { display: block }
+.grid-schedule-rows .section-item-grid .content-card {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: 8px 40px;
+  align-items: baseline;
+  padding: 22px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* Explicit placement, not source order. A grid lays its children out in the
+   order they appear, and `::after` is the last child — so the plate a schedule
+   puts first landed in the trailing column, and the name was pushed into the
+   narrow leading one where it wrapped a word at a time into the description
+   beside it. Naming each cell is what makes the row read left to right. */
+.grid-schedule-rows .section-item-grid .content-card h3 { grid-column: 1; margin: 0; font-size: var(--text-lg) }
+.grid-schedule-rows .section-item-grid .content-card p { grid-column: 2; margin: 0; font-size: var(--text-base) }
+.grid-schedule-rows .section-item-grid .content-card:last-child { border-bottom: 1px solid var(--color-border) }
+.grid-schedule-rows .plain-list { display: block }
+.grid-schedule-rows .plain-list li { border: 0; border-top: 1px solid var(--color-border); border-radius: 0; background: transparent; box-shadow: none }
+
+/* The moment adapts to the grid rather than fighting it. On a card
+   figure-index reserves a ruled plate above the copy; on a schedule row the
+   plate belongs at the head of the row, which is where a numbered schedule
+   puts it. */
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card {
+  grid-template-columns: 4.5rem minmax(0, 18rem) minmax(0, 1fr);
+  padding-top: 22px;
+}
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after {
+  grid-column: 1;
+  grid-row: 1;
+  position: static;
+  border-bottom: 0;
+  padding-bottom: 0;
+  font-size: var(--text-lg);
+}
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card h3 { grid-column: 2 }
+.grid-schedule-rows.moment-figure-index .section-item-grid .content-card p { grid-column: 3 }
+
+/* A register is a register on every section, not only the one the direction
+   was designed around. Two reviews called the secondary content sparse and
+   repetitive, and a schedule that reverts to cards for locations and contact
+   details is exactly that: the grammar announced at the top of the page and
+   abandoned below it. Locations and contact rows are the same ruled row as a
+   service, so a reader who has learned to read one has learned the page. */
+.grid-schedule-rows .section-location-list .plain-list li,
+.grid-schedule-rows .section-entity-list .plain-list li,
+.grid-schedule-rows .section-content-list .plain-list li { padding: 18px 0 18px 54px }
+.grid-schedule-rows .section-location-list .plain-list li::before,
+.grid-schedule-rows .section-entity-list .plain-list li::before,
+.grid-schedule-rows .section-content-list .plain-list li::before { display: none }
+.grid-schedule-rows .section-location-list .plain-list,
+.grid-schedule-rows .section-entity-list .plain-list,
+.grid-schedule-rows .section-content-list .plain-list { counter-reset: place }
+.grid-schedule-rows .section-location-list .plain-list li::after,
+.grid-schedule-rows .section-entity-list .plain-list li::after,
+.grid-schedule-rows .section-content-list .plain-list li::after {
+  content: counter(place, decimal-leading-zero);
+  counter-increment: place;
+  position: absolute;
+  left: 0;
+  top: 18px;
+  color: var(--color-accent);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.grid-schedule-rows .contact-grid { display: block }
+.grid-schedule-rows .contact-grid > a, .grid-schedule-rows .contact-grid > div {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  gap: 8px 40px;
+  align-items: baseline;
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.grid-schedule-rows .contact-grid > :last-child { border-bottom: 1px solid var(--color-border) }
+.grid-schedule-rows .contact-grid > a:hover { border-color: var(--color-border); background: var(--color-surface-muted) }
+
+/* Numbered headings. A contents page rather than a rule: each section states
+   its place in the document. */
+.headings-numbered .app-shell { counter-reset: surface-section }
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > h2,
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > .section-heading > h2 { counter-increment: surface-section; display: flex; align-items: baseline; gap: 16px }
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > h2::before,
+.headings-numbered .page-section:not(.hero-section):not(.cta-section) > .section-heading > h2::before {
+  content: counter(surface-section, decimal-leading-zero);
+  flex: 0 0 auto;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+/* Layout variance, visual distinctiveness and motion intensity. -------------
+   These three are declared by every direction, recorded in the candidate
+   signature and counted by the diversity gate. Until now none of them reached
+   the stylesheet at all, so a candidate set could be certified structurally
+   diverse over planes a visitor could not see — which is most of why two
+   directions kept arriving as the same professional-services template.
+   `tooling/art-direction-axes.test.mjs` now refuses any counted axis whose
+   values do not render differently. */
+
+/* Rhythm. Whether consecutive sections read as one continuous document, as an
+   alternating pair, or as a set that keeps changing footing. */
+.variance-uniform .page-section:nth-of-type(even):not(.hero-section):not(.cta-section) { background: transparent }
+.variance-uniform .page-section + .page-section { border-top: 1px solid var(--color-border) }
+.variance-varied .page-section:nth-of-type(3n):not(.hero-section):not(.cta-section) { background: var(--color-surface-muted) }
+.variance-varied .page-section:nth-of-type(4n):not(.hero-section):not(.cta-section) { padding-left: max(44px, calc((100vw - var(--layout-max-width)) / 2 + 24px)) }
+
+/* Expression. How hard the accent works and how much the display type is
+   allowed to assert itself. */
+.distinct-restrained h2 { font-size: var(--text-2xl) }
+.distinct-restrained h2::before { opacity: .55 }
+.distinct-expressive h2 { font-size: var(--text-4xl); letter-spacing: -.015em }
+.distinct-expressive .section-copy { max-width: 46ch; font-size: var(--text-lg) }
+.distinct-expressive .page-section > h2 { margin-bottom: 22px }
+
+/* Motion. A direction that asked for stillness gets it; one that asked for
+   moderate movement gets a considered amount rather than none. Durations come
+   from the motion tokens so this stays one decision rather than a second. */
+.motion-none *, .motion-none *::before, .motion-none *::after { transition: none !important }
+.motion-subtle a, .motion-subtle .content-card { transition: color var(--motion-duration-fast) var(--motion-ease), border-color var(--motion-duration-fast) var(--motion-ease) }
+.motion-moderate a, .motion-moderate .content-card { transition: color var(--motion-duration-fast) var(--motion-ease), border-color var(--motion-duration-fast) var(--motion-ease), transform var(--motion-duration-fast) var(--motion-ease), box-shadow var(--motion-duration-fast) var(--motion-ease) }
+.motion-moderate .content-card:hover { transform: translateY(var(--motion-hover-lift)); box-shadow: var(--shadow-raised) }
+@media (prefers-reduced-motion: reduce) {
+  .motion-subtle *, .motion-moderate *, .motion-subtle *::before, .motion-moderate *::before { transition: none !important }
+  .motion-moderate .content-card:hover { transform: none }
+}
+
 @media (max-width: 880px) {
+  /* A schedule reads across only while there is width to read across. Holding
+     three columns on a phone squeezed each description into about a hundred
+     pixels and set it one word per line, which is the density failure richer
+     content is supposed to expose rather than cause. Below this the plate keeps
+     its column and the row stacks under it. */
+  .grid-schedule-rows .section-item-grid .content-card { grid-template-columns: 1fr; gap: 6px }
+  .grid-schedule-rows .section-item-grid .content-card h3,
+  .grid-schedule-rows .section-item-grid .content-card p { grid-column: 1 }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card { grid-template-columns: 3rem minmax(0, 1fr); gap: 6px 14px }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after { grid-column: 1; grid-row: 1 }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card h3 { grid-column: 2; grid-row: 1 }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card p { grid-column: 2; grid-row: 2 }
+  .grid-schedule-rows .contact-grid > a, .grid-schedule-rows .contact-grid > div { grid-template-columns: 1fr; gap: 4px }
+
   .hero-section.has-image { grid-template-columns: 1fr; gap: 32px }
   .grid-asymmetric .item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .grid-asymmetric .section-item-grid .item-grid > :first-child, .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2 }
@@ -328,40 +546,28 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      inheriting desktop with fewer columns. Every rule below is driven by a
      class the factory compiled from the plan. */
 
-  /* Navigation. One scrolling row of destinations, which works where a site
-     has few surfaces and reads badly where it has many — which is exactly why
-     it is a direction's decision and not a default.
+  /* Navigation, for a direction that wants its destinations visible rather
+     than behind a trigger. That intent is what distinguishes it from
+     `disclosure`, and it is worth keeping; the row that expressed it was not.
 
-     It previously read badly everywhere. An independent review found the row
-     "visibly clipped": the brand took its own natural width, wrapping to four
-     lines and leaving the row about two destinations wide, and the scrollbar
-     was hidden with nothing put in its place. Three of five destinations were
-     invisible with no cue that they existed, which is not a scrolling row —
-     it is a truncated one.
+     This was a scrolling row twice, and an independent reviewer called it
+     clipped both times. The first attempt lost three of five destinations
+     behind a hidden scrollbar. The second gave the row its own line and added
+     a fade to say it continued, and the next review still reported navigation
+     "visibly clipped at mobile width across pages, including a partially
+     obscured Locations item, making the composition look unfinished".
 
-     So the brand is made to yield, and the row says it continues. The fade is
-     the affordance; it is applied only while the row actually overflows, so a
-     site whose destinations do fit is not told to scroll for nothing. */
-  /* Sharing one row with the brand was the mistake. A flex item will not go
-     below its longest word, so "Consultants" wrapped the brand to four lines
-     and still left the row about two destinations wide; shrinking the brand
-     only bought back pixels the longest word took straight back.
-
-     So the row stops competing for width and takes its own. Brand above,
-     destinations beneath across the full measure — a title bar over a section
-     nav, which is a pattern rather than a squeeze. */
-  .site-header.nav-inline-scroll { flex-wrap: wrap; gap: 0; row-gap: 10px; align-items: center }
-  .site-header.nav-inline-scroll .site-brand { flex: 1 1 100%; min-width: 0; font-size: 1rem; line-height: 1.3 }
-  .site-header.nav-inline-scroll nav { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; justify-content: flex-start; margin: 0 -4px; padding: 0 4px; overscroll-behavior-x: contain }
-  .site-header.nav-inline-scroll nav::-webkit-scrollbar { display: none }
-  /* The trailing edge softens so the row reads as continuing rather than as
-     ending. Destinations stay in document order, so the row starts where
-     reading starts. */
-  /* `currentColor` rather than a literal: a mask reads alpha only, so any
-     opaque colour behaves identically, and this keeps the surface inside the
-     token system the design-system lint enforces. */
-  .site-header.nav-inline-scroll nav { mask-image: linear-gradient(to right, currentColor calc(100% - 28px), transparent 100%) }
-  .site-header.nav-inline-scroll nav a { flex: 0 0 auto; padding: 9px 11px }
+     The lesson is not that the fade was too subtle. A horizontal scroller in a
+     header asks the reader to discover destinations by dragging a row that
+     looks like it has already ended, and a partially cut word reads as a bug
+     however it is faded. So the row stops scrolling and starts wrapping: every
+     destination is laid out, on as many lines as it takes, and nothing is
+     off-screen to be found. Wrapping costs a few pixels of header height on
+     the smallest widths and buys a navigation that looks finished. */
+  .site-header.nav-inline-wrap { flex-wrap: wrap; gap: 0; row-gap: 10px; align-items: center }
+  .site-header.nav-inline-wrap .site-brand { flex: 1 1 100%; min-width: 0; font-size: 1rem; line-height: 1.3 }
+  .site-header.nav-inline-wrap nav { display: flex; flex: 1 1 100%; min-width: 0; flex-wrap: wrap; gap: 6px; justify-content: flex-start; margin: 0 -4px; padding: 0 4px }
+  .site-header.nav-inline-wrap nav a { flex: 0 0 auto; padding: 9px 11px }
 
   /* Content order. A trade business is found on a phone by someone who wants
      to call it, so a conversion-first direction puts contact directly under

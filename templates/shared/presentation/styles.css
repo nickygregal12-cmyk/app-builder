@@ -478,6 +478,20 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 }
 
 @media (max-width: 880px) {
+  /* A schedule reads across only while there is width to read across. Holding
+     three columns on a phone squeezed each description into about a hundred
+     pixels and set it one word per line, which is the density failure richer
+     content is supposed to expose rather than cause. Below this the plate keeps
+     its column and the row stacks under it. */
+  .grid-schedule-rows .section-item-grid .content-card { grid-template-columns: 1fr; gap: 6px }
+  .grid-schedule-rows .section-item-grid .content-card h3,
+  .grid-schedule-rows .section-item-grid .content-card p { grid-column: 1 }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card { grid-template-columns: 3rem minmax(0, 1fr); gap: 6px 14px }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after { grid-column: 1; grid-row: 1 }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card h3 { grid-column: 2; grid-row: 1 }
+  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card p { grid-column: 2; grid-row: 2 }
+  .grid-schedule-rows .contact-grid > a, .grid-schedule-rows .contact-grid > div { grid-template-columns: 1fr; gap: 4px }
+
   .hero-section.has-image { grid-template-columns: 1fr; gap: 32px }
   .grid-asymmetric .item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .grid-asymmetric .section-item-grid .item-grid > :first-child, .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2 }

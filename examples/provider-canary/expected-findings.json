@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "description": "What a competent reviewer should say about `flawed-cart.js`, declared before any provider is asked. Scoring a canary against criteria written after reading the answer would measure nothing, so these are committed first and the fixture is not to be repaired.",
+  "dataClass": "synthetic",
+  "fixture": "examples/provider-canary/flawed-cart.js",
+  "roleId": "code-reviewer",
+  "artifactContract": "schemas/review-verdict.schema.json",
+  "scoring": {
+    "required": "A provider earns a pass only by naming every defect in `mustFind`. These are unambiguous and present in four lines of code; missing one is not a near miss.",
+    "invention": "A finding that names a defect not in `mustFind` and not defensible against the fixture counts as invented. A reviewer that invents findings is worse than no reviewer, because its output has to be checked line by line.",
+    "note": "Passing this earns the `code-reviewer` role on synthetic material for the exact provider and model that ran it. It earns nothing else — not implementation, not architecture, not security, not another model from the same vendor."
+  },
+  "mustFind": [
+    {
+      "id": "missing-input-validation",
+      "symbol": "cartTotal",
+      "summary": "`items` is used without validation, so an undefined or non-array argument throws inside `.reduce`."
+    },
+    {
+      "id": "missing-await",
+      "symbol": "priceWithDiscount",
+      "summary": "`fetchDiscount()` is not awaited, so a promise is subtracted from a number and the result is NaN."
+    },
+    {
+      "id": "swallowed-error",
+      "symbol": "saveCart",
+      "summary": "The catch block returns `{ saved: true }`, so a failed write is reported as a successful one."
+    },
+    {
+      "id": "unbounded-allocation",
+      "symbol": "expandBundle",
+      "summary": "`repeat` is untrusted and unbounded, so a large value allocates without limit."
+    }
+  ]
+}

@@ -318,3 +318,100 @@ image, and a real provider call on that host.
 
 A local or CI image is not evidence of hosted identity, and this lane does not
 report a skipped proof as green.
+
+## 11. Adding a free provider, and earning a role with it
+
+Section 8 is the Anthropic lane. This is the same ladder for a free provider,
+and the ladder is the point: **a key is not readiness.** A provider goes
+
+```text
+configured → reachable → fixed canary → typed output valid
+→ compared against declared criteria → reviewed → eligible for one role
+```
+
+and it earns only the role it was actually tested on. Passing a code-review
+canary earns `code-reviewer` on synthetic material for that exact provider and
+model. It earns nothing for implementation, architecture, security or another
+model from the same vendor.
+
+### Where the state lives
+
+| Thing | Where | Changed by |
+| --- | --- | --- |
+| Which providers exist and what they may receive | `config/provider-profiles.json` | a reviewed merge |
+| Whether any provider call may happen | `config/model-execution.json` **and** `/etc/app-builder/model-execution.json` | a reviewed merge, and the operator |
+| The credential | the gateway process environment, for one run | the operator, on the host |
+
+The credential is never in the repository, never in a committed `.env`, never in
+an attempt record and never in a copyback. `config/provider-profiles.json`
+records a `secretRef` — the *name* of a variable — and the trusted gateway is
+the only thing that resolves it.
+
+### Check first, before touching anything
+
+```bash
+npm run providers:doctor
+```
+
+Reports adapter, pinned model, whether each `secretRef` resolves, permitted data
+classes, canary state and earned roles. It contacts no provider, so it costs
+nothing and works with no credentials.
+
+### Add a key — typed directly on the Hetzner shell
+
+Type this on the host yourself. Do not paste a key into Claude, Codex, ChatGPT,
+a GitHub issue, or any file in the repository.
+
+```bash
+# In the shell that will run the canary, and nowhere else.
+# Note the leading space: it keeps the line out of shell history.
+ export GROQ_API_KEY=<PASTE_KEY_LOCALLY_HERE>
+
+# Confirm it resolved, without printing it.
+npm run providers:doctor | grep -A1 '^  groq'
+```
+
+If the shell does not honour a leading space, `unset HISTFILE` for that session
+instead. Either way the variable dies with the shell, which is the intended
+lifetime: a provider credential that outlives the run it authorised is a
+credential nobody is watching.
+
+### Run the canary against the synthetic fixture
+
+`examples/provider-canary/flawed-cart.js` is a deliberately flawed shopping-cart
+helper invented for this purpose. It contains no App Builder source, no customer
+material and no private business fact, which is what makes it safe to send to a
+provider approved only for `synthetic` data. Its four defects and the scoring
+rules are declared in `expected-findings.json` **before** any provider sees it —
+criteria written after reading the answer would measure nothing.
+
+Do not repair the fixture. Repairing it destroys the measurement.
+
+The canary is the same one-time, single-use, budgeted decision as section 8: the
+kill switch must be on at both halves, and the run needs an authorised decision
+naming the role, model and ceilings. A `free-only` profile refuses to become a
+billable call, so an exhausted allowance fails rather than spends.
+
+### Recording what was earned
+
+A passing canary is evidence, and evidence is what moves `ready` and
+`eligibleRoles` in `config/provider-profiles.json` — through a reviewed change,
+never a runtime toggle. `model-execution-doctor.mjs` fails the build if a
+profile arrives with a role or a readiness flag it has not earned.
+
+High-risk roles are not reachable this way at all. Security, release promotion,
+destructive-change review, architecture sign-off and visual promotion need the
+role in `highRiskRolesApproved` as well, which is a separate deliberate line.
+One canary against a synthetic fixture is not evidence for any of them.
+
+### The order to do this in
+
+1. **Groq first.** It publishes explicit free-plan limits and returns a standard
+   429, so it exercises the fallback path rather than only the happy one.
+2. **Gemini second**, with the same fixture, keeping its
+   public/synthetic/sanitised restriction — Free Tier data may be used to
+   improve Google's products, which is why that restriction is recorded in the
+   profile rather than inferred.
+3. **OpenRouter last, and only pinned.** Its `modelId` is deliberately null: the
+   data policy that matters is the underlying provider's, and `openrouter/free`
+   names none. Pin a model and a provider before selecting it for anything.

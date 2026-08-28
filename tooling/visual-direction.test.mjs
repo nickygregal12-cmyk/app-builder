@@ -124,6 +124,11 @@ test('every declared visual direction compiles, and every dimension it declares 
     assert.ok(STYLES_CSS.includes(`.moment-${dimensions.distinctiveMoment}`) || dimensions.distinctiveMoment === 'none',
       `${id} declares distinctiveMoment ${dimensions.distinctiveMoment} and nothing renders it`);
     assert.ok(STYLES_CSS.includes(`nav-${responsive.navigation}`), `${id} declares navigation ${responsive.navigation} and the stylesheet never reads it`);
+    // ctaPlacement decides desktop order *and* whether mobile conversion-first
+    // may pull the ask forward, so the stylesheet has to be able to tell the
+    // two declarations apart rather than moving every conversion section.
+    assert.ok(STYLES_CSS.includes(`.cta-${dimensions.ctaPlacement}`) || dimensions.ctaPlacement === 'closing',
+      `${id} declares ctaPlacement ${dimensions.ctaPlacement} and the stylesheet never reads it`);
     assert.ok(STYLES_CSS.includes(`.mobile-hero-${responsive.mobileHero}`) || responsive.mobileHero === 'copy-first',
       `${id} declares mobileHero ${responsive.mobileHero} and the stylesheet never reads it`);
     assert.ok(STYLES_CSS.includes(`.mobile-order-${responsive.mobileSectionOrder}`) || responsive.mobileSectionOrder === 'as-desktop',

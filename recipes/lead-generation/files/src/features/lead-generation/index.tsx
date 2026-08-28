@@ -38,7 +38,15 @@ export function EnquiryForm() {
     <label className="span-two">Message <textarea name="message" rows={5} required /></label>
     <div className="enquiry-actions">
       <button className="button primary-action" type="submit">Send enquiry</button>
-      <p aria-live="polite">{status}</p>
+      {/* `role="alert"` only for the outcome a visitor has to act on. Announcing
+          "Sending…" that way interrupts a screen reader mid-task for a state
+          that resolves on its own. */}
+      <p
+        className={`enquiry-status enquiry-status-${status.tone}`}
+        role={status.tone === 'failed' ? 'alert' : undefined}
+        aria-live="polite"
+        hidden={status.tone === 'idle'}
+      >{status.message}</p>
     </div>
   </form>;
 }

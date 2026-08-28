@@ -330,6 +330,29 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   letter-spacing: .09em;
 }
 
+/* Enquiry outcome. --------------------------------------------------------
+   A failure used to be a sentence in the same grey as a success, which an
+   independent review called visually understated on every candidate it saw. A
+   visitor whose enquiry has just been lost is the last person who should have
+   to notice a line of body copy, so the failure takes a panel with a rule
+   against the submit control it belongs to. There is no status colour in the
+   token set and inventing one here would make this file a second design
+   authority, so it is built from the tokens that exist. */
+.enquiry-status { margin: 0 }
+.enquiry-status-pending { color: var(--color-text-muted) }
+.enquiry-status-sent { padding: 10px 14px; border-left: 3px solid var(--color-accent); background: var(--color-accent-soft); color: var(--color-ink); font-weight: 600 }
+.enquiry-status-failed {
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-left: 4px solid var(--color-ink);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.enquiry-actions { align-items: flex-start }
+
 /* Schedule rows. ------------------------------------------------------------
    An item set read across as ruled rows rather than down as cards. Cards give
    every item the same box whatever it has to say; a schedule gives each one a

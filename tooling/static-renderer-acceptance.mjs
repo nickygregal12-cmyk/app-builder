@@ -35,6 +35,9 @@ import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { generateComposedProject } from './lib/composed-generator.mjs';
 import { loadCatalog } from './lib/generator.mjs';
+import { writeVisualReviewPacket } from './lib/visual-review-report.mjs';
+import { reviewCriteriaFor } from './lib/visual-candidates.mjs';
+import { compileAssetReadiness } from './lib/asset-readiness.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 const KNOWLEDGE = 'examples/genuine-business/nbm-approved-knowledge.v1.json';
@@ -248,6 +251,55 @@ try {
       detail: 'This runner produces evidence and stops. The creator of a rendering may not pass its own visual review.',
     },
   };
+
+  const assetReadiness = compileAssetReadiness({
+    knowledgePack: service.getKnowledgePack(project.id),
+    assetDecisions: service.readAssetDecisions(project.id).decisions,
+  });
+
+  // The portable half, in the shape the independent reviewer already reads.
+  //
+  // 4.2A has stayed open with "static evidence exists but nobody reviewed it",
+  // and the reason was mechanical rather than deliberate: the reviewer reads a
+  // packet of candidates and captures, and this lane produced neither. A static
+  // rendering is one presentation of one truth, so it is written as a set of
+  // one — which is also the honest shape, because there is nothing here to
+  // choose between.
+  const packet = writeVisualReviewPacket({
+    outputDir: path.join(root, 'packet'),
+    business: bundle.projectManifest.project.name,
+    set: {
+      setId: `static-${evidence.evidence.id}`,
+      projectId: project.id,
+      frozenTruth: { projectType: manifest.project.type },
+      // Compiled rather than asserted: the packet index states what the
+      // approved inventory can support, and a static rendering is judged
+      // against the same imagery ceiling as a candidate.
+      assetReadiness,
+      candidates: [{
+        candidateId: 'static-content-rendering',
+        directionId: record.design?.visualDirectionId ?? record.renderer.id,
+        directionLabel: record.renderer.label,
+        purpose: record.renderer.reason,
+        state: verified.task.state === 'succeeded' ? 'deterministic-pass' : 'deterministic-fail',
+        outcome: 'undecided',
+        compositionHash: report.compositionHash ?? null,
+        evidenceId: evidence.evidence.id,
+        gate: { status: 'clear', blocking: [], mustAddress: [] },
+        designLint: lint,
+      }],
+    },
+    criteria: reviewCriteriaFor({
+      projectType: manifest.project.type,
+      // The same rule the candidate lane applies: a criterion about imagery
+      // cannot be scored by a business that publishes none.
+      publishesImagery: assetReadiness.supportsImageryLed,
+    }),
+    qualityGate: service.visualQualityGate(),
+    readEvidence: () => captured,
+    readCapture: (evidenceId, captureId) => service.readRenderedCapture(project.id, evidenceId, captureId)?.bytes ?? null,
+  });
+  console.log(`Portable review packet: ${packet.root} (${packet.captureCount} capture(s))`);
 
   fs.writeFileSync(path.join(root, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify({ ...report, documents: Object.keys(documents), designLint: report.designLint?.counts ?? null }, null, 2));

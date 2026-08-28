@@ -23,7 +23,7 @@
   <label class="span-two">Message <textarea name="message" rows="5" required></textarea></label>
   <div class="enquiry-actions">
     <button class="button primary-action" type="submit">Send enquiry</button>
-    <p aria-live="polite"></p>
+    <p class="enquiry-status enquiry-status-idle" aria-live="polite" hidden></p>
   </div>
 </form>
 <script is:inline>
@@ -32,9 +32,19 @@
     for (var index = 0; index < forms.length; index += 1) {
       (function (form) {
         var status = form.querySelector('.enquiry-actions p');
+        // The same outcome states the application renderer sets, so a reader
+        // sees the same thing whichever renderer served the page.
+        function show(tone, message) {
+          if (!status) return;
+          status.className = 'enquiry-status enquiry-status-' + tone;
+          status.hidden = tone === 'idle';
+          if (tone === 'failed') status.setAttribute('role', 'alert');
+          else status.removeAttribute('role');
+          status.textContent = message;
+        }
         form.addEventListener('submit', function (event) {
           event.preventDefault();
-          if (status) status.textContent = 'Sending…';
+          show('pending', 'Sending…');
           var params = new URLSearchParams();
           var data = new FormData(form);
           data.forEach(function (value, key) { if (typeof value === 'string') params.append(key, value); });
@@ -45,9 +55,9 @@
           }).then(function (response) {
             if (!response.ok) throw new Error('Submission failed.');
             form.reset();
-            if (status) status.textContent = 'Thanks — your enquiry has been sent.';
+            show('sent', 'Thanks — your enquiry has been sent.');
           }).catch(function () {
-            if (status) status.textContent = 'We could not send your enquiry. Please try again.';
+            show('failed', 'We could not send your enquiry. Nothing you typed has been lost — try again, or reach us using the contact details on this page.');
           });
         });
       })(forms[index]);

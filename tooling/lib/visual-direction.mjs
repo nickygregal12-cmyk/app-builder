@@ -323,6 +323,15 @@ export function visualDirectionClasses({ id = null, artDirection = null, shellCl
     // touch" above the services. Two declarations contradicting each other is
     // not a responsive decision, so the stylesheet is told which one this is.
     `cta-${dimensions.ctaPlacement}`,
+    // These three were recorded in the candidate signature and counted by the
+    // diversity gate, and never reached the stylesheet in any form. Two
+    // candidates could therefore be certified "structurally different" on
+    // planes a visitor cannot see, which is most of why two directions kept
+    // arriving as the same professional-services template. A declared axis
+    // either renders or it must not count.
+    `variance-${dimensions.layoutVariance}`,
+    `distinct-${dimensions.visualDistinctiveness}`,
+    `motion-${dimensions.motionIntensity}`,
     `mobile-hero-${responsive.mobileHero}`,
     `mobile-order-${responsive.mobileSectionOrder}`,
     // No `mobile-density-*` class: that decision compiles to

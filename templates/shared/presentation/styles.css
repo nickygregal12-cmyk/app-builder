@@ -330,6 +330,42 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   letter-spacing: .09em;
 }
 
+/* Layout variance, visual distinctiveness and motion intensity. -------------
+   These three are declared by every direction, recorded in the candidate
+   signature and counted by the diversity gate. Until now none of them reached
+   the stylesheet at all, so a candidate set could be certified structurally
+   diverse over planes a visitor could not see — which is most of why two
+   directions kept arriving as the same professional-services template.
+   `tooling/art-direction-axes.test.mjs` now refuses any counted axis whose
+   values do not render differently. */
+
+/* Rhythm. Whether consecutive sections read as one continuous document, as an
+   alternating pair, or as a set that keeps changing footing. */
+.variance-uniform .page-section:nth-of-type(even):not(.hero-section):not(.cta-section) { background: transparent }
+.variance-uniform .page-section + .page-section { border-top: 1px solid var(--color-border) }
+.variance-varied .page-section:nth-of-type(3n):not(.hero-section):not(.cta-section) { background: var(--color-surface-muted) }
+.variance-varied .page-section:nth-of-type(4n):not(.hero-section):not(.cta-section) { padding-left: max(44px, calc((100vw - var(--layout-max-width)) / 2 + 24px)) }
+
+/* Expression. How hard the accent works and how much the display type is
+   allowed to assert itself. */
+.distinct-restrained h2 { font-size: var(--text-2xl) }
+.distinct-restrained h2::before { opacity: .55 }
+.distinct-expressive h2 { font-size: var(--text-4xl); letter-spacing: -.015em }
+.distinct-expressive .section-copy { max-width: 46ch; font-size: var(--text-lg) }
+.distinct-expressive .page-section > h2 { margin-bottom: 22px }
+
+/* Motion. A direction that asked for stillness gets it; one that asked for
+   moderate movement gets a considered amount rather than none. Durations come
+   from the motion tokens so this stays one decision rather than a second. */
+.motion-none *, .motion-none *::before, .motion-none *::after { transition: none !important }
+.motion-subtle a, .motion-subtle .content-card { transition: color var(--motion-duration-fast) var(--motion-ease), border-color var(--motion-duration-fast) var(--motion-ease) }
+.motion-moderate a, .motion-moderate .content-card { transition: color var(--motion-duration-fast) var(--motion-ease), border-color var(--motion-duration-fast) var(--motion-ease), transform var(--motion-duration-fast) var(--motion-ease), box-shadow var(--motion-duration-fast) var(--motion-ease) }
+.motion-moderate .content-card:hover { transform: translateY(var(--motion-hover-lift)); box-shadow: var(--shadow-raised) }
+@media (prefers-reduced-motion: reduce) {
+  .motion-subtle *, .motion-moderate *, .motion-subtle *::before, .motion-moderate *::before { transition: none !important }
+  .motion-moderate .content-card:hover { transform: none }
+}
+
 @media (max-width: 880px) {
   .hero-section.has-image { grid-template-columns: 1fr; gap: 32px }
   .grid-asymmetric .item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }

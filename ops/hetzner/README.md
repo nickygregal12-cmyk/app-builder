@@ -436,6 +436,137 @@ Future systemd units/AgentRuntimeAdapter workers should use `app-builder-runtime
 
 Do not run long-lived OpenCode workers directly as root or as the existing Predictor service account.
 
+## 7a. Codex as the fallback coding agent
+
+Claude Code is the current primary development agent. Its allowance is finite, and the day it stops answering is not the day to start working out what replaces it. Codex CLI is the declared fallback.
+
+This works because of something already true rather than something added: **the project's state is not in the agent.** Requirements, tasks, evidence, checkpoints, decisions and history live in this repository, its Git branches and the event ledger. A conversation is where a worker thought, not where the project is kept. So switching agent changes the worker, not the project, and the handover is a `git` command rather than a migration.
+
+### What App Builder knows about Codex, and what it must never know
+
+Only this: *Codex is an available operator tool.*
+
+Codex authenticates through the operator's own **Sign in with ChatGPT** session, which it stores under `~/.codex` in the operator's home directory. That session belongs to Codex and to the operator.
+
+Do not, under any circumstances:
+
+- extract Codex OAuth or session tokens;
+- copy `~/.codex/auth.json` into the repository, a worktree, a task context or a copyback;
+- register a ChatGPT login as a model-gateway secret in `config/model-execution.json`;
+- make any App Builder code path depend on a Codex credential file existing.
+
+The reason is the boundary in section 6b, not squeamishness. The trusted gateway resolves a provider credential in its own process so that nothing else can hold one; importing a second vendor's session into the repository would create exactly the credential-in-the-tree problem that design exists to prevent — and would do it for a credential App Builder gains nothing by holding.
+
+An **OpenAI API key is not required** for this workflow, and adding one would change what the lane is. `OPENAI_API_KEY` in `~/.codex/auth.json` stays null under ChatGPT sign-in.
+
+Note the distinction from `npm run review:codex`. That is `tooling/lib/codex-visual-reviewer.mjs`, which drives the same CLI as an *independent reviewer of a portable evidence packet* and refuses to run without an explicit `authorised: true`. This section is about Codex as a **development agent working a mutable checkout**. Same binary, different job.
+
+### Check the host first
+
+```bash
+npm run agents:doctor
+```
+
+Reports which operator CLIs are installed, which version, whether Codex has a usable session, and whether Git can give an agent an isolated worktree. It makes no model call — paid or free — so it is safe to run on a machine with no credential and costs nothing.
+
+It reports `Fallback ready: yes` only when Codex is both installed **and** signed in. An installed binary nobody has authenticated cannot take the next task, and an unrecognised login answer is reported as `unknown` rather than assumed working, because this is the claim an operator plans around.
+
+It is deliberately **not** part of `npm run doctor`. Those checks describe the repository and must give the same answer on every machine; this one describes a host, and CI has no Codex. The invariants that belong in CI are in `tooling/operator-agent-doctor.test.mjs`.
+
+### 1. Install or update Codex
+
+As the normal operator account — **not root, and not the `appbuilder` service user**, because the account that runs the agent must be the account that owns the worktrees:
+
+```bash
+npm install -g @openai/codex   # or: brew install codex
+codex --version
+```
+
+### 2. Sign in
+
+```bash
+codex login
+```
+
+Choose **Sign in with ChatGPT** and complete the browser flow. On a headless server, forward the callback port over the existing admin SSH path from section 8:
+
+```bash
+ssh -L 1455:127.0.0.1:1455 YOUR_EXISTING_ADMIN_USER@SERVER_IP
+```
+
+### 3. Verify without exposing anything
+
+```bash
+codex login status
+```
+
+Expect `Logged in using ChatGPT`. Note it prints to **stderr** and exits 0.
+
+Never paste `~/.codex/auth.json`, or any part of it, into a report, an issue, a prompt or a chat with any model. `npm run agents:doctor` exists so that "is Codex usable?" can be answered and pasted safely: it reports a login *class*, never the material behind it.
+
+### 4. Take an isolated worktree
+
+One mutable agent = one worktree + one branch. Never point a second agent at a worktree another session is using, and never reset, stash or clean a checkout you did not create.
+
+```bash
+git -C /srv/app-builder/repository fetch origin
+git -C /srv/app-builder/repository worktree add -b session/SHORT_TASK_NAME \
+  /srv/app-builder/workspaces/SHORT_TASK_NAME origin/main
+```
+
+### 5. Start Codex there
+
+```bash
+cd /srv/app-builder/workspaces/SHORT_TASK_NAME
+codex
+```
+
+Codex reads `AGENTS.md` from the repository root, so it arrives under the same authority and the same principles Claude Code works under. Give it the same bounded task prompt: the task, its scope, the gates it must satisfy, and the boundaries it must not cross.
+
+### 6. Resume from durable state, not from memory
+
+Codex does not need the previous session's conversation, and should not be given a summary in place of the real thing. Point it at the record:
+
+```text
+Resume this task from durable repository state.
+
+Task:      TASK_ID
+Branch:    session/SHORT_TASK_NAME
+Base:      origin/main at SHA
+Stage:     the current stage in the task record
+PR:        #NNN (if open)
+
+Read AGENTS.md, then the task's own record and ledger entries.
+Do not trust this message over what the repository says.
+```
+
+That last line is the point. A handover note is a claim about a moving thing, written at a moment that has passed. The branch, the ledger and the task record are the thing itself.
+
+### 7. Run the gates
+
+Unchanged by which agent is driving:
+
+```bash
+npm run check
+```
+
+### 8. Finish the session
+
+```bash
+gh pr create --fill    # or: gh pr edit
+```
+
+Then produce the same copyback any agent produces — the shape is in `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`, and it is provider-independent so that the next worker can start from it whoever they are.
+
+Stop cleanly by exiting Codex. If the worktree is finished with:
+
+```bash
+git -C /srv/app-builder/repository worktree remove /srv/app-builder/workspaces/SHORT_TASK_NAME
+git -C /srv/app-builder/repository worktree prune
+```
+
+Leave it in place if the work is unfinished. An unfinished branch is durable state, and removing it to tidy up is how a session's work gets lost.
+
 ## 8. Network exposure
 
 The current factory service, Console and OpenCode server should remain loopback-only on the shared server. There is no need to add public firewall rules for `4310`, `5173`, `4097` or arbitrary preview ports.

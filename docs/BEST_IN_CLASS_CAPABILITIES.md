@@ -601,6 +601,30 @@ time, manual edits, portability and maintainability.
 | `frontend-design` beats the incumbent frontend/art-direction skills | `frontend-implementation`, `art-direction` | the incumbent skills are authored and have a baseline to compare against |
 | AccessLint specialist review beats the current pipeline | Playwright + axe baseline, `accessibility-review` | a real project ships an accessibility defect the baseline did not catch |
 
+## 8.7 Evidence-driven differentiators beyond headline builder parity
+
+A 2026-08-28 parity audit found that the obvious competitor features — planning, visual editing,
+Git, subagents, browser testing, connectors, deploy/ops and later generated-app MCP — are already
+represented in the plan. The more valuable remaining gaps are **anti-vibe-coding guarantees** that
+reduce silent omissions, rewrite churn and unsafe autonomous maintenance. They are registered here,
+but their implementation detail stays in the authority that can actually consume them.
+
+| Capability | Rating | Owning plan / activation rule |
+| --- | ---: | --- |
+| Derived requirement -> consumer -> executable-evidence coverage | **10/10** | `docs/ENGINEERING_QUALITY_PROGRAMME.md` Q10; start with hard/material requirements and the known `manifest.constraints.hard` gap |
+| Existing design-system assimilation for brownfield repos | **9.8/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §5.2; activate when an adopted repo has enough real shared components/tokens that duplicate invention is a risk |
+| Revision-bound full-stack preview environments | **9.7/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §7.3; activate for stateful concurrent/preview work where shared backend state creates interference |
+| Deterministic Change Impact Map | **9.5/10** | `docs/ENGINEERING_QUALITY_PROGRAMME.md` Q10b; benchmark first on complex/brownfield work before adding richer graph tooling |
+| Incident -> reproduction -> regression -> reviewed repair | **9.4/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §11; production auto-repair remains unproven when the incident cannot be reproduced |
+| Provenance-aware generated visual assets | **9.2/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §2.1; activate only when a real project's lack of publishable imagery is the visual bottleneck |
+| Privacy-safe deterministic scenario-data factory | **9.0/10** | `docs/PRODUCTION_COMPLETENESS.md` Phase 6; first consumer should be complex/stateful acceptance that currently needs hand-written fixtures |
+
+These do **not** create seven new programmes. They extend existing contracts and gates. No new package,
+model, connector or schema is justified merely by this list; the first real consumer decides the
+smallest implementation. In particular, requirement coverage is derived from existing Build
+Contract/Manifest/evidence state rather than becoming a second requirements authority, and the impact
+map starts from existing module/product identities rather than requiring a graph database.
+
 ## 9. Tooling decisions explicitly not made
 
 Do **not** adopt these by default merely because they appeared in research:

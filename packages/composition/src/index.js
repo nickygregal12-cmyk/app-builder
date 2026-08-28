@@ -358,7 +358,13 @@ function hero(pageId, surface, index, manifest, pack, actions, assetDecisions) {
   const title = index === 0 ? companyNameBinding(pack, manifest) : manifestBinding('title', surface);
   // A secondary page says what it is in its heading. "Work for MGB Decor."
   // adds nothing and reads as unfinished.
-  const body = index === 0 || /about/i.test(surface) ? projectDescriptionBinding(pack, manifest) : null;
+  //
+  // An About surface used to be excepted, which printed the description twice:
+  // once here and again immediately below in the `-about` rich-text section
+  // that exists to carry exactly that copy. Two independent reviews read the
+  // result as repeated registration text and thin, padded pages. The
+  // description belongs to the section that owns it.
+  const body = index === 0 ? projectDescriptionBinding(pack, manifest) : null;
   // No eyebrow. It previously carried the project type, which published a
   // Build Contract field — "marketing site" — as a caption above the business
   // name on every page.

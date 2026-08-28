@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "setId": "candidates-9a1f2f59aea51a3f",
+  "projectId": "project-8673f4e7-eebb-4620-ad4d-1f43ebc06dc8",
+  "reviewedAt": "2026-08-28T13:14:21.866Z",
+  "reviews": [
+    {
+      "candidateId": "candidate-structured-practice",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clean, legible and structurally consistent, but it feels like a lightly branded professional-services template rather than a studio-quality identity for a construction cost consultancy. Repetitive layouts, excessive empty space, duplicated content on About and the absence of a memorable visual idea keep it well below the required bar.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.2,
+          "note": "The restrained palette and sturdy typography suit a consultancy, but there is almost no construction, surveying or Scottish practice character beyond the copy."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.1,
+          "note": "Large headings and primary call buttons are immediately legible, though sparse inner pages and oversized dead zones make the hierarchy feel under-composed."
+        },
+        {
+          "criterion": "coherence",
+          "score": 6.8,
+          "note": "Typography, cards, colours and calls to action are consistent, but the home page changes section order on mobile and the repeated generic page structures lack a convincing compositional rhythm."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.4,
+          "note": "Rounded white cards, pale grey bands, pill buttons and a dark CTA panel are generic template conventions with no business-specific visual authorship."
+        },
+        {
+          "criterion": "credibility",
+          "score": 6.5,
+          "note": "Clear company facts and contact details provide baseline legitimacy, but the thin service content, duplicated About copy and lack of evidence such as expertise, projects or credentials limit trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 7.2,
+          "note": "Telephone and email actions are prominent across pages and the enquiry form is clear; however, the failed-submission message is visually weak and offers no alternate recovery action."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 6.3,
+          "note": "Nothing visibly overflows and content remains readable, but mobile is largely a single-column collapse with oversized cards, repetitive stacking and an unexplained home-page section reorder."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 2.5,
+          "note": "No distinctive moment is evident; the dark Get in touch panel is repeated utility styling rather than a memorable, business-specific expression."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "distinctiveness",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Introduce a recognisable visual idea grounded in construction cost consultancy rather than relying on generic cards and pill buttons.",
+        "Replace the duplicated About content with a properly composed credibility section and meaningful supporting evidence.",
+        "Rework mobile layouts as intentional compositions, including a clear rationale for section order and tighter control of repetitive vertical stacking.",
+        "Strengthen sparse desktop page compositions and reduce large areas of unproductive empty space.",
+        "Make the enquiry failure state more prominent and provide an obvious recovery or alternative contact path."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-structured-practice",
+        "compositionHash": "67dba1afde7487866e6b0e0fa67664b9bc8be847c9756c1999981083b4ccb707",
+        "captureCount": 21,
+        "captureDigest": "4c47da1969ea5782f414a08e8b34baab5b842f280212544bb0aa21aa6a52213a"
+      }
+    },
+    {
+      "candidateId": "candidate-editorial-authority",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clean and legible, but it feels like a restrained generic template rather than a bespoke expression of an established construction consultancy. Severe mobile navigation clipping, repetitive page compositions, weak differentiation, and an under-emphasized form failure state keep it below professional-studio quality.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.4,
+          "note": "The sober typography and muted blue suit a professional consultancy, but the treatment conveys little specific construction, surveying, Scottish, or company character."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.2,
+          "note": "Large headings and prominent call buttons establish clear entry points, though excessive empty space and sparse secondary pages weaken pacing and information density."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7.1,
+          "note": "Typography, colors, lists, cards, CTAs, and footer treatments are consistent, but the homepage and internal pages feel assembled from a small set of repeated blocks rather than shaped as complete narratives."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.8,
+          "note": "The oversized sans-serif headings, numbered rows, neutral panels, pill buttons, and dark CTA slab are familiar template conventions with little business-specific art direction."
+        },
+        {
+          "criterion": "credibility",
+          "score": 6.6,
+          "note": "The factual company details, restrained palette, and orderly layout feel legitimate, but thin content, the duplicated About copy, and lack of visible proof such as projects, credentials, people, or testimonials limit authority."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 7,
+          "note": "Telephone and email actions recur prominently and the contact form is straightforward, but the site over-relies on calling, offers little contextual persuasion, and renders the submission failure message too quietly."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 4.2,
+          "note": "Content columns collapse readably, but the horizontal navigation is visibly clipped at mobile width across pages, including a partially obscured Locations item, making the composition look unfinished."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 3.8,
+          "note": "No memorable editorial gesture, imagery, data presentation, case-study moment, or construction-specific visual device emerges; the dark CTA panel is the strongest motif but remains conventional."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "distinctiveness",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Replace the clipped mobile navigation with a deliberately designed small-screen navigation pattern.",
+        "Introduce a credible, business-specific editorial moment and stronger construction-consultancy identity rather than relying solely on typography and a muted accent.",
+        "Add visible trust evidence and substantive differentiation, especially projects, expertise, credentials, people, or sourced proof.",
+        "Rework sparse and repetitive internal-page compositions, including the duplicated About copy.",
+        "Give the failed enquiry state stronger visual prominence and clearer recovery guidance."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-editorial-authority",
+        "compositionHash": "3ef77932856ce3d8dfaf5b5f469ff887d1399f66ae9b341a24c4c086e7831c8d",
+        "captureCount": 21,
+        "captureDigest": "812053cbc7e01182161b48b9acc1ae7180b702f87be691b708d17bb1b55b8bb6"
+      }
+    }
+  ],
+  "skipped": []
+}

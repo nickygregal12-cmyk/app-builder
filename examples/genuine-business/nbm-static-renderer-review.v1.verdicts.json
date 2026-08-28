@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "setId": "static-evidence-0b3e91c4bef9da7f",
+  "projectId": "project-1565fd4b-6a95-4f6f-986e-c6acafd1add3",
+  "reviewedAt": "2026-08-28T14:50:57.563Z",
+  "reviews": [
+    {
+      "candidateId": "static-content-rendering",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is structurally competent and readable across viewports, but it feels like a minimally branded template rather than a considered identity for a construction cost consultancy. Excessive empty space, repetitive card treatments, weak location content, and exposed generator metadata undermine credibility, while no genuine distinctive moment is visible.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "The restrained typography and blue-grey accent are plausible for a consultancy, but nothing specifically expresses construction, surveying expertise, Glasgow heritage, or the firm's own character."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7,
+          "note": "Headings and primary calls to action are easy to find, though desktop pages contain large areas of purposeless space and the repeated oversized headings make every page feel mechanically identical."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7,
+          "note": "Typography, colours, cards, buttons, and spacing are consistent, but the rigid repetition of the same hero, pale panel, dark CTA, and footer sequence reads as a system default rather than a composed narrative."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 3,
+          "note": "The presentation is an unmistakable generic service-business template with interchangeable copy and accent colour; there is no bespoke imagery, graphic language, project evidence, or construction-related visual idea."
+        },
+        {
+          "criterion": "credibility",
+          "score": 5,
+          "note": "Company registration details and contact information help, but the site lacks team, credentials, projects, clients, testimonials, or substantive location information. Exposed footer text such as \"4 deterministic capabilities\" and \"1 composition warnings\" is an unacceptable generator artifact."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 7,
+          "note": "Calling and emailing are consistently prominent, and the failed form state preserves input and explains the problem clearly. The site nevertheless over-repeats the same actions without supplying enough trust-building evidence to make visitors ready to use them."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 6.5,
+          "note": "Nothing visibly overflows and mobile spacing remains legible, but the mobile experience is mainly the desktop structure stacked into one column; the concealed navigation and tall repetitive cards create a long, undifferentiated scroll."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 2,
+          "note": "No distinctive moment is evident. The dark \"Get in touch\" panel is merely a repeated CTA block and does not communicate anything particular to this business."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "distinctiveness",
+        "credibility",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Remove all exposed generator and composition metadata from the public footer.",
+        "Establish a business-specific visual idea rooted in cost consultancy, quantity surveying, built environments, or the firm's Scottish identity.",
+        "Add credible proof such as representative projects, sectors, credentials, team expertise, client evidence, or a clearly sourced track record.",
+        "Replace the empty location labels with useful office or service-area information.",
+        "Reduce purposeless desktop whitespace and vary page composition so the site does not read as one template section sequence repeated everywhere.",
+        "Create a genuine distinctive moment that supports the firm's expertise rather than functioning as another generic CTA panel."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "static-content-rendering",
+        "compositionHash": null,
+        "captureCount": 21,
+        "captureDigest": "e8cf050b2d5c5d0d92209d6220d34cd43e6c69ce1c8ddc6d01ebc6456a75b8c1"
+      }
+    }
+  ],
+  "skipped": []
+}

@@ -122,7 +122,6 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
    so without a wrap it competes with the three real columns and squeezes
    them. Rendered evidence is captured from the dev preview, so a footer that
    only looks like that in development would be photographed as the product. */
-.factory-meta { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; padding-top: 16px; border-top: 1px dashed var(--color-border); font-size: .74rem }
 
 /* Rich text and evidence ------------------------------------------------ */
 .section-rich-text .section-copy { max-width: 62ch; font-size: var(--text-xl) }

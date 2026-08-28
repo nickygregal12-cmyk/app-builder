@@ -109,13 +109,6 @@ const socialProfilesValue = contact ? binding(contact, 'profiles')?.value : null
         <nav class="footer-nav" aria-label="Footer navigation">
           {navigation.map((entry) => <a href={siteHref(entry.path)}>{entry.navigation.label}</a>)}
         </nav>
-        {import.meta.env.DEV && (
-          <div class="factory-meta" data-development-only="true">
-            <span>{design.label}</span>
-            <span>{installedRecipes.length} deterministic capabilities</span>
-            <span>{composed.warnings.length ? `${composed.warnings.length} composition warnings` : 'Composition complete'}</span>
-          </div>
-        )}
       </footer>
     </div>
 

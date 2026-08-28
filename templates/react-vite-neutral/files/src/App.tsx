@@ -349,11 +349,6 @@ function SiteFooter({ navigation, navigate }: { navigation: readonly PageSpec[];
     <nav className="footer-nav" aria-label="Footer navigation">
       {navigation.map((page) => <a href={siteHref(page.path)} onClick={(event) => navigate(event, page.path)} key={page.id}>{page.navigation.label}</a>)}
     </nav>
-    {import.meta.env.DEV && <div className="factory-meta" data-development-only="true">
-      <span>{design.label}</span>
-      <span>{installedRecipes.length} deterministic capabilities</span>
-      <span>{composed.warnings.length ? `${composed.warnings.length} composition warnings` : 'Composition complete'}</span>
-    </div>}
   </footer>;
 }
 

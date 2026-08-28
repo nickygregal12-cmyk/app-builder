@@ -131,6 +131,24 @@ Do not turn the Console into an unconstrained CSS editor by default. The normal 
 
 Exit evidence should include a non-technical user performing common visual corrections without editing source files.
 
+## 2.1 Provenance-aware generated visual assets
+
+A premium visual result should not be capped by a source pack that contains a logo and text but no publishable photography. Add a bounded generated-asset lane for projects whose approved ArtDirectionPlan genuinely needs original visual material that deterministic shapes/type/layout cannot provide well.
+
+Suitable outputs can include:
+
+- abstract or geometric hero art;
+- textures, patterns and branded decorative motifs;
+- service/editorial illustrations and diagrams;
+- background compositions;
+- campaign/social imagery derived from approved project truth.
+
+Generated media is **synthetic design material, never source evidence**. It must not silently become a photograph of work the company never completed, a staff/customer likeness that was never supplied, a testimonial, accreditation or any other factual claim.
+
+Every generated asset should retain enough durable metadata to reproduce/audit its origin where the provider supports it: provider/model or tool identity, generation/edit specification, source inputs, timestamp, project/revision, intended usage, approval/rights state and visual-review result. The normal asset pipeline still owns responsive derivatives, focal/crop choices, optimization, accessibility semantics and publication approval.
+
+Prefer provider-neutral generation/edit adapters rather than coupling DesignSystemSpec or generated repositories to one image model. Deterministic graphics remain cheaper and preferred when they can satisfy the art direction. Activate this capability only when real corpus output shows missing visual material is the limiting factor; do not generate media merely because an image model is available.
+
 ---
 
 # 3. Phase 4.3 / new Phase 4.4 slice — production application capability breadth
@@ -312,7 +330,28 @@ This classification is a decision aid, not a licence for churn. “Replace” ne
 
 The specialist architecture should be used by decision boundary: product/IA/UX/design/architecture/security/performance agents receive only the evidence relevant to their question, and creators do not approve their own work. An architectural finding does not become a visual rewrite by accident, and a visual redesign cannot silently change domain rules.
 
-## 5.2 Improvement Contract and bounded execution
+## 5.2 Existing design-system assimilation
+
+Brownfield adoption should not stop at “we found the component library”. Where the existing product has a coherent design system, the factory should be able to **assimilate it into the same retrieval/constraint machinery used for generated projects without taking ownership of it by default**.
+
+The adoption pass should inspect, where available:
+
+- design tokens and theme variables;
+- shared components/primitives and their imports/usages;
+- props, variants, states and composition rules;
+- responsive and accessibility behaviour that can be established from code/tests/evidence;
+- documentation/examples and package/version identity;
+- which components are actually product standards versus one-off local code.
+
+From that evidence, propose mappings into `DesignSystemSpec`, Component Manifest and Presentation Registry concepts. Existing components may remain project-owned and merely become retrievable/understood; managed ownership is introduced only through explicit adoption. Unknown behaviour stays `unproven` rather than being inferred from a component name or README.
+
+The primary success measure is **reuse without template convergence**: after adoption, specialist agents should retrieve the project's approved button/input/navigation/card/table/etc. rather than silently inventing duplicates or replacing them with App Builder's preferred primitives. Novel presentation remains allowed where the product genuinely needs it, but it must compose with the adopted design contract.
+
+Do not ingest a third-party styled library wholesale simply because the repo depends on it. Assimilate the project's actual usage and ownership boundary. External docs remain `instructionAuthority: none`.
+
+The first serious acceptance should use a mature existing repo with enough real components to expose duplicate-component temptation; the Predictor brownfield benchmark is one candidate once that mode is ready.
+
+## 5.3 Improvement Contract and bounded execution
 
 Before material implementation, turn the approved diagnosis into a bounded improvement contract using existing project/task/Build Contract/ChangeSet primitives rather than inventing a second task system. It should identify:
 
@@ -326,7 +365,7 @@ Before material implementation, turn the approved diagnosis into a bounded impro
 
 Implementation uses isolated branches/worktrees and small ChangeSets. Large redesigns or architecture programmes are decomposed into reviewable slices with an executable journey or measurable product outcome, not one repository-wide autonomous rewrite.
 
-## 5.3 Before/after evidence and convergence
+## 5.4 Before/after evidence and convergence
 
 Every accepted improvement slice should retain its baseline and record the delta. Compare only metrics relevant to the change, for example:
 
@@ -344,7 +383,7 @@ Every accepted improvement slice should retain its baseline and record the delta
 
 “More code”, “new framework” or “agent says better” are not improvement metrics. A slice converges when its agreed outcome is better than or intentionally unchanged from baseline, required gates pass, and independent review accepts the result. Failed attempts remain attributable rather than being overwritten by the eventual pass.
 
-## 5.4 Git-native workflow
+## 5.5 Git-native workflow
 
 The Console should eventually support:
 
@@ -363,11 +402,11 @@ Generated new projects should be able to opt into the same Git lifecycle after t
 
 The durable Factory ledger remains product execution evidence; Git is the source-code collaboration/history layer. Do not create two competing task truths.
 
-## 5.5 Acceptance
+## 5.6 Acceptance
 
 Existing-product parity is not proven by successfully cloning a repository. A representative adoption must show:
 
-`connect repo + URL -> freeze baseline -> map product/architecture/journeys -> specialist diagnosis -> approved improvement contract -> isolated ChangeSet -> preview -> deterministic gates -> independent review -> before/after evidence -> PR/merge -> release`
+`connect repo + URL -> freeze baseline -> map product/architecture/journeys -> assimilate existing design system where present -> specialist diagnosis -> approved improvement contract -> isolated ChangeSet -> preview -> deterministic gates -> independent review -> before/after evidence -> PR/merge -> release`
 
 The long-horizon complex benchmark for this mode is the Existing-repository adoption path in `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`. It should prove that App Builder can find and safely improve the kinds of architectural, product and visual problems that otherwise accumulate through repeated prompt-led iteration, without introducing equivalent regressions or Predictor-specific factory hacks.
 
@@ -454,6 +493,27 @@ Move beyond a checklist when a deployment adapter can support it safely:
 - preview vs production separation.
 
 Provider-specific domain APIs remain adapters, not stable project contracts.
+
+## 7.3 Revision-bound full-stack preview environments
+
+A code branch is not fully isolated if its browser preview still shares another task's database, migrations or integration state. For stateful projects, significant reviewable revisions should therefore be able to request a **revision-bound full-stack preview environment**.
+
+Where the selected adapters support it, bind together:
+
+- exact Git revision / task / worktree identity;
+- preview deployment URL;
+- isolated or branched database/backend identity;
+- migration state for that revision;
+- deterministic scenario/seed data where tests require it;
+- environment-scoped secret references;
+- sandbox/test identities for external integrations where available;
+- creation, health, expiry and cleanup status.
+
+The environment contract is the stable concept; a Supabase branch, separate disposable project, local container or another provider's preview database are adapter choices. Do not require a provider's branching feature merely for parity.
+
+A preview must fail closed if source revision, migration state and backend identity cannot be reconciled. Production credentials/data are never inherited because a preview happens to lack its own configuration. Concurrent agents should not mutate the same stateful preview unless the task explicitly declares shared ownership.
+
+This capability should be earned first by database-backed benchmark work where shared test state causes real interference. It is not required for a static marketing-site branch whose entire product is an immutable artifact.
 
 ---
 
@@ -553,6 +613,14 @@ Possible bounded maintenance workflows:
 - create a branch/ChangeSet, rerun gates and request approval;
 - never silently push production changes.
 
+For a concrete production incident, prefer a stronger repair contract than “agent saw an error and changed code”:
+
+`incident signal -> exact release/environment evidence -> minimal reproduction -> failing regression test or executable reproducer -> bounded ChangeSet -> affected journeys/gates -> preview -> independent review -> approved release`
+
+Bind the incident record to the deployed revision, environment and relevant logs/network/runtime evidence. Where the failure can be reproduced deterministically, the repair should not be eligible for promotion until that reproduction fails before the fix and passes after it. The regression joins the ordinary suite when it protects a reusable invariant rather than a one-off provider outage.
+
+If the incident cannot yet be reproduced, keep the diagnosis and proposed change explicitly `unproven`; do not convert uncertainty into an autonomous production patch. Emergency/manual remediation may still be necessary, but it is recorded as such and followed by retrospective evidence when practical.
+
 A post-launch agent uses the same capability/grant/environment boundaries as a build agent. Production changes remain approval-gated.
 
 ---
@@ -582,18 +650,22 @@ Do not prioritize this before the core build/edit/deploy/integration experience 
 | Inspiration URLs/screenshots + VisualReferenceAnalysis | **Delivered (4D.2).** See `docs/DESIGN_INTELLIGENCE.md` §4. |
 | Research-agent public-web execution | Phase 5 after public-egress proof |
 | Drag/reorder/component swap/responsive visual editing | Phase 4B/4D |
+| Provenance-aware generated visual-asset lane | Phase 4D/4.3, only when corpus evidence shows missing publishable assets limit quality |
 | CMS editing surface + content operations | Phase 4.3 |
 | Localization workflow | Phase 4.3 |
 | Existing-product baseline, diagnosis and improvement contract | Phase 4.3 |
+| Existing design-system assimilation | Phase 4.3 with DesignSystemSpec/Component Manifest/Presentation Registry |
 | Existing repo import/adoption + bidirectional Git workflow | Phase 4.3/4E |
 | Payment/billing recipe | Phase 4.4 |
 | Email/notifications/webhooks/jobs/queues/realtime | Phase 4.4 |
 | IntegrationSpec + Connections UI + end-user OAuth connections | Phase 4.4 |
 | Stakeholder comments/review/approval | Phase 4E/4F |
 | Branch/staging/release promotion workflow | Phase 4E/4F |
+| Revision-bound full-stack preview environments | Phase 4E/7 for stateful projects |
 | Deployment/logs/domains/analytics/monitoring/rollback console | Phase 4E/7 |
 | Cross-browser/device production matrix | Phase 6 |
 | Autonomous research/build/test/review loops | Phase 5/5.5 |
+| Incident -> reproduction -> regression -> reviewed repair loop | Phase 7/8 |
 | Post-launch maintenance agents | Phase 7/8 |
 | Generated-app MCP/API exposure | Later optional |
 
@@ -606,7 +678,7 @@ capability breadth in this table, not after it: the corpus is what tells us whic
 real projects actually need.
 
 What this programme does own is the dependency between its own items: connections before connectors,
-environment identity before release promotion, baseline/adoption mapping before existing-product mutation, Git adoption before bidirectional workflow, and a real
+environment identity before release promotion, baseline/adoption mapping before existing-product mutation, design-system assimilation before an adopted product is allowed to replace established presentation primitives, revision-bound environment identity before concurrent full-stack mutation, Git adoption before bidirectional workflow, and a real
 egress proof before any research agent reaches the public web.
 
 Do not delay the first real-project corpus until every late platform feature exists. Use maturity tiers: a project class can be proven for marketing/content sites before every SaaS integration capability is proven. But do not claim broad “best app builder” parity while common auth/billing/integration/deployment workflows still require bespoke manual glue.
@@ -627,7 +699,7 @@ A capability appearing in a plan is not parity. Before claiming App Builder is i
 
 ### Existing project
 
-`connect repository + live URL -> freeze baseline -> inspect/adopt -> product/architecture/journey diagnosis -> approved improvement contract -> isolated branch/ChangeSet -> AI change -> preview -> deterministic gates -> independent review -> before/after evidence -> PR/merge -> deploy`
+`connect repository + live URL -> freeze baseline -> inspect/adopt -> assimilate existing design system where present -> product/architecture/journey diagnosis -> approved improvement contract -> isolated branch/ChangeSet -> AI change -> preview -> deterministic gates -> independent review -> before/after evidence -> PR/merge -> deploy`
 
 The pass is not “the repository imported” or “the PR merged”. Representative protected journeys must not regress, and the agreed outcome must be measurably better than the frozen baseline. For complex application adoption, use `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` rather than inventing a second brownfield benchmark.
 

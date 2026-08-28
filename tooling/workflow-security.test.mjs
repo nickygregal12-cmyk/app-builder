@@ -149,3 +149,45 @@ test('every finding names a declared rule', () => {
   // Every rule fires at least once on a workflow that breaks all of them, so none of them is inert.
   assert.deepEqual([...new Set(findings.map((entry) => entry.rule))].sort(), [...WORKFLOW_SECURITY_RULES].filter((rule) => rule !== 'permissions-write-all').sort());
 });
+
+/**
+ * A step that needs a running service must live in the job that starts it.
+ *
+ * This is not hypothetical tidiness. `npx playwright install` appears in two
+ * jobs, so a textual insertion before "the first one" put the Storage API
+ * acceptance into `verify`, which starts no Supabase stack at all. It failed on
+ * a connection error rather than on anything it was meant to measure, and the
+ * job that DOES have the stack went green without ever running it — the worst
+ * shape of failure, because a green tick appeared next to work that had not
+ * happened.
+ *
+ * Keyed on the script a step runs rather than on a step name, because a name is
+ * the thing most likely to be reworded.
+ */
+test('a step that needs the Supabase stack runs in the job that starts it', () => {
+  const workflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8');
+
+  // Split into jobs by their two-space-indented keys, so each block is one job.
+  const blocks = [...workflow.matchAll(/^ {2}([a-z][\w-]*):$/gm)].map((match, index, all) => ({
+    job: match[1],
+    body: workflow.slice(match.index, index + 1 < all.length ? all[index + 1].index : workflow.length),
+  }));
+  assert.ok(blocks.length >= 2, 'expected the CI workflow to declare several jobs');
+
+  const NEEDS_STACK = ['tooling/storage-boundary-acceptance.mjs', 'tooling/seed-records-journey.mjs', 'test:e2e:generated-app'];
+  const starts = (body) => /supabase@[\d.]+ start/.test(body);
+
+  let checked = 0;
+  for (const script of NEEDS_STACK) {
+    const owning = blocks.filter((block) => block.body.includes(script));
+    assert.ok(owning.length > 0, `${script} is not run by any CI job, so nothing proves it works`);
+    for (const block of owning) {
+      checked += 1;
+      assert.ok(
+        starts(block.body),
+        `${script} runs in job "${block.job}", which never starts Supabase. It will fail on a connection error, and the job that does have the stack will pass without running it.`,
+      );
+    }
+  }
+  assert.ok(checked >= NEEDS_STACK.length, `expected every stack-dependent script to be placed, checked ${checked}`);
+});

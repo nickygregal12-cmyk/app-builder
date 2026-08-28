@@ -42,18 +42,6 @@ jobs:
       - name: Build synthetic mixed-source regression app
         run: npm run acceptance:synthetic-mixed-source
 
-      # The half of the boundary SQL cannot reach. A real Supabase deployment
-      # forbids direct DELETE and UPDATE on storage.objects, so the remove
-      # boundary and the role distinction are proved against the Storage HTTP
-      # API with real per-identity tokens.
-      - name: Storage API boundary acceptance
-        run: |
-          STATUS="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json)"
-          node tooling/storage-boundary-acceptance.mjs \
-            --url http://127.0.0.1:54321 \
-            --anon-key "$(jq -r '.ANON_KEY' <<<"$STATUS")" \
-            --service-key "$(jq -r '.SERVICE_ROLE_KEY' <<<"$STATUS")"
-
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
@@ -182,6 +170,18 @@ jobs:
         run: |
           SERVICE_KEY="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json | jq -r '.SERVICE_ROLE_KEY')"
           node tooling/seed-records-journey.mjs --url http://127.0.0.1:54321 --service-key "$SERVICE_KEY"
+
+      # The half of the boundary SQL cannot reach. A real Supabase deployment
+      # forbids direct DELETE and UPDATE on storage.objects, so the remove
+      # boundary and the role distinction are proved against the Storage HTTP
+      # API with real per-identity tokens.
+      - name: Storage API boundary acceptance
+        run: |
+          STATUS="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json)"
+          node tooling/storage-boundary-acceptance.mjs \
+            --url http://127.0.0.1:54321 \
+            --anon-key "$(jq -r '.ANON_KEY' <<<"$STATUS")" \
+            --service-key "$(jq -r '.SERVICE_ROLE_KEY' <<<"$STATUS")"
 
       - run: npx playwright install --with-deps chromium
 

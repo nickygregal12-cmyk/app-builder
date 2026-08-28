@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "notifications",
+  "module": "notifications",
+  "version": "1.0.0",
+  "status": "ready",
+  "compatibleTemplates": [
+    "react-vite-neutral"
+  ],
+  "entry": "src/features/notifications/index.tsx",
+  "files": [
+    "src/features/notifications/index.tsx",
+    "src/features/notifications/NotificationsContext.tsx",
+    "src/features/notifications/NotificationsSection.tsx",
+    "src/features/notifications/notifications.css"
+  ],
+  "requires": [
+    "auth",
+    "organisations",
+    "records"
+  ],
+  "requiresAdapters": [
+    "supabase"
+  ],
+  "conflicts": [],
+  "database": {
+    "adapter": "supabase",
+    "fragments": [
+      "database/notifications.sql"
+    ]
+  },
+  "package": {
+    "dependencies": {},
+    "devDependencies": {},
+    "scripts": {}
+  }
+}

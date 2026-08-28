@@ -123,3 +123,48 @@ test('upload recipe owns a private organisation bucket and derives the tenant fr
   // applied here. RLS is the whole boundary for storage.
   assert.doesNotMatch(sql, /revoke all on storage\./, 'revoking Supabase storage grants breaks the Storage API rather than securing it');
 });
+
+test('notifications are created only by the database and readable only by their recipient', () => {
+  const sql = fs.readFileSync('recipes/notifications/database/notifications.sql', 'utf8').toLowerCase();
+
+  // The forgery boundary is a PRIVILEGE, not a policy. An insert policy can
+  // only test what a row says about itself, so a client naming itself as the
+  // recipient of a notification it invented satisfies any honest `with check`
+  // clause. Withholding the grant refuses the statement before a policy is
+  // consulted, for every kind, recipient and organisation at once.
+  assert.match(sql, /revoke all on public\.notifications from anon, authenticated;/);
+  assert.match(sql, /grant select on public\.notifications to authenticated;/);
+  assert.match(sql, /grant update \(read_at\) on public\.notifications to authenticated;/);
+  assert.doesNotMatch(sql, /grant insert[^;]*on public\.notifications/, 'a client that can insert a notification can forge one from the system');
+  assert.doesNotMatch(sql, /grant delete[^;]*on public\.notifications/, 'a recipient must not be able to destroy the record that something was told to them');
+
+  // The absence of these policies is the design rather than an oversight, and
+  // is asserted so that nobody adds one back for symmetry with records.
+  assert.doesNotMatch(sql, /on public\.notifications for insert/, 'an insert policy would be the only route to a forged system notification');
+  assert.doesNotMatch(sql, /on public\.notifications for delete/, 'a delete policy would let a recipient erase what they were told');
+
+  // Ownership is two-dimensional here, unlike every capability before it: an
+  // organisation-wide read would show one colleague another colleague's inbox,
+  // so both predicates have to be present on both policies.
+  assert.match(sql, /on public\.notifications for select to authenticated/);
+  assert.match(sql, /on public\.notifications for update to authenticated/);
+  const policies = [...sql.matchAll(/create policy[\s\S]*?on public\.notifications[\s\S]*?;/g)].map((match) => match[0]);
+  assert.equal(policies.length, 2, 'notifications must carry exactly the read and mark-read policies');
+  for (const policy of policies) {
+    assert.match(policy, /recipient_id = \(select auth\.uid\(\)\)/, 'every notification policy must test the recipient');
+    assert.match(policy, /app_private\.has_org_role\(organisation_id, null\)/, 'every notification policy must test the organisation');
+  }
+
+  // The one elevated creation path, and the bound on it: a trigger on the table
+  // whose changes are the application events, writing nothing else.
+  assert.match(sql, /create or replace function app_private\.notify_record_event\(\)[\s\S]*?security definer/);
+  assert.match(sql, /set search_path = ''/);
+  assert.match(sql, /after insert or update of status on public\.records/);
+  assert.match(sql, /where membership\.organisation_id = new\.organisation_id/, 'the fan-out must be scoped to the organisation the event happened in');
+  assert.match(sql, /and membership\.user_id is distinct from actor/, 'the person who caused the event is not notified about it');
+  assert.doesNotMatch(sql, /create or replace function public\./, 'notifications add no publicly callable function');
+
+  // A bounded enumeration rather than free text, so a future recipe cannot
+  // invent a notification kind the product has never rendered.
+  assert.match(sql, /check \(kind in \('record-created', 'record-archived'\)\)/);
+});

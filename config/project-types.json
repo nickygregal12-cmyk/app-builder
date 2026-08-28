@@ -19,6 +19,7 @@
         "organisations",
         "records",
         "uploads",
+        "notifications",
         "admin",
         "analytics",
         "observability"

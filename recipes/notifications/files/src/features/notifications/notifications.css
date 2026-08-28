@@ -1,0 +1,54 @@
+/* In-app notifications. Layout only.
+ *
+ * Every custom property below is one the compiled design system already
+ * declares, so this surface inherits the project's direction rather than
+ * introducing a second palette. The unread state is carried by weight, a border
+ * and a word — not by a colour the palette does not have and not by colour
+ * alone, which would leave the distinction invisible to a reader who cannot see
+ * it. */
+
+.notifications-panel { display: grid; gap: 16px }
+
+.notifications-context { color: var(--color-text-muted); margin: 0 }
+
+.notification-count { font-weight: 600; color: var(--color-text) }
+
+.notification-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
+
+.notification-card { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: space-between }
+
+/* Unread carries a rule down its leading edge as well as the word "Unread", so
+   the state survives both a greyscale screen and a screen reader. */
+.notification-card-unread { border-left: 4px solid var(--color-accent) }
+
+.notification-identity { display: grid; gap: 4px; min-width: 0 }
+
+.notification-title { margin: 0; font-weight: 600; overflow-wrap: anywhere }
+
+.notification-flag { color: var(--color-accent); text-transform: uppercase; font-size: var(--text-sm); letter-spacing: 0.04em }
+
+.notification-body { margin: 0; color: var(--color-text); overflow-wrap: anywhere }
+
+.notification-meta { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm) }
+
+.notification-actions { display: flex; gap: 8px; flex-wrap: wrap }
+
+.notification-status { margin: 0; font-size: var(--text-sm); flex-basis: 100% }
+
+/* The same treatment the files surface uses for a failure a person must act on:
+   weight and a border rather than a colour the palette does not carry. */
+.notification-status-failed {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-left: 4px solid var(--color-text);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.notification-empty, .notification-loading { color: var(--color-text-muted); margin: 0 }
+
+@media (max-width: 600px) {
+  .notification-actions { width: 100% }
+}

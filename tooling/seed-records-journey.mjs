@@ -90,6 +90,14 @@ sql(`insert into public.organisation_memberships (organisation_id, user_id, role
 // visible. Organisation B's record is the control: if it ever appears in
 // organisation A's list, the isolation the pgTAP suite proves has been undone
 // somewhere between the database and the screen.
+//
+// These inserts also raise notifications, and that is worth stating because it
+// is not seeding notifications — it is the notifications recipe's trigger
+// reacting to a real record being created, exactly as it does for a record
+// created through the interface. `auth.uid()` is null for a psql seed, so the
+// trigger falls back to the record's own author: organisation A's owner is the
+// author of REC-A1 and is therefore NOT notified about it, which is what leaves
+// the notification journey a clean starting point to act against.
 sql(`insert into public.records (id, organisation_id, reference, title, summary, status, created_by) values
   ('30000000-0000-0000-0000-000000000001', '${ORGANISATIONS.a.id}', 'REC-A1', 'Organisation A first record', 'Seeded for the browser journey.', 'active', '${ORGANISATIONS.a.createdBy}'),
   ('30000000-0000-0000-0000-000000000004', '${ORGANISATIONS.b.id}', 'REC-B1', 'Organisation B confidential record', 'Must never appear to organisation A.', 'active', '${ORGANISATIONS.b.createdBy}')
@@ -112,4 +120,4 @@ if (!upload.ok) {
 }
 console.log('seeded   organisation B file for the cross-tenant assertion');
 
-console.log('seeded   2 organisations, 4 identities, 2 records, 1 file');
+console.log('seeded   2 organisations, 4 identities, 2 records, 1 file (and the notifications those records raised)');

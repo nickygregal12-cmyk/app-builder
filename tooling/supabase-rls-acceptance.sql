@@ -1,6 +1,6 @@
 begin;
 
-select plan(71);
+select plan(115);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.profiles'::regclass),
@@ -17,6 +17,10 @@ select ok(
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.records'::regclass),
   'records has RLS enabled'
+);
+select ok(
+  (select relrowsecurity from pg_class where oid = 'public.notifications'::regclass),
+  'notifications has RLS enabled'
 );
 
 -- Create genuine local Supabase auth users before exercising recipe foreign keys
@@ -651,6 +655,393 @@ select throws_ok(
   '42501',
   null,
   'anonymous callers cannot upload an organisation file'
+);
+
+
+-- ===========================================================================
+-- In-app notifications.
+--
+-- The first rows in this factory that no client creates. A record is something
+-- a person puts in the database; a notification is something the database says
+-- happened, and that inverts where the boundary has to be. For records the
+-- interesting question is which ROWS a caller may reach. Here the first
+-- question is whether a caller may write the table AT ALL, because a client
+-- that can insert a notification can forge one from the system, and no `with
+-- check` clause could tell the difference — a forger naming themselves as the
+-- recipient satisfies an honest policy perfectly.
+--
+-- So the forgery boundary is a PRIVILEGE, and it is asserted as one. The
+-- catalogue is queried directly rather than only attempting a write, because a
+-- refusal tells you the statement failed and not which safeguard refused it: a
+-- suite that only ever tries the insert would still pass if the grant came back
+-- and a policy happened to catch that particular attempt.
+--
+-- The second question is the recipient one, which is new. Every earlier
+-- capability was organisation-owned and readable by any member; a notification
+-- addressed to a colleague must not be, so `has_org_role` is half of this
+-- boundary rather than all of it.
+-- ===========================================================================
+
+reset role;
+
+-- What a signed-in caller may do to this table, from the catalogue.
+select is(
+  has_table_privilege('authenticated', 'public.notifications', 'INSERT'),
+  false,
+  'no signed-in caller holds INSERT on notifications, so a system notification cannot be forged'
+);
+select is(
+  has_table_privilege('authenticated', 'public.notifications', 'DELETE'),
+  false,
+  'no signed-in caller holds DELETE on notifications, so a recipient cannot destroy what they were told'
+);
+select is(
+  has_table_privilege('authenticated', 'public.notifications', 'SELECT'),
+  true,
+  'a signed-in caller may read notifications, subject to row level security'
+);
+select is(
+  has_column_privilege('authenticated', 'public.notifications', 'read_at', 'UPDATE'),
+  true,
+  'a recipient may mark a notification read'
+);
+-- Ownership and content are set when the notification is raised. Each of these
+-- would be reachable if the table inherited Supabase's blanket UPDATE grant.
+select is(
+  has_column_privilege('authenticated', 'public.notifications', 'recipient_id', 'UPDATE'),
+  false,
+  'a recipient cannot readdress a notification to somebody else'
+);
+select is(
+  has_column_privilege('authenticated', 'public.notifications', 'organisation_id', 'UPDATE'),
+  false,
+  'a recipient cannot move a notification into another organisation'
+);
+select is(
+  has_column_privilege('authenticated', 'public.notifications', 'title', 'UPDATE'),
+  false,
+  'a recipient cannot rewrite what a notification says'
+);
+select is(
+  has_column_privilege('authenticated', 'public.notifications', 'kind', 'UPDATE'),
+  false,
+  'a recipient cannot relabel which kind of event a notification reports'
+);
+select is(
+  has_column_privilege('authenticated', 'public.notifications', 'created_at', 'UPDATE'),
+  false,
+  'a recipient cannot backdate a notification'
+);
+
+-- --- The application event ----------------------------------------------------
+--
+-- A real record, created by a real signed-in contributor through the ordinary
+-- insert path. Nothing below asks for a notification; the point is that causing
+-- the event is the only thing anybody does.
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
+-- editor-a: a contributor in organisation A only
+select results_eq(
+  $$with created as (insert into public.records (id, organisation_id, reference, title, summary, status, created_by)
+      values ('30000000-0000-0000-0000-0000000000a1', '20000000-0000-0000-0000-000000000001', 'REC-NOTIFY', 'Notification event record', 'Causes the notification fan-out.', 'draft', '10000000-0000-0000-0000-000000000003')
+      returning 1) select count(*)::bigint from created$$,
+  array[1::bigint],
+  'a contributor can create the record whose creation is the application event'
+);
+
+-- The actor is not notified of their own action, and that is visible from here:
+-- editor-a can read their own notifications and none of them is about this.
+select results_eq(
+  $$select count(*)::bigint from public.notifications where title = 'New record: Notification event record'$$,
+  array[0::bigint],
+  'the person who caused the event is not notified about it'
+);
+
+reset role;
+-- From outside row level security, so the shape of the fan-out is visible
+-- rather than one caller's slice of it. Organisation A has six members and the
+-- actor is one of them.
+select results_eq(
+  $$select count(*)::bigint from public.notifications where title = 'New record: Notification event record'$$,
+  array[5::bigint],
+  'one application event raises one notification for every member of the organisation except its actor'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications
+    where title = 'New record: Notification event record' and organisation_id <> '20000000-0000-0000-0000-000000000001'$$,
+  array[0::bigint],
+  'the fan-out never leaves the organisation the event happened in'
+);
+select results_eq(
+  $$select distinct kind from public.notifications where title = 'New record: Notification event record'$$,
+  array['record-created'],
+  'the event kind is derived from the event rather than supplied by the caller'
+);
+
+-- --- Who may read it ------------------------------------------------------------
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+-- owner-a: an intended recipient
+select results_eq(
+  $$select count(*)::bigint from public.notifications where title = 'New record: Notification event record'$$,
+  array[1::bigint],
+  'an intended recipient sees their own notification and not the four addressed to their colleagues'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where read_at is null and title = 'New record: Notification event record'$$,
+  array[1::bigint],
+  'a notification arrives unread'
+);
+-- The recipient predicate, stated as its own question rather than inferred from
+-- the count above: nothing this caller can see is addressed to anybody else.
+select results_eq(
+  $$select count(*)::bigint from public.notifications where recipient_id <> '10000000-0000-0000-0000-000000000001'$$,
+  array[0::bigint],
+  'a recipient can see no notification addressed to another person'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000006', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000006","role":"authenticated"}', true);
+-- owner-b: another tenant entirely
+select results_eq(
+  $$select count(*)::bigint from public.notifications where title = 'New record: Notification event record'$$,
+  array[0::bigint],
+  'another organisation never sees a notification raised in this one'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where organisation_id = '20000000-0000-0000-0000-000000000001'$$,
+  array[0::bigint],
+  'an owner of organisation B sees nothing belonging to organisation A'
+);
+
+reset role;
+set local role anon;
+select throws_ok(
+  $$select * from public.notifications$$,
+  '42501',
+  'permission denied for table notifications',
+  'anonymous callers cannot read notifications'
+);
+
+-- --- Marking one read, and the boundary around that -----------------------------
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+-- owner-a: the intended recipient, acting on their own notification
+
+-- A colleague's notification is not theirs to clear. Row level security makes
+-- this a no-op rather than an error, which is the correct shape: the row is not
+-- visible, so there is nothing to refuse.
+select results_eq(
+  $$with changed as (update public.notifications set read_at = now()
+      where recipient_id = '10000000-0000-0000-0000-000000000004' returning 1) select count(*)::bigint from changed$$,
+  array[0::bigint],
+  'a recipient cannot mark another recipient notification read'
+);
+
+-- Their own, they can. The timestamp they send is deliberately absurd: the
+-- recipient decides THAT they have read it, and the database decides when.
+select results_eq(
+  $$with changed as (update public.notifications set read_at = now() - interval '5 years'
+      where title = 'New record: Notification event record' returning 1) select count(*)::bigint from changed$$,
+  array[1::bigint],
+  'an intended recipient can mark their own notification read'
+);
+select ok(
+  (select read_at from public.notifications where title = 'New record: Notification event record') > now() - interval '1 minute',
+  'the read timestamp is the database clock, not the one the client sent'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where read_at is null and title = 'New record: Notification event record'$$,
+  array[0::bigint],
+  'the notification is no longer unread'
+);
+-- Read once. A second write would let a recipient rewrite when they saw it.
+select throws_ok(
+  $$update public.notifications set read_at = now() - interval '1 day' where title = 'New record: Notification event record'$$,
+  '42501',
+  null,
+  'a notification that has been read cannot have its read time rewritten'
+);
+
+-- Ownership and content are not reachable through an ordinary client update.
+select throws_ok(
+  $$update public.notifications set recipient_id = '10000000-0000-0000-0000-000000000001' where recipient_id = '10000000-0000-0000-0000-000000000004'$$,
+  '42501',
+  null,
+  'a recipient cannot readdress a notification to themselves'
+);
+select throws_ok(
+  $$update public.notifications set organisation_id = '20000000-0000-0000-0000-000000000002' where recipient_id = '10000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a recipient cannot move their notification into another organisation'
+);
+select throws_ok(
+  $$update public.notifications set title = 'Something the system never said' where recipient_id = '10000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a recipient cannot rewrite what a notification says'
+);
+select throws_ok(
+  $$delete from public.notifications where recipient_id = '10000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  null,
+  'a recipient cannot delete a notification'
+);
+-- The forgery attempt itself, refused before any policy is consulted.
+select throws_ok(
+  $$insert into public.notifications (organisation_id, recipient_id, kind, title, body)
+    values ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'record-created', 'Trusted-looking notice', 'Written by a client.')$$,
+  '42501',
+  null,
+  'a signed-in caller cannot create a notification of their own'
+);
+select throws_ok(
+  $$insert into public.notifications (organisation_id, recipient_id, kind, title, body)
+    values ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000006', 'record-created', 'Cross-tenant notice', 'Written by a client.')$$,
+  '42501',
+  null,
+  'a signed-in caller cannot create a notification for another organisation either'
+);
+
+reset role;
+set local role anon;
+select throws_ok(
+  $$insert into public.notifications (organisation_id, recipient_id, kind, title, body)
+    values ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'record-created', 'Anonymous notice', 'Written by nobody.')$$,
+  '42501',
+  null,
+  'anonymous callers cannot create a notification'
+);
+
+-- --- The privileged operation raises one too --------------------------------------
+--
+-- Archiving is the records recipe's bounded security definer function, and it
+-- is the second application event this capability listens to. Proving it here
+-- proves the seam is the EVENT rather than one particular statement shape: the
+-- trigger fires for a write made inside another privileged function just as it
+-- does for an ordinary insert.
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+-- owner-a archives the record this block created, rather than a fixture the
+-- assertions above have already archived, restored or deleted.
+select results_eq(
+  $$select status from public.set_record_archived('30000000-0000-0000-0000-0000000000a1', true)$$,
+  array['archived'::text],
+  'an organisation owner can archive the record this block created'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where kind = 'record-archived' and title = 'Record archived: Notification event record'$$,
+  array[0::bigint],
+  'the person who archived the record is not notified about it'
+);
+
+reset role;
+select results_eq(
+  $$select count(*)::bigint from public.notifications where kind = 'record-archived' and title = 'Record archived: Notification event record'$$,
+  array[5::bigint],
+  'archiving raises a notification for every member of the organisation except the actor'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000005', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
+-- viewer-a: read-only in organisation A, and still a member of it
+select results_eq(
+  $$select count(*)::bigint from public.notifications where kind = 'record-archived' and title = 'Record archived: Notification event record'$$,
+  array[1::bigint],
+  'a viewer is a member and is told what happened, even though they could not have done it'
+);
+
+-- Clearing an inbox, and the one shape that can see the UPDATE policy at all.
+--
+-- Every assertion above that tries to touch a colleague's notification is
+-- answered by the SELECT policy before the UPDATE policy is consulted: a
+-- statement with a WHERE clause has to read the row, the read policy hides it,
+-- and nothing changes. That masks the UPDATE policy's own recipient predicate
+-- so completely that removing it changes no observable behaviour — measured,
+-- not assumed, by removing it and watching every assertion still pass.
+--
+-- A WHERE-less update reads nothing, so only the UPDATE policy decides which
+-- rows it reaches. In this shape a missing recipient predicate is immediately
+-- visible: the statement reaches a colleague's row, the `with check` half
+-- refuses the result, and the whole statement fails instead of clearing one
+-- person's inbox. viewer-a is used because their inbox is untouched, and the
+-- guard trigger refuses to rewrite a read timestamp that is already set.
+select lives_ok(
+  $$update public.notifications set read_at = now()$$,
+  'a recipient can clear their own inbox in a single statement'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where read_at is null$$,
+  array[0::bigint],
+  'and it reached every notification of their own'
+);
+
+reset role;
+select results_eq(
+  $$select count(*)::bigint from public.notifications
+    where read_at is not null
+      and recipient_id not in ('10000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000005')$$,
+  array[0::bigint],
+  'clearing an inbox reaches nobody elses notifications'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000005', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
+
+-- --- Membership is what keeps a notification readable ------------------------------
+--
+-- The organisation half of the select policy, and the case that proves it is
+-- not decoration. dual-ab belongs to both organisations and holds a real
+-- organisation B notification; removing that membership must take the
+-- notification with it, because a person who has left is not entitled to keep
+-- reading what the organisation told them.
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000007', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000007","role":"authenticated"}', true);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where organisation_id = '20000000-0000-0000-0000-000000000002'$$,
+  array[1::bigint],
+  'an identity in both organisations holds a real organisation B notification'
+);
+
+reset role;
+delete from public.organisation_memberships
+where organisation_id = '20000000-0000-0000-0000-000000000002' and user_id = '10000000-0000-0000-0000-000000000007';
+select results_eq(
+  $$select count(*)::bigint from public.notifications where organisation_id = '20000000-0000-0000-0000-000000000002' and recipient_id = '10000000-0000-0000-0000-000000000007'$$,
+  array[1::bigint],
+  'the row itself survives the membership being removed'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000007', true);
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000007","role":"authenticated"}', true);
+select results_eq(
+  $$select count(*)::bigint from public.notifications where organisation_id = '20000000-0000-0000-0000-000000000002'$$,
+  array[0::bigint],
+  'a former member can no longer read what that organisation told them'
+);
+select results_eq(
+  $$select count(*)::bigint from public.notifications
+    where organisation_id = '20000000-0000-0000-0000-000000000001' and title = 'New record: Notification event record'$$,
+  array[1::bigint],
+  'and what their remaining organisation told them is still readable'
 );
 
 reset role;

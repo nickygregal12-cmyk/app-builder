@@ -34,7 +34,8 @@
         "profiles",
         "organisations",
         "admin",
-        "uploads"
+        "uploads",
+        "notifications"
       ],
       "renderer": "application",
       "reason": "The manifest enables a capability that is an authenticated or stateful application area rather than a page. A public site with a real application inside it is an application, and rendering it statically would ship a login as a document."

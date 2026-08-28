@@ -4,7 +4,7 @@
   "title": "App Builder Rendered Evidence",
   "description": "What a build actually renders, captured from a real browser against a real preview. A compiling build is not evidence that a visual change is correct, so this is a first-class artifact with its own identity rather than a folder of screenshots. It is visual evidence only: a capture can show what a state looks like and can never prove that a journey completes. States a screenshot cannot establish are recorded as uncovered, with the reason, rather than left out.",
   "type": "object",
-  "required": ["schemaVersion", "id", "projectId", "buildRef", "compositionHash", "capturedAt", "viewports", "captures", "uncovered", "setHash"],
+  "required": ["schemaVersion", "id", "projectId", "buildRef", "compositionHash", "capturedAt", "renderingSource", "viewports", "captures", "uncovered", "setHash"],
   "properties": {
     "schemaVersion": {"const": 1},
     "id": {"type": "string", "pattern": "^evidence-[a-f0-9]{16}$"},
@@ -14,6 +14,23 @@
     "taskId": {"type": ["string", "null"]},
     "compositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "capturedAt": {"type": "string", "minLength": 1},
+    "renderingSource": {
+      "type": "object",
+      "description": "What was actually serving when these captures were taken. Required, because its absence is what made two separate review failures possible: a set that photographed the wrong document, and a set that photographed a development-only banner the built output does not contain. A picture cannot say which artifact produced it, so the evidence has to.",
+      "required": ["serverMode", "artifact", "artifactHash", "depictsShippingArtifact", "detail"],
+      "properties": {
+        "serverMode": {
+          "enum": ["development", "built-artifact"],
+          "description": "A development server renders things no built output contains. Capturing one is legitimate for iteration and is never evidence about what ships."
+        },
+        "artifact": {"type": ["string", "null"], "description": "The served directory, relative to the workspace where possible. Null for a development server, which serves no artifact."},
+        "artifactHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$", "description": "A hash over every path and byte the artifact serves, so a set can be re-checked against the build it claims and a rebuild invalidates it."},
+        "fileCount": {"type": ["integer", "null"], "minimum": 1},
+        "depictsShippingArtifact": {"type": "boolean"},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
     "viewports": {
       "type": "array",
       "minItems": 1,

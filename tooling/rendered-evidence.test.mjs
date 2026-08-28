@@ -8,6 +8,24 @@ import { composeProject } from '../packages/composition/src/index.js';
 import { deriveJourneys, deriveStateMatrix } from './lib/launch-readiness.mjs';
 
 const launchRules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
+
+/**
+ * Every evidence set has to declare what was serving when it was captured.
+ *
+ * These cases are about capture bookkeeping — hashing, dropping what failed,
+ * refusing degenerate routes — rather than about provenance, so they declare
+ * the honest thing a real run declares: a named, hashed built artifact.
+ * `tooling/rendering-source.test.mjs` is where the declaration itself is tested.
+ */
+const BUILT_ARTIFACT = Object.freeze({
+  serverMode: 'built-artifact',
+  artifact: 'dist',
+  artifactHash: 'b'.repeat(64),
+  fileCount: 2,
+  depictsShippingArtifact: true,
+  detail: 'Fixture: captured against a built artifact.',
+});
+
 import { INTERACTIONS, VIEWPORTS, applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan, findDegenerateRouteCaptures } from './lib/rendered-evidence.mjs';
 import { captureEvidence } from './lib/rendered-evidence-capture.mjs';
 import { FactoryStore } from '../apps/service/src/store.js';
@@ -144,7 +162,7 @@ test('an evidence set validates, hashes what was captured and drops what was not
     projectId: 'project-evidence',
     buildRef: '/workspaces/evidence',
     compositionHash: composition.compositionHash,
-    capturedAt: '2026-08-26T00:00:00.000Z',
+    capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
   });
 
   assert.deepEqual(validateContract('rendered-evidence', evidence), []);
@@ -162,7 +180,7 @@ test('an evidence set validates, hashes what was captured and drops what was not
 
 test('identical captures hash identically and different bytes do not', () => {
   const { composition, plan } = planFor();
-  const args = { plan, projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' };
+  const args = { plan, projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT };
   const first = buildEvidenceSet({ ...args, results: fakeResults(plan) });
   const second = buildEvidenceSet({ ...args, results: fakeResults(plan) });
   assert.equal(first.setHash, second.setHash);
@@ -172,7 +190,7 @@ test('identical captures hash identically and different bytes do not', () => {
 
 test('rendered evidence raises only the states a picture settles', () => {
   const { composition, plan } = planFor();
-  const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' });
+  const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT });
   const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), evidence);
   const states = matrix.flatMap((surface) => surface.states);
 
@@ -189,7 +207,7 @@ test('rendered evidence never answers a journey step', () => {
   routed.company = { ...routed.company, conversionGoals: ['contact form'] };
   const composition = composeProject({ manifest: routed });
   const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
-  const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' });
+  const evidence = buildEvidenceSet({ plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT });
 
   // The build has an enquiry form and evidence of how it fails. That is a
   // picture of a state, not proof the enquiry arrives.
@@ -276,7 +294,7 @@ test('capture failures leave the state uncovered rather than silently proven', (
   const evidence = buildEvidenceSet({
     plan,
     results: fakeResults(plan).filter((result) => !interactionCaptures.some((capture) => capture.id === result.id)),
-    projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z',
+    projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
   });
   assert.ok(!evidence.captures.some((capture) => capture.state.interaction),
     'a capture with no bytes must not appear in the evidence set');
@@ -297,7 +315,7 @@ test('routes the composition builds differently cannot be photographed identical
   // Every capture returns the same bytes, which is what a browser that never
   // left the home page produces.
   const collapsed = plan.captures.map((capture) => ({ id: capture.id, bytes: Buffer.from('the-home-page') }));
-  const args = { plan, projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' };
+  const args = { plan, projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT };
 
   // Without the composition the check cannot be made, and the old behaviour stands.
   assert.ok(buildEvidenceSet({ ...args, results: collapsed }).captures.length > 0);
@@ -327,7 +345,7 @@ test('pages composed from the same sections are allowed to render alike', () => 
   // A real composition photographed properly raises nothing.
   const honest = buildEvidenceSet({
     plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w',
-    compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', composition,
+    compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT, composition,
   });
   assert.deepEqual(findDegenerateRouteCaptures({ composition, captures: honest.captures }), []);
 });

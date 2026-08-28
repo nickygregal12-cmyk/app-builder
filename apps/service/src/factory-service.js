@@ -9,7 +9,7 @@ import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
-import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, serveCandidateBuild, verifyCandidate } from './visual-candidates.js';
+import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, serveBuiltArtifact, verifyCandidate } from './visual-candidates.js';
 import { designReferenceInfluence } from './visual-references.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
@@ -23,6 +23,7 @@ import { attachRevisedCandidate, planVisualRework, remainingReworkBudget, rework
 import { auditLaunchReadiness, deriveStateMatrix } from '../../../tooling/lib/launch-readiness.mjs';
 import { deriveOpportunities } from '../../../tooling/lib/product-opportunities.mjs';
 import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.mjs';
+import { describeBuiltArtifact, describeDevServer } from '../../../tooling/lib/rendering-source.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
 
@@ -765,16 +766,32 @@ export class FactoryService {
   }
 
   /**
-   * Capture what this build actually renders.
+   * Capture what this build actually renders, against one of two things.
    *
-   * It runs against the service-managed preview, which is the same rendering a
-   * person reviews, rather than against a separately started server that might
-   * not be serving the same workspace.
+   * `preview` — the service-managed dev server, which is the same rendering the
+   * operator is looking at. Right for iterating, and it is a development build:
+   * the evidence says so, and a review packet refuses to treat it as a claim
+   * about what ships.
+   *
+   * `built-artifact` — the `dist` this project's own verification produced,
+   * served as static output. This is the compliant path for evidence anyone
+   * intends to review or promote on, and it exists because a fail-closed rule
+   * with no way to satisfy it is a blocker rather than a guard.
+   *
+   * Both are honest; only one is evidence about the product. Which one was used
+   * travels with the pictures rather than being remembered by whoever ran it.
    */
-  async captureRenderedEvidence(projectId) {
+  async captureRenderedEvidence(projectId, { against = 'preview' } = {}) {
     const { project, workspace } = this.requireWorkspace(projectId);
-    const preview = this.previewTarget(projectId);
-    if (!preview) throw new Error('Rendered evidence is captured from the running preview. Start the preview first.');
+    if (against !== 'preview' && against !== 'built-artifact') {
+      throw new Error(`Rendered evidence can be captured against 'preview' or 'built-artifact', not ${JSON.stringify(against)}.`);
+    }
+    const dist = path.join(workspace, 'dist');
+    if (against === 'built-artifact' && !fs.existsSync(dist)) {
+      throw new Error('There is no built artifact to capture. Verify the project first, so the captures depict output this build actually produced.');
+    }
+    const preview = against === 'preview' ? this.previewTarget(projectId) : null;
+    if (against === 'preview' && !preview) throw new Error('Rendered evidence is captured from the running preview. Start the preview first.');
     const composition = this.getComposition(projectId);
     if (!composition) return null;
 
@@ -804,8 +821,12 @@ export class FactoryService {
       payload: { planned: plan.captures.length, uncovered: plan.uncovered.length, viewports: plan.viewports.map((viewport) => viewport.name) },
     }));
 
+    // Serving the built artifact is this lane's own concern, so the server it
+    // starts is the server it stops. The preview belongs to the operator and is
+    // left exactly as it was found.
+    const artifactServer = against === 'built-artifact' ? await serveBuiltArtifact(dist) : null;
     try {
-      const { results, failures } = await captureEvidence({ plan, baseUrl: preview.url });
+      const { results, failures } = await captureEvidence({ plan, baseUrl: artifactServer?.url ?? preview.url });
       if (!results.length) throw new Error(`No rendered evidence could be captured: ${failures[0]?.message ?? 'the browser produced nothing'}`);
 
       const evidence = assertContract('rendered-evidence', buildEvidenceSet({
@@ -815,6 +836,14 @@ export class FactoryService {
         buildRef: workspace,
         compositionHash: composition.compositionHash,
         capturedAt: new Date().toISOString(),
+        // Stated, not implied. The preview lane photographs the operator's live
+        // dev server, which is the right thing to photograph while someone is
+        // working and is not what a visitor receives. Recording that is what
+        // stops those captures reaching a review as a claim about what ships:
+        // the review packet reads this field and refuses.
+        renderingSource: against === 'built-artifact'
+          ? describeBuiltArtifact({ workspace, dist })
+          : describeDevServer(),
         taskId: task.id,
         // The composition is what makes "these two routes must differ"
         // answerable, so it travels with the captures rather than being
@@ -869,6 +898,8 @@ export class FactoryService {
       this.store.upsertTask(task);
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'evidence.capture.failed', actor: 'factory-service', payload: { message }, usage: { durationMs: Date.now() - started } }));
       throw error;
+    } finally {
+      await artifactServer?.close();
     }
   }
 
@@ -1450,7 +1481,7 @@ export class FactoryService {
     const captured = [];
     for (const candidate of pending) {
       const dist = verifyCandidate(candidate.workspace);
-      const server = await serveCandidateBuild(dist);
+      const server = await serveBuiltArtifact(dist);
       try {
         const composition = JSON.parse(fs.readFileSync(path.join(candidate.workspace, '.app-builder/composition.json'), 'utf8'));
         const designLint = this.lintWorkspace(candidate.workspace, composition);
@@ -1468,6 +1499,11 @@ export class FactoryService {
           buildRef: candidate.workspace,
           compositionHash: composition.compositionHash,
           capturedAt,
+          // This lane already served the built artifact rather than a dev
+          // server, which was the right decision and was previously invisible
+          // to anyone reading the evidence. Now the set says so, and names the
+          // exact artifact it was photographed against.
+          renderingSource: describeBuiltArtifact({ workspace: candidate.workspace, dist }),
           designLint,
           // The degenerate-route check landed on the preview path and missed
           // this one, which is the path whose evidence the first independent

@@ -224,8 +224,16 @@ export function findDegenerateRouteCaptures({ composition, captures } = {}) {
   return findings;
 }
 
-export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, checkpointId = null, taskId = null, designLint = null, composition = null } = {}) {
+export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, renderingSource, checkpointId = null, taskId = null, designLint = null, composition = null } = {}) {
   if (!projectId || !buildRef || !compositionHash || !capturedAt) throw new Error('Rendered evidence needs a project, a build, a composition hash and a capture time.');
+  // What was serving is not optional and has no default. A default would be a
+  // guess, and the only two guesses available are "development" — which would
+  // quietly refuse honest built-artifact evidence — and "built-artifact", which
+  // would let a development capture claim to depict what ships. That second
+  // mistake is the one that has already cost a paid review, twice.
+  if (!renderingSource?.serverMode) {
+    throw new Error('Rendered evidence must record what was serving when it was captured. A capture that cannot say which artifact it photographed is not evidence about a build.');
+  }
   const captured = new Map(list(results).map((result) => [result.id, result]));
   const captures = plan.captures
     .filter((capture) => captured.has(capture.id))
@@ -280,6 +288,10 @@ export function buildEvidenceSet({ plan, results, projectId, buildRef, compositi
     taskId,
     compositionHash,
     capturedAt,
+    // Part of `base`, so it is inside `setHash`. Evidence whose identity did not
+    // cover what was serving could have its rendering source rewritten without
+    // the set noticing.
+    renderingSource,
     viewports: plan.viewports,
     captures,
     uncovered,

@@ -52,7 +52,29 @@ type Device = 'desktop' | 'tablet' | 'mobile';
 type StageView = 'preview' | 'compare';
 type Operation = 'generate' | 'verify' | 'start-preview' | 'stop-preview' | 'ingest' | 'capture-evidence' | null;
 
-const deviceWidth: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
+// These must stay equal to VIEWPORTS in tooling/lib/rendered-evidence.mjs: the
+// evidence someone reviews and the preview they clicked through have to be the
+// same rendering, not two nearby ones. `console-preview-parity` in
+// tooling/rendered-evidence.test.mjs fails if these two drift apart.
+const deviceWidth: Record<Device, number> = { desktop: 1440, tablet: 768, mobile: 390 };
+
+/**
+ * Who authored a candidate set generated from the Console.
+ *
+ * A person clicking Generate did not design anything: the factory composed these
+ * deterministically from the approved truth and the direction registry. Recording
+ * the operator here would be false, and would bar them from reviewing work they
+ * did not produce. An agent driving the service declares its own identity
+ * instead, which is what stops that agent reviewing its own output.
+ */
+const FACTORY_AUTHOR = { role: 'visual-direction', vendor: 'app-builder', model: 'deterministic-composition' };
+
+/** An identity as a person reads it, rather than as an object React cannot render. */
+const who = (identity: { role: string; vendor: string; model: string } | string | null | undefined) => {
+  if (!identity) return 'an unrecorded runtime';
+  if (typeof identity === 'string') return identity;
+  return identity.vendor === 'human' ? identity.model : `${identity.role} (${identity.vendor}/${identity.model})`;
+};
 
 function duration(ms: number) {
   if (ms < 1000) return `${Math.round(ms)} ms`;
@@ -710,9 +732,15 @@ function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
     const values = criteriaFor(candidateId).map((criterion) => scoresFor(candidateId)[criterion.id]).filter((value): value is number => Number.isFinite(value));
     return values.length ? Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2)) : null;
   };
+  // A person reviewing through the Console is independent of whatever produced
+  // the candidate, but independence is decided on `vendor`, so the person has to
+  // be expressible in the same terms as a runtime. `human` is the vendor; the
+  // name they typed is what distinguishes one person from another.
+  const asPerson = (role: string) => ({ role, vendor: 'human', model: reviewer.trim() });
+
   const reviewPayload = (candidate: VisualCandidate, verdict: string) => ({
     verdict,
-    reviewedBy: reviewer.trim(),
+    reviewedBy: asPerson('design-critic'),
     addressedRules: candidate.gate.mustAddress,
     rationale: rationale[candidate.candidateId] ?? '',
     criterionScores: criteriaFor(candidate.candidateId).map((criterion) => ({ criterion: criterion.id, score: scoresFor(candidate.candidateId)[criterion.id] })),
@@ -726,7 +754,7 @@ function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
     </div>
     <p className="builder-empty">Several genuinely different presentations of the same facts. They say the same thing; they are not the same site.</p>
 
-    {!set && <button type="button" className="secondary compact" disabled={busy !== null} onClick={() => act('generate', () => generateVisualCandidates(projectId))}>
+    {!set && <button type="button" className="secondary compact" disabled={busy !== null} onClick={() => act('generate', () => generateVisualCandidates(projectId, FACTORY_AUTHOR))}>
       {busy === 'generate' ? 'Generating…' : 'Generate candidates'}
     </button>}
 
@@ -828,7 +856,7 @@ function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
             <span>Same product truth: <code>{candidate.lineage.frozenTruthHash}</code></span>
           </div>}
           {candidate.review && <p className="builder-empty">
-            {label(candidate.review.verdict)} by {candidate.review.reviewedBy}
+            {label(candidate.review.verdict)} by {who(candidate.review.reviewedBy)}
             {typeof candidate.review.overallScore === 'number' ? ` · ${candidate.review.overallScore}/10` : ''}
             {candidate.review.thresholdMet === false ? ` · ${candidate.review.thresholdDetail ?? 'below the bar'}` : ''}
             {candidate.review.rationale ? ` — ${candidate.review.rationale}` : ''}
@@ -877,7 +905,7 @@ function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
             {candidate.review?.verdict === 'rework' && !summary?.exhausted && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act(`revise-${candidate.candidateId}`, async () => (await reworkVisualCandidate(projectId, candidate.candidateId, reviewer.trim())).set)}>
               {busy === `revise-${candidate.candidateId}` ? 'Revising…' : `Make the revision (pass ${(candidate.iteration ?? 0) + 1} of ${summary?.budget ?? 2})`}
             </button>}
-            {candidate.review?.verdict === 'pass' && <button type="button" disabled={busy !== null || !reviewer.trim()} onClick={() => act(`promote-${candidate.candidateId}`, () => promoteVisualCandidate(projectId, candidate.candidateId, { promotedBy: reviewer.trim(), rationale: rationale[candidate.candidateId] ?? '' }))}>
+            {candidate.review?.verdict === 'pass' && <button type="button" disabled={busy !== null || !reviewer.trim()} onClick={() => act(`promote-${candidate.candidateId}`, () => promoteVisualCandidate(projectId, candidate.candidateId, { promotedBy: asPerson('design-critic'), rationale: rationale[candidate.candidateId] ?? '' }))}>
               {busy === `promote-${candidate.candidateId}` ? 'Promoting…' : 'Promote this one'}
             </button>}
           </div>}
@@ -903,13 +931,13 @@ function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
           {summary.exhausted ? ' The rework budget is spent, so rejecting is the remaining answer.' : ` ${summary.remaining} of ${summary.budget} rework pass(es) left.`}
         </p>
         <div className="candidate-actions">
-          {summary.canRework && !summary.exhausted && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act('set-rework', () => decideVisualCandidateSet(projectId, { outcome: 'rework-required', decidedBy: reviewer.trim(), rationale: rationale.set ?? '' }))}>Send the set back for rework</button>}
-          {summary.canReject && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act('set-reject', () => decideVisualCandidateSet(projectId, { outcome: 'rejected', decidedBy: reviewer.trim(), rationale: rationale.set ?? '' }))}>Reject all of them</button>}
+          {summary.canRework && !summary.exhausted && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act('set-rework', () => decideVisualCandidateSet(projectId, { outcome: 'rework-required', decidedBy: asPerson('design-critic'), rationale: rationale.set ?? '' }))}>Send the set back for rework</button>}
+          {summary.canReject && <button type="button" className="secondary compact" disabled={busy !== null || !reviewer.trim()} onClick={() => act('set-reject', () => decideVisualCandidateSet(projectId, { outcome: 'rejected', decidedBy: asPerson('design-critic'), rationale: rationale.set ?? '' }))}>Reject all of them</button>}
         </div>
       </div>}
 
       {set.decision && set.setOutcome !== 'promoted' && <div className="evidence-uncovered">
-        <strong>Set {label(set.setOutcome ?? 'decided')} by {set.decision.decidedBy}</strong>
+        <strong>Set {label(set.setOutcome ?? 'decided')} by {who(set.decision.decidedBy)}</strong>
         {set.decision.rationale && <span>{set.decision.rationale}</span>}
       </div>}
 

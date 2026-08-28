@@ -23,7 +23,7 @@ import { createHash } from 'node:crypto';
 // The same widths the Console previews at, so evidence and the preview someone
 // reviewed are the same rendering rather than two nearby ones.
 export const VIEWPORTS = Object.freeze([
-  Object.freeze({ name: 'desktop', width: 1280, height: 800, deviceScaleFactor: 1 }),
+  Object.freeze({ name: 'desktop', width: 1440, height: 900, deviceScaleFactor: 1 }),
   Object.freeze({ name: 'tablet', width: 768, height: 1024, deviceScaleFactor: 1 }),
   Object.freeze({ name: 'mobile', width: 390, height: 844, deviceScaleFactor: 1 }),
 ]);

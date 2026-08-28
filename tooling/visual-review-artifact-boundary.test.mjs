@@ -85,6 +85,121 @@ test('the hosted evidence run uploads the packet a reviewer opens, not only its 
   );
 });
 
+const ACCEPTANCE = 'tooling/visual-candidate-acceptance.mjs';
+
+/**
+ * The environment the acceptance run fail-closes on, read from the script
+ * rather than restated here.
+ *
+ * Listing the names in this test would let the two drift apart in exactly the
+ * way that costs a hosted run: the script gains a third required variable, this
+ * file still asserts the two it knew about, and the workflow discovers the gap
+ * forty seconds into a job that has already installed Chromium.
+ */
+function requiredRuntimeEnv(text) {
+  return [...new Set([...text.matchAll(/process\.env\.(APP_BUILDER_[A-Z0-9_]+)/g)].map((match) => match[1]))].sort();
+}
+
+/** The `env:` keys declared on the step that runs a given command. */
+function stepEnv(text, command) {
+  const lines = text.split('\n');
+  const runIndex = lines.findIndex((line) => line.includes(`run: ${command}`));
+  assert.notEqual(runIndex, -1, `${WORKFLOW} must run ${command}.`);
+
+  let start = runIndex;
+  while (start >= 0 && !/^\s*- /.test(lines[start])) start -= 1;
+  assert.notEqual(start, -1, `Could not find the step that runs ${command}.`);
+  const stepIndent = lines[start].indexOf('-');
+
+  let end = start + 1;
+  while (end < lines.length && !(/^\s*- /.test(lines[end]) && lines[end].indexOf('-') === stepIndent)) end += 1;
+
+  const block = lines.slice(start, end);
+  const envIndex = block.findIndex((line) => /^\s*env:\s*$/.test(line));
+  if (envIndex === -1) return [];
+  const envIndent = block[envIndex].match(/^\s*/)[0].length;
+  const keys = [];
+  for (let index = envIndex + 1; index < block.length; index += 1) {
+    const line = block[index];
+    if (!line.trim()) continue;
+    if (line.match(/^\s*/)[0].length <= envIndent) break;
+    const key = line.trim().match(/^([A-Za-z0-9_]+):/);
+    if (key) keys.push(key[1]);
+  }
+  return keys.sort();
+}
+
+/**
+ * The hosted run must declare the identity the script refuses to guess.
+ *
+ * This is the defect the workflow actually hit. `runIdentity` was made
+ * fail-closed — correctly, because a guessed vendor authorises a creator to
+ * approve itself — but the workflow that calls it was never given the answer,
+ * so the evidence job died before capturing anything and the only signal was a
+ * red check on a pull request whose own gates were green.
+ *
+ * Asserting the presence of the variables, not their values: which vendor is
+ * declared is a judgement recorded in the workflow's own comment, and pinning
+ * the string here would make a deliberate change to it look like a test
+ * failure. What must never regress is that the answer is supplied at all.
+ */
+test('the hosted evidence run declares the runtime identity the acceptance script requires', () => {
+  const required = requiredRuntimeEnv(fs.readFileSync(ACCEPTANCE, 'utf8'));
+  assert.ok(required.length > 0, `${ACCEPTANCE} should read its runtime identity from the environment.`);
+
+  const declared = stepEnv(fs.readFileSync(WORKFLOW, 'utf8'), 'npm run acceptance:visual-candidates');
+  const missing = required.filter((name) => !declared.includes(name));
+  assert.deepEqual(
+    missing,
+    [],
+    `${WORKFLOW} does not declare ${missing.join(', ')}, which ${ACCEPTANCE} fails closed without. A hosted evidence run would install Chromium and then refuse to say who created the candidates.`,
+  );
+});
+
+const CONSOLE_WORKSPACE = 'apps/console/src/workspace/BuilderWorkspace.tsx';
+
+/** The `env:` values declared on the step that runs a given command. */
+function stepEnvValues(text, command) {
+  const lines = text.split('\n');
+  const runIndex = lines.findIndex((line) => line.includes(`run: ${command}`));
+  let start = runIndex;
+  while (start >= 0 && !/^\s*- /.test(lines[start])) start -= 1;
+  const stepIndent = lines[start].indexOf('-');
+  let end = start + 1;
+  while (end < lines.length && !(/^\s*- /.test(lines[end]) && lines[end].indexOf('-') === stepIndent)) end += 1;
+  const values = {};
+  for (const line of lines.slice(start, end)) {
+    const match = line.trim().match(/^(APP_BUILDER_[A-Z0-9_]+):\s*(\S+)$/);
+    if (match) values[match[1]] = match[2];
+  }
+  return values;
+}
+
+/**
+ * Both deterministic generation paths must author under the same identity.
+ *
+ * Nothing about a candidate changes because a runner built it rather than a
+ * desk: the directions are committed, the intake bundle is frozen, and no model
+ * executes on either path. If the two disagreed, provenance would record where
+ * a build happened instead of what authored it, and the same candidate set
+ * would admit a reviewer on one path and refuse them on the other — a rule 17
+ * decision made by accident of location.
+ */
+test('the hosted evidence run authors candidates as the same factory identity the Console does', () => {
+  const declared = stepEnvValues(fs.readFileSync(WORKFLOW, 'utf8'), 'npm run acceptance:visual-candidates');
+  const consoleSource = fs.readFileSync(CONSOLE_WORKSPACE, 'utf8');
+  const author = consoleSource.match(/const FACTORY_AUTHOR = \{([^}]+)\}/);
+  assert.ok(author, `${CONSOLE_WORKSPACE} must declare FACTORY_AUTHOR, the identity deterministic generation is authored under.`);
+  const field = (name) => author[1].match(new RegExp(`${name}:\\s*'([^']+)'`))?.[1];
+
+  assert.equal(
+    declared.APP_BUILDER_RUNTIME_VENDOR,
+    field('vendor'),
+    `${WORKFLOW} and ${CONSOLE_WORKSPACE} must agree on the vendor deterministic generation is authored under; independence is decided on vendor.`,
+  );
+  assert.equal(declared.APP_BUILDER_RUNTIME_MODEL, field('model'), 'The audit trail should record the same runtime on both paths.');
+});
+
 test('superseded visual evidence runs are cancelled but manual runs stay independent', () => {
   const text = fs.readFileSync(WORKFLOW, 'utf8');
   assert.match(text, /group:\s*visual-review-evidence-\$\{\{\s*github\.event_name == 'pull_request' && github\.event\.pull_request\.number \|\| github\.run_id\s*\}\}/);

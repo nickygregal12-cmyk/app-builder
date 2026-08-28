@@ -1228,7 +1228,9 @@ export class FactoryService {
    * that is one build in several colours costs a compile rather than three
    * installs and a browser run.
    */
-  async generateVisualCandidates(projectId, { directions = null, createdBy = 'visual-direction', now = new Date().toISOString() } = {}) {
+  // `createdBy` has no default: the runtime that drives a generation is the one
+  // barred from later promoting it, so it has to say who it is.
+  async generateVisualCandidates(projectId, { directions = null, createdBy, now = new Date().toISOString() } = {}) {
     const project = this.requireProject(projectId);
     const existing = this.readVisualCandidateSet(projectId);
     if (existing && !existing.promotedCandidateId) {
@@ -1644,7 +1646,11 @@ export class FactoryService {
       outcome: 'pending',
       rationale: null,
       reworkOwner: null,
-      provenance: { createdBy: plan.owner, reviewedBy: null, promotedBy: null, decidedAt: null },
+      // A revision inherits the runtime that authored what it revises, and takes
+      // the rework owner as its role. `plan.owner` alone is a role name, and a
+      // role name cannot establish independence — a revision recorded under one
+      // would be reviewable by the very runtime that produced it.
+      provenance: { createdBy: { ...candidate.provenance.createdBy, role: plan.owner }, reviewedBy: null, promotedBy: null, decidedAt: null },
     };
 
     const stored = this.writeVisualCandidateSet(projectId, attachRevisedCandidate(set, { plan, candidate: revised }));

@@ -8,6 +8,12 @@ import { assertKnowledgePack, buildKnowledgePack, normalizeSource } from '../pac
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 
+// Independence is decided on vendor, so a fixture creator and a fixture
+// reviewer have to be different vendors — not just different labels.
+const CREATOR = { role: 'visual-direction', vendor: 'anthropic', model: 'claude-opus-5' };
+const CRITIC = { role: 'design-critic', vendor: 'openai', model: 'gpt-5.6' };
+
+
 /**
  * The candidate lifecycle as the service runs it.
  *
@@ -93,7 +99,7 @@ test('a candidate set is several presentations of one truth, each a real reposit
     const project = service.createProject({ id: 'project-candidates', manifest: projectManifest(), knowledgePack: await pack(3) });
     await service.generateProject(project.id);
 
-    const set = await service.generateVisualCandidates(project.id);
+    const set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
     assert.ok(set.candidates.length >= 2, 'one candidate is not a choice');
     assert.equal(set.diversity.distinct, true);
     assert.equal(set.promotedCandidateId, null);
@@ -120,8 +126,8 @@ test('a second undecided set is refused, so a project never has two open choices
   await withService('one-set', async ({ service, pack }) => {
     const project = service.createProject({ id: 'project-one-set', manifest: projectManifest(), knowledgePack: await pack(3) });
     await service.generateProject(project.id);
-    await service.generateVisualCandidates(project.id);
-    await assert.rejects(() => service.generateVisualCandidates(project.id), /already has an undecided candidate set/);
+    await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
+    await assert.rejects(() => service.generateVisualCandidates(project.id, { createdBy: CREATOR }), /already has an undecided candidate set/);
   });
 });
 
@@ -129,7 +135,7 @@ test('a project with no publishable photography is offered directions that do no
   await withService('no-imagery', async ({ service, pack }) => {
     const project = service.createProject({ id: 'project-no-imagery', manifest: projectManifest(), knowledgePack: await pack(0) });
     await service.generateProject(project.id);
-    const set = await service.generateVisualCandidates(project.id);
+    const set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
 
     assert.equal(set.assetReadiness.strategy, 'typography-led');
     assert.equal(set.assetReadiness.supportsImageryLed, false);
@@ -144,7 +150,7 @@ test('the review packet separates what a rule settled from what needs judgement'
   await withService('packet', async ({ service, pack }) => {
     const project = service.createProject({ id: 'project-packet', manifest: projectManifest(), knowledgePack: await pack(3) });
     await service.generateProject(project.id);
-    const set = await service.generateVisualCandidates(project.id);
+    const set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
     const packet = service.visualReviewPacket(project.id, set.candidates[0].candidateId);
 
     const settled = new Set(['accent-contrast', 'reduced-motion-required', 'repetitive-section-presentation', 'competing-primary-actions', 'uniform-page-rhythm']);
@@ -162,12 +168,12 @@ test('promotion makes one candidate the project, and leaves no forks behind', as
   await withService('promote', async ({ service, pack }) => {
     const project = service.createProject({ id: 'project-promote', manifest: projectManifest(), knowledgePack: await pack(3) });
     await service.generateProject(project.id);
-    let set = await service.generateVisualCandidates(project.id);
+    let set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
     const workspaces = set.candidates.map((candidate) => candidate.workspace);
     const winner = set.candidates[1];
 
     // A candidate cannot be promoted before it has been reviewed.
-    await assert.rejects(() => service.promoteVisualCandidate(project.id, winner.candidateId, { promotedBy: 'design-critic' }), /no passing visual review/);
+    await assert.rejects(() => service.promoteVisualCandidate(project.id, winner.candidateId, { promotedBy: CRITIC }), /no passing visual review/);
 
     // Move each candidate through evidence and review the way capture would.
     set = service.writeVisualCandidateSet(project.id, {
@@ -185,7 +191,7 @@ test('promotion makes one candidate the project, and leaves no forks behind', as
       const criteria = service.visualReviewPacket(project.id, candidate.candidateId).criteria;
       await service.recordVisualCandidateReview(project.id, candidate.candidateId, {
         verdict: wins ? 'pass' : 'rework',
-        reviewedBy: 'design-critic',
+        reviewedBy: CRITIC,
         addressedRules: [],
         rationale: 'Reviewed against the scoped criteria.',
         // A verdict now carries a score against every criterion it was scoped,
@@ -195,7 +201,7 @@ test('promotion makes one candidate the project, and leaves no forks behind', as
       });
     }
 
-    const promoted = await service.promoteVisualCandidate(project.id, winner.candidateId, { promotedBy: 'design-critic', rationale: 'Reads as the practice it is for.' });
+    const promoted = await service.promoteVisualCandidate(project.id, winner.candidateId, { promotedBy: CRITIC, rationale: 'Reads as the practice it is for.' });
     assert.equal(promoted.promotedCandidateId, winner.candidateId);
     assert.equal(promoted.candidates.filter((candidate) => candidate.outcome === 'promoted').length, 1);
     assert.equal(promoted.candidates.filter((candidate) => candidate.outcome === 'pending').length, 0);
@@ -226,7 +232,7 @@ test('a promoted set records the decision in the project ledger', async () => {
   await withService('ledger', async ({ service, pack }) => {
     const project = service.createProject({ id: 'project-ledger', manifest: projectManifest(), knowledgePack: await pack(3) });
     await service.generateProject(project.id);
-    const set = await service.generateVisualCandidates(project.id);
+    const set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
     const types = service.listEvents(project.id).map((event) => event.type);
     assert.ok(types.includes('visual.candidates.generated'));
     const event = service.listEvents(project.id).find((entry) => entry.type === 'visual.candidates.generated');

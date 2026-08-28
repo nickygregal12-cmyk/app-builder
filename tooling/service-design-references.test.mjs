@@ -18,6 +18,11 @@ import {
 } from '../apps/service/src/visual-references.js';
 import { observationsFrom } from './lib/visual-reference-capture.mjs';
 
+// Candidate generation records the runtime that drove it, because that runtime
+// is the one barred from later promoting what it produced.
+const CREATOR = { role: 'visual-direction', vendor: 'anthropic', model: 'claude-opus-5' };
+
+
 /**
  * Design references as the service actually runs them.
  *
@@ -301,7 +306,7 @@ test('an avoided structural trait refuses a direction rather than generating one
     // names the reference that caused it rather than reporting a shortage of
     // directions the operator cannot explain.
     await assert.rejects(
-      () => service.generateVisualCandidates(project.id),
+      () => service.generateVisualCandidates(project.id, { createdBy: CREATOR }),
       (error) => {
         assert.match(error.message, /editorial-authority \(reference-avoids-trait/);
         assert.match(error.message, /design reference/i);
@@ -312,7 +317,7 @@ test('an avoided structural trait refuses a direction rather than generating one
     // Withdraw the refusal and the same project produces a set again, with the
     // reference still recorded against every candidate it informed.
     await setDesignReferenceApproval(service, project.id, reference.referenceId, { state: 'disabled' });
-    const set = await service.generateVisualCandidates(project.id);
+    const set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
     assert.ok(set.candidates.length >= 2);
     assert.ok(!set.refusedDirections.some((entry) => entry.reason === 'reference-avoids-trait'));
   });

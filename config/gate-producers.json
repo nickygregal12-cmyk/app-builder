@@ -48,7 +48,7 @@
       "contract": "config/payload-budgets.json",
       "artifact": ".app-builder/gate-evidence/payload-budget.json",
       "buildRefField": "compositionHash",
-      "reads": "A built repository \u2014 installed and built as an ordinary project \u2014 held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
+      "reads": "A built repository — installed and built as an ordinary project — held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
     },
     "secret-scan": {
       "id": "secret-scan",
@@ -79,6 +79,16 @@
       "artifact": ".app-builder/gate-evidence/generated-checks.json",
       "buildRefField": "compositionHash",
       "reads": "The generated repository's own typecheck, lint and test scripts, run in that repository. Nothing is reimplemented here: the portability claim is that those scripts run without the Console, so they are what answers the gate."
+    },
+    "seo-aeo-scanner": {
+      "id": "seo-aeo-scanner",
+      "command": "npm run gates:evidence",
+      "implementation": "tooling/lib/seo-aeo.mjs readBuiltDocuments + scanSeoAeo",
+      "artifactKind": "SeoReport",
+      "contract": "tooling/lib/seo-aeo.mjs",
+      "artifact": ".app-builder/gate-evidence/seo-aeo.json",
+      "buildRefField": "compositionHash",
+      "reads": "The built documents a visitor is actually served, from the generated repository's own dist. Not the composition: a composer can decide a perfect title for every route and the renderer can still ship one document that says something else, and only the second is what a crawler receives."
     }
   },
   "checks": {
@@ -119,7 +129,7 @@
       "failOnFindings": [
         "violation"
       ],
-      "why": "A DesignLint violation is an invariant that broke \u2014 unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
+      "why": "A DesignLint violation is an invariant that broke — unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
     },
     "design-system-lint": {
       "id": "design-system-lint",
@@ -204,9 +214,30 @@
       "failOnFindings": [
         "unit-tests-failed"
       ],
-      "why": "The generated project's own test script. Exit zero is not the whole verdict \u2014 a suite that ran nothing exits zero too \u2014 so the TAP plan travels as the coverage number.",
+      "why": "The generated project's own test script. Exit zero is not the whole verdict — a suite that ran nothing exits zero too — so the TAP plan travels as the coverage number.",
       "coverageField": "unitTests",
       "coverageLabel": "tests in the generated project's own suite"
+    },
+    "seo-aeo-scanner": {
+      "id": "seo-aeo-scanner",
+      "gate": "seo",
+      "producer": "seo-aeo-scanner",
+      "findingsField": "findings",
+      "findingIdField": "check",
+      "failOnFindings": [
+        "document-title-missing",
+        "document-title-placeholder",
+        "document-title-duplicated",
+        "document-description-missing",
+        "document-description-duplicated",
+        "document-heading-missing",
+        "route-metadata-not-crawlable",
+        "structured-data-unparseable",
+        "canonical-missing"
+      ],
+      "why": "Crawlability and answerability are properties of what shipped, not of what was composed. The advisory findings the scanner also records - a withheld canonical when no site URL is known, a title longer than consumers display - are deliberately absent here, because failing a build for not knowing its own deployment URL would punish the factory's refusal to invent one.",
+      "coverageField": "documentsScanned",
+      "coverageLabel": "documents in the built output"
     }
   },
   "unregistered": {
@@ -214,7 +245,6 @@
     "checks": [
       "e2e-tests",
       "axe-serious-critical",
-      "seo-aeo-scanner",
       "executed-rls-acceptance"
     ]
   }

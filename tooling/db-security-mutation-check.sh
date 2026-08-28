@@ -7,11 +7,15 @@
 # FAIL each time. A mutation that leaves the suite green is a safeguard nothing
 # is actually testing.
 #
-# It covers two boundaries that are easy to confuse. Row level security decides
-# WHICH ROWS a caller may touch; column privileges decide WHICH FIELDS of them
-# may change. The second was decorative until the recipes started revoking the
-# blanket grant a Supabase database installs before any of them run, so the
-# mutations below break both kinds and require the suite to notice.
+# It covers three boundaries that are easy to confuse. Row level security
+# decides WHICH ROWS a caller may touch; column privileges decide WHICH FIELDS
+# of them may change; and a withheld table privilege decides whether a caller
+# may issue the statement at all. The second was decorative until the recipes
+# started revoking the blanket grant a Supabase database installs before any of
+# them run. The third is what stops a client forging a notification from the
+# system, and no policy could do it: a forger who names themselves as the
+# recipient satisfies any honest `with check` clause. The mutations below break
+# all three kinds and require the suite to notice.
 #
 # Deliberately not wired into `npm run check`: it needs a container runtime and
 # several minutes. Run it when the policies or grants change.
@@ -244,6 +248,68 @@ mutate "storage read requires only a signed-in caller" \
 #     and the namespace collapses.
 mutate "storage tenant helper returns a fixed organisation" \
   "s|then ((storage.foldername(object_name))\[1\])::uuid|then '20000000-0000-0000-0000-000000000001'::uuid|"
+
+
+# --- In-app notifications --------------------------------------------------------
+#
+# The first table whose rows no client creates, so the safeguards are a
+# different shape from the ones above. Two of them are privileges rather than
+# policies — a client that could INSERT here could forge a notification from the
+# system, and no `with check` clause can tell a forger who names themselves as
+# the recipient from a genuine row — and one of them is the trigger that decides
+# WHEN a notification was read.
+
+# 17. The revoke itself. Without it the table inherits Supabase's blanket grant,
+#     and a signed-in caller regains INSERT and DELETE: notification forgery,
+#     and the ability to destroy the record that something was told to you.
+mutate "notifications inherits blanket INSERT, UPDATE and DELETE again" \
+  "s|^revoke all on public.notifications from anon, authenticated;\$||"
+
+# 18. The recipient predicate on reading. This is the boundary that is new in
+#     this capability: every earlier one was organisation-wide, so a mistake
+#     here shows one colleague another colleague's private notifications.
+mutate "notification read predicate drops the recipient check" \
+  "s|^  recipient_id = (select auth.uid())\$|  true|"
+
+# 19. The organisation predicate on reading. Redundant-looking, because the
+#     recipient check usually reaches the same answer — and not redundant at
+#     all: it is the only thing that stops somebody who has LEFT an organisation
+#     from continuing to read what it told them.
+mutate "notification read predicate drops the organisation check" \
+  "s|^  and app_private.has_org_role(organisation_id, null)\$|  and true|"
+
+# 20. The recipient predicate on writing, which is what stops one person
+#     clearing another person's inbox.
+mutate "notification update predicate drops the recipient check" \
+  "s|^using (recipient_id = (select auth.uid()) and app_private.has_org_role(organisation_id, null))\$|using (app_private.has_org_role(organisation_id, null))|"
+
+# 21. The actor exclusion. Not a confidentiality boundary — everybody here is
+#     entitled to the notification — but it is the behaviour the product journey
+#     depends on, and a fan-out that notifies the actor is one nobody reads.
+mutate "the fan-out stops excluding the person who caused the event" \
+  "s|and membership.user_id is distinct from actor;|and true;|"
+
+# 22. The tenant predicate on the fan-out itself. This is the one that would
+#     deliver an organisation's business to every other tenant on the platform,
+#     and it is in a security definer function where row level security is not
+#     watching.
+mutate "the fan-out stops scoping recipients to the events organisation" \
+  "s|where membership.organisation_id = new.organisation_id|where true|"
+
+# 23. The read clock. With the pin removed the recipient chooses when they read
+#     something, and anything that later trusted that timestamp is trusting the
+#     client.
+mutate "the read timestamp becomes whatever the client sent" \
+  "s|^    new.read_at := now();\$||"
+
+# 24. The column guard, with its OTHER protection removed first — the same
+#     compound shape the records recipe needs, and for the same reason. Two
+#     mechanisms defend these columns: the grant stops today's client and the
+#     trigger stops a future recipe author who widens the grant list. Removing
+#     the trigger alone changes nothing observable, so the grant is widened here
+#     to leave the trigger doing the work alone.
+mutate "notification ownership granted back, leaving only the trigger" \
+  "s|^grant update (read_at) on public.notifications to authenticated;\$|grant update on public.notifications to authenticated;|; s|^  if row(new.id.*then\$|  if false then|"
 
 echo
 if [ "$failures" -eq 0 ]; then

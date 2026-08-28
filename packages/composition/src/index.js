@@ -481,6 +481,26 @@ function organisationFilesSection(pageId, manifest) {
   ]);
 }
 
+/**
+ * What has happened that the person has not caught up on.
+ *
+ * Placed on the surface an application is CAUGHT UP on rather than the one it
+ * is worked in. A dashboard summarises and a workspace is worked in, so a
+ * notifications panel belongs above the summary a person opens first, while the
+ * records and files they act on stay together on the workspace.
+ *
+ * Placed only where the capability is installed, like the sections beside it.
+ * The composer decides the section belongs on this page; the notifications
+ * recipe owns what it looks like and how it reaches the database, and the
+ * recipient scoping it enforces is the database's, not this section's.
+ */
+function notificationsSection(pageId, manifest) {
+  if (manifest?.modules?.notifications !== true) return null;
+  return section(`${pageId}-notifications`, 'notifications', 'Catch up on what has happened in this organisation', [
+    manifestBinding('title', 'Notifications'),
+  ]);
+}
+
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
   const profiles = socialProfileBinding(pack, manifest);
@@ -613,6 +633,12 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
     // putting a full CRUD panel behind Settings would be a filing cabinet in a
     // cupboard. `sectionsForPage` dedupes by id, so a project whose surfaces
     // include both still gets one.
+    //
+    // Notifications go the other way for the same reason. Catching up is what
+    // opening a dashboard is FOR, so the panel sits above the summary rather
+    // than beside the work — and it is placed first, because a person who has
+    // been told something needs to see it before they start.
+    if (/dashboard|notification|activity|alert/.test(lower)) output.push(notificationsSection(pageId, manifest));
     if (/workspace|record/.test(lower)) output.push(tenantRecordsSection(pageId, manifest));
     if (/workspace|file|document/.test(lower)) output.push(organisationFilesSection(pageId, manifest));
     output.push(entitiesSection(pageId, manifest));

@@ -188,6 +188,13 @@ case, framework rewrites, and anything wanted because it sounds impressive.
   already pass, plus a browser journey and the ordinary standalone generated-repo acceptance.
 - **Dependency order:** auth / organisations / RBAC → database + RLS → profiles/admin → email →
   uploads → notifications → webhooks → jobs/retries → billing → realtime if earned. Not one PR.
+- **Built so far in this stage, in that order:** tenant-scoped records, organisation-owned uploads and
+  in-app notifications, each generated into the canonical B2B SaaS application and each proved by the
+  `database-security` job rather than claimed. **In-app** is the whole of the notification claim:
+  email, push, realtime delivery, webhooks, background jobs and any generic event infrastructure
+  remain unbuilt and unclaimed. Transactional email was taken out of order because notifications had a
+  real consumer already in the generated application and email still has none — per-capability state is
+  in `config/factory-status.json`.
 - **Exit evidence:** the integration acceptance standard in `docs/PLATFORM_PARITY_PROGRAMME.md` §3, §4
   and §14 — transactional email, notifications, webhooks, jobs/cron/queues, realtime, billing, and
   `IntegrationSpec` with the connection manager. None may be claimed first-class without it, and a

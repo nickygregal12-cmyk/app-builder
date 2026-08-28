@@ -272,6 +272,28 @@
         "--color-accent",
         "--color-ink"
       ]
+    },
+    "notifications-section": {
+      "sectionType": "notifications",
+      "lifecycle": "ready",
+      "renderer": "recipe",
+      "purpose": "What has happened in an organisation that the signed-in person has not caught up on, with an unread/read distinction they can clear. The recipe owns how it renders and how it reaches the database; row level security owns which notifications are theirs at all, and no client may create one.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens",
+        "recipe:notifications"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--radius-md",
+        "--color-border-strong",
+        "--color-accent",
+        "--color-text",
+        "--color-text-muted",
+        "--color-surface-muted",
+        "--text-sm"
+      ]
     }
   }
 }

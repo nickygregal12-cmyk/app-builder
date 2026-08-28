@@ -174,7 +174,57 @@ export function deriveEvidencePlan({ composition, stateMatrix, viewports = VIEWP
  * A planned capture with no bytes is not recorded. Evidence that names a file
  * nobody produced is worse than evidence that admits a gap.
  */
-export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, checkpointId = null, taskId = null, designLint = null } = {}) {
+/**
+ * Routes the composition says differ, photographed identically.
+ *
+ * The nbm candidate sets were captured across six routes and produced six
+ * byte-identical PNGs per viewport. The packet recorded six identical content
+ * hashes, the run reported complete evidence, and a reviewer was handed
+ * eighteen pictures of what were really three. Nothing compared them, because
+ * nothing had ever been asked to.
+ *
+ * This is deliberately not "all captures must be unique". Two pages built from
+ * the same sections *should* render alike, and calling that a defect would
+ * teach everyone to ignore the check. The question is narrower and answerable
+ * from the composition alone: pages whose section sets differ cannot legitimately
+ * produce the same pixels, so when they do, the capture did not photograph what
+ * it says it did.
+ *
+ * Comparison is within a viewport and interaction state, so a desktop capture is
+ * never compared against a phone one.
+ */
+export function findDegenerateRouteCaptures({ composition, captures } = {}) {
+  const sectionsFor = new Map(list(composition?.pages).map((page) => [page.id, [...list(page.sectionIds)].sort().join(' ')]));
+  const groups = new Map();
+  for (const capture of list(captures)) {
+    const key = `${capture.viewport} ${capture.state?.axis ?? ''} ${capture.state?.state ?? ''}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(capture);
+  }
+
+  const findings = [];
+  for (const [, group] of groups) {
+    for (let i = 0; i < group.length; i += 1) {
+      for (let j = i + 1; j < group.length; j += 1) {
+        const [a, b] = [group[i], group[j]];
+        if (a.pageId === b.pageId) continue;
+        if (a.contentHash !== b.contentHash) continue;
+        // Same pixels is only a defect when the composition promised otherwise.
+        if (sectionsFor.get(a.pageId) === sectionsFor.get(b.pageId)) continue;
+        findings.push({
+          viewport: a.viewport,
+          routes: [a.route, b.route].sort(),
+          pageIds: [a.pageId, b.pageId].sort(),
+          contentHash: a.contentHash,
+          detail: `${a.route} and ${b.route} are composed from different sections but rendered byte-identically at ${a.viewport}.`,
+        });
+      }
+    }
+  }
+  return findings;
+}
+
+export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, checkpointId = null, taskId = null, designLint = null, composition = null } = {}) {
   if (!projectId || !buildRef || !compositionHash || !capturedAt) throw new Error('Rendered evidence needs a project, a build, a composition hash and a capture time.');
   const captured = new Map(list(results).map((result) => [result.id, result]));
   const captures = plan.captures
@@ -207,6 +257,19 @@ export function buildEvidenceSet({ plan, results, projectId, buildRef, compositi
       detail: 'Planned but not captured in this run.',
     })),
   ];
+
+  // Fail closed before the record exists. Evidence that silently collapses six
+  // routes into one picture is worse than a failed capture, because a failed
+  // capture stops and this ships to a reviewer looking complete.
+  if (composition) {
+    const degenerate = findDegenerateRouteCaptures({ composition, captures });
+    if (degenerate.length) {
+      throw new Error(
+        `Rendered evidence is degenerate: ${degenerate.length} route pair(s) that the composition builds from different sections were photographed byte-identically. `
+        + `${degenerate[0].detail} This is a failed capture, not evidence — the browser did not render the route it was sent to, or the build does not serve it.`,
+      );
+    }
+  }
 
   const base = {
     schemaVersion: 1,

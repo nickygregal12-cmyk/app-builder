@@ -8,7 +8,7 @@ import { composeProject } from '../packages/composition/src/index.js';
 import { deriveJourneys, deriveStateMatrix } from './lib/launch-readiness.mjs';
 
 const launchRules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
-import { INTERACTIONS, VIEWPORTS, applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from './lib/rendered-evidence.mjs';
+import { INTERACTIONS, VIEWPORTS, applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan, findDegenerateRouteCaptures } from './lib/rendered-evidence.mjs';
 import { captureEvidence } from './lib/rendered-evidence-capture.mjs';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
@@ -283,4 +283,60 @@ test('capture failures leave the state uncovered rather than silently proven', (
   const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), evidence);
   const failedWrite = matrix.flatMap((surface) => surface.states).find((state) => state.axis === 'write' && state.state === 'failed');
   assert.equal(failedWrite.evidence, 'none', 'the state it could not reach stays unproven');
+});
+
+// --- Degenerate route evidence --------------------------------------------
+//
+// The defect this guards was found by an independent reviewer, not by the
+// factory: the nbm candidate sets photographed six routes and produced six
+// byte-identical PNGs per viewport. The packet recorded six identical content
+// hashes and reported complete evidence.
+
+test('routes the composition builds differently cannot be photographed identically', () => {
+  const { composition, plan } = planFor();
+  // Every capture returns the same bytes, which is what a browser that never
+  // left the home page produces.
+  const collapsed = plan.captures.map((capture) => ({ id: capture.id, bytes: Buffer.from('the-home-page') }));
+  const args = { plan, projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z' };
+
+  // Without the composition the check cannot be made, and the old behaviour stands.
+  assert.ok(buildEvidenceSet({ ...args, results: collapsed }).captures.length > 0);
+
+  // With it, this is a failed capture rather than a durable record.
+  assert.throws(
+    () => buildEvidenceSet({ ...args, results: collapsed, composition }),
+    /degenerate/,
+    'six identical pictures of six different compositions is not evidence',
+  );
+});
+
+test('pages composed from the same sections are allowed to render alike', () => {
+  const { composition, plan } = planFor();
+  const captures = [
+    { pageId: 'a', route: '/a', viewport: 'desktop', state: { axis: 'viewport', state: 'desktop' }, contentHash: 'same' },
+    { pageId: 'b', route: '/b', viewport: 'desktop', state: { axis: 'viewport', state: 'desktop' }, contentHash: 'same' },
+  ];
+  const twins = { pages: [{ id: 'a', sectionIds: ['s1'] }, { id: 'b', sectionIds: ['s1'] }] };
+  assert.deepEqual(findDegenerateRouteCaptures({ composition: twins, captures }), [], 'identical sections may legitimately render identically');
+
+  const different = { pages: [{ id: 'a', sectionIds: ['s1'] }, { id: 'b', sectionIds: ['s1', 's2'] }] };
+  const found = findDegenerateRouteCaptures({ composition: different, captures });
+  assert.equal(found.length, 1);
+  assert.deepEqual(found[0].routes, ['/a', '/b']);
+
+  // A real composition photographed properly raises nothing.
+  const honest = buildEvidenceSet({
+    plan, results: fakeResults(plan), projectId: 'p', buildRef: '/w',
+    compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', composition,
+  });
+  assert.deepEqual(findDegenerateRouteCaptures({ composition, captures: honest.captures }), []);
+});
+
+test('a desktop capture is never compared against a phone one', () => {
+  const captures = [
+    { pageId: 'a', route: '/a', viewport: 'desktop', state: { axis: 'viewport', state: 'desktop' }, contentHash: 'same' },
+    { pageId: 'b', route: '/b', viewport: 'mobile', state: { axis: 'viewport', state: 'mobile' }, contentHash: 'same' },
+  ];
+  const composition = { pages: [{ id: 'a', sectionIds: ['s1'] }, { id: 'b', sectionIds: ['s1', 's2'] }] };
+  assert.deepEqual(findDegenerateRouteCaptures({ composition, captures }), [], 'different widths are not comparable evidence');
 });

@@ -769,6 +769,10 @@ export class FactoryService {
         compositionHash: composition.compositionHash,
         capturedAt: new Date().toISOString(),
         taskId: task.id,
+        // The composition is what makes "these two routes must differ"
+        // answerable, so it travels with the captures rather than being
+        // re-derived from them.
+        composition,
         // The rules travel with the pictures. A reviewer, or a later visual
         // critic, should not re-derive from a screenshot what a rule already
         // settled from the compiled design and the composition.

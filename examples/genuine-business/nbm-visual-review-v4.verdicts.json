@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "setId": "candidates-8caa9f3ee92885c0",
+  "projectId": "project-7e180b31-7dfd-4153-924f-edc375144754",
+  "reviewedAt": "2026-08-28T14:39:42.116Z",
+  "reviews": [
+    {
+      "candidateId": "candidate-structured-practice",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clean, legible, and consistent, but it feels like a competent generic professional-services template rather than a distinctive construction consultancy identity. Oversized empty areas, repetitive card treatments, weak mobile recomposition, and the absence of a memorable visual moment keep it below studio-grade quality.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.2,
+          "note": "The sober typography and muted blue suit a consultancy, but there is little visual language specifically tied to construction, surveying, precision, or the firm's own character."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.4,
+          "note": "Headings and primary call buttons are immediately visible, although excessive vertical space and sparse secondary pages weaken pacing and make modest content feel unfinished."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7.2,
+          "note": "Typography, colours, cards, buttons, and section backgrounds are consistent, but the home page's denser composition and the extremely sparse internal pages do not feel equally resolved."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.3,
+          "note": "The layout relies on familiar oversized headings, pale panels, white cards, pill buttons, and a dark CTA block without a business-specific concept or authored visual detail."
+        },
+        {
+          "criterion": "credibility",
+          "score": 6.7,
+          "note": "Clear contact details and restrained styling establish basic legitimacy, but thin company content, generic presentation, and large unused areas make the practice appear less established than it could."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 7.5,
+          "note": "Phone and email actions are prominent and repeated appropriately, and the contact form is straightforward; however, the failed-submit feedback is visually subdued and lacks a stronger recovery path."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 6.3,
+          "note": "Nothing visibly breaks, but mobile mostly stacks desktop components, the home page changes content order without an evident narrative benefit, and several sections retain bulky spacing rather than becoming a deliberately composed mobile experience."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 2.8,
+          "note": "No distinctive moment is apparent; the dark 'Get in touch' panel is the strongest contrast event, but it is a standard CTA treatment rather than a memorable expression of this business."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "distinctiveness",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Develop a recognisable construction-cost-consultancy visual idea rather than relying solely on generic cards, pills, and alternating backgrounds.",
+        "Recompose mobile pages with intentional sequencing, spacing, and emphasis instead of primarily collapsing the desktop grid.",
+        "Give sparse internal pages more useful business evidence and stronger page-specific composition so they do not appear unfinished.",
+        "Make failed enquiry feedback more prominent and provide an obvious retry or alternative-contact recovery path.",
+        "Create a genuine distinctive moment suited to precision, surveying, cost control, or the firm's Scottish practice."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-structured-practice",
+        "compositionHash": "8c51a9c93266421cc79e6cfa9013082cb693a75d9dd37872433f424dfd0913c2",
+        "captureCount": 21,
+        "captureDigest": "d4a05f376de2fb2e5b25675225d0d8531cd111759308eb1ceaf81779b98d21c4"
+      }
+    },
+    {
+      "candidateId": "candidate-editorial-authority",
+      "verdict": "reject",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is legible and consistent, but it feels like a sparse generic template rather than a studio-quality expression of an established construction consultancy. Excessive empty space, repetitive page structures, awkward wrapped navigation, thin business evidence, and the absence of a memorable editorial device leave it below the professional bar.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 5.8,
+          "note": "The restrained palette and sturdy typography suit professional services, but little specifically evokes construction, surveying, Glasgow, or the firm's own character."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.8,
+          "note": "Large headings and primary call buttons are immediately visible, but oversized empty regions weaken pacing and make sparse content feel unfinished."
+        },
+        {
+          "criterion": "coherence",
+          "score": 6.7,
+          "note": "Typography, colors, cards, and buttons are consistent, yet the dense home page and extremely sparse internal pages feel like different levels of completion."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.5,
+          "note": "Numbered lists, neutral panels, pill buttons, and a dark CTA block are familiar template devices with no business-specific art direction."
+        },
+        {
+          "criterion": "credibility",
+          "score": 5.9,
+          "note": "Accurate-looking contact and company details provide a foundation, but the lack of projects, credentials, people, testimonials, process, or substantive service evidence limits trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 7.2,
+          "note": "Calling and emailing are consistently prominent, and the enquiry form is clear, though repeated CTAs do not compensate for insufficient persuasive context and the failed state is visually understated."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 5.8,
+          "note": "Content remains readable without obvious clipping, but mobile largely collapses the same composition; the navigation wraps inelegantly and spacing becomes disproportionately long."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 3.2,
+          "note": "No convincing distinctive moment is visible; the oversized headings and black contact panel are repeated utility treatments rather than a memorable editorial expression."
+        }
+      ],
+      "failingCriteria": [
+        "brand-fit",
+        "distinctiveness",
+        "credibility",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Introduce a business-specific visual idea grounded in construction cost consultancy instead of relying on generic editorial styling.",
+        "Add credible proof such as representative projects, qualifications, experience, process, sectors, or client evidence.",
+        "Redesign mobile navigation so it does not wrap into an awkward loose second row.",
+        "Reduce excessive vertical dead space and give sparse internal pages stronger, purposeful compositions.",
+        "Strengthen the enquiry failure treatment with clearer prominence and recovery guidance."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-editorial-authority",
+        "compositionHash": "f8fcee7012aca02f9464e4d1c4350f53eacf6542021f74d63ced5968514ad72c",
+        "captureCount": 21,
+        "captureDigest": "3a5ed6d3bc0f11dfbe58bd13ab2abf2148a2e6748006b258a6595cf6aa75b751"
+      }
+    },
+    {
+      "candidateId": "candidate-schedule-register",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clean, legible and consistent, but its oversized whitespace, generic typography and repeated dark CTA panel make it feel like a lightly branded template rather than a studio-quality identity for a cost consultancy. The schedule-register numbering is appropriate but too restrained to become a convincing distinctive moment, while sparse secondary pages and an understated failure state weaken polish and credibility.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.5,
+          "note": "The restrained palette and register-like numbering suit a professional quantity-surveying firm, but the visual voice remains generic and says little specifically about construction or cost consultancy."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.3,
+          "note": "Large headings and prominent call buttons establish clear priorities, though excessive empty space on desktop makes several pages feel unfinished and disconnects related content."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7.2,
+          "note": "Typography, rules, buttons and numbered rows are consistently applied, but the spacious desktop layouts, denser mobile layouts and blunt dark CTA blocks do not fully resolve into one sophisticated composition."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.8,
+          "note": "Apart from numbered rows, the design relies on familiar sans-serif headings, pill buttons, thin dividers and a dark CTA rectangle, producing a strongly template-derived impression."
+        },
+        {
+          "criterion": "credibility",
+          "score": 6.8,
+          "note": "The factual content, restrained styling and clear contact information feel legitimate, but the sparse pages, absent supporting imagery or proof points, and underdeveloped presentation limit the increase in trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 7.6,
+          "note": "Phone and email actions are consistently prominent, and the contact form is straightforward; however, the repeated CTA offers little contextual persuasion and the failure message is visually weak."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 7,
+          "note": "Mobile layouts reflow cleanly with readable type, usable controls and no visible overflow, but they largely feel like stacked desktop components rather than a deliberately re-composed mobile experience."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 5.2,
+          "note": "The schedule-register numbering fits the business and gives lists some structure, but it is too minor and inconsistently consequential to carry the visual direction or create a memorable moment."
+        }
+      ],
+      "failingCriteria": [
+        "distinctiveness",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Develop the schedule-register concept into a stronger, business-specific visual system rather than limiting it to small section and row numbers.",
+        "Resolve the excessive desktop whitespace and sparse secondary pages so they look intentionally composed rather than under-populated.",
+        "Add visible credibility-building structure such as qualifications, project evidence, client sectors or process detail without inventing unsupported claims.",
+        "Give the enquiry failure state stronger visual status, clearer recovery guidance and a more deliberate relationship to the submit control.",
+        "Create a genuinely composed mobile hierarchy instead of primarily stacking the desktop modules."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-schedule-register",
+        "compositionHash": "3c8db759f14aa0309555261bd64f7641e85d28137515a32ff5cb5b78b8caa665",
+        "captureCount": 21,
+        "captureDigest": "d150173e2cebbf004248d1e595f27058e524e0298e05c32b215dad3b0cb93d0d"
+      }
+    }
+  ],
+  "skipped": []
+}

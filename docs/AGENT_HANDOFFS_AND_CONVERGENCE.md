@@ -139,18 +139,26 @@ and `npm run gates:evidence` runs it over a real build of the frozen nbm intake.
 
 The registry names, per deterministic check, the real producer that answers it, the artifact that
 producer leaves, the field carrying that artifact's build reference, and which of the producer's
-findings fail the check. Ten checks are registered today against seven producers: the launch
+findings fail the check. Eleven checks are registered today against eight producers: the launch
 readiness audit answers `fact-provenance-check`, the asset-rights audit answers `asset-rights-check`,
 the compiled DesignLint report answers both `design-lint` and `design-system-lint`, the payload
 budget answers `performance-budgets`, the tree-wide credential scan answers `secret-scan`,
-`npm audit` over the tree the project installs answers `dependency-audit`, and the generated
-project's **own** `typecheck`, `lint` and `test` scripts answer the three checks named after them.
-The last four need the project installed and built, because a payload, a dependency tree or a test
-run measured from source is a measurement of the wrong thing. Four declared checks have no producer
-and are listed as such: `e2e-tests`, `axe-serious-critical`, `seo-aeo-scanner` and
+`npm audit` over the tree the project installs answers `dependency-audit`, the SEO/AEO scanner
+answers `seo-aeo-scanner`, and the generated project's **own** `typecheck`, `lint` and `test`
+scripts answer the three checks named after them.
+The last five need the project installed and built, because a payload, a dependency tree, a test
+run or a document head measured from source is a measurement of the wrong thing. Three declared
+checks have no producer and are listed as such: `e2e-tests`, `axe-serious-critical` and
 `executed-rls-acceptance`. The first two need a browser and a served build, which the Playwright
-lanes own; the third needs a scanner Phase 4.3 has not built; the fourth needs a live Postgres with
-the generated policies applied, which is the `database-security` CI job's.
+lanes own; the third needs a live Postgres with the generated policies applied, which is the
+`database-security` CI job's.
+
+`seo-aeo-scanner` reads the **built documents** rather than the composition, for the same reason the
+payload budget does: what a renderer emits is a separate fact from what a composer decided, and only
+the first is what a crawler receives. It records findings and no score — `gates.seo` sets
+`minimumScore: null` — and it deliberately does not fail a build for not knowing its own deployment
+URL, because a canonical link is a claim about where a site lives and the factory refuses to invent
+one. That refusal is recorded as an advisory limit.
 
 What the resolver refuses, all of it as `not-run` rather than a pass:
 

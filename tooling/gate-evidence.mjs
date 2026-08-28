@@ -14,14 +14,16 @@
  *   npm run gates:evidence            # build, produce, resolve, converge
  *   npm run gates:evidence -- --out d # somewhere other than .app-builder/gate-evidence
  *
- * What it is:  one real build, three real producers, four registered checks,
+ * What it is:  one real build, eight real producers, eleven registered checks,
  *              and a convergence report over the marketing-site pipeline's
- *              eighteen required gates.
+ *              eighteen required gates. Five of those gates now have every
+ *              declared check answered: design-system, visual, performance,
+ *              provenance and — as of the SEO/AEO scanner — seo.
  * What it is not: a passing build. Convergence is false and is expected to stay
- *              false: fourteen of the eighteen gates have no producer, and the
- *              three that are fully measured still want an independent verdict
- *              that no one has issued. It promotes nothing, arms nothing and
- *              calls no model.
+ *              false: eleven of the eighteen gates still have no producer at
+ *              all, and the five that are fully measured still want an
+ *              independent verdict that no one has issued. It promotes nothing,
+ *              arms nothing and calls no model.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -40,6 +42,7 @@ import { auditAssetRights } from './lib/asset-rights.mjs';
 import { evaluatePayloadBudgets, measureBuildPayload } from './lib/payload-budget.mjs';
 import { scanRepository } from './lib/secret-scan.mjs';
 import { auditCommittedSecrets, auditDependencyAdvisories } from './lib/security-evidence.mjs';
+import { readBuiltDocuments, scanSeoAeo } from './lib/seo-aeo.mjs';
 import { GENERATED_CHECKS, summariseGeneratedChecks } from './lib/generated-check-evidence.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
@@ -126,6 +129,18 @@ const payload = evaluatePayloadBudgets({
   compositionHash: buildRef,
 });
 
+// What the built documents tell a crawler about themselves. It reads `dist`
+// for the same reason the payload producer does — the composed product is not
+// the thing anybody is served — and it is told the site URL the build actually
+// had rather than one supplied here, because a canonical link is a claim about
+// where the site lives and an invented one would be a fabricated observation.
+const seo = scanSeoAeo({
+  documents: readBuiltDocuments(path.join(generated.workspace, 'dist')),
+  routesDeclared: composition.pages?.length ?? 0,
+  siteUrl: process.env.VITE_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? null,
+  compositionHash: buildRef,
+});
+
 // The generated repository's own verdict on itself, from its own scripts. The
 // portability claim is that these run without the Console, so running them here
 // is both the gate evidence and a check on that claim.
@@ -168,6 +183,7 @@ const artifacts = {
   'secret-scan': publish('secret-scan', secrets, project.id),
   'dependency-audit': publish('dependency-audit', dependencies, project.id),
   'generated-checks': publish('generated-checks', generatedChecks, project.id),
+  'seo-aeo-scanner': publish('seo-aeo-scanner', seo, project.id),
 };
 
 for (const [id, artifact] of Object.entries(artifacts)) {

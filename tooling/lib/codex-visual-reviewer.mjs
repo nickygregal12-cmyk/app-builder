@@ -72,6 +72,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
+import { VIEWPORTS as EVIDENCE_VIEWPORTS } from './rendered-evidence.mjs';
+
 /**
  * Stamped, never accepted.
  *
@@ -92,17 +94,42 @@ export const VISUAL_REVIEW_VERDICTS = ['pass', 'rework', 'reject'];
  * default is one capture: a criterion nobody photographed anything for is not a
  * criterion anybody looked at.
  *
- * `responsive-quality` is the one that matters most and the one a single
- * screenshot silently fakes. Its question — is the mobile rendering a designed
- * composition, or the desktop one with fewer columns? — cannot be answered by
- * any number of captures at one width, so it requires at least two distinct
- * viewports and says so.
+ * Where a criterion's question names particular widths, the rule names them too.
+ * Counting distinct viewports is not enough: `responsive-quality` asks whether
+ * the *mobile* rendering is a designed composition or the desktop one with
+ * fewer columns, and captures at 1440 and 1024 are two distinct viewports that
+ * answer it no better than one does. A count is satisfied by any two widths; the
+ * question is only satisfied by the phone and the desktop it would have been
+ * narrowed from.
  */
 export const CRITERION_EVIDENCE = Object.freeze({
-  'responsive-quality': Object.freeze({ minViewports: 2, reason: 'comparing widths is the question; one width cannot answer it' }),
+  'responsive-quality': Object.freeze({
+    requiredViewports: Object.freeze(['desktop', 'mobile']),
+    reason: 'the question is whether the mobile rendering is designed or merely narrowed, which needs the phone and the desktop it would have been narrowed from',
+  }),
+  'imagery-suitability': Object.freeze({
+    requiredViewports: Object.freeze(['desktop', 'mobile']),
+    reason: 'framing at every width is half the question, and a photograph framed well on a desktop can be cropped to nonsense on a phone',
+  }),
 });
 
-const DEFAULT_EVIDENCE = Object.freeze({ minViewports: 1, reason: 'a criterion needs at least one capture to have been looked at' });
+const DEFAULT_EVIDENCE = Object.freeze({
+  minViewports: 1,
+  requiredViewports: Object.freeze([]),
+  reason: 'a criterion needs at least one capture to have been looked at',
+});
+
+// A rule that names a viewport the evidence plan cannot produce would make its
+// criterion permanently unproven, which fails closed but for a reason nobody
+// could find. The registry is closed, so check against it here rather than
+// discovering the typo during a review.
+for (const [id, rule] of Object.entries(CRITERION_EVIDENCE)) {
+  for (const name of rule.requiredViewports ?? []) {
+    if (!EVIDENCE_VIEWPORTS.some((viewport) => viewport.name === name)) {
+      throw new Error(`CRITERION_EVIDENCE for ${id} requires viewport "${name}", which rendered-evidence.mjs does not capture.`);
+    }
+  }
+}
 
 const list = (value) => (Array.isArray(value) ? value : []);
 
@@ -118,17 +145,33 @@ function sha256(value) {
  */
 export function criterionCoverage(criteria, captures) {
   const viewports = new Set(list(captures).map((capture) => capture?.viewport).filter(Boolean));
+  const present = [...viewports].sort();
   return list(criteria).map((criterion) => {
-    const rule = CRITERION_EVIDENCE[criterion.id] ?? DEFAULT_EVIDENCE;
-    const covered = viewports.size >= rule.minViewports;
+    const rule = { ...DEFAULT_EVIDENCE, ...CRITERION_EVIDENCE[criterion.id] };
+    const required = list(rule.requiredViewports);
+    const missing = required.filter((name) => !viewports.has(name));
+    const minimum = rule.minViewports ?? 1;
+    const covered = missing.length === 0 && viewports.size >= minimum;
+
+    // Two ways to be short of the evidence, and they read differently. Naming a
+    // missing width is actionable; naming a shortfall in a count is not.
+    let detail = null;
+    if (missing.length) {
+      detail = `${criterion.id} is unproven: ${rule.reason}. The captures cover ${present.join(', ') || 'no viewport'}, and this needs ${required.join(' and ')}.`;
+    } else if (!covered) {
+      detail = `${criterion.id} is unproven: ${rule.reason}. The captures cover ${viewports.size} viewport(s) and it needs ${minimum}.`;
+    }
+
     return {
       id: criterion.id,
       question: criterion.question ?? null,
       covered,
-      viewports: [...viewports].sort(),
-      requiredViewports: rule.minViewports,
+      viewports: present,
+      requiredViewports: required,
+      minimumViewports: minimum,
+      missingViewports: missing,
       status: covered ? 'evidenced' : 'unproven',
-      detail: covered ? null : `${criterion.id} is unproven: ${rule.reason}. The captures cover ${viewports.size} viewport(s) and it needs ${rule.minViewports}.`,
+      detail,
     };
   });
 }

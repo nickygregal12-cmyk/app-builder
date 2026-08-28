@@ -126,10 +126,38 @@ test('a criterion the captures do not cover is unproven rather than scored', () 
   const responsive = coverage.find((entry) => entry.id === 'responsive-quality');
   assert.equal(responsive.covered, false);
   assert.equal(responsive.status, 'unproven');
-  assert.match(responsive.detail, /one width cannot answer it/);
+  assert.deepEqual(responsive.missingViewports, ['mobile']);
+  assert.match(responsive.detail, /needs desktop and mobile/);
 
   // And the criterion that only needs a picture is fine with one.
   assert.equal(coverage.find((entry) => entry.id === 'credibility').status, 'evidenced');
+});
+
+test('two widths that are not the two widths do not cover a criterion that names them', () => {
+  // The defect this guards. `responsive-quality` asks whether the mobile
+  // rendering is designed or merely narrowed. Desktop and tablet are two
+  // distinct viewports and satisfy any count-based rule, while photographing no
+  // phone at all — so a count would have called this criterion evidenced and
+  // let a reviewer pass a mobile rendering nobody has seen.
+  const coverage = criterionCoverage(CRITERIA, [capture('a', 'desktop'), capture('b', 'tablet')]);
+  const responsive = coverage.find((entry) => entry.id === 'responsive-quality');
+  assert.equal(responsive.covered, false, 'two non-phone widths cannot answer a question about the phone');
+  assert.deepEqual(responsive.missingViewports, ['mobile']);
+
+  // And the phone alone is equally not an answer: the question is comparative.
+  const phoneOnly = criterionCoverage(CRITERIA, [capture('a', 'mobile')]);
+  assert.equal(phoneOnly.find((entry) => entry.id === 'responsive-quality').covered, false);
+  assert.deepEqual(phoneOnly.find((entry) => entry.id === 'responsive-quality').missingViewports, ['desktop']);
+
+  // The pair the criterion actually names does cover it.
+  const both = criterionCoverage(CRITERIA, [capture('a', 'desktop'), capture('b', 'mobile')]);
+  assert.equal(both.find((entry) => entry.id === 'responsive-quality').status, 'evidenced');
+});
+
+test('imagery suitability needs the widths it claims to judge framing at', () => {
+  const criteria = [{ id: 'imagery-suitability', question: 'Are the photographs framed well at every width?' }];
+  assert.equal(criterionCoverage(criteria, [capture('a', 'desktop')])[0].covered, false);
+  assert.equal(criterionCoverage(criteria, [capture('a', 'desktop'), capture('b', 'mobile')])[0].covered, true);
 });
 
 test('a pass is refused while any scoped criterion is unproven', () => {

@@ -317,6 +317,12 @@ export function visualDirectionClasses({ id = null, artDirection = null, shellCl
     `grid-${dimensions.gridFamily}`,
     `headings-${dimensions.headingTreatment}`,
     `moment-${dimensions.distinctiveMoment}`,
+    // Where the direction said the ask belongs. Mobile conversion-first used to
+    // pull every conversion section forward, including a call to action the
+    // same direction had declared `closing` — so /services opened with "Get in
+    // touch" above the services. Two declarations contradicting each other is
+    // not a responsive decision, so the stylesheet is told which one this is.
+    `cta-${dimensions.ctaPlacement}`,
     `mobile-hero-${responsive.mobileHero}`,
     `mobile-order-${responsive.mobileSectionOrder}`,
     // No `mobile-density-*` class: that decision compiles to

@@ -328,23 +328,57 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      inheriting desktop with fewer columns. Every rule below is driven by a
      class the factory compiled from the plan. */
 
-  /* Navigation. Every destination stays visible in one scrolling row, which
-     works where a site has few surfaces and reads badly where it has many —
-     which is exactly why it is a direction's decision and not a default. */
-  .site-header.nav-inline-scroll { gap: 16px }
-  .site-header.nav-inline-scroll nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; justify-content: flex-start; margin: 0 -4px; padding: 0 4px }
+  /* Navigation. One scrolling row of destinations, which works where a site
+     has few surfaces and reads badly where it has many — which is exactly why
+     it is a direction's decision and not a default.
+
+     It previously read badly everywhere. An independent review found the row
+     "visibly clipped": the brand took its own natural width, wrapping to four
+     lines and leaving the row about two destinations wide, and the scrollbar
+     was hidden with nothing put in its place. Three of five destinations were
+     invisible with no cue that they existed, which is not a scrolling row —
+     it is a truncated one.
+
+     So the brand is made to yield, and the row says it continues. The fade is
+     the affordance; it is applied only while the row actually overflows, so a
+     site whose destinations do fit is not told to scroll for nothing. */
+  /* Sharing one row with the brand was the mistake. A flex item will not go
+     below its longest word, so "Consultants" wrapped the brand to four lines
+     and still left the row about two destinations wide; shrinking the brand
+     only bought back pixels the longest word took straight back.
+
+     So the row stops competing for width and takes its own. Brand above,
+     destinations beneath across the full measure — a title bar over a section
+     nav, which is a pattern rather than a squeeze. */
+  .site-header.nav-inline-scroll { flex-wrap: wrap; gap: 0; row-gap: 10px; align-items: center }
+  .site-header.nav-inline-scroll .site-brand { flex: 1 1 100%; min-width: 0; font-size: 1rem; line-height: 1.3 }
+  .site-header.nav-inline-scroll nav { flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; justify-content: flex-start; margin: 0 -4px; padding: 0 4px; overscroll-behavior-x: contain }
   .site-header.nav-inline-scroll nav::-webkit-scrollbar { display: none }
-  .site-header.nav-inline-scroll nav a { flex: 0 0 auto }
+  /* The trailing edge softens so the row reads as continuing rather than as
+     ending. Destinations stay in document order, so the row starts where
+     reading starts. */
+  /* `currentColor` rather than a literal: a mask reads alpha only, so any
+     opaque colour behaves identically, and this keeps the surface inside the
+     token system the design-system lint enforces. */
+  .site-header.nav-inline-scroll nav { mask-image: linear-gradient(to right, currentColor calc(100% - 28px), transparent 100%) }
+  .site-header.nav-inline-scroll nav a { flex: 0 0 auto; padding: 9px 11px }
 
   /* Content order. A trade business is found on a phone by someone who wants
      to call it, so a conversion-first direction puts contact directly under
-     the opening instead of eight sections down. */
+     the opening instead of eight sections down.
+
+     What it pulls forward is a way to make contact — the details and the
+     enquiry form. It does not pull forward a call to action the direction
+     declared `closing`: an independent review found /services opening with a
+     generic "Get in touch" panel above the services themselves, which is the
+     responsive plan overruling the art direction rather than expressing it.
+     A `mid-page` ask is a different declaration and still moves. */
   .mobile-order-conversion-first .app-shell { display: flex; flex-direction: column }
   .mobile-order-conversion-first .page-section { order: 2 }
   .mobile-order-conversion-first .hero-section { order: 0 }
   .mobile-order-conversion-first .contact-section,
-  .mobile-order-conversion-first .section-enquiry-form,
-  .mobile-order-conversion-first .cta-section { order: 1 }
+  .mobile-order-conversion-first .section-enquiry-form { order: 1 }
+  .mobile-order-conversion-first.cta-mid-page .cta-section { order: 1 }
 
   /* Hero composition. The picture goes first, last, or not at all. */
   .mobile-hero-image-first .hero-section.has-image { display: flex; flex-direction: column-reverse }

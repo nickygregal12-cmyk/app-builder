@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -34,6 +35,80 @@ test('recipe upgrades fail closed on modified files, majors and undeclared compa
   assert.match(planRecipeUpgrade({ installation: record, targetVersion: '1.3.0', currentHashes: clean }).reason, /not explicitly declared compatibility/);
   assert.equal(planRecipeUpgrade({ installation: record, targetVersion: '1.3.0', currentHashes: clean, compatibleFrom: ['1.2.0'] }).status, 'ready');
   assert.equal(planRecipeUpgrade({ installation: record, targetVersion: '1.1.0', currentHashes: clean }).status, 'blocked');
+});
+
+test('database-bearing recipe upgrades cannot report ready while persistent evolution is unmodelled', () => {
+  const record = installation();
+  const clean = { 'src/auth.ts': hashA, 'src/login.tsx': hashB };
+  const compatibleUpgrade = {
+    installation: record,
+    targetVersion: '1.3.0',
+    currentHashes: clean,
+    compatibleFrom: ['1.2.0'],
+  };
+
+  assert.equal(planRecipeUpgrade(compatibleUpgrade).status, 'ready');
+  assert.deepEqual(
+    planRecipeUpgrade({ ...compatibleUpgrade, hasUnmodelledDatabaseEvolution: true }),
+    {
+      schemaVersion: 1,
+      recipeId: 'auth',
+      fromVersion: '1.2.0',
+      toVersion: '1.3.0',
+      modifiedManagedFiles: [],
+      missingManagedFiles: [],
+      requiredChecks: ['npm run check', 'npm run build'],
+      migrationNotes: [],
+      status: 'review-required',
+      reasonCode: 'database-evolution-unmodelled',
+      reason: 'The target recipe manages persistent database state whose evolution is not modelled automatically.',
+    },
+  );
+});
+
+test('project upgrade planning derives persistent database effects from the target recipe definition', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-database-upgrade-'));
+  const factoryRoot = path.join(temp, 'factory');
+  const projectRoot = path.join(temp, 'project');
+  const recipeRoot = path.join(factoryRoot, 'recipes/example');
+  const managedFile = 'src/example.ts';
+  const managedContents = 'export const example = true;\n';
+  const managedHash = crypto.createHash('sha256').update(managedContents).digest('hex');
+  const definition = {
+    id: 'example',
+    version: '1.3.0',
+    files: [managedFile],
+    database: { adapter: 'supabase', fragments: ['database/example.sql'] },
+    upgrade: { compatibleFrom: ['1.2.0'] },
+  };
+
+  try {
+    fs.mkdirSync(path.join(factoryRoot, 'config'), { recursive: true });
+    fs.mkdirSync(recipeRoot, { recursive: true });
+    fs.mkdirSync(path.join(projectRoot, '.app-builder'), { recursive: true });
+    fs.mkdirSync(path.join(projectRoot, 'src'), { recursive: true });
+    fs.writeFileSync(path.join(factoryRoot, 'package.json'), '{"version":"0.1.0"}\n');
+    fs.writeFileSync(path.join(factoryRoot, 'config/recipes.json'), JSON.stringify({ recipes: { example: { path: 'recipes/example' } } }));
+    fs.writeFileSync(path.join(recipeRoot, 'recipe.json'), JSON.stringify(definition));
+    fs.writeFileSync(path.join(projectRoot, managedFile), managedContents);
+    fs.writeFileSync(path.join(projectRoot, '.app-builder/recipe-installations.json'), JSON.stringify({
+      schemaVersion: 1,
+      installed: [createRecipeInstallation({ recipeId: 'example', version: '1.2.0', fileHashes: { [managedFile]: managedHash } })],
+      unresolved: [],
+    }));
+
+    const databasePlan = planProjectRecipeUpgrades(projectRoot, { factoryRoot }).proposals[0];
+    assert.equal(databasePlan.status, 'review-required');
+    assert.equal(databasePlan.reasonCode, 'database-evolution-unmodelled');
+
+    delete definition.database;
+    fs.writeFileSync(path.join(recipeRoot, 'recipe.json'), JSON.stringify(definition));
+    const fileOnlyPlan = planProjectRecipeUpgrades(projectRoot, { factoryRoot }).proposals[0];
+    assert.equal(fileOnlyPlan.status, 'ready');
+    assert.equal(fileOnlyPlan.reasonCode, undefined);
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
 });
 
 test('newly generated projects can persist recipe installation hashes and later detect divergence', () => {
@@ -83,4 +158,6 @@ test('recipe schema can declare explicit upgrade compatibility without requiring
   assert.ok(schema.properties.upgrade);
   assert.ok(schema.properties.upgrade.properties.compatibleFrom);
   assert.equal(schema.required.includes('upgrade'), false);
+  const proposalSchema = JSON.parse(fs.readFileSync('schemas/recipe-upgrade-proposal.schema.json', 'utf8'));
+  assert.ok(proposalSchema.properties.reasonCode);
 });

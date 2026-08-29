@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/approved-build-plan.schema.json",
+  "title": "ApprovedBuildPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "planVersion",
+    "planId",
+    "projectId",
+    "operation",
+    "fingerprintVersion",
+    "singleUse",
+    "approval",
+    "source",
+    "planHash"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "planVersion": { "const": 1 },
+    "planId": { "type": "string", "pattern": "^approved-plan-[A-Za-z0-9_-]{12,120}$" },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "operation": { "const": "project.generate" },
+    "fingerprintVersion": { "const": "approved-build-state-v1" },
+    "singleUse": { "const": true },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "approvalId", "approvedAt"],
+      "properties": {
+        "mode": { "const": "explicit-local-operator" },
+        "approvalId": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{1,120}$" },
+        "approvedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approvedIntakeBundleId",
+        "manifestHash",
+        "knowledgePackHash",
+        "approvedIntakeBundleHash",
+        "contentOverridesHash",
+        "assetDecisionsHash",
+        "sectionVariantsHash",
+        "designChoicesHash",
+        "referenceInfluenceHash",
+        "bespokePresentationsHash",
+        "projectStateHash"
+      ],
+      "properties": {
+        "approvedIntakeBundleId": { "type": ["string", "null"], "maxLength": 160 },
+        "manifestHash": { "$ref": "#/$defs/sha256" },
+        "knowledgePackHash": { "$ref": "#/$defs/sha256" },
+        "approvedIntakeBundleHash": { "$ref": "#/$defs/sha256" },
+        "contentOverridesHash": { "$ref": "#/$defs/sha256" },
+        "assetDecisionsHash": { "$ref": "#/$defs/sha256" },
+        "sectionVariantsHash": { "$ref": "#/$defs/sha256" },
+        "designChoicesHash": { "$ref": "#/$defs/sha256" },
+        "referenceInfluenceHash": { "$ref": "#/$defs/sha256" },
+        "bespokePresentationsHash": { "$ref": "#/$defs/sha256" },
+        "projectStateHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "planHash": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

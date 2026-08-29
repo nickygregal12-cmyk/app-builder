@@ -1,401 +1,153 @@
 # Roadmap
 
-The **sequencing authority**: where we are, what is blocked, what comes next and what evidence closes
-each step.
-
-`config/factory-status.json` is the machine-readable authority for the current phase, active stage,
-outstanding gates and deliberate deferrals. This document does not restate that state; where the two
-disagree the status file wins. What "finished" means is `docs/MASTER_PLAN.md` §7.
-
----
+This is the **sequencing authority**. `config/factory-status.json` is the machine-readable current
+state; `docs/MASTER_PLAN.md` defines the destination. A change to what comes next must update the
+status file in the same pull request.
 
 ## Current position
 
-**Phase 4.4 — high-value application capabilities, opened on the dependency that is already proven rather than on the whole 4.3 table.** Active.
+**Phase 4.4 — product proof through high-value application capability. Active.**
 
-### The sequencing change of 2026-08-28
+The factory generates portable websites and stateful B2B application output. Auth, profiles,
+organisations, role-aware records, organisation-owned uploads, in-app notifications and admin have
+real generated consumers. Database security exercises generated schema on real PostgreSQL/Supabase
+infrastructure. Capability integrity distinguishes requested, registered, resolvable, generated,
+consumed and proved states. These are foundations, not proof that every listed capability or project
+class is first-class.
 
-Phase 4D visual excellence **failed its gate and is now deferred rather than treated as a global
-dependency.** This is a change of sequencing, not of standard:
+The largest uncertainty is repeatability: **can the factory produce genuinely excellent finished
+products across materially different real cases?** Product and release evidence therefore outrank
+generic platform breadth. Phase 4.4 is not a walk down a feature list.
 
-- it is **not** passed, **not** waived, and its threshold is **unchanged** at 8.5 mean / 6.5 floor;
-- four independent reviews recorded a best mean of **6.55**, and every verdict is preserved;
-- the debt, the architectural finding and the **revival conditions** are in
-  `docs/PHASE_4D_VISUAL_DEBT.md`, with the machine-readable form in `config/factory-status.json`
-  under `deferredCapabilities`;
-- **Phase 4.2A**'s static-renderer *visual parity* is deferred the same way and for a related reason:
-  it was reviewed at mean 5.38, but against the **default presentation shell**, because no direction
-  has ever been promoted for it to present by.
+Closed facts that must not be reopened as gaps:
 
-Why it was deferred rather than iterated again: the finding is that the **Presentation Registry** is
-the ceiling — art direction owns tokens and section presentations and does not own the component
-vocabulary — so distinctiveness never moved off ~4.8 through four rounds of intervention. Fixing that
-means letting a direction select component implementations, which is a design-system change that
-would be **badly designed from one thinly-evidenced business**. It needs the corpus and application
-evidence that the stages below produce. Iterating CSS against a fixed vocabulary was returning less
-each round while blocking work that does not depend on it.
+- rendered evidence is bound to the served build; accepted-build promotion remains open;
+- read-only brownfield profiling is accepted, but diagnosis and mutation are unattempted;
+- capability resolution and a real generated admin consumer have landed.
 
-**What this does and does not unblock.** Items 4, 5, 9 and 10 below no longer wait on the visual
-verdict. Security, data-loss, durability and production boundaries are untouched and retain veto
-power — nothing in this change makes them deferrable. Before App Builder claims best-in-class visual
-output, professional visual maturity or fully proven website generation, the 8.5 gate must be
-revisited and paid; that pre-release qualification is revival condition C and is mandatory.
+Still unpaid or blocked:
 
-**The one genuine blocker in the active stage is owner-only** and stops nothing else: the corpus needs
-a second real business, and what is missing is an explicit asset-level rights approval, not code. See
-item 4.
+- Phase 4D visual quality failed at best mean **6.55** and floor **4.8**, against 8.5/6.5. It is
+  deferred, not passed or waived. `docs/PHASE_4D_VISUAL_DEBT.md` owns its evidence and revival rules.
+- Static-renderer visual parity remains unpaid for the related reason recorded there.
+- MGB Decor is blocked only by owner-supplied facts and explicit asset-level usage approval. Public
+  availability is not republication permission. This blocks that case, not engineering.
+- Recipe-managed files have safe upgrade planning; persistent database state does not have equivalent
+  evolution semantics.
+- No project class has earned a maturity tier from repeatable real-project evidence.
 
----
+## Immediate outcomes
 
-## Immediate programme
+These are parallel proof tracks. A change enters one only when it closes the named gap or a real case
+pulls it.
 
-### 1–3. Phase 4D visual excellence and Phase 4.2A visual parity — deferred, unpaid
+### Outcome A — quality truth closure
 
-- **Status:** **measured, failed, deferred.** Not passed, not waived, threshold unchanged. These three
-  items were the chain that blocked everything below them, and they no longer do.
-- **What was measured:** four independent `design-critic` verdicts on the candidate set (best mean
-  **6.55** against 8.5, best floor 4.8 against 6.5) and one on the static rendering (**5.38**, floor
-  2.0). Every verdict file is committed under `examples/genuine-business/`. The reviewer requirement
-  was satisfied — all three surfaces have now been reviewed by someone who did not produce them — so
-  what is outstanding is the **quality**, not the reviewer.
-- **Why deferred rather than iterated:** the ceiling is the Presentation Registry, not the art
-  direction. See `docs/PHASE_4D_VISUAL_DEBT.md` for the finding, the full score history and the four
-  revival conditions.
-- **Revives when:** corpus evidence shows the convergence is cross-project; or a later capability needs
-  direction-selectable component implementations; or **before any public claim of visual maturity**
-  (mandatory); or genuinely new benchmark evidence appears. **Not** because another CSS pass might add
-  0.3 points.
-- **Next:** nothing waits on these. Items 4–10 proceed.
+1. Make database-bearing recipe version changes fail closed when persistent evolution is unmodelled.
+   The result is `review-required / database-evolution-unmodelled`, never false `ready`.
+2. Complete derived requirement coverage through existing Build Contract, Manifest, capability,
+   consumer and evidence identities. Keep `unconsumed` distinct from `implemented-unproven`; do not
+   create a second requirements authority.
+3. Preserve the CI gate truth loop: missing, malformed, wrong-build and unresolved evidence fails
+   closed; measured product failure remains failure rather than becoming fake-green CI. The command
+   exists, but CI does not call it yet.
+4. Restore root reproducibility: `package-lock.json` is absent and gitignored, and CI uses
+   `npm install`; a fresh checkout therefore cannot use root `npm ci`.
 
-### 4. Product-proof corpus — real businesses, running now rather than after the visual gate
+**Exit evidence:** planted tests kill false upgrade readiness and both requirement-coverage failure
+classes; ordinary CI proves the registered producer/resolver loop; a tracked lockfile makes fresh
+root `npm ci` succeed. Authorities:
+`docs/ENGINEERING_QUALITY_PROGRAMME.md` and `docs/PLATFORM_PARITY_PROGRAMME.md`.
 
-- **Status:** **open**, and deliberately no longer a freeze that waits on item 1. The corpus is partly
-  what is needed to solve the visual system intelligently later, so making it wait on the visual system
-  was circular.
-- **Why now:** one project cannot distinguish a factory defect from a source ceiling. Principle 22:
-  real product evidence, not roadmap enthusiasm, chooses what expands next.
-- **First calibrated case — done and frozen:** nbm, a thin-assets / professional-service /
-  provenance-stress case. Frozen intake, KnowledgePack `e7c387bc`, 9 sources, 22 facts, source hashes,
-  rights limitations, five independent verdicts, responsive and launch-readiness results. **Do not
-  regenerate it** unless a reusable factory change needs regression testing.
-- **Blocked by — OWNER INPUT ONLY, and it blocks nothing else:** a second genuine business. The nearest
-  candidate is MGB Decor (issue #60), which already has owner-supplied first-party source *locations*.
-  It is not usable yet: issue #60 states explicitly that authoritative source locations grant **no**
-  republication rights to any photograph, customer image, logo or third-party asset, and no
-  asset-level approval exists in the repository. **The precise owner action needed** is an explicit
-  asset-level rights approval plus the owner-supplied facts, frozen in the shape
-  `examples/genuine-business/nbm-approved-intake.v1.json` already defines. Do not crawl those profiles.
-  Do not infer approval from a URL being public. Never fabricate owner approval.
-- **Exit evidence:** deliberately varied real businesses through the same product path under
-  `docs/GENUINE_BUSINESS_ACCEPTANCE.md`, with per-case measurements and the anti-template diversity
-  diagnostic owned by `docs/VISUAL_EXCELLENCE.md` §8.
-- **Next:** item 5. Per-case metrics accumulate as data; **no Factory Intelligence dashboard** is built
-  on one case.
+### Outcome B — second genuine-business proof
 
-**Allowed during the freeze:** a reusable defect the corpus exposed; a deterministic check for a real
-observed failure; a contract, recipe, renderer or presentation improvement real output proved
-insufficient; a security, data-loss, durability or runtime blocker; a measured cost, latency or
-intervention bottleneck. **Paused while the corpus runs:** new orchestration frameworks, further role
-proliferation, a new project class without corpus evidence, provider integrations with no live use
-case, framework rewrites, and anything wanted because it sounds impressive.
+Run MGB Decor through the current factory when approved inputs exist. Freeze owner-supplied facts and
+asset-level rights first; do not crawl public/social URLs or infer rights. Its purpose is to learn
+whether NBM's fixed-component-vocabulary ceiling is factory-wide or partly case-specific. Fix only
+reusable defects exposed by frozen evidence, then rerun the same inputs. Do not regenerate or polish
+NBM merely to chase 8.5, and do not redesign the Presentation Registry before evidence earns it.
 
-### 5. Fix only the reusable defects the corpus exposes, then rerun the frozen inputs
+**Blocked by:** owner input only. **Exit evidence:** a second varied case through
+`docs/GENUINE_BUSINESS_ACCEPTANCE.md`, including rights provenance, meaningful-edit count, launch and
+visual evidence, independent review and the cross-case anti-template diagnostic.
 
-- **Status:** waiting on item 4 producing a second case.
-- **Exit evidence:** the same frozen briefs and source packs rerun and compared; per-class maturity
-  tiers (`docs/MASTER_PLAN.md` §7.2) earned from what the corpus recorded. No class is claimed at any
-  tier today.
-- **Blocked by:** item 4, which is owner-blocked. This does **not** propagate to items 9–10 any more:
-  capability work with a real consumer today proceeds without waiting for the corpus to name it.
-- **Next:** items 9–11 sequence by what the corpus measured.
+### Outcome C — bounded serious-application benchmark
 
-### 6. Pinned task-image host digest and hosted egress attestation
+Use the Predictor-class benchmark as pressure, not as a request to clone Predictor or complete every
+Phase 4.4 capability. The first greenfield slice is:
 
-- **Status:** **closed 2026-08-28.** PR #185 records the host-built `task-baseline` digest in
-  `config/task-images.json`; the same host run passed the non-root, tool-exclusion, read-only-root and
-  writable-workspace boundary checks. Infrastructure evidence alone did not promote a role.
-- **Why now:** it is the deny-by-default evidence a role must carry before it can ever be
-  `runtimeReady`, and it does not compete with the visual gate.
-- **Exit evidence:** the digest recorded in `config/task-images.json` through a reviewed change, and the
-  hosted boundary proof re-run with that image present. `packages/control-plane/src/runtime-readiness.js`
-  refuses a promotion without it. Authority: `docs/AGENT_RUNTIME.md`.
-- **Blocked by:** nothing. **Next:** item 7.
+`entity/fixture -> user decision/prediction -> server-authoritative deadline/lock -> official result
+-> settlement -> score -> leaderboard`
 
-### 7. One bounded low-risk real-model canary, reviewed
+Factory seams stay domain-neutral; football-specific rules stay in benchmark domain code. Pull only
+the lifecycle, time, settlement, leaderboard, scenario-data and evidence machinery the slice needs.
+Email, billing, realtime, jobs and webhooks enter only with a concrete consumer and acceptance boundary.
 
-- **Status:** **attempted, failed, repair merged; rerun outstanding.** The first bounded Groq attempt
-  reached the provider but failed the typed-output contract, so it is failed evidence rather than a
-  completed canary. PR #189 repaired structured-output enforcement and deliberately made no live
-  provider call; canary #2 has not run and no role is `runtimeReady`.
-- **Why now:** it is the last unmet runtime-readiness requirement, and nothing is `runtimeReady` until
-  one bounded real attempt has been run and reviewed.
-- **Exit evidence:** the `code-reviewer` canary executed and reviewed under the hard budget and both
-  halves of the kill switch. Runbook: `docs/MODEL_CANARY.md`. State: `config/runtime-readiness.json`.
-- **Blocked by:** a second owner-authorised live provider run under the existing runbook. **Next:** if
-  that attempt passes and is reviewed, record its evidence before any separate role-promotion change.
+**Exit evidence:** non-vacuous database/domain/browser acceptance across multiple identities and
+states, rendered evidence and independent review, in an ordinary portable repository. Authority:
+`docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
 
-### 8. Remaining deterministic gate stages
+### Outcome D — accepted build to release
 
-- **Status:** open, and safe to do beside the visual gate.
-- **Why now:** each is cheaper before the surface it guards grows.
-- **Exit evidence:** the stage's own acceptance in `docs/ENGINEERING_QUALITY_PROGRAMME.md` — Q2 curated
-  visual contracts, Q3 component/state preview,
-  Q7 property tests, Q10 consumer assertions, Q12 production data-change safety (required before any
-  autonomous mutation of real production data), and the remaining supply-chain hardening.
-- **Blocked by:** nothing. **Next:** they feed Phase 6.
+Prove the smallest professional release chain on the simplest real product that benefits:
 
-### 9. Phase 4.3 — mature website-builder capabilities — **PARTLY CLOSED, no longer the active stage**
+`exact accepted revision/artifact -> preview -> evidence/review -> explicit approval -> production
+promotion -> smoke/health verification -> release record -> rollback target`
 
-- **Status:** **not active, and not complete.** Two capabilities closed with acceptance; three remain
-  genuinely unbuilt and are recorded as deferred rather than done. See item 10 for why the stage was
-  left before the table was emptied.
-- **Why now:** the corpus can no longer say which capabilities are needed on its own timetable, because
-  it is owner-blocked on a second business. The rule that replaces "wait for the corpus" is narrower
-  and still evidence-bound: **implement the capability that has a real consumer today**, not the whole
-  §13 table because it is listed.
-- **Closed with acceptance (2026-08-28):** the deterministic **SEO/AEO scanner**, which now answers
-  `gates.seo` from built documents; **application-renderer document metadata**, fixed at the generator
-  seam and measured on real `dist` output, with the route-crawlability decision recorded in
-  `docs/RENDERER_SELECTION.md`; and **read-first brownfield profiling**
-  (`docs/PLATFORM_PARITY_PROGRAMME.md` §5.1), proved on a mature outside repository with zero mutations
-  and its counts checked by hand against source.
-- **Still genuinely unbuilt, and deferred rather than claimed:** CMS/content collections, localisation
-  (one unread NFR schema field is not a partial implementation) and Figma import of any kind. Each is in
-  `config/factory-status.json` under `deferredCapabilities` with its own revival condition. **None of
-  them is a prerequisite for application work**, which is why the stage could be left.
-- **Exit evidence:** per-capability acceptance in `docs/PLATFORM_PARITY_PROGRAMME.md` §8 and §5. A
-  capability is not claimed because a dependency or a plan exists.
-- **Blocked by:** nothing. **Next:** item 10, which is now active.
+Production is never “whatever is in the current editor or worktree”. Static sites do not need database
+branching. Stateful evidence may later earn revision-bound backend identity, migration state, scenario
+data, environment-scoped secrets and integration isolation.
 
-### 10. Phase 4.4 — high-value application capabilities — **ACTIVE**
+**Exit evidence:** one real generated product promotes an identified accepted artifact, records the
+result and verifies or rolls it back without ambiguous environment identity. Authorities:
+`docs/PLATFORM_PARITY_PROGRAMME.md` and `docs/PRODUCTION_COMPLETENESS.md`.
 
-- **Status:** **active from 2026-08-28.** **Why now:** these separate a
-  generated brochure site from a generated product, and a serious application benchmark is what
-  produces the application evidence the deferred visual work needs (revival condition A/B).
-- **Why the stage opened before item 9's table was emptied:** the same rule that deferred Phase 4D —
-  progression is about the dependencies the next real work needs, not about every optional parity
-  feature being finished. Nothing in CMS, localisation or Figma import is depended on by auth, tenancy,
-  database security or application state.
-- **What is already proven, and is the reason the first slice is not auth:** reading the dependency
-  order literally would send the next session to build authentication. **Auth already exists.** Ten
-  recipes are ready including auth, profiles, organisations, admin and uploads, and the
-  `database-security` CI job generates the canonical `b2b-saas` app, loads **its own generated schema
-  fragments** into a real local Postgres and runs 18 pgTAP assertions over **6 deterministic identities
-  and 2 organisations** — owner reads and updates their organisation, a second organisation's rows are
-  invisible, profile RLS exposes only the current user's profile, and the anonymous role is denied
-  outright. That is executable multi-tenant database security on generated output, in automation, across
-  more than one tenant.
-- **What is actually missing, and it is narrower than the list implies:** there is **no tenant-scoped
-  domain entity** anywhere in the recipe catalogue — no table, no policy, no UI, no assertion. So
-  "organisation A cannot see organisation B's records" is unprovable for the plain reason that no
-  records exist. The current acceptance isolates organisations and profiles, which are the tenancy
-  primitives themselves rather than a product's data inside them. **The first 4.4 slice is a
-  tenant-scoped records capability** carried through the same pgTAP acceptance the tenancy primitives
-  already pass, plus a browser journey and the ordinary standalone generated-repo acceptance.
-- **Dependency order:** auth / organisations / RBAC → database + RLS → profiles/admin → email →
-  uploads → notifications → webhooks → jobs/retries → billing → realtime if earned. Not one PR.
-- **Built so far in this stage, in that order:** tenant-scoped records, organisation-owned uploads and
-  in-app notifications, each generated into the canonical B2B SaaS application and each proved by the
-  `database-security` job rather than claimed. **In-app** is the whole of the notification claim:
-  email, push, realtime delivery, webhooks, background jobs and any generic event infrastructure
-  remain unbuilt and unclaimed. Transactional email was taken out of order because notifications had a
-  real consumer already in the generated application and email still has none — per-capability state is
-  in `config/factory-status.json`.
-- **Exit evidence:** the integration acceptance standard in `docs/PLATFORM_PARITY_PROGRAMME.md` §3, §4
-  and §14 — transactional email, notifications, webhooks, jobs/cron/queues, realtime, billing, and
-  `IntegrationSpec` with the connection manager. None may be claimed first-class without it, and a
-  package dependency existing is not evidence.
-- **Blocked by:** nothing. The 4.3 capabilities a benchmark would actually consume — auth,
-  organisations, profiles, admin, database and RLS — are the ones that exist. **Next:** resolve
-  capability intent against compatible recipes before adding another application slice.
+## Explicitly not now
 
----
+- more NBM CSS iteration or Presentation Registry redesign before revival evidence;
+- generic completion of email, billing, realtime, jobs, webhooks or the Phase 4.4 list;
+- a full database fleet-migration system before a deployed stateful product needs it;
+- CMS, localisation, Figma, hybrid SSR or static-search extras without a real consumer;
+- brownfield mutation before exact-revision behavioural and rendered baseline evidence;
+- another orchestration framework, more roles/providers or provider activation without measured need;
+- FactoryService, Console, SQLite/event-ledger or project-class rewrites based on size or taste;
+- a visual canvas, Factory Intelligence dashboard or new planning/findings authority.
 
-## Later programme
+Security, data-loss and durability blockers may interrupt the sequence. Architecture aesthetics and
+capability wishlists may not.
 
-Ordered, and none of it blocks v1. Each links to the authority that owns its detail; this document
-owns only the order.
+## Later order
 
-1. **Phase 4E/4F — environments, Git/staging, stakeholder review and release UX.** Explicit
-   development/preview/production identity that fails closed when a target is ambiguous, then the
-   collaboration surface on top of it. → `docs/PLATFORM_PARITY_PROGRAMME.md` §5–§7.
-2. **Phase 5 — bounded specialist AI orchestration** on the dedicated runtime, with disposable
-   per-role sessions, durable handoffs and provider-neutral adapters. → `docs/AGENT_RUNTIME.md`,
-   `docs/AGENT_SPECIALIST_ARCHITECTURE.md`, `docs/AGENT_HANDOFFS_AND_CONVERGENCE.md`.
-3. **Phase 5.5 — model/skill evaluation and red team**, including the controlled skill comparison that
-   is the only promotion method. → `docs/AGENT_RUNTIME.md`, `config/skill-registry.json`.
-4. **Phase 6 — production-quality, cross-browser, security and performance verification.**
-   → `docs/ENGINEERING_QUALITY_PROGRAMME.md`, `docs/PRODUCTION_COMPLETENESS.md`,
-   `docs/VISUAL_EXCELLENCE.md` §7.
-5. **Phase 7 — deployment, operations, upgrade propagation and post-launch.**
-   → `docs/PLATFORM_PARITY_PROGRAMME.md` §7 and §11, `docs/PRODUCTION_COMPLETENESS.md`.
-6. **Phase 7.5 — experiments and controlled personalisation**, only once analytics, privacy and
-   deployment state are mature. → `docs/PLATFORM_PARITY_PROGRAMME.md`.
-7. **Phase 8 — evidence-driven factory improvement**, where the corpus becomes the input that decides
-   which patterns are promoted and which retired. → `docs/VISUAL_EXCELLENCE.md` §11.
-8. **The complex-app maturity programme**, culminating in the Predictor-class benchmark.
-   → `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` (issue #66).
+1. **Phase 4E/4F:** environment identity, Git/staging, review and release UX, pulled by Outcome D.
+2. **Phase 5/5.5:** bounded specialist execution, then model/skill evaluation. Operator agents remain
+   separate from factory model/API workers; provider continuity is parallel infrastructure, not
+   product sequencing authority.
+3. **Phase 6:** production-quality cross-browser, accessibility, performance, security and journey
+   verification.
+4. **Phase 7:** deployment, operations, upgrade propagation and post-launch work earned by deployed
+   products.
+5. **Phase 8:** evidence-driven factory improvement once the corpus supports promotion decisions.
 
-Later expansion deliberately outside v1 — native mobile, a large connector marketplace, generated apps
-as agent-accessible products, enterprise SSO, marketplace/ecommerce depth — is listed once in
-`docs/MASTER_PLAN.md` §7.3 and is not sequenced here.
-
----
-
-## Sequencing discipline
-
-1. **A product gate needs product evidence.** Convincing architecture is not proof that real businesses
-   like the output. A stage advances on artifacts, evidence, deterministic checks and an independent
-   verdict, never on how complete the design looks.
-2. **Build the minimum output machinery that makes the next real-world benchmark meaningful, then stop
-   extending it.** The completeness list is `docs/VISUAL_EXCELLENCE.md` §9, not a licence to keep adding
-   contracts.
-3. **After that gate, real project failures outrank roadmap enthusiasm.**
-
-Security, data-loss and durability blockers may interrupt this sequence. Speculative architecture may
-not.
-
----
+Later expansion outside v1 lives only in `docs/MASTER_PLAN.md` §7.3.
 
 ## Completed programme
 
-A compact ledger. Implementation detail lives in the commits, the merged pull requests, the tests and
-the code; it is not restated here. `config/factory-status.json` holds the machine-readable list.
+Implementation history lives in Git, merged pull requests, tests and acceptance records.
+`config/factory-status.json` carries completed-stage ids. In summary:
 
-- ✅ **Phase 0** — repository boundaries, manifest/build-contract schemas, registries, `create-app`
-  skeleton, Console shell, CI and contamination guard.
-- ✅ **Phase 1** — adaptive Quick/Standard/Thorough intake, company profile, source references,
-  reviewed Build Contract, deterministic Manifest, save/resume, export, Chromium acceptance journey.
-- ✅ **Phase 2** — versioned template/recipe contracts, neutral React/Vite template, fail-closed
-  capability resolution, Supabase/auth/profiles/organisations/admin recipes, Netlify adapter, six
-  layout patterns, handover docs, byte-stable generation.
-- ✅ **Phase 3** — deterministic extraction across text/HTML/CSV/PDF/DOCX/XLSX, bounded same-origin
-  crawl, content-addressed cache, provenance-aware facts, asset inventory, brand observations,
-  knowledge-pack hash, `npm run ingest`.
-- ✅ **Phase 3.5A/3.5B** — durable task/ledger/ChangeSet/checkpoint primitives, `instructionAuthority`
-  trust boundary, deny-by-default capability policies, provider-neutral control-plane package, six
-  canonical benchmark cases, recipe upgrade proposals, NFR and Design Contract groundwork.
-- ◐ **Phase 3.5C** — sandbox and trace adapters, mostly landed early through Phase 4.5 work. What
-  remains is items 6–7 above plus trace/export mapping.
-- ✅ **Phase 3.6** — Manifest/Build Contract v2, `PageSpec`/`SectionSpec`/content-binding contracts,
-  deterministic information architecture, trusted knowledge as a real generation input. 3.6C was closed
-  by the accepted Phase 3.8E run.
-- ✅ **Phase 3.7** — `apps/service` boundary, project/workspace lifecycle, service-owned generation and
-  preview, JSONL event evidence with a SQLite read projection, provider-neutral tool descriptor.
-- ✅ **Phase 3.8A** — segment-correct ChangeSet path policy; no textual-prefix scope escape survives the
-  adversarial or the `fast-check` property cases.
-- ✅ **Phase 3.8B** — `JSON Schema -> packages/contracts types -> Ajv boundary validation` for nine
-  contract families, with `npm run contracts:check` failing on schema-hash or generated-type drift.
-  Remaining schemas stay listed in `config/contract-families.json` with a recorded reason.
-- ✅ **Phase 3.8C** — executed Supabase security acceptance; generated RLS policies are exercised
-  against real authenticated users across roles and cross-organisation isolation.
-- ✅ **Phase 3.8D** — `@axe-core/playwright` accessibility baseline in canonical browser acceptance,
-  with deterministic serious/critical gates before any AI review.
-- ✅ **Phase 3.8E** — genuine business product proof, passed 2026-08-26 at 0 meaningful manual edits.
-  Immutable record: `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`.
-- ✅ **Phase 3.8F** — MCP v2 facade over the bounded factory surface. It exposes no production deploy,
-  database write, raw secret, arbitrary path or shell execution, and it is an adapter, never factory
-  truth.
-- ✅ **Phase 3.8G** — brand-source and asset-provenance foundation, extending the existing
-  content/asset intelligence rather than adding a second extraction subsystem. Asset rights/use state
-  means "publicly visible" never silently means "approved to republish".
-- ✅ **Phase 3.8H** — specialist agent architecture: role registry, project-class pipelines,
-  deterministic no-self-approval, `HandoffContract`, typed rework, and a convergence engine that refuses
-  to call an unrun gate a pass.
-- ✅ **Phase 3.8I** — routing discipline: deterministic routing benchmarks with positive **and negative**
-  triggers, bounded task routes that leave broad prompts unclassified, first-orientation context
-  ceilings, and per-load-class skill budgets. Installed is not loaded.
-- ✅ **Phase 3.8J** — `npm run architecture` makes the dependency direction a blocking gate, and
-  `config/risk-surfaces.json` makes conditional review genuinely conditional: an ordinary CSS or
-  documentation change buys no adversarial reviewer.
-- ✅ **Phase 3.8K** — `npm run audit:launch` predicts manual edits in the same vocabulary as the
-  acceptance schema and names the owning role; `StateMatrixSpec` and `JourneyClosureEvidence` are
-  derived deterministically; canonical generation gates on a measured predicted-edit ceiling per
-  project type that is lowered as the factory improves and never raised to pass a regression.
-- ✅ **Phase 4A** — the first complete usable vertical slice: service-owned ingestion, durable ingestion
-  tasks, versioned workspaces, visible task/event progress, service-managed preview and build history.
-- ✅ **Phase 4B** — direct manipulation: Builder Element Identity that fails closed when a rendered
-  element does not resolve, `RenderedEvidence` that records what a capture could not establish rather
-  than omitting it, per-asset publication governance, focal-point cropping, section presentation
-  selection, structured Design Contract editing, provenance-preserving text editing replayed over fresh
-  composition, and asset replacement where no permission is inherited across a swap. Project asset
-  policy modes were deliberately not implemented.
-- ✅ **Phase 4C** — Design System Registry: a `DesignSystemSpec` compiler IR persisted into the generated
-  repository as `.product/design-system.json`; BrandSpec, ArtDirectionPlan and MotionContract compiling
-  into it; a Presentation Registry compiled from what the template actually renders that refuses a build
-  it cannot satisfy; and deterministic DesignLint carried inside rendered evidence. 4C.6 is
-  conditionally deferred. Storybook was evaluated and not adopted.
-- ✅ **Phase 4.2A** — the static/content renderer: a second genuinely different renderer with
-  deterministic, fail-closed selection, producing six route documents and zero client JavaScript for
-  the same business the application renderer serves with one document. Its independent visual review is
-  item 2 above.
-- 🚧 **Phase 4D** — visual direction, responsive composition and candidate promotion. Machinery
-  complete; items 1 and 3 above are what remain.
-- ◐ **Phase 4.5** — pre-agent hardening, landed ahead of its place in the sequence: the execution
-  sandbox and its rootless implementation, secret/network/resource restrictions, the supervised attempt
-  lifecycle, the pinned content-addressed task image with bounded public egress, and the deny-by-default
-  capability broker. The registered specialist pipeline is now executable end to end with a
-  deterministic stand-in where the model will be (`npm run rehearse:pipeline`) — a rehearsal of the
-  control plane, not a build, not a runtime proof and not product evidence. **No role is
-  `runtimeReady`**; items 6–7 above are what that costs.
+- Phases 0–3 established contracts, generation, ingestion and provenance.
+- Phases 3.5–3.8 established control-plane boundaries, the service/Console path, real-business
+  acceptance and deterministic engineering gates.
+- Phases 4A–4C established composition, renderers, design machinery, evidence and independent review.
+- Phase 4D machinery was built and measured; its quality verdict failed and remains unpaid.
+- Phase 4.3 delivered SEO/AEO, application metadata correctness and read-only brownfield profiling;
+  CMS, localisation and Figma remain genuinely unbuilt and deferred.
+- Phase 4.4 delivered the initial multi-tenant application foundations named above. It is active, not
+  complete.
 
----
+## Drift control
 
-## Deferred / conditional
-
-`config/factory-status.json` `deferredCapabilities` is the only backlog for conditionally deferred
-work, and it is the sole place a reviving condition is recorded. No document keeps a second one.
-Currently deferred: the design-intelligence catalogue (4C.6), MessagingPlan (4D.3), the visual
-comparison canvas, the four 4.2B–4.2E static extras — and, since 2026-08-28, **Phase 4D visual
-excellence** and **Phase 4.2A static-renderer visual parity**.
-
-Those last two are a different kind of entry and are marked as such in the status file by an
-`unpaidGate` block. Everything else here is a capability nobody built because nothing reads it yet.
-4D and 4.2A were built, were measured against `gates.visual` by an independent reviewer, and
-**failed** — best mean 6.55 and 5.38 against a required 8.5. They are set down so unrelated work can
-proceed, not resolved. `config/factory-status.json` carries their thresholds, their measured results
-and their cited evidence; `tooling/deferred-gate-honesty.test.mjs` and `npm run control-plane:doctor`
-refuse a deferral whose recorded best result reaches its threshold, so this distinction cannot be
-edited away quietly. The narrative is in `docs/PHASE_4D_VISUAL_DEBT.md`.
-
-Two conditional decisions are not stages and live here:
-
-- **Hono** — evaluate only if Console/service development begins duplicating route/request/response
-  types. Do not rewrite the service to adopt it; `packages/contracts` remains authoritative.
-- **Comparative competitor evidence** — once the internal corpus is stable enough for the comparison to
-  mean anything, the same frozen brief may be run through relevant current builders and scored blind.
-  The purpose is to test the best-in-class claim, not to chase competitor features.
-
----
-
-## Architectural follow-ups to preserve
-
-Standing constraints. Each one exists because the obvious alternative was considered and rejected.
-
-- add short ADRs for durable-state choice, control-plane ownership, template strategy, backend
-  defaults, deployment defaults and environment identity;
-- do not adopt `lucide-react` as a default generated dependency when static SVG copying solves the need;
-- do not add another SVG rasterizer while Sharp satisfies the deterministic social-image pipeline;
-- image-generation providers remain factory adapters, not generated-app dependencies;
-- social/profile enrichment prefers exact URLs, official surfaces and authorised connectors rather than
-  platform-bypass scraping;
-- publicly visible assets retain rights/use state and are never assumed approved for republication;
-- do not make Hono authoritative for contracts;
-- evaluate `@mozilla/readability` against real crawled sites before adopting it;
-- do not adopt Temporal/LangGraph/large orchestration frameworks unless measured complexity justifies
-  them;
-- generated projects remain ordinary repositories and never require the Builder Console, MCP server or
-  Hetzner/OpenCode runtime to operate;
-- external repositories in `config/external-sources.json` stay prior art until pinned, licensed,
-  security reviewed and granted to a named role; no agent fetches a mutable branch at run time;
-- do not add a canvas dependency before a concrete comparison task proves the Console cannot do it;
-- do not adopt a screenshot-to-code architecture; references become structured adopt/avoid observations;
-- routing benchmark ceilings are context-efficiency guards: expand one task's context deliberately
-  rather than raising a global ceiling;
-- a graph/index layer is navigation evidence and never repository authority, a required dependency or a
-  CI gate;
-- do not claim independent review when both reviewers run on the same model or runtime;
-- do not create a second memory/lessons documentation system; one fact gets one home;
-- do not start a refactor programme because a file is large; extract by product capability when
-  divergence actually appears;
-- do not treat the `consumer-app` web class as native-mobile support.
+Every pull request that materially changes what comes next updates this file and
+`config/factory-status.json` together. A completed “Next” statement is removed or advanced in that
+change. `tooling/roadmap-status-consistency.test.mjs` enforces easy machine/prose contradictions; review owns
+whether the proposed sequence is the right one.

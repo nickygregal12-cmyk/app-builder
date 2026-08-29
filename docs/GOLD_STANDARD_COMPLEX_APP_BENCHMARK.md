@@ -94,6 +94,16 @@ This mode should deliberately test whether App Builder can discover and solve th
 
 ## Representative greenfield journeys
 
+The first bounded slice should establish the reusable domain spine before expanding breadth:
+
+`entity/fixture -> user decision/prediction -> server-authoritative deadline/lock -> official result -> settlement -> score -> leaderboard`
+
+This is one vertical slice, not the whole reference product. It should pull only the generic lifecycle,
+time-bound mutation, settlement and ranking contracts it proves it needs. Football naming, scoring and
+competition rules remain benchmark-domain logic; they must not enter factory registries or recipes.
+Email, billing, realtime, jobs and webhooks are not prerequisites unless the slice records a concrete
+consumer and acceptance boundary for one.
+
 The first serious benchmark iteration should prove enough vertical slices to establish the architecture:
 
 - signup/sign-in/profile;

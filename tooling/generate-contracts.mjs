@@ -64,13 +64,11 @@ const barrel = [
 ].join('\n');
 await fs.writeFile(path.join(generatedDirectory, 'index.d.ts'), barrel, 'utf8');
 
-function short(value) {
-  return value ? `${value.slice(0, 12)}…` : 'no hash';
-}
-
 // Both hashes matter. The schema hash catches validation changes that do not
 // alter the emitted TypeScript; the types hash catches generator changes that
-// alter consumers without any schema edit.
+// alter consumers without any schema edit. Check-mode prints the complete hash
+// so a cloud-only worker can update the registry without reconstructing a
+// truncated diagnostic locally.
 const drifted = results.filter(({ family, typesHash, schemaHash }) => family.typesHash !== typesHash || family.schemaHash !== schemaHash);
 if (check) {
   if (!drifted.length) {
@@ -79,8 +77,8 @@ if (check) {
   }
   for (const result of drifted) {
     const { family } = result;
-    if (family.schemaHash !== result.schemaHash) console.error(`Contract drift: schemas/${family.schema} hashes ${short(result.schemaHash)} but config/contract-families.json records ${short(family.schemaHash)}.`);
-    if (family.typesHash !== result.typesHash) console.error(`Contract drift: ${family.id} generates types ${short(result.typesHash)} but config/contract-families.json records ${short(family.typesHash)}.`);
+    if (family.schemaHash !== result.schemaHash) console.error(`Contract drift: schemas/${family.schema} hashes ${result.schemaHash} but config/contract-families.json records ${family.schemaHash ?? 'no hash'}.`);
+    if (family.typesHash !== result.typesHash) console.error(`Contract drift: ${family.id} generates types ${result.typesHash} but config/contract-families.json records ${family.typesHash ?? 'no hash'}.`);
   }
   console.error('Run `npm run contracts:generate` and review the recorded hashes.');
   process.exit(1);

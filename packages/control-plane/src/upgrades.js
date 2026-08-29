@@ -37,7 +37,7 @@ export function compareManagedInventory(installation, currentHashes) {
   return { modified, missing, unchanged };
 }
 
-export function planRecipeUpgrade({ installation, targetVersion, currentHashes, compatibleFrom = [], migrationNotes = [], requiredChecks = ['npm run check', 'npm run build'] }) {
+export function planRecipeUpgrade({ installation, targetVersion, currentHashes, compatibleFrom = [], migrationNotes = [], requiredChecks = ['npm run check', 'npm run build'], hasUnmodelledDatabaseEvolution = false }) {
   const order = compareVersions(installation.version, targetVersion);
   const inventory = compareManagedInventory(installation, currentHashes);
   const base = {
@@ -62,6 +62,14 @@ export function planRecipeUpgrade({ installation, targetVersion, currentHashes, 
   if (toMajor !== fromMajor) return { ...base, status: 'review-required', reason: 'Major-version upgrades require explicit review even when managed files are unchanged.' };
   if (!compatibleFrom.includes(installation.version)) {
     return { ...base, status: 'review-required', reason: 'The target recipe has not explicitly declared compatibility from the installed version.' };
+  }
+  if (hasUnmodelledDatabaseEvolution) {
+    return {
+      ...base,
+      status: 'review-required',
+      reasonCode: 'database-evolution-unmodelled',
+      reason: 'The target recipe manages persistent database state whose evolution is not modelled automatically.',
+    };
   }
   return { ...base, status: 'ready', reason: 'Managed files are unchanged and the target explicitly declares compatibility from the installed version.' };
 }

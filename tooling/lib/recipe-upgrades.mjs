@@ -217,6 +217,7 @@ export function planProjectRecipeUpgrades(projectDir, { factoryRoot = process.cw
       currentHashes: currentManagedHashes(projectRoot, installation),
       compatibleFrom: definition.upgrade?.compatibleFrom ?? [],
       migrationNotes: definition.upgrade?.migrationNotes ?? [],
+      hasUnmodelledDatabaseEvolution: (definition.database?.fragments?.length ?? 0) > 0,
     });
     if (definition.upgrade?.alwaysReview && proposal.status === 'ready') {
       proposal = { ...proposal, status: 'review-required', reason: 'Target recipe explicitly requires review for upgrades.' };

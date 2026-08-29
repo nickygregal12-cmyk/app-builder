@@ -169,6 +169,17 @@ try {
       if (!fs.existsSync(path.join(root, entry.path, relative))) { console.error(`Recipe ${recipeId} declares missing database fragment: ${relative}`); failed = true; }
     }
   }
+  for (const [moduleId, moduleEntry] of Object.entries(modules)) {
+    if (!moduleEntry.implementationRecipe) continue;
+    const recipeEntry = recipes.recipes?.[moduleEntry.implementationRecipe];
+    if (!recipeEntry || recipeEntry.status !== 'ready' || recipeEntry.module !== moduleId) {
+      console.error(`Module ${moduleId} names unavailable or mismatched implementation recipe ${moduleEntry.implementationRecipe}.`); failed = true; continue;
+    }
+    const recipe = JSON.parse(fs.readFileSync(path.join(root, recipeEntry.path, 'recipe.json'), 'utf8'));
+    if (JSON.stringify(moduleEntry.requiresModules ?? []) !== JSON.stringify(recipe.requires ?? [])) {
+      console.error(`Module ${moduleId} compatibility dependencies do not match recipe ${moduleEntry.implementationRecipe}.`); failed = true;
+    }
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   failed = true;

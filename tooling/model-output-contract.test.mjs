@@ -59,10 +59,12 @@ test('the provider projection is strict while canonical-only refinements remain 
   assert.deepEqual(schema.properties.taskId.enum, ['model-canary-task']);
   assert.deepEqual(schema.properties.reviewerRole.enum, ['code-reviewer']);
 
-  assert.deepEqual(schema.properties.taskId.type, ['string', 'null'], 'nullable union is preserved for Groq strict mode');
+  assert.deepEqual(schema.properties.taskId.type, ['string', 'null'], 'nullable union is preserved for strict provider mode');
   assert.equal(schema.properties.id.minLength, undefined, 'canonical minLength remains a local AJV constraint');
   assert.equal(schema.properties.authorRoles.minItems, undefined, 'canonical minItems remains a local AJV constraint');
   assert.equal(schema.properties.authorRoles.uniqueItems, undefined, 'canonical uniqueItems remains a local AJV constraint');
+  assert.equal(schema.properties.score.minimum, undefined, 'canonical numeric minimum remains a local AJV constraint');
+  assert.equal(schema.properties.score.maximum, undefined, 'canonical numeric maximum remains a local AJV constraint');
 
   const evidenceItem = schema.properties.evidence.items;
   assert.equal(evidenceItem.additionalProperties, false);
@@ -95,7 +97,10 @@ test('provider profiles cannot claim structured output without exact executable 
   const profiles = JSON.parse(fs.readFileSync('config/provider-profiles.json', 'utf8')).profiles;
   const claimed = profiles.filter((profile) => profile.structuredOutput === true);
 
-  assert.deepEqual(claimed.map((profile) => `${profile.providerId}/${profile.modelId}`), ['groq/openai/gpt-oss-120b']);
+  assert.deepEqual(claimed.map((profile) => `${profile.providerId}/${profile.modelId}`), [
+    'anthropic/claude-haiku-4-5-20251001',
+    'groq/openai/gpt-oss-120b',
+  ]);
   for (const profile of profiles) {
     assert.equal(
       profile.structuredOutput === true,

@@ -15,8 +15,8 @@
       "schema": "build-contract.schema.json",
       "typeName": "ReviewedBuildContract",
       "boundary": "Reviewed intake handoff into the factory.",
-      "typesHash": "d9d93c6629cc31b02ac0190dbd14390840e8c243e936f4527805fc16848dc481",
-      "schemaHash": "4b73a85711b7e2f32b0edef6606a92993c1c1a9ec1fbcb888d38d3f9a9206a0c"
+      "typesHash": "ce0fb485eabfcf60b16cd2ad229d3335f91137920b9dcc48f4856b762b612945",
+      "schemaHash": "75952fdbb7d55fc39d908c0b8a1031d3b92387950f7fe57066312132d9e68d02"
     },
     {
       "id": "intake-session",
@@ -127,7 +127,7 @@
       "schema": "approved-intake-bundle.schema.json",
       "typeName": "AppBuilderApprovedIntakeBundle",
       "boundary": "Durable approved-intake persistence and the service replay/import path.",
-      "typesHash": "9d8d35d4074b5da5c2d003990117f3f80e647f8991caaa5823a600b395a9ee49",
+      "typesHash": "d4688fddfd6d6da2f6b4e9b4df9d0bd95fe35ca33a7e33c926a5f247ffe17617",
       "schemaHash": "43410f0bb6480ac471026f749df7f481d71b294b866caac7454cfff814e8ebfe"
     },
     {

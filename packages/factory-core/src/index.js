@@ -374,19 +374,36 @@ export function deriveEnabledModules(projectType, answers, projectTypesConfig) {
 export function assessRequestedCapabilities(projectType, answers, projectTypesConfig, capabilityDecisions = {}) {
   const registry = projectTypesConfig.moduleRegistry?.modules ?? {};
   const requestedModules = deriveEnabledModules(projectType, answers, projectTypesConfig);
+  const requested = new Set(requestedModules);
   const capabilities = requestedModules.map((module) => {
     const registryEntry = registry[module];
-    const availability = registryEntry?.status ?? 'unknown';
-    if (availability === 'ready') return { module, availability, decision: 'include' };
+    const missingDependencies = (registryEntry?.requiresModules ?? []).filter((dependency) => !requested.has(dependency));
+    const availability = registryEntry?.status === 'ready' && missingDependencies.length > 0
+      ? 'incompatible'
+      : registryEntry?.status ?? 'unknown';
+    if (availability === 'ready') return {
+      module,
+      availability,
+      decision: 'include',
+      ...(registryEntry?.implementationRecipe ? { implementationRecipe: registryEntry.implementationRecipe } : {}),
+      ...(registryEntry?.requiresModules ? { requiresModules: [...registryEntry.requiresModules] } : {})
+    };
     const decision = capabilityDecisions[module] === 'exclude' || capabilityDecisions[module] === 'custom-work'
       ? capabilityDecisions[module]
       : 'unresolved';
-    return { module, availability, decision };
+    return {
+      module,
+      availability,
+      decision,
+      ...(registryEntry?.implementationRecipe ? { implementationRecipe: registryEntry.implementationRecipe } : {}),
+      ...(registryEntry?.requiresModules ? { requiresModules: [...registryEntry.requiresModules] } : {}),
+      ...(missingDependencies.length ? { missingDependencies } : {})
+    };
   });
   return {
     requestedModules,
     capabilities,
-    readyModules: capabilities.filter((item) => item.availability === 'ready').map((item) => item.module),
+    readyModules: capabilities.filter((item) => item.decision === 'include').map((item) => item.module),
     customWorkModules: capabilities.filter((item) => item.decision === 'custom-work').map((item) => item.module),
     excludedModules: capabilities.filter((item) => item.decision === 'exclude').map((item) => item.module),
     unresolvedModules: capabilities.filter((item) => item.decision === 'unresolved').map((item) => item.module)

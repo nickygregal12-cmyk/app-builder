@@ -4,7 +4,7 @@ export type Answers = Record<string, AnswerValue>;
 export interface WhenCondition { questionId: string; equals?: AnswerValue; notEquals?: AnswerValue; in?: AnswerValue[]; includes?: string[]; truthy?: boolean; }
 export interface Question { id: string; label: string; type: string; required?: boolean; default?: AnswerValue; options?: string[]; depth?: IntakeMode; impact?: 'blocking' | 'high' | 'normal' | 'optional'; placeholder?: string; when?: WhenCondition | WhenCondition[]; followUpIfMissing?: boolean; }
 export interface QuestionnaireDefinition { version: string; id: string; questions: Question[]; }
-export interface ModuleRegistryEntry { description?: string; status?: 'draft' | 'ready' | 'planned' | 'deprecated' | string; defaultEnabled?: boolean; }
+export interface ModuleRegistryEntry { description?: string; status?: 'draft' | 'ready' | 'planned' | 'deprecated' | string; defaultEnabled?: boolean; implementationRecipe?: string; requiresModules?: string[]; }
 export interface ProjectTypesConfig { projectTypes: Record<string, { label?: string; defaultModules: string[]; questionnaire?: string }>; moduleRegistry?: { modules: Record<string, ModuleRegistryEntry> }; }
 export type SourceKind = 'url' | 'logo' | 'image' | 'screenshot' | 'document' | 'spreadsheet' | 'database-api' | 'other';
 export type SourceRightsStatus = 'approved-for-use' | 'reference-only' | 'unknown' | 'restricted';
@@ -35,7 +35,7 @@ export interface FollowUpCandidate { id: string; questionId: string; question: s
 export interface AmbiguityFollowUpRequest { version: number; required: boolean; maxQuestions: number; aiAllowed: boolean; budget: { maxTokens: number; modelClass: 'economy' }; candidates: FollowUpCandidate[]; }
 export type CapabilityDecision = 'exclude' | 'custom-work';
 export type CapabilityDecisions = Record<string, CapabilityDecision>;
-export interface CapabilityAssessment { module: string; availability: string; decision: 'include' | 'exclude' | 'custom-work' | 'unresolved'; }
+export interface CapabilityAssessment { module: string; availability: string; decision: 'include' | 'exclude' | 'custom-work' | 'unresolved'; implementationRecipe?: string; requiresModules?: string[]; missingDependencies?: string[]; }
 export interface CapabilityPlan { requestedModules: string[]; capabilities: CapabilityAssessment[]; readyModules: string[]; customWorkModules: string[]; excludedModules: string[]; unresolvedModules: string[]; }
 export interface RequirementAudience { summary: string; roles: string[]; }
 export interface CompanyRequirements { identity: Record<string, string>; services: string[]; locations: string[]; contactDetails: Record<string, string>; trustSignals: string[]; conversionGoals: string[]; }

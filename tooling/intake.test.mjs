@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { approveBuildContract, applyQuestionDefaults, buildBuildContract, buildProjectManifest, deriveEnabledModules, getUnresolvedHighImpactQuestions, isAnswered, mergeQuestionnaires, normalizeListAnswer, questionsForMode } from '../packages/factory-core/src/index.js';
+import fc from 'fast-check';
+import { approveBuildContract, applyQuestionDefaults, assessRequestedCapabilities, buildBuildContract, buildProjectManifest, deriveEnabledModules, getUnresolvedHighImpactQuestions, isAnswered, mergeQuestionnaires, normalizeListAnswer, questionsForMode } from '../packages/factory-core/src/index.js';
 
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const base = read('questionnaires/v1/base.json');
@@ -52,6 +53,51 @@ test('consumer accounts can be explicitly disabled', () => {
   const enabled = deriveEnabledModules('consumer-app', { account_required: false }, config);
   assert.ok(!enabled.includes('auth'));
   assert.ok(!enabled.includes('profiles'));
+});
+
+test('notification intent resolves only when the registered recipe dependency shape is compatible', () => {
+  const b2b = assessRequestedCapabilities('b2b-saas', { notifications: ['in-app'] }, config);
+  assert.ok(b2b.readyModules.includes('notifications'));
+  assert.deepEqual(b2b.capabilities.find((item) => item.module === 'notifications'), {
+    module: 'notifications', availability: 'ready', decision: 'include',
+    implementationRecipe: 'notifications', requiresModules: ['auth', 'organisations', 'records']
+  });
+
+  const consumer = assessRequestedCapabilities('consumer-app', { notifications: ['in-app'] }, config);
+  assert.ok(consumer.requestedModules.includes('notifications'), 'the requested capability must remain represented');
+  assert.equal(consumer.readyModules.includes('notifications'), false);
+  assert.equal(consumer.readyModules.includes('organisations'), false);
+  assert.equal(consumer.readyModules.includes('records'), false);
+  assert.deepEqual(consumer.unresolvedModules, ['notifications']);
+  assert.deepEqual(consumer.capabilities.find((item) => item.module === 'notifications')?.missingDependencies, ['organisations', 'records']);
+});
+
+test('an incompatible capability blocks approval without expanding its recipe dependency graph', () => {
+  const questions = [];
+  const answers = { project_name: 'Consumer alerts', primary_goal: 'Keep users informed', notifications: ['in-app'] };
+  const contract = buildBuildContract({ projectType: 'consumer-app', answers, questions, projectTypesConfig: config });
+  assert.equal(contract.status, 'draft');
+  assert.ok(contract.requestedModules.includes('notifications'));
+  assert.equal(contract.enabledModules.includes('notifications'), false);
+  assert.equal(contract.enabledModules.includes('organisations'), false);
+  assert.deepEqual(contract.unresolvedCapabilityDecisions, ['notifications']);
+  assert.throws(() => approveBuildContract(contract), /notifications/);
+});
+
+test('ready capability implementations are closed over their declared dependencies', () => {
+  fc.assert(fc.property(
+    fc.constantFrom(...Object.keys(config.projectTypes)),
+    fc.constantFrom(undefined, [], ['none'], ['in-app']),
+    (projectType, notifications) => {
+      const plan = assessRequestedCapabilities(projectType, { notifications }, config);
+      const requested = new Set(plan.requestedModules);
+      for (const capability of plan.capabilities.filter((item) => item.decision === 'include')) {
+        for (const dependency of capability.requiresModules ?? []) {
+          assert.ok(requested.has(dependency), `${projectType}:${capability.module} admitted without ${dependency}`);
+        }
+      }
+    }
+  ));
 });
 
 test('list answers normalise at the durable boundary, not on every keystroke', () => {

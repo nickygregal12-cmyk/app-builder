@@ -17,7 +17,7 @@
     "enabledModules":{"type":"array","items":{"type":"string"}},
     "customWorkModules":{"type":"array","items":{"type":"string"}},
     "excludedModules":{"type":"array","items":{"type":"string"}},
-    "capabilityPlan":{"type":"array","items":{"type":"object","required":["module","availability","decision"],"properties":{"module":{"type":"string"},"availability":{"type":"string"},"decision":{"enum":["include","exclude","custom-work","unresolved"]}},"additionalProperties":false}},
+    "capabilityPlan":{"type":"array","items":{"type":"object","required":["module","availability","decision"],"properties":{"module":{"type":"string"},"availability":{"type":"string"},"decision":{"enum":["include","exclude","custom-work","unresolved"]},"implementationRecipe":{"type":"string"},"requiresModules":{"type":"array","items":{"type":"string"}},"missingDependencies":{"type":"array","items":{"type":"string"}}},"additionalProperties":false}},
     "infrastructure":{"type":"object","required":["backend","deployment"]},
     "brandDesignDirection":{"type":"string"},
     "designDirection":{"type":"string"},

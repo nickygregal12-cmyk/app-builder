@@ -435,6 +435,12 @@ Support a clear flow:
 
 `work branch/checkpoint -> preview -> review -> required gates -> approved revision -> production release`
 
+Production promotion must identify the exact accepted source revision and artifact. It must not deploy
+whatever happens to be in an editor, workspace or branch tip at invocation time. The first acceptance
+continues through smoke/health verification, a durable release record and an explicit rollback target.
+Database/backend identity joins that record only for stateful products that need it; static marketing
+sites do not need full-stack branching to satisfy this invariant.
+
 A design candidate and a code branch are not the same concept. Visual 4D candidates remain bounded evidence until promoted; implementation branches contain actual source changes.
 
 ## 6.3 Collaboration roles
@@ -612,6 +618,19 @@ Possible bounded maintenance workflows:
 - review analytics/experiment evidence and suggest improvements;
 - create a branch/ChangeSet, rerun gates and request approval;
 - never silently push production changes.
+
+### Recipe evolution boundary
+
+The existing upgrade system is real but deliberately narrower than database migration: it records
+recipe installation identity and managed-file hashes, compares baselines, performs safe three-way
+file reasoning and returns `review-required` or `blocked` when files cannot be changed safely.
+Recipe-managed persistent database state has no equivalent automatic evolution semantics yet.
+
+Until a deployed stateful product earns a migration system, a version-changing recipe with database
+fragments or other persistent database effects must never be reported `ready` solely because its files
+are unchanged. The conservative result is `review-required` with reason
+`database-evolution-unmodelled`. That is a bounded truth fix, not permission to pull a fleet-wide
+migration platform forward.
 
 For a concrete production incident, prefer a stronger repair contract than “agent saw an error and changed code”:
 

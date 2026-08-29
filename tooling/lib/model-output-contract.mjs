@@ -24,8 +24,6 @@ const PASSTHROUGH_KEYS = Object.freeze([
   'type',
   'enum',
   'description',
-  'minimum',
-  'maximum',
 ]);
 
 function clone(value) {
@@ -49,9 +47,9 @@ export function supportsStructuredOutputProfile({ providerId, adapterId, modelId
  *
  * This projection may be less expressive than the canonical schema, never more
  * authoritative. The canonical schema is still validated locally after the
- * provider returns. Provider constraints make malformed shape harder to emit;
- * local validation remains the source of truth for refinements such as
- * minLength, minItems and uniqueItems.
+ * provider returns. Unsupported refinements such as minLength, minItems,
+ * minimum/maximum and uniqueItems stay local rather than making one provider's
+ * grammar capability a hidden dependency of the shared contract.
  */
 export function toStrictProviderSchema(node) {
   if (Array.isArray(node)) return node.map((entry) => toStrictProviderSchema(entry));

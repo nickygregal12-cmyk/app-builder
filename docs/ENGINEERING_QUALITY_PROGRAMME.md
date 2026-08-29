@@ -581,6 +581,16 @@ handler in the broker, so a capability nobody can perform fails rather than reas
 shape — declaration names its consumer, test checks the consumer exists — rather than inventing a
 new mechanism per registry.
 
+The product-capability form now has a small derived primitive in
+`tooling/lib/capability-integrity.mjs`. It accepts the Build Contract/Manifest request, module and
+recipe registries, generated recipe record, runtime consumers and executable evidence already
+produced by a build, and derives `requested`, `registered`, `resolvable`, `generated`, `consumed` and
+`proved`. It owns none of those facts. Planted acceptance distinguishes an absent implementation,
+broken dependency closure, generated-but-unconsumed module and unsupported proof claim. It is not yet
+in the blocking check: applying it to canonical B2B output found the existing `admin` recipe is
+installed by default but only exports helpers no generated runtime invokes. Make that capability a
+real surface/consumer (or remove the default claim) before promoting this audit to a global gate.
+
 ### Stage Q10b — deterministic change-impact map (Phase 5/6; activate on a real complex/brownfield consumer)
 
 Graph-assisted navigation should eventually answer more than “which files are nearby?”. Before a

@@ -111,22 +111,28 @@ case, framework rewrites, and anything wanted because it sounds impressive.
 
 ### 6. Pinned task-image host digest and hosted egress attestation
 
-- **Status:** open, and safe to do now — it is a safety boundary rather than a product surface.
+- **Status:** **closed 2026-08-28.** PR #185 records the host-built `task-baseline` digest in
+  `config/task-images.json`; the same host run passed the non-root, tool-exclusion, read-only-root and
+  writable-workspace boundary checks. Infrastructure evidence alone did not promote a role.
 - **Why now:** it is the deny-by-default evidence a role must carry before it can ever be
   `runtimeReady`, and it does not compete with the visual gate.
 - **Exit evidence:** the digest recorded in `config/task-images.json` through a reviewed change, and the
   hosted boundary proof re-run with that image present. `packages/control-plane/src/runtime-readiness.js`
   refuses a promotion without it. Authority: `docs/AGENT_RUNTIME.md`.
-- **Blocked by:** host access. **Next:** item 7.
+- **Blocked by:** nothing. **Next:** item 7.
 
 ### 7. One bounded low-risk real-model canary, reviewed
 
-- **Status:** open, runbook complete.
+- **Status:** **attempted, failed, repair merged; rerun outstanding.** The first bounded Groq attempt
+  reached the provider but failed the typed-output contract, so it is failed evidence rather than a
+  completed canary. PR #189 repaired structured-output enforcement and deliberately made no live
+  provider call; canary #2 has not run and no role is `runtimeReady`.
 - **Why now:** it is the last unmet runtime-readiness requirement, and nothing is `runtimeReady` until
   one bounded real attempt has been run and reviewed.
 - **Exit evidence:** the `code-reviewer` canary executed and reviewed under the hard budget and both
   halves of the kill switch. Runbook: `docs/MODEL_CANARY.md`. State: `config/runtime-readiness.json`.
-- **Blocked by:** item 6. **Next:** one genuinely runtime-ready role.
+- **Blocked by:** a second owner-authorised live provider run under the existing runbook. **Next:** if
+  that attempt passes and is reviewed, record its evidence before any separate role-promotion change.
 
 ### 8. Remaining deterministic gate stages
 
@@ -200,7 +206,8 @@ case, framework rewrites, and anything wanted because it sounds impressive.
   `IntegrationSpec` with the connection manager. None may be claimed first-class without it, and a
   package dependency existing is not evidence.
 - **Blocked by:** nothing. The 4.3 capabilities a benchmark would actually consume — auth,
-  organisations, profiles, admin, database and RLS — are the ones that exist. **Next:** item 11.
+  organisations, profiles, admin, database and RLS — are the ones that exist. **Next:** resolve
+  capability intent against compatible recipes before adding another application slice.
 
 ---
 

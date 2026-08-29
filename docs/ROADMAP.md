@@ -26,9 +26,8 @@ Statuses are deliberately small:
 
 **Phase 4.4 — product proof through high-value application capability. Active.**
 
-> **NOW: make database-bearing recipe upgrades fail closed when persistent database evolution is
-> unmodelled.**
-This is higher leverage than another feature because the current planner can otherwise describe an incomplete persistent-state upgrade as safe. It is a bounded truth fix before the serious application benchmark puts more state behind recipes.
+> **NOW: make the root dependency graph reproducible with `npm ci`.**
+The root lockfile is absent and ignored, so a fresh checkout still resolves a new dependency graph before it can run the factory's ordinary checks.
 ## EXECUTION MAP
 
 ```text
@@ -46,76 +45,11 @@ Provider/operator continuity: PARALLEL infrastructure, never the product sequenc
 ```
 ### Outcome A — quality truth closure
 
-## [NOW] Stage: Database-bearing upgrade honesty
+Completed: database-bearing upgrades fail closed as `database-evolution-unmodelled` (PR #201).
 
-**Outcome**
-A version-changing recipe with database state cannot report `ready` while persistent evolution is unmodelled; it returns `review-required` with a machine-readable reason such as
-`database-evolution-unmodelled`.
-**Why now**
-The existing file-upgrade system is strong: installation identity, hashes, baselines and safe reconciliation already exist. The narrower gap is persistent database state. A generated database security fix proved that future generation can be corrected while an existing generated application cannot automatically inherit that correction.
-**Prerequisites**
+Completed: ordinary CI runs the integrated producer → resolver → convergence lane and fails evidence-system integrity without weakening measured product gates.
 
-- none;
-- preserve all current managed-file `ready`, `review-required` and `blocked` behaviour.
-**Read before working**
-
-1. `docs/PLATFORM_PARITY_PROGRAMME.md` — Recipe evolution boundary.
-2. `packages/control-plane/src/upgrades.js`.
-3. `tooling/control-plane-upgrades.test.mjs`.
-**Do**
-
-1. Identify version-changing recipes whose target definition has database fragments/effects.
-2. Carry that fact into upgrade planning without creating a second recipe registry.
-3. Return conservative review-required status before file safety can produce `ready`.
-4. Plant a negative proving a clean managed-file inventory cannot mask unmodelled database change.
-5. Preserve ordinary file-only upgrade behaviour.
-**Do not**
-
-- claim App Builder has no upgrade system;
-- build automatic migrations, fleet rollout, rollback orchestration or production mutation;
-- encode one historic SQL defect into the generic contract.
-**Evidence that closes this stage**
-
-- the planted database-bearing version change is refused as `database-evolution-unmodelled`;
-- file-only compatible upgrades still reach `ready`;
-- modified files, majors and undeclared compatibility retain their existing results;
-- `npm run check` and `npm run build` pass on the exact head.
-**Then**
-Advance `NOW` to Gate evidence → resolver → CI truth.
-## [NEXT] Stage: Gate evidence → resolver → CI truth
-
-**Outcome**
-Ordinary CI fails when registered deterministic evidence wiring is missing, malformed, stale, wrong-build, unresolved or silently not-run, while a correctly measured unpaid product gate remains a truthful product failure rather than fake-green evidence.
-**Why now**
-`npm run gates:evidence` already integrates producer artifacts, gate resolution and convergence. Its historical warm cost (~19.8 seconds / 542 MB) was not the blocker; semantics were. Product failure and evidence-system failure must stay distinct.
-**Prerequisites**
-
-- Database-bearing upgrade honesty closed and merged.
-**Read before working**
-
-1. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — registered producers and CI closure.
-2. `config/gate-producers.json`.
-3. `tooling/gate-evidence.mjs`.
-**Do**
-
-1. Define the CI exit contract around evidence-system integrity.
-2. Reuse the existing producer registry, artifacts, resolver and convergence path.
-3. Invoke the integrated path in CI with bounded resource use.
-4. Plant missing/malformed/wrong-build/unresolved negatives.
-**Do not**
-
-- mark known visual debt acceptable so CI becomes green;
-- create a second quality registry or resolver;
-- confuse “the product failed its gate” with “the evidence path is broken”.
-**Evidence that closes this stage**
-
-- every registered deterministic producer expected in the lane resolves;
-- each planted wiring defect fails CI;
-- a well-formed below-threshold product verdict remains resolved and below threshold;
-- exact-head `verify`, `database-security` and `mutation-strength` succeed.
-**Then**
-Advance `NOW` to Root dependency reproducibility.
-## [NEXT] Stage: Root dependency reproducibility
+## [NOW] Stage: Root dependency reproducibility
 
 **Outcome**
 A fresh checkout installs the root dependency graph with `npm ci` from a tracked lockfile and passes the normal checks/build under the repository's intended Node/npm versions.
@@ -123,7 +57,7 @@ A fresh checkout installs the root dependency graph with `npm ci` from a tracked
 The root `package-lock.json` is currently absent and gitignored, so `npm install` must first resolve a new dependency graph. This is a small engineering-quality defect and should stay small.
 **Prerequisites**
 
-- Gate evidence CI truth closed and merged.
+- Database-bearing upgrade honesty and gate-evidence CI truth closed and merged.
 **Read before working**
 
 1. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — Root install reproducibility.

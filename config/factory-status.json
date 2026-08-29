@@ -13,7 +13,7 @@
     "accepted-build-release-lifecycle"
   ],
   "outstandingProductGates": [
-    "quality-truth-closure: database-bearing recipe upgrades must fail closed when persistent database evolution is unmodelled; derived requirement coverage remains open; gates:evidence is not invoked by CI; the root package-lock is absent and gitignored, so fresh root npm ci is unavailable.",
+    "quality-truth-closure: derived requirement coverage remains open; the root package-lock is absent and gitignored, so fresh root npm ci is unavailable.",
     "second-genuine-business-proof: MGB Decor requires owner-approved facts and asset-level usage rights before replayable intake can be frozen.",
     "bounded-serious-application-benchmark: the first Predictor-class vertical slice has not run; it must prove decision, authoritative lock, official result, settlement, score and leaderboard without football-specific factory abstractions.",
     "accepted-build-release-lifecycle: no real generated product has proved explicit promotion of an identified accepted revision/artifact through production smoke verification, release record and rollback target.",

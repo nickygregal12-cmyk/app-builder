@@ -21,6 +21,7 @@ import {
   CHECK_STATUSES,
   EVIDENCE_REFUSALS,
   assertProducerRegistry,
+  evaluateEvidenceIntegrity,
   resolveGateResults,
   summariseResolutions,
 } from '@app-builder/control-plane/gate-evidence';
@@ -260,6 +261,35 @@ test('every refusal reason a check can carry is a declared one', () => {
   for (const reason of reasons) assert.ok(EVIDENCE_REFUSALS.includes(reason), `${reason} is not a declared refusal`);
 });
 
+test('evidence integrity fails for missing, malformed, wrong-build and unresolved registered checks', () => {
+  const cases = [
+    { expected: 'artifact-missing', artifacts: { 'launch-readiness': launchArtifact([]) } },
+    { expected: 'artifact-unreadable', artifacts: { 'launch-readiness': launchArtifact([]), 'asset-rights': { ref: 'asset.json', value: null, error: 'malformed' } } },
+    { expected: 'evidence-for-another-build', artifacts: { 'launch-readiness': launchArtifact([]), 'asset-rights': assetArtifact([], 3) } },
+    { expected: 'build-reference-missing', artifacts: { 'launch-readiness': launchArtifact([]), 'asset-rights': assetArtifact([], 3) } },
+  ];
+  cases[2].artifacts['asset-rights'].value.compositionHash = 'wrong-build';
+  delete cases[3].artifacts['asset-rights'].value.compositionHash;
+
+  for (const { expected, artifacts } of cases) {
+    const { resolutions } = resolveProvenance(artifacts);
+    const integrity = evaluateEvidenceIntegrity({ resolutions, registry: REGISTRY });
+    assert.equal(integrity.status, 'fail', expected);
+    assert.ok(integrity.failures.some((entry) => entry.reason === expected), expected);
+  }
+});
+
+test('resolved product failure does not become an evidence-system failure', () => {
+  const { resolutions } = resolveProvenance({
+    'launch-readiness': launchArtifact([{ check: 'generated-claim-without-source', detail: 'unsupported claim' }]),
+    'asset-rights': assetArtifact([]),
+  });
+  assert.equal(resolutions[0].status, 'fail');
+  assert.deepEqual(evaluateEvidenceIntegrity({ resolutions, registry: REGISTRY }), {
+    status: 'pass', expectedChecks: 2, resolvedChecks: 2, failures: [],
+  });
+});
+
 // ---------------------------------------------------------------------------
 // What deterministic evidence may never buy.
 // ---------------------------------------------------------------------------
@@ -297,6 +327,7 @@ test('a supplied verdict decides the gate, and its score is what the minimum is 
   }, '2026-08-27T00:00:00.000Z');
   assert.equal(report.gates[0].status, 'fail');
   assert.ok(report.gates[0].failingCriteria.some((entry) => entry.startsWith('score-below-minimum')));
+  assert.equal(evaluateEvidenceIntegrity({ resolutions: below.resolutions, registry: REGISTRY }).status, 'pass');
 });
 
 test('a gate whose required evidence is absent has nothing for a reviewer to look at', () => {

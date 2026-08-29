@@ -33,7 +33,7 @@ import process from 'node:process';
 import { createHash } from 'node:crypto';
 
 import { evaluateConvergence } from '@app-builder/control-plane/roles';
-import { resolveGateResults, summariseResolutions } from '@app-builder/control-plane/gate-evidence';
+import { evaluateEvidenceIntegrity, resolveGateResults, summariseResolutions } from '@app-builder/control-plane/gate-evidence';
 
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
@@ -228,6 +228,7 @@ const report = evaluateConvergence({
 });
 
 const summary = summariseResolutions(resolutions);
+const integrity = evaluateEvidenceIntegrity({ resolutions, registry });
 fs.writeFileSync(
   path.join(root, 'report.json'),
   `${JSON.stringify({
@@ -237,6 +238,7 @@ fs.writeFileSync(
     buildRef,
     artifacts: Object.fromEntries(Object.entries(artifacts).map(([id, entry]) => [id, { ref: entry.ref, hash: entry.hash }])),
     summary,
+    integrity,
     resolutions,
     convergence: report,
   }, null, 2)}\n`,
@@ -248,9 +250,13 @@ console.log(`stopReason: ${report.stopReason}`);
 console.log(`gates:      ${summary.gates} required, ${summary.passed} pass, ${summary.failed} fail, ${summary.notRun} not-run`);
 console.log(`measured:   ${summary.everyCheckAnswered.join(', ') || 'none'} — every declared check answered from real evidence`);
 console.log(`awaiting a verdict: ${summary.awaitingIndependentVerdict.join(', ') || 'none'}`);
+console.log(`evidence integrity: ${integrity.status} — ${integrity.resolvedChecks}/${integrity.expectedChecks} registered checks resolved`);
 console.log(`\nReport: ${path.relative(process.cwd(), path.join(root, 'report.json'))}`);
 
-if (report.converged) {
+if (integrity.status !== 'pass') {
+  console.error(`\nEvidence integrity failed: ${integrity.failures.map((entry) => `${entry.checkId}:${entry.reason}`).join(', ')}`);
+  process.exitCode = 1;
+} else if (report.converged) {
   console.error('\nConvergence reported success. Nothing in this repository has earned that, so this is a defect in the wiring rather than a finished project.');
   process.exitCode = 1;
 } else if (summary.everyCheckAnswered.length === 0) {

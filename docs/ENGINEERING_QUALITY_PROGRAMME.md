@@ -207,11 +207,11 @@ a static class emitting one document fails: that is an application shell wearing
 builds the nbm project and the `performance` gate's only deterministic check is answered from that
 build — the first gate evidence in the repository that required a real build to exist.
 
-**CI closure remains open.** The command and resolver are real, but `.github/workflows/ci.yml` does not
-invoke `npm run gates:evidence`. Until it does, ordinary CI proves the producer and resolver separately
-through tests but does not prove every registered deterministic producer resolves its artifact in the
-workflow. Closing this means running the existing command and failing closed on missing, malformed,
-wrong-build or unresolved evidence; it does not mean weakening an unpaid product gate.
+**CI closure is active.** Ordinary CI invokes `npm run gates:evidence` and requires every registered
+deterministic check in the lane to resolve from its producer artifact. Missing, malformed, wrong-build
+or otherwise unresolved evidence fails the command. A resolved product failure remains a product
+failure rather than an evidence-system failure: the integrated NBM lane currently resolves all 11
+registered checks while truthfully reporting its below-budget performance and SEO findings.
 
 **Still open:** Core Web Vitals and other lab metrics, image and font budgets with real assets behind
 them (both fixtures currently ship neither), and bundle analysis for the Console itself. Each needs a

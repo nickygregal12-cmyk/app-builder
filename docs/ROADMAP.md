@@ -1,153 +1,345 @@
-# Roadmap
+# App Builder Roadmap
 
-This is the **sequencing authority**. `config/factory-status.json` is the machine-readable current
-state; `docs/MASTER_PLAN.md` defines the destination. A change to what comes next must update the
-status file in the same pull request.
+This is the repository's **execution spine**. `config/factory-status.json` is machine-readable current state; specialist documents own depth; `docs/MASTER_PLAN.md` owns the destination.
+## START HERE
 
-## Current position
+### What App Builder is
+
+App Builder is a private AI-first website and application factory. It turns ideas, businesses, existing repositories, URLs and source material into structured requirements, portable repositories, independently verified product evidence and, eventually, safely released and maintained products with progressively less human steering.
+Its advantage is not raw code generation. It is:
+`requirements + provenance + deterministic composition + reusable recipes/invariants + bounded autonomy + real generated-product evidence + learning that improves future builds`
+### Programme thesis
+
+The factory architecture is stronger than the amount of exceptional finished-product quality proved so far. The programme therefore shifts from **factory-building to factory-using**. A new capability is normally earned by a real benchmark, a genuine-business failure, a production/release need or a demonstrated reusable defect—not by appearing in a parity list.
+### How to use this roadmap
+
+For ordinary work, do not read the documentation tree. Read `AGENTS.md` and this file, then only the one to three authorities in the current Stage Card. Expand only when evidence proves another authority is needed.
+Statuses are deliberately small:
+
+- **NOW** — highest-value task, executable immediately;
+- **NEXT** — becomes executable when the preceding main-track stage closes;
+- **PARALLEL** — independent of the main track;
+- **WAITING — OWNER INPUT** — only the owner can unblock it;
+- **DEFERRED — REVIVAL CONDITION REQUIRED** — important debt, deliberately inactive;
+- **LATER** — real work whose prerequisites have not earned it.
+### Current phase and priority
 
 **Phase 4.4 — product proof through high-value application capability. Active.**
 
-The factory generates portable websites and stateful B2B application output. Auth, profiles,
-organisations, role-aware records, organisation-owned uploads, in-app notifications and admin have
-real generated consumers. Database security exercises generated schema on real PostgreSQL/Supabase
-infrastructure. Capability integrity distinguishes requested, registered, resolvable, generated,
-consumed and proved states. These are foundations, not proof that every listed capability or project
-class is first-class.
+> **NOW: make database-bearing recipe upgrades fail closed when persistent database evolution is
+> unmodelled.**
+This is higher leverage than another feature because the current planner can otherwise describe an incomplete persistent-state upgrade as safe. It is a bounded truth fix before the serious application benchmark puts more state behind recipes.
+## EXECUTION MAP
 
-The largest uncertainty is repeatability: **can the factory produce genuinely excellent finished
-products across materially different real cases?** Product and release evidence therefore outrank
-generic platform breadth. Phase 4.4 is not a walk down a feature list.
-
-Closed facts that must not be reopened as gaps:
-
-- rendered evidence is bound to the served build; accepted-build promotion remains open;
-- read-only brownfield profiling is accepted, but diagnosis and mutation are unattempted;
-- capability resolution and a real generated admin consumer have landed.
-
-Still unpaid or blocked:
-
-- Phase 4D visual quality failed at best mean **6.55** and floor **4.8**, against 8.5/6.5. It is
-  deferred, not passed or waived. `docs/PHASE_4D_VISUAL_DEBT.md` owns its evidence and revival rules.
-- Static-renderer visual parity remains unpaid for the related reason recorded there.
-- MGB Decor is blocked only by owner-supplied facts and explicit asset-level usage approval. Public
-  availability is not republication permission. This blocks that case, not engineering.
-- Recipe-managed files have safe upgrade planning; persistent database state does not have equivalent
-  evolution semantics.
-- No project class has earned a maturity tier from repeatable real-project evidence.
-
-## Immediate outcomes
-
-These are parallel proof tracks. A change enters one only when it closes the named gap or a real case
-pulls it.
-
+```text
+database-upgrade honesty (NOW)
+  -> gate-evidence CI truth
+  -> reproducible root npm ci
+  -> bounded serious-application benchmark
+  -> fix smallest reusable failures
+  -> rerun the frozen benchmark
+  -> mature requirement coverage
+  -> accepted artifact -> release -> verification -> rollback
+  -> only then earn larger migration/autonomy work
+MGB Decor: WAITING on owner facts/rights, then runs PARALLEL through the current factory
+Provider/operator continuity: PARALLEL infrastructure, never the product sequence
+```
 ### Outcome A — quality truth closure
 
-1. Make database-bearing recipe version changes fail closed when persistent evolution is unmodelled.
-   The result is `review-required / database-evolution-unmodelled`, never false `ready`.
-2. Complete derived requirement coverage through existing Build Contract, Manifest, capability,
-   consumer and evidence identities. Keep `unconsumed` distinct from `implemented-unproven`; do not
-   create a second requirements authority.
-3. Preserve the CI gate truth loop: missing, malformed, wrong-build and unresolved evidence fails
-   closed; measured product failure remains failure rather than becoming fake-green CI. The command
-   exists, but CI does not call it yet.
-4. Restore root reproducibility: `package-lock.json` is absent and gitignored, and CI uses
-   `npm install`; a fresh checkout therefore cannot use root `npm ci`.
+## [NOW] Stage: Database-bearing upgrade honesty
 
-**Exit evidence:** planted tests kill false upgrade readiness and both requirement-coverage failure
-classes; ordinary CI proves the registered producer/resolver loop; a tracked lockfile makes fresh
-root `npm ci` succeed. Authorities:
-`docs/ENGINEERING_QUALITY_PROGRAMME.md` and `docs/PLATFORM_PARITY_PROGRAMME.md`.
+**Outcome**
+A version-changing recipe with database state cannot report `ready` while persistent evolution is unmodelled; it returns `review-required` with a machine-readable reason such as
+`database-evolution-unmodelled`.
+**Why now**
+The existing file-upgrade system is strong: installation identity, hashes, baselines and safe reconciliation already exist. The narrower gap is persistent database state. A generated database security fix proved that future generation can be corrected while an existing generated application cannot automatically inherit that correction.
+**Prerequisites**
 
-### Outcome B — second genuine-business proof
+- none;
+- preserve all current managed-file `ready`, `review-required` and `blocked` behaviour.
+**Read before working**
 
-Run MGB Decor through the current factory when approved inputs exist. Freeze owner-supplied facts and
-asset-level rights first; do not crawl public/social URLs or infer rights. Its purpose is to learn
-whether NBM's fixed-component-vocabulary ceiling is factory-wide or partly case-specific. Fix only
-reusable defects exposed by frozen evidence, then rerun the same inputs. Do not regenerate or polish
-NBM merely to chase 8.5, and do not redesign the Presentation Registry before evidence earns it.
+1. `docs/PLATFORM_PARITY_PROGRAMME.md` — Recipe evolution boundary.
+2. `packages/control-plane/src/upgrades.js`.
+3. `tooling/control-plane-upgrades.test.mjs`.
+**Do**
 
-**Blocked by:** owner input only. **Exit evidence:** a second varied case through
-`docs/GENUINE_BUSINESS_ACCEPTANCE.md`, including rights provenance, meaningful-edit count, launch and
-visual evidence, independent review and the cross-case anti-template diagnostic.
+1. Identify version-changing recipes whose target definition has database fragments/effects.
+2. Carry that fact into upgrade planning without creating a second recipe registry.
+3. Return conservative review-required status before file safety can produce `ready`.
+4. Plant a negative proving a clean managed-file inventory cannot mask unmodelled database change.
+5. Preserve ordinary file-only upgrade behaviour.
+**Do not**
 
+- claim App Builder has no upgrade system;
+- build automatic migrations, fleet rollout, rollback orchestration or production mutation;
+- encode one historic SQL defect into the generic contract.
+**Evidence that closes this stage**
+
+- the planted database-bearing version change is refused as `database-evolution-unmodelled`;
+- file-only compatible upgrades still reach `ready`;
+- modified files, majors and undeclared compatibility retain their existing results;
+- `npm run check` and `npm run build` pass on the exact head.
+**Then**
+Advance `NOW` to Gate evidence → resolver → CI truth.
+## [NEXT] Stage: Gate evidence → resolver → CI truth
+
+**Outcome**
+Ordinary CI fails when registered deterministic evidence wiring is missing, malformed, stale, wrong-build, unresolved or silently not-run, while a correctly measured unpaid product gate remains a truthful product failure rather than fake-green evidence.
+**Why now**
+`npm run gates:evidence` already integrates producer artifacts, gate resolution and convergence. Its historical warm cost (~19.8 seconds / 542 MB) was not the blocker; semantics were. Product failure and evidence-system failure must stay distinct.
+**Prerequisites**
+
+- Database-bearing upgrade honesty closed and merged.
+**Read before working**
+
+1. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — registered producers and CI closure.
+2. `config/gate-producers.json`.
+3. `tooling/gate-evidence.mjs`.
+**Do**
+
+1. Define the CI exit contract around evidence-system integrity.
+2. Reuse the existing producer registry, artifacts, resolver and convergence path.
+3. Invoke the integrated path in CI with bounded resource use.
+4. Plant missing/malformed/wrong-build/unresolved negatives.
+**Do not**
+
+- mark known visual debt acceptable so CI becomes green;
+- create a second quality registry or resolver;
+- confuse “the product failed its gate” with “the evidence path is broken”.
+**Evidence that closes this stage**
+
+- every registered deterministic producer expected in the lane resolves;
+- each planted wiring defect fails CI;
+- a well-formed below-threshold product verdict remains resolved and below threshold;
+- exact-head `verify`, `database-security` and `mutation-strength` succeed.
+**Then**
+Advance `NOW` to Root dependency reproducibility.
+## [NEXT] Stage: Root dependency reproducibility
+
+**Outcome**
+A fresh checkout installs the root dependency graph with `npm ci` from a tracked lockfile and passes the normal checks/build under the repository's intended Node/npm versions.
+**Why now**
+The root `package-lock.json` is currently absent and gitignored, so `npm install` must first resolve a new dependency graph. This is a small engineering-quality defect and should stay small.
+**Prerequisites**
+
+- Gate evidence CI truth closed and merged.
+**Read before working**
+
+1. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — Root install reproducibility.
+2. `package.json`.
+3. `.github/workflows/ci.yml`.
+**Do**
+
+1. Confirm the intended Node/npm toolchain.
+2. Track the root lockfile and remove only the ignore rule that prevents it.
+3. Prove `npm ci` in a clean checkout/worktree.
+4. Use the reproducible install in the appropriate CI path.
+**Do not**
+
+- mix this with visual/product work;
+- start a package-manager migration or dependency-upgrade programme.
+**Evidence that closes this stage**
+
+- clean root `npm ci` succeeds without a preceding `npm install`;
+- `npm run check` and `npm run build` pass;
+- exact-head hosted CI passes.
+**Then**
+Advance `NOW` to the bounded serious-application benchmark.
 ### Outcome C — bounded serious-application benchmark
 
-Use the Predictor-class benchmark as pressure, not as a request to clone Predictor or complete every
-Phase 4.4 capability. The first greenfield slice is:
+## [NEXT] Stage: Bounded serious-application benchmark
 
-`entity/fixture -> user decision/prediction -> server-authoritative deadline/lock -> official result
--> settlement -> score -> leaderboard`
+**Outcome**
+One portable generated application proves this domain journey against a real generated backend:
+`scheduled entity -> user decision -> authoritative deadline/lock -> official result -> deterministic settlement -> persisted score -> leaderboard`
+**Why now**
+This makes a difficult product journey reveal which reusable application primitives the factory actually lacks. It is not “continue Phase 4.4 capabilities” and not a rebuild of the whole Euro 2028
+Predictor.
+**Prerequisites**
 
-Factory seams stay domain-neutral; football-specific rules stay in benchmark domain code. Pull only
-the lifecycle, time, settlement, leaderboard, scenario-data and evidence machinery the slice needs.
-Email, billing, realtime, jobs and webhooks enter only with a concrete consumer and acceptance boundary.
+- the three bounded truth/safety stages above are merged;
+- freeze a bounded benchmark contract and representative scenario data.
+**Read before working**
 
-**Exit evidence:** non-vacuous database/domain/browser acceptance across multiple identities and
-states, rendered evidence and independent review, in an ordinary portable repository. Authority:
-`docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
+1. `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
+2. `docs/PRODUCTION_COMPLETENESS.md`.
+3. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — requirement coverage and database evidence.
+**Do**
 
+1. Specify authoritative domain state, lifecycle transitions and official/external truth boundary.
+2. Enforce the deadline server-side and refuse post-lock mutation.
+3. Settle deterministically and idempotently; persist score and expose a leaderboard/read model.
+4. Exercise real identities, isolation and non-vacuous pre-lock/locked/settled scenarios.
+5. Prove the database boundary and browser journey against the generated backend.
+6. Record factory-level reusable defects, fix only those, then rerun the identical frozen benchmark.
+**Do not**
+
+- rebuild auth, profiles, organisations, records, RLS, uploads, notifications or admin;
+- introduce football-specific factory recipes/contracts;
+- add email, billing, realtime, jobs, queues, generic webhooks or another backend unless this journey
+  proves a concrete consumer and acceptance boundary;
+- attempt the whole Predictor.
+**Evidence that closes this stage**
+
+- pre-lock success and post-lock refusal are executable;
+- repeated settlement is idempotent and official result correction follows an explicit policy;
+- scores/leaderboard are deterministic and persisted;
+- isolation is tested with real competing identities/data, not vacuously;
+- the generated repository installs, checks, builds and runs independently;
+- rendered/product evidence receives independent review;
+- the frozen rerun shows the reusable correction burden decreased.
+**Then**
+Advance requirement-coverage maturity using the precise requirements this slice exposed, then begin the accepted-artifact release stage. Larger capabilities remain evidence-triggered.
+### Outcome B — second genuine-business proof
+
+## [WAITING — OWNER INPUT] Stage: MGB Decor genuine-business case 2
+
+**Outcome**
+Run a materially different real business through the current factory to test whether NBM's visual convergence is factory-wide or case/source-specific.
+**Why it matters**
+NBM was a thin-imagery professional-services/provenance stress case. MGB is not merely “business #2”; it is the preferred falsification experiment for the hypothesis that one shared component vocabulary limits distinctiveness across businesses.
+**Owner input required**
+
+- approved factual source bundle;
+- explicit asset-level publication/use rights for every intended logo/photo/customer/third-party asset.
+Public website/social URLs are evidence locations, not republication permission. Accessible images do not become approved assets.
+**Read before working**
+
+1. `docs/GENUINE_BUSINESS_ACCEPTANCE.md`.
+2. `docs/VISUAL_EXCELLENCE.md`.
+3. GitHub issue #60.
+**Do when unblocked**
+
+1. Freeze approved facts, sources, assets and rights.
+2. Run the current factory first—no pre-emptive Presentation Registry redesign.
+3. Capture independent product/visual evidence and compare the failure mechanism with NBM.
+4. Record score, criterion floor, distinctiveness, responsive quality, publishability, interventions,
+   elapsed effort, cost and whether primitive-vocabulary convergence recurs.
+**Evidence that closes this stage**
+
+- a replayable approved intake/source pack with asset-level rights;
+- a genuine-business acceptance packet and independent review;
+- a conclusion that distinguishes case-specific source limits from repeated factory-wide convergence.
+**Then**
+If convergence recurs, the Phase 4D component-family revival is earned. If it does not, do not rebuild the Presentation Registry merely because NBM struggled.
+## PRODUCT-PROOF TRACK A: Genuine websites
+
+### NBM context capsule
+
+NBM proved ingestion, KnowledgePack/provenance, deterministic composition, an ordinary generated repository, supported preview/evidence, launch audit and owner acceptance with **0 meaningful manual edits**. It did **not** prove best-in-class visual generation.
+Independent visual review reached best mean **6.55** and distinctiveness around the mid-4s. The formal gate remains **mean ≥ 8.5 and every criterion ≥ 6.5**. Therefore `0 edits` does not mean `excellent design`; optimise for resources/interventions required to reach independently accepted quality.
+Visual candidates once omitted the accepted KnowledgePack. That defect was fixed and source fidelity improved, but visual quality still failed. Do not reopen the fixed bug or begin another NBM CSS loop.
+### Phase 4D state
+
+**DEFERRED — REVIVAL CONDITION REQUIRED. Unpaid, not passed, abandoned or globally blocking.**
+The current hypothesis is that art direction changes tokens, layout and section presentation while still inheriting one primitive/component vocabulary. That may explain repeated pill buttons, CTA blocks, dividers and display treatment, but one business cannot prove it cross-project.
+Do not invent a “Design Grammar” subsystem. If MGB repeats the mechanism, begin with the smallest component-family experiment (for example button, CTA or display-type treatment) and rerun frozen MGB.
+Authority: `docs/PHASE_4D_VISUAL_DEBT.md`.
+Reviewer independence is already required. Reviewer calibration is separate: before scores support a professional-maturity claim, calibrate the critic against excellent human work, competent commercial work, generic templates and weak/polished-generic AI output. This does not block current application work. Authority: `docs/VISUAL_EXCELLENCE.md`.
+## PRODUCT-PROOF TRACK B: Serious applications
+
+The Predictor-class benchmark is the long-term pressure test, in bounded vertical slices. Existing application foundations are reused, not rebuilt. Factory contracts remain domain-neutral while project rules remain project code.
+For each run record: accepted/publishable result, independent product/visual result, deterministic first-pass failures, unconsumed material requirements, owner decisions, meaningful interventions, rework loops, elapsed time, AI/tool cost and post-launch defects where applicable.
+The optimisation target is **Accepted Quality Efficiency**. Zero edits to a 6.5-quality result is not better than two interventions to a 9-quality result.
+## [PARALLEL] Provider and operator continuity
+
+Operator tools (Claude Code, Codex CLI, OpenCode) work in controlled development worktrees. Factory model/API workers are separately governed by role, provider readiness, data class, capability, privacy, cost and the master switch. Codex/ChatGPT OAuth—especially `~/.codex/auth.json`—must never become factory gateway credentials.
+Every fallback provider is evaluated from scratch. Quota failure grants no inherited authority and no privacy downgrade. If none qualifies, the durable result is `waiting-for-provider`; secrets are never a routable data class. This lane may improve in parallel but never replaces product proof.
+Read only `docs/AGENT_RUNTIME.md` and `config/provider-profiles.json` for provider work.
+## LATER LIFECYCLE
+
+### Requirement coverage maturity
+
+`material requirement -> explicit consumer/disposition -> evidence`
+Valid outcomes include implemented/proven, implemented/evidence-outstanding, unsupported/custom, deferred, excluded or superseded by an approved decision. Silent loss is invalid; so is generated scope added only because a model assumes that project class usually contains it. Extend existing Build
+Contract, Manifest, capability-integrity, composition, journey and evidence contracts rather than creating a giant parallel requirements platform.
 ### Outcome D — accepted build to release
 
-Prove the smallest professional release chain on the simplest real product that benefits:
+`source revision -> build artifact -> preview -> evidence -> independent review -> approved revision
+-> production promotion -> smoke/health verification -> release record -> rollback target`
+Production is explicit promotion of the accepted identity, never whatever is open in a worktree. A stateful product may later require backend identity, migration state, scoped secrets, integration environment and scenario data. A static site does not need database branching.
+### Brownfield adoption
 
-`exact accepted revision/artifact -> preview -> evidence/review -> explicit approval -> production
-promotion -> smoke/health verification -> release record -> rollback target`
+`repo + optional URL -> frozen baseline -> understanding -> design-system assimilation -> diagnosis
+-> Improvement Contract -> bounded ChangeSet -> evidence -> independent review -> before/after -> PR
+-> release`
+Read before mutate. Preserve `demonstrated`, `inferred`, `unproven` and `not-applicable`: a dependency, folder or file does not prove runtime behaviour. Predictor becomes a hard brownfield benchmark only after exact-revision behavioural and rendered baselines can protect known-good behaviour.
+### Static versus application rendering
 
-Production is never “whatever is in the current editor or worktree”. Static sites do not need database
-branching. Stateful evidence may later earn revision-bound backend identity, migration state, scenario
-data, environment-scoped secrets and integration isolation.
+Use the static/content renderer for public marketing/content sites needing crawlable route documents.
+The SPA renderer is valid for authenticated/stateful applications; one crawlable SPA document is an architectural trade-off, not automatically a bug. Investigate hybrid/SSR only when one real product needs both substantial public multi-route content and stateful application behaviour. Static renderer engineering correctness and its unpaid visual parity are separate facts. Authority:
+`docs/RENDERER_SELECTION.md`.
+## REVIVAL / DECISION TRIGGERS
 
-**Exit evidence:** one real generated product promotes an identified accepted artifact, records the
-result and verifies or rolls it back without ambiguous environment identity. Authorities:
-`docs/PLATFORM_PARITY_PROGRAMME.md` and `docs/PRODUCTION_COMPLETENESS.md`.
+| Evidence trigger | Decision unlocked |
+| --- | --- |
+| MGB reproduces NBM component-vocabulary convergence | Test the smallest Presentation Registry/component-family expansion |
+| Serious benchmark requires an unsupported capability | Build the smallest reusable capability with that consumer/evidence |
+| First deployed stateful app needs schema evolution | Design automatic database migration from that real transition |
+| One product needs public crawlable routes plus substantial authenticated behaviour | Investigate hybrid/SSR architecture |
+| Measured CI feedback/resource pain | Optimise or split CI around the measured bottleneck |
+| A real remote Factory service is required | Design an authenticated remote boundary |
+| Several corpus cases can support comparison | Add richer factory-learning metrics, not a dashboard before data |
+| A professional visual-maturity claim approaches | Calibrate visual reviewers against reference and expert-human evidence |
+## EXPLICITLY NOT NOW
 
-## Explicitly not now
+- another NBM visual/CSS loop or pre-evidence Presentation Registry redesign;
+- a full automatic database migration/fleet system;
+- email, billing, generic webhooks, queues/jobs, realtime or another backend without a real consumer;
+- CMS/content collections, localisation, Figma import or hybrid SSR without a real project;
+- another orchestration framework, more roles/providers merely because they exist, or broad runtime
+  promotion before product proof;
+- FactoryService, SQLite/event-ledger, project-type or whole-Console rewrites based on size/taste;
+- a full typed-error migration, tiny-corpus intelligence dashboard or whole Predictor implementation.
+These may be valuable later. They are not earned now.
+## DURABLE GUARDRAILS
 
-- more NBM CSS iteration or Presentation Registry redesign before revival evidence;
-- generic completion of email, billing, realtime, jobs, webhooks or the Phase 4.4 list;
-- a full database fleet-migration system before a deployed stateful product needs it;
-- CMS, localisation, Figma, hybrid SSR or static-search extras without a real consumer;
-- brownfield mutation before exact-revision behavioural and rendered baseline evidence;
-- another orchestration framework, more roles/providers or provider activation without measured need;
-- FactoryService, Console, SQLite/event-ledger or project-class rewrites based on size or taste;
-- a visual canvas, Factory Intelligence dashboard or new planning/findings authority.
+- **Proof of proof:** a quality claim identifies the correct subject, build/artifact, environment and
+  meaningful coverage. Stale, mismatched, wrong-route and zero-subject evidence is refused.
+- **No lost requirements:** every material requirement gets an explicit consumer/disposition and
+  evidence; every generated capability traces to approved product intent.
+- **Deterministic first:** rules and executable gates settle what they can before model judgement.
+- **No privacy downgrade:** provider fallback re-evaluates policy from scratch or waits.
+- **Read before mutate:** brownfield understanding and a frozen baseline precede diagnosis/mutation.
+- **Portable output:** generated products remain ordinary repositories without App Builder runtime.
+- **No self-approval:** creators do not issue final promotion verdicts.
+### Shared-host/worktree safety
 
-Security, data-loss and durability blockers may interrupt the sequence. Architecture aesthetics and
-capability wishlists may not.
+Operator/development checkouts may live under `/home/predictor/app-builder-bootstrap` with worktrees in
+`/home/predictor/app-builder-worktrees/`. The isolated service tree is `/srv/app-builder/repository`, owned by constrained user `appbuilder`. They are intentionally separate; do not sudo around ownership because a path differs from expectation.
+One mutable agent equals one branch/worktree. Never clean, reset, stash, switch or overwrite another session's tree. When main moves: fetch, rebase your own branch, rerun relevant checks, dispatch exact-head
+CI and merge only that tested head. Avoid overlapping full browser/database/mutation suites on the shared host where practical. Full runbook: `ops/hetzner/README.md`.
+## OWNER INPUT QUEUE
 
-## Later order
+| Item | Needed | When supplied |
+| --- | --- | --- |
+| MGB Decor | Approved fact bundle and explicit per-asset publication/use rights | Freeze intake and run the current factory as the parallel visual falsification experiment |
+## SPECIALIST AUTHORITY INDEX
 
-1. **Phase 4E/4F:** environment identity, Git/staging, review and release UX, pulled by Outcome D.
-2. **Phase 5/5.5:** bounded specialist execution, then model/skill evaluation. Operator agents remain
-   separate from factory model/API workers; provider continuity is parallel infrastructure, not
-   product sequencing authority.
-3. **Phase 6:** production-quality cross-browser, accessibility, performance, security and journey
-   verification.
-4. **Phase 7:** deployment, operations, upgrade propagation and post-launch work earned by deployed
-   products.
-5. **Phase 8:** evidence-driven factory improvement once the corpus supports promotion decisions.
+| Working on | Read |
+| --- | --- |
+| Current state/sequence | `config/factory-status.json`, this roadmap |
+| Database/file upgrade lifecycle | `docs/PLATFORM_PARITY_PROGRAMME.md`, `packages/control-plane/src/upgrades.js` |
+| Engineering gates/evidence/requirements | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
+| MGB/genuine-business acceptance | `docs/GENUINE_BUSINESS_ACCEPTANCE.md` |
+| Visual quality/Phase 4D | `docs/VISUAL_EXCELLENCE.md`, `docs/PHASE_4D_VISUAL_DEBT.md` |
+| Serious application benchmark | `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` |
+| Release/environments/completeness | `docs/PLATFORM_PARITY_PROGRAMME.md`, `docs/PRODUCTION_COMPLETENESS.md` |
+| Brownfield adoption | `docs/PLATFORM_PARITY_PROGRAMME.md` §5 |
+| Renderer selection | `docs/RENDERER_SELECTION.md` |
+| Providers/model execution | `docs/AGENT_RUNTIME.md`, `config/provider-profiles.json` |
+| Hetzner/worktree operations | `ops/hetzner/README.md` |
+| Long-term destination | `docs/MASTER_PLAN.md` |
+## STAGE COMPLETION PROTOCOL
 
-Later expansion outside v1 lives only in `docs/MASTER_PLAN.md` §7.3.
+When a stage closes:
 
-## Completed programme
-
-Implementation history lives in Git, merged pull requests, tests and acceptance records.
-`config/factory-status.json` carries completed-stage ids. In summary:
-
-- Phases 0–3 established contracts, generation, ingestion and provenance.
-- Phases 3.5–3.8 established control-plane boundaries, the service/Console path, real-business
-  acceptance and deterministic engineering gates.
-- Phases 4A–4C established composition, renderers, design machinery, evidence and independent review.
-- Phase 4D machinery was built and measured; its quality verdict failed and remains unpaid.
-- Phase 4.3 delivered SEO/AEO, application metadata correctness and read-only brownfield profiling;
-  CMS, localisation and Figma remain genuinely unbuilt and deferred.
-- Phase 4.4 delivered the initial multi-tenant application foundations named above. It is active, not
-  complete.
-
-## Drift control
-
-Every pull request that materially changes what comes next updates this file and
-`config/factory-status.json` together. A completed “Next” statement is removed or advanced in that
-change. `tooling/roadmap-status-consistency.test.mjs` enforces easy machine/prose contradictions; review owns
-whether the proposed sequence is the right one.
+1. prove its acceptance criteria;
+2. merge the exact tested head under current CI rules;
+3. update its specialist authority only if durable truth changed;
+4. update `config/factory-status.json` when machine current state materially changes;
+5. advance this roadmap's single `NOW` and name what became executable;
+6. remove completed execution prose instead of accumulating a diary;
+7. leave history in Git, merged PRs and evidence records.
+`tooling/roadmap-status-consistency.test.mjs` catches easy phase/outcome contradictions. Human review still owns whether the sequence is correct.

@@ -135,6 +135,19 @@ test('v1 manifests still receive project-type composition defaults as a compatib
   }
 });
 
+test('canonical B2B admin is composed onto a real settings surface', () => {
+  const composition = composeProject({ manifest: {
+    schemaVersion: 2,
+    project: { name: 'Admin consumer', slug: 'admin-consumer', type: 'b2b-saas', primaryGoal: 'Operate safely' },
+    modules: { admin: true },
+  } });
+  const settings = composition.pages.find((page) => page.path === '/settings');
+  assert.ok(settings, 'the canonical B2B settings surface must exist');
+  const admin = composition.sections.find((section) => section.type === 'administration');
+  assert.ok(admin, 'admin must be more than an installed file');
+  assert.ok(settings.sectionIds.includes(admin.id), 'the generated runtime must render the admin-owned section');
+});
+
 test('a surface the factory proposed and cannot fill is withheld, not shipped as a dead end', () => {
   const composition = composeProject({ manifest:{schemaVersion:2,project:{name:'Thin Content Co',slug:'thin',type:'content-site',primaryGoal:'Publish'},modules:{}} });
   const dropped = composition.warnings.filter((item) => item.startsWith('unfillable-surface:'));

@@ -16,4 +16,8 @@ export function AdminShell({ title = 'Admin', children }: PropsWithChildren<{ ti
   return <section aria-label={title}><header><p>Administration</p><h1>{title}</h1></header>{children}</section>;
 }
 
+export { AdminSection } from './AdminSection';
+import { AdminSection } from './AdminSection';
+export const sections = { administration: AdminSection };
+
 // UI gating is not authorization. Secure every privileged database/server action separately.

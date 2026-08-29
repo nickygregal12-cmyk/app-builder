@@ -294,6 +294,25 @@
         "--color-surface-muted",
         "--text-sm"
       ]
+    },
+    "administration-section": {
+      "sectionType": "administration",
+      "lifecycle": "ready",
+      "renderer": "recipe",
+      "purpose": "A visible platform-administration boundary. The recipe owns the role-sensitive rendering; every privileged operation remains responsible for server or database authorization.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens",
+        "recipe:admin"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--radius-sm",
+        "--color-border-strong",
+        "--color-accent",
+        "--color-ink"
+      ]
     }
   }
 }

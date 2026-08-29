@@ -38,7 +38,7 @@ if (!serviceKey) {
 }
 
 export const IDENTITIES = Object.freeze([
-  { id: '10000000-0000-0000-0000-000000000001', email: 'owner-a@test.local', password: 'records-journey-owner-a', role: 'owner', organisation: 'a', name: 'Owner A' },
+  { id: '10000000-0000-0000-0000-000000000001', email: 'owner-a@test.local', password: 'records-journey-owner-a', role: 'owner', organisation: 'a', name: 'Owner A', platformRole: 'admin' },
   { id: '10000000-0000-0000-0000-000000000004', email: 'member-a@test.local', password: 'records-journey-member-a', role: 'member', organisation: 'a', name: 'Member A' },
   { id: '10000000-0000-0000-0000-000000000005', email: 'viewer-a@test.local', password: 'records-journey-viewer-a', role: 'viewer', organisation: 'a', name: 'Viewer A' },
   { id: '10000000-0000-0000-0000-000000000006', email: 'owner-b@test.local', password: 'records-journey-owner-b', role: 'owner', organisation: 'b', name: 'Owner B' },
@@ -53,7 +53,7 @@ async function createUser(identity) {
   const response = await fetch(`${url}/auth/v1/admin/users`, {
     method: 'POST',
     headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: identity.id, email: identity.email, password: identity.password, email_confirm: true }),
+    body: JSON.stringify({ id: identity.id, email: identity.email, password: identity.password, email_confirm: true, app_metadata: identity.platformRole ? { platform_role: identity.platformRole } : {} }),
   });
   if (response.ok) return 'created';
   const body = await response.text();

@@ -51,7 +51,7 @@ test('a proof claim requires passed evidence for the same capability', () => {
   assert.ok(alerts.problems.includes('proof-claim-without-evidence'));
 });
 
-test('canonical B2B registries expose the existing generated admin consumer gap', () => {
+test('canonical B2B registries carry every generated module into runtime behaviour', () => {
   const moduleRegistry = JSON.parse(fs.readFileSync('config/modules.json', 'utf8')).modules;
   const recipeRegistry = JSON.parse(fs.readFileSync('config/recipes.json', 'utf8')).recipes;
   const requestedModules = JSON.parse(fs.readFileSync('config/project-types.json', 'utf8'))
@@ -73,8 +73,8 @@ test('canonical B2B registries expose the existing generated admin consumer gap'
     generatedModules: requestedModules, consumedModules,
   });
   const admin = ledger.find((entry) => entry.module === 'admin');
-  assert.deepEqual(admin.problems, ['generated-unconsumed']);
-  for (const module of ['auth', 'profiles', 'organisations', 'records', 'uploads', 'notifications', 'analytics', 'observability']) {
+  assert.deepEqual(admin.problems, []);
+  for (const module of ['auth', 'profiles', 'organisations', 'records', 'uploads', 'notifications', 'admin', 'analytics', 'observability']) {
     assert.equal(ledger.find((entry) => entry.module === module).consumed, true, `${module} must reach generated runtime behaviour`);
   }
 });

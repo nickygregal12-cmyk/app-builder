@@ -415,6 +415,18 @@
         "actions": false,
         "assets": false,
         "variants": []
+      },
+      "administration": {
+        "id": "administration-section",
+        "version": "1.0.0",
+        "bindingRoles": {
+          "title": "heading",
+          "body": "body-copy"
+        },
+        "defaultBindingRole": "collection",
+        "actions": false,
+        "assets": false,
+        "variants": []
       }
     }
   }

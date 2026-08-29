@@ -501,6 +501,13 @@ function notificationsSection(pageId, manifest) {
   ]);
 }
 
+function administrationSection(pageId, manifest) {
+  if (manifest?.modules?.admin !== true) return null;
+  return section(`${pageId}-administration`, 'administration', 'Expose the platform administration boundary where the capability is installed', [
+    manifestBinding('title', 'Administration'),
+  ]);
+}
+
 function contactSection(pageId, pack, manifest) {
   const bindings = contactBindings(pack, manifest);
   const profiles = socialProfileBinding(pack, manifest);
@@ -641,6 +648,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
     if (/dashboard|notification|activity|alert/.test(lower)) output.push(notificationsSection(pageId, manifest));
     if (/workspace|record/.test(lower)) output.push(tenantRecordsSection(pageId, manifest));
     if (/workspace|file|document/.test(lower)) output.push(organisationFilesSection(pageId, manifest));
+    if (/admin|setting/.test(lower)) output.push(administrationSection(pageId, manifest));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
   } else {

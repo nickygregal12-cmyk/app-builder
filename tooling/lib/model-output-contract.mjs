@@ -11,11 +11,12 @@ const APPROVED_CONTRACTS = Object.freeze({
   }),
 });
 
-// This is deliberately an exact tuple allowlist rather than "all OpenAI-
-// compatible providers". The wire format existing does not prove the selected
+// This is deliberately an exact tuple allowlist rather than a provider-family
+// capability claim. A wire format existing does not prove the selected
 // provider/model supports strict JSON Schema. Add another tuple only after its
 // current provider documentation and deterministic adapter tests prove it.
 const STRICT_OUTPUT_PROFILES = Object.freeze(new Set([
+  'anthropic|anthropic-messages|claude-haiku-4-5-20251001',
   'groq|openai-compatible|openai/gpt-oss-120b',
 ]));
 
@@ -44,7 +45,7 @@ export function supportsStructuredOutputProfile({ providerId, adapterId, modelId
 
 /**
  * Project the canonical App Builder schema into the deliberately smaller JSON
- * Schema subset accepted by strict OpenAI-compatible structured-output lanes.
+ * Schema subset accepted by strict provider structured-output lanes.
  *
  * This projection may be less expressive than the canonical schema, never more
  * authoritative. The canonical schema is still validated locally after the
@@ -72,10 +73,10 @@ export function toStrictProviderSchema(node) {
     projected.properties = Object.fromEntries(
       Object.entries(node.properties).map(([key, value]) => [key, toStrictProviderSchema(value)]),
     );
-    // Groq strict mode requires every declared property to be required and
-    // every object to be closed. Optional canonical fields remain nullable only
-    // where the canonical schema already allows null; otherwise the model must
-    // supply a canonical value and local AJV checks it again after return.
+    // Strict provider modes require closed objects. We require every declared
+    // property as well, which keeps the provider grammar deterministic; optional
+    // canonical fields remain nullable only where the canonical schema already
+    // allows null. Canonical AJV validation still runs after return.
     projected.required = Object.keys(projected.properties);
     projected.additionalProperties = false;
   } else if (node.type === 'object') {

@@ -6,6 +6,7 @@ import {
   WORKFLOW_SECURITY_RULES,
   auditWorkflow,
   checkoutsPersistingCredentials,
+  dependencyReviewFindings,
   permissionFindings,
   pullRequestTargetFindings,
   secretsOnCommandLines,
@@ -133,6 +134,24 @@ test('a comment cannot hide a violation, and a hash inside a string is not a com
   assert.equal(secretsOnCommandLines('      - run: echo "a # b ${{ secrets.TOKEN }}"\n').length, 1);
 });
 
+test('dependency review is PR-only, read-only, secretless and blocks meaningful introductions', () => {
+  const workflow = fs.readFileSync('.github/workflows/dependency-review.yml', 'utf8');
+  assert.deepEqual(dependencyReviewFindings(workflow), []);
+  assert.deepEqual(permissionFindings(workflow), []);
+  assert.deepEqual(unpinnedActions(workflow), []);
+
+  const planted = [
+    [workflow.replace('  pull_request:', '  push:'), 'dependency-review-not-pr-only'],
+    [workflow.replace(/actions\/dependency-review-action@[0-9a-f]{40}/, 'actions/dependency-review-action@v5'), 'dependency-review-action-missing'],
+    [workflow.replace('fail-on-severity: high', 'fail-on-severity: critical'), 'dependency-review-threshold-weakened'],
+    [workflow.replace('license-check: false', 'license-check: true'), 'dependency-review-scope-widened'],
+    [`${workflow}\n# \${{ secrets.DEPENDENCY_TOKEN }}\n`, 'dependency-review-secret-used'],
+  ];
+  for (const [mutant, rule] of planted) {
+    assert.ok(dependencyReviewFindings(mutant).some((finding) => finding.rule === rule), rule);
+  }
+});
+
 test('every finding names a declared rule', () => {
   const planted = SOUND
     .replace('permissions:\n  contents: read\n\n', '')
@@ -147,7 +166,8 @@ test('every finding names a declared rule', () => {
     assert.ok(Number.isInteger(finding.line) && finding.line > 0, `${finding.rule} must name a line`);
   }
   // Every rule fires at least once on a workflow that breaks all of them, so none of them is inert.
-  assert.deepEqual([...new Set(findings.map((entry) => entry.rule))].sort(), [...WORKFLOW_SECURITY_RULES].filter((rule) => rule !== 'permissions-write-all').sort());
+  const generalRules = WORKFLOW_SECURITY_RULES.filter((rule) => !rule.startsWith('dependency-review-') && rule !== 'permissions-write-all');
+  assert.deepEqual([...new Set(findings.map((entry) => entry.rule))].sort(), generalRules.sort());
 });
 
 /**

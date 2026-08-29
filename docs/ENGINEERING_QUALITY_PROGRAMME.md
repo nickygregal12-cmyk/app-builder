@@ -441,9 +441,14 @@ version in a diff rather than as a silent resolution.
 Proven by regenerating all six canonical acceptance apps from the pinned templates and running the
 full benchmark: 6/6 install, check and build at 100%.
 
-With declarations exact, a manifest diff now means something, so **GitHub's own
-`dependency-review-action` is the next item** — the repository is public, so it needs no Advanced
-Security, and it is the right shape: platform-native, no scanner to invent.
+With declarations exact, a manifest diff now means something. GitHub's own
+`dependency-review-action` now compares every pull request with its base and blocks newly introduced
+high or critical vulnerabilities. It is pinned to an immutable full commit SHA, runs with
+`contents: read`, receives no secret and does not comment on the pull request. License policy,
+Dependabot/Renovate behaviour, SBOM generation and static analysis remain separate decisions rather
+than scope smuggled into one supply-chain PR. `dependencyReviewFindings` keeps that boundary
+executable and its tests plant a missing action, non-PR trigger, weakened threshold, widened license
+scope and secret reference so the clean workflow is not vacuous evidence.
 
 **3. Secret-leakage scanning ✅ delivered.** `tooling/model-execution-doctor.mjs` already asked this
 of the six files the model lane owns, by shape rather than by variable name, because the failure it

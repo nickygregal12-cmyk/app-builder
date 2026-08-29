@@ -231,6 +231,36 @@ export function secretsOnCommandLines(text) {
   return findings;
 }
 
+/**
+ * The dependency-introduction gate has one deliberately narrow contract.
+ *
+ * It runs only for pull requests, asks only for read access, carries no secret,
+ * and blocks high or critical vulnerabilities introduced by the diff. License
+ * policy, update automation and lockfile pinning belong to their existing lanes.
+ */
+export function dependencyReviewFindings(text) {
+  const source = String(text ?? '');
+  const findings = [];
+  const add = (rule, detail) => findings.push({ rule, line: 1, detail });
+
+  if (!/^\s{2}pull_request:\s*$/m.test(source) || /^\s{2}(push|workflow_dispatch):/m.test(source)) {
+    add('dependency-review-not-pr-only', 'Dependency review must run only for pull requests.');
+  }
+  if (!/uses:\s*actions\/dependency-review-action@[0-9a-f]{40}(?:\s|#|$)/.test(source)) {
+    add('dependency-review-action-missing', 'Use the dependency review action pinned to an immutable commit SHA.');
+  }
+  if (!/fail-on-severity:\s*high\s*$/m.test(source)) {
+    add('dependency-review-threshold-weakened', 'Block newly introduced high and critical vulnerabilities.');
+  }
+  if (!/license-check:\s*false\s*$/m.test(source)) {
+    add('dependency-review-scope-widened', 'This gate owns vulnerability introduction only; license policy is not configured here.');
+  }
+  if (/\$\{\{\s*secrets\./.test(source)) {
+    add('dependency-review-secret-used', 'Dependency review must use the read-only workflow token and no repository secret.');
+  }
+  return findings;
+}
+
 /** Every rule, applied to one workflow. */
 export function auditWorkflow(text) {
   return [
@@ -251,4 +281,9 @@ export const WORKFLOW_SECURITY_RULES = Object.freeze([
   'pull-request-target-used',
   'untrusted-interpolation-in-run',
   'secret-interpolated-into-run',
+  'dependency-review-not-pr-only',
+  'dependency-review-action-missing',
+  'dependency-review-threshold-weakened',
+  'dependency-review-scope-widened',
+  'dependency-review-secret-used',
 ]);

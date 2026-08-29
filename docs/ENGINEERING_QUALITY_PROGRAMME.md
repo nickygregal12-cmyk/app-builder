@@ -19,6 +19,19 @@ Two rules govern everything below.
    And a gate must be shown failing before its passing means anything — see
    [Could this gate pass without exercising anything?](#could-this-gate-pass-without-exercising-anything).
 
+A third rule applies to every important quality claim: **evidence must prove what it measured.** The
+subject, build/artifact, environment and relevant coverage must be attributable; stale, wrong-build,
+wrong-route or vacuous evidence is not rescued by being well-formed. Individual historical defects are
+closed where their tests say so; this is the invariant that prevents the same class returning through
+a different producer.
+
+### Root install reproducibility — bounded open defect
+
+The root `package-lock.json` is absent and gitignored, and CI uses `npm install`. A fresh checkout
+therefore cannot use `npm ci` to reproduce the root dependency graph. This is an engineering-quality
+defect, not visual or product-proof work: close it with a tracked lockfile and a fresh-checkout `npm ci`
+proof, without broadening it into a dependency-management programme.
+
 ## Tool responsibility map
 
 Every tool answers exactly one question. An agent picks a tool by the question it has, never by the
@@ -537,6 +550,11 @@ For each material requirement, the derived view should be able to distinguish at
 - **unconsumed** — the requirement is preserved but no implementation/planning consumer can be found;
 - **not-applicable** — the approved architecture made the requirement irrelevant to this generated
   surface, with that decision attributable rather than inferred after the fact.
+
+Where implementation is not the disposition, the same derived view must retain an approved reason:
+explicitly deferred, unsupported/custom work required, intentionally superseded, or rejected/out of
+scope. Generated scope needs the same traceability back to approved product intent; a capability must
+not appear merely because a model assumes projects of that class usually contain it.
 
 A must-have/hard requirement that is `unconsumed` or `implemented-unproven` cannot be presented as
 satisfied merely because the project builds or an agent says it handled it. Existing Build Contract

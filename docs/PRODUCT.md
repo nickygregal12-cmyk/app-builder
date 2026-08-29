@@ -47,4 +47,11 @@ For an adopted product, success additionally means preserving known-good behavio
 
 The Builder Console should become a real control surface over durable factory state: source intake, visual preview/editing, design variants, assets, environments, build progress, checkpoints, quality findings and deployment approvals all operate through the factory service rather than hidden browser-only state.
 
+The Console exposes decisions the owner needs to make, not the complexity the factory contains. Use
+four interaction classes: **automatic** for high-confidence, low-risk and reversible decisions;
+**recommended** when a strong default exists but preference matters; **ask** when the choice is
+subjective, consequential or unknowable; and **escalate** for conflicting evidence, destructive work,
+security/production boundaries or policy approval. Track owner decisions required per accepted build
+alongside prompts and edits; reducing prompts by hiding consequential choices is not product progress.
+
 The best-in-class capability backlog and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`. What "finished" means lives in `docs/MASTER_PLAN.md`; the order it is reached in lives in `docs/ROADMAP.md`.

@@ -122,7 +122,7 @@ echo
 echo "== Mutations (each MUST fail the suite) =="
 
 mutate() {
-  local label="$1" expression="$2"
+  local label="$1" expression="$2" expected_assertion="${3:-}"
   build_migration "$WORK/mutant.sql"
   sed -i "$expression" "$WORK/mutant.sql"
   if cmp -s "$WORK/baseline.sql" "$WORK/mutant.sql"; then
@@ -137,6 +137,11 @@ mutate() {
   else
     local caught
     caught="$(grep -cE '^ *not ok' "$WORK/tap.log")"
+    if [ -n "$expected_assertion" ] && ! grep -Fq -- "- ${expected_assertion}" "$WORK/tap.log"; then
+      echo "  ERROR $label — the expected security assertion did not fail"
+      failures=$((failures + 1))
+      return
+    fi
     if [ "$caught" -gt 0 ]; then
       echo "  killed    $label — ${caught} assertion(s) failed"
     else
@@ -149,9 +154,12 @@ mutate() {
 mutate "tenant predicate removed from SELECT" \
   's|^create policy "records_select_member" on public.records for select to authenticated$|create policy "records_select_member" on public.records for select to authenticated|; s|^using (app_private.has_org_role(organisation_id, null));$|using (true);|'
 
-# 2. Tenant predicate on UPDATE: anyone authenticated may edit any record.
+# 2. Tenant/role predicate on UPDATE: a readable row becomes writable. Both
+#    halves must be weakened together; changing only USING makes WITH CHECK
+#    raise a generic SQL error instead of proving the named security property.
 mutate "tenant predicate removed from UPDATE" \
-  's|^using (app_private.has_org_role(organisation_id, array\[.owner., .admin., .editor., .member.\]))$|using (true)|'
+  "s|^create policy \"records_update_contributor\" on public.records for update to authenticated$|create policy \"records_update_contributor\" on public.records for update to authenticated|; /create policy \"records_update_contributor\"/,/with check/ { s|^using (app_private.has_org_role(organisation_id, array\['owner', 'admin', 'editor', 'member'\]))$|using (true)|; s|^with check (app_private.has_org_role(organisation_id, array\['owner', 'admin', 'editor', 'member'\]));$|with check (true);|; }" \
+  "a viewer in organisation A cannot update a record it can read"
 
 # 3. Organisation-id forgery: the insert no longer re-derives membership, so a
 #    client may name any tenant it likes.

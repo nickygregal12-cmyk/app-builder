@@ -157,6 +157,12 @@ Phase 3.8E closed with the genuine NBM Construction Cost Consultants run:
 
 The complete closure record, including the Playwright-browser provisioning finding and imagery-calibration finding, is `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`.
 
+The **0 meaningful edits** result proves operational/product acceptance under the Phase 3.8E launchable
+bar. It does not prove formal visual excellence: later independent review remained below the unchanged
+8.5/6.5 visual gate, as recorded in `docs/PHASE_4D_VISUAL_DEBT.md`. Long-term corpus comparison should
+therefore measure the resources, interventions and correction cycles required to reach independently
+accepted quality, not optimise the edit count in isolation.
+
 Anything a future genuine-business rerun exposes that another project would hit is a Factory defect: fix the Factory, add regression coverage and rerun the same approved intake. Do not hand-beautify generated output to improve the benchmark.
 
 ## From one accepted run to a frozen corpus

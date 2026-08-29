@@ -301,6 +301,14 @@ scope, so they issue a scored `ReviewVerdict` and route rework to `art-direction
 `composition` rather than editing the product themselves. Deterministic DesignLint runs first, so the
 vision model spends its context on judgement rather than on defects a rule could have caught.
 
+Reviewer independence and reviewer calibration are different properties. Before numerical critic
+scores support a best-in-class or class-maturity claim, the critic must be calibrated against a
+reference set that distinguishes excellent professional work, competent commercial work, generic
+templates, polished-but-generic AI output and weak output. Pairwise comparisons, periodic expert-human
+review and cross-model consistency checks are valid ways to establish that the scale means what the
+gate assumes. This is not an immediate blocker on running the corpus; it becomes required when critic
+scores are used to promote a maturity claim rather than to diagnose one project.
+
 ### Cross-browser visual acceptance
 
 Agency-quality claims require more than Chromium. Keep full rendered-evidence coverage on the primary browser, then add a targeted portability smoke across at least Chromium, WebKit and Firefox for representative critical routes/states.

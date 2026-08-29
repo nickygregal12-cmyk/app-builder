@@ -12,7 +12,7 @@
       "id": "task-baseline",
       "reference": "localhost/app-builder-task",
       "tag": "baseline-1",
-      "digest": "sha256:6dfabc07be5164b3033b9ce02340eef40e5ef6d76333f54fcba07d4033b3ee17",
+      "digest": "sha256:f2a9ffbc5649512666378b59ebf1012d33a8183dd7c6ff969ca8e4ce55445321",
       "containerfile": "ops/images/app-builder-task/Containerfile",
       "buildCommand": "sudo bash ops/hetzner/build-task-image.sh",
       "purpose": "The first reproducible task sandbox: enough to read a bounded workspace, run Node, run the repository's tests, and talk to the capability broker. Nothing else.",

@@ -1,0 +1,32 @@
+[Unit]
+Description=App Builder Project Command Centre heartbeat
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=appbuilder
+WorkingDirectory=/srv/app-builder/repository
+EnvironmentFile=/etc/app-builder/command-centre-heartbeat.env
+ExecStart=/usr/bin/env npm run command-centre:heartbeat
+
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

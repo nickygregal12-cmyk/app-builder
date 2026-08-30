@@ -77,7 +77,7 @@ Predictor.
 2. ~~Enforce the deadline server-side and refuse post-lock mutation.~~ — done, and in the database rather than at the edge: a trigger refuses a late decision whatever the role, and the update policy keeps the window condition in `with check` so a late amendment raises instead of silently changing nothing. A closed window cannot be reopened.
 3. ~~Settle deterministically and idempotently; persist score and expose a leaderboard/read model.~~ — done. The frozen identity key is a unique constraint, so a repeat settlement creates nothing rather than relying on application-level idempotence; a correction settles under a new version and the superseded scores stay on record. The leaderboard's `board_position` is a window function whose ordering ends in the unique identity, so it cannot tie.
 4. ~~Exercise real identities, isolation and non-vacuous pre-lock/locked/settled scenarios.~~ — done. Four competitors inside one organisation, which is the axis this shape gets wrong; each isolation assertion is made while the data it must not reach exists.
-5. Prove the **browser** journey against the generated backend. The database boundary is proved; the generated application still has no journey evidence, and the recipe currently ships a typed client surface rather than a UI.
+5. ~~Prove the **browser** journey against the generated backend.~~ — done. The recipe now ships the section the composer places rather than a typed client surface, and `tests/generated-app/scheduled-decisions.spec.ts` drives the journey through the generated application against the same Supabase stack the pgTAP suite runs on. The lifecycle state the interface renders comes from `public.scheduled_entity_board`, which derives it server-side from the stored deadline, so no control is offered for a window the database has already closed. The reveal is asserted the honest way: signed in as one competitor, another competitor's open decision — which the seed demonstrably created — must be absent from the page, and present once the entity settles.
 6. Record factory-level reusable defects, fix only those, then rerun the identical frozen benchmark.
 **Do not**
 
@@ -92,7 +92,7 @@ Predictor.
 - ~~repeated settlement is idempotent and official result correction follows an explicit policy~~;
 - ~~scores/leaderboard are deterministic and persisted~~;
 - ~~isolation is tested with real competing identities/data, not vacuously~~;
-- the generated repository installs, checks, builds and runs independently;
+- ~~the generated repository installs, checks, builds and runs independently~~ — the benchmark project installs from its own lockfile, passes its own `tsc --noEmit`, builds, and is the repository the browser journey is served from;
 - rendered/product evidence receives independent review;
 - the frozen rerun shows the reusable correction burden decreased.
 **Then**

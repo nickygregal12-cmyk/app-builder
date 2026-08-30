@@ -2,14 +2,15 @@
   "schemaVersion":1,
   "id":"scheduled-decisions",
   "module":"scheduled-decisions",
-  "version":"1.0.0",
+  "version":"1.1.0",
   "status":"ready",
   "compatibleTemplates":["react-vite-neutral"],
-  "entry":"src/features/scheduled-decisions/index.ts",
-  "files":["src/features/scheduled-decisions/index.ts"],
+  "entry":"src/features/scheduled-decisions/index.tsx",
+  "files":["src/features/scheduled-decisions/index.tsx","src/features/scheduled-decisions/ScheduledDecisionsContext.tsx","src/features/scheduled-decisions/ScheduledDecisionsSection.tsx"],
   "requires":["auth","organisations"],
   "requiresAdapters":["supabase"],
   "conflicts":[],
   "package":{"dependencies":{},"devDependencies":{},"scripts":{}},
-  "database":{"adapter":"supabase","fragments":["database/scheduled-decisions.sql"]}
+  "database":{"adapter":"supabase","fragments":["database/scheduled-decisions.sql"]},
+  "upgrade":{"compatibleFrom":["1.0.0"],"migrationNotes":["1.0.0 shipped a typed client surface with no rendered section. 1.1.0 adds the section the composer places, and a `public.scheduled_entity_board` view so a list reads its lifecycle states in one query instead of one per entity."]}
 }

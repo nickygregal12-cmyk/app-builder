@@ -13,6 +13,6 @@
     "analytics": {"path":"recipes/analytics","version":"1.0.0","module":"analytics","status":"ready"},
     "observability": {"path":"recipes/observability","version":"1.0.0","module":"observability","status":"ready"},
     "lead-generation": {"path":"recipes/lead-generation","version":"1.0.0","module":"lead-generation","status":"ready"},
-    "scheduled-decisions": {"path":"recipes/scheduled-decisions","version":"1.0.0","module":"scheduled-decisions","status":"ready"}
+    "scheduled-decisions": {"path":"recipes/scheduled-decisions","version":"1.1.0","module":"scheduled-decisions","status":"ready"}
   }
 }

@@ -31,7 +31,7 @@ const NOT_FOUND = /(^|\/)(404|not-found)$/;
 export const SECTION_TYPES = Object.freeze([
   'hero', 'rich-text', 'item-grid', 'proof-grid', 'people-grid', 'location-list',
   'contact-panel', 'entity-list', 'content-list', 'cta', 'gallery', 'enquiry-form',
-  'tenant-records', 'organisation-files', 'notifications', 'administration',
+  'tenant-records', 'organisation-files', 'notifications', 'administration', 'scheduled-decisions',
 ]);
 
 /**

@@ -104,11 +104,25 @@ create table if not exists public.scheduled_entities (
 create index if not exists scheduled_entities_organisation_idx on public.scheduled_entities(organisation_id);
 create index if not exists scheduled_entities_deadline_idx on public.scheduled_entities(organisation_id, decision_deadline);
 
--- The lifecycle, as one answer rather than five places that each work it out.
+-- The lifecycle, as one answer rather than several places that each work it out.
 --
 -- `scheduled` and `locked` are the same stored row read at different times,
 -- which is the whole point: nothing has to happen at the deadline for the
--- deadline to take effect.
+-- deadline to take effect. This expression is the only place that knows it, and
+-- both the single-entity function and the list view below call it, because two
+-- copies of a rule about time is two rules the day one of them is edited.
+create or replace function app_private.derive_entity_state(result_state text, decision_deadline timestamptz)
+returns text
+language sql
+stable
+as $$
+  select case
+    when result_state <> 'scheduled' then result_state
+    when now() < decision_deadline then 'scheduled'
+    else 'locked'
+  end;
+$$;
+
 create or replace function public.scheduled_entity_state(entity_id uuid)
 returns text
 language sql
@@ -116,11 +130,7 @@ stable
 security definer
 set search_path = ''
 as $$
-  select case
-    when entity.result_state <> 'scheduled' then entity.result_state
-    when now() < entity.decision_deadline then 'scheduled'
-    else 'locked'
-  end
+  select app_private.derive_entity_state(entity.result_state, entity.decision_deadline)
   from public.scheduled_entities entity
   where entity.id = entity_id
     and app_private.has_org_role(entity.organisation_id, null);
@@ -128,6 +138,7 @@ $$;
 
 revoke all on function public.scheduled_entity_state(uuid) from public;
 grant execute on function public.scheduled_entity_state(uuid) to authenticated;
+grant execute on function app_private.derive_entity_state(text, timestamptz) to authenticated;
 
 -- Used by policies and triggers below, and separate from the public function
 -- because a policy must not depend on the caller being allowed to *read* the
@@ -217,6 +228,34 @@ with check (
 create policy "scheduled_entities_update_admin" on public.scheduled_entities for update to authenticated
 using (app_private.has_org_role(organisation_id, array['owner', 'admin']))
 with check (app_private.has_org_role(organisation_id, array['owner', 'admin']));
+
+-- The list a client reads, with the lifecycle state already decided.
+--
+-- Without this a product listing ten entities either asks the server ten times
+-- or works the state out in the browser, and the second is the one that looks
+-- fine and is wrong: a fast local clock renders an open form for a window the
+-- database has already closed. Deriving it here keeps the answer on the side of
+-- the connection whose clock is authoritative, in one query.
+create or replace view public.scheduled_entity_board as
+select entity.id,
+       entity.organisation_id,
+       entity.reference,
+       entity.title,
+       entity.decision_deadline,
+       entity.result_state,
+       entity.voided_reason,
+       entity.created_at,
+       entity.updated_at,
+       app_private.derive_entity_state(entity.result_state, entity.decision_deadline) as state
+from public.scheduled_entities entity;
+
+-- Runs as the caller, so the entity select policy still decides which rows
+-- reach it. A view owned by the migration role and left as a definer view would
+-- hand every organisation's schedule to every signed-in person.
+alter view public.scheduled_entity_board set (security_invoker = on);
+
+revoke all on public.scheduled_entity_board from anon, authenticated;
+grant select on public.scheduled_entity_board to authenticated;
 
 -- --- The decision ---------------------------------------------------------------
 

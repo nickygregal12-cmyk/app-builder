@@ -131,26 +131,9 @@ test('a journey summary separates gated from declared and states truncation', ()
   assert.deepEqual(capped.truncated, { recorded: SIGNAL_CAP, emitted: SIGNAL_CAP + 5 });
 });
 
-test('no generated-application journey can opt out of being watched', () => {
-  const files = specFiles();
-  assert.ok(files.length >= 5, 'expected the generated-app journeys to be discoverable');
-
-  for (const file of files) {
-    const source = read(path.join('tests/generated-app', file));
-    assert.match(
-      source,
-      /import \{[^}]*\btest\b[^}]*\} from '\.\/journey'/,
-      `${file} must take its test from ./journey, or nothing watches what the browser reports while it runs.`,
-    );
-    // A type is not a runtime binding and cannot escape the fixture, so a
-    // type-only import from the framework is still allowed.
-    for (const [, names] of source.matchAll(/import \{([^}]*)\} from '@playwright\/test'/g)) {
-      for (const name of names.split(',').map((entry) => entry.trim()).filter(Boolean)) {
-        assert.match(name, /^type\s/, `${file} imports a runtime ${name} from @playwright/test, which bypasses the journey base.`);
-      }
-    }
-  }
-});
+// Which specs may not opt out of instrumentation is a cross-lane rule now, and
+// lives in tooling/browser-signal-lanes.test.mjs so that one file answers it for
+// every lane rather than each lane answering it for itself.
 
 /**
  * The retry rule, and why it is about the write rather than the outcome.

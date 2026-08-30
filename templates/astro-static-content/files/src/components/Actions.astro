@@ -1,7 +1,8 @@
 ---
 import type { Action } from '../lib/composition';
 import { isExternal, siteHref } from '../lib/composition';
-import { composition } from '../generated/composition';
+import { design } from '../generated/design';
+import type { VisualDirection } from '../lib/composition';
 
 /**
  * The action family, in the static renderer.
@@ -15,8 +16,13 @@ import { composition } from '../generated/composition';
 const TREATMENTS = ['solid', 'outlined', 'underline', 'arrow', 'block'] as const;
 type Treatment = (typeof TREATMENTS)[number];
 
-const declared = (composition as { artDirection?: { dimensions?: { actionTreatment?: string } } })
-  ?.artDirection?.dimensions?.actionTreatment;
+// `design`, not `composition`. The direction lives on the design module — it
+// is where Section.astro and SiteLayout.astro read theirs from — and reading it
+// off the composition is how the first version of this axis reached the
+// candidate signature, the diversity gate and the review packet while every
+// candidate still rendered the same filled pill.
+const directed = design as unknown as VisualDirection;
+const declared = directed.artDirection?.dimensions?.actionTreatment;
 const treatment: Treatment = (TREATMENTS as readonly string[]).includes(declared ?? '')
   ? (declared as Treatment)
   : 'solid';

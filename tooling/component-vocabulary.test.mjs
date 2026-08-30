@@ -128,15 +128,49 @@ test('both renderers agree about the family', () => {
  * failed six generated projects in CI with `Property 'actionTreatment' does not
  * exist`. This is that check, made local and cheap.
  */
-test('the template type knows every composition dimension the contract can send it', () => {
-  const source = read('templates/react-vite-neutral/files/src/App.tsx');
-  const declared = source.match(/dimensions\?:\s*\{([^}]*)\}/);
-  assert.ok(declared, 'the generated app must declare the dimensions it is willing to read');
+test('every template type knows every composition dimension the contract can send it', () => {
+  // Both renderers, because a marketing site is rendered by the static one and
+  // an application by the React one. A dimension added to only one of them is a
+  // direction that means something on half the products.
+  for (const file of [
+    'templates/react-vite-neutral/files/src/App.tsx',
+    'templates/astro-static-content/files/src/lib/composition.ts',
+  ]) {
+    const declared = read(file).match(/dimensions\?:\s*\{([^}]*)\}/);
+    assert.ok(declared, `${file} must declare the dimensions it is willing to read`);
+    for (const axis of Object.keys(DEFAULT_COMPOSITION_DIMENSIONS)) {
+      assert.ok(
+        declared[1].includes(`${axis}?:`),
+        `${file} does not list ${axis}, so every generated project fails its own tsc the moment a direction sends it.`,
+      );
+    }
+  }
+});
 
-  for (const axis of Object.keys(DEFAULT_COMPOSITION_DIMENSIONS)) {
-    assert.ok(
-      declared[1].includes(`${axis}?:`),
-      `the template's VisualDirection type does not list ${axis}, so every generated project fails its own tsc the moment a direction sends it.`,
+/**
+ * The defect that cost this axis a whole hosted round trip.
+ *
+ * `Actions.astro` read the direction off the *composition* module. The
+ * composition carries pages, sections and bindings; the direction lives on the
+ * design module, which is where `Section.astro` and `SiteLayout.astro` read
+ * theirs. So the lookup returned undefined, the treatment fell back to `solid`,
+ * and the axis reached the candidate signature, the diversity gate and the
+ * review packet while all three candidates still rendered the same filled pill.
+ *
+ * Nothing failed. CI was green and `report.json` reported three different
+ * families. Only the screenshots disagreed.
+ */
+test('a renderer reads the direction from the module that carries it', () => {
+  for (const file of [
+    'templates/astro-static-content/files/src/components/Actions.astro',
+    'templates/astro-static-content/files/src/components/Section.astro',
+  ]) {
+    const source = read(file);
+    if (!/artDirection\?\.dimensions/.test(source)) continue;
+    assert.match(
+      source,
+      /import \{ design \} from '\.\.\/generated\/design'/,
+      `${file} reads artDirection but does not import the design module. The composition does not carry the direction, so the lookup silently returns undefined and the axis renders as its default.`,
     );
   }
 });

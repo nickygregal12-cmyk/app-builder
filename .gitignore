@@ -1,5 +1,4 @@
 node_modules/
-package-lock.json
 dist/
 *.tsbuildinfo
 coverage/
@@ -18,7 +17,6 @@ generated/
 test-results/
 playwright-report/
 *.tsbuildinfo
-package-lock.json
 
 # Local factory state: sqlite, event ledgers, captured evidence and built workspaces.
 .app-builder/

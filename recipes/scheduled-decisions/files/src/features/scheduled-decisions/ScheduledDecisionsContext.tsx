@@ -69,6 +69,9 @@ type ScheduledDecisionsContextValue = {
 
 const ScheduledDecisionsContext = createContext<ScheduledDecisionsContextValue | null>(null);
 
+/** PostgreSQL `unique_violation`: somebody already decided, so this is an amendment. */
+const UNIQUE_VIOLATION = '23505';
+
 const ENTITY_COLUMNS = 'id,organisation_id,reference,title,decision_deadline,result_state,voided_reason,state';
 const DECISION_COLUMNS = 'id,entity_id,identity_id,choice,created_at,updated_at';
 
@@ -130,13 +133,34 @@ export function ScheduledDecisionsProvider({ children }: PropsWithChildren) {
     refresh,
     async submitDecision(entityId, choice) {
       if (!user) throw new Error('Sign in before making a decision.');
-      // Upsert rather than read-then-write. Deciding in the client whether a
-      // decision already exists is a race with the same person's other tab; the
-      // unique constraint settles it without one.
-      const { error: writeError } = await supabase
+
+      // Insert first, and treat the unique violation as "this is an amendment"
+      // rather than asking first whether one exists. Asking first is a race with
+      // the same person's other tab; the constraint arbitrates without one.
+      //
+      // Not an upsert, and the reason is a grant rather than a preference.
+      // `scheduled_decisions` grants `update (choice)` and nothing else, so an
+      // amendment can change the decision and can never move it to another
+      // entity or another person. PostgREST compiles `.upsert()` into
+      // `on conflict do update set` over *every column in the payload*, so it
+      // asks for update on `entity_id` and `identity_id` too — and is refused
+      // for the whole table, on the first decision anyone makes, before any row
+      // conflicts at all. The narrow grant is right; the upsert was the thing
+      // that could not live with it.
+      const insert = await supabase
         .from('scheduled_decisions')
-        .upsert({ entity_id: entityId, identity_id: user.id, choice }, { onConflict: 'entity_id,identity_id' });
-      if (writeError) throw writeError;
+        .insert({ entity_id: entityId, identity_id: user.id, choice });
+      if (insert.error) {
+        if (insert.error.code !== UNIQUE_VIOLATION) throw insert.error;
+        // Only `choice` is sent. The row is found by its identity, which the
+        // policy pins to `auth.uid()` regardless of what is asked for here.
+        const amend = await supabase
+          .from('scheduled_decisions')
+          .update({ choice })
+          .eq('entity_id', entityId)
+          .eq('identity_id', user.id);
+        if (amend.error) throw amend.error;
+      }
       await refresh();
     },
   }), [decisions, entities, error, leaderboard, leaderboardUnavailable, loading, organisationId, refresh, user]);

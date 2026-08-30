@@ -23,6 +23,25 @@ import { useScheduledDecisions, type ScheduledDecision, type ScheduledEntity } f
 
 const OPEN: ScheduledEntity['state'] = 'scheduled';
 
+/**
+ * What actually went wrong, when anything is willing to say so.
+ *
+ * A refusal from the database arrives as a plain object carrying `message`, not
+ * as an `Error`, so an `instanceof Error` test falls through to the generic
+ * sentence for precisely the failures worth reading. That is not only unkind to
+ * the person — it cost a real diagnosis once, when a refused write reported
+ * "could not be saved" and the reason it gave, naming the missing privilege,
+ * was thrown away on the way to the screen.
+ */
+function describeFailure(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error as { message: unknown };
+    if (typeof message === 'string' && message.length > 0) return message;
+  }
+  return 'That decision could not be saved.';
+}
+
 function describeDeadline(entity: ScheduledEntity) {
   // Rendered, never compared. The clock that decides whether this window is
   // open is the server's, and `entity.state` already carries its answer.
@@ -57,7 +76,7 @@ function DecisionForm({ entity, existing, onSubmit }: {
     try {
       await onSubmit(choice);
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : 'That decision could not be saved.');
+      setFailure(describeFailure(error));
     } finally {
       setPending(false);
     }

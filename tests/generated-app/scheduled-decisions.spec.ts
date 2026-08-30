@@ -61,6 +61,25 @@ test.describe('scheduled decisions', () => {
     //    component that optimistically rendered one.
     await page.reload();
     await expect(open.locator(`[data-decision-identity="${MEMBER_A.id}"]`)).toContainText('{"a":3,"b":2}');
+
+    // 6. Change it, while the window is still open. This is a different write
+    //    from the one above — an amendment to an existing row rather than a new
+    //    one — and it is the path the narrow `update (choice)` grant governs. A
+    //    first decision that works while every amendment is refused looks fine
+    //    until somebody changes their mind, so both paths are exercised here.
+    await page.getByLabel('Decision for SCH-OPEN').fill('{"a":4,"b":0}');
+    await open.getByRole('button', { name: /change decision/i }).click();
+    await expect(open.locator(`[data-decision-identity="${MEMBER_A.id}"]`)).toContainText('{"a":4,"b":0}', { timeout: 15_000 });
+
+    // 7. Amended, not duplicated. One person holds one decision per entity, and
+    //    the constraint that says so is the same one the amendment path relies
+    //    on to know it was an amendment.
+    await page.reload();
+    await expect(open.locator(`[data-decision-identity="${MEMBER_A.id}"]`)).toHaveCount(1);
+    await expect(open.locator(`[data-decision-identity="${MEMBER_A.id}"]`)).toContainText('{"a":4,"b":0}');
+
+    // 8. And no refusal was reported anywhere on the way through.
+    await expect(open.locator('.decision-status-failed')).toHaveCount(0);
   });
 
   test('a settled entity reveals every decision and ranks them', async ({ page }) => {

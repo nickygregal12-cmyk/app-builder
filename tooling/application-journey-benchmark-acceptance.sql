@@ -20,7 +20,7 @@
 
 begin;
 
-select plan(58);
+select plan(60);
 
 -- --- Identities and tenancy -----------------------------------------------------
 --
@@ -193,6 +193,27 @@ select results_eq(
     where entity_id = '43000000-0000-0000-0000-000000000001'$$,
   array[1::bigint],
   '[competing-identity-cannot-read] with two decisions on the entity, an identity sees only their own'
+);
+
+-- An amendment may change the decision and may not move it to another entity or
+-- another person. That is a column-level grant rather than a policy, and it is
+-- asserted here because a grant is invisible in the policies above and easy to
+-- widen: the first client that cannot write through it reports "permission
+-- denied for table", and granting plain UPDATE makes the symptom go away while
+-- handing every author the ability to reassign their decision to somebody else.
+--
+-- It cost a real diagnosis. A client-side upsert compiles to
+-- `on conflict do update set` over every column it sends, so it asked for update
+-- on `entity_id` and `identity_id`, and was refused for the whole table on the
+-- first decision anyone made — before any row conflicted. The grant was right.
+select ok(
+  has_column_privilege('authenticated', 'public.scheduled_decisions', 'choice', 'UPDATE'),
+  'an author may amend the decision itself'
+);
+select ok(
+  not has_column_privilege('authenticated', 'public.scheduled_decisions', 'identity_id', 'UPDATE')
+  and not has_column_privilege('authenticated', 'public.scheduled_decisions', 'entity_id', 'UPDATE'),
+  'and may not move a decision to another person or another entity'
 );
 
 -- --- [competing-identity-cannot-amend] ------------------------------------------

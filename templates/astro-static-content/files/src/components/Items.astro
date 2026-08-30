@@ -1,27 +1,112 @@
 ---
-import { itemDetail, itemShape, itemTitle } from '../lib/composition';
+/**
+ * A set of items, in the grammar the direction chose.
+ *
+ * Two decisions compose here and they are not the same decision. The
+ * *variant* is how much of each item is shown, and a person can choose it.
+ * The *grammar* is what the set is made of, and it is the direction's.
+ *
+ * Every grammar emits its own structure rather than the same DOM re-laid out,
+ * because the second one is what the independent reviews kept describing: the
+ * editorial direction and the register direction both compiled to a three-column
+ * ruled row and differed only in typeface. `.content-card` survives every
+ * grammar because it is the item's component identity — element identity, the
+ * distinctive-moment contract and DesignLint all address it — but what is inside
+ * it changes.
+ */
+import { itemDetail, itemShape, itemTitle, panelGrammar } from '../lib/composition';
+import type { VisualDirection } from '../lib/composition';
+import { design } from '../generated/design';
 
 interface Props { values: unknown; variant?: string }
 const { values, variant } = Astro.props;
 const list = Array.isArray(values) ? values : [];
 const shape = itemShape(list, variant);
+const directed = design as unknown as VisualDirection;
+const grammar = panelGrammar(directed.artDirection?.dimensions?.gridFamily, list);
+// `features` and `cards` are both "this item has something to say"; the grammar
+// decides how it says it. Only `list` — items that are nothing but a name — is
+// a different amount of content rather than a different presentation of it.
+const named = shape === 'list';
+const [lead, ...supporting] = list;
 ---
-{list.length > 0 && shape === 'list' && (
-  <ul class="plain-list">{list.map((item) => <li>{itemTitle(item)}</li>)}</ul>
+{list.length > 0 && named && (
+  <ul class={`plain-list panel-${grammar}`} data-panel-grammar={grammar} data-panel-shape="named">
+    {list.map((item) => <li>{itemTitle(item)}</li>)}
+  </ul>
 )}
-{list.length > 0 && shape === 'features' && (
-  <ul class="feature-list">{list.map((item) => (
-    <li>
-      <strong>{itemTitle(item)}</strong>
-      {itemDetail(item).map((detail) => <span>{detail}</span>)}
-    </li>
-  ))}</ul>
+
+{/* Contained surfaces in a regular grid. What every build rendered before the
+    grammar existed, so a project that names none is unchanged. */}
+{list.length > 0 && !named && grammar === 'symmetric' && shape === 'features' && (
+  <ul class="feature-list panel-symmetric" data-panel-grammar="symmetric" data-panel-shape="detailed">
+    {list.map((item) => (
+      <li>
+        <strong>{itemTitle(item)}</strong>
+        {itemDetail(item).map((detail) => <span>{detail}</span>)}
+      </li>
+    ))}
+  </ul>
 )}
-{list.length > 0 && shape === 'cards' && (
-  <div class="item-grid">{list.map((item) => (
-    <article class="content-card">
-      <h3>{itemTitle(item)}</h3>
-      {itemDetail(item).map((detail) => <p>{detail}</p>)}
+{list.length > 0 && !named && grammar === 'symmetric' && shape !== 'features' && (
+  <div class="item-grid panel-symmetric" data-panel-grammar="symmetric" data-panel-shape="detailed">
+    {list.map((item) => (
+      <article class="content-card">
+        <h3>{itemTitle(item)}</h3>
+        {itemDetail(item).map((detail) => <p>{detail}</p>)}
+      </article>
+    ))}
+  </div>
+)}
+
+{/* Editorial. No boxes and no index: the title is the entry, its own sentence
+    sits beneath it at reading measure, and a hairline separates one entry from
+    the next. The two wrappers are what let the body sit under the title rather
+    than in a third column — the register's shape, which is why the two
+    directions used to read alike. */}
+{list.length > 0 && !named && grammar === 'editorial-rows' && (
+  <div class="item-grid panel-editorial-rows" data-panel-grammar="editorial-rows" data-panel-shape="detailed">
+    {list.map((item) => (
+      <article class="content-card">
+        <div class="panel-lede"><h3>{itemTitle(item)}</h3></div>
+        <div class="panel-detail">{itemDetail(item).map((detail) => <p>{detail}</p>)}</div>
+      </article>
+    ))}
+  </div>
+)}
+
+{/* A register. An ordered list, because it is one: the position of an entry is
+    part of what it says. The index is a real element rather than a counter in
+    the stylesheet, so it survives a grammar that is read without CSS. */}
+{list.length > 0 && !named && grammar === 'schedule-rows' && (
+  <ol class="item-grid panel-schedule-rows" data-panel-grammar="schedule-rows" data-panel-shape="detailed">
+    {list.map((item, index) => (
+      <li class="content-card">
+        <span class="panel-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+        <h3>{itemTitle(item)}</h3>
+        <div class="panel-detail">{itemDetail(item).map((detail) => <p>{detail}</p>)}</div>
+      </li>
+    ))}
+  </ol>
+)}
+
+{/* A showcase. The first entry is the one the page is arguing with, so it is a
+    sibling of the group rather than the first cell of it — which is also what
+    makes the phone order obvious: lead, then the rest. `panelGrammar` refuses
+    this grammar for a set too small or too thin to carry it. */}
+{list.length > 0 && !named && grammar === 'asymmetric' && (
+  <div class="item-grid panel-asymmetric" data-panel-grammar="asymmetric" data-panel-shape="detailed">
+    <article class="content-card panel-lead">
+      <h3>{itemTitle(lead)}</h3>
+      {itemDetail(lead).map((detail) => <p>{detail}</p>)}
     </article>
-  ))}</div>
+    <div class="panel-support">
+      {supporting.map((item) => (
+        <article class="content-card">
+          <h3>{itemTitle(item)}</h3>
+          {itemDetail(item).map((detail) => <p>{detail}</p>)}
+        </article>
+      ))}
+    </div>
+  </div>
 )}

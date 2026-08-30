@@ -62,7 +62,7 @@ export const DISPOSITIONS = Object.freeze(['gated', 'declared', 'observed']);
  * re-optimise dependencies mid-session, and it is not being driven by a
  * harness that cancels navigations.
  */
-export const HARNESS_DECLARATIONS = Object.freeze([
+export const DEV_SERVER_DECLARATIONS = Object.freeze([
   Object.freeze({
     id: 'favicon-not-served',
     kinds: Object.freeze(['http-error']),
@@ -80,18 +80,6 @@ export const HARNESS_DECLARATIONS = Object.freeze([
       'A request in flight when the harness calls goto() or reload() is cancelled by that navigation. The journeys reload '
       + 'deliberately — it is how they prove a write reached the database rather than React — so this is the harness\'s own '
       + 'doing. Any other failure text is a request that genuinely never arrived, and stays gated.',
-  }),
-  Object.freeze({
-    id: 'supabase-local-jwt-clock-skew',
-    kinds: Object.freeze(['http-error']),
-    match: Object.freeze({ status: Object.freeze([401]), body: '"code":"PGRST303"' }),
-    because:
-      'PostgREST rejecting a token GoTrue minted a moment earlier, with "JWT issued at future". The two run as separate '
-      + 'containers in the local acceptance stack and PostgREST allows no leeway on `iat`, so a sub-second difference between '
-      + 'their clocks refuses a perfectly valid session. The application cannot cause it — it mints no tokens and sets no '
-      + 'claims — and it is intermittent, which is what a clock race looks like. It is matched on the PostgREST error code '
-      + 'rather than on the status, so an ordinary 401 is still gated, and it stays counted in the evidence: if it starts '
-      + 'happening on every run that is a stack to fix, not a line to keep excusing.',
   }),
   Object.freeze({
     id: 'resource-failure-console-duplicate',
@@ -157,6 +145,35 @@ export function retryViolatesMutation(attempts) {
   if (!Array.isArray(attempts) || attempts.length < 2) return false;
   return attempts.slice(0, -1).some((attempt) => (attempt.mutations ?? []).length > 0);
 }
+
+/**
+ * Signals belonging to the local Supabase acceptance stack rather than to a
+ * dev server, kept separate so a lane takes only what applies to it.
+ *
+ * A marketing-site lane that carried a PostgREST excuse would be claiming to
+ * have considered something it never runs, and the first time that excuse
+ * mattered it would be in the wrong place to notice.
+ */
+export const SUPABASE_LOCAL_DECLARATIONS = Object.freeze([
+  Object.freeze({
+    id: 'supabase-local-jwt-clock-skew',
+    kinds: Object.freeze(['http-error']),
+    match: Object.freeze({ status: Object.freeze([401]), body: '"code":"PGRST303"' }),
+    because:
+      'PostgREST rejecting a token GoTrue minted a moment earlier, with "JWT issued at future". The two run as separate '
+      + 'containers in the local acceptance stack and PostgREST allows no leeway on `iat`, so a sub-second difference between '
+      + 'their clocks refuses a perfectly valid session. The application cannot cause it — it mints no tokens and sets no '
+      + 'claims — and it is intermittent, which is what a clock race looks like. It is matched on the PostgREST error code '
+      + 'rather than on the status, so an ordinary 401 is still gated, and it stays counted in the evidence: if it starts '
+      + 'happening on every run that is a stack to fix, not a line to keep excusing.',
+  }),
+]);
+
+/**
+ * What the generated-application journey lane declares: a dev server in front
+ * of a local Supabase stack, so both sets apply.
+ */
+export const HARNESS_DECLARATIONS = Object.freeze([...DEV_SERVER_DECLARATIONS, ...SUPABASE_LOCAL_DECLARATIONS]);
 
 /** Console levels worth keeping in the record without gating on them. */
 const OBSERVED_CONSOLE_TYPES = Object.freeze(['warning']);

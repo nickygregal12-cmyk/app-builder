@@ -30,7 +30,7 @@ async function signIn(page: import('@playwright/test').Page, credentials: { emai
 }
 
 test.describe('scheduled decisions', () => {
-  test('a competitor decides before the deadline and sees nobody else until it passes', async ({ page, journeySignals }) => {
+  test('a competitor decides before the deadline and sees nobody else until it passes', async ({ page, browserSignals }) => {
     // The amendment at step 6 is *expected* to be refused once, and the refusal
     // is the mechanism rather than a fault. The recipe grants `update (choice)`
     // and nothing else, so PostgREST's `.upsert()` — which asks for update on
@@ -39,7 +39,7 @@ test.describe('scheduled decisions', () => {
     // 409 is that violation. It is declared here rather than centrally because
     // it belongs to this journey's design and should stop being excused the day
     // that design changes.
-    journeySignals.declare({
+    browserSignals.declare({
       id: 'decision-amendment-conflict',
       kinds: ['http-error'],
       match: { url: '/rest/v1/scheduled_decisions', status: [409] },

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './journey';
 
 test('Acme source pack becomes a navigable source-backed standalone website', async ({ page }) => {
   await page.goto('/');

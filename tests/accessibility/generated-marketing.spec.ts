@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './journey';
 
 const blockingImpacts = new Set(['serious', 'critical']);
 const representativePaths = ['/', '/services', '/contact'];

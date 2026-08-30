@@ -664,10 +664,25 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .action-link.primary-action:hover,
 .action-link.secondary-action:hover { transform: none; box-shadow: none; }
 
-/* Inside the dark closing panel the accent has too little contrast, so a text
-   action there takes the panel's own inverse ink. */
+/* Inside the dark closing panel the accent has too little contrast, so an
+   action there takes the panel's own inverse ink. This covers every treatment,
+   not only the text ones: the first version fixed `.action-link` and left
+   `.action-outlined` rendering dark-on-black, which made the secondary ask in
+   the closing panel effectively invisible. A family that can put an
+   unreadable control on the page is not ready to be chosen. */
 .cta-section .action-link.primary-action,
-.cta-section .action-link.secondary-action { color: var(--color-text-inverse); }
+.cta-section .action-link.secondary-action,
+.cta-section .button.action-outlined,
+.cta-section .button.action-outlined.primary-action,
+.cta-section .button.action-block,
+.cta-section .button.action-block.primary-action {
+  color: var(--color-text-inverse);
+  border-color: var(--color-text-inverse);
+}
+.cta-section .button.action-outlined:hover {
+  background: var(--color-text-inverse);
+  color: var(--color-ink);
+}
 
 /* Outlined — the same footprint as solid, carried by a rule rather than a fill. */
 .button.action-outlined {

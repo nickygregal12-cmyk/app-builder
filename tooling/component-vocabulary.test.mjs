@@ -193,4 +193,17 @@ test('the stylesheet gives every treatment something a token could not', () => {
     /\.action-link\.primary-action[\s\S]{0,200}background:\s*none/,
     'a text treatment must clear the rank background it would otherwise inherit',
   );
+
+  // Every treatment has to stay readable on the dark closing panel. The first
+  // version of the reset covered `.action-link` and left `.action-outlined`
+  // dark-on-black, so the secondary ask in the closing panel was effectively
+  // invisible — a family that can put an unreadable control on the page is not
+  // ready to be chosen.
+  for (const treatment of ['action-outlined', 'action-block']) {
+    assert.match(
+      css,
+      new RegExp(`\\.cta-section[^{]*\\.${treatment}[\\s\\S]{0,240}color:\\s*var\\(--color-text-inverse\\)`),
+      `${treatment} must take the closing panel's inverse ink, or it renders dark on a dark ground`,
+    );
+  }
 });

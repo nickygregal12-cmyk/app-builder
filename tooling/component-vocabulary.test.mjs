@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, TYPOGRAPHY_STRATEGIES, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
+import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, PANEL_GRAMMARS, TYPOGRAPHY_STRATEGIES, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8');
@@ -145,6 +145,138 @@ test('typographic character is a category change, not a size change', () => {
   // No font bytes may enter a generated repository: nothing to license, nothing
   // to preload, no layout shift, no network dependency in the output.
   assert.doesNotMatch(css, /@font-face|fonts\.googleapis|fonts\.gstatic/, 'the typography families must stay on system stacks');
+});
+
+/**
+ * The middle of the page.
+ *
+ * The last thing the v4 critic named that had not been paid — "thin dividers
+ * and one card grammar" — and the one that already had an axis. `gridFamily`
+ * reached the stylesheet and nothing else, so all four grammars re-laid out one
+ * DOM. The result was only ever visible in a screenshot: `editorial-rows` and
+ * `schedule-rows` both compiled to a numbered three-column ruled row, so two of
+ * the three imagery-free nbm candidates presented an identical middle in
+ * different typefaces. Nothing failed. This is that finding, made a check.
+ */
+test('a panel grammar emits its own structure rather than re-laying out one DOM', () => {
+  assert.deepEqual([...PANEL_GRAMMARS], ['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows']);
+  // `symmetric` is what every build rendered before the grammar reached the
+  // DOM, so a project that names none is unchanged.
+  assert.equal(DEFAULT_COMPOSITION_DIMENSIONS.gridFamily, 'symmetric');
+
+  for (const source of [
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    read('templates/astro-static-content/files/src/components/Items.astro'),
+  ]) {
+    // Structure one grammar has and the others do not. If every branch emitted
+    // the same children this would be a class swap, and the reviews would keep
+    // describing the same ruled rows.
+    assert.match(source, /panel-lede/, 'the editorial grammar needs a wrapper that lets the body sit under the title');
+    assert.match(source, /panel-index/, 'the register needs its index in the document, not drawn by the stylesheet');
+    assert.match(source, /panel-support/, 'the showcase needs its lead to be a sibling of the supporting group');
+    assert.match(source, /<ol/, 'the register is an ordered list, because an entry’s position is part of what it says');
+    // The item keeps its component identity in every grammar, or element
+    // identity, DesignLint and the distinctive-moment contract stop addressing
+    // the thing they were written against.
+    assert.match(source, /content-card/, 'the item must keep its component identity across grammars');
+    assert.match(source, /data-panel-grammar/, 'the rendered grammar must be inspectable');
+  }
+});
+
+test('a grammar the content cannot carry is refused rather than rendered badly', () => {
+  // A showcase needs something to be dominant *with* and something to be
+  // dominant *over*. Rendering the declared grammar faithfully for one thin
+  // item produces a lead panel with nothing beside it: a page that reads as
+  // broken rather than art-directed.
+  for (const source of [
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    read('templates/astro-static-content/files/src/lib/composition.ts'),
+  ]) {
+    assert.match(source, /length >= 3 && detailed \? 'asymmetric' : 'symmetric'/, 'the showcase must be refused for a set that cannot carry it');
+  }
+});
+
+test('the grammar reaches the block that used to be outside it', () => {
+  // The contact panel is a set of rows in the middle of the page like any
+  // other, and it was the only one no grammar answered. Two directions that
+  // differed in their opening, their items, their closing ask and their
+  // typeface still presented the same four white boxes in the lower half.
+  for (const source of [
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    read('templates/astro-static-content/files/src/components/Section.astro'),
+  ]) {
+    assert.match(source, /contact-section panel-\$\{DECLARED_GRAMMAR\}/, 'the contact panel must carry the declared grammar');
+  }
+  const css = read('templates/shared/presentation/styles.css');
+  for (const grammar of ['editorial-rows', 'schedule-rows', 'asymmetric']) {
+    assert.match(
+      css,
+      new RegExp(`\\.contact-section\\.panel-${grammar} \\.contact-grid`),
+      `the contact panel has no ${grammar} treatment, so that direction closes on the default boxes`,
+    );
+  }
+});
+
+test('the stylesheet gives every grammar something a token could not', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  // Each grammar has to drop or add structure, not tint it. A grammar
+  // reachable by changing `--layout-radius` would be a token wearing a
+  // family's name, and `structuralSignature` excludes tokens for that reason.
+  assert.match(css, /\.panel-editorial-rows > \.content-card[\s\S]{0,320}border-top:\s*1px/, 'editorial entries are separated by a hairline rather than boxed');
+  assert.match(css, /\.panel-editorial-rows \.panel-detail \{[^}]*max-width/, 'an editorial entry sets its own reading measure');
+  assert.match(css, /\.panel-schedule-rows > \.content-card[\s\S]{0,320}grid-template-columns:\s*4\.5rem/, 'a register reads across in named columns');
+  assert.match(css, /\.panel-asymmetric \{[^}]*grid-template-columns/, 'a showcase gives its lead a different share of the width');
+  // And the two that used to be the same must not be the same again.
+  const editorial = css.match(/\.panel-editorial-rows > \.content-card \{([^}]*)\}/);
+  const register = css.match(/\.panel-schedule-rows > \.content-card \{([^}]*)\}/);
+  assert.ok(editorial && register, 'both grammars must declare their own entry rule');
+  assert.notEqual(
+    editorial[1].replace(/\s+/g, ' ').trim(),
+    register[1].replace(/\s+/g, ' ').trim(),
+    'the editorial and register grammars declare the same entry, which is the convergence this family exists to end',
+  );
+});
+
+/**
+ * The defect this axis shipped, found in a screenshot and nowhere else.
+ *
+ * The contact panel carries the grammar on its own `<section>`, and the
+ * register's container reset — `padding: 0`, entirely correct for the `<ol>`
+ * it was written for — matched that section too. The section lost its page
+ * gutter and its rows ran to the window edge. Every test passed.
+ */
+test('a grammar rule cannot take the page gutter off the section that carries it', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  for (const grammar of ['editorial-rows', 'schedule-rows', 'asymmetric']) {
+    assert.doesNotMatch(
+      css,
+      new RegExp(`(^|\\})\\s*\\.panel-${grammar} \\{`, 'm'),
+      `.panel-${grammar} is declared unscoped, so it styles the section that carries the same class as well as the container it was written for`,
+    );
+  }
+});
+
+test('every grammar says what it does on a phone', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  // Not accidental wrapping. Each grammar states its own mobile behaviour, and
+  // the one thing each must not lose is the thing that makes it that grammar.
+  assert.match(css, /max-width:\s*880px[\s\S]*?\.panel-schedule-rows \.panel-index \{[^}]*grid-column:\s*1/, 'a register keeps its index on a phone');
+  assert.match(css, /max-width:\s*880px[\s\S]*?\.panel-editorial-rows \.panel-lede h3[^}]*font-size/, 'an editorial entry keeps its rhythm rather than inheriting a narrower desktop');
+  assert.match(css, /max-width:\s*880px[\s\S]*?\.panel-asymmetric \{[^}]*grid-template-columns:\s*1fr/, 'a showcase becomes an ordered stack');
+});
+
+test('every direction chooses a panel grammar, and the imagery-free set spans them', () => {
+  const directions = json('config/visual-directions.json').directions;
+  for (const [id, direction] of Object.entries(directions)) {
+    const grammar = direction.composition?.gridFamily;
+    assert.ok(PANEL_GRAMMARS.includes(grammar), `${id} names a panel grammar that does not exist: ${grammar}`);
+  }
+  // The three directions nbm can actually produce — immersive-lead is refused
+  // without photography — must not share a middle, or the candidate set is
+  // diverse at its opening and its closing and the same in between.
+  const nbm = ['structured-practice', 'editorial-authority', 'schedule-register']
+    .map((id) => directions[id].composition.gridFamily);
+  assert.equal(new Set(nbm).size, 3, `the three imagery-free directions present the same middle: ${nbm.join(', ')}`);
 });
 
 test('an external source may only name roles that exist and actually design', () => {

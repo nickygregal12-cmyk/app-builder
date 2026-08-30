@@ -113,7 +113,36 @@ export const TYPOGRAPHY_STRATEGIES = Object.freeze(['neutral', 'editorial', 'tec
 export const HERO_COMPOSITIONS = Object.freeze(['stacked', 'columns', 'statement', 'centred']);
 
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
+
+/**
+ * The panel grammar — what a set of items in the middle of a page is made of.
+ *
+ * The last axis the v4 critic named that had not been paid: "thin dividers and
+ * one card grammar". This one existed by name and reached the stylesheet only,
+ * so every grammar re-laid out the same DOM. The consequence was visible in the
+ * candidate screenshots rather than in any test: `editorial-rows` and
+ * `schedule-rows` both compiled to a numbered three-column ruled row, so two of
+ * the three imagery-free candidates presented an identical middle and differed
+ * by typeface. A direction could choose a grammar and the page still said the
+ * same thing.
+ *
+ * Each grammar now emits its own structure:
+ *
+ *   symmetric       contained panels in a regular grid — the default, unchanged
+ *   editorial-rows  the title is the entry and its sentence sits beneath it at
+ *                   reading measure, separated by a hairline; no box, no index
+ *   schedule-rows   an ordered list with the index as a real element, the entry
+ *                   and its detail read across one ruled line
+ *   asymmetric      a lead entry that is a sibling of its supporting group
+ *
+ * And a grammar is not selectable blindly. A showcase needs a set that can
+ * carry one; the renderers resolve that against the content and fall back to
+ * `symmetric` rather than rendering a dominant panel with nothing beside it.
+ * The contact panel takes the grammar too — it was the block that stayed the
+ * same four white boxes in every direction that was not the register.
+ */
 export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows']);
+export const PANEL_GRAMMARS = GRID_FAMILIES;
 export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled', 'numbered']);
 export const CTA_PLACEMENTS = Object.freeze(['closing', 'mid-page']);
 export const DISTINCTIVE_MOMENTS = Object.freeze(['lead-statement', 'full-bleed-lead', 'figure-index', 'none']);
@@ -486,7 +515,7 @@ export function applyVisualDirection(composition, direction) {
     return { ...page, sectionIds: [...hero, ...placed].map((section) => section.id) };
   });
 
-  const sections = list(composition.sections).map((section) => applyPresentation(section, dimensions));
+  const sections = list(composition.sections).map((section) => applyPresentation(section));
   const next = rehashComposition({ ...composition, pages, sections });
   assertPresentationOnly(composition, next);
   return next;
@@ -511,38 +540,25 @@ function liftCallToAction(sections) {
 }
 
 /**
- * How a direction biases the presentation of a set of items.
+ * A direction no longer rewrites the composer's variant.
  *
- * It is a bias rather than an override: `editorial-rows` wants indexed rows, so
- * a section the composer chose `cards` for becomes `features`, but a section
- * whose items are bare names stays a `list` because there is nothing to put in
- * the second column. Only variants the template implements are ever produced —
- * 4C.4 refuses a build naming one it does not, and this must not be the thing
- * that trips it.
+ * It used to: `editorial-rows` turned a `cards` section into `features`, and
+ * `asymmetric` turned `features` into `cards`. That was a way of reaching a
+ * different layout through the one DOM the template emitted, back when the grid
+ * family reached the stylesheet and nothing else.
+ *
+ * The grammar now emits its own structure, and `cards` and `features` are both
+ * "this item has something to say" in every grammar but `symmetric`. So the
+ * bias had stopped changing anything a visitor could see while still moving the
+ * candidate signature — a knob on a picture of a machine, and exactly the shape
+ * of defect `structuralSignature` excludes tokens to avoid.
+ *
+ * The two decisions are now cleanly separated: the *variant* is how much of an
+ * item is shown and a person may choose it; the *grammar* is what the set is
+ * made of and the direction chooses it.
  */
-const GRID_VARIANTS = Object.freeze({
-  // The regular grid is what the composer already chooses for, so it changes
-  // nothing. A bias that restated the default would make every build look like
-  // it had been through a direction it never chose.
-  symmetric: {},
-  asymmetric: { features: 'cards' },
-  'editorial-rows': { cards: 'features' },
-});
-
-const PRESENTED_TYPES = new Set(['item-grid', 'proof-grid', 'people-grid', 'location-list', 'entity-list', 'content-list']);
-
-function applyPresentation(section, dimensions) {
-  if (section.type === 'hero') {
-    // The hero's own variant stays the composer's: `primary` and `compact`
-    // distinguish an entry page from a secondary one, which is a property of
-    // the page rather than of the direction. The strategy is what the direction
-    // decides, and the renderer reads it from the plan.
-    return section;
-  }
-  if (!PRESENTED_TYPES.has(section.type)) return section;
-  const mapping = GRID_VARIANTS[dimensions.gridFamily] ?? GRID_VARIANTS.symmetric;
-  const variant = mapping[section.variant] ?? section.variant;
-  return variant === section.variant ? section : { ...section, variant };
+function applyPresentation(section) {
+  return section;
 }
 
 /**

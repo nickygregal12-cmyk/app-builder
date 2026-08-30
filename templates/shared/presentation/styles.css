@@ -170,57 +170,68 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .hero-section.hero-utility .section-actions { grid-column: 2; grid-row: 1 / span 2; margin-top: 0 }
 
 /* Grid families. How a set of items is laid out, not how it is coloured. ----- */
-.grid-asymmetric .item-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: dense }
-/* The first item is the one the page is arguing with, so it is given the room
-   to be read rather than the same card as everything after it.
-   Deliberately scoped to the section that leads — services or projects. A
-   testimonial is not more true for being twice the size, and a service area is
-   not more of a place. */
-.grid-asymmetric .section-item-grid .item-grid > :first-child { grid-column: span 2; display: flex; flex-direction: column; justify-content: center; padding: clamp(30px, 3vw, 44px); background: var(--color-accent-soft); border-color: var(--color-accent-line) }
-.grid-asymmetric .section-item-grid .item-grid > :first-child h3 { font-size: var(--text-2xl) }
+/* The lead entry used to be the first cell of a grid, given two columns by a
+   `:first-child` selector. That is a layout trick rather than a composition:
+   it could not survive a set the content could not carry, and on a phone it
+   depended on which cell happened to wrap first. `.panel-asymmetric` below
+   makes the lead a sibling of the supporting group instead. What stays here is
+   the gallery, which has assets rather than items and no grammar to speak of. */
 /* Only where there is a grid to be asymmetric within. With two pictures a
    spanning first item leaves a hole rather than a composition, so the span
    waits until there are at least three. */
 .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2; grid-row: span 2 }
 .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) img { height: 100%; aspect-ratio: auto; min-height: 100% }
 
-/* Rows with an index, not cards in a grid. A document, read downwards. */
-/* The counter is reset on the section rather than on each list. A proof
-   section renders testimonials and accreditations as two lists, and resetting
-   per list numbered both of them 01. */
+/* Editorial entries. ---------------------------------------------------------
+   No box, and deliberately no index.
+
+   This grammar used to compile to a numbered three-column ruled row — which is
+   the register below, in a different typeface. Two directions that had chosen
+   different grammars therefore presented the same middle, and the reviews kept
+   describing them in the same words. An editorial entry is the other thing a
+   set of items can be: the title *is* the entry, its own sentence sits beneath
+   it at reading measure rather than beside it in a column, and a hairline is
+   the only furniture between one entry and the next.
+
+   The wrappers are what make that possible — `.panel-lede` and `.panel-detail`
+   are emitted by this grammar and by nothing else. */
 .grid-editorial-rows .page-section { counter-reset: figure }
-.grid-editorial-rows .item-grid, .grid-editorial-rows .plain-list { display: block }
-.grid-editorial-rows .feature-list { display: block; margin-top: 0 }
-.grid-editorial-rows .feature-list li, .grid-editorial-rows .item-grid > *, .grid-editorial-rows .plain-list li {
-  counter-increment: figure;
+/* Scoped to the container, never to a bare class: the contact panel carries
+   the grammar on its own <section>, and an unscoped `padding: 0` here took
+   that section's page gutter away and ran its rows to the window edge. */
+.item-grid.panel-editorial-rows { display: block }
+.panel-editorial-rows > .content-card {
   display: grid;
-  /* Proportional rather than a fixed measure: a testimonial's own sentence is
-     the title, and 22ch turned one into a narrow tall column. */
-  grid-template-columns: 3.5rem minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 8px 28px;
-  align-items: baseline;
-  padding: clamp(20px, 2vw, 30px) 0;
+  gap: 12px;
+  padding: clamp(26px, 2.8vw, 42px) 0;
   border: 0;
   border-top: 1px solid var(--color-border);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
-.grid-editorial-rows .feature-list li::before, .grid-editorial-rows .item-grid > *::before, .grid-editorial-rows .plain-list li::before {
-  content: counter(figure, decimal-leading-zero);
-  position: static;
-  width: auto;
-  inset: auto;
+/* The first entry sits under the section heading, which is already a boundary.
+   A rule there is a second one. */
+.panel-editorial-rows > .content-card:first-child { border-top: 0; padding-top: 4px }
+.panel-editorial-rows .panel-lede h3 { max-width: 24ch; font-size: var(--text-2xl); line-height: 1.14 }
+.panel-editorial-rows .panel-detail { max-width: 62ch }
+.panel-editorial-rows .panel-detail p { margin: 0 0 10px; color: var(--color-text-muted); font-size: var(--text-lg); line-height: 1.62 }
+.panel-editorial-rows .panel-detail p:last-child { margin-bottom: 0 }
+/* Items with nothing but a name are not entries and must not be given the
+   apparatus of one. Two service areas rendered as two full editorial entries
+   is padding, and both nbm reviews called the secondary content sparse. */
+.panel-editorial-rows.plain-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 40px }
+.panel-editorial-rows.plain-list li {
+  padding: 14px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
   border-radius: 0;
-  background: none;
-  color: var(--color-accent);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: .08em;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--text-xl);
+  font-weight: 600;
 }
-.grid-editorial-rows .feature-list strong, .grid-editorial-rows .item-grid h3 { grid-column: 2; font-size: var(--text-xl) }
-.grid-editorial-rows .feature-list span, .grid-editorial-rows .item-grid p { grid-column: 3; margin: 0 }
-.grid-editorial-rows .plain-list li { grid-template-columns: 3.5rem minmax(0, 1fr) }
+.panel-editorial-rows.plain-list li::before { display: none }
 
 /* Heading treatment. A detail, and the kind of detail a restrained site is
    distinctive through. ------------------------------------------------------ */
@@ -359,48 +370,57 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
    information is actually published. For a practice whose credibility is in
    checkable detail rather than photography, this is a register rather than a
    brochure. */
-.grid-schedule-rows .item-grid { display: block }
-.grid-schedule-rows .section-item-grid .content-card {
+/* The index is an element, not a counter. A register's numbering is part of
+   what it says — entry 03 is the third thing this practice does — so it is in
+   the document rather than drawn by the stylesheet, and it survives being read
+   with no CSS at all. The container is an ordered list for the same reason. */
+.item-grid.panel-schedule-rows { display: block; margin: 0; padding: 0; list-style: none }
+.panel-schedule-rows > .content-card {
   display: grid;
-  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
-  gap: 8px 40px;
+  grid-template-columns: 4.5rem minmax(0, 18rem) minmax(0, 1fr);
+  gap: 6px 32px;
   align-items: baseline;
-  padding: 22px 0;
+  padding: 20px 0;
   border: 0;
   border-top: 1px solid var(--color-border);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
-/* Explicit placement, not source order. A grid lays its children out in the
-   order they appear, and `::after` is the last child — so the plate a schedule
-   puts first landed in the trailing column, and the name was pushed into the
-   narrow leading one where it wrapped a word at a time into the description
-   beside it. Naming each cell is what makes the row read left to right. */
-.grid-schedule-rows .section-item-grid .content-card h3 { grid-column: 1; margin: 0; font-size: var(--text-lg) }
-.grid-schedule-rows .section-item-grid .content-card p { grid-column: 2; margin: 0; font-size: var(--text-base) }
-.grid-schedule-rows .section-item-grid .content-card:last-child { border-bottom: 1px solid var(--color-border) }
-.grid-schedule-rows .plain-list { display: block }
+.panel-schedule-rows > .content-card:last-child { border-bottom: 1px solid var(--color-border) }
+.panel-schedule-rows .panel-index { grid-column: 1; color: var(--color-accent); font-size: var(--text-lg); font-weight: 700; letter-spacing: .08em }
+.panel-schedule-rows > .content-card h3 { grid-column: 2; margin: 0; font-size: var(--text-lg) }
+.panel-schedule-rows .panel-detail { grid-column: 3 }
+.panel-schedule-rows .panel-detail p { margin: 0 0 4px; font-size: var(--text-base); color: var(--color-text-muted) }
+.panel-schedule-rows .panel-detail p:last-child { margin-bottom: 0 }
+.panel-schedule-rows.plain-list, .grid-schedule-rows .plain-list { display: block }
 .grid-schedule-rows .plain-list li { border: 0; border-top: 1px solid var(--color-border); border-radius: 0; background: transparent; box-shadow: none }
 
-/* The moment adapts to the grid rather than fighting it. On a card
-   figure-index reserves a ruled plate above the copy; on a schedule row the
-   plate belongs at the head of the row, which is where a numbered schedule
-   puts it. */
-.grid-schedule-rows.moment-figure-index .section-item-grid .content-card {
-  grid-template-columns: 4.5rem minmax(0, 18rem) minmax(0, 1fr);
-  padding-top: 22px;
+/* The moment's plate and the register's own index are the same idea, so the
+   grammar keeps its element and the moment stops drawing a second number
+   beside it. Two numerals on one row is a moment fighting the grammar that
+   already carries it. */
+.moment-figure-index .panel-schedule-rows > .content-card { padding-top: 20px }
+.moment-figure-index .panel-schedule-rows > .content-card::after { content: none }
+.moment-figure-index .panel-schedule-rows .panel-index { font-size: var(--text-xl) }
+
+/* A showcase. --------------------------------------------------------------
+   One entry carries the argument and the rest support it, which is a
+   composition rather than a grid with one wide cell: the lead is a sibling of
+   the supporting group, not its first child. That is also what makes the phone
+   order obvious — lead, then the rest — instead of relying on which cell
+   happens to be first in a wrapped grid.
+
+   `panelGrammar` refuses this grammar for a set that cannot carry it, so a
+   single thin item never renders as a dominant panel with nothing beside it. */
+.item-grid.panel-asymmetric { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(18px, 2.4vw, 34px); align-items: start }
+.panel-asymmetric > .panel-lead {
+  padding: clamp(30px, 3.2vw, 48px);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-line);
 }
-.grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after {
-  grid-column: 1;
-  grid-row: 1;
-  position: static;
-  border-bottom: 0;
-  padding-bottom: 0;
-  font-size: var(--text-lg);
-}
-.grid-schedule-rows.moment-figure-index .section-item-grid .content-card h3 { grid-column: 2 }
-.grid-schedule-rows.moment-figure-index .section-item-grid .content-card p { grid-column: 3 }
+.panel-asymmetric > .panel-lead h3 { margin-bottom: 14px; font-size: var(--text-2xl) }
+.panel-asymmetric .panel-support { display: grid; gap: 12px; align-content: start }
 
 /* A register is a register on every section, not only the one the direction
    was designed around. Two reviews called the secondary content sparse and
@@ -430,8 +450,13 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   font-weight: 700;
   letter-spacing: .08em;
 }
-.grid-schedule-rows .contact-grid { display: block }
-.grid-schedule-rows .contact-grid > a, .grid-schedule-rows .contact-grid > div {
+/* The contact panel is a set of rows in the middle of the page like any other,
+   and it was the one that stayed outside the grammar. Two directions that
+   differed in their opening, their items, their closing ask and their typeface
+   still presented the same four white boxes here, which is most of the lower
+   half of a short site. Every grammar now answers it. */
+.contact-section.panel-schedule-rows .contact-grid { display: block }
+.contact-section.panel-schedule-rows .contact-grid > a, .contact-section.panel-schedule-rows .contact-grid > div {
   display: grid;
   grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
   gap: 8px 40px;
@@ -443,8 +468,46 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   background: transparent;
   box-shadow: none;
 }
-.grid-schedule-rows .contact-grid > :last-child { border-bottom: 1px solid var(--color-border) }
-.grid-schedule-rows .contact-grid > a:hover { border-color: var(--color-border); background: var(--color-surface-muted) }
+.contact-section.panel-schedule-rows .contact-grid > :last-child { border-bottom: 1px solid var(--color-border) }
+.contact-section.panel-schedule-rows .contact-grid > a:hover { border-color: var(--color-border); background: var(--color-surface-muted) }
+
+/* Editorial contact: the detail is the thing, so it is set at reading size with
+   its label as a caption above it. No box, no rule, no table — a register's
+   ruled label/value table is the grammar next door. */
+/* Wide columns, deliberately. Set at reading size in a 220px column, a web
+   address breaks mid-word — `overflow-wrap: anywhere` is what stops it
+   overflowing the card in the default grammar, and it is not a typography
+   decision. Fewer, wider columns is. */
+.contact-section.panel-editorial-rows .contact-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px 48px }
+.contact-section.panel-editorial-rows .contact-grid > a,
+.contact-section.panel-editorial-rows .contact-grid > div {
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.contact-section.panel-editorial-rows .contact-grid strong { font-size: var(--text-xl); font-weight: 600 }
+.contact-section.panel-editorial-rows .contact-grid > a:hover strong { color: var(--color-accent) }
+
+/* A showcase leads with one thing here too: the first way to reach the business
+   is the panel, and the rest sit beside it as plain detail. */
+.contact-section.panel-asymmetric .contact-grid { grid-template-columns: minmax(0, 1.15fr) repeat(auto-fit, minmax(180px, 1fr)) }
+.contact-section.panel-asymmetric .contact-grid > :first-child {
+  padding: clamp(26px, 3vw, 40px);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-line);
+}
+.contact-section.panel-asymmetric .contact-grid > :first-child strong { font-size: var(--text-xl) }
+.contact-section.panel-asymmetric .contact-grid > :not(:first-child) {
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 
 /* Numbered headings. A contents page rather than a rule: each section states
    its place in the document. */
@@ -505,18 +568,32 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      pixels and set it one word per line, which is the density failure richer
      content is supposed to expose rather than cause. Below this the plate keeps
      its column and the row stacks under it. */
-  .grid-schedule-rows .section-item-grid .content-card { grid-template-columns: 1fr; gap: 6px }
-  .grid-schedule-rows .section-item-grid .content-card h3,
-  .grid-schedule-rows .section-item-grid .content-card p { grid-column: 1 }
-  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card { grid-template-columns: 3rem minmax(0, 1fr); gap: 6px 14px }
-  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card::after { grid-column: 1; grid-row: 1 }
-  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card h3 { grid-column: 2; grid-row: 1 }
-  .grid-schedule-rows.moment-figure-index .section-item-grid .content-card p { grid-column: 2; grid-row: 2 }
-  .grid-schedule-rows .contact-grid > a, .grid-schedule-rows .contact-grid > div { grid-template-columns: 1fr; gap: 4px }
+  /* A register reads across only while there is width to read across. The index
+     keeps its column — losing the numbering is losing the grammar — and the
+     title and its detail stack beside it. */
+  .panel-schedule-rows > .content-card { grid-template-columns: 3rem minmax(0, 1fr); gap: 4px 14px }
+  .panel-schedule-rows .panel-index { grid-column: 1; grid-row: 1 / span 2 }
+  .panel-schedule-rows > .content-card h3 { grid-column: 2; grid-row: 1 }
+  .panel-schedule-rows .panel-detail { grid-column: 2; grid-row: 2 }
+  .contact-section.panel-schedule-rows .contact-grid > a,
+  .contact-section.panel-schedule-rows .contact-grid > div { grid-template-columns: 1fr; gap: 4px }
+
+  /* An editorial entry is already one column, so the phone keeps its rhythm
+     rather than inheriting a narrower version of a desktop layout. What changes
+     is the measure and the space between entries. */
+  .panel-editorial-rows > .content-card { padding: 24px 0 }
+  .panel-editorial-rows .panel-lede h3 { max-width: none; font-size: var(--text-xl) }
+  .panel-editorial-rows .panel-detail p { font-size: var(--text-base) }
+  .panel-editorial-rows.plain-list { grid-template-columns: 1fr }
+
+  /* A showcase becomes an ordered stack: the lead first, then its support. The
+     DOM already says that, which is why nothing here has to reorder anything. */
+  .item-grid.panel-asymmetric { grid-template-columns: 1fr }
+  .panel-asymmetric .panel-support { grid-template-columns: 1fr }
+  .contact-section.panel-asymmetric .contact-grid { grid-template-columns: 1fr }
 
   .hero-section.has-image { grid-template-columns: 1fr; gap: 32px }
-  .grid-asymmetric .item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
-  .grid-asymmetric .section-item-grid .item-grid > :first-child, .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2 }
+  .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: span 2 }
   .hero-section.hero-immersive { margin-left: 20px; margin-right: 20px }
   .item-grid, .gallery-grid, .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .enquiry-form { grid-template-columns: 1fr }
@@ -606,17 +683,16 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .hero-section.hero-utility .hero-copy-column { grid-template-columns: minmax(0, 1fr) }
   .hero-section.hero-utility .section-actions { grid-column: 1; grid-row: auto; margin-top: 24px }
 
-  /* Indexed rows lose the third column before they lose the index. */
-  .grid-editorial-rows .feature-list li, .grid-editorial-rows .item-grid > *, .grid-editorial-rows .plain-list li { grid-template-columns: 2.5rem minmax(0, 1fr) }
-  .grid-editorial-rows .feature-list span, .grid-editorial-rows .item-grid p { grid-column: 2 }
+  /* A register loses its third column before it loses its index. */
+  .panel-schedule-rows > .content-card { grid-template-columns: 2.5rem minmax(0, 1fr) }
 
   /* The asymmetric lead item stops spanning a grid that is one column wide.
      The single-column rule needs this specificity to win: the 880px rule that
      holds the asymmetric grid at two columns is more specific than the plain
      `.item-grid` reset, and left alone it cramped three service cards into two
      columns at 390px. */
-  .grid-asymmetric .item-grid, .grid-asymmetric .gallery-grid { grid-template-columns: 1fr }
-  .grid-asymmetric .section-item-grid .item-grid > :first-child, .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: auto; grid-row: auto }
+  .grid-asymmetric .gallery-grid { grid-template-columns: 1fr }
+  .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: auto; grid-row: auto }
   .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) img { aspect-ratio: 4 / 3; min-height: 0; height: auto }
 }
 

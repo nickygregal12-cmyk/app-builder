@@ -14,7 +14,8 @@
  * event handler. A link is a link.
  */
 import type { SectionSpec } from '../lib/composition';
-import { HEADING_BINDING_KEYS, binding, editable, text } from '../lib/composition';
+import { HEADING_BINDING_KEYS, PANEL_GRAMMARS, binding, editable, text } from '../lib/composition';
+import type { PanelGrammar } from '../lib/composition';
 import { design } from '../generated/design';
 import { assets } from '../generated/assets';
 import { recipeSections } from '../generated/recipes';
@@ -62,6 +63,20 @@ const HERO_COMPOSITION: HeroComposition = (HERO_COMPOSITIONS as readonly string[
   ? (declaredHero as HeroComposition)
   : 'stacked';
 
+/**
+ * The panel grammar, as declared.
+ *
+ * `Items` resolves the grammar against the content it has, because a showcase
+ * needs a set that can carry one. The contact panel has no items to resolve
+ * against — it is a fixed set of rows — but it is still a block in the middle
+ * of the page, and leaving it outside the grammar is why two directions that
+ * differed everywhere else still presented the same four white boxes.
+ */
+const declaredGrammar = directed.artDirection?.dimensions?.gridFamily;
+const DECLARED_GRAMMAR: PanelGrammar = (PANEL_GRAMMARS as readonly string[]).includes(declaredGrammar ?? '')
+  ? (declaredGrammar as PanelGrammar)
+  : 'symmetric';
+
 const sectionAssets = section.assetIds.map((id) => assetMap[id]).filter(Boolean);
 const title = binding(section, 'title');
 const body = binding(section, 'body');
@@ -105,7 +120,7 @@ const galleryEmpty = section.type === 'gallery' && sectionAssets.length === 0 &&
 )}
 
 {section.type === 'contact-panel' && (
-  <section class="page-section contact-section" id={section.id} data-section-id={section.id} data-element-key="section">
+  <section class={`page-section contact-section panel-${DECLARED_GRAMMAR}`} data-panel-grammar={DECLARED_GRAMMAR} id={section.id} data-section-id={section.id} data-element-key="section">
     {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
     <div class="contact-grid">
       {email && <a href={`mailto:${text(email.value)}`} data-binding-origin={email.origin}><span>Email</span><strong>{text(email.value)}</strong></a>}

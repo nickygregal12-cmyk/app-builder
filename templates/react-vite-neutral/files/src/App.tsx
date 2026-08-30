@@ -185,27 +185,116 @@ function SocialLinks({ profiles }: { profiles: unknown }) {
 }
 
 /**
- * How a set of items is presented.
+ * What a set of items is made of.
  *
- * The section's variant decides, because a person can choose it. Where it names
- * none of these, the fallback is the old rule: items with nothing but a name
- * are a list, not a grid of tall empty cards.
+ * Two decisions compose here and they are not the same decision. The *variant*
+ * is how much of each item is shown, and a person can choose it. The *grammar*
+ * is the structure the set is presented in, and it is the direction's.
+ *
+ * Until now the grammar reached the stylesheet only, so every grammar re-laid
+ * out the same DOM: the editorial direction and the register direction both
+ * compiled to a three-column ruled row and differed by typeface alone, which is
+ * why independent reviews kept describing candidates in the same words. Each
+ * grammar now emits its own structure. `content-card` survives all of them
+ * because it is the item's component identity — element identity, the
+ * distinctive-moment contract and DesignLint address it — but what is inside it
+ * changes.
  */
+const PANEL_GRAMMARS = ['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows'] as const;
+type PanelGrammar = (typeof PANEL_GRAMMARS)[number];
+
+/**
+ * The grammar this set can actually carry.
+ *
+ * A showcase needs something to be dominant *with* and something to be dominant
+ * *over*. One item, or a set of bare names, produces a lead panel with nothing
+ * beside it: a page that reads as broken rather than art-directed. Where the
+ * content cannot carry the declared grammar the set falls back to the one that
+ * always can, instead of rendering the bad composition faithfully.
+ */
+function panelGrammarFor(declared: string | undefined, values: readonly unknown[]): PanelGrammar {
+  const grammar: PanelGrammar = (PANEL_GRAMMARS as readonly string[]).includes(declared ?? '')
+    ? (declared as PanelGrammar)
+    : 'symmetric';
+  if (grammar !== 'asymmetric') return grammar;
+  const detailed = values.some((item) => itemDetail(item).length > 0);
+  return values.length >= 3 && detailed ? 'asymmetric' : 'symmetric';
+}
+
+const GRID_FAMILY = directed.artDirection?.dimensions?.gridFamily;
+// The contact panel carries no items, so it has no content to be compatible
+// with — but it is a set of rows in the middle of the page like any other, and
+// leaving it outside the grammar is why two directions that differed everywhere
+// else still closed on the same four white boxes.
+const DECLARED_GRAMMAR: PanelGrammar = (PANEL_GRAMMARS as readonly string[]).includes(GRID_FAMILY ?? '')
+  ? (GRID_FAMILY as PanelGrammar)
+  : 'symmetric';
+
 function Items({ values, variant }: { values: unknown; variant?: string }) {
   if (!Array.isArray(values) || values.length === 0) return null;
   const detailed = values.some((item) => itemDetail(item).length > 0);
   const shape = variant === 'cards' || variant === 'list' || variant === 'features' ? variant : (detailed ? 'cards' : 'list');
+  const grammar = panelGrammarFor(GRID_FAMILY, values);
 
+  // Items that are nothing but a name are a different amount of content rather
+  // than a different presentation of it, so every grammar shows them as a list
+  // and styles it as its own.
   if (shape === 'list') {
-    return <ul className="plain-list">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}</ul>;
+    return <ul className={`plain-list panel-${grammar}`} data-panel-grammar={grammar} data-panel-shape="named">
+      {values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}
+    </ul>;
   }
+
+  // No boxes and no index: the title is the entry, its own sentence sits under
+  // it at reading measure, and a hairline separates one from the next.
+  if (grammar === 'editorial-rows') {
+    return <div className="item-grid panel-editorial-rows" data-panel-grammar="editorial-rows" data-panel-shape="detailed">
+      {values.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
+        <div className="panel-lede"><h3>{itemTitle(item)}</h3></div>
+        <div className="panel-detail">{itemDetail(item).map((detail) => <p key={detail}>{detail}</p>)}</div>
+      </article>)}
+    </div>;
+  }
+
+  // An ordered list, because it is one: an entry's position is part of what it
+  // says. The index is an element rather than a counter in the stylesheet, so
+  // it survives being read without CSS.
+  if (grammar === 'schedule-rows') {
+    return <ol className="item-grid panel-schedule-rows" data-panel-grammar="schedule-rows" data-panel-shape="detailed">
+      {values.map((item, index) => <li className="content-card" key={`${itemTitle(item)}-${index}`}>
+        <span className="panel-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+        <h3>{itemTitle(item)}</h3>
+        <div className="panel-detail">{itemDetail(item).map((detail) => <p key={detail}>{detail}</p>)}</div>
+      </li>)}
+    </ol>;
+  }
+
+  // The first entry is the one the page is arguing with, so it is a sibling of
+  // the group rather than the first cell of it — which is also what makes the
+  // phone order obvious: lead, then the rest.
+  if (grammar === 'asymmetric') {
+    const [lead, ...supporting] = values;
+    return <div className="item-grid panel-asymmetric" data-panel-grammar="asymmetric" data-panel-shape="detailed">
+      <article className="content-card panel-lead">
+        <h3>{itemTitle(lead)}</h3>
+        {itemDetail(lead).map((detail) => <p key={detail}>{detail}</p>)}
+      </article>
+      <div className="panel-support">
+        {supporting.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
+          <h3>{itemTitle(item)}</h3>
+          {itemDetail(item).map((detail) => <p key={detail}>{detail}</p>)}
+        </article>)}
+      </div>
+    </div>;
+  }
+
   if (shape === 'features') {
-    return <ul className="feature-list">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>
+    return <ul className="feature-list panel-symmetric" data-panel-grammar="symmetric" data-panel-shape="detailed">{values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>
       <strong>{itemTitle(item)}</strong>
       {itemDetail(item).map((detail) => <span key={detail}>{detail}</span>)}
     </li>)}</ul>;
   }
-  return <div className="item-grid">{values.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
+  return <div className="item-grid panel-symmetric" data-panel-grammar="symmetric" data-panel-shape="detailed">{values.map((item, index) => <article className="content-card" key={`${itemTitle(item)}-${index}`}>
     <h3>{itemTitle(item)}</h3>
     {itemDetail(item).map((detail) => <p key={detail}>{detail}</p>)}
   </article>)}</div>;
@@ -315,7 +404,7 @@ function Section({ section, navigate }: { section: SectionSpec; navigate: (event
     const phone = binding(section, 'phone');
     const address = binding(section, 'address');
     const website = binding(section, 'website');
-    return <section className="page-section contact-section" id={section.id} data-section-id={section.id} data-element-key="section">
+    return <section className={`page-section contact-section panel-${DECLARED_GRAMMAR}`} data-panel-grammar={DECLARED_GRAMMAR} id={section.id} data-section-id={section.id} data-element-key="section">
       {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
       <div className="contact-grid">
         {email && <a href={`mailto:${text(email.value)}`} data-binding-origin={email.origin}><span>Email</span><strong>{text(email.value)}</strong></a>}

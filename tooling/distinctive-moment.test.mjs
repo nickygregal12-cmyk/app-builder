@@ -74,7 +74,15 @@ test('the variant-to-element mapping still matches what the renderer emits', () 
   // If this drifts, every coverage assertion below silently checks nothing.
   const app = fs.readFileSync('templates/react-vite-neutral/files/src/App.tsx', 'utf8');
   for (const [variant, element] of Object.entries(VARIANT_ELEMENT)) {
-    assert.match(app, new RegExp(`className="${element.slice(1)}"`), `the renderer no longer emits ${element} for ${variant}`);
+    // The class may be alone or beside the panel grammar's own class, and it
+    // may be written as a literal or as a template. What matters to every
+    // assertion below is that the renderer still emits it, because that is the
+    // element a moment attaches to.
+    assert.match(
+      app,
+      new RegExp(`className=(?:"|\\{\`)[^"\`]*\\b${element.slice(1)}\\b`),
+      `the renderer no longer emits ${element} for ${variant}`,
+    );
   }
   // The item-grid variants are the ones the renderer branches on by name.
   for (const variant of ['cards', 'list', 'features']) {

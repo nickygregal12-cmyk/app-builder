@@ -155,6 +155,44 @@ export function itemShape(values: readonly unknown[], variant?: string): 'cards'
 }
 
 /**
+ * What a set of items is made of.
+ *
+ * The variant above decides how much of each item is shown. This decides the
+ * structure the set is presented in, and it is the direction's decision rather
+ * than the content's: contained panels in a grid, editorial entries at reading
+ * measure, an indexed register, or a showcase with one dominant entry.
+ *
+ * Until now this axis reached the stylesheet only, so every grammar re-laid out
+ * the same DOM and two directions that had chosen different grammars kept
+ * arriving as the same ruled rows in different typefaces. Each grammar now
+ * emits its own structure.
+ */
+export const PANEL_GRAMMARS = ['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows'] as const;
+export type PanelGrammar = (typeof PANEL_GRAMMARS)[number];
+
+/**
+ * The grammar this set can actually carry.
+ *
+ * A grammar is not selectable blindly. A showcase needs something to be
+ * dominant *with* and something to be dominant *over*: one item, or a set of
+ * bare names, produces a lead panel with nothing beside it and a page that
+ * looks broken rather than art-directed. Where the content cannot carry the
+ * declared grammar the set falls back to the one that always can, rather than
+ * rendering the bad composition the direction asked for.
+ *
+ * The other three carry both a detailed and a names-only form themselves, so
+ * they are never refused.
+ */
+export function panelGrammar(declared: string | undefined, values: readonly unknown[]): PanelGrammar {
+  const grammar: PanelGrammar = (PANEL_GRAMMARS as readonly string[]).includes(declared ?? '')
+    ? (declared as PanelGrammar)
+    : 'symmetric';
+  if (grammar !== 'asymmetric') return grammar;
+  const detailed = values.some((item) => itemDetail(item).length > 0);
+  return values.length >= 3 && detailed ? 'asymmetric' : 'symmetric';
+}
+
+/**
  * Editing identity, carried by the published document.
  *
  * An element carries only the coordinates the Builder needs to name it — its

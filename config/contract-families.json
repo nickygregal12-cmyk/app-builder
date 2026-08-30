@@ -131,6 +131,14 @@
       "schemaHash": "43410f0bb6480ac471026f749df7f481d71b294b866caac7454cfff814e8ebfe"
     },
     {
+      "id": "approved-build-plan",
+      "schema": "approved-build-plan.schema.json",
+      "typeName": "ApprovedBuildPlan",
+      "boundary": "Explicitly approved immutable project-generation state and the single-use approved-plan execution boundary.",
+      "typesHash": "df672d854229c617ad4aa9100e05af043fc12130af4ed66020b4e0d0a6835cce",
+      "schemaHash": "ed9adb479bf84cb3beb388571cc5187496d93df151ad6130d259c95a5c45981b"
+    },
+    {
       "id": "visual-candidate-set",
       "schema": "visual-candidate-set.schema.json",
       "typeName": "AppBuilderVisualCandidateSet",

@@ -1,4 +1,4 @@
-export const FACTORY_TOOL_CONTRACT_VERSION = 4;
+export const FACTORY_TOOL_CONTRACT_VERSION = 5;
 
 export const FACTORY_TOOLS = Object.freeze([
   { name: 'project.list', method: 'GET', path: '/projects', mutating: false, approvalRequired: false },
@@ -12,6 +12,10 @@ export const FACTORY_TOOLS = Object.freeze([
   { name: 'project.source.governance.update', method: 'POST', path: '/projects/{projectId}/sources/{sourceId}/governance', mutating: true, approvalRequired: true },
   { name: 'project.overrides.read', method: 'GET', path: '/projects/{projectId}/overrides', mutating: false, approvalRequired: false },
   { name: 'project.overrides.write', method: 'PUT', path: '/projects/{projectId}/overrides', mutating: true, approvalRequired: false },
+  { name: 'project.approved-build-plan.list', method: 'GET', path: '/projects/{projectId}/approved-build-plans', mutating: false, approvalRequired: false },
+  { name: 'project.approved-build-plan.read', method: 'GET', path: '/projects/{projectId}/approved-build-plans/{planId}', mutating: false, approvalRequired: false },
+  { name: 'project.approved-build-plan.approve', method: 'POST', path: '/projects/{projectId}/approved-build-plans', mutating: true, approvalRequired: true },
+  { name: 'project.approved-build-plan.execute', method: 'POST', path: '/projects/{projectId}/approved-build-plans/execute', mutating: true, approvalRequired: true },
   { name: 'project.generate', method: 'POST', path: '/projects/{projectId}/generate', mutating: true, approvalRequired: false },
   { name: 'project.verify', method: 'POST', path: '/projects/{projectId}/verify', mutating: true, approvalRequired: false },
   { name: 'project.tasks.read', method: 'GET', path: '/projects/{projectId}/tasks', mutating: false, approvalRequired: false },

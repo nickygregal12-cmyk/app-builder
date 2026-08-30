@@ -359,6 +359,22 @@
     {
       "operation": "project.source.governance.update",
       "reason": "Source governance decides whether crawled material may inform the knowledge pack. That is a human/Console trust decision about untrusted content, and an agent that could make it could launder its own instructions into factory-trusted state."
+    },
+    {
+      "operation": "project.approved-build-plan.list",
+      "reason": "Listing a project's approved build plans exposes which generations an operator has already authorised. It backs the Console approval screen; an agent that could read it learns nothing it needs and gains a map of the approval boundary."
+    },
+    {
+      "operation": "project.approved-build-plan.read",
+      "reason": "Reading one approved plan returns the frozen project-state fingerprint an execution will be checked against. Console only, for the same reason as the list."
+    },
+    {
+      "operation": "project.approved-build-plan.approve",
+      "reason": "Approval is the explicit local operator confirmation the whole boundary rests on. An agent that could approve could authorise its own generation, which is precisely the authority this contract exists to withhold."
+    },
+    {
+      "operation": "project.approved-build-plan.execute",
+      "reason": "Execution spends an approval an operator made. Until there is an approved policy for who may spend one, the operator who minted the plan is the only actor allowed to redeem it; a later integration may execute plans already approved inside App Builder, and that grant belongs in the change that makes it."
     }
   ],
   "internalOnlyRoutes": [
@@ -475,6 +491,30 @@
       "path": "/intake-bundles/replay",
       "marker": "url.pathname === '/intake-bundles/replay'",
       "reason": "Replaying an approved intake starts a fresh operator-authorised run."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/approved-build-plans",
+      "marker": "handleApprovedBuildPlanHttp",
+      "reason": "Approved-plan inventory for the Console approval screen."
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{projectId}/approved-build-plans/{planId}",
+      "marker": "handleApprovedBuildPlanHttp",
+      "reason": "One approved plan and its frozen state fingerprint, for the Console."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/approved-build-plans",
+      "marker": "handleApprovedBuildPlanHttp",
+      "reason": "Explicit local operator approval. Console only."
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{projectId}/approved-build-plans/execute",
+      "marker": "handleApprovedBuildPlanHttp",
+      "reason": "Redeeming a local operator approval. Console only."
     }
   ]
 }

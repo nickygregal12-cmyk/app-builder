@@ -52,7 +52,12 @@ test('the Anthropic payload sends native output_config JSON Schema and leaves ca
 });
 
 test('the exact Anthropic adapter advertises structured output and sends no credential in its body', async () => {
-  const secret = 'sk-ant-PLANTEDSTRUCTUREDOUTPUTSECRET';
+  // Assembled at run time, like every planted credential in tooling/secret-scan.test.mjs.
+  // The point of this test is that a credential shaped like a live Anthropic key never
+  // reaches the request body, so the shape has to be realistic — and a realistic shape
+  // written as one contiguous literal is a committed credential, which the repository's own
+  // scanner refuses. It exists in memory for the length of this test and nowhere else.
+  const secret = ['sk-', 'ant-', 'api03-', 'PLANTEDSTRUCTUREDOUTPUT', 'X'.repeat(24)].join('');
   let captured = null;
   const fetchImpl = async (_url, init) => {
     captured = { headers: init.headers, body: JSON.parse(init.body) };

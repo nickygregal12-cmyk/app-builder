@@ -7,6 +7,7 @@ import { assetInventory, decideProjectAsset, recropProjectAsset, replaceProjectA
 import { chooseSectionVariant, sectionVariantOptions } from './section-variants.js';
 import { addDesignReference, designReferenceSummary, readDesignReferenceCapture, removeDesignReference, setDesignReferenceApproval, updateDesignReferenceIntent } from './visual-references.js';
 import { createPreviewProxy, previewProxyRoute } from './preview-proxy.js';
+import { handleApprovedBuildPlanHttp } from './approved-build-plan-http.js';
 
 function send(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -40,6 +41,7 @@ const CLIENT_ERROR_PATTERNS = [
       /JSON/, /manifest/, /knowledge[ -]pack/, /Request body/, /Unsafe/,
       /Ingestion (requires|accepts)/, /^Invalid content-override/, /^Invalid composition/, /^Unresolved element identity/, /does not expose an editable/, /Rendered evidence (needs|is captured)/, /Sources cannot reference/, /Only http\(s\) source URLs/,
       /^Source \w+ (is required|must be)/, /^Approved intake/, /^Unknown project type/, /^An intake bundle records/, /^Invalid approved-intake-bundle/, /cannot be replayed/, /Uploaded source/, /maxPages must be/,
+      /^Approved build plan/, /^No approved build plan/, /^Cannot approve a build plan/,
       // A source the operator named that cannot be reached is their problem to
       // see and act on — a different URL, a different network — not an
       // internal factory failure to hide behind a 500.
@@ -121,6 +123,9 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
       if (!route) return send(response, 404, { error: 'not-found' });
       const project = service.getProject(route.projectId);
       if (!project) return send(response, 404, { error: 'unknown-project' });
+
+      const approvedBuildPlanRoute = await handleApprovedBuildPlanHttp({ request, route, service, readJson });
+      if (approvedBuildPlanRoute.handled) return send(response, approvedBuildPlanRoute.status, approvedBuildPlanRoute.value);
 
       const sourceGovernanceRoute = route.action?.match(/^sources\/([^/]+)\/governance$/);
       if (request.method === 'POST' && sourceGovernanceRoute) {

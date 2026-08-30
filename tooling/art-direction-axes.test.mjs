@@ -31,6 +31,10 @@ const stylesheet = fs.readFileSync('templates/shared/presentation/styles.css', '
 const COUNTED_AXIS_PREFIX = Object.freeze({
   heroStrategy: 'hero-',
   gridFamily: 'grid-',
+  // The header carries its own family class rather than inheriting one from
+  // the shell: it is the only element the family styles, and a second class
+  // on an ancestor would be a knob nothing reads.
+  navigationFamily: 'nav-',
   headingTreatment: 'headings-',
   ctaPlacement: 'cta-',
   distinctiveMoment: 'moment-',
@@ -97,7 +101,7 @@ test('the shell carries every counted axis, so the stylesheet can reach it', () 
         visualDistinctiveness: 'balanced',
         motionIntensity: 'subtle',
       },
-      responsive: { mobileHero: 'copy-first', navigation: 'inline-wrap', mobileSectionOrder: 'as-desktop', mobileDensity: 'as-desktop', mobileMotion: 'as-desktop' },
+      responsive: { mobileHero: 'copy-first', mobileSectionOrder: 'as-desktop', mobileDensity: 'as-desktop', mobileMotion: 'as-desktop' },
     },
     shellClass: 'layout-public',
   });

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Named visual directions. A direction is a coherent set of art-direction decisions that differ STRUCTURALLY from the others \u2014 hero strategy, panel grammar (`gridFamily`), section order, heading treatment, responsive composition \u2014 not by palette, radius or token values. Every field here has a renderer or composer consumer; a dimension nothing reads would be a knob on a picture of a machine. `gridFamily` is the panel grammar: what a set of items in the middle of a page is MADE OF, emitted as its own structure by both renderers rather than as one DOM re-laid out by the stylesheet, and refused where the content cannot carry it. `assetAppetite` is checked against Visual Asset Readiness before a direction may become a candidate, so 'no publishable imagery' is an art-direction input rather than a late defect.",
+  "description": "Named visual directions. A direction is a coherent set of art-direction decisions that differ STRUCTURALLY from the others — hero strategy, panel grammar (`gridFamily`), navigation family, section order, heading treatment, responsive composition — not by palette, radius or token values. Every field here has a renderer or composer consumer; a dimension nothing reads would be a knob on a picture of a machine. `gridFamily` is the panel grammar: what a set of items in the middle of a page is MADE OF, emitted as its own structure by both renderers rather than as one DOM re-laid out by the stylesheet, and refused where the content cannot carry it. `assetAppetite` is checked against Visual Asset Readiness before a direction may become a candidate, so 'no publishable imagery' is an art-direction input rather than a late defect.",
   "projectTypeCandidates": {
     "marketing-site": [
       "structured-practice",
@@ -88,12 +88,12 @@
         "actionTreatment": "outlined",
         "ctaComposition": "register",
         "heroComposition": "columns",
-        "typographyStrategy": "neutral"
+        "typographyStrategy": "neutral",
+        "navigationFamily": "utility"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
         "mobileHero": "copy-first",
-        "navigation": "disclosure",
         "mobileSectionOrder": "conversion-first",
         "mobileDensity": "tighter",
         "mobileMotion": "as-desktop"
@@ -130,12 +130,12 @@
         "actionTreatment": "underline",
         "ctaComposition": "editorial",
         "heroComposition": "statement",
-        "typographyStrategy": "editorial"
+        "typographyStrategy": "editorial",
+        "navigationFamily": "editorial"
       },
       "assetAppetite": "typographic",
       "responsive": {
         "mobileHero": "copy-only",
-        "navigation": "inline-wrap",
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "as-desktop",
         "mobileMotion": "as-desktop"
@@ -172,12 +172,12 @@
         "actionTreatment": "block",
         "ctaComposition": "banner",
         "heroComposition": "stacked",
-        "typographyStrategy": "bold"
+        "typographyStrategy": "bold",
+        "navigationFamily": "centred"
       },
       "assetAppetite": "imagery-required",
       "responsive": {
         "mobileHero": "image-first",
-        "navigation": "disclosure",
         "mobileSectionOrder": "conversion-first",
         "mobileDensity": "as-desktop",
         "mobileMotion": "reduced"
@@ -207,12 +207,12 @@
         "actionTreatment": "solid",
         "ctaComposition": "panel",
         "heroComposition": "stacked",
-        "typographyStrategy": "neutral"
+        "typographyStrategy": "neutral",
+        "navigationFamily": "utility"
       },
       "assetAppetite": "typographic",
       "responsive": {
         "mobileHero": "copy-only",
-        "navigation": "disclosure",
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "tighter",
         "mobileMotion": "reduced"
@@ -249,12 +249,12 @@
         "actionTreatment": "arrow",
         "ctaComposition": "banner",
         "heroComposition": "centred",
-        "typographyStrategy": "technical"
+        "typographyStrategy": "technical",
+        "navigationFamily": "register"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
         "mobileHero": "copy-only",
-        "navigation": "disclosure",
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "tighter",
         "mobileMotion": "reduced"

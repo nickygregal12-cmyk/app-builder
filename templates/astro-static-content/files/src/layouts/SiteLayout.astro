@@ -38,17 +38,37 @@ const { page } = Astro.props;
 
 const composed = composition as unknown as ProjectComposition;
 const directed = design as unknown as VisualDirection;
-const NAVIGATION_TREATMENT = directed.artDirection?.responsive?.navigation ?? 'disclosure';
 const MOBILE_HERO = directed.artDirection?.responsive?.mobileHero ?? 'copy-first';
 const SHELL_CLASSES = directed.shellClasses ?? directed.shellClass ?? '';
 
+/**
+ * What the header is made of.
+ *
+ * The last shared element, and the first one a visitor sees. Every direction
+ * used to carry the same bar — brand left, destinations right, a filled pill on
+ * the current page — so a serif editorial document and a mono technical
+ * register announced themselves identically.
+ *
+ * This replaced `responsive.navigation`, which decided whether the row
+ * collapsed on a phone while nothing decided what the row *was*. One element
+ * cannot have two authorities, so the family owns both: every family discloses
+ * behind a control on a phone, in its own character.
+ */
+const NAVIGATION_FAMILIES = ['utility', 'editorial', 'register', 'centred'] as const;
+type NavigationFamily = (typeof NAVIGATION_FAMILIES)[number];
+const declaredNav = directed.artDirection?.dimensions?.navigationFamily;
+const NAVIGATION_FAMILY: NavigationFamily = (NAVIGATION_FAMILIES as readonly string[]).includes(declaredNav ?? '')
+  ? (declaredNav as NavigationFamily)
+  : 'utility';
+
 const navigation = [...composed.pages].filter((entry) => entry.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order);
 
-// Two navigation treatments, because a phone is where a direction's decision
-// about navigation actually shows. The toggle is not rendered at all under
-// `inline-scroll` rather than hidden: a control that is present, focusable and
-// does nothing is worse than absent.
-const disclosureNav = NAVIGATION_TREATMENT !== 'inline-scroll';
+// The conversion action belongs in a working header and nowhere else. An
+// editorial masthead that grew a filled button would stop being one, and a
+// register header is a document index rather than a place to sell from.
+const headerAction = NAVIGATION_FAMILY === 'utility' || NAVIGATION_FAMILY === 'centred'
+  ? composed.pages.find((entry) => entry.id === page.id)?.primaryAction ?? null
+  : null;
 
 // Everything in the footer is business information. Factory diagnostics stay
 // development-only: publishing them put build metadata in front of customers.
@@ -77,20 +97,33 @@ const socialProfilesValue = contact ? binding(contact, 'profiles')?.value : null
   </head>
   <body>
     <div class={`site-frame ${SHELL_CLASSES}`.trim()} data-scenario={currentScenario}>
-      <header class={`site-header nav-${NAVIGATION_TREATMENT}`}>
-        <a class="site-brand" href={siteHref('/')}>{project.name}</a>
-        {/* Rendered open, then collapsed by the progressive-enhancement script
-            below. A visitor with no JavaScript keeps every destination; the
-            alternative — shipping it closed and depending on a script to open
-            it — is a navigation that does not exist without JavaScript. */}
-        {disclosureNav && (
+      {/* The families differ in structure, not paint. `centred` puts the brand
+          on its own row above the destinations, so it needs a wrapper the
+          others do not have; `register` numbers each destination with a real
+          element, the way the register grammar numbers an entry; `editorial`
+          carries no boxed control at all. Every family keeps the same
+          destinations, the same hrefs and the same `aria-current`, because a
+          header may change what it looks like and never where it goes. */}
+      <header class={`site-header nav-${NAVIGATION_FAMILY}`} data-navigation-family={NAVIGATION_FAMILY}>
+        <div class="site-header-brand">
+          <a class="site-brand" href={siteHref('/')}>{project.name}</a>
+          {/* Rendered open, then collapsed by the progressive-enhancement script
+              below. A visitor with no JavaScript keeps every destination; the
+              alternative — shipping it closed and depending on a script to open
+              it — is a navigation that does not exist without JavaScript. */}
           <button type="button" class="nav-toggle" aria-expanded="true" aria-controls="primary-navigation" hidden>Menu</button>
-        )}
+        </div>
         <nav id="primary-navigation" aria-label="Primary navigation" data-open="true">
-          {navigation.map((entry) => (
-            <a class={entry.id === page.id ? 'active' : ''} href={siteHref(entry.path)} aria-current={entry.id === page.id ? 'page' : undefined}>{entry.navigation.label}</a>
+          {navigation.map((entry, index) => (
+            <a class={entry.id === page.id ? 'active' : ''} href={siteHref(entry.path)} aria-current={entry.id === page.id ? 'page' : undefined}>
+              {NAVIGATION_FAMILY === 'register' && <span class="nav-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>}
+              <span class="nav-label">{entry.navigation.label}</span>
+            </a>
           ))}
         </nav>
+        {headerAction && (
+          <a class="nav-action" href={siteHref(headerAction.href)}>{headerAction.label}</a>
+        )}
       </header>
       <main class="app-shell" data-page-id={page.id} data-mobile-hero={MOBILE_HERO}>
         <slot />
@@ -125,11 +158,27 @@ const socialProfilesValue = contact ? binding(contact, 'profiles')?.value : null
           toggle.hidden = false;
           nav.dataset.open = 'false';
           toggle.setAttribute('aria-expanded', 'false');
+          var setOpen = function (open) {
+            nav.dataset.open = open ? 'true' : 'false';
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            toggle.textContent = open ? 'Close' : 'Menu';
+          };
           toggle.addEventListener('click', function () {
-            var open = nav.dataset.open === 'true';
-            nav.dataset.open = open ? 'false' : 'true';
-            toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
-            toggle.textContent = open ? 'Menu' : 'Close';
+            setOpen(nav.dataset.open !== 'true');
+          });
+          // Escape closes it and returns the reader to the control they opened
+          // it with, rather than leaving focus inside a panel that is gone.
+          document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape' || nav.dataset.open !== 'true') return;
+            setOpen(false);
+            toggle.focus();
+          });
+          // A destination inside a collapsed panel is still in the document and
+          // still focusable, so a keyboard reader could tab into a panel nobody
+          // can see. Opening on focus keeps the panel and the focus ring in
+          // agreement without taking any destination out of the document.
+          nav.addEventListener('focusin', function () {
+            if (window.matchMedia('(max-width: 880px)').matches) setOpen(true);
           });
         }
 

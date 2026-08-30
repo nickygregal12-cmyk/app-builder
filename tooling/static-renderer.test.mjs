@@ -237,10 +237,11 @@ test('a static site is usable before any script runs', () => {
     // shipping closed and depending on a script to reveal it.
     assert.match(layout, /data-open="true"/);
     assert.match(layout, /class="nav-toggle"[^>]*hidden/);
-    // The disclosure control is hidden until enhanced. Both selectors are
-    // required: the mobile rule that shows it ties on specificity.
+    // The disclosure control is hidden until enhanced. One selector now: every
+    // navigation family discloses, so the control is no longer scoped to a
+    // treatment that had to out-rank the mobile rule showing it.
     const styles = read(generated.out, 'src/styles.css');
-    assert.match(styles, /\.site-header\.nav-disclosure \.nav-toggle\[hidden\]/);
+    assert.match(styles, /\.site-header \.nav-toggle\[hidden\]/);
     // The enquiry form is a form, not a component that becomes one.
     const form = read(generated.out, 'src/features/lead-generation/EnquiryForm.astro');
     assert.match(form, /<form[^>]+method="POST"/);

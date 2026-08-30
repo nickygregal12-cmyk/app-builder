@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, PANEL_GRAMMARS, TYPOGRAPHY_STRATEGIES, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
+import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, NAVIGATION_FAMILIES, PANEL_GRAMMARS, TYPOGRAPHY_STRATEGIES, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8');
@@ -277,6 +277,111 @@ test('every direction chooses a panel grammar, and the imagery-free set spans th
   const nbm = ['structured-practice', 'editorial-authority', 'schedule-register']
     .map((id) => directions[id].composition.gridFamily);
   assert.equal(new Set(nbm).size, 3, `the three imagery-free directions present the same middle: ${nbm.join(', ')}`);
+});
+
+
+/**
+ * The header — the last element every direction shared.
+ *
+ * Actions, the closing ask, the opening, the typography and the middle of the
+ * page all became direction-selectable, and every candidate still opened with
+ * the same bar: brand left, destinations right, a filled pill on the current
+ * page. It is the first thing a reviewer sees and it contradicted the art
+ * direction underneath before they had scrolled.
+ */
+test('the header is a composition family and not a repaint', () => {
+  assert.deepEqual([...NAVIGATION_FAMILIES], ['utility', 'editorial', 'register', 'centred']);
+  // `utility` is the bar every build has always carried, so a project naming no
+  // family renders the header it rendered yesterday.
+  assert.equal(DEFAULT_COMPOSITION_DIMENSIONS.navigationFamily, 'utility');
+
+  const css = read('templates/shared/presentation/styles.css');
+  // Each family has to change composition, not paint. A family that only moved
+  // a colour would be a token wearing a family's name.
+  assert.match(css, /\.nav-centred \{[^}]*flex-direction:\s*column/, 'centred must put the brand on its own row rather than align it differently');
+  assert.match(css, /\.nav-editorial nav a \{[^}]*border-radius:\s*0/, 'an editorial masthead carries no boxed control');
+  assert.match(css, /\.nav-register nav a \{[^}]*text-transform:\s*uppercase/, 'a register sets its destinations as technical labels');
+  assert.match(css, /\.nav-register \.nav-index/, 'a register numbers its destinations');
+});
+
+test('the header family changes the DOM, not only the class', () => {
+  for (const source of [
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    read('templates/astro-static-content/files/src/layouts/SiteLayout.astro'),
+  ]) {
+    assert.match(source, /data-navigation-family/, 'the rendered family must be inspectable');
+    assert.match(source, /site-header-brand/, 'centred needs a brand row the other families do not have');
+    assert.match(source, /nav-index/, 'the register numbers each destination with a real element');
+    // The conversion action is present only where the header is a working bar.
+    assert.match(source, /NAVIGATION_FAMILY === 'utility' \|\| NAVIGATION_FAMILY === 'centred'/, 'only a working header carries a conversion action');
+    // Every family goes to the same places, whatever it looks like.
+    assert.match(source, /aria-current=\{?[^}]*'page'/, 'the current page must be announced in every family');
+  }
+});
+
+/**
+ * The current-page marker was part of the family resemblance.
+ *
+ * A filled pill on every candidate is a decision no direction made. Each family
+ * marks the current page in its own register, and each must still mark it.
+ */
+test('every family marks the current page, and not all of them with a pill', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const markers = {
+    utility: /\.site-header nav a\.active \{[^}]*background:\s*var\(--color-ink\)/,
+    editorial: /\.nav-editorial nav a\.active \{[^}]*border-bottom-color:\s*var\(--color-accent\)/,
+    register: /\.nav-register nav a\.active \.nav-index \{[^}]*background:\s*var\(--color-accent\)/,
+    centred: /\.nav-centred nav a\.active \{[^}]*border-bottom-color:\s*var\(--color-accent\)/,
+  };
+  for (const [family, marker] of Object.entries(markers)) {
+    assert.match(css, marker, `${family} does not mark the current page in its own register`);
+  }
+  // Three of the four must not be a filled shape, or the pill has survived the
+  // family it was supposed to be a member of.
+  for (const family of ['editorial', 'register', 'centred']) {
+    assert.match(css, new RegExp(`\\.nav-${family} nav a\\.active \\{[^}]*background:\\s*none`), `${family} still fills its current page like a pill`);
+  }
+});
+
+test('every family discloses on a phone, in its own character', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const mobile = css.slice(css.indexOf('@media (max-width: 720px)'));
+  // One disclosure, applied to the header rather than to one treatment: the
+  // two-row bar is retired and no family may opt out of collapsing.
+  assert.match(mobile, /\.site-header \.nav-toggle \{[^}]*display:\s*inline-flex/, 'the control must appear on a phone for every family');
+  assert.match(mobile, /\.site-header nav\[data-open="false"\] \{[^}]*display:\s*none/, 'the panel must collapse');
+  // And each family keeps what makes it that family.
+  assert.match(mobile, /\.nav-register nav a \{[^}]*grid-template-columns/, 'the register keeps its numbering on a phone');
+  assert.match(mobile, /\.nav-editorial nav a\.active \{[^}]*border-bottom-color/, 'the editorial masthead keeps its rule rather than gaining a fill');
+});
+
+test('the disclosure is operable by keyboard and closes on Escape', () => {
+  for (const source of [
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    read('templates/astro-static-content/files/src/layouts/SiteLayout.astro'),
+  ]) {
+    assert.match(source, /aria-expanded/, 'the control must announce its state');
+    assert.match(source, /aria-controls="primary-navigation"/, 'the control must name what it opens');
+    assert.match(source, /Escape/, 'Escape must close a panel the reader opened');
+  }
+  // A destination inside a collapsed panel is still focusable, so tabbing into
+  // one must not put the focus ring somewhere nothing is drawn.
+  assert.match(
+    read('templates/astro-static-content/files/src/layouts/SiteLayout.astro'),
+    /focusin/,
+    'focus entering the collapsed panel must open it rather than disappear into it',
+  );
+});
+
+test('every direction chooses a header, and the imagery-free set spans them', () => {
+  const directions = json('config/visual-directions.json').directions;
+  for (const [id, direction] of Object.entries(directions)) {
+    const family = direction.composition?.navigationFamily;
+    assert.ok(NAVIGATION_FAMILIES.includes(family), `${id} names a header family that does not exist: ${family}`);
+  }
+  const nbm = ['structured-practice', 'editorial-authority', 'schedule-register']
+    .map((id) => directions[id].composition.navigationFamily);
+  assert.equal(new Set(nbm).size, 3, `the three imagery-free directions open with the same header: ${nbm.join(', ')}`);
 });
 
 test('an external source may only name roles that exist and actually design', () => {

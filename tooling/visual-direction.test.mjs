@@ -123,7 +123,8 @@ test('every declared visual direction compiles, and every dimension it declares 
       `${id} declares headingTreatment ${dimensions.headingTreatment} and the stylesheet never reads it`);
     assert.ok(STYLES_CSS.includes(`.moment-${dimensions.distinctiveMoment}`) || dimensions.distinctiveMoment === 'none',
       `${id} declares distinctiveMoment ${dimensions.distinctiveMoment} and nothing renders it`);
-    assert.ok(STYLES_CSS.includes(`nav-${responsive.navigation}`), `${id} declares navigation ${responsive.navigation} and the stylesheet never reads it`);
+    assert.ok(STYLES_CSS.includes(`.nav-${dimensions.navigationFamily}`) || dimensions.navigationFamily === 'utility',
+      `${id} declares navigationFamily ${dimensions.navigationFamily} and the stylesheet never reads it`);
     // ctaPlacement decides desktop order *and* whether mobile conversion-first
     // may pull the ask forward, so the stylesheet has to be able to tell the
     // two declarations apart rather than moving every conversion section.
@@ -200,7 +201,7 @@ test('two candidates over one product truth differ structurally, and say the sam
   assert.notDeepEqual(sequence(editorial), sequence(immersive));
   assert.notEqual(editorial.spec.artDirection.dimensions.heroStrategy, immersive.spec.artDirection.dimensions.heroStrategy);
   assert.notEqual(editorial.spec.layout.shellClasses, immersive.spec.layout.shellClasses);
-  assert.notEqual(editorial.spec.artDirection.responsive.navigation, immersive.spec.artDirection.responsive.navigation);
+  assert.notEqual(editorial.spec.artDirection.dimensions.navigationFamily, immersive.spec.artDirection.dimensions.navigationFamily);
 
   const signatures = [editorial, immersive].map((result) => structuralSignature({
     direction: { id: result.spec.visualDirection, artDirection: result.spec.artDirection },

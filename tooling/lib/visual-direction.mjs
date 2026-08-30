@@ -112,6 +112,34 @@ export const TYPOGRAPHY_STRATEGIES = Object.freeze(['neutral', 'editorial', 'tec
 
 export const HERO_COMPOSITIONS = Object.freeze(['stacked', 'columns', 'statement', 'centred']);
 
+/**
+ * The header — what a site opens with before it says anything.
+ *
+ * The last shared element, and the one a visitor sees first. Every direction
+ * carried the same bar: brand left, links right, a filled pill on the current
+ * page. A serif editorial document, a mono technical register and a structured
+ * professional practice all announced themselves identically, which contradicts
+ * the art direction underneath before the reader has scrolled.
+ *
+ * These are compositions rather than themes. `centred` puts the brand on its
+ * own row and the destinations beneath it; `register` is a document header with
+ * an indexed, ruled destination list; `editorial` drops boxed controls entirely
+ * and marks the current page with a rule under type. A treatment reachable by
+ * changing `--radius-pill` or `--color-surface` would be a token and belongs in
+ * the design spec.
+ *
+ * The family owns the header on a phone as well. It replaced
+ * `responsive.navigation`, which decided *whether* the row collapsed while
+ * nothing decided what it was: the two could not both be the authority on one
+ * element. Its `inline-wrap` value — the two-row bar the fourth independent
+ * review called loose, and which `docs/PHASE_4D_VISUAL_DEBT.md` §7 left as an
+ * explicit choice between making deliberate and retiring — is retired here in
+ * favour of a disclosure per family. No family may scroll a row or hide a
+ * destination to make one fit; those were the two earlier defects and the
+ * guards against them move to the family rather than lapsing.
+ */
+export const NAVIGATION_FAMILIES = Object.freeze(['utility', 'editorial', 'register', 'centred']);
+
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
 
 /**
@@ -149,7 +177,6 @@ export const DISTINCTIVE_MOMENTS = Object.freeze(['lead-statement', 'full-bleed-
 export const ASSET_APPETITES = Object.freeze(['imagery-required', 'imagery-optional', 'typographic']);
 
 export const MOBILE_HERO = Object.freeze(['copy-first', 'image-first', 'copy-only']);
-export const MOBILE_NAVIGATION = Object.freeze(['disclosure', 'inline-wrap']);
 export const MOBILE_SECTION_ORDER = Object.freeze(['as-desktop', 'conversion-first']);
 export const MOBILE_DENSITY = Object.freeze(['as-desktop', 'tighter']);
 export const MOBILE_MOTION = Object.freeze(['as-desktop', 'reduced']);
@@ -178,6 +205,7 @@ const ORDER = Object.freeze({
   actionTreatment: ACTION_TREATMENTS,
   ctaComposition: CTA_COMPOSITIONS,
   heroComposition: HERO_COMPOSITIONS,
+  navigationFamily: NAVIGATION_FAMILIES,
   typographyStrategy: TYPOGRAPHY_STRATEGIES,
   heroStrategy: HERO_STRATEGIES,
   gridFamily: GRID_FAMILIES,
@@ -188,7 +216,6 @@ const ORDER = Object.freeze({
 
 const RESPONSIVE_ORDER = Object.freeze({
   mobileHero: MOBILE_HERO,
-  navigation: MOBILE_NAVIGATION,
   mobileSectionOrder: MOBILE_SECTION_ORDER,
   mobileDensity: MOBILE_DENSITY,
   mobileMotion: MOBILE_MOTION,
@@ -203,6 +230,9 @@ export const DEFAULT_COMPOSITION_DIMENSIONS = Object.freeze({
   ctaComposition: 'panel',
   // What every build opened with before this axis existed.
   heroComposition: 'stacked',
+  // The bar every build has always carried, so a project naming no family
+  // renders exactly the header it rendered yesterday.
+  navigationFamily: 'utility',
   // The sans pairing every build has always rendered.
   typographyStrategy: 'neutral',
   heroStrategy: 'split',
@@ -214,7 +244,6 @@ export const DEFAULT_COMPOSITION_DIMENSIONS = Object.freeze({
 
 export const DEFAULT_RESPONSIVE_PLAN = Object.freeze({
   mobileHero: 'copy-first',
-  navigation: 'disclosure',
   mobileSectionOrder: 'as-desktop',
   mobileDensity: 'as-desktop',
   mobileMotion: 'as-desktop',
@@ -264,8 +293,8 @@ export const REFERENCE_STRUCTURAL_AXES = Object.freeze([
   'headingTreatment',
   'ctaPlacement',
   'distinctiveMoment',
+  'navigationFamily',
   'mobileHero',
-  'navigation',
   'mobileSectionOrder',
   'mobileDensity',
   'mobileMotion',
@@ -620,6 +649,7 @@ export function structuralSignature({ direction, composition, design = null }) {
       actionTreatment: dimensions.actionTreatment,
       ctaComposition: dimensions.ctaComposition,
       heroComposition: dimensions.heroComposition,
+      navigationFamily: dimensions.navigationFamily,
       typographyStrategy: dimensions.typographyStrategy,
       heroStrategy: dimensions.heroStrategy,
       gridFamily: dimensions.gridFamily,
@@ -631,7 +661,7 @@ export function structuralSignature({ direction, composition, design = null }) {
       motionIntensity: dimensions.motionIntensity,
       informationDensity: design?.density ?? dimensions.informationDensity ?? null,
       layoutFamily: design?.patternId ?? null,
-      responsiveStrategy: `${responsive.mobileHero}/${responsive.navigation}/${responsive.mobileSectionOrder}/${responsive.mobileDensity}/${responsive.mobileMotion}`,
+      responsiveStrategy: `${responsive.mobileHero}/${responsive.mobileSectionOrder}/${responsive.mobileDensity}/${responsive.mobileMotion}`,
     },
     sequence: list(composition?.pages).map((page) => ({
       pageId: page.id,

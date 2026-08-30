@@ -64,7 +64,8 @@ Predictor.
 **Prerequisites**
 
 - the three bounded truth/safety stages above are merged;
-- ~~freeze a bounded benchmark contract and representative scenario data~~ — done: `config/application-journey-benchmarks.json`, held still by `tooling/application-journey-benchmark.test.mjs`. The journey, lifecycle, lock authority, official/provisional boundary, settlement identity key, scoring rule and leaderboard ordering are frozen, and the benchmark's domain vocabulary is checked against every factory surface. No generated application has been measured against it yet, which is the rest of this stage.
+- ~~freeze a bounded benchmark contract and representative scenario data~~ — done: `config/application-journey-benchmarks.json`, held still by `tooling/application-journey-benchmark.test.mjs`. The journey, lifecycle, lock authority, official/provisional boundary, settlement identity key, scoring rule and leaderboard ordering are frozen, and the benchmark's domain vocabulary is checked against every factory surface.
+- ~~make the frozen contract executable against a generated backend~~ — done: the `scheduled-decisions` recipe supplies the reusable spine, `.tmp/generated-acceptance-journey-benchmark` is a generated project that installs it, and `tooling/application-journey-benchmark-acceptance.sql` runs every frozen scenario against real PostgreSQL inside the existing `database-security` job. The scoring rule is *not* in the factory: the recipe ships `app_domain.score_decision` and `app_domain.max_decision_points` as functions that raise, and `tooling/application-journey-benchmark-domain.sql` is the benchmark product's own replacement.
 **Read before working**
 
 1. `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.
@@ -72,11 +73,11 @@ Predictor.
 3. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — requirement coverage and database evidence.
 **Do**
 
-1. Specify authoritative domain state, lifecycle transitions and official/external truth boundary.
-2. Enforce the deadline server-side and refuse post-lock mutation.
-3. Settle deterministically and idempotently; persist score and expose a leaderboard/read model.
-4. Exercise real identities, isolation and non-vacuous pre-lock/locked/settled scenarios.
-5. Prove the database boundary and browser journey against the generated backend.
+1. ~~Specify authoritative domain state, lifecycle transitions and official/external truth boundary.~~ — done. `public.scheduled_entity_state` derives `scheduled`/`locked` from the stored deadline and the server clock, so no scheduler has to fire for a lock to take effect; `awaiting-official`, `settled` and `voided` move only through privileged transitions. `confirmed` is the only official result status.
+2. ~~Enforce the deadline server-side and refuse post-lock mutation.~~ — done, and in the database rather than at the edge: a trigger refuses a late decision whatever the role, and the update policy keeps the window condition in `with check` so a late amendment raises instead of silently changing nothing. A closed window cannot be reopened.
+3. ~~Settle deterministically and idempotently; persist score and expose a leaderboard/read model.~~ — done. The frozen identity key is a unique constraint, so a repeat settlement creates nothing rather than relying on application-level idempotence; a correction settles under a new version and the superseded scores stay on record. The leaderboard's `board_position` is a window function whose ordering ends in the unique identity, so it cannot tie.
+4. ~~Exercise real identities, isolation and non-vacuous pre-lock/locked/settled scenarios.~~ — done. Four competitors inside one organisation, which is the axis this shape gets wrong; each isolation assertion is made while the data it must not reach exists.
+5. Prove the **browser** journey against the generated backend. The database boundary is proved; the generated application still has no journey evidence, and the recipe currently ships a typed client surface rather than a UI.
 6. Record factory-level reusable defects, fix only those, then rerun the identical frozen benchmark.
 **Do not**
 
@@ -87,10 +88,10 @@ Predictor.
 - attempt the whole Predictor.
 **Evidence that closes this stage**
 
-- pre-lock success and post-lock refusal are executable;
-- repeated settlement is idempotent and official result correction follows an explicit policy;
-- scores/leaderboard are deterministic and persisted;
-- isolation is tested with real competing identities/data, not vacuously;
+- ~~pre-lock success and post-lock refusal are executable~~;
+- ~~repeated settlement is idempotent and official result correction follows an explicit policy~~;
+- ~~scores/leaderboard are deterministic and persisted~~;
+- ~~isolation is tested with real competing identities/data, not vacuously~~;
 - the generated repository installs, checks, builds and runs independently;
 - rendered/product evidence receives independent review;
 - the frozen rerun shows the reusable correction burden decreased.

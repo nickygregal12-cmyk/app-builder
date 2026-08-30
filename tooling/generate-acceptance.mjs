@@ -8,9 +8,9 @@ import { recordRecipeInstallations } from './lib/recipe-upgrades.mjs';
 const projectTypes = JSON.parse(fs.readFileSync('config/project-types.json', 'utf8')).projectTypes;
 const orderedTypes = ['marketing-site', 'b2b-saas', 'consumer-app', 'internal-tool', 'content-site', 'ai-app'];
 
-function manifestFor(type) {
+function manifestFor(type, extraModules = {}) {
   const backend = ['marketing-site', 'content-site'].includes(type) ? 'none' : 'supabase';
-  const modules = Object.fromEntries((projectTypes[type].defaultModules ?? []).map((name) => [name, true]));
+  const modules = { ...Object.fromEntries((projectTypes[type].defaultModules ?? []).map((name) => [name, true])), ...extraModules };
   return {
     schemaVersion: 2,
     project: {
@@ -62,4 +62,33 @@ for (const type of orderedTypes) {
     );
   }
   console.log(`${type} -> ${output} (${composition.pages.length} pages, ${composition.sections.length} sections, ${inventory.installed.length} recipe installation records, ${report.predictedManualEdits}/${ceiling ?? '-'} predicted edits)`);
+}
+
+/*
+ * The bounded serious-application benchmark's project.
+ *
+ * It is the b2b-saas acceptance project plus one module rather than a project
+ * type of its own, because `scheduled-decisions` is not a sensible default for
+ * any project type and adding it to one so that a test can reach it would put a
+ * capability into every generated B2B product to make a gate convenient.
+ *
+ * What the executable acceptance then measures is generated output. The
+ * distinction is worth the extra project: reading the recipe's own SQL file
+ * would prove the recipe is well written, and prove nothing about whether the
+ * factory installs it.
+ */
+const BENCHMARK_OUTPUT = path.resolve('.tmp/generated-acceptance-journey-benchmark');
+{
+  const manifest = manifestFor('b2b-saas', { 'scheduled-decisions': true });
+  manifest.project.name = 'application journey benchmark';
+  manifest.project.slug = 'application-journey-benchmark';
+  manifest.project.primaryGoal = 'Prove the bounded serious-application benchmark against a real generated backend.';
+  fs.rmSync(BENCHMARK_OUTPUT, { recursive: true, force: true });
+  const { composition } = generateComposedProject(manifest, BENCHMARK_OUTPUT);
+  const inventory = recordRecipeInstallations(BENCHMARK_OUTPUT);
+  if (inventory.unresolved.length) throw new Error('The journey benchmark project generated with unresolved recipe installation inventory.');
+  if (!inventory.installed.some((entry) => entry.recipeId === 'scheduled-decisions')) {
+    throw new Error('The journey benchmark project did not install the scheduled-decisions recipe, so nothing downstream is measuring it.');
+  }
+  console.log(`application-journey-benchmark -> ${BENCHMARK_OUTPUT} (${composition.pages.length} pages, ${inventory.installed.length} recipe installation records)`);
 }

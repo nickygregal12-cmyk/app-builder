@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateContract } from '../packages/contracts/src/index.js';
 import { FactoryStore } from '../apps/service/src/store.js';
-import { approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, mintApprovedBuildPlan } from '../apps/service/src/approved-build-plan.js';
+import { approvedBuildHash, approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, mintApprovedBuildPlan } from '../apps/service/src/approved-build-plan.js';
 import { approveProjectBuildPlan, executeApprovedProjectBuildPlan } from '../apps/service/src/approved-build-plan-service.js';
 import { handleApprovedBuildPlanHttp } from '../apps/service/src/approved-build-plan-http.js';
 import { FACTORY_TOOL_CONTRACT_VERSION, FACTORY_TOOLS } from '../apps/service/src/tool-contract.js';
@@ -19,6 +19,7 @@ function buildState(overrides = {}) {
     intakeBundle: null,
     contentOverrides: [],
     assetDecisions: [],
+    assetSourceHash: approvedBuildHash([]),
     sectionVariants: [],
     designChoices: {},
     referenceInfluence: null,
@@ -29,14 +30,20 @@ function buildState(overrides = {}) {
 
 function serviceFixture({ generate = null } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-approved-plan-service-'));
-  const store = new FactoryStore({ stateRoot: path.join(root, 'state') });
+  const stateRoot = path.join(root, 'state');
+  const store = new FactoryStore({ stateRoot });
   const state = buildState();
   const projectId = 'project-approved-plan-test';
   const now = '2026-08-30T00:00:00.000Z';
+  const assets = path.join(stateRoot, 'sources', projectId, 'assets');
+  fs.mkdirSync(assets, { recursive: true });
+  const assetFile = path.join(assets, 'hero.bin');
+  fs.writeFileSync(assetFile, 'approved-asset-bytes');
   store.upsertProject({ id: projectId, name: 'Approved Plan Test', type: 'marketing-site', slug: 'approved-plan-test', state: 'ready', workspacePath: null, manifest: state.manifest, knowledgePack: state.knowledgePack, intakeBundle: state.intakeBundle, createdAt: now, updatedAt: now });
   let generateCalls = 0;
   const service = {
     store,
+    ingestion: { assetDirectory: (id) => id === projectId ? assets : path.join(stateRoot, 'sources', id, 'assets') },
     readOverrides: () => ({ schemaVersion: 1, projectId, overrides: state.contentOverrides }),
     readAssetDecisions: () => ({ schemaVersion: 1, projectId, decisions: state.assetDecisions }),
     readSectionVariants: () => ({ schemaVersion: 1, projectId, choices: state.sectionVariants }),
@@ -45,11 +52,31 @@ function serviceFixture({ generate = null } = {}) {
     readBespokePresentations: () => ({ schemaVersion: 1, projectId, presentations: state.bespokePresentations }),
     async generateProject(id) {
       generateCalls += 1;
-      if (generate) return generate(id);
-      return { project: { id, workspacePath: '/private/app-builder/workspaces/approved-plan-test' }, task: { id: 'task-approved-plan' }, checkpoint: { id: 'checkpoint-approved-plan' }, composition: { compositionHash: HASH } };
+      try {
+        const result = generate
+          ? await generate.call(this, id)
+          : { project: { id, workspacePath: '/private/app-builder/workspaces/approved-plan-test' }, task: { id: 'task-approved-plan' }, checkpoint: { id: 'checkpoint-approved-plan' }, composition: { compositionHash: HASH } };
+        const current = store.getProject(id);
+        store.upsertProject({ ...current, state: 'generated', workspacePath: result.project?.workspacePath ?? '/private/app-builder/workspaces/approved-plan-test', updatedAt: new Date().toISOString() });
+        return result;
+      } catch (error) {
+        const current = store.getProject(id);
+        store.upsertProject({ ...current, state: 'failed', updatedAt: new Date().toISOString() });
+        throw error;
+      }
     },
   };
-  return { service, state, projectId, generateCalls: () => generateCalls, events: () => store.listEvents(projectId), close() { store.close(); fs.rmSync(root, { recursive: true, force: true }); } };
+  return {
+    service,
+    store,
+    state,
+    projectId,
+    assets,
+    assetFile,
+    generateCalls: () => generateCalls,
+    events: () => store.listEvents(projectId),
+    close() { store.close(); fs.rmSync(root, { recursive: true, force: true }); },
+  };
 }
 
 function approvedPlan(source = approvedBuildStateEvidence(buildState())) {
@@ -67,6 +94,7 @@ test('approved build state fingerprint is deterministic and covers every generat
     { intakeBundle: { bundleId: 'bundle-changed' } },
     { contentOverrides: [{ ref: 'hero.title', value: 'Changed' }] },
     { assetDecisions: [{ assetId: 'hero', decision: 'publish' }] },
+    { assetSourceHash: 'b'.repeat(64) },
     { sectionVariants: [{ sectionId: 'hero', variant: 'editorial' }] },
     { designChoices: { radius: 'lg' } },
     { referenceInfluence: { adopt: ['spacing'] } },
@@ -105,6 +133,55 @@ test('approved-plan service requires local confirmation, rechecks state and cons
     assert.equal(fixture.generateCalls(), 1);
     await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: '../approved-plan-service-001', expectedPlanHash: plan.planHash, requestId: 'request-003' }), /exact bounded plan id/);
     await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: 'not-a-hash', requestId: 'request-003' }), /exact SHA-256 plan hash/);
+  } finally { fixture.close(); }
+});
+
+test('execution rejects drift that lands while the claim audit write is in flight and restores project state', async () => {
+  const fixture = serviceFixture();
+  try {
+    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-audit-race', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-audit-race-001' });
+    const recordEvent = fixture.store.recordEvent.bind(fixture.store);
+    fixture.store.recordEvent = async (event) => {
+      const recorded = await recordEvent(event);
+      if (event.type === 'approved-build-plan.execution-claimed') fixture.state.designChoices = { radius: 'lg' };
+      return recorded;
+    };
+
+    await assert.rejects(
+      () => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-audit-race' }),
+      /drifted since approval/,
+    );
+    assert.equal(fixture.generateCalls(), 0);
+    assert.equal(fixture.store.getProject(fixture.projectId).state, 'ready', 'a rejected handoff must release the temporary generation lock');
+    await assert.rejects(
+      () => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-audit-race-retry' }),
+      /already been claimed/,
+    );
+  } finally { fixture.close(); }
+});
+
+test('approved execution uses frozen sidecar values and asset bytes after the final state check', async () => {
+  let fixture;
+  let observed = null;
+  fixture = serviceFixture({
+    generate: async function generateFromFrozenSnapshot(id) {
+      fixture.state.designChoices = { radius: 'lg' };
+      fs.writeFileSync(fixture.assetFile, 'changed-after-final-check');
+      observed = {
+        designChoices: this.readDesignChoices(id).choices,
+        assetBytes: fs.readFileSync(path.join(this.ingestion.assetDirectory(id), 'hero.bin'), 'utf8'),
+        assetDirectory: this.ingestion.assetDirectory(id),
+      };
+      return { project: { id, workspacePath: '/private/app-builder/workspaces/approved-plan-test' }, task: { id: 'task-frozen-approved-plan' }, checkpoint: { id: 'checkpoint-frozen-approved-plan' }, composition: { compositionHash: HASH } };
+    },
+  });
+  try {
+    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-frozen', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-frozen-001' });
+    const executed = await executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-frozen' });
+    assert.equal(executed.result.composition.compositionHash, HASH);
+    assert.deepEqual(observed.designChoices, {}, 'a post-check edit must not enter the approved build');
+    assert.equal(observed.assetBytes, 'approved-asset-bytes', 'the approved build must consume the copied asset bytes');
+    assert.notEqual(path.resolve(observed.assetDirectory), path.resolve(fixture.assets), 'generation must read the frozen asset copy, not the live asset directory');
   } finally { fixture.close(); }
 });
 

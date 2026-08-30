@@ -26,12 +26,12 @@
       ],
       "eligibleRoles": [],
       "highRiskRolesApproved": [],
-      "structuredOutput": false,
+      "structuredOutput": true,
       "maxOutputTokens": 4096,
       "ready": false,
       "policyReviewedAt": null,
       "policySource": null,
-      "note": "The existing canary provider, described here so selection sees one field rather than two. It remains prose-JSON only in the current adapter, so this profile does not claim executable structured output. No provider terms have been reviewed and recorded, and the first canary uses synthetic material, so nothing needs a wider data class today."
+      "note": "The existing canary provider now uses Claude's native schema-constrained JSON output for the approved ReviewVerdict contract, with the same trusted-side contract resolution and canonical local validation used by other strict-output lanes. That capability does not make the provider ready: no provider terms have been reviewed and recorded, the first canary still uses synthetic material, and no role or private data class is granted here."
     },
     {
       "providerId": "groq",

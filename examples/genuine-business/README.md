@@ -1,4 +1,13 @@
-# Phase 3.8E operator-authored acceptance input
+# Genuine-business corpus inputs
+
+The frozen inputs and recorded verdicts for the real businesses the factory has
+been run against. Each case keeps its approved input so a later factory version
+reruns the same truth rather than a new interpretation of it.
+
+- **nbm Construction Cost Consultants** — case 1, the Phase 3.8E acceptance run.
+- **MGB Decor** — case 2, run as an explicit prototype. See the last section.
+
+## Phase 3.8E operator-authored acceptance input
 
 `nbm-genuine-business-acceptance.xlsx` is the workbook the owner approved as
 source material for the Phase 3.8E genuine-business trial against **nbm
@@ -134,3 +143,114 @@ professional-services template rather than as this practice.
 That is the split the pair was kept to record. Do not read v1's hierarchy or
 credibility scores as design evidence, and do not read v2's improvement as the
 rework having happened — it has not started.
+
+## `mgb-approved-intake.v1.json` — corpus case 2, as a prototype
+
+MGB Decor is a Glasgow painting and decorating business and the second
+genuine-business case. It exists to answer one question NBM could not: is the
+component-vocabulary convergence recorded in `docs/PHASE_4D_VISUAL_DEBT.md`
+cross-project, or an artefact of one thinly-evidenced professional-services
+business? A craft trade whose product is photographs of finished rooms is about
+as far from a cost consultancy as the corpus can currently reach.
+
+`build-mgb-intake-bundle.mjs` regenerates the bundle byte-for-byte and
+`tooling/mgb-corpus-intake.test.mjs` asserts that it does:
+
+```bash
+node examples/genuine-business/build-mgb-intake-bundle.mjs
+```
+
+### It is a prototype input, and says so
+
+Unlike the nbm workbook, this input was not assembled for a launch. The owner
+supplied enough real business fact to build and judge a site, and did not supply
+production contact details, review evidence, project histories, asset bytes or a
+domain. The bundle therefore carries three kinds of statement that must never
+merge into one another:
+
+| | Example | What it is |
+| --- | --- | --- |
+| Owner-supplied fact | founded 2020, eight staff, the eight services, Glasgow and the West, fully insured | Real, and the site may rely on it |
+| Public reference location | the Facebook, Instagram and Companies House URLs | A place to look. Not permission to publish, and not ingested in this run |
+| Prototype placeholder | `123456789`, `test@mgb.com` | Present so the quote and contact journeys can be exercised. Never MGB's contact details |
+
+`tooling/mgb-corpus-intake.test.mjs` is written as one test per promotion the
+bundle must stay incapable of: a public profile becoming publication rights, a
+placeholder becoming a verified fact, a rights declaration without bytes
+becoming an ingested asset, "founded 2020" becoming an incorporation date, an
+unsupplied qualification becoming a published claim, and a preferred domain
+becoming an owned one.
+
+### What is deliberately not claimed
+
+The owner granted prototype rights over the MGB logo and two project
+photographs. **The files were never handed over.** The rights decision is
+recorded, and nothing else is: no asset is marked approved, no hash is invented,
+`assetStatus` and `publishUseAllowed` stay off, and the run ingested nothing. A
+rights declaration is not an asset. `trust` is left unanswered on the same
+principle that left it unanswered for nbm — trial finding F23 — and
+`project.siteUrl` is unset, so the build asserts no canonical address for a
+domain nobody owns.
+
+### What the questionnaire could not record
+
+Seven gaps are kept in `intake.feedback` rather than being dropped or invented
+around, because principle 8 asks intake to propose versioned changes rather than
+rewrite itself. The ones a second local-service business would hit again:
+
+- **WhatsApp** is the owner's named secondary conversion and `conversion` has no
+  option for it, so it is recorded as `other` and composition drops it with
+  `declared-conversion-unsupported:other`.
+- **Insurance status** is the single genuine trust fact MGB has, and `trust`
+  offers only testimonials, accreditations, case studies, project photos, awards
+  and client logos — all of which would be false here.
+- **Social profiles.** `project-manifest.schema.json` models
+  `company.socialProfiles` and composition already binds them as a first-class
+  contact route, its own comment noting that linking to a public profile is not
+  republishing it. No questionnaire answer and no Manifest builder populates the
+  field, so a business whose only web presence is Instagram cannot link to it.
+- **Photographs on a quote request**, which is the most useful thing a
+  decorating enquiry can carry. Enabling `uploads` moves a marketing site onto
+  the application renderer under `config/renderers.json`, so the requirement is
+  real, unmet, and recorded rather than silently enabled or silently dropped.
+
+### What the first run exposed
+
+The frozen input was generated, installed, checked, built and captured across
+desktop, tablet and mobile. It produced a portable Astro static-content
+repository: 0 typecheck errors, 0 lint errors, 0 page errors, no horizontal
+overflow at 390px, and seven prerendered route documents. It also exposed three
+factory defects that were not specific to this business, all now fixed:
+
+| Run 1 | Run 2 | |
+| --- | --- | --- |
+| Contract hash `b05b11bb3df6`, manifest `0778cb8631d7` | `19bb60205a68` / `9fb8c3553a0f` | same answers, rebuilt contract |
+| 7 pages, 20 sections | 6 pages, 17 sections | the spurious `/locations` page is gone |
+| 3 composition warnings | 4 | the empty `Our Work` surface is now named |
+| "and ames taping in Glasgow" | "and Ames taping in Glasgow" | a supplied fact is no longer recased |
+| 10 predicted manual edits | 10 | unchanged; one spurious page removed, one honest gap surfaced |
+
+1. **A derived surface outranked declared intent.** MGB listed five surfaces,
+   excluded a dedicated areas page in `out_of_scope`, and answered `locations`
+   truthfully. The approved Build Contract then excluded an areas page and
+   listed a `Locations` surface at the same time, and the build shipped one.
+   `deriveMajorSurfaces` now treats an explicit surface list as the answer. nbm
+   had the same contradiction and its baseline lost a `Locations` page too,
+   which is what makes this factory debt rather than an MGB quirk.
+2. **A declared surface with nothing on it was published silently.** Composition
+   already distinguished a surface the operator declared from one the factory
+   proposed, and its comment said the declared one is "published and named as an
+   open content gap". Only the first half existed. MGB shipped an empty
+   `Our Work` page — the entire proof surface of a decorating business — into
+   its own navigation and sitemap with no composition warning attached. There is
+   now an `empty-declared-surface` warning. The launch audit already reported
+   the page through `content-less-page`, so no second audit rule was added.
+3. **A supplied fact was recased to make a sentence tidier.** The generated
+   summary lowercased everything after its first character and published
+   "Ames taping" as "ames taping".
+
+Two further gaps are real, larger, and deliberately not fixed from one case: the
+site has no imagery at all because the approved asset bytes were never supplied,
+and every page repeats the same pill-button and dark-rectangle CTA vocabulary
+that `docs/PHASE_4D_VISUAL_DEBT.md` records against nbm. **No independent visual
+review has been run on this build**, so nothing here is a score.

@@ -95,6 +95,19 @@ test('major surfaces are deterministic by project type and can be explicitly ove
   assert.deepEqual(deriveMajorSurfaces('marketing-site', {}), ['Home','Services','About','Contact']);
   assert.deepEqual(deriveMajorSurfaces('marketing-site', {major_surfaces:['Home','Emergency repairs']}), ['Home','Emergency repairs']);
   assert.deepEqual(deriveMajorSurfaces('marketing-site', {locations:['Glasgow']}), ['Home','Services','About','Contact','Locations']);
+
+  // An operator who listed their pages has answered the question. MGB Decor
+  // listed five surfaces, excluded a dedicated areas page in `out_of_scope` and
+  // answered `locations` truthfully, and the approved Build Contract used to
+  // exclude an areas page and list a `Locations` surface at the same time.
+  assert.deepEqual(
+    deriveMajorSurfaces('marketing-site', {major_surfaces:['Home','Services','Our Work','About','Contact'], locations:['Glasgow','West of Scotland']}),
+    ['Home','Services','Our Work','About','Contact'],
+  );
+  assert.deepEqual(
+    deriveMajorSurfaces('consumer-app', {major_surfaces:['Home','Feed'], moderation:true}),
+    ['Home','Feed'],
+  );
 });
 
 test('unavailable requested modules are approval decisions, not enabled deterministic recipes', () => {

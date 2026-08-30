@@ -237,6 +237,13 @@ function auditNavigation(composition, rules, roles, findings) {
   }
 }
 
+/**
+ * `empty-declared-surface` deliberately has no rule here. The audit already
+ * reports the same page through `content-less-page`, and a second finding for
+ * one page would inflate the predicted edit count the corpus measures itself
+ * with. That warning's job is to reach the Console, the journey events and the
+ * review packet, which read composition warnings and never saw this case.
+ */
 function auditWarnings(composition, rules, findings) {
   for (const warning of list(composition.warnings)) {
     const direct = WARNING_CHECKS[warning];

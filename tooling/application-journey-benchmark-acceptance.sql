@@ -82,13 +82,16 @@ select ok(
 -- claim in a comment. If this is ever relaxed to a plain index, the repeat
 -- settlement below stops proving idempotence and starts proving nothing.
 select results_eq(
-  $$select array_agg(attname::text order by attname)
+  -- Joined into one string rather than compared as an array: `array[array[...]]`
+  -- is a two-dimensional array in PostgreSQL, not a one-row list containing an
+  -- array, so the comparison would not mean what it reads as.
+  $$select array_to_string(array_agg(attname::text order by attname), ',')
     from pg_constraint
     join pg_attribute on pg_attribute.attrelid = pg_constraint.conrelid
                      and pg_attribute.attnum = any(pg_constraint.conkey)
     where pg_constraint.conname = 'scheduled_settlements_identity_key'
       and pg_constraint.contype = 'u'$$,
-  array[array['entity_id', 'identity_id', 'official_result_version']],
+  array['entity_id,identity_id,official_result_version'],
   'the frozen settlement identity key is a unique constraint on exactly entity, identity and result version'
 );
 

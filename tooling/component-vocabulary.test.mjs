@@ -183,4 +183,14 @@ test('the stylesheet gives every treatment something a token could not', () => {
   assert.match(css, /\.button\.action-block[\s\S]*?width:\s*100%/, 'block must change the footprint, not the colour');
   assert.match(css, /\.action-link\.action-underline[\s\S]*?border-bottom/, 'underline must be a rule under text rather than a box');
   assert.match(css, /prefers-reduced-motion[\s\S]*?action-arrow/, 'the arrow movement must be dropped under reduced motion');
+
+  // The rank rules set a background without requiring `.button`, because every
+  // action used to be one. A text treatment that does not reset them renders as
+  // a filled box with an arrow after it, which is the family reaching the DOM
+  // and changing nothing a visitor sees.
+  assert.match(
+    css,
+    /\.action-link\.primary-action[\s\S]{0,200}background:\s*none/,
+    'a text treatment must clear the rank background it would otherwise inherit',
+  );
 });

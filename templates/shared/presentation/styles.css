@@ -642,6 +642,33 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 
 .section-actions .action-label { display: inline-block; }
 
+/* The rank rules above (`.primary-action`, `.secondary-action`) set a
+   background, a border and a shadow without requiring `.button`, because until
+   now every action was one. A text treatment therefore inherited the accent
+   fill and arrived as a box with an arrow after it — the family reached the DOM
+   and the page still looked like the thing it was supposed to replace.
+
+   Reset on `.action-link` rather than by narrowing the rules above, so the
+   `.button` path every existing build renders is byte-for-byte unchanged and
+   `solid` cannot regress. */
+.action-link.primary-action,
+.action-link.secondary-action {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+}
+.action-link.primary-action { color: var(--color-accent); }
+.action-link.primary-action:hover,
+.action-link.secondary-action:hover { transform: none; box-shadow: none; }
+
+/* Inside the dark closing panel the accent has too little contrast, so a text
+   action there takes the panel's own inverse ink. */
+.cta-section .action-link.primary-action,
+.cta-section .action-link.secondary-action { color: var(--color-text-inverse); }
+
 /* Outlined — the same footprint as solid, carried by a rule rather than a fill. */
 .button.action-outlined {
   background: transparent;

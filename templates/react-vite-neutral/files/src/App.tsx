@@ -211,18 +211,57 @@ function Items({ values, variant }: { values: unknown; variant?: string }) {
   </article>)}</div>;
 }
 
+/**
+ * The action family.
+ *
+ * The one primitive four independent reviews all named — "pill buttons" — and
+ * the one that had no axis. These are different implementations rather than
+ * different styles: `underline` and `arrow` are not boxes, and `block` is a
+ * full-width band. A treatment reachable by changing `--layout-radius` would be
+ * a token, and would belong nowhere near here.
+ *
+ * What every treatment keeps is the part a visitor and a test depend on: the
+ * same anchor, the same href, the same element key so Builder element identity
+ * still addresses it, and an accessible name that is the label and nothing
+ * else. The arrow is decoration and is hidden from assistive technology, which
+ * is why it is a span and not part of the label.
+ */
+const ACTION_TREATMENTS = ['solid', 'outlined', 'underline', 'arrow', 'block'] as const;
+type ActionTreatment = (typeof ACTION_TREATMENTS)[number];
+
+const declaredTreatment = directed.artDirection?.dimensions?.actionTreatment;
+const ACTION_TREATMENT: ActionTreatment = (ACTION_TREATMENTS as readonly string[]).includes(declaredTreatment ?? '')
+  ? (declaredTreatment as ActionTreatment)
+  : 'solid';
+
+/** Whether this treatment presents as a control or as running text. */
+const BOXED: Record<ActionTreatment, boolean> = {
+  solid: true, outlined: true, block: true, underline: false, arrow: false,
+};
+
+function actionClass(treatment: ActionTreatment, index: number) {
+  const rank = index === 0 ? 'primary-action' : 'secondary-action';
+  // `button` is kept only where the treatment really is a button. A text link
+  // carrying a class called `button` is what made every direction's closing ask
+  // look like the same control no matter what it had been told to be.
+  return [BOXED[treatment] ? 'button' : 'action-link', `action-${treatment}`, rank].join(' ');
+}
+
 function Actions({ actions, navigate }: { actions: readonly Action[]; navigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void }) {
   if (!actions.length) return null;
-  return <div className="section-actions">{actions.map((action, index) => {
+  return <div className={`section-actions actions-${ACTION_TREATMENT}`} data-action-treatment={ACTION_TREATMENT}>{actions.map((action, index) => {
     const external = /^https?:\/\//.test(action.href);
     return <a
-      className={index === 0 ? 'button primary-action' : 'button secondary-action'}
+      className={actionClass(ACTION_TREATMENT, index)}
       data-element-key={`action:${index}`}
       href={siteHref(action.href)}
       onClick={(event) => navigate(event, action.href)}
       key={`${action.label}-${action.href}`}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-    >{action.label}</a>;
+    >
+      <span className="action-label">{action.label}</span>
+      {ACTION_TREATMENT === 'arrow' && <span className="action-arrow" aria-hidden="true">&#8594;</span>}
+    </a>;
   })}</div>;
 }
 

@@ -36,6 +36,30 @@ import { rehashComposition } from '../../packages/composition/src/index.js';
 import { DEFAULT_ART_DIRECTION, LAYOUT_VARIANCE_ORDER, RESTRAINT_LEVELS, VISUAL_DISTINCTIVENESS_ORDER, compileArtDirectionPlan } from './art-direction.mjs';
 import { MOTION_INTENSITY_ORDER } from './motion-contract.mjs';
 
+/**
+ * The action family — what a call to action is actually made of.
+ *
+ * The first component family, and it exists because four independent reviews
+ * said the same thing about the thing that was missing. `distinctiveness`
+ * scored 4.3-4.8 across every candidate in every review, through a content fix,
+ * a moment contract, an axis-rendering fix and an entirely new direction, and
+ * the v4 critic named why: "familiar sans-serif headings, pill buttons, thin
+ * dividers and a dark CTA rectangle".
+ *
+ * Of those four, the button was the one with no axis at all. `heroStrategy`
+ * and `gridFamily` change what the page is made of; nothing did that for the
+ * one primitive that appears in every section of every page. A direction could
+ * move the accent colour and the corner radius and every candidate still
+ * offered the visitor the same filled pill.
+ *
+ * So these are implementations rather than styles. `underline` and `arrow` are
+ * not boxes at all; `block` is a full-width rule-led band. A treatment that
+ * could be reached by changing `--layout-radius` does not belong here — that is
+ * a token, and tokens are excluded from `structuralSignature` precisely so a
+ * recoloured candidate cannot claim to be a different one.
+ */
+export const ACTION_TREATMENTS = Object.freeze(['solid', 'outlined', 'underline', 'arrow', 'block']);
+
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
 export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows']);
 export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled', 'numbered']);
@@ -70,6 +94,7 @@ export const PUBLIC_PROJECT_TYPES = Object.freeze(['marketing-site', 'content-si
 const CONVERSION_TYPES = Object.freeze(['contact-panel', 'enquiry-form', 'cta']);
 
 const ORDER = Object.freeze({
+  actionTreatment: ACTION_TREATMENTS,
   heroStrategy: HERO_STRATEGIES,
   gridFamily: GRID_FAMILIES,
   headingTreatment: HEADING_TREATMENTS,
@@ -86,6 +111,9 @@ const RESPONSIVE_ORDER = Object.freeze({
 });
 
 export const DEFAULT_COMPOSITION_DIMENSIONS = Object.freeze({
+  // `solid` is what every build rendered before this axis existed, so a project
+  // that names no treatment renders exactly what it rendered yesterday.
+  actionTreatment: 'solid',
   heroStrategy: 'split',
   gridFamily: 'symmetric',
   headingTreatment: 'plain',
@@ -314,6 +342,10 @@ export function visualDirectionClasses({ id = null, artDirection = null, shellCl
   return [
     shellClass,
     `direction-${id ?? 'default'}`,
+    // The action family reaches the stylesheet as well as the DOM. The DOM
+    // carries the difference a visitor sees; the class lets a direction tune
+    // the treatment it chose without every treatment having to know about it.
+    `actions-${dimensions.actionTreatment}`,
     `grid-${dimensions.gridFamily}`,
     `headings-${dimensions.headingTreatment}`,
     `moment-${dimensions.distinctiveMoment}`,
@@ -502,6 +534,7 @@ export function structuralSignature({ direction, composition, design = null }) {
     schemaVersion: 1,
     directionId: direction?.id ?? null,
     axes: {
+      actionTreatment: dimensions.actionTreatment,
       heroStrategy: dimensions.heroStrategy,
       gridFamily: dimensions.gridFamily,
       headingTreatment: dimensions.headingTreatment,

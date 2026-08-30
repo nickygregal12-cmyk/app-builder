@@ -87,7 +87,8 @@
         "distinctiveMoment": "figure-index",
         "actionTreatment": "outlined",
         "ctaComposition": "register",
-        "heroComposition": "columns"
+        "heroComposition": "columns",
+        "typographyStrategy": "neutral"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
@@ -128,7 +129,8 @@
         "distinctiveMoment": "lead-statement",
         "actionTreatment": "underline",
         "ctaComposition": "editorial",
-        "heroComposition": "statement"
+        "heroComposition": "statement",
+        "typographyStrategy": "editorial"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -169,7 +171,8 @@
         "distinctiveMoment": "full-bleed-lead",
         "actionTreatment": "block",
         "ctaComposition": "banner",
-        "heroComposition": "stacked"
+        "heroComposition": "stacked",
+        "typographyStrategy": "bold"
       },
       "assetAppetite": "imagery-required",
       "responsive": {
@@ -203,7 +206,8 @@
         "distinctiveMoment": "none",
         "actionTreatment": "solid",
         "ctaComposition": "panel",
-        "heroComposition": "stacked"
+        "heroComposition": "stacked",
+        "typographyStrategy": "neutral"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -244,7 +248,8 @@
         "distinctiveMoment": "figure-index",
         "actionTreatment": "arrow",
         "ctaComposition": "banner",
-        "heroComposition": "centred"
+        "heroComposition": "centred",
+        "typographyStrategy": "technical"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {

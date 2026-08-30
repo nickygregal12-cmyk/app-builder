@@ -88,6 +88,28 @@ export const CTA_COMPOSITIONS = Object.freeze(['panel', 'editorial', 'banner', '
  * when type is all it has: one column, two columns, a full-width statement, or
  * a centred measure. It composes with `heroStrategy` rather than replacing it.
  */
+/**
+ * Typographic character.
+ *
+ * The last candidate set differed in its opening, its closing and its actions
+ * and still read as three versions of one site. `--font-display` and
+ * `--font-body` were the same Inter stack in every direction, so every heading,
+ * label, nav item and paragraph on every candidate was set the same way.
+ * Typography is the only thing present on every element of every page, which is
+ * what made it the strongest remaining source of sameness.
+ *
+ * The lever is the *category* rather than the size: a serif display against a
+ * sans body is a different kind of document from a mono-labelled register,
+ * however the scale is tuned. `neutral` is today's sans pairing and stays the
+ * default. Each strategy also carries its own scale, weight, tracking, case and
+ * measure, because a family that changed only the typeface would be a token.
+ *
+ * Every stack is a system stack. No font bytes are added to a generated
+ * repository, so there is nothing to license, nothing to preload, no layout
+ * shift while a webfont loads and no network dependency in the output.
+ */
+export const TYPOGRAPHY_STRATEGIES = Object.freeze(['neutral', 'editorial', 'technical', 'bold']);
+
 export const HERO_COMPOSITIONS = Object.freeze(['stacked', 'columns', 'statement', 'centred']);
 
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
@@ -127,6 +149,7 @@ const ORDER = Object.freeze({
   actionTreatment: ACTION_TREATMENTS,
   ctaComposition: CTA_COMPOSITIONS,
   heroComposition: HERO_COMPOSITIONS,
+  typographyStrategy: TYPOGRAPHY_STRATEGIES,
   heroStrategy: HERO_STRATEGIES,
   gridFamily: GRID_FAMILIES,
   headingTreatment: HEADING_TREATMENTS,
@@ -151,6 +174,8 @@ export const DEFAULT_COMPOSITION_DIMENSIONS = Object.freeze({
   ctaComposition: 'panel',
   // What every build opened with before this axis existed.
   heroComposition: 'stacked',
+  // The sans pairing every build has always rendered.
+  typographyStrategy: 'neutral',
   heroStrategy: 'split',
   gridFamily: 'symmetric',
   headingTreatment: 'plain',
@@ -385,6 +410,9 @@ export function visualDirectionClasses({ id = null, artDirection = null, shellCl
     `actions-${dimensions.actionTreatment}`,
     `cta-composition-${dimensions.ctaComposition}`,
     `hero-composition-${dimensions.heroComposition}`,
+    // Reaches the shell, so it re-scopes the font tokens for every element on
+    // the page in one hop rather than needing each component to know about it.
+    `type-${dimensions.typographyStrategy}`,
     `grid-${dimensions.gridFamily}`,
     `headings-${dimensions.headingTreatment}`,
     `moment-${dimensions.distinctiveMoment}`,
@@ -576,6 +604,7 @@ export function structuralSignature({ direction, composition, design = null }) {
       actionTreatment: dimensions.actionTreatment,
       ctaComposition: dimensions.ctaComposition,
       heroComposition: dimensions.heroComposition,
+      typographyStrategy: dimensions.typographyStrategy,
       heroStrategy: dimensions.heroStrategy,
       gridFamily: dimensions.gridFamily,
       headingTreatment: dimensions.headingTreatment,

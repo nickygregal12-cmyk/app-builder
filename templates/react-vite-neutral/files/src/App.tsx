@@ -58,7 +58,7 @@ const assetMap = assets as unknown as Record<string, GeneratedAsset>;
 type VisualDirection = {
   shellClasses?: string;
   artDirection?: {
-    dimensions?: { actionTreatment?: string; ctaComposition?: string; heroComposition?: string; heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
+    dimensions?: { actionTreatment?: string; ctaComposition?: string; heroComposition?: string; typographyStrategy?: string; heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
     responsive?: { mobileHero?: string; navigation?: string; mobileSectionOrder?: string; mobileDensity?: string; mobileMotion?: string };
   };
 };

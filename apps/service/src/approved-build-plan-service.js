@@ -2,6 +2,8 @@ import { createEvent } from '@app-builder/control-plane';
 import { approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, mintApprovedBuildPlan } from './approved-build-plan.js';
 
 const OPAQUE_ID = /^[A-Za-z0-9._:-]{1,120}$/;
+const APPROVED_PLAN_ID = /^approved-plan-[A-Za-z0-9._:-]{1,120}$/;
+const SHA256 = /^[a-f0-9]{64}$/;
 
 function fullProject(service, projectId) {
   const project = service?.store?.getProject(projectId) ?? null;
@@ -62,7 +64,8 @@ export function listApprovedProjectBuildPlans(service, projectId) {
 
 export async function executeApprovedProjectBuildPlan(service, projectId, { planId, expectedPlanHash, requestId, now = () => new Date() } = {}) {
   fullProject(service, projectId);
-  if (typeof planId !== 'string' || !planId.startsWith('approved-plan-')) throw new Error('Approved build plan execution requires an exact plan id.');
+  if (!APPROVED_PLAN_ID.test(String(planId ?? ''))) throw new Error('Approved build plan execution requires an exact bounded plan id.');
+  if (!SHA256.test(String(expectedPlanHash ?? ''))) throw new Error('Approved build plan execution requires an exact SHA-256 plan hash.');
   if (!OPAQUE_ID.test(String(requestId ?? ''))) throw new Error('Approved build plan execution requires a bounded request id.');
 
   const plan = service.store.getApprovedBuildPlan(projectId, planId);

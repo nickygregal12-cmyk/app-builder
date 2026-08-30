@@ -7,6 +7,7 @@ import { FactoryService } from '../apps/service/src/factory-service.js';
 import { createFactoryHttpServer } from '../apps/service/src/http.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { updateProjectSourceGovernance } from '../apps/service/src/source-governance.js';
+import { FACTORY_TOOL_CONTRACT_VERSION } from '../apps/service/src/tool-contract.js';
 
 function manifest() {
   return {
@@ -95,7 +96,11 @@ test('HTTP facade exposes bounded governance decisions and advertises them in th
     const base = `http://127.0.0.1:${address.port}`;
 
     const tools = await fetch(`${base}/tools`).then((response) => response.json());
-    assert.equal(tools.contractVersion, 4);
+    // What this test is about is that the facade advertises the contract it is
+    // actually serving, not which number that contract is on. Pinning the
+    // literal here made every contract addition look like a governance
+    // regression; tooling/approved-build-plan.test.mjs pins the number itself.
+    assert.equal(tools.contractVersion, FACTORY_TOOL_CONTRACT_VERSION);
     assert.equal(tools.tools.some((tool) => tool.name === 'project.source.governance.update'), true);
 
     const response = await fetch(`${base}/projects/project-governed/sources/logo-upload/governance`, {

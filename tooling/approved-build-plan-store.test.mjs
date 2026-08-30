@@ -20,7 +20,7 @@ test('approved build-plan storage is isolated from the core ledger store and sin
   const projectId = 'project-store-plan';
   try {
     store.upsertProject({ id: projectId, name: 'Store Plan', type: 'marketing-site', slug: 'store-plan', state: 'ready', workspacePath: null, manifest: {}, knowledgePack: null, intakeBundle: null, createdAt: now, updatedAt: now });
-    const plan = mintApprovedBuildPlan({ projectId, approvalId: 'approval-store', approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-store-001', source: state() });
+    const plan = mintApprovedBuildPlan({ projectId, approvalId: 'approval-store', approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-store-fixture-001', source: state() });
     recordApprovedBuildPlan(store, plan);
     assert.equal(getApprovedBuildPlan(store, projectId, plan.planId).planHash, plan.planHash);
     assert.throws(() => recordApprovedBuildPlan(store, plan), /UNIQUE|constraint/i);

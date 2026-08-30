@@ -83,12 +83,26 @@ export function mintApprovedBuildPlan({ projectId, approvalId, source, approvedA
   return assertContract('approved-build-plan', { ...draft, planHash: approvedBuildHash(draft) });
 }
 
-export function assertApprovedBuildPlanExecutable(plan, { projectId, expectedPlanHash, currentSource }) {
+/**
+ * Is this the plan the request names, and is it still itself?
+ *
+ * Identity only: it answers "we are both talking about the same immutable
+ * plan" and says nothing about whether executing it is allowed now. Separated
+ * from the drift check because the caller needs to establish identity before
+ * it can truthfully report anything else about the plan — including that the
+ * plan has already been spent.
+ */
+export function assertApprovedBuildPlanIdentity(plan, { projectId, expectedPlanHash }) {
   const checked = assertContract('approved-build-plan', plan);
   if (checked.projectId !== projectId) throw new Error('Approved build plan project does not match the execution target.');
   if (!SHA256.test(String(expectedPlanHash ?? '')) || expectedPlanHash !== checked.planHash) throw new Error('Approved build plan hash does not match the execution request.');
   if (approvedBuildPlanHash(checked) !== checked.planHash) throw new Error('Approved build plan content no longer matches its immutable hash.');
   if (checked.fingerprintVersion !== FINGERPRINT_VERSION) throw new Error('Approved build plan fingerprint version is unsupported.');
+  return checked;
+}
+
+export function assertApprovedBuildPlanExecutable(plan, { projectId, expectedPlanHash, currentSource }) {
+  const checked = assertApprovedBuildPlanIdentity(plan, { projectId, expectedPlanHash });
   if (!currentSource || currentSource.projectStateHash !== checked.source.projectStateHash) throw new Error('Approved build plan project state has drifted since approval.');
   return checked;
 }

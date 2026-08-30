@@ -80,7 +80,7 @@ function serviceFixture({ generate = null } = {}) {
 }
 
 function approvedPlan(source = approvedBuildStateEvidence(buildState())) {
-  return mintApprovedBuildPlan({ projectId: 'project-approved-plan-test', approvalId: 'approval-001', approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-test-001', source });
+  return mintApprovedBuildPlan({ projectId: 'project-approved-plan-test', approvalId: 'approval-001', approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-test-fixture-001', source });
 }
 
 test('approved build state fingerprint is deterministic and covers every generation-affecting input', () => {
@@ -108,21 +108,21 @@ test('approved build plan is schema-valid, self-hashed and rejects target/hash/s
   const plan = approvedPlan(source);
   assert.deepEqual(validateContract('approved-build-plan', plan), []);
   assert.equal(assertApprovedBuildPlanExecutable(plan, { projectId: plan.projectId, expectedPlanHash: plan.planHash, currentSource: source }).planId, plan.planId);
-  assert.throws(() => assertApprovedBuildPlanExecutable(plan, { projectId: 'project-other', expectedPlanHash: plan.planHash, currentSource: source }), /different project/);
+  assert.throws(() => assertApprovedBuildPlanExecutable(plan, { projectId: 'project-other', expectedPlanHash: plan.planHash, currentSource: source }), /does not match the execution target/);
   assert.throws(() => assertApprovedBuildPlanExecutable(plan, { projectId: plan.projectId, expectedPlanHash: HASH, currentSource: source }), /plan hash/);
   const changed = approvedBuildStateEvidence(buildState({ designChoices: { radius: 'lg' } }));
-  assert.throws(() => assertApprovedBuildPlanExecutable(plan, { projectId: plan.projectId, expectedPlanHash: plan.planHash, currentSource: changed }), /changed since approval/);
+  assert.throws(() => assertApprovedBuildPlanExecutable(plan, { projectId: plan.projectId, expectedPlanHash: plan.planHash, currentSource: changed }), /drifted since approval/);
 });
 
 test('approved-plan service requires local confirmation, rechecks state and consumes a plan once', async () => {
   const fixture = serviceFixture();
   try {
     await assert.rejects(() => approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-001', approvalMode: 'explicit-local-operator', confirmed: false }), /explicit local operator confirmation/);
-    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-001', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-service-001' });
+    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-001', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-service-fixture-001' });
     const same = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-001', approvalMode: 'explicit-local-operator', confirmed: true });
     assert.equal(same.planId, plan.planId, 'one local approval id must not mint two plans');
     fixture.state.designChoices.radius = 'lg';
-    await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-drift' }), /changed since approval/);
+    await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-drift' }), /drifted since approval/);
     assert.equal(fixture.generateCalls(), 0);
     delete fixture.state.designChoices.radius;
     const executed = await executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-001', now: () => new Date('2026-08-30T00:02:00.000Z') });
@@ -131,7 +131,7 @@ test('approved-plan service requires local confirmation, rechecks state and cons
     assert.equal(JSON.stringify(fixture.events()).includes('/private/app-builder'), false, 'approved-plan events must not reveal local paths');
     await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-002' }), /already been claimed/);
     assert.equal(fixture.generateCalls(), 1);
-    await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: '../approved-plan-service-001', expectedPlanHash: plan.planHash, requestId: 'request-003' }), /exact bounded plan id/);
+    await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: '../approved-plan-service-fixture-001', expectedPlanHash: plan.planHash, requestId: 'request-003' }), /exact bounded plan id/);
     await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: 'not-a-hash', requestId: 'request-003' }), /exact SHA-256 plan hash/);
   } finally { fixture.close(); }
 });
@@ -176,7 +176,7 @@ test('approved execution uses frozen sidecar values and asset bytes after the fi
     },
   });
   try {
-    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-frozen', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-frozen-001' });
+    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-frozen', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-frozen-fixture-001' });
     const executed = await executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-frozen' });
     assert.equal(executed.result.composition.compositionHash, HASH);
     assert.deepEqual(observed.designChoices, {}, 'a post-check edit must not enter the approved build');
@@ -188,7 +188,7 @@ test('approved execution uses frozen sidecar values and asset bytes after the fi
 test('a failed generation still consumes the approved plan and requires a new approval', async () => {
   const fixture = serviceFixture({ generate: async () => { throw new TypeError('synthetic generator failure'); } });
   try {
-    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-failure', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-failure-001' });
+    const plan = await approveProjectBuildPlan(fixture.service, fixture.projectId, { approvalId: 'approval-failure', approvalMode: 'explicit-local-operator', confirmed: true, approvedAt: '2026-08-30T00:01:00.000Z', planId: 'approved-plan-failure-fixture-001' });
     await assert.rejects(() => executeApprovedProjectBuildPlan(fixture.service, fixture.projectId, { planId: plan.planId, expectedPlanHash: plan.planHash, requestId: 'request-failure' }), /synthetic generator failure/);
     assert.equal(fixture.events().at(-1).type, 'approved-build-plan.execution-failed');
     assert.equal(fixture.events().at(-1).payload.errorClass, 'TypeError');

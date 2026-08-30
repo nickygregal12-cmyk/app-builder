@@ -3,12 +3,24 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { createEvent } from '@app-builder/control-plane';
-import { approvedBuildHash, approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, mintApprovedBuildPlan } from './approved-build-plan.js';
-import { claimApprovedBuildPlanExecution, getApprovedBuildPlan, getApprovedBuildPlanByApprovalId, listApprovedBuildPlans, recordApprovedBuildPlan } from './approved-build-plan-store.js';
+import { contractSchema } from '@app-builder/contracts';
+import { approvedBuildHash, approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, assertApprovedBuildPlanIdentity, mintApprovedBuildPlan } from './approved-build-plan.js';
+import { claimApprovedBuildPlanExecution, getApprovedBuildPlan, getApprovedBuildPlanByApprovalId, getApprovedBuildPlanExecution, listApprovedBuildPlans, recordApprovedBuildPlan } from './approved-build-plan-store.js';
 
 const OPAQUE_ID = /^[A-Za-z0-9._:-]{1,120}$/;
-const APPROVED_PLAN_ID = /^approved-plan-[A-Za-z0-9._:-]{1,120}$/;
+
+// The shape an execution request may name is the shape the contract can mint,
+// read from the contract rather than restated here. A second hand-written
+// pattern is a second authority: it drifted once already, accepting ids with
+// `.` and `:` and as few as one character after the prefix — shapes the schema
+// refuses — so the service would look up plan ids that could never exist.
+const APPROVED_PLAN_ID = new RegExp(contractSchema('approved-build-plan').properties.planId.pattern);
 const SHA256 = /^[a-f0-9]{64}$/;
+
+function alreadyClaimed(planId, prior, requestId) {
+  const suffix = prior?.requestId === requestId ? ' by this request' : ' by another request';
+  return new Error(`Approved build plan ${planId} has already been claimed${suffix}; mint a new approved plan before another generation attempt.`);
+}
 
 function fullProject(service, projectId) {
   const project = service?.store?.getProject(projectId) ?? null;
@@ -203,18 +215,26 @@ export async function executeApprovedProjectBuildPlan(service, projectId, { plan
 
   const plan = getApprovedBuildPlan(service.store, projectId, planId);
   if (!plan) throw new Error(`No approved build plan ${planId} exists for project ${projectId}.`);
+  const identified = assertApprovedBuildPlanIdentity(plan, { projectId, expectedPlanHash });
+
+  // Being spent is terminal; drift is recoverable. Report the terminal fact
+  // first, or a retry of a consumed plan whose project has since changed is
+  // told its state drifted — which invites the operator to restore the state
+  // and try again, and no restoration can make a spent plan executable.
+  const priorClaim = getApprovedBuildPlanExecution(service.store, identified.planId);
+  if (priorClaim) throw alreadyClaimed(planId, priorClaim, requestId);
+
   const firstSnapshot = currentApprovedBuildSnapshot(service, projectId);
   const checked = assertApprovedBuildPlanExecutable(plan, { projectId, expectedPlanHash, currentSource: firstSnapshot.evidence });
 
   const claimedAtDate = now();
   if (!(claimedAtDate instanceof Date) || !Number.isFinite(claimedAtDate.getTime())) throw new Error('Approved build plan execution clock is invalid.');
   const claimedAt = claimedAtDate.toISOString();
+  // The read above is not the guard — this insert is. Two requests can both
+  // pass the read and only one can win the unique constraint, so the loser
+  // still has to be told here.
   const claimed = claimApprovedBuildPlanExecution(service.store, { planId: checked.planId, projectId, requestId, claimedAt });
-  if (!claimed.claimed) {
-    const prior = claimed.claim;
-    const suffix = prior?.requestId === requestId ? ' by this request' : ' by another request';
-    throw new Error(`Approved build plan ${planId} has already been claimed${suffix}; mint a new approved plan before another generation attempt.`);
-  }
+  if (!claimed.claimed) throw alreadyClaimed(planId, claimed.claim, requestId);
 
   const originalProject = lockProjectForApprovedGeneration(service, projectId);
   let assetSnapshot = null;

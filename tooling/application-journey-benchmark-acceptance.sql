@@ -81,17 +81,22 @@ select ok(
 -- The settlement identity key, as a constraint that exists rather than as a
 -- claim in a comment. If this is ever relaxed to a plain index, the repeat
 -- settlement below stops proving idempotence and starts proving nothing.
-select results_eq(
-  -- Joined into one string rather than compared as an array: `array[array[...]]`
-  -- is a two-dimensional array in PostgreSQL, not a one-row list containing an
-  -- array, so the comparison would not mean what it reads as.
-  $$select array_to_string(array_agg(attname::text order by attname), ',')
-    from pg_constraint
-    join pg_attribute on pg_attribute.attrelid = pg_constraint.conrelid
-                     and pg_attribute.attnum = any(pg_constraint.conkey)
-    where pg_constraint.conname = 'scheduled_settlements_identity_key'
-      and pg_constraint.contype = 'u'$$,
-  array['entity_id,identity_id,official_result_version'],
+-- The comparison happens inside the query rather than through `results_eq`, and
+-- both details are deliberate. `array[array[...]]` is a two-dimensional array in
+-- PostgreSQL rather than a one-row list containing an array, so comparing the
+-- aggregate directly would not mean what it reads as. And `attname` is of type
+-- `name`, whose collation is not the database default, so handing the derived
+-- text to `results_eq` fails with "could not determine which collation to use"
+-- before it compares anything. An unknown literal on the other side of `=`
+-- adopts the collation of the column, so there is nothing left to resolve.
+select ok(
+  (select array_to_string(array_agg(attname::text order by attname::text), ',')
+            = 'entity_id,identity_id,official_result_version'
+     from pg_constraint
+     join pg_attribute on pg_attribute.attrelid = pg_constraint.conrelid
+                      and pg_attribute.attnum = any(pg_constraint.conkey)
+     where pg_constraint.conname = 'scheduled_settlements_identity_key'
+       and pg_constraint.contype = 'u'),
   'the frozen settlement identity key is a unique constraint on exactly entity, identity and result version'
 );
 

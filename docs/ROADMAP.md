@@ -64,7 +64,7 @@ Predictor.
 **Prerequisites**
 
 - the three bounded truth/safety stages above are merged;
-- freeze a bounded benchmark contract and representative scenario data.
+- ~~freeze a bounded benchmark contract and representative scenario data~~ — done: `config/application-journey-benchmarks.json`, held still by `tooling/application-journey-benchmark.test.mjs`. The journey, lifecycle, lock authority, official/provisional boundary, settlement identity key, scoring rule and leaderboard ordering are frozen, and the benchmark's domain vocabulary is checked against every factory surface. No generated application has been measured against it yet, which is the rest of this stage.
 **Read before working**
 
 1. `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md`.

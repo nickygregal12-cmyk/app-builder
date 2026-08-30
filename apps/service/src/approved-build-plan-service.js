@@ -94,7 +94,7 @@ export async function executeApprovedProjectBuildPlan(service, projectId, { plan
       taskId: result.task?.id ?? null,
       type: 'approved-build-plan.executed',
       actor: 'factory-service',
-      payload: { planId, planHash: checked.planHash, requestId, workspacePath: result.project?.workspacePath ?? null },
+      payload: { planId, planHash: checked.planHash, requestId },
     }));
     return { plan: checked, execution: claimed.claim, result };
   } catch (error) {

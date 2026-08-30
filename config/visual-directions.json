@@ -85,7 +85,9 @@
           "contact-panel"
         ],
         "distinctiveMoment": "figure-index",
-        "actionTreatment": "outlined"
+        "actionTreatment": "outlined",
+        "ctaComposition": "register",
+        "heroComposition": "columns"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
@@ -124,7 +126,9 @@
           "contact-panel"
         ],
         "distinctiveMoment": "lead-statement",
-        "actionTreatment": "underline"
+        "actionTreatment": "underline",
+        "ctaComposition": "editorial",
+        "heroComposition": "statement"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -163,7 +167,9 @@
           "contact-panel"
         ],
         "distinctiveMoment": "full-bleed-lead",
-        "actionTreatment": "block"
+        "actionTreatment": "block",
+        "ctaComposition": "banner",
+        "heroComposition": "stacked"
       },
       "assetAppetite": "imagery-required",
       "responsive": {
@@ -195,7 +201,9 @@
         "ctaPlacement": "closing",
         "sectionOrder": [],
         "distinctiveMoment": "none",
-        "actionTreatment": "solid"
+        "actionTreatment": "solid",
+        "ctaComposition": "panel",
+        "heroComposition": "stacked"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -234,7 +242,9 @@
           "contact-panel"
         ],
         "distinctiveMoment": "figure-index",
-        "actionTreatment": "arrow"
+        "actionTreatment": "arrow",
+        "ctaComposition": "banner",
+        "heroComposition": "centred"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {

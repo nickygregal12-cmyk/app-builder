@@ -29,6 +29,8 @@ import { structuralSignature } from './visual-direction.mjs';
 export const SIGNALS = Object.freeze([
   { id: 'sequence', label: 'section/presentation sequence', from: 'sequence' },
   { id: 'actionTreatment', label: 'action family', from: 'axes.actionTreatment' },
+  { id: 'ctaComposition', label: 'closing-ask composition', from: 'axes.ctaComposition' },
+  { id: 'heroComposition', label: 'opening composition', from: 'axes.heroComposition' },
   { id: 'heroStrategy', label: 'hero strategy', from: 'axes.heroStrategy' },
   { id: 'gridFamily', label: 'layout/grid family', from: 'axes.gridFamily' },
   { id: 'layoutFamily', label: 'layout pattern', from: 'axes.layoutFamily' },
@@ -68,6 +70,8 @@ export function crossBuildSignature({ build, composition, design, direction = nu
       // order across two unrelated businesses is the finding, not any one page.
       sequence: JSON.stringify(signature.sequence.map((page) => page.presentation)),
       actionTreatment: signature.axes.actionTreatment ?? null,
+      ctaComposition: signature.axes.ctaComposition ?? null,
+      heroComposition: signature.axes.heroComposition ?? null,
       heroStrategy: signature.axes.heroStrategy ?? null,
       gridFamily: signature.axes.gridFamily ?? null,
       layoutFamily: signature.axes.layoutFamily ?? null,

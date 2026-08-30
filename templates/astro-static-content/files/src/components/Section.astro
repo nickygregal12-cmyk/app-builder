@@ -31,6 +31,37 @@ const assetMap = assets as unknown as Record<string, GeneratedAsset>;
 const directed = design as unknown as VisualDirection;
 const HERO_STRATEGY = directed.artDirection?.dimensions?.heroStrategy ?? 'split';
 
+/**
+ * What the closing ask is made of.
+ *
+ * `panel` is the inset dark rectangle every build rendered before this axis
+ * existed and stays the default, so a project that names no composition is
+ * unchanged. The others are different compositions rather than different
+ * paint: `banner` has no panel and runs edge to edge, `register` is a ruled row
+ * with no fill, `editorial` is a statement at reading measure under a rule.
+ */
+const CTA_COMPOSITIONS = ['panel', 'editorial', 'banner', 'register'] as const;
+type CtaComposition = (typeof CTA_COMPOSITIONS)[number];
+const declaredCta = directed.artDirection?.dimensions?.ctaComposition;
+const CTA_COMPOSITION: CtaComposition = (CTA_COMPOSITIONS as readonly string[]).includes(declaredCta ?? '')
+  ? (declaredCta as CtaComposition)
+  : 'panel';
+
+/**
+ * How the opening is composed when type is what it has.
+ *
+ * `heroStrategy` above decides where a photograph goes. With no photograph —
+ * nbm has none — every one of its values renders the same copy-only block,
+ * which is why imagery-free candidates all opened alike. This decides the
+ * typographic composition and composes with it rather than replacing it.
+ */
+const HERO_COMPOSITIONS = ['stacked', 'columns', 'statement', 'centred'] as const;
+type HeroComposition = (typeof HERO_COMPOSITIONS)[number];
+const declaredHero = directed.artDirection?.dimensions?.heroComposition;
+const HERO_COMPOSITION: HeroComposition = (HERO_COMPOSITIONS as readonly string[]).includes(declaredHero ?? '')
+  ? (declaredHero as HeroComposition)
+  : 'stacked';
+
 const sectionAssets = section.assetIds.map((id) => assetMap[id]).filter(Boolean);
 const title = binding(section, 'title');
 const body = binding(section, 'body');
@@ -46,7 +77,7 @@ const lead = sectionAssets[0];
 const beside = HERO_STRATEGY === 'split' && Boolean(lead);
 const behind = HERO_STRATEGY === 'immersive' && Boolean(lead);
 const below = HERO_STRATEGY === 'editorial' && Boolean(lead);
-const heroClasses = ['page-section', 'hero-section', `variant-${section.variant}`, `hero-${HERO_STRATEGY}`];
+const heroClasses = ['page-section', 'hero-section', `variant-${section.variant}`, `hero-${HERO_STRATEGY}`, `hero-compose-${HERO_COMPOSITION}`];
 if (beside) heroClasses.push('has-image');
 if (behind) heroClasses.push('has-backdrop');
 if (below) heroClasses.push('has-band');
@@ -59,8 +90,9 @@ const itemBindings = section.bindings.filter((item) => !HEADING_BINDING_KEYS.inc
 const galleryEmpty = section.type === 'gallery' && sectionAssets.length === 0 && section.actions.length === 0;
 ---
 {section.type === 'hero' && (
-  <section class={heroClasses.join(' ')} id={section.id} data-section-id={section.id} data-element-key="section" data-hero-strategy={HERO_STRATEGY}>
+  <section class={heroClasses.join(' ')} id={section.id} data-section-id={section.id} data-element-key="section" data-hero-strategy={HERO_STRATEGY} data-hero-composition={HERO_COMPOSITION}>
     {behind && lead && <Picture asset={lead} role="hero-16x9" class="hero-backdrop" sizes="100vw" />}
+    {HERO_COMPOSITION === 'statement' && <span class="hero-rule" aria-hidden="true"></span>}
     <div class="hero-copy-column">
       {eyebrow && <p class="eyebrow" {...editable(section, eyebrow)}>{text(eyebrow.value)}</p>}
       {title && <h1 {...editable(section, title)}>{text(title.value)}</h1>}
@@ -109,12 +141,40 @@ const galleryEmpty = section.type === 'gallery' && sectionAssets.length === 0 &&
 )}
 
 {section.type === 'cta' && !RecipeSection && (
-  <section class="page-section cta-section" id={section.id} data-section-id={section.id} data-element-key="section">
-    <div>
-      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
-      {body && <p {...editable(section, body)}>{text(body.value)}</p>}
-    </div>
-    <Actions actions={section.actions} />
+  <section
+    class={`page-section cta-section cta-${CTA_COMPOSITION}`}
+    id={section.id}
+    data-section-id={section.id}
+    data-element-key="section"
+    data-cta-composition={CTA_COMPOSITION}
+  >
+    {/* The compositions differ in structure, not only in styling. `register`
+        puts the ask and the actions on one ruled line with a rule element that
+        no other composition has; `banner` needs an inner container because it
+        is edge-to-edge and its content still has to sit at measure; `editorial`
+        leads with a rule and keeps the actions under the copy. Every one of
+        them keeps the same heading, the same copy and the same actions, because
+        a composition may change what the ask looks like and never what it
+        says. */}
+    {CTA_COMPOSITION === 'register' && <span class="cta-rule" aria-hidden="true"></span>}
+    {CTA_COMPOSITION === 'banner' ? (
+      <div class="cta-inner">
+        <div class="cta-copy">
+          {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+          {body && <p {...editable(section, body)}>{text(body.value)}</p>}
+        </div>
+        <Actions actions={section.actions} />
+      </div>
+    ) : (
+      <>
+        <div class="cta-copy">
+          {CTA_COMPOSITION === 'editorial' && <span class="cta-rule" aria-hidden="true"></span>}
+          {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+          {body && <p {...editable(section, body)}>{text(body.value)}</p>}
+        </div>
+        <Actions actions={section.actions} />
+      </>
+    )}
   </section>
 )}
 

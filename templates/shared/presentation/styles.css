@@ -735,3 +735,155 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .action-link.action-arrow:hover .action-arrow { transition: none; transform: none; }
   .button.action-block:hover { padding-left: 0; }
 }
+
+/* ---------------------------------------------------------------------------
+   The closing-ask family.
+
+   `.cta-section` above is the inset dark rounded rectangle every candidate in
+   every independent review closed on, and the v4 critic named it among the four
+   reasons the work read as template-derived. `panel` keeps it exactly, because
+   it is what every existing build renders and this axis must not change a
+   project that never asked for one.
+
+   The others are compositions. Each overrides the panel's ground, shape and
+   flow rather than tinting it, and each carries structure the others do not.
+--------------------------------------------------------------------------- */
+
+.cta-section .cta-copy { min-width: 0; }
+.cta-section .cta-rule { display: block; width: 64px; height: 3px; background: var(--color-accent); }
+
+/* Editorial — no panel. A rule, a statement at reading measure, the ask under
+   it. Sits on the page ground like any other section. */
+.cta-section.cta-editorial {
+  display: block;
+  background: none;
+  color: inherit;
+  border-radius: 0;
+  padding: var(--section-space) 0;
+  margin-inline: max(20px, calc((100vw - var(--layout-max-width)) / 2));
+}
+.cta-section.cta-editorial h2 { color: var(--color-ink); font-size: clamp(2rem, 4vw, 3.25rem); max-width: 18ch; margin: 20px 0 0; }
+.cta-section.cta-editorial p { color: var(--color-text-muted); opacity: 1; max-width: 56ch; }
+.cta-section.cta-editorial .section-actions { margin-top: 28px; }
+
+/* Banner — edge to edge. No side margin and no radius, so the ask becomes a
+   full-width band rather than a card floating on the page. */
+.cta-section.cta-banner {
+  display: block;
+  margin-inline: 0;
+  border-radius: 0;
+  padding: clamp(48px, 6vw, 88px) max(20px, calc((100vw - var(--layout-max-width)) / 2));
+}
+.cta-section.cta-banner .cta-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+}
+.cta-section.cta-banner h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); max-width: 16ch; }
+
+/* Register — a ruled row, no fill. The ask reads as the last entry in the
+   document rather than as a panel attached to the end of it. */
+.cta-section.cta-register {
+  display: flex;
+  align-items: baseline;
+  gap: 32px;
+  background: none;
+  color: inherit;
+  border-radius: 0;
+  border-top: 2px solid var(--color-ink);
+  padding: 28px 0 0;
+  margin-inline: max(20px, calc((100vw - var(--layout-max-width)) / 2));
+}
+.cta-section.cta-register .cta-rule { display: none; }
+.cta-section.cta-register h2 { color: var(--color-ink); font-size: var(--text-2xl, 1.6rem); margin: 0; }
+.cta-section.cta-register p { color: var(--color-text-muted); opacity: 1; margin: 8px 0 0; font-size: var(--text-base, 1rem); }
+
+/* A composition without the dark ground must not keep the inverse ink the
+   panel handed its actions, or the ask disappears into the page. */
+.cta-section.cta-editorial .action-link,
+.cta-section.cta-register .action-link,
+.cta-section.cta-editorial .button.action-outlined,
+.cta-section.cta-register .button.action-outlined {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.cta-section.cta-editorial .button.action-outlined:hover,
+.cta-section.cta-register .button.action-outlined:hover { background: var(--color-accent); color: var(--color-surface); }
+.cta-section.cta-editorial .primary-action.button:not(.action-outlined):not(.action-block),
+.cta-section.cta-register .primary-action.button:not(.action-outlined):not(.action-block) {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+@media (max-width: 880px) {
+  .cta-section.cta-register { flex-direction: column; gap: 20px; }
+  .cta-section.cta-banner .cta-inner { flex-direction: column; align-items: flex-start; }
+}
+
+/* ---------------------------------------------------------------------------
+   The opening composition family.
+
+   `hero-{strategy}` above decides where a photograph goes. With no photograph
+   every strategy renders the same copy-only block, which is why nbm — which has
+   none — opened identically in every candidate. These decide how the opening is
+   composed when type is what it has, and they compose with the strategy rather
+   than replacing it.
+--------------------------------------------------------------------------- */
+
+.hero-section .hero-rule { display: block; width: 96px; height: 4px; background: var(--color-accent); margin-bottom: 28px; }
+
+/* Columns — the claim on the left, the reading copy and the ask on the right.
+   A two-column opening rather than one stack. */
+@media (min-width: 900px) {
+  .hero-section.hero-compose-columns:not(.has-image):not(.has-backdrop) .hero-copy-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    column-gap: clamp(40px, 6vw, 96px);
+    align-items: start;
+  }
+  .hero-section.hero-compose-columns .hero-copy-column > h1 { grid-column: 1; margin: 0; }
+  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy,
+  .hero-section.hero-compose-columns .hero-copy-column > .section-actions { grid-column: 2; }
+  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy { margin-top: 0; }
+}
+
+/* Statement — the opening is the claim. Oversized display type under a rule,
+   copy kept short, the ask directly beneath. */
+.hero-section.hero-compose-statement .hero-copy-column > h1 {
+  font-size: clamp(2.75rem, 7.5vw, 6rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  max-width: 14ch;
+}
+.hero-section.hero-compose-statement .hero-copy { max-width: 46ch; font-size: var(--text-lg); }
+
+/* Centred — a measured, symmetrical opening.
+
+   `display` is restated rather than assumed. `heroStrategy` also styles this
+   element — `hero-utility` makes it a two-column grid with the actions in the
+   right-hand column — and the two axes compose, so a composition that does not
+   set its own layout inherits the strategy's. That is exactly what happened:
+   centred copy with the ask floating beside it at mid-height, which is neither
+   composition. A composition rule has to win on the properties it owns. */
+.hero-section.hero-compose-centred .hero-copy-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-template-columns: none;
+  max-width: 62ch;
+  margin-inline: auto;
+  text-align: center;
+}
+.hero-section.hero-compose-centred .hero-copy-column > .hero-copy { margin-inline: auto; }
+.hero-section.hero-compose-centred .section-actions { justify-content: center; }
+.hero-section.hero-compose-centred .hero-rule { margin-inline: auto; }
+
+/* On a phone every opening is one column. `columns` is a desktop composition,
+   and forcing a two-column grid onto 390px would be the "desktop with fewer
+   columns" mobile this repository already refuses. */
+@media (max-width: 899px) {
+  .hero-section.hero-compose-columns .hero-copy-column { display: block; }
+}

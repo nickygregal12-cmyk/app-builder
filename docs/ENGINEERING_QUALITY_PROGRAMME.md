@@ -25,12 +25,19 @@ wrong-route or vacuous evidence is not rescued by being well-formed. Individual 
 closed where their tests say so; this is the invariant that prevents the same class returning through
 a different producer.
 
-### Root install reproducibility — bounded open defect
+### Root install reproducibility — closed
 
-The root `package-lock.json` is absent and gitignored, and CI uses `npm install`. A fresh checkout
-therefore cannot use `npm ci` to reproduce the root dependency graph. This is an engineering-quality
-defect, not visual or product-proof work: close it with a tracked lockfile and a fresh-checkout `npm ci`
-proof, without broadening it into a dependency-management programme.
+The root `package-lock.json` is tracked and every workflow installs with `npm ci`, so a fresh
+checkout reproduces the exact dependency graph rather than re-resolving one from ranges. Proved by
+installing a clean clone with `npm ci` and no preceding `npm install`.
+
+`tooling/root-install-reproducibility.test.mjs` is what keeps it closed, because every way this
+regresses is a one-line edit somebody makes for a good reason: it fails if an ignore rule hides the
+lockfile again, if a workflow reverts to `npm install`, or if a declared workspace is missing from
+the lockfile. Each of those three was planted and observed to fail before the rules were trusted.
+
+Deliberately not broadened into a dependency-management programme: the lockfile pins what is already
+declared and no version was changed to land it.
 
 ## Tool responsibility map
 
@@ -440,13 +447,17 @@ checked *is* the text — a rule that only holds after a parser has normalised t
 about the parser. Comment stripping is quote-aware in both directions, so a `#` inside a `run:`
 string cannot hide the rest of the block and a pinned action's `# v7` note is not read as its ref.
 
-**2. Exact versions ✅ delivered; dependency review next.** `package-lock.json` is deliberately not
-committed, so a range is resolved fresh on every install: the tree a contributor tested is not the
-tree CI installs, and neither is the tree the next contributor gets. The failure mode is quiet until
-it is not — a pull request in this programme passed `npm run check` locally against `oxlint@1.71`
-and failed hosted CI on a rule added in `1.80`, same declared dependency, different resolved
-version, one cycle lost. The supply-chain form of the same gap is worse than a lost cycle: a
-compromised patch release of any permitted range lands without anybody choosing it.
+**2. Exact versions ✅ delivered; dependency review next.** The gap this addressed was that a range
+was resolved fresh on every install: the tree a contributor tested was not the tree CI installed,
+and neither was the tree the next contributor got. The failure mode is quiet until it is not — a
+pull request in this programme passed `npm run check` locally against `oxlint@1.71` and failed
+hosted CI on a rule added in `1.80`, same declared dependency, different resolved version, one cycle
+lost. The supply-chain form of the same gap is worse than a lost cycle: a compromised patch release
+of any permitted range lands without anybody choosing it.
+
+Exact versions narrowed that window to what each manifest declares. The root `package-lock.json` has
+since been committed and every workflow installs with `npm ci`, which closes the rest of it by
+pinning the transitive graph nobody declared — see *Root install reproducibility* above.
 
 Twenty ranges across four manifests are now exact — three in the root, six in the Console, and
 eleven in the two templates, which is where it matters most: `templates/` is copied into somebody

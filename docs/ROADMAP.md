@@ -26,15 +26,15 @@ Statuses are deliberately small:
 
 **Phase 4.4 — product proof through high-value application capability. Active.**
 
-> **NOW: make the root dependency graph reproducible with `npm ci`.**
-The root lockfile is absent and ignored, so a fresh checkout still resolves a new dependency graph before it can run the factory's ordinary checks.
+> **NOW: run the bounded serious-application benchmark.**
+The three bounded truth/safety stages are merged, so the next highest-value work is making one difficult product journey reveal which reusable application primitives the factory actually lacks.
 ## EXECUTION MAP
 
 ```text
-database-upgrade honesty (NOW)
-  -> gate-evidence CI truth
-  -> reproducible root npm ci
-  -> bounded serious-application benchmark
+database-upgrade honesty (done)
+  -> gate-evidence CI truth (done)
+  -> reproducible root npm ci (done)
+  -> bounded serious-application benchmark (NOW)
   -> fix smallest reusable failures
   -> rerun the frozen benchmark
   -> mature requirement coverage
@@ -49,40 +49,11 @@ Completed: database-bearing upgrades fail closed as `database-evolution-unmodell
 
 Completed: ordinary CI runs the integrated producer → resolver → convergence lane and fails evidence-system integrity without weakening measured product gates.
 
-## [NOW] Stage: Root dependency reproducibility
+Completed: the root lockfile is tracked and every workflow installs with `npm ci`, so a fresh checkout reproduces the exact dependency graph instead of resolving a new one (`tooling/root-install-reproducibility.test.mjs` keeps it closed).
 
-**Outcome**
-A fresh checkout installs the root dependency graph with `npm ci` from a tracked lockfile and passes the normal checks/build under the repository's intended Node/npm versions.
-**Why now**
-The root `package-lock.json` is currently absent and gitignored, so `npm install` must first resolve a new dependency graph. This is a small engineering-quality defect and should stay small.
-**Prerequisites**
-
-- Database-bearing upgrade honesty and gate-evidence CI truth closed and merged.
-**Read before working**
-
-1. `docs/ENGINEERING_QUALITY_PROGRAMME.md` — Root install reproducibility.
-2. `package.json`.
-3. `.github/workflows/ci.yml`.
-**Do**
-
-1. Confirm the intended Node/npm toolchain.
-2. Track the root lockfile and remove only the ignore rule that prevents it.
-3. Prove `npm ci` in a clean checkout/worktree.
-4. Use the reproducible install in the appropriate CI path.
-**Do not**
-
-- mix this with visual/product work;
-- start a package-manager migration or dependency-upgrade programme.
-**Evidence that closes this stage**
-
-- clean root `npm ci` succeeds without a preceding `npm install`;
-- `npm run check` and `npm run build` pass;
-- exact-head hosted CI passes.
-**Then**
-Advance `NOW` to the bounded serious-application benchmark.
 ### Outcome C — bounded serious-application benchmark
 
-## [NEXT] Stage: Bounded serious-application benchmark
+## [NOW] Stage: Bounded serious-application benchmark
 
 **Outcome**
 One portable generated application proves this domain journey against a real generated backend:

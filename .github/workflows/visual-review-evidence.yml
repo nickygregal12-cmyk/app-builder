@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: 22
 
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
 
       # Who created these candidates, declared because the run refuses to guess.

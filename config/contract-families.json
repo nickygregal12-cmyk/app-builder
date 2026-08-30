@@ -135,8 +135,8 @@
       "schema": "approved-build-plan.schema.json",
       "typeName": "ApprovedBuildPlan",
       "boundary": "Explicitly approved immutable project-generation state and the single-use approved-plan execution boundary.",
-      "typesHash": "ee95a3b12d538e23a745ff22e974334a8c96a809be89d24f5c9ae141ea0fe0af",
-      "schemaHash": "ecf6fdc2438ebe336baae71636b169758068655a6b3ccc0ef83dab0ff8fd6aa8"
+      "typesHash": "df672d854229c617ad4aa9100e05af043fc12130af4ed66020b4e0d0a6835cce",
+      "schemaHash": "ed9adb479bf84cb3beb388571cc5187496d93df151ad6130d259c95a5c45981b"
     },
     {
       "id": "visual-candidate-set",

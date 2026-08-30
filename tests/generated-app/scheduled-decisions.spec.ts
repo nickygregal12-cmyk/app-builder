@@ -30,7 +30,25 @@ async function signIn(page: import('@playwright/test').Page, credentials: { emai
 }
 
 test.describe('scheduled decisions', () => {
-  test('a competitor decides before the deadline and sees nobody else until it passes', async ({ page }) => {
+  test('a competitor decides before the deadline and sees nobody else until it passes', async ({ page, journeySignals }) => {
+    // The amendment at step 6 is *expected* to be refused once, and the refusal
+    // is the mechanism rather than a fault. The recipe grants `update (choice)`
+    // and nothing else, so PostgREST's `.upsert()` — which asks for update on
+    // every column in the payload — cannot be used; the client inserts instead
+    // and reads the unique violation as "this person has already decided". The
+    // 409 is that violation. It is declared here rather than centrally because
+    // it belongs to this journey's design and should stop being excused the day
+    // that design changes.
+    journeySignals.declare({
+      id: 'decision-amendment-conflict',
+      kinds: ['http-error'],
+      match: { url: '/rest/v1/scheduled_decisions', status: [409] },
+      because:
+        'The client inserts a decision and treats the unique-constraint violation as an amendment, because the narrow '
+        + '`update (choice)` grant refuses the upsert that would otherwise express it. The 409 is how the amendment path '
+        + 'detects it is amending, so a run of this journey without one would mean the amendment was never exercised.',
+    });
+
     await signIn(page, MEMBER_A);
 
     const open = page.locator('[data-entity-reference="SCH-OPEN"]');

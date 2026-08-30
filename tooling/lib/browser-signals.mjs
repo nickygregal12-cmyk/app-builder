@@ -82,6 +82,18 @@ export const HARNESS_DECLARATIONS = Object.freeze([
       + 'doing. Any other failure text is a request that genuinely never arrived, and stays gated.',
   }),
   Object.freeze({
+    id: 'supabase-local-jwt-clock-skew',
+    kinds: Object.freeze(['http-error']),
+    match: Object.freeze({ status: Object.freeze([401]), body: '"code":"PGRST303"' }),
+    because:
+      'PostgREST rejecting a token GoTrue minted a moment earlier, with "JWT issued at future". The two run as separate '
+      + 'containers in the local acceptance stack and PostgREST allows no leeway on `iat`, so a sub-second difference between '
+      + 'their clocks refuses a perfectly valid session. The application cannot cause it — it mints no tokens and sets no '
+      + 'claims — and it is intermittent, which is what a clock race looks like. It is matched on the PostgREST error code '
+      + 'rather than on the status, so an ordinary 401 is still gated, and it stays counted in the evidence: if it starts '
+      + 'happening on every run that is a stack to fix, not a line to keep excusing.',
+  }),
+  Object.freeze({
     id: 'resource-failure-console-duplicate',
     kinds: Object.freeze(['console-error']),
     match: Object.freeze({ text: '^Failed to load resource: (the server responded with a status of \\d+|net::)' }),
@@ -130,6 +142,13 @@ function matches(match, signal) {
   }
   if (match.text !== undefined) {
     if (typeof signal.text !== 'string' || !new RegExp(match.text).test(signal.text)) return false;
+  }
+  // Matched as a plain substring rather than a pattern. What goes here is an
+  // API's own error code, and a code is a literal; treating it as a regular
+  // expression would make `.` in a code match anything and turn a narrow
+  // declaration into a broad one by accident.
+  if (match.body !== undefined) {
+    if (typeof signal.body !== 'string' || !signal.body.includes(match.body)) return false;
   }
   return true;
 }
@@ -204,7 +223,11 @@ export function describeGatedSignals(gated) {
       case 'request-failed':
         return `request never completed: ${signal.method} ${signal.url} (${signal.failure})`;
       case 'http-error':
-        return `HTTP ${signal.status}: ${signal.method} ${signal.url}`;
+        // With the body, because a status is not a diagnosis. The first hosted
+        // run of this gate reported `HTTP 401` against a profile write and the
+        // status alone read as a broken product; the body said `PGRST303 — JWT
+        // issued at future`, which is two containers disagreeing about the time.
+        return `HTTP ${signal.status}: ${signal.method} ${signal.url}${signal.body ? ` — ${signal.body}` : ''}`;
       default:
         return `${signal.kind}: ${signal.text ?? signal.url ?? ''}`;
     }

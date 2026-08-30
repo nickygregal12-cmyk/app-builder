@@ -185,6 +185,36 @@ than these two did. That is a change to the instrument between the second run an
 is recorded here rather than folded into the result, because a burden that falls under a stricter
 lane is worth something and a burden that falls under a looser one is not.
 
+**What the stricter lane found on its first hosted run.** Four things, none of which any previous run
+could have reported:
+
+1. *`PGRST303 — JWT issued at future`, on the profile write at sign-in.* PostgREST refusing a token
+   GoTrue had minted moments earlier. The two are separate containers in the local acceptance stack
+   and PostgREST allows no leeway on `iat`, so a sub-second disagreement about the time refuses a
+   valid session. Intermittent, which is what a clock race looks like. It is a stack artefact rather
+   than a product defect — the application mints no tokens — so it is declared centrally, matched on
+   the PostgREST error code rather than on the status, and still counted: if it starts happening
+   every run it is a stack to fix, not a line to keep excusing.
+2. *`409` on `POST /rest/v1/scheduled_decisions`.* Not a fault at all — it is the amendment mechanism
+   recorded above. The client inserts and reads the unique violation as "this person has already
+   decided", because the narrow `update (choice)` grant refuses the upsert that would otherwise say
+   it. Declared inside the journey rather than centrally, so it stops being excused the day that
+   design changes, and a run without one would mean the amendment path was never exercised.
+3. *The lane's retries cannot rescue a write journey.* When the gate failed the decision journey's
+   first attempt, the retry timed out looking for a "submit decision" control that was no longer
+   there: the first attempt had already written the decision, and the seed is not reset between
+   attempts. `retries: 1` absorbs infrastructure noise on a read-only journey and can do nothing for
+   a journey that changes the database. This is recorded rather than fixed; it is a question about
+   what the lane's retry is for.
+4. *A retry was editing the evidence.* The packet assembler read the last attempt, so a journey that
+   reported an error and then passed on retry was published as clean while the job was red. Fixed,
+   and now gated: a retry that follows an undeclared signal fails the evidence step, because
+   Playwright exits 0 for a flaky pass and nothing else was in a position to catch it.
+
+The first two are the gate doing its job — one environmental, one by design, neither previously
+visible. The second two are defects in the instrument, found by pointing it at a real run, which is
+the argument for landing an instrument against real evidence rather than against a fixture.
+
 ## Required build sequence
 
 A Predictor-class application must not go directly from questionnaire to bulk implementation.

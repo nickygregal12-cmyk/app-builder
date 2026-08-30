@@ -68,20 +68,35 @@ const decode = (attachment) => {
 
 const slug = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
 
-/** Every test in a Playwright JSON report, flattened out of its suite nesting. */
+/**
+ * Every test in a Playwright JSON report, with every attempt it made.
+ *
+ * All of them, not the last one. Reading `results.at(-1)` is the obvious thing
+ * and it is wrong here, and the first hosted run of this lane proved it: three
+ * journeys reported errors on their first attempt, two passed on retry, and a
+ * packet built from last-attempt-only described a clean run while the job was
+ * red. A retry that passed does not unsay what the attempt before it reported —
+ * `retries: 1` is there to absorb infrastructure noise, not to edit the record.
+ */
 export function flattenTests(report) {
   const found = [];
   const walk = (suite, file) => {
     const specFile = suite.file ?? file;
     for (const spec of suite.specs ?? []) {
       for (const testCase of spec.tests ?? []) {
-        const last = (testCase.results ?? []).at(-1) ?? {};
+        const results = testCase.results ?? [];
+        const attempts = results.map((result, index) => ({
+          attempt: index + 1,
+          status: result.status ?? 'unknown',
+          durationMs: result.duration ?? null,
+          attachments: result.attachments ?? [],
+        }));
         found.push({
           title: spec.title,
           file: path.basename(specFile ?? 'unknown'),
-          status: last.status ?? 'unknown',
-          durationMs: last.duration ?? null,
-          attachments: last.attachments ?? [],
+          status: attempts.at(-1)?.status ?? 'unknown',
+          attempts,
+          attachments: attempts.flatMap((attempt) => attempt.attachments),
         });
       }
     }
@@ -126,31 +141,55 @@ export function summariseSignals(journeys) {
   const byKind = Object.fromEntries(SIGNAL_KINDS.concat('console-warning').map((kind) => [kind, { gated: 0, declared: 0, observed: 0 }]));
   const declarationsUsed = {};
   let unwatched = 0;
+  // Counted across every attempt. A journey that reported four errors and then
+  // passed on retry contributed four, and a total that quietly dropped them
+  // would be the retry editing the record a second time.
   for (const journey of journeys) {
-    // A journey that never ran had nothing to watch. A journey that ran and
-    // recorded nothing is the case worth failing on, because silence from an
-    // unwatched journey reads exactly like silence from a clean one.
-    if (!journey.signals) { if (journey.status !== 'skipped') unwatched += 1; continue; }
-    for (const signal of journey.signals.signals ?? []) {
-      const bucket = byKind[signal.kind] ?? (byKind[signal.kind] = { gated: 0, declared: 0, observed: 0 });
-      bucket[signal.disposition] = (bucket[signal.disposition] ?? 0) + 1;
-      if (signal.declaredBy) declarationsUsed[signal.declaredBy] = (declarationsUsed[signal.declaredBy] ?? 0) + 1;
+    for (const attempt of journey.attempts ?? []) {
+      // An attempt that never ran had nothing to watch. One that ran and
+      // recorded nothing is the case worth failing on, because silence from an
+      // unwatched journey reads exactly like silence from a clean one.
+      if (!attempt.signals) {
+        if (attempt.status !== 'skipped' && attempt.status !== 'timedOut') unwatched += 1;
+        continue;
+      }
+      for (const signal of attempt.signals.signals ?? []) {
+        const bucket = byKind[signal.kind] ?? (byKind[signal.kind] = { gated: 0, declared: 0, observed: 0 });
+        bucket[signal.disposition] = (bucket[signal.disposition] ?? 0) + 1;
+        if (signal.declaredBy) declarationsUsed[signal.declaredBy] = (declarationsUsed[signal.declaredBy] ?? 0) + 1;
+      }
     }
   }
-  return { byKind, declarationsUsed, unwatched };
+  return { byKind, declarationsUsed, unwatched, maskedByRetry: journeys.filter((journey) => journey.maskedByRetry).map((journey) => journey.journey) };
 }
+
+const attemptSignals = (attempt) => {
+  const found = attempt.attachments.find((attachment) => attachment.name === 'browser-signals');
+  return found ? JSON.parse(decode(found) ?? 'null') : null;
+};
 
 export function buildPacket({ report, tests, captureFiles }) {
   const journeys = tests.map((entry) => {
-    const signals = entry.attachments.find((attachment) => attachment.name === 'browser-signals');
-    const parsed = signals ? JSON.parse(decode(signals) ?? 'null') : null;
+    const attempts = entry.attempts.map((attempt) => ({
+      attempt: attempt.attempt,
+      status: attempt.status,
+      durationMs: attempt.durationMs,
+      signals: attemptSignals(attempt),
+    }));
+    const final = attempts.at(-1) ?? null;
     return {
       journey: entry.title,
       capability: entry.file.replace(/\.spec\.ts$/, ''),
       status: entry.status,
-      durationMs: entry.durationMs,
       captures: captureFiles.get(entry.title) ?? [],
-      signals: parsed,
+      attempts,
+      // Named, because this is the shape in which a lane lies to itself: the
+      // job goes green, the summary says "flaky", and what the browser reported
+      // on the attempt that failed is never read by anyone.
+      maskedByRetry: attempts.length > 1
+        && final?.status === 'passed'
+        && attempts.slice(0, -1).some((attempt) => attempt.signals && !attempt.signals.clean),
+      signals: final?.signals ?? null,
     };
   });
   return {
@@ -206,12 +245,17 @@ function reviewMarkdown(packet) {
     '',
     '## Journeys',
     '',
-    '| Capability | Journey | Result | Captures | Gated signals |',
-    '| --- | --- | --- | --- | --- |',
+    '| Capability | Journey | Result | Attempts | Captures | Gated signals |',
+    '| --- | --- | --- | --- | --- | --- |',
   ];
   for (const journey of packet.journeys) {
-    const gated = journey.signals ? journey.signals.counts.gated : 'not recorded';
-    lines.push(`| ${journey.capability} | ${journey.journey} | ${journey.status} | ${journey.captures.length} | ${gated} |`);
+    // Summed over attempts, not taken from the last one. A journey that passed
+    // on retry still reported whatever it reported the first time.
+    const gated = journey.attempts.some((attempt) => attempt.signals)
+      ? journey.attempts.reduce((total, attempt) => total + (attempt.signals?.counts.gated ?? 0), 0)
+      : 'not recorded';
+    const result = journey.maskedByRetry ? `${journey.status} (masked by retry)` : journey.status;
+    lines.push(`| ${journey.capability} | ${journey.journey} | ${result} | ${journey.attempts.length} | ${journey.captures.length} | ${gated} |`);
   }
   lines.push('', '## What the browser reported', '');
   for (const [kind, counts] of Object.entries(packet.signals.byKind)) {
@@ -255,7 +299,15 @@ function main() {
     console.log(`${journey.status.padEnd(7)} ${journey.captures.length} capture(s)  ${gated} gated  ${journey.journey}`);
   }
   if (packet.signals.unwatched) {
-    console.error(`${packet.signals.unwatched} journey(ies) recorded no browser signals. A journey that is not watched is not evidence that nothing went wrong.`);
+    console.error(`${packet.signals.unwatched} attempt(s) recorded no browser signals. A journey that is not watched is not evidence that nothing went wrong.`);
+  }
+  // Playwright exits 0 for a journey that failed once and passed on retry, so
+  // this is the only place a retried error can still be caught. A retry exists
+  // to absorb infrastructure noise; it must not launder a signal nobody
+  // declared, because the second run of a flaky failure is not a refutation of
+  // the first.
+  for (const journey of packet.signals.maskedByRetry) {
+    console.error(`"${journey}" reported an undeclared browser error and then passed on retry. The retry is not the answer to it.`);
   }
   for (const entry of packet.reconciliation.missing) {
     console.error(`${entry.file}: expected ${entry.expected} journey(ies), ran ${entry.ran}. A lane that lost a journey publishes a shorter green run, not a faster one.`);
@@ -265,7 +317,10 @@ function main() {
   }
   console.log(`Evidence: ${path.relative(ROOT, EVIDENCE)}`);
 
-  const failed = !packet.reconciliation.complete || packet.reconciliation.unexpected.length > 0 || packet.signals.unwatched > 0;
+  const failed = !packet.reconciliation.complete
+    || packet.reconciliation.unexpected.length > 0
+    || packet.signals.unwatched > 0
+    || packet.signals.maskedByRetry.length > 0;
   if (failed) process.exit(1);
 }
 

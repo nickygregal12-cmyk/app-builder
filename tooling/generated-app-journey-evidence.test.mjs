@@ -82,6 +82,14 @@ test('the harness declarations excuse the harness and nothing beside it', () => 
     [{ kind: 'console-error', text: 'Failed to load resource: net::ERR_CONNECTION_REFUSED' }, 'declared'],
     // A message the application wrote is not an echo of anything.
     [{ kind: 'console-error', text: 'Failed to load resources for the dashboard' }, 'gated'],
+    // The local stack's own clock race, matched on the PostgREST code and not
+    // on the status. This is what the first hosted run of the gate actually
+    // found behind `HTTP 401` on a profile write.
+    [{ kind: 'http-error', url: 'http://127.0.0.1:54321/rest/v1/profiles?on_conflict=id', status: 401, body: '{"code":"PGRST303","details":null,"hint":null,"message":"JWT issued at future"}' }, 'declared'],
+    // Any other 401 on the same address is a product signal and stays gated.
+    [{ kind: 'http-error', url: 'http://127.0.0.1:54321/rest/v1/profiles?on_conflict=id', status: 401, body: '{"code":"PGRST301","message":"JWT expired"}' }, 'gated'],
+    // And a 401 whose body never arrived cannot be excused by a body rule.
+    [{ kind: 'http-error', url: 'http://127.0.0.1:54321/rest/v1/profiles', status: 401 }, 'gated'],
   ];
   for (const [signal, expected] of cases) {
     assert.equal(
@@ -200,4 +208,42 @@ test('a Playwright report is flattened to the journeys it ran', () => {
   assert.equal(tests.length, 1);
   assert.equal(tests[0].file, 'records.spec.ts');
   assert.equal(tests[0].status, 'passed');
+  assert.equal(tests[0].attempts.length, 1);
+});
+
+/**
+ * The defect the first hosted run of this gate exposed in this file's own
+ * assembler. Three journeys reported errors on their first attempt, two passed
+ * on retry, and a packet built from `results.at(-1)` described a clean run while
+ * the job was red.
+ */
+test('a retry does not launder what the attempt before it reported', () => {
+  const signals = (gated) => ({
+    body: Buffer.from(JSON.stringify({ counts: { gated, declared: 0, observed: 0 }, clean: gated === 0, signals: Array.from({ length: gated }, () => ({ kind: 'http-error', disposition: 'gated' })) })).toString('base64'),
+    name: 'browser-signals',
+    contentType: 'application/json',
+  });
+  const report = {
+    suites: [{
+      file: 'tests/generated-app/admin.spec.ts',
+      suites: [{
+        specs: [{
+          title: 'a platform administrator reaches the real generated admin consumer',
+          tests: [{ results: [
+            { status: 'failed', duration: 900, attachments: [signals(1)] },
+            { status: 'passed', duration: 800, attachments: [signals(0)] },
+          ] }],
+        }],
+      }],
+    }],
+  };
+  const tests = flattenTests(report);
+  assert.equal(tests[0].attempts.length, 2, 'both attempts must survive into the packet');
+
+  const packet = buildPacket({ report, tests, captureFiles: new Map() });
+  const journey = packet.journeys[0];
+  assert.equal(journey.status, 'passed', 'Playwright called this a flaky pass and the packet does not argue with that');
+  assert.equal(journey.maskedByRetry, true, 'but it must say the earlier attempt reported something');
+  assert.equal(packet.signals.byKind['http-error'].gated, 1, 'the error is counted, not dropped with the attempt that saw it');
+  assert.deepEqual(packet.signals.maskedByRetry, ['a platform administrator reaches the real generated admin consumer']);
 });

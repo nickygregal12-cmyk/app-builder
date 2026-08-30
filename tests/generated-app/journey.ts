@@ -51,7 +51,16 @@ export type JourneySignals = {
   declare(declaration: Declaration): void;
 };
 
-function collect(page: Page, sink: Signal[]) {
+/**
+ * How much of an error response to keep.
+ *
+ * Enough for an API's own error code and message, which is the part that turns
+ * a status into a diagnosis, and not so much that a stack trace from a 500 ends
+ * up in the evidence of every journey that saw it.
+ */
+const BODY_LIMIT = 400;
+
+function collect(page: Page, sink: Signal[], pending: Promise<unknown>[]) {
   const at = () => sink.length;
   page.on('pageerror', (error) => {
     sink.push({ kind: 'page-error', text: error.stack ?? String(error), url: page.url(), at: at() });
@@ -72,28 +81,41 @@ function collect(page: Page, sink: Signal[]) {
   });
   page.on('response', (response) => {
     if (response.status() < 400) return;
-    sink.push({
+    const signal: Signal = {
       kind: 'http-error',
       url: response.url(),
       method: response.request().method(),
       status: response.status(),
       at: at(),
-    });
+    };
+    sink.push(signal);
+    // Read after pushing, and awaited in teardown rather than here. A response
+    // body arrives asynchronously and can be gone by the time it is asked for —
+    // the request was cancelled, or the context has closed — so the signal is
+    // recorded first and enriched if the body turns up. The gate must never
+    // depend on a body being readable.
+    pending.push(
+      response.text().then(
+        (body) => { signal.body = body.slice(0, BODY_LIMIT); },
+        () => { signal.body = undefined; },
+      ),
+    );
   });
 }
 
-function watch(context: BrowserContext, sink: Signal[]) {
-  for (const page of context.pages()) collect(page, sink);
-  context.on('page', (page) => collect(page, sink));
+function watch(context: BrowserContext, sink: Signal[], pending: Promise<unknown>[]) {
+  for (const page of context.pages()) collect(page, sink, pending);
+  context.on('page', (page) => collect(page, sink, pending));
 }
 
 export const test = base.extend<{ journeySignals: JourneySignals }>({
   journeySignals: [
     async ({ context, browser }, use, testInfo) => {
       const sink: Signal[] = [];
+      const pending: Promise<unknown>[] = [];
       const declarations: Declaration[] = [...HARNESS_DECLARATIONS];
 
-      watch(context, sink);
+      watch(context, sink, pending);
 
       // The notifications journey is three people, so it opens its own contexts
       // through the worker-scoped `browser` rather than using the one this
@@ -111,7 +133,7 @@ export const test = base.extend<{ journeySignals: JourneySignals }>({
       const newContext = browser.newContext.bind(browser);
       browser.newContext = async (...args) => {
         const created = await newContext(...args);
-        watch(created, sink);
+        watch(created, sink, pending);
         return created;
       };
 
@@ -122,6 +144,11 @@ export const test = base.extend<{ journeySignals: JourneySignals }>({
       });
 
       browser.newContext = newContext;
+
+      // Every error body that is still arriving. Classifying before these settle
+      // would judge a 401 without the code that says whether it is the product
+      // or the clock.
+      await Promise.allSettled(pending);
 
       const summary = summariseJourneySignals(sink, declarations);
       await testInfo.attach('browser-signals', {

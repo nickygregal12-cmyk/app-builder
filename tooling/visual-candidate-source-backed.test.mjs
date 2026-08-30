@@ -16,9 +16,12 @@ import path from 'node:path';
 import test from 'node:test';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { FactoryStore } from '../apps/service/src/store.js';
+import { classifyCandidateTruthReadiness } from './lib/candidate-truth-readiness.mjs';
+import { compileAssetReadiness } from './lib/asset-readiness.mjs';
 
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 const KNOWLEDGE = 'examples/genuine-business/nbm-approved-knowledge.v1.json';
+const MGB_BUNDLE = 'examples/genuine-business/mgb-approved-intake.v1.json';
 const CREATOR = { role: 'visual-direction', vendor: 'anthropic', model: 'claude-opus-5' };
 
 const readBundle = () => JSON.parse(fs.readFileSync(BUNDLE, 'utf8'));
@@ -129,11 +132,176 @@ test('the same run without the pack is refused, because a reviewer would judge a
         assert.match(error.message, /declares \d+ approved source\(s\)/);
         assert.match(error.message, /knowledge-pack-not-provided/);
         assert.match(error.message, /incomplete product truth/);
-        assert.ok(error.message.includes(String(declared.length)), 'the refusal names how many sources went unread');
+        // The refusal names the source that went unread. It counts material
+        // sources rather than declared ones, which is the correction: nbm
+        // declares two, and only the workbook is content anyone could read.
+        assert.match(error.message, /nbm-approved-workbook/);
+        assert.doesNotMatch(error.message, /nbm-public-website/, 'a reference-only research location is not what starved this truth');
         return true;
       },
     );
   });
+});
+
+/**
+ * The correction, and the case that forced it.
+ *
+ * MGB declares six sources and none of them is material. Under the count
+ * predicate the only way past the guard was to freeze an empty knowledge pack —
+ * an artefact that adds no truth and exists solely to satisfy the shape of a
+ * check. These tests hold the semantic distinction instead, and hold the sham
+ * pack planted so it cannot become the way through.
+ */
+test('a business whose only sources are research locations and unsupplied assets may generate candidates', async () => {
+  await withService('mgb-approved-intake', async ({ service }) => {
+    const bundle = JSON.parse(fs.readFileSync(MGB_BUNDLE, 'utf8'));
+    const { project } = await service.replayIntakeBundle(bundle);
+    const { frozenTruth } = service.frozenProductTruth(project.id);
+
+    // The starved-looking state is real and is not what is being waved through:
+    // there genuinely is no pack, because there was never anything to ingest.
+    assert.equal(frozenTruth.knowledgeSource, 'approved-manifest-only');
+    assert.equal(frozenTruth.knowledgePackHash, null);
+
+    const readiness = classifyCandidateTruthReadiness({ sources: bundle.projectManifest.inputs.sources });
+    assert.equal(readiness.status, 'approved-intake-truth-with-source-gaps');
+    assert.ok(readiness.readyForCandidates);
+    assert.deepEqual(readiness.material, [], 'not one of mgb\'s six sources is content the run failed to read');
+    assert.deepEqual(readiness.referenceOnlyResearch, ['mgb-facebook', 'mgb-instagram', 'mgb-companies-house-psc']);
+    assert.deepEqual(readiness.assetRightsWithoutBytes, ['mgb-logo', 'mgb-project-photo-1', 'mgb-project-photo-2']);
+
+    // And the run reaches generation without being handed a fake pack.
+    const set = await service.generateVisualCandidates(project.id, { createdBy: CREATOR });
+    assert.equal(set.truthReadiness.status, 'approved-intake-truth-with-source-gaps');
+    assert.deepEqual(set.truthReadiness.assetRightsWithoutBytes, ['mgb-logo', 'mgb-project-photo-1', 'mgb-project-photo-2']);
+  });
+});
+
+test('the candidate set never reports approved intake as externally verified truth', () => {
+  const bundle = JSON.parse(fs.readFileSync(MGB_BUNDLE, 'utf8'));
+  const readiness = classifyCandidateTruthReadiness({ sources: bundle.projectManifest.inputs.sources });
+  const notes = readiness.truthBasis.notes.join(' ');
+
+  // The whole risk of allowing this run is that its candidates get read as
+  // though somebody checked the facts. Nobody did.
+  assert.match(notes, /owner-approved intake, not externally verified fact/);
+  assert.match(notes, /No knowledge pack was ingested/);
+  assert.match(notes, /supplied for research only/);
+  assert.match(notes, /no supplied bytes/);
+});
+
+test('a public profile the owner listed never becomes an ingested fact', () => {
+  const bundle = JSON.parse(fs.readFileSync(MGB_BUNDLE, 'utf8'));
+  const readiness = classifyCandidateTruthReadiness({ sources: bundle.projectManifest.inputs.sources });
+  for (const id of ['mgb-facebook', 'mgb-instagram', 'mgb-companies-house-psc']) {
+    const entry = readiness.classified.find((source) => source.id === id);
+    assert.equal(entry.state, 'reference-only-research');
+    assert.equal(entry.publishUseAllowed, false, 'public visibility is not a republication right');
+    assert.ok(!readiness.material.includes(id), 'a place to look must never become required content');
+  }
+});
+
+test('rights over a file the owner never sent stay an asset gap, not a publishable asset', () => {
+  const bundle = JSON.parse(fs.readFileSync(MGB_BUNDLE, 'utf8'));
+  const readiness = classifyCandidateTruthReadiness({ sources: bundle.projectManifest.inputs.sources });
+  for (const id of ['mgb-logo', 'mgb-project-photo-1', 'mgb-project-photo-2']) {
+    const entry = readiness.classified.find((source) => source.id === id);
+    assert.equal(entry.rightsStatus, 'approved-for-use', 'the owner did approve prototype use');
+    assert.equal(entry.state, 'asset-right-without-bytes', 'and the bytes still never arrived');
+    assert.equal(entry.publishUseAllowed, false, 'so nothing derived from it is publishable');
+  }
+  // Asset readiness has to reach the same conclusion, or a direction could be
+  // chosen for photographs that do not exist.
+  const strategy = compileAssetReadiness({ knowledgePack: null, assetDecisions: [] });
+  assert.equal(strategy.supportsImageryLed, false);
+  assert.equal(strategy.strategy, 'typography-led');
+});
+
+test('an empty knowledge pack does not buy a way past the guard', async () => {
+  await withService('sham-pack', async ({ service }) => {
+    const pack = readPack();
+    // The obvious way around a source-backed check: hand over a pack that is
+    // shaped like evidence and contains none. It sets knowledgeSource to
+    // 'ingested-knowledge-pack', which is exactly what the old predicate read.
+    const sham = { ...pack, sources: [], facts: [], content: [], chunks: [] };
+    const { project } = await service.replayIntakeBundle(readBundle(), { knowledgePack: sham });
+    const { frozenTruth } = service.frozenProductTruth(project.id);
+    assert.equal(frozenTruth.knowledgeSource, 'ingested-knowledge-pack', 'the sham reproduces: the old guard would have been satisfied here');
+
+    await assert.rejects(
+      () => service.generateVisualCandidates(project.id, { createdBy: CREATOR }),
+      (error) => {
+        assert.match(error.message, /incomplete product truth/);
+        assert.match(error.message, /nbm-approved-workbook/);
+        return true;
+      },
+    );
+  });
+});
+
+test('a pack that lists a source but carries nothing from it is still an unread source', () => {
+  const pack = readPack();
+  // Subtler than an empty pack, and the reason coverage is measured by what a
+  // source contributed rather than by whether it is named.
+  const listedOnly = { ...pack, facts: [], content: [], chunks: [] };
+  const readiness = classifyCandidateTruthReadiness({
+    sources: readBundle().projectManifest.inputs.sources,
+    knowledgePack: listedOnly,
+  });
+  assert.equal(readiness.status, 'material-source-unread');
+  assert.equal(readiness.readyForCandidates, false);
+  assert.match(readiness.truthBasis.notes.join(' '), /contributed no fact, content or chunk/);
+});
+
+test('a future intake that declares material and ignores it is refused', async () => {
+  await withService('material-ignored', async ({ service }) => {
+    const bundle = JSON.parse(fs.readFileSync(MGB_BUNDLE, 'utf8'));
+    // Exactly the shape the guard exists for, on a business that is otherwise
+    // allowed: one owner-approved document, carrying content, never read.
+    bundle.projectManifest.inputs.sources.push({
+      id: 'mgb-brochure',
+      kind: 'document',
+      label: 'MGB services brochure',
+      name: 'mgb-brochure.pdf',
+      provenance: 'user-supplied',
+      purpose: 'Owner-supplied brochure describing the services and the work.',
+      rightsStatus: 'approved-for-use',
+      sourceRole: 'content',
+      sourceChannel: 'upload',
+      instructionAuthority: 'none',
+      publishUseAllowed: false,
+      recordedAt: '2026-08-30T00:00:00.000Z',
+    });
+
+    const readiness = classifyCandidateTruthReadiness({ sources: bundle.projectManifest.inputs.sources });
+    assert.deepEqual(readiness.material, ['mgb-brochure'], 'the brochure is material; the profiles and the photographs still are not');
+    assert.equal(readiness.readyForCandidates, false);
+
+    // Created from the manifest rather than replayed, because a replay rebuilds
+    // the manifest from the questionnaire and would drop the added source
+    // before the guard ever saw it.
+    const project = service.createProject({ manifest: bundle.projectManifest });
+    await assert.rejects(
+      () => service.generateVisualCandidates(project.id, { createdBy: CREATOR }),
+      (error) => {
+        assert.match(error.message, /incomplete product truth/);
+        assert.match(error.message, /mgb-brochure/);
+        assert.doesNotMatch(error.message, /mgb-facebook/);
+        assert.doesNotMatch(error.message, /mgb-logo/);
+        return true;
+      },
+    );
+  });
+});
+
+test('mgb prototype contact details stay visible as placeholders', () => {
+  const bundle = JSON.parse(fs.readFileSync(MGB_BUNDLE, 'utf8'));
+  const serialised = JSON.stringify(bundle);
+  // The prototype carries a fake number and a fake address on purpose. They are
+  // allowed to be there and are not allowed to become quiet production data, so
+  // the fixture is pinned rather than trusted.
+  assert.match(serialised, /123456789/);
+  assert.match(serialised, /test@mgb\.com/);
 });
 
 test('a project that declares no sources is left alone', async () => {

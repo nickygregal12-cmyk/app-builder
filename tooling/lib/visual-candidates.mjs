@@ -513,7 +513,7 @@ export function summariseCandidateSet(set, gate = null) {
  * candidates are the same build in other colours is refused rather than
  * rendered three times and compared by a person who then says so.
  */
-export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetReadiness, candidates, refusedDirections = [], createdBy } = {}) {
+export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetReadiness, truthReadiness = null, candidates, refusedDirections = [], createdBy } = {}) {
   if (!projectId) throw new Error('A visual candidate set belongs to a project.');
   if (!createdAt) throw new Error('A visual candidate set records when it was created.');
   // No default. The runtime that drives a generation is the one that may not
@@ -565,6 +565,20 @@ export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetRead
       supportsImageryLed: assetReadiness.supportsImageryLed,
       strategyReason: assetReadiness.strategyReason,
     },
+    // What the candidates are composed from, in the words that are true of it.
+    // A set built from owner-approved intake with three unread research
+    // locations and three unsupplied assets is a legitimate prototype and an
+    // illegitimate thing to call verified, and a reviewer cannot tell the
+    // difference from a screenshot.
+    truthReadiness: truthReadiness
+      ? {
+        status: truthReadiness.status,
+        material: truthReadiness.material,
+        referenceOnlyResearch: truthReadiness.referenceOnlyResearch,
+        assetRightsWithoutBytes: truthReadiness.assetRightsWithoutBytes,
+        notes: truthReadiness.truthBasis.notes,
+      }
+      : null,
     diversity: {
       distinct: diversity.distinct,
       minimumDifferingPlanes: MINIMUM_DIFFERING_PLANES,

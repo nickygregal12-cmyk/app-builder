@@ -25,7 +25,23 @@
  * points the ordinary Builder Console at exactly that state, so reviewing is
  * opening a page rather than finding a screenshot in a workspace.
  *
- *   node tooling/visual-candidate-acceptance.mjs [--verdicts verdicts.json] [--out dir]
+ * The business is an argument rather than a constant. It was nbm's bundle and
+ * nbm's knowledge pack hard-coded at the top of this file, which was honest
+ * while there was one genuine business and became the reason a second one could
+ * not be photographed. A second business is the whole point of the exercise —
+ * one company's three candidates cannot show whether the factory makes
+ * different-looking sites or makes one site in three colours — so the runner
+ * takes a bundle and, where one exists, a frozen pack. Defaults are unchanged,
+ * so `npm run acceptance:visual-candidates` is still the nbm run it always was.
+ *
+ * `--knowledge` is optional because a legitimate business may have nothing to
+ * ingest. MGB's approved intake declares three social and register URLs supplied
+ * as places to look and three assets whose bytes never arrived; there is no pack
+ * to freeze, and inventing an empty one to look source-backed is exactly what
+ * the truth guard exists to refuse.
+ *
+ *   node tooling/visual-candidate-acceptance.mjs [--bundle b.json] [--knowledge k.json]
+ *                                                [--verdicts verdicts.json] [--out dir]
  */
 
 import fs from 'node:fs';
@@ -35,17 +51,37 @@ import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { designReferenceSummary } from '../apps/service/src/visual-references.js';
 import { captureInventory, writeVisualReviewPacket } from './lib/visual-review-report.mjs';
+import { classifyCandidateTruthReadiness } from './lib/candidate-truth-readiness.mjs';
 
-const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
+// The default business, kept so the existing acceptance command means what it
+// has always meant.
+const DEFAULT_BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 // The frozen half of the same truth. The bundle carries approved intent; this
 // carries the material that intent was approved over, ingested once and
 // committed so every candidate in a set - and every later rerun - is composed
 // from identical bytes rather than from whatever the business published today.
-const KNOWLEDGE = 'examples/genuine-business/nbm-approved-knowledge.v1.json';
+const DEFAULT_KNOWLEDGE = 'examples/genuine-business/nbm-approved-knowledge.v1.json';
 
 function argument(name) {
   const index = process.argv.indexOf(name);
   return index === -1 ? null : process.argv[index + 1] ?? null;
+}
+
+/**
+ * Which business, and what material it comes with.
+ *
+ * Passing `--bundle` without `--knowledge` means "this business has no ingested
+ * material", not "I forgot the pack". Silently falling back to nbm's pack would
+ * compose one company's candidates from another company's facts, so the default
+ * pack only applies to the default bundle.
+ */
+function selectCase() {
+  const bundlePath = argument('--bundle') ?? DEFAULT_BUNDLE;
+  const explicitKnowledge = argument('--knowledge');
+  const knowledgePath = explicitKnowledge ?? (bundlePath === DEFAULT_BUNDLE ? DEFAULT_KNOWLEDGE : null);
+  if (knowledgePath && !fs.existsSync(knowledgePath)) throw new Error(`Knowledge pack not found: ${knowledgePath}`);
+  if (!fs.existsSync(bundlePath)) throw new Error(`Approved intake bundle not found: ${bundlePath}`);
+  return { bundlePath, knowledgePath };
 }
 
 /**
@@ -94,11 +130,24 @@ const store = new FactoryStore({ stateRoot });
 const service = new FactoryService({ store, workspacesRoot, factoryRoot: process.cwd() });
 
 try {
-  const bundle = JSON.parse(fs.readFileSync(BUNDLE, 'utf8'));
-  const knowledgePack = JSON.parse(fs.readFileSync(KNOWLEDGE, 'utf8'));
+  const { bundlePath, knowledgePath } = selectCase();
+  const bundle = JSON.parse(fs.readFileSync(bundlePath, 'utf8'));
+  const knowledgePack = knowledgePath ? JSON.parse(fs.readFileSync(knowledgePath, 'utf8')) : null;
   const { project } = await service.replayIntakeBundle(bundle, { knowledgePack });
-  console.log(`Replayed ${bundle.bundleId} as ${project.id}.`);
-  console.log(`Frozen knowledge pack ${knowledgePack.packHash}: ${knowledgePack.sources.length} source(s), ${knowledgePack.facts.length} fact(s).`);
+  console.log(`Replayed ${bundle.bundleId} (${bundlePath}) as ${project.id}.`);
+
+  // What this run's candidates are made of, said before anything is generated.
+  // A reviewer opening the packet has to be able to tell ingested source-backed
+  // truth from owner-approved intake with gaps, and cannot tell from a
+  // screenshot.
+  const truthReadiness = classifyCandidateTruthReadiness({
+    sources: bundle.projectManifest.inputs?.sources ?? [],
+    knowledgePack,
+  });
+  if (knowledgePack) console.log(`Frozen knowledge pack ${knowledgePack.packHash}: ${knowledgePack.sources.length} source(s), ${knowledgePack.facts.length} fact(s).`);
+  else console.log('No knowledge pack: this business supplied no ingestable material.');
+  console.log(`Truth basis: ${truthReadiness.status}`);
+  for (const note of truthReadiness.truthBasis.notes) console.log(`  ${note}`);
 
   // The canonical build first. A candidate set is a choice over a project that
   // already has an answer, not a substitute for having one.
@@ -171,10 +220,33 @@ try {
     schemaVersion: 1,
     business: bundle.projectManifest.project.name,
     bundleId: bundle.bundleId,
+    // The exact inputs, so a reviewer knows which business and which material
+    // produced the screenshots they are judging.
+    inputs: {
+      bundlePath,
+      bundleHash: bundle.projectManifestHash ?? null,
+      knowledgePath,
+      knowledgePackHash: knowledgePack?.packHash ?? null,
+      knowledgeSourceCount: knowledgePack?.sources.length ?? 0,
+      knowledgeFactCount: knowledgePack?.facts.length ?? 0,
+    },
+    // The truth basis, in the words that are true of it. This is the field that
+    // stops owner-approved intake being read as externally verified fact.
+    truthReadiness: {
+      status: truthReadiness.status,
+      notes: truthReadiness.truthBasis.notes,
+      material: truthReadiness.material,
+      referenceOnlyResearch: truthReadiness.referenceOnlyResearch,
+      unavailableAssetInputs: truthReadiness.assetRightsWithoutBytes,
+    },
     projectId: project.id,
     setId: decided.setId,
     frozenTruth: decided.frozenTruth,
     assetReadiness: decided.assetReadiness,
+    // Warnings the composition raised over this truth. "No publishable imagery"
+    // and "empty declared surface" are the honest prototype gaps, and a report
+    // that omits them flatters the candidates.
+    compositionWarnings: service.frozenProductTruth(project.id).composition.warnings,
     diversity: decided.diversity,
     refusedDirections: decided.refusedDirections,
     candidates: decided.candidates.map((candidate) => {

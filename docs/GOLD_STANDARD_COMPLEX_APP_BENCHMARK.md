@@ -141,8 +141,37 @@ football vocabulary, and that vocabulary is checked against `config/`, `recipes/
 `packages/`, `templates/` and `adapters/`. Extracting reusable capability is a judgement; not
 hard-coding the reference application is now a check.
 
-Nothing has been measured against the frozen slice yet. Freezing the target is not evidence about
-the factory — it is what makes the first measurement, and the rerun after it, mean anything.
+## First measurement against the frozen slice
+
+The slice has now been run twice against an unchanged contract. `config/application-journey-benchmarks.json`
+was not edited between the two runs, which is the only thing that makes the second one worth reading.
+
+**First pass — the browser half (PR #212).** Two meaningful interventions, both reusable factory
+corrections in `recipes/scheduled-decisions`, neither a benchmark-domain hack:
+
+1. *Every first decision was refused.* The recipe grants `update (choice)` on `scheduled_decisions`
+   and nothing else, so an amendment can change the decision and can never move it to another entity
+   or another person. The client used PostgREST's `.upsert()`, which compiles to
+   `on conflict do update set` over every column in the payload — so it asked for update on
+   `entity_id` and `identity_id` too, and was refused for the whole table before any row conflicted.
+   The grant was right and the upsert was the thing that could not live with it; the client now
+   inserts and treats the unique violation as an amendment. Two assertions hold the grant still,
+   because PostgreSQL's own hint on that error tells the next person to widen it.
+2. *The interface discarded the reason.* A refusal arrives carrying `message` on a plain object
+   rather than as an `Error`, so an `instanceof Error` test fell through to a generic sentence for
+   precisely the failures worth reading. This is what made the first defect expensive to find.
+
+Both were invisible to SQL. The pgTAP suite passed every assertion on the run that failed in the
+browser, which is the argument for the browser half existing at all: a policy the database enforces
+correctly and no client can reach is a boundary that works and a product that does not.
+
+**Rerun — identical contract, regenerated from scratch.** Zero interventions. The generated project
+installs from its own lockfile, passes its own `tsc --noEmit`, builds to an identical bundle, and the
+same 60 pgTAP assertions and 10 browser journeys pass without a correction.
+
+What this does and does not say: two runs is a first data point about one slice, not a trend, and the
+corrections were cheap because the boundary was already right. The measurement worth repeating is
+whether the *next* unfamiliar journey costs fewer reusable corrections than this one did.
 
 ## Required build sequence
 

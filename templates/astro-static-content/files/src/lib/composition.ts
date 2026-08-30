@@ -75,8 +75,8 @@ export type VisualDirection = {
   shellClass?: string;
   shellClasses?: string;
   artDirection?: {
-    dimensions?: { actionTreatment?: string; ctaComposition?: string; heroComposition?: string; typographyStrategy?: string; heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
-    responsive?: { mobileHero?: string; navigation?: string; mobileSectionOrder?: string; mobileDensity?: string; mobileMotion?: string };
+    dimensions?: { actionTreatment?: string; ctaComposition?: string; heroComposition?: string; navigationFamily?: string; typographyStrategy?: string; heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
+    responsive?: { mobileHero?: string; mobileSectionOrder?: string; mobileDensity?: string; mobileMotion?: string };
   };
 };
 

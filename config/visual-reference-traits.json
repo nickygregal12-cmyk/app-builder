@@ -388,44 +388,6 @@
         }
       }
     },
-    "disclosure-navigation": {
-      "label": "Disclosure navigation",
-      "useFor": "navigation",
-      "describe": "Navigation collapses behind a control on a small screen.",
-      "opposite": "inline-navigation",
-      "consumer": "direction.navigation",
-      "adopt": {
-        "prefer": {
-          "navigation": "disclosure"
-        }
-      },
-      "avoid": {
-        "refuse": {
-          "navigation": [
-            "disclosure"
-          ]
-        }
-      }
-    },
-    "inline-navigation": {
-      "label": "Inline navigation",
-      "useFor": "navigation",
-      "describe": "Navigation stays visible and scrolls sideways on a small screen.",
-      "opposite": "disclosure-navigation",
-      "consumer": "direction.navigation",
-      "adopt": {
-        "prefer": {
-          "navigation": "inline-wrap"
-        }
-      },
-      "avoid": {
-        "refuse": {
-          "navigation": [
-            "inline-wrap"
-          ]
-        }
-      }
-    },
     "dark-ground": {
       "label": "Dark full-page ground",
       "useFor": "colour",
@@ -480,6 +442,44 @@
       },
       "avoid": {
         "refuse": {}
+      }
+    },
+    "disclosure-navigation": {
+      "label": "Disclosure navigation",
+      "useFor": "navigation",
+      "describe": "The reference hides its destinations behind a control and keeps the header quiet, which is a masthead rather than a working bar.",
+      "opposite": "inline-navigation",
+      "consumer": "direction.navigationFamily",
+      "adopt": {
+        "prefer": {
+          "navigationFamily": "editorial"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "navigationFamily": [
+            "editorial"
+          ]
+        }
+      }
+    },
+    "inline-navigation": {
+      "label": "Inline navigation",
+      "useFor": "navigation",
+      "describe": "The reference keeps every destination on the bar, which is a working header that expects to be used rather than read.",
+      "opposite": "disclosure-navigation",
+      "consumer": "direction.navigationFamily",
+      "adopt": {
+        "prefer": {
+          "navigationFamily": "utility"
+        }
+      },
+      "avoid": {
+        "refuse": {
+          "navigationFamily": [
+            "utility"
+          ]
+        }
       }
     }
   },

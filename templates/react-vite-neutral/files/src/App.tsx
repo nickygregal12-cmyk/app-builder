@@ -58,13 +58,26 @@ const assetMap = assets as unknown as Record<string, GeneratedAsset>;
 type VisualDirection = {
   shellClasses?: string;
   artDirection?: {
-    dimensions?: { actionTreatment?: string; ctaComposition?: string; heroComposition?: string; typographyStrategy?: string; heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
-    responsive?: { mobileHero?: string; navigation?: string; mobileSectionOrder?: string; mobileDensity?: string; mobileMotion?: string };
+    dimensions?: { actionTreatment?: string; ctaComposition?: string; heroComposition?: string; navigationFamily?: string; typographyStrategy?: string; heroStrategy?: string; gridFamily?: string; headingTreatment?: string; ctaPlacement?: string; distinctiveMoment?: string };
+    responsive?: { mobileHero?: string; mobileSectionOrder?: string; mobileDensity?: string; mobileMotion?: string };
   };
 };
 const directed = design as unknown as VisualDirection;
 const HERO_STRATEGY = directed.artDirection?.dimensions?.heroStrategy ?? 'split';
-const NAVIGATION_TREATMENT = directed.artDirection?.responsive?.navigation ?? 'disclosure';
+/**
+ * What the header is made of.
+ *
+ * The last shared element and the first one a visitor sees. It replaced
+ * `responsive.navigation`, which decided whether the row collapsed on a phone
+ * while nothing decided what the row was — one element cannot have two
+ * authorities, so the family owns both.
+ */
+const NAVIGATION_FAMILIES = ['utility', 'editorial', 'register', 'centred'] as const;
+type NavigationFamily = (typeof NAVIGATION_FAMILIES)[number];
+const declaredNav = directed.artDirection?.dimensions?.navigationFamily;
+const NAVIGATION_FAMILY: NavigationFamily = (NAVIGATION_FAMILIES as readonly string[]).includes(declaredNav ?? '')
+  ? (declaredNav as NavigationFamily)
+  : 'utility';
 const MOBILE_HERO = directed.artDirection?.responsive?.mobileHero ?? 'copy-first';
 const SHELL_CLASSES = directed.shellClasses ?? design.shellClass;
 
@@ -559,28 +572,43 @@ export default function App() {
     setMenuOpen(false);
     navigate(event, href);
   };
-  // Two navigation treatments, because a phone is where a direction's decision
-  // about navigation actually shows. `disclosure` collapses behind a toggle;
-  // `inline-wrap` keeps every destination visible by wrapping the row, which
-  // suits a site whose surfaces are few and whose register is editorial. The
-  // toggle is not rendered at all under `inline-wrap` rather than hidden: a
-  // control that is present, focusable and does nothing is worse than absent.
-  const disclosureNav = NAVIGATION_TREATMENT !== 'inline-wrap';
+  // The conversion action a working header carries. It belongs in a working
+  // header and nowhere else, and it is the *site's* action — taken from the
+  // entry page rather than from whichever page is open. Reading it per page put
+  // the not-found page's "Back to home" recovery link in the header, so a
+  // visitor who mistyped an address was offered the same link twice. A page
+  // outside the navigation carries none at all.
+  const headerAction = (NAVIGATION_FAMILY === 'utility' || NAVIGATION_FAMILY === 'centred') && currentPage.navigation.visible
+    ? navigation[0]?.primaryAction ?? null
+    : null;
   return <div className={`site-frame ${SHELL_CLASSES}`} data-scenario={currentScenario}>
-    <header className={`site-header nav-${NAVIGATION_TREATMENT}`}>
-      <a className="site-brand" href={siteHref('/')} onClick={(event) => followLink(event, '/')}>{project.name}</a>
-      {/* A site with more than a handful of surfaces wraps its navigation over
-          three or four rows on a phone, which is collapsed rather than
-          designed. The toggle is CSS-hidden above the breakpoint, so wide
-          screens keep the single row they already had. */}
-      {disclosureNav && <button
-        type="button"
-        className="nav-toggle"
-        aria-expanded={menuOpen}
-        aria-controls="primary-navigation"
-        onClick={() => setMenuOpen((open) => !open)}
-      >{menuOpen ? 'Close' : 'Menu'}</button>}
-      <nav id="primary-navigation" aria-label="Primary navigation" data-open={disclosureNav ? (menuOpen ? 'true' : 'false') : 'true'}>{navigation.map((page) => <a className={page.id === currentPage.id ? 'active' : ''} href={siteHref(page.path)} onClick={(event) => followLink(event, page.path)} key={page.id}>{page.navigation.label}</a>)}</nav>
+    {/* The families differ in structure, not paint. `centred` puts the brand on
+        its own row above the destinations, so it needs a wrapper the others do
+        not have; `register` numbers each destination with a real element;
+        `editorial` carries no boxed control at all. Every family keeps the same
+        destinations, the same hrefs and the same current-page marking, because
+        a header may change what it looks like and never where it goes. */}
+    <header className={`site-header nav-${NAVIGATION_FAMILY}`} data-navigation-family={NAVIGATION_FAMILY}>
+      <div className="site-header-brand">
+        <a className="site-brand" href={siteHref('/')} onClick={(event) => followLink(event, '/')}>{project.name}</a>
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
+          onClick={() => setMenuOpen((open) => !open)}
+        >{menuOpen ? 'Close' : 'Menu'}</button>
+      </div>
+      <nav
+        id="primary-navigation"
+        aria-label="Primary navigation"
+        data-open={menuOpen ? 'true' : 'false'}
+        onKeyDown={(event) => { if (event.key === 'Escape') setMenuOpen(false); }}
+      >{navigation.map((page, index) => <a className={page.id === currentPage.id ? 'active' : ''} href={siteHref(page.path)} aria-current={page.id === currentPage.id ? 'page' : undefined} onClick={(event) => followLink(event, page.path)} key={page.id}>
+        {NAVIGATION_FAMILY === 'register' && <span className="nav-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>}
+        <span className="nav-label">{page.navigation.label}</span>
+      </a>)}</nav>
+      {headerAction && <a className="nav-action" href={siteHref(headerAction.href)} onClick={(event) => followLink(event, headerAction.href)}>{headerAction.label}</a>}
     </header>
     <main className="app-shell" data-page-id={currentPage.id} data-mobile-hero={MOBILE_HERO}>
       {currentPage.sectionIds.map((sectionId) => sectionMap.get(sectionId)).filter((section): section is SectionSpec => Boolean(section)).map((section) => <Section key={section.id} section={section} navigate={navigate} />)}

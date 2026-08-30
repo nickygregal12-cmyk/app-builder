@@ -77,42 +77,39 @@ test('the ask placement reaches the shell so the stylesheet can tell the two apa
 });
 
 /**
- * The wrapping navigation row.
+ * The two defects the header has already shipped, now guarded for every family.
  *
- * This was a scrolling row twice and an independent reviewer called it clipped
- * both times — the second time as navigation "visibly clipped at mobile width
- * across pages, including a partially obscured Locations item". A header
- * scroller asks the reader to drag a row that looks like it has already ended,
- * and no fade fixes a half-cut word. So the row wraps: every destination is
- * laid out, and none is off-screen to be discovered.
+ * The mobile row was a horizontal scroller twice and an independent reviewer
+ * called it clipped both times — the second time as navigation "visibly clipped
+ * at mobile width across pages, including a partially obscured Locations item".
+ * It was then a wrapping two-row bar, which the fourth review called loose, and
+ * `docs/PHASE_4D_VISUAL_DEBT.md` §7 left the choice between making that
+ * deliberate and retiring it in favour of disclosure.
+ *
+ * It is retired: every navigation family now discloses behind a control, in its
+ * own character. The rules those two defects earned do not lapse with the
+ * treatment that caused them, so they are asserted over the whole header block
+ * rather than over one class.
  */
-test('the visible navigation treatment gets its own width instead of competing with the brand', () => {
-  // A flex item will not shrink below its longest word, so sharing the row let
-  // "Consultants" set the width of the bar.
-  const header = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header.nav-inline-wrap')).join('\n');
-  assert.match(header, /flex-wrap:\s*wrap/, 'the header must be allowed to put the row on its own line');
-  const brand = STYLES_CSS.split('\n').find((line) => line.includes('.site-header.nav-inline-wrap .site-brand'));
-  const nav = STYLES_CSS.split('\n').find((line) => line.includes('.site-header.nav-inline-wrap nav {'));
-  assert.match(brand, /flex:\s*1 1 100%/, 'the brand takes its own row');
-  assert.match(nav, /flex:\s*1 1 100%/, 'the destinations take the full measure rather than what is left of it');
-});
+const HEADER_RULES = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header') || line.includes('.nav-'));
 
-test('the visible navigation treatment wraps rather than scrolling out of view', () => {
-  const nav = STYLES_CSS.split('\n').filter((line) => line.includes('.site-header.nav-inline-wrap nav')).join('\n');
-  assert.match(nav, /flex-wrap:\s*wrap/, 'destinations wrap onto as many lines as they need');
-  // The whole defect was a destination the reader could not see. Anything that
-  // moves part of the row off-screen brings it straight back.
-  assert.doesNotMatch(nav, /overflow-x:\s*auto|overflow-x:\s*scroll/, 'a header scroller reads as a truncated row, however it is faded');
-  assert.doesNotMatch(nav, /mask-image/, 'a fade is an apology for clipping, not a navigation pattern');
-  assert.doesNotMatch(nav, /flex-wrap:\s*nowrap/, 'nowrap is what forced the row to overflow');
+test('no navigation family scrolls a destination out of view', () => {
+  const header = HEADER_RULES.join('\n');
+  assert.doesNotMatch(header, /overflow-x:\s*auto|overflow-x:\s*scroll/, 'a header scroller reads as a truncated row, however it is faded');
+  assert.doesNotMatch(header, /mask-image/, 'a fade is an apology for clipping, not a navigation pattern');
 });
 
 test('every destination stays in the document and stays visible', () => {
-  // The failure mode this forbids is "fix the clipping by rendering fewer
-  // links", which would look correct in a screenshot and lose the pages.
-  const nav = STYLES_CSS.split('\n')
-    .filter((line) => line.includes('nav-inline-wrap'))
-    .join('\n');
-  assert.doesNotMatch(nav, /display:\s*none/, 'destinations must not be hidden to make the row fit');
-  assert.doesNotMatch(nav, /visibility:\s*hidden/, 'destinations must not be made invisible to make the row fit');
+  // The failure mode this forbids is "fix the fit by rendering fewer links",
+  // which would look correct in a screenshot and lose the pages. `nav[data-open]`
+  // is the disclosure itself and is excluded: a panel that is closed is closed,
+  // and every destination inside it is one control away.
+  const links = HEADER_RULES.filter((line) => line.includes('nav a') && !line.includes('data-open'));
+  const text = links.join('\n');
+  assert.doesNotMatch(text, /display:\s*none/, 'destinations must not be hidden to make the row fit');
+  assert.doesNotMatch(text, /visibility:\s*hidden/, 'destinations must not be made invisible to make the row fit');
+});
+
+test('the retired two-row bar does not come back', () => {
+  assert.doesNotMatch(STYLES_CSS, /nav-inline-wrap|nav-inline-scroll/, 'the loose wrapping row and the scroller are both retired');
 });

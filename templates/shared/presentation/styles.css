@@ -860,8 +860,19 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 }
 .hero-section.hero-compose-statement .hero-copy { max-width: 46ch; font-size: var(--text-lg); }
 
-/* Centred — a measured, symmetrical opening. */
+/* Centred — a measured, symmetrical opening.
+
+   `display` is restated rather than assumed. `heroStrategy` also styles this
+   element — `hero-utility` makes it a two-column grid with the actions in the
+   right-hand column — and the two axes compose, so a composition that does not
+   set its own layout inherits the strategy's. That is exactly what happened:
+   centred copy with the ask floating beside it at mid-height, which is neither
+   composition. A composition rule has to win on the properties it owns. */
 .hero-section.hero-compose-centred .hero-copy-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-template-columns: none;
   max-width: 62ch;
   margin-inline: auto;
   text-align: center;

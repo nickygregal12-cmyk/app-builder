@@ -107,7 +107,16 @@ test('the opening composes even when there is no photograph to place', () => {
   // rules must not be scoped behind the image-carrying classes.
   assert.match(css, /\.hero-compose-columns[\s\S]{0,400}grid-template-columns/, 'columns must be a two-column opening');
   assert.match(css, /\.hero-compose-statement[\s\S]{0,240}font-size:\s*clamp/, 'statement must change the display scale, not the colour');
-  assert.match(css, /\.hero-compose-centred[\s\S]{0,240}margin-inline:\s*auto/, 'centred must actually centre');
+  assert.match(css, /\.hero-compose-centred[\s\S]{0,320}margin-inline:\s*auto/, 'centred must actually centre');
+  // `heroStrategy` styles the same element — `hero-utility` makes it a
+  // two-column grid — and the two axes compose. A composition that does not set
+  // its own layout inherits the strategy's, which rendered centred copy with
+  // the ask floating beside it at mid-height: neither composition.
+  assert.match(
+    css,
+    /\.hero-compose-centred \.hero-copy-column \{[^}]*display:\s*flex/,
+    'a composition must restate the layout properties it owns, or a strategy that also styles the copy column wins',
+  );
   // A two-column opening squeezed onto a phone is the "desktop with fewer
   // columns" mobile this repository refuses elsewhere.
   assert.match(css, /max-width:\s*899px[\s\S]{0,200}hero-compose-columns[\s\S]{0,120}display:\s*block/, 'columns must collapse on a phone deliberately');

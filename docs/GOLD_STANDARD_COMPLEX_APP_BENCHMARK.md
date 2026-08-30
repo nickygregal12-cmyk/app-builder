@@ -204,8 +204,13 @@ could have reported:
    first attempt, the retry timed out looking for a "submit decision" control that was no longer
    there: the first attempt had already written the decision, and the seed is not reset between
    attempts. `retries: 1` absorbs infrastructure noise on a read-only journey and can do nothing for
-   a journey that changes the database. This is recorded rather than fixed; it is a question about
-   what the lane's retry is for.
+   a journey that changes the database. Now fixed: the lane runs `retries: 0`, and the rule is
+   enforced rather than left to that line staying at zero. Each journey's writes are *observed* — a
+   non-safe request that the server accepted — and the evidence step refuses any run in which a
+   journey that wrote was then retried. The rule is about the write and not the outcome, because
+   both attempts passing is not a defence: the second one still started from what the first one
+   left behind. A write the server refused changed nothing and does not count, so a journey that
+   deliberately provokes a refusal stays retryable.
 4. *A retry was editing the evidence.* The packet assembler read the last attempt, so a journey that
    reported an error and then passed on retry was published as clean while the job was red. Fixed,
    and now gated: a retry that follows an undeclared signal fails the evidence step, because

@@ -116,6 +116,48 @@ export const HARNESS_DECLARATIONS = Object.freeze([
   }),
 ]);
 
+/**
+ * Methods that cannot change what a later attempt would read.
+ *
+ * Everything else is treated as a write. This is deliberately the HTTP
+ * definition rather than a judgement about a particular endpoint: a lane cannot
+ * be asked to know which of its POSTs "really" changed something, and the
+ * failure this protects against does not care either.
+ */
+export const SAFE_METHODS = Object.freeze(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * Whether a request changed state that a rerun would see.
+ *
+ * A write that was refused changed nothing, so only a successful one counts.
+ * That distinction is what makes this usable as a retry rule rather than as a
+ * blanket ban: a journey that tried to write and was correctly refused may be
+ * retried, and a journey that wrote and then failed may not.
+ */
+export function isMutation({ method, status }) {
+  return !SAFE_METHODS.includes(String(method ?? '').toUpperCase()) && Number(status) >= 200 && Number(status) < 400;
+}
+
+/**
+ * Why a retry cannot be trusted after a write.
+ *
+ * The lane's first hosted run made this concrete. The gate failed the decision
+ * journey's first attempt *after* it had already written Member A's decision;
+ * the retry then went looking for the "submit decision" control, which the
+ * application had correctly replaced with "change decision", and timed out. The
+ * dangerous version of that is the one that goes green: an attempt fails
+ * halfway through a write, the retry runs against the state the first attempt
+ * left behind, and the pass is reported as evidence that the journey works from
+ * the seeded state. It never ran from the seeded state.
+ *
+ * So the rule is about the write and not about the outcome. Both attempts
+ * passing is not a defence — the second one still started somewhere else.
+ */
+export function retryViolatesMutation(attempts) {
+  if (!Array.isArray(attempts) || attempts.length < 2) return false;
+  return attempts.slice(0, -1).some((attempt) => (attempt.mutations ?? []).length > 0);
+}
+
 /** Console levels worth keeping in the record without gating on them. */
 const OBSERVED_CONSOLE_TYPES = Object.freeze(['warning']);
 

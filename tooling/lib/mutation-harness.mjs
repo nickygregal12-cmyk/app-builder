@@ -176,8 +176,18 @@ function applyMutation(source, mutation) {
  * is slow. A *survivor* is a weakening the tests did not notice, and each one is either a missing
  * test or an equivalent mutation that the registry has to say so about.
  *
- * The original file is restored in a `finally` so an interrupted run never leaves a weakened safety
- * module on disk.
+ * The original file is restored in a `finally`, which covers a throw and nothing else. It does not
+ * cover being killed: `Ctrl-C`, a `timeout`, a cancelled CI job and an agent giving up on a slow run
+ * all leave a mutant on disk, and a JS signal handler cannot help because the process spends almost
+ * all of its life blocked inside `spawnSync`, where a signal is never dispatched to JavaScript at
+ * all — measured, not assumed. The consequence is a weakened safety module sitting in the working
+ * tree, indistinguishable from an edit, waiting for the next `git add -A`.
+ *
+ * So recovery does not depend on the dying process running any code. The original is written to a
+ * sibling backup before the first mutation and removed on the way out; a backup still present when
+ * a run starts is a previous run that was killed, and it is restored from before anything else
+ * happens. The backup is also an untracked file with an obvious name, which is the loud version of
+ * a problem that was otherwise silent.
  *
  * The unmutated tests are run first, and this is not a formality. A kill is inferred from a failing
  * exit status, so a target whose tests were *already* failing kills every mutation it is given and
@@ -186,9 +196,31 @@ function applyMutation(source, mutation) {
  * the target, break one of its tests, and the run that was supposed to tell you so congratulates
  * you instead.
  */
+/** Where a run parks the pristine source while it is mutating the real file. */
+export function mutationBackupPath(root, file) {
+  return `${path.join(root, file)}.mutation-backup`;
+}
+
+/**
+ * Undo a run that was killed before it could tidy up.
+ *
+ * Returns the file it rescued, or null. Called at the start of every run rather than by a separate
+ * command, because the person who needs this is the one who does not yet know it happened.
+ */
+export function recoverInterruptedMutation(root, file) {
+  const backup = mutationBackupPath(root, file);
+  if (!fs.existsSync(backup)) return null;
+  fs.writeFileSync(path.join(root, file), fs.readFileSync(backup, 'utf8'));
+  fs.rmSync(backup);
+  return file;
+}
+
 export function runMutationTesting({ root, target, onProgress = () => {} }) {
   const absolute = path.join(root, target.file);
+  const rescued = recoverInterruptedMutation(root, target.file);
+  if (rescued) onProgress({ rescued });
   const original = fs.readFileSync(absolute, 'utf8');
+  const backup = mutationBackupPath(root, target.file);
 
   const baseline = spawnSync(process.execPath, ['--test', ...target.tests], { cwd: root, encoding: 'utf8', timeout: 120_000, env: childEnvironment() });
   if (baseline.status !== 0 || baseline.error !== undefined) {
@@ -204,6 +236,7 @@ export function runMutationTesting({ root, target, onProgress = () => {} }) {
   const survived = [];
   const skipped = [];
 
+  fs.writeFileSync(backup, original);
   try {
     for (const mutation of mutations) {
       if (ignored.has(mutation.id)) {
@@ -219,6 +252,7 @@ export function runMutationTesting({ root, target, onProgress = () => {} }) {
     }
   } finally {
     fs.writeFileSync(absolute, original);
+    fs.rmSync(backup, { force: true });
   }
 
   return { target: target.file, total: mutations.length, killed, survived, skipped };

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { MUTATION_OPERATORS, generateMutations, runMutationTesting } from './lib/mutation-harness.mjs';
+import { MUTATION_OPERATORS, generateMutations, mutationBackupPath, recoverInterruptedMutation, runMutationTesting } from './lib/mutation-harness.mjs';
 import { MUTATION_TARGETS } from './lib/mutation-targets.mjs';
 
 /**
@@ -128,6 +128,54 @@ test('a weakening the tests do not notice is reported, and one they do notice is
   // And the target file must be exactly as it was found. A harness that leaves a weakened module on
   // disk when it finishes is a worse problem than the one it was looking for.
   assert.match(fs.readFileSync(path.join(root, 'src/guard.js'), 'utf8'), /role === "operator" && approved === true/);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('a run that was killed is undone by the next one, not left on disk', () => {
+  // The `finally` covers a throw. It does not cover being killed, and almost all of a run's life is
+  // spent blocked inside `spawnSync`, where a signal never reaches JavaScript at all. So a killed
+  // run leaves a weakened module in the working tree, indistinguishable from an edit — which is how
+  // it gets committed. Recovery therefore cannot depend on the dying process doing anything.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-mutation-rescue-'));
+  const pristine = 'export const allowed = (role) => role === "operator";\n';
+  fs.writeFileSync(path.join(root, 'guard.js'), pristine);
+
+  // Exactly the state a killed run leaves behind: a mutant in place, the original beside it.
+  fs.writeFileSync(mutationBackupPath(root, 'guard.js'), pristine);
+  fs.writeFileSync(path.join(root, 'guard.js'), 'export const allowed = (role) => role !== "operator";\n');
+
+  assert.equal(recoverInterruptedMutation(root, 'guard.js'), 'guard.js');
+  assert.equal(fs.readFileSync(path.join(root, 'guard.js'), 'utf8'), pristine, 'the weakened module was left on disk');
+  assert.equal(fs.existsSync(mutationBackupPath(root, 'guard.js')), false, 'a backup left behind would rescue a later, deliberate edit');
+
+  // Nothing to rescue is not an error, and must not touch the file.
+  fs.writeFileSync(path.join(root, 'guard.js'), 'export const allowed = () => true;\n');
+  assert.equal(recoverInterruptedMutation(root, 'guard.js'), null);
+  assert.equal(fs.readFileSync(path.join(root, 'guard.js'), 'utf8'), 'export const allowed = () => true;\n');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('a completed run leaves no backup behind to rescue a later edit', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-mutation-backup-'));
+  fs.writeFileSync(path.join(root, 'guard.js'), 'export const allowed = (role) => role === "operator";\n');
+  fs.writeFileSync(path.join(root, 'guard.test.mjs'), [
+    "import test from 'node:test';",
+    "import assert from 'node:assert/strict';",
+    "import { allowed } from './guard.js';",
+    "test('operator', () => { assert.equal(allowed('operator'), true); assert.equal(allowed('visitor'), false); });",
+    '',
+  ].join('\n'));
+
+  // Observed mid-run, because "the backup exists afterwards" and "the backup was never written"
+  // look identical from the outside — and the second is the one that makes recovery a no-op.
+  let backupExistedDuringRun = false;
+  runMutationTesting({
+    root,
+    target: { file: 'guard.js', tests: ['guard.test.mjs'] },
+    onProgress: () => { backupExistedDuringRun ||= fs.existsSync(mutationBackupPath(root, 'guard.js')); },
+  });
+  assert.ok(backupExistedDuringRun, 'nothing was parked anywhere, so a killed run would have nothing to recover from');
+  assert.equal(fs.existsSync(mutationBackupPath(root, 'guard.js')), false);
   fs.rmSync(root, { recursive: true, force: true });
 });
 

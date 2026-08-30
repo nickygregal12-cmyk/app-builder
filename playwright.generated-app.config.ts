@@ -32,16 +32,35 @@ const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const requireStack = 'if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then'
   + ' echo "The generated-application journey needs VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY for the stack it should run against." >&2; exit 1; fi;';
 
+// Where this lane leaves the material an independent reviewer reads. It is
+// deliberately outside `test-results`, which Playwright empties at the start of
+// every run and fills with per-attempt scratch; a review packet has to survive
+// as one directory that can be uploaded, unzipped and read in order.
+const EVIDENCE = '.app-builder/generated-app-journey';
+
 export default defineConfig({
   testDir: './tests/generated-app',
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  reporter: process.env.CI ? 'line' : 'list',
+  // A machine-readable result beside the human one. Before this the lane
+  // reported to a terminal and nowhere else, so a green run left no record of
+  // what ran — and `npm run evidence:generated-app` has nothing to read from a
+  // wall of text that has already scrolled past.
+  reporter: [
+    [process.env.CI ? 'line' : 'list'],
+    ['json', { outputFile: `${EVIDENCE}/playwright-report.json` }],
+  ],
   use: {
     baseURL: 'http://127.0.0.1:4373',
     trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    // `on`, not `only-on-failure`. The stage criterion this lane is held to is
+    // that rendered product evidence receives independent review, and under
+    // `only-on-failure` a passing run photographs nothing: the evidence step in
+    // CI uploaded an empty directory, and the review had no object. A journey
+    // that passed is exactly the one worth looking at, because passing its
+    // assertions is not the same as looking right.
+    screenshot: 'on',
     launchOptions,
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './journey';
 
 const PLATFORM_ADMIN = { email: 'owner-a@test.local', password: 'records-journey-owner-a' };
 const ORDINARY_USER = { email: 'viewer-a@test.local', password: 'records-journey-viewer-a' };

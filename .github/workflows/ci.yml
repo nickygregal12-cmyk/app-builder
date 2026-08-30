@@ -200,11 +200,25 @@ jobs:
           npm --prefix .tmp/generated-acceptance-journey-benchmark install --no-audit --no-fund
           npm run test:e2e:generated-app
 
+      # Assembled separately from the run above, and deliberately not chained to
+      # it with `&&`. A failing journey is the run whose evidence matters most,
+      # so the packet is built whether the lane passed or not.
+      - name: Assemble generated-application journey review packet
+        if: always()
+        run: npm run evidence:generated-app
+
+      # `error`, not `warn`. This artifact is the object of the one open
+      # criterion on the bounded serious-application benchmark — that rendered
+      # product evidence receives independent review — and it was previously
+      # `test-results` under `if-no-files-found: warn`, which on a green run
+      # meant an empty upload and a warning nobody read.
       - name: Publish generated-application journey evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: generated-app-records-journey
-          path: test-results
-          if-no-files-found: warn
+          name: generated-app-journey-evidence
+          path: |
+            .app-builder/generated-app-journey
+            test-results
+          if-no-files-found: error
           retention-days: 14

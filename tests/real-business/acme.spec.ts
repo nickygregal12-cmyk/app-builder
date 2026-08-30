@@ -70,7 +70,20 @@ test.describe('on a wide screen', () => {
   });
 });
 
-test('a link that resolves to nothing lands on a not-found page, not the homepage', async ({ page }) => {
+test('a link that resolves to nothing lands on a not-found page, not the homepage', async ({ page, browserSignals }) => {
+  // The 404 is what this test is for, so it is declared rather than excused
+  // centrally: the day this stops answering 404 is the day the declaration goes
+  // unused and the test should notice, and every other 404 in this lane stays
+  // gated.
+  browserSignals.declare({
+    id: 'deliberate-missing-route',
+    kinds: ['http-error'],
+    match: { url: '/a-page-that-does-not-exist$', status: [404] },
+    because:
+      'This journey asks for a route that does not exist, on purpose, to prove the site answers not-found rather than '
+      + 'rendering the homepage under the wrong URL. A 200 here would be the soft-404 the test exists to refuse.',
+  });
+
   await page.goto('/a-page-that-does-not-exist');
   await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
   // The old behaviour rendered the homepage under the wrong URL, which told

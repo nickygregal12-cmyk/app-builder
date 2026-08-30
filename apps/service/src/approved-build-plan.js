@@ -27,11 +27,13 @@ export function approvedBuildStateEvidence({
   intakeBundle = null,
   contentOverrides = [],
   assetDecisions = [],
+  assetSourceHash = approvedBuildHash([]),
   sectionVariants = {},
   designChoices = {},
   referenceInfluence = null,
   bespokePresentations = [],
 }) {
+  if (!SHA256.test(String(assetSourceHash))) throw new Error('Approved build state requires an exact asset-source SHA-256 hash.');
   const evidence = {
     approvedIntakeBundleId: intakeBundle?.bundleId ?? null,
     manifestHash: approvedBuildHash(manifest),
@@ -39,6 +41,7 @@ export function approvedBuildStateEvidence({
     approvedIntakeBundleHash: approvedBuildHash(intakeBundle),
     contentOverridesHash: approvedBuildHash(contentOverrides),
     assetDecisionsHash: approvedBuildHash(assetDecisions),
+    assetSourceHash,
     sectionVariantsHash: approvedBuildHash(sectionVariants),
     designChoicesHash: approvedBuildHash(designChoices),
     referenceInfluenceHash: approvedBuildHash(referenceInfluence),

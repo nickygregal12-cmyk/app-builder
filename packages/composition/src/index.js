@@ -204,7 +204,11 @@ function summaryFromDeclaredFacts(pack, manifest) {
     ? declared[0]
     : `${declared.slice(0, -1).join(', ')} and ${declared.at(-1)}`;
   const where = locations.length ? ` in ${locations.length === 1 ? locations[0] : `${locations.slice(0, -1).join(', ')} and ${locations.at(-1)}`}` : '';
-  return defaultBinding('body', `${phrase.charAt(0).toUpperCase()}${phrase.slice(1).toLowerCase()}${where}.`);
+  // Only the first character is touched. Lowercasing the rest read as tidier
+  // prose and silently recased the business's own facts: MGB Decor's "Ames
+  // taping" was published as "ames taping". A service name is a supplied fact,
+  // and a sentence is not a good enough reason to rewrite one.
+  return defaultBinding('body', `${phrase.charAt(0).toUpperCase()}${phrase.slice(1)}${where}.`);
 }
 
 function projectDescriptionBinding(pack, manifest) {
@@ -701,11 +705,13 @@ function surfacesFor(manifest) {
 // A page whose only sections are a hero and a call to action is a dead end: the
 // visitor arrived from navigation and found nothing they came for.
 //
-// The two cases are not the same. A surface the operator declared is their
-// intent, so it is still published and named as an open content gap. A surface
-// the factory proposed for itself and then could not fill is the factory's own
-// mistake, so it is not published at all — shipping it would put a hole in the
-// navigation of every generated site whose sources happen to be thin.
+// The two cases are not the same, and both are reported. A surface the operator
+// declared is their intent, so it is still published — and named as an open
+// content gap, `empty-declared-surface`. A surface the factory proposed for
+// itself and then could not fill is the factory's own mistake, so it is not
+// published at all — shipping it would put a hole in the navigation of every
+// generated site whose sources happen to be thin — and it is named
+// `unfillable-surface`.
 const CHROME_SECTIONS = new Set(['hero', 'cta']);
 
 function carriesContent(pageSections) {
@@ -781,6 +787,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
   const plan = conversionPlan(manifest, surfaces.map((surface) => surface.name), knowledgePack);
   const sections = [];
   const unfillable = [];
+  const emptyDeclared = [];
   const pages = [];
   surfaces.forEach((surface, index) => {
     const slug = index === 0 ? 'home' : slugify(surface.name);
@@ -801,9 +808,19 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       ctaActions: available.slice(0, 2),
     });
     // The home page always ships: dropping it would leave the site with no entry.
-    if (index > 0 && !surface.declared && !carriesContent(pageSections)) {
-      unfillable.push(surface.name);
-      return;
+    if (index > 0 && !carriesContent(pageSections)) {
+      if (!surface.declared) {
+        unfillable.push(surface.name);
+        return;
+      }
+      // Declared intent still outranks the factory's judgement, so the page is
+      // published. Saying nothing about it was the other half of the rule and
+      // it was never implemented: MGB Decor declared "Our Work", the run had no
+      // publishable imagery and no project material, and a decorating business
+      // shipped an empty proof page into its own navigation and sitemap with
+      // not one warning attached. A gap the operator has to fix is only a gap
+      // they can see.
+      emptyDeclared.push(surface.name);
     }
     sections.push(...pageSections);
     pages.push({
@@ -837,7 +854,11 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
     input: { manifestVersion: manifest.schemaVersion ?? 1, knowledgePackHash: knowledgePack?.packHash ?? null, assetDecisionsHash: assetDecisionsHash(assetDecisions) },
     pages,
     sections,
-    warnings: [...warningsFor(manifest, knowledgePack, assetDecisions, plan), ...unfillable.map((name) => `unfillable-surface:${name}`)],
+    warnings: [
+      ...warningsFor(manifest, knowledgePack, assetDecisions, plan),
+      ...unfillable.map((name) => `unfillable-surface:${name}`),
+      ...emptyDeclared.map((name) => `empty-declared-surface:${name}`),
+    ],
   };
   return { ...base, compositionHash: hash(base) };
 }

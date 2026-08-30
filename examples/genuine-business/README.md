@@ -213,3 +213,44 @@ rewrite itself. The ones a second local-service business would hit again:
   decorating enquiry can carry. Enabling `uploads` moves a marketing site onto
   the application renderer under `config/renderers.json`, so the requirement is
   real, unmet, and recorded rather than silently enabled or silently dropped.
+
+### What the first run exposed
+
+The frozen input was generated, installed, checked, built and captured across
+desktop, tablet and mobile. It produced a portable Astro static-content
+repository: 0 typecheck errors, 0 lint errors, 0 page errors, no horizontal
+overflow at 390px, and seven prerendered route documents. It also exposed three
+factory defects that were not specific to this business, all now fixed:
+
+| Run 1 | Run 2 | |
+| --- | --- | --- |
+| Contract hash `b05b11bb3df6`, manifest `0778cb8631d7` | `19bb60205a68` / `9fb8c3553a0f` | same answers, rebuilt contract |
+| 7 pages, 20 sections | 6 pages, 17 sections | the spurious `/locations` page is gone |
+| 3 composition warnings | 4 | the empty `Our Work` surface is now named |
+| "and ames taping in Glasgow" | "and Ames taping in Glasgow" | a supplied fact is no longer recased |
+| 10 predicted manual edits | 10 | unchanged; one spurious page removed, one honest gap surfaced |
+
+1. **A derived surface outranked declared intent.** MGB listed five surfaces,
+   excluded a dedicated areas page in `out_of_scope`, and answered `locations`
+   truthfully. The approved Build Contract then excluded an areas page and
+   listed a `Locations` surface at the same time, and the build shipped one.
+   `deriveMajorSurfaces` now treats an explicit surface list as the answer. nbm
+   had the same contradiction and its baseline lost a `Locations` page too,
+   which is what makes this factory debt rather than an MGB quirk.
+2. **A declared surface with nothing on it was published silently.** Composition
+   already distinguished a surface the operator declared from one the factory
+   proposed, and its comment said the declared one is "published and named as an
+   open content gap". Only the first half existed. MGB shipped an empty
+   `Our Work` page — the entire proof surface of a decorating business — into
+   its own navigation and sitemap with no composition warning attached. There is
+   now an `empty-declared-surface` warning. The launch audit already reported
+   the page through `content-less-page`, so no second audit rule was added.
+3. **A supplied fact was recased to make a sentence tidier.** The generated
+   summary lowercased everything after its first character and published
+   "Ames taping" as "ames taping".
+
+Two further gaps are real, larger, and deliberately not fixed from one case: the
+site has no imagery at all because the approved asset bytes were never supplied,
+and every page repeats the same pill-button and dark-rectangle CTA vocabulary
+that `docs/PHASE_4D_VISUAL_DEBT.md` records against nbm. **No independent visual
+review has been run on this build**, so nothing here is a score.

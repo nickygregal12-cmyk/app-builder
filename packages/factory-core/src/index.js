@@ -432,10 +432,25 @@ function asRecord(value) {
   return typeof value === 'object' && value && !Array.isArray(value) ? { ...value } : {};
 }
 
+/**
+ * The surfaces a project actually asks for.
+ *
+ * A surface list the operator typed is a decision, so it is the answer. The
+ * derived additions below exist to fill in for an operator who said nothing
+ * about surfaces at all — answering "we work in Glasgow and Edinburgh" should
+ * still produce somewhere to say so — and they are a poor guess about somebody
+ * who has already listed the pages they want.
+ *
+ * MGB Decor is where that mattered. It listed Home, Services, Our Work, About
+ * and Contact, named a dedicated areas page in `out_of_scope`, and answered
+ * `locations` truthfully because the business really does cover Glasgow and the
+ * West. The approved Build Contract then excluded an areas page and listed a
+ * `Locations` surface at the same time, and the build shipped one.
+ */
 export function deriveMajorSurfaces(projectType, answers = {}) {
   const explicit = asList(answers.major_surfaces ?? answers.major_pages);
-  const defaults = SURFACE_DEFAULTS[projectType] ?? ['Home'];
-  const surfaces = explicit.length ? [...explicit] : [...defaults];
+  if (explicit.length) return [...new Set(explicit)];
+  const surfaces = [...(SURFACE_DEFAULTS[projectType] ?? ['Home'])];
   if (projectType === 'marketing-site' && asList(answers.locations).length > 0 && !surfaces.includes('Locations')) surfaces.push('Locations');
   if (answers.moderation === true && !surfaces.includes('Administration')) surfaces.push('Administration');
   return [...new Set(surfaces)];

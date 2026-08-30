@@ -242,8 +242,7 @@
       "Home",
       "Services",
       "About",
-      "Contact",
-      "Locations"
+      "Contact"
     ],
     "requestedModules": [
       "analytics",
@@ -350,7 +349,7 @@
     },
     "approvedAt": "2026-08-26T00:00:00.000Z"
   },
-  "buildContractHash": "24a426ad38ede610798bb7c88f07aa9ec87fb78c391b29bb2142bd1578423ef3",
+  "buildContractHash": "c016e0df1b333deb88b5a51b12014198617011961a2726864d4e65353835286e",
   "projectManifest": {
     "schemaVersion": 2,
     "project": {
@@ -373,8 +372,7 @@
       "Home",
       "Services",
       "About",
-      "Contact",
-      "Locations"
+      "Contact"
     ],
     "entities": [],
     "company": {
@@ -502,5 +500,5 @@
       "Online payment, client portal or document exchange"
     ]
   },
-  "projectManifestHash": "fec97c5328015d0ea67c3a2d74e3dc75a3d19735ff80d0fd06dc07b9f086dfbe"
+  "projectManifestHash": "6dd31402cfdde665487b1662d303d61e29916a2ce781888d87ea13cb31cd75e2"
 }

@@ -192,12 +192,12 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
 
-      - name: Generated-application records journey
+      - name: Generated-application journeys
         env:
           VITE_SUPABASE_URL: http://127.0.0.1:54321
         run: |
           export VITE_SUPABASE_PUBLISHABLE_KEY="$(npx --yes supabase@2.115.0 status --workdir .tmp/supabase-rls-acceptance -o json | jq -r '.ANON_KEY')"
-          npm --prefix .tmp/generated-acceptance-b2b-saas install --no-audit --no-fund
+          npm --prefix .tmp/generated-acceptance-journey-benchmark install --no-audit --no-fund
           npm run test:e2e:generated-app
 
       - name: Publish generated-application journey evidence

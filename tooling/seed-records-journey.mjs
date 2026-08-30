@@ -120,4 +120,57 @@ if (!upload.ok) {
 }
 console.log('seeded   organisation B file for the cross-tenant assertion');
 
-console.log('seeded   2 organisations, 4 identities, 2 records, 1 file (and the notifications those records raised)');
+// --- The scheduled-decision journey -------------------------------------------
+//
+// Two entities in organisation A, and the order of these statements is the
+// fixture rather than an implementation detail.
+//
+// A decision cannot be written to an entity whose window has closed — the
+// trigger refuses it whoever is asking, including this seed. So the settled
+// entity is created OPEN, decided on, and only then brought forward. That is
+// also the honest shape: it is what happened, in the order it happened, rather
+// than a row asserting that it did.
+const SCHEDULE = Object.freeze({
+  open: '44000000-0000-0000-0000-000000000001',
+  settled: '44000000-0000-0000-0000-000000000002',
+});
+const MEMBER_A = '10000000-0000-0000-0000-000000000004';
+const VIEWER_A = '10000000-0000-0000-0000-000000000005';
+const OWNER_A = ORGANISATIONS.a.createdBy;
+
+sql(`insert into public.scheduled_entities (id, organisation_id, reference, title, decision_deadline, created_by) values
+  ('${SCHEDULE.open}', '${ORGANISATIONS.a.id}', 'SCH-OPEN', 'Open for decisions', now() + interval '2 hours', '${OWNER_A}'),
+  ('${SCHEDULE.settled}', '${ORGANISATIONS.a.id}', 'SCH-SETTLED', 'Already settled', now() + interval '2 hours', '${OWNER_A}')
+  on conflict (id) do nothing;`);
+
+// Viewer A decides on the open entity and Member A does not. That asymmetry is
+// the browser isolation assertion: signed in as Member A, a decision that
+// demonstrably exists must not be on the page. A fixture where nobody else had
+// decided would pass whether the policy worked or not.
+sql(`insert into public.scheduled_decisions (entity_id, identity_id, choice) values
+  ('${SCHEDULE.open}', '${VIEWER_A}', '{"a":1,"b":1}'::jsonb),
+  ('${SCHEDULE.settled}', '${MEMBER_A}', '{"a":2,"b":1}'::jsonb),
+  ('${SCHEDULE.settled}', '${VIEWER_A}', '{"a":5,"b":0}'::jsonb)
+  on conflict (entity_id, identity_id) do nothing;`);
+
+// Now close the settled entity's window. Allowed because it is still open at
+// this moment, and refused for ever afterwards.
+sql(`update public.scheduled_entities set decision_deadline = now() - interval '1 minute'
+     where id = '${SCHEDULE.settled}' and decision_deadline > now();`);
+
+sql(`insert into public.scheduled_official_results (entity_id, version, status, outcome, source, observed_at) values
+  ('${SCHEDULE.settled}', 1, 'confirmed', '{"a":2,"b":1}'::jsonb, 'journey-seed-results-feed', now() - interval '30 seconds')
+  on conflict (entity_id, version) do nothing;`);
+
+// Settled through the real function rather than by inserting settlement rows,
+// because the point of a seeded standing is that the thing which produces
+// standings produced it. `settle_scheduled_entity` re-derives the caller's role,
+// so the seed has to claim an identity the way a request would; both settings
+// are transaction-local and psql runs this as one transaction.
+sql(`select set_config('request.jwt.claim.sub', '${OWNER_A}', true);
+     select set_config('request.jwt.claims', '{"sub":"${OWNER_A}","role":"authenticated"}', true);
+     select public.settle_scheduled_entity('${SCHEDULE.settled}');`);
+
+console.log('seeded   2 scheduled entities, 3 decisions and one settled result');
+
+console.log('seeded   2 organisations, 4 identities, 2 records, 1 file, 2 scheduled entities (and the notifications those records raised)');

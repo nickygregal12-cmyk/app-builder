@@ -235,6 +235,25 @@
         "--color-ink"
       ]
     },
+    "scheduled-decisions-section": {
+      "sectionType": "scheduled-decisions",
+      "lifecycle": "ready",
+      "renderer": "recipe",
+      "purpose": "What is scheduled, this identity's decision while the window is open, every decision once it locks, and the settled standings. The recipe owns how it renders and how it reaches the database; the stored deadline and row level security own who may write and see what.",
+      "runtimeRequirements": [
+        "template-renderer",
+        "compiled-design-tokens",
+        "recipe:scheduled-decisions"
+      ],
+      "tokens": [
+        "--section-space",
+        "--color-surface",
+        "--radius-sm",
+        "--color-border-strong",
+        "--color-accent",
+        "--color-ink"
+      ]
+    },
     "tenant-records-section": {
       "sectionType": "tenant-records",
       "lifecycle": "ready",

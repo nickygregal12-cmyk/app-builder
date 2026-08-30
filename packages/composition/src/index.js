@@ -474,6 +474,22 @@ function tenantRecordsSection(pageId, manifest) {
  * looks like and how it reaches storage. The tenancy it enforces is storage's,
  * not this section's.
  */
+/**
+ * What is scheduled, what this person decided, and where they stand.
+ *
+ * Placed on the workspace beside the records it belongs with, and for the same
+ * reason: a schedule with a deadline is worked in, not summarised. The composer
+ * decides the section belongs on this page; the recipe owns what it looks like
+ * and how it reaches the database, and the deadline it enforces is the
+ * database's, not this section's.
+ */
+function scheduledDecisionsSection(pageId, manifest) {
+  if (manifest?.modules?.['scheduled-decisions'] !== true) return null;
+  return section(`${pageId}-scheduled-decisions`, 'scheduled-decisions', 'Decide before the deadline, then see how the decisions settled', [
+    manifestBinding('title', 'Schedule'),
+  ]);
+}
+
 function organisationFilesSection(pageId, manifest) {
   if (manifest?.modules?.uploads !== true) return null;
   return section(`${pageId}-files`, 'organisation-files', 'Keep and retrieve the files this organisation owns', [
@@ -647,6 +663,7 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
     // been told something needs to see it before they start.
     if (/dashboard|notification|activity|alert/.test(lower)) output.push(notificationsSection(pageId, manifest));
     if (/workspace|record/.test(lower)) output.push(tenantRecordsSection(pageId, manifest));
+    if (/workspace|schedule|decision/.test(lower)) output.push(scheduledDecisionsSection(pageId, manifest));
     if (/workspace|file|document/.test(lower)) output.push(organisationFilesSection(pageId, manifest));
     if (/admin|setting/.test(lower)) output.push(administrationSection(pageId, manifest));
     output.push(entitiesSection(pageId, manifest));

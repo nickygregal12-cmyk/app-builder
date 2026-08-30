@@ -20,7 +20,7 @@
 
 begin;
 
-select plan(55);
+select plan(58);
 
 -- --- Identities and tenancy -----------------------------------------------------
 --
@@ -81,6 +81,7 @@ select ok(
 -- The settlement identity key, as a constraint that exists rather than as a
 -- claim in a comment. If this is ever relaxed to a plain index, the repeat
 -- settlement below stops proving idempotence and starts proving nothing.
+--
 -- The comparison happens inside the query rather than through `results_eq`, and
 -- both details are deliberate. `array[array[...]]` is a two-dimensional array in
 -- PostgreSQL rather than a one-row list containing an array, so comparing the
@@ -117,6 +118,16 @@ select is(
   (select public.scheduled_entity_state('43000000-0000-0000-0000-000000000001')),
   'scheduled'::text,
   'an entity whose deadline is in the future reports the scheduled state'
+);
+
+-- The list view and the single-entity function must never disagree, because a
+-- product reads the first and enforces against the second. They share one
+-- expression so that they cannot, and this is the assertion that keeps them
+-- sharing it.
+select results_eq(
+  $$select state from public.scheduled_entity_board where id = '43000000-0000-0000-0000-000000000001'$$,
+  array['scheduled'::text],
+  'the board view reports the same state the single-entity function does'
 );
 
 -- A member is not an operator. Scheduling is the act that fixes the deadline
@@ -277,6 +288,11 @@ select results_eq(
   array['scheduled'::text],
   'and no stored column had to be updated for the lock to take effect'
 );
+select results_eq(
+  $$select state from public.scheduled_entity_board where id = '43000000-0000-0000-0000-000000000001'$$,
+  array['locked'::text],
+  'the board a client reads reports the lock too, from the same expression'
+);
 
 -- A closed window never reopens. This is the assertion that stops a late
 -- decision being made legal after its author has seen how the event is going.
@@ -337,6 +353,14 @@ select results_eq(
   $$select count(*)::bigint from public.scheduled_decisions$$,
   array[0::bigint],
   'an identity outside the organisation sees no decisions at all, before or after the lock'
+);
+-- The view is `security_invoker`, and this is what says so. A definer view here
+-- would hand every organisation's schedule to every signed-in person, and would
+-- look exactly like a working one until somebody outside the tenant read it.
+select results_eq(
+  $$select count(*)::bigint from public.scheduled_entity_board$$,
+  array[0::bigint],
+  'and no entity from another organisation reaches them through the board view'
 );
 select throws_ok(
   $$select public.settle_scheduled_entity('43000000-0000-0000-0000-000000000001')$$,

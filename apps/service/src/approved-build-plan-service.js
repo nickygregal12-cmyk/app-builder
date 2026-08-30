@@ -1,5 +1,6 @@
 import { createEvent } from '@app-builder/control-plane';
 import { approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, mintApprovedBuildPlan } from './approved-build-plan.js';
+import { claimApprovedBuildPlanExecution, getApprovedBuildPlan, getApprovedBuildPlanByApprovalId, listApprovedBuildPlans, recordApprovedBuildPlan } from './approved-build-plan-store.js';
 
 const OPAQUE_ID = /^[A-Za-z0-9._:-]{1,120}$/;
 const APPROVED_PLAN_ID = /^approved-plan-[A-Za-z0-9._:-]{1,120}$/;
@@ -32,12 +33,12 @@ export async function approveProjectBuildPlan(service, projectId, { approvalId, 
   if (approvalMode !== 'explicit-local-operator' || confirmed !== true) throw new Error('Approved build plan requires explicit local operator confirmation.');
   if (!OPAQUE_ID.test(String(approvalId ?? ''))) throw new Error('Approved build plan requires an explicit local approval id.');
 
-  const existing = service.store.getApprovedBuildPlanByApprovalId(projectId, approvalId);
+  const existing = getApprovedBuildPlanByApprovalId(service.store, projectId, approvalId);
   if (existing) return existing;
 
   const source = currentApprovedBuildState(service, projectId);
   const plan = mintApprovedBuildPlan({ projectId, approvalId, source, approvedAt, ...(planId ? { planId } : {}) });
-  service.store.recordApprovedBuildPlan(plan);
+  recordApprovedBuildPlan(service.store, plan);
   await service.store.recordEvent(createEvent({
     projectId,
     type: 'approved-build-plan.approved',
@@ -54,12 +55,12 @@ export async function approveProjectBuildPlan(service, projectId, { approvalId, 
 
 export function getApprovedProjectBuildPlan(service, projectId, planId) {
   fullProject(service, projectId);
-  return service.store.getApprovedBuildPlan(projectId, planId);
+  return getApprovedBuildPlan(service.store, projectId, planId);
 }
 
 export function listApprovedProjectBuildPlans(service, projectId) {
   fullProject(service, projectId);
-  return service.store.listApprovedBuildPlans(projectId);
+  return listApprovedBuildPlans(service.store, projectId);
 }
 
 export async function executeApprovedProjectBuildPlan(service, projectId, { planId, expectedPlanHash, requestId, now = () => new Date() } = {}) {
@@ -68,7 +69,7 @@ export async function executeApprovedProjectBuildPlan(service, projectId, { plan
   if (!SHA256.test(String(expectedPlanHash ?? ''))) throw new Error('Approved build plan execution requires an exact SHA-256 plan hash.');
   if (!OPAQUE_ID.test(String(requestId ?? ''))) throw new Error('Approved build plan execution requires a bounded request id.');
 
-  const plan = service.store.getApprovedBuildPlan(projectId, planId);
+  const plan = getApprovedBuildPlan(service.store, projectId, planId);
   if (!plan) throw new Error(`No approved build plan ${planId} exists for project ${projectId}.`);
   const currentSource = currentApprovedBuildState(service, projectId);
   const checked = assertApprovedBuildPlanExecutable(plan, { projectId, expectedPlanHash, currentSource });
@@ -76,7 +77,7 @@ export async function executeApprovedProjectBuildPlan(service, projectId, { plan
   const claimedAtDate = now();
   if (!(claimedAtDate instanceof Date) || !Number.isFinite(claimedAtDate.getTime())) throw new Error('Approved build plan execution clock is invalid.');
   const claimedAt = claimedAtDate.toISOString();
-  const claimed = service.store.claimApprovedBuildPlanExecution({ planId: checked.planId, projectId, requestId, claimedAt });
+  const claimed = claimApprovedBuildPlanExecution(service.store, { planId: checked.planId, projectId, requestId, claimedAt });
   if (!claimed.claimed) {
     const prior = claimed.claim;
     const suffix = prior?.requestId === requestId ? ' by this request' : ' by another request';

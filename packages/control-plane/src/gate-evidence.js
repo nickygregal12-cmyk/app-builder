@@ -263,3 +263,43 @@ export function summariseResolutions(resolutions) {
       .map((entry) => entry.gateId),
   };
 }
+
+/**
+ * Whether the registered evidence path itself completed for this lane.
+ *
+ * A resolved `fail` is still sound evidence: it says the measured product did
+ * not meet its gate. Only `not-run` (or a registered check missing from the
+ * lane's resolution altogether) is an integrity failure. Keeping that
+ * distinction here prevents CI from being made green by weakening a product
+ * threshold, and prevents an unpaid product gate from masquerading as broken
+ * evidence wiring.
+ */
+export function evaluateEvidenceIntegrity({ resolutions, registry }) {
+  const byGate = new Map((resolutions ?? []).map((entry) => [entry.gateId, entry]));
+  const failures = [];
+  let expectedChecks = 0;
+  let resolvedChecks = 0;
+
+  for (const check of Object.values(registry?.checks ?? {})) {
+    const gate = byGate.get(check.gate);
+    // A registry can serve several pipeline classes. A check is expected in
+    // this lane only when its owning gate is one of this lane's resolutions.
+    if (!gate) continue;
+    expectedChecks += 1;
+    const resolution = gate.checks.find((entry) => entry.id === check.id);
+    if (!resolution) {
+      failures.push({ checkId: check.id, gateId: check.gate, producerId: check.producer, reason: 'resolution-missing' });
+    } else if (resolution.status === 'not-run') {
+      failures.push({ checkId: check.id, gateId: check.gate, producerId: check.producer, reason: resolution.reason });
+    } else {
+      resolvedChecks += 1;
+    }
+  }
+
+  return {
+    status: failures.length === 0 && expectedChecks > 0 ? 'pass' : 'fail',
+    expectedChecks,
+    resolvedChecks,
+    failures,
+  };
+}

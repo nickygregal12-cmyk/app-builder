@@ -33,6 +33,13 @@ jobs:
       - run: npm run check
       - run: npm run build
 
+      # Product failure and evidence-system failure are different outcomes.
+      # This command exits non-zero only when a registered deterministic check
+      # is missing, malformed, wrong-build or otherwise unresolved; a correctly
+      # measured below-threshold product gate stays a truthful product result.
+      - name: Resolve registered deterministic gate evidence
+        run: npm run gates:evidence
+
       - name: Generate six canonical acceptance apps
         run: npm run generate:acceptance
 

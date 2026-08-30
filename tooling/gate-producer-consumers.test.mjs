@@ -67,6 +67,11 @@ test('the command that collects evidence writes every artifact the registry prom
   }
 });
 
+test('ordinary CI invokes the integrated producer, resolver and convergence command', () => {
+  const workflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8');
+  assert.match(workflow, /run: npm run gates:evidence/);
+});
+
 test('the list of unanswered checks is exactly the checks nothing answers', () => {
   const declared = new Set(Object.values(PIPELINES.gates).flatMap((gate) => gate.deterministicChecks ?? []));
   const answered = new Set(Object.keys(REGISTRY.checks));

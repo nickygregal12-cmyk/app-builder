@@ -173,6 +173,18 @@ What this does and does not say: two runs is a first data point about one slice,
 corrections were cheap because the boundary was already right. The measurement worth repeating is
 whether the *next* unfamiliar journey costs fewer reusable corrections than this one did.
 
+**What the lane could not have seen when those two runs were measured.** Both passes were judged by a
+harness with no console, runtime or network classification: it asserted what was on the screen and
+never asked the browser what it had reported. A journey could take an uncaught exception, a console
+error, a request that never completed and a 500 from the API and still finish green, because a React
+error inside a component that has already rendered does not remove the markup the assertions look at.
+So "zero interventions" on the rerun is a true statement about the assertions that ran and is not a
+statement about a clean browser — nobody was in a position to make that one. The lane now classifies
+all four and refuses a journey that took one it did not declare, so the next measurement means more
+than these two did. That is a change to the instrument between the second run and the third, and it
+is recorded here rather than folded into the result, because a burden that falls under a stricter
+lane is worth something and a burden that falls under a looser one is not.
+
 ## Required build sequence
 
 A Predictor-class application must not go directly from questionnaire to bulk implementation.

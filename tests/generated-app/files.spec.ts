@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { expect, test } from './journey';
 
 /**
  * Organisation-owned files, driven through the generated application against a

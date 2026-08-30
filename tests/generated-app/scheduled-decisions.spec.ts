@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './journey';
 
 /**
  * The scheduled-decision journey, driven through the generated application's own

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './journey';
 
 /**
  * The tenant-records journey, driven through the generated application's own

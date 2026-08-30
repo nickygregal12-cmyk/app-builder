@@ -24,9 +24,10 @@ export function currentApprovedBuildState(service, projectId) {
   });
 }
 
-export async function approveProjectBuildPlan(service, projectId, { approvalId, approvedAt = new Date().toISOString(), planId = undefined } = {}) {
+export async function approveProjectBuildPlan(service, projectId, { approvalId, approvalMode, confirmed, approvedAt = new Date().toISOString(), planId = undefined } = {}) {
   const project = fullProject(service, projectId);
   if (project.state === 'generating') throw new Error('Cannot approve a build plan while project generation is running.');
+  if (approvalMode !== 'explicit-local-operator' || confirmed !== true) throw new Error('Approved build plan requires explicit local operator confirmation.');
   if (!OPAQUE_ID.test(String(approvalId ?? ''))) throw new Error('Approved build plan requires an explicit local approval id.');
 
   const existing = service.store.getApprovedBuildPlanByApprovalId(projectId, approvalId);

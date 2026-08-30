@@ -31,6 +31,22 @@ const assetMap = assets as unknown as Record<string, GeneratedAsset>;
 const directed = design as unknown as VisualDirection;
 const HERO_STRATEGY = directed.artDirection?.dimensions?.heroStrategy ?? 'split';
 
+/**
+ * What the closing ask is made of.
+ *
+ * `panel` is the inset dark rectangle every build rendered before this axis
+ * existed and stays the default, so a project that names no composition is
+ * unchanged. The others are different compositions rather than different
+ * paint: `banner` has no panel and runs edge to edge, `register` is a ruled row
+ * with no fill, `editorial` is a statement at reading measure under a rule.
+ */
+const CTA_COMPOSITIONS = ['panel', 'editorial', 'banner', 'register'] as const;
+type CtaComposition = (typeof CTA_COMPOSITIONS)[number];
+const declaredCta = directed.artDirection?.dimensions?.ctaComposition;
+const CTA_COMPOSITION: CtaComposition = (CTA_COMPOSITIONS as readonly string[]).includes(declaredCta ?? '')
+  ? (declaredCta as CtaComposition)
+  : 'panel';
+
 const sectionAssets = section.assetIds.map((id) => assetMap[id]).filter(Boolean);
 const title = binding(section, 'title');
 const body = binding(section, 'body');
@@ -109,12 +125,40 @@ const galleryEmpty = section.type === 'gallery' && sectionAssets.length === 0 &&
 )}
 
 {section.type === 'cta' && !RecipeSection && (
-  <section class="page-section cta-section" id={section.id} data-section-id={section.id} data-element-key="section">
-    <div>
-      {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
-      {body && <p {...editable(section, body)}>{text(body.value)}</p>}
-    </div>
-    <Actions actions={section.actions} />
+  <section
+    class={`page-section cta-section cta-${CTA_COMPOSITION}`}
+    id={section.id}
+    data-section-id={section.id}
+    data-element-key="section"
+    data-cta-composition={CTA_COMPOSITION}
+  >
+    {/* The compositions differ in structure, not only in styling. `register`
+        puts the ask and the actions on one ruled line with a rule element that
+        no other composition has; `banner` needs an inner container because it
+        is edge-to-edge and its content still has to sit at measure; `editorial`
+        leads with a rule and keeps the actions under the copy. Every one of
+        them keeps the same heading, the same copy and the same actions, because
+        a composition may change what the ask looks like and never what it
+        says. */}
+    {CTA_COMPOSITION === 'register' && <span class="cta-rule" aria-hidden="true"></span>}
+    {CTA_COMPOSITION === 'banner' ? (
+      <div class="cta-inner">
+        <div class="cta-copy">
+          {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+          {body && <p {...editable(section, body)}>{text(body.value)}</p>}
+        </div>
+        <Actions actions={section.actions} />
+      </div>
+    ) : (
+      <>
+        <div class="cta-copy">
+          {CTA_COMPOSITION === 'editorial' && <span class="cta-rule" aria-hidden="true"></span>}
+          {title && <h2 {...editable(section, title)}>{text(title.value)}</h2>}
+          {body && <p {...editable(section, body)}>{text(body.value)}</p>}
+        </div>
+        <Actions actions={section.actions} />
+      </>
+    )}
   </section>
 )}
 

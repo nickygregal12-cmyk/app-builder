@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ACTION_TREATMENTS, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
+import { ACTION_TREATMENTS, CTA_COMPOSITIONS, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8');
@@ -42,7 +42,10 @@ test('the section vocabulary inventory is what the reviews said it was', () => {
   // ask is made of. This assertion is expected to change when a CTA family
   // lands — and changing it should be a deliberate act with evidence, which is
   // why it is written down rather than left implicit.
-  for (const type of ['cta', 'gallery', 'contact-panel', 'enquiry-form', 'rich-text']) {
+  // `cta` used to be here. It now has a composition family of its own — see
+  // `CTA_COMPOSITIONS` — which is why it is asserted separately below rather
+  // than listed among the section types that still have no choice at all.
+  for (const type of ['gallery', 'contact-panel', 'enquiry-form', 'rich-text']) {
     assert.equal(variants[type], 0, `${type} has no compositional axis, which is the finding rather than an oversight`);
   }
 });
@@ -59,6 +62,38 @@ test('the action family is a family and not a token', () => {
   assert.equal(DEFAULT_COMPOSITION_DIMENSIONS.actionTreatment, 'solid');
 });
 
+test('the closing ask is a composition family and not a repaint', () => {
+  assert.deepEqual([...CTA_COMPOSITIONS], ['panel', 'editorial', 'banner', 'register']);
+  // `panel` is what every build rendered before the axis, so an unchanged
+  // project renders an unchanged closing ask.
+  assert.equal(DEFAULT_COMPOSITION_DIMENSIONS.ctaComposition, 'panel');
+
+  const css = read('templates/shared/presentation/styles.css');
+  // Each composition has to drop something the panel has, not tint it. A member
+  // that only changed `background` would be a token wearing a family's name.
+  assert.match(css, /\.cta-section\.cta-editorial[\s\S]{0,260}background:\s*none/, 'editorial must have no panel at all');
+  assert.match(css, /\.cta-section\.cta-banner[\s\S]{0,260}margin-inline:\s*0/, 'banner must run edge to edge rather than sit inset');
+  assert.match(css, /\.cta-section\.cta-register[\s\S]{0,320}border-top/, 'register must be a ruled row rather than a filled panel');
+
+  // The panel hands its actions inverse ink. A composition without the dark
+  // ground that kept it would render the ask invisible — the exact defect the
+  // action family shipped and had to be fixed for.
+  assert.match(css, /cta-editorial \.action-link[\s\S]{0,200}color:\s*var\(--color-accent\)/, 'a light composition must re-colour its actions');
+});
+
+test('the closing-ask composition changes the DOM, not only the class', () => {
+  const source = read('templates/astro-static-content/files/src/components/Section.astro');
+  assert.match(source, /data-cta-composition=\{CTA_COMPOSITION\}/, 'the rendered composition must be inspectable');
+  // Structure the other compositions do not have. If every branch emitted the
+  // same children, this would be a class swap and the reviews would keep
+  // describing the same closing rectangle.
+  assert.match(source, /CTA_COMPOSITION === 'register' && <span class="cta-rule"/, 'register carries a rule element');
+  assert.match(source, /CTA_COMPOSITION === 'banner' \?[\s\S]{0,200}cta-inner/, 'banner needs an inner container because it is edge to edge');
+  // And the ask still says the same thing in every composition.
+  const bodies = source.match(/editable\(section, title\)/g) ?? [];
+  assert.ok(bodies.length >= 2, 'every composition must render the same heading binding');
+});
+
 test('the family reaches the structural signature, so two candidates can differ by it', () => {
   const base = { id: 'a', artDirection: { dimensions: { ...DEFAULT_COMPOSITION_DIMENSIONS } } };
   const other = { id: 'b', artDirection: { dimensions: { ...DEFAULT_COMPOSITION_DIMENSIONS, actionTreatment: 'underline' } } };
@@ -68,7 +103,25 @@ test('the family reaches the structural signature, so two candidates can differ 
   const two = structuralSignature({ direction: other, composition });
   assert.equal(one.axes.actionTreatment, 'solid');
   assert.equal(two.axes.actionTreatment, 'underline');
+  assert.equal(one.axes.ctaComposition, 'panel', 'the closing ask must be part of what makes two candidates different');
   assert.notDeepEqual(one.axes, two.axes, 'a different action family must register as a structural difference');
+});
+
+test('every direction chooses a closing-ask composition, and the candidate set spans them', () => {
+  const directions = json('config/visual-directions.json').directions;
+  const chosen = Object.entries(directions).map(([id, direction]) => {
+    const value = direction.composition?.ctaComposition;
+    assert.ok(CTA_COMPOSITIONS.includes(value), `${id} names an unknown closing-ask composition: ${value}`);
+    return value;
+  });
+  assert.ok(new Set(chosen).size >= 3, `directions must span the family, got ${new Set(chosen).size}`);
+
+  // The three directions NBM can actually produce — immersive-lead is refused
+  // without photography — must not share a closing ask, or the candidate set
+  // is diverse everywhere except the place a visitor looks last.
+  const nbm = ['structured-practice', 'editorial-authority', 'schedule-register']
+    .map((id) => directions[id].composition.ctaComposition);
+  assert.equal(new Set(nbm).size, 3, `the three imagery-free directions close identically: ${nbm.join(', ')}`);
 });
 
 test('every direction chooses an action family, and they are not all the same one', () => {

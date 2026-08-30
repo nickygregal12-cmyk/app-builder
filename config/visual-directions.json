@@ -85,7 +85,8 @@
           "contact-panel"
         ],
         "distinctiveMoment": "figure-index",
-        "actionTreatment": "outlined"
+        "actionTreatment": "outlined",
+        "ctaComposition": "register"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
@@ -124,7 +125,8 @@
           "contact-panel"
         ],
         "distinctiveMoment": "lead-statement",
-        "actionTreatment": "underline"
+        "actionTreatment": "underline",
+        "ctaComposition": "editorial"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -163,7 +165,8 @@
           "contact-panel"
         ],
         "distinctiveMoment": "full-bleed-lead",
-        "actionTreatment": "block"
+        "actionTreatment": "block",
+        "ctaComposition": "banner"
       },
       "assetAppetite": "imagery-required",
       "responsive": {
@@ -195,7 +198,8 @@
         "ctaPlacement": "closing",
         "sectionOrder": [],
         "distinctiveMoment": "none",
-        "actionTreatment": "solid"
+        "actionTreatment": "solid",
+        "ctaComposition": "panel"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -234,7 +238,8 @@
           "contact-panel"
         ],
         "distinctiveMoment": "figure-index",
-        "actionTreatment": "arrow"
+        "actionTreatment": "arrow",
+        "ctaComposition": "banner"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {

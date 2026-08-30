@@ -38,6 +38,7 @@ import {
   emptyModelSpend,
   evaluateModelLane,
   modelAttemptEvidenceStatus,
+  priceModelUsage,
   recordReviewerVerdict,
   verifyModelEnableDecision,
 } from '@app-builder/control-plane/model-execution';
@@ -334,6 +335,50 @@ test('a response with no usage is unreconcilable, not free', () => {
   assert.throws(
     () => accountModelCall({ spend: emptyModelSpend(), usage: {}, pricingGbpPerMillionTokens: { input: 1, output: 1 } }),
     (error) => error instanceof ModelLaneError && error.reason === 'usage-unreconcilable',
+  );
+});
+
+// ---------------------------------------------------------------------------
+// What a provider cache does to the accounting.
+//
+// No lane sends `cache_control` today. These exist because the day one does,
+// the provider starts reporting the uncached remainder where it used to report
+// the prompt — and a ceiling that stops counting the cached part is a ceiling
+// that stops binding, silently, on a request nobody changed.
+// ---------------------------------------------------------------------------
+
+test('a cached prompt is counted whole, so the ceiling still binds', () => {
+  const rate = { input: 1, output: 1 };
+  const fresh = priceModelUsage({ inputTokens: 2000, outputTokens: 100 }, rate);
+  const cached = priceModelUsage(
+    { inputTokens: 2000, outputTokens: 100, uncachedInputTokens: 200, cacheReadInputTokens: 1800 },
+    rate,
+  );
+  assert.equal(cached.inputTokens, fresh.inputTokens, 'the same prompt must count the same whether or not a cache served it');
+  assert.equal(cached.totalTokens, fresh.totalTokens);
+});
+
+test('a cache read is cheaper than fresh input and a cache write is dearer', () => {
+  const rate = { input: 1, output: 1, cacheRead: 0.1, cacheWrite: 1.25 };
+  const fresh = priceModelUsage({ inputTokens: 1000, outputTokens: 0 }, rate).costGbp;
+  const read = priceModelUsage({ inputTokens: 1000, outputTokens: 0, cacheReadInputTokens: 1000 }, rate).costGbp;
+  const write = priceModelUsage({ inputTokens: 1000, outputTokens: 0, cacheCreationInputTokens: 1000 }, rate).costGbp;
+  assert.ok(read < fresh, 'a cache read priced at or above fresh input makes caching invisible');
+  assert.ok(write > fresh, 'a cache write is not free');
+});
+
+test('an undeclared cache rate is charged as fresh input rather than guessed', () => {
+  // Overstating is the safe direction, as the note beside these rates says.
+  const rate = { input: 1, output: 1 };
+  const cached = priceModelUsage({ inputTokens: 1000, outputTokens: 0, cacheReadInputTokens: 1000 }, rate);
+  const fresh = priceModelUsage({ inputTokens: 1000, outputTokens: 0 }, rate);
+  assert.equal(cached.costGbp, fresh.costGbp);
+});
+
+test('cache parts larger than the prompt they belong to are refused', () => {
+  assert.throws(
+    () => priceModelUsage({ inputTokens: 100, outputTokens: 0, cacheReadInputTokens: 900 }, { input: 1, output: 1 }),
+    /exceed the reported input tokens/,
   );
 });
 

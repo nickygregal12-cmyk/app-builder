@@ -383,11 +383,45 @@ export function emptyModelSpend() {
   return Object.freeze({ calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, costGbp: 0 });
 }
 
+/**
+ * Price one call, including the parts of the prompt a provider cache served.
+ *
+ * `inputTokens` is the whole prompt. That matters because a cache changes what
+ * a provider reports rather than what was sent: Anthropic's `input_tokens`
+ * becomes the uncached remainder once caching is on, so an adapter that mapped
+ * it straight through would report a shrinking prompt for an unchanged request
+ * and the ceiling would stop binding. The parts are carried separately so the
+ * cost can be right as well as the count — a cached read is far cheaper than
+ * fresh input, and a cache write is dearer.
+ *
+ * When a rate for a part is not declared, that part is priced as fresh input.
+ * Overstating is the safe direction, as the note beside these rates says: an
+ * undeclared discount that we invent is a ceiling that binds later than the
+ * operator agreed to.
+ */
 export function priceModelUsage(usage, pricingGbpPerMillionTokens) {
   const input = whole(usage?.inputTokens, 'Usage inputTokens', { minimum: 0 });
   const output = whole(usage?.outputTokens, 'Usage outputTokens', { minimum: 0 });
+  const cacheRead = whole(usage?.cacheReadInputTokens ?? 0, 'Usage cacheReadInputTokens', { minimum: 0 });
+  const cacheWrite = whole(usage?.cacheCreationInputTokens ?? 0, 'Usage cacheCreationInputTokens', { minimum: 0 });
   const rate = pricingGbpPerMillionTokens ?? {};
-  const cost = (input * money(rate.input, 'Pricing input') + output * money(rate.output, 'Pricing output')) / 1_000_000;
+  const inputRate = money(rate.input, 'Pricing input');
+
+  if (cacheRead + cacheWrite > input) {
+    // The parts cannot exceed the whole. This is the adapter's arithmetic being
+    // checked rather than the provider's honesty: it is the shape a mapping bug
+    // takes, and it would otherwise land as a plausible-looking cheap call.
+    throw new Error('Usage cache tokens exceed the reported input tokens, so the call cannot be priced.');
+  }
+
+  const uncached = input - cacheRead - cacheWrite;
+  const cost = (
+    uncached * inputRate
+    + cacheRead * (rate.cacheRead === undefined ? inputRate : money(rate.cacheRead, 'Pricing cacheRead'))
+    + cacheWrite * (rate.cacheWrite === undefined ? inputRate : money(rate.cacheWrite, 'Pricing cacheWrite'))
+    + output * money(rate.output, 'Pricing output')
+  ) / 1_000_000;
+
   return { inputTokens: input, outputTokens: output, totalTokens: input + output, costGbp: cost };
 }
 

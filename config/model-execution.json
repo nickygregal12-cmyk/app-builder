@@ -37,8 +37,11 @@
   "pricingGbpPerMillionTokens": {
     "input": 0.8,
     "output": 4.0,
-    "recordedAt": "2026-08-26",
-    "note": "Declared here so a response can be priced from its own token counts. The gateway refuses to record a call it cannot price, because an unpriced call is a budget nobody enforced. Overstating the rate is the safe direction: it makes the ceiling bind sooner."
+    "cacheRead": 0.08,
+    "cacheWrite": 1.0,
+    "recordedAt": "2026-08-30",
+    "note": "Declared here so a response can be priced from its own token counts. The gateway refuses to record a call it cannot price, because an unpriced call is a budget nobody enforced. Overstating the rate is the safe direction: it makes the ceiling bind sooner.",
+    "cacheNote": "A cached prompt prefix is not free and is not full price. These follow the published multipliers against `input` - a read is a tenth, a write is a quarter dearer - and are declared rather than derived so a change to either is reviewed. No lane sends `cache_control` today; these exist so that enabling one cannot silently change what a call costs. Deleting them does not disable pricing: an absent rate is charged as fresh input, which is the safe direction."
   },
   "canaryBudget": {
     "maxCalls": 1,

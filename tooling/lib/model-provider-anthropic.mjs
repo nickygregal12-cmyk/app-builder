@@ -21,8 +21,10 @@
  *
  *   { id, providerId, complete({ request, apiKey, signal }) -> ProviderResult }
  *
- * where `ProviderResult` is `{ text, usage: { inputTokens, outputTokens },
- * stopReason, model }` and nothing else. A provider's own request id, session
+ * where `ProviderResult` is `{ text, usage: { inputTokens, outputTokens }, ...
+ * stopReason, model }` and nothing else. `inputTokens` is always the whole
+ * prompt; where a provider reports which parts of it a cache served, those
+ * counts travel beside it rather than replacing it. A provider's own request id, session
  * id or response envelope stops here: `assertNoProviderSessionIdentity` in the
  * control plane refuses it downstream, and returning it would be an
  * OpenCode-shaped mistake made with a different vendor.
@@ -181,9 +183,29 @@ export function createAnthropicModelAdapter({ endpoint, apiVersion, model, fetch
         throw new Error('Provider response carried no token usage, so the call cannot be reconciled against the budget.');
       }
 
+      // With prompt caching on, `input_tokens` is the uncached remainder rather
+      // than the prompt: the whole prompt is that plus what was written to the
+      // cache plus what was read from it. Summing here keeps `inputTokens`
+      // meaning the same thing whether or not a cache served the call, so the
+      // budget ceiling cannot quietly stop binding the day caching is enabled.
+      // Both fields are absent today and default to zero, which is exactly the
+      // arithmetic this lane already does.
+      const cacheCreationInputTokens = usage.cache_creation_input_tokens ?? 0;
+      const cacheReadInputTokens = usage.cache_read_input_tokens ?? 0;
+      if (!Number.isInteger(cacheCreationInputTokens) || !Number.isInteger(cacheReadInputTokens)
+        || cacheCreationInputTokens < 0 || cacheReadInputTokens < 0) {
+        throw new Error('Provider response carried unusable cache token counts, so the call cannot be reconciled against the budget.');
+      }
+
       return {
         text: (body?.content ?? []).filter((part) => part?.type === 'text').map((part) => part.text).join(''),
-        usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens },
+        usage: {
+          inputTokens: usage.input_tokens + cacheCreationInputTokens + cacheReadInputTokens,
+          outputTokens: usage.output_tokens,
+          uncachedInputTokens: usage.input_tokens,
+          cacheCreationInputTokens,
+          cacheReadInputTokens,
+        },
         stopReason: STOP_REASONS[body?.stop_reason] ?? 'error',
         providerStopReason: String(body?.stop_reason ?? 'unknown'),
         model: String(body?.model ?? resolvedModel),

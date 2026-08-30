@@ -31,7 +31,7 @@
       "ready": false,
       "policyReviewedAt": null,
       "policySource": null,
-      "note": "The existing canary provider now uses Claude's native schema-constrained JSON output for the approved ReviewVerdict contract, with the same trusted-side contract resolution and canonical local validation used by other strict-output lanes. That capability does not make the provider ready: no provider terms have been reviewed and recorded, the first canary still uses synthetic material, and no role or private data class is granted here."
+      "note": "The existing canary provider now uses Claude's native schema-constrained JSON output for the approved ReviewVerdict contract, with the same trusted-side contract resolution and canonical local validation used by other strict-output lanes. That capability does not make the provider ready: no provider terms have been reviewed and recorded, the first canary still uses synthetic material, and no role or private data class is granted here. Prompt caching is deliberately not enabled: this lane's stable prefix is roughly 270 tokens and the pinned model does not cache a prefix below 4,096, so a cache_control breakpoint here would report nothing cached and change no cost. The accounting is ready for it anyway - `inputTokens` is the whole prompt including whatever a cache served - so enabling it later cannot quietly stop the budget binding."
     },
     {
       "providerId": "groq",

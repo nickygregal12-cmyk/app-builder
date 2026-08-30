@@ -109,3 +109,60 @@ test('an unapproved Anthropic output contract is refused before provider traffic
   );
   assert.equal(called, false);
 });
+
+// ---------------------------------------------------------------------------
+// What a provider cache would do to this adapter's accounting.
+//
+// No lane sends `cache_control` today, and this lane could not benefit if it
+// did: its stable prefix is roughly 270 tokens and the pinned model will not
+// cache a prefix below 4,096. These exist because the mapping has to be right
+// before that changes, not after — with caching on, `input_tokens` is the
+// uncached remainder, and an adapter that passes it through reports a shrinking
+// prompt for a request nobody changed.
+// ---------------------------------------------------------------------------
+
+function adapterReturning(usage) {
+  const adapter = createAnthropicModelAdapter({
+    endpoint: 'https://api.anthropic.com/v1/messages',
+    apiVersion: '2023-06-01',
+    model: MODEL,
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        model: MODEL,
+        stop_reason: 'end_turn',
+        content: [{ type: 'text', text: '{"verdict":"rework-required"}' }],
+        usage,
+      }),
+      text: async () => '',
+    }),
+  });
+  return adapter.complete({ request: REQUEST, apiKey: 'test-key' });
+}
+
+test('a response with no cache fields reports exactly what it did before', async () => {
+  const result = await adapterReturning({ input_tokens: 2000, output_tokens: 100 });
+  assert.equal(result.usage.inputTokens, 2000);
+  assert.equal(result.usage.cacheReadInputTokens, 0);
+  assert.equal(result.usage.cacheCreationInputTokens, 0);
+});
+
+test('a cached response still reports the whole prompt, with the parts beside it', async () => {
+  const result = await adapterReturning({
+    input_tokens: 200,
+    output_tokens: 100,
+    cache_creation_input_tokens: 0,
+    cache_read_input_tokens: 1800,
+  });
+  assert.equal(result.usage.inputTokens, 2000, 'the prompt did not shrink because a cache served most of it');
+  assert.equal(result.usage.uncachedInputTokens, 200);
+  assert.equal(result.usage.cacheReadInputTokens, 1800);
+});
+
+test('unusable cache counts are refused rather than treated as zero', async () => {
+  await assert.rejects(
+    () => adapterReturning({ input_tokens: 10, output_tokens: 5, cache_read_input_tokens: -1 }),
+    /cache token counts/,
+  );
+});

@@ -308,10 +308,14 @@ using (
 );
 
 -- Write: only as yourself, only into an entity of an organisation you belong to,
--- and only while the window is open. The window condition is repeated from the
--- trigger deliberately — the trigger is the truth, this is the error the client
--- should get, and a policy that let the row through to be refused by a trigger
--- would report a permissions failure as a server error.
+-- and only while the window is open.
+--
+-- The window condition is repeated from the trigger, and it is the trigger that
+-- a late client actually hears from: a policy's `with check` is evaluated AFTER
+-- before-row triggers have fired, so the trigger raises first. The repetition is
+-- not there to produce the message. It is there so that the write boundary is
+-- complete when someone reads the policies alone — which is where a reviewer
+-- looks — and so that removing the trigger does not silently open the window.
 create policy "scheduled_decisions_insert_own_while_open" on public.scheduled_decisions for insert to authenticated
 with check (
   identity_id = (select auth.uid())

@@ -364,8 +364,7 @@
       "Services",
       "Our Work",
       "About",
-      "Contact",
-      "Locations"
+      "Contact"
     ],
     "requestedModules": [
       "analytics",
@@ -529,7 +528,7 @@
     },
     "approvedAt": "2026-08-30T00:00:00.000Z"
   },
-  "buildContractHash": "b05b11bb3df6b1f1fd462ab5881e1a12dfbc8ccfe2678d6e78dc3333e069b274",
+  "buildContractHash": "19bb60205a6834a7024e6efaa4056cb455144ea9f6833f5481ee67dae9fb4061",
   "projectManifest": {
     "schemaVersion": 2,
     "project": {
@@ -555,8 +554,7 @@
       "Services",
       "Our Work",
       "About",
-      "Contact",
-      "Locations"
+      "Contact"
     ],
     "entities": [],
     "company": {
@@ -620,6 +618,7 @@
       "organisations": false,
       "admin": false,
       "records": false,
+      "scheduled-decisions": false,
       "billing": false,
       "email": false,
       "notifications": false,
@@ -748,5 +747,5 @@
       "Photograph upload on the quote form: the uploads capability moves a marketing site onto the application renderer, so the requirement is preserved as unmet rather than built in this run"
     ]
   },
-  "projectManifestHash": "0778cb8631d7b2ea5910a939176af2862cb48170629777308f9cfd108f6ca8d0"
+  "projectManifestHash": "9252c81836a81dbf97e5df0d2c8a5f97d840bcdbbded444055911335ceed55a5"
 }

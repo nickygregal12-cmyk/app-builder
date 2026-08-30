@@ -166,6 +166,27 @@ test('a surface the operator declared is published even when the factory cannot 
   assert.deepEqual(composition.pages.map((page) => page.path), ['/','/projects','/careers','/404'],
     'operator intent outranks the factory’s own judgement about what it can fill');
   assert.deepEqual(composition.warnings.filter((item) => item.startsWith('unfillable-surface:')), []);
+
+  // Published is not the same as unreported. MGB Decor declared "Our Work", the
+  // run had no publishable imagery and no project material, and a decorating
+  // business shipped an empty proof page into its own navigation and sitemap
+  // with nothing attached to say so.
+  assert.deepEqual(
+    composition.warnings.filter((item) => item.startsWith('empty-declared-surface:')),
+    ['empty-declared-surface:Projects', 'empty-declared-surface:Careers'],
+  );
+});
+
+test('a supplied service name is quoted in generated prose, never recased', () => {
+  const composition = composeProject({ manifest: marketingManifest({
+    company: { identity: { name: 'MGB Decor' }, services: ['Interior painting and decorating', 'Ames taping'], locations: ['Glasgow'], contactDetails: {}, trustSignals: [], conversionGoals: ['quote request'] },
+  }) });
+  const prose = composition.sections.flatMap((item) => item.bindings).map((item) => item.value).filter((item) => typeof item === 'string');
+  // The summary sentence lowercased everything after its first character, which
+  // published MGB Decor's "Ames taping" as "ames taping". A service name is a
+  // supplied fact and a tidier sentence is not a reason to rewrite one.
+  assert.equal(prose.some((item) => item.includes('ames taping')), false, 'a service name must not be recased');
+  assert.ok(prose.some((item) => item.includes('Ames taping')), 'the supplied service name must survive');
 });
 
 test('custom and unresolved capability intent survives as composition warnings', () => {

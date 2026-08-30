@@ -624,3 +624,114 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .builder-mode [data-element-key] { cursor: pointer; outline-offset: 3px }
 .builder-mode [data-element-key]:hover { outline: 2px dashed var(--color-accent) }
 .builder-mode .builder-selected { outline: 2px solid var(--color-accent) }
+
+/* ---------------------------------------------------------------------------
+   The action family.
+
+   Five implementations of a call to action, not five skins of one. The reason
+   this exists is recorded in docs/PHASE_4D_VISUAL_DEBT.md: `distinctiveness`
+   scored 4.3-4.8 across every candidate in every independent review, and the
+   critic named the filled pill as one of four reasons every direction arrived
+   looking template-derived. It was the one of the four with no axis at all.
+
+   `.action-link` treatments are deliberately not `.button`, so they inherit
+   none of the control styling above. That is the point: an editorial direction
+   asks in running text, and a direction that wanted a box would have chosen
+   one.
+--------------------------------------------------------------------------- */
+
+.section-actions .action-label { display: inline-block; }
+
+/* The rank rules above (`.primary-action`, `.secondary-action`) set a
+   background, a border and a shadow without requiring `.button`, because until
+   now every action was one. A text treatment therefore inherited the accent
+   fill and arrived as a box with an arrow after it — the family reached the DOM
+   and the page still looked like the thing it was supposed to replace.
+
+   Reset on `.action-link` rather than by narrowing the rules above, so the
+   `.button` path every existing build renders is byte-for-byte unchanged and
+   `solid` cannot regress. */
+.action-link.primary-action,
+.action-link.secondary-action {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+}
+.action-link.primary-action { color: var(--color-accent); }
+.action-link.primary-action:hover,
+.action-link.secondary-action:hover { transform: none; box-shadow: none; }
+
+/* Inside the dark closing panel the accent has too little contrast, so an
+   action there takes the panel's own inverse ink. This covers every treatment,
+   not only the text ones: the first version fixed `.action-link` and left
+   `.action-outlined` rendering dark-on-black, which made the secondary ask in
+   the closing panel effectively invisible. A family that can put an
+   unreadable control on the page is not ready to be chosen. */
+.cta-section .action-link.primary-action,
+.cta-section .action-link.secondary-action,
+.cta-section .button.action-outlined,
+.cta-section .button.action-outlined.primary-action,
+.cta-section .button.action-block,
+.cta-section .button.action-block.primary-action {
+  color: var(--color-text-inverse);
+  border-color: var(--color-text-inverse);
+}
+.cta-section .button.action-outlined:hover {
+  background: var(--color-text-inverse);
+  color: var(--color-ink);
+}
+
+/* Outlined — the same footprint as solid, carried by a rule rather than a fill. */
+.button.action-outlined {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid currentColor;
+  box-shadow: none;
+}
+.button.action-outlined.primary-action { border-color: var(--color-accent); color: var(--color-accent); }
+.button.action-outlined:hover { background: var(--color-accent); color: var(--color-surface); }
+
+/* Block — a full-width band. The ask stops being a control in a row of
+   controls and becomes the edge of the section. */
+.actions-block { display: block; }
+.button.action-block {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-top: 2px solid currentColor;
+  border-radius: 0;
+  padding: 1.1rem 0 0.9rem;
+  font-size: var(--text-xl, 1.25rem);
+  background: transparent;
+  color: var(--color-text);
+  box-shadow: none;
+}
+.button.action-block.primary-action { color: var(--color-accent); }
+.button.action-block:hover { padding-left: 0.4rem; }
+
+/* Underline — running text with a rule. Not a box at any width. */
+.action-link { display: inline-flex; align-items: baseline; gap: 0.45rem; text-decoration: none; font-weight: 600; color: var(--color-text); }
+.action-link.action-underline .action-label {
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 0.12rem;
+}
+.action-link.action-underline:hover .action-label { border-bottom-color: currentColor; }
+
+/* Arrow — directional, and the glyph is decoration the label does not include. */
+.action-link.action-arrow .action-arrow { transition: transform 140ms ease; }
+.action-link.action-arrow:hover .action-arrow { transform: translateX(0.28rem); }
+.action-link.action-arrow .action-label { border-bottom: 1px solid transparent; }
+.action-link.action-arrow:hover .action-label { border-bottom-color: currentColor; }
+
+.action-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+
+/* A direction that asked for reduced motion gets none of the movement above. */
+@media (prefers-reduced-motion: reduce) {
+  .action-link.action-arrow .action-arrow,
+  .action-link.action-arrow:hover .action-arrow { transition: none; transform: none; }
+  .button.action-block:hover { padding-left: 0; }
+}

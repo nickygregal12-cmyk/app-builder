@@ -1,19 +1,53 @@
 ---
 import type { Action } from '../lib/composition';
 import { isExternal, siteHref } from '../lib/composition';
+import { design } from '../generated/design';
+import type { VisualDirection } from '../lib/composition';
+
+/**
+ * The action family, in the static renderer.
+ *
+ * Kept in step with the React template deliberately. Two renderers that
+ * disagree about what a call to action is made of would mean a promoted
+ * direction looked like one thing in the preview and another in the shipped
+ * static build, which is the class of defect `renderingSource` exists to catch
+ * after the fact rather than a thing to introduce on purpose.
+ */
+const TREATMENTS = ['solid', 'outlined', 'underline', 'arrow', 'block'] as const;
+type Treatment = (typeof TREATMENTS)[number];
+
+// `design`, not `composition`. The direction lives on the design module — it
+// is where Section.astro and SiteLayout.astro read theirs from — and reading it
+// off the composition is how the first version of this axis reached the
+// candidate signature, the diversity gate and the review packet while every
+// candidate still rendered the same filled pill.
+const directed = design as unknown as VisualDirection;
+const declared = directed.artDirection?.dimensions?.actionTreatment;
+const treatment: Treatment = (TREATMENTS as readonly string[]).includes(declared ?? '')
+  ? (declared as Treatment)
+  : 'solid';
+
+// `button` only where the treatment is a button; a text link carrying it is
+// what made every direction's ask look like the same control.
+const boxed: Record<Treatment, boolean> = {
+  solid: true, outlined: true, block: true, underline: false, arrow: false,
+};
 
 interface Props { actions: readonly Action[] }
 const { actions } = Astro.props;
 ---
 {actions.length > 0 && (
-  <div class="section-actions">
+  <div class={`section-actions actions-${treatment}`} data-action-treatment={treatment}>
     {actions.map((action, index) => (
       <a
-        class={index === 0 ? 'button primary-action' : 'button secondary-action'}
+        class={`${boxed[treatment] ? 'button' : 'action-link'} action-${treatment} ${index === 0 ? 'primary-action' : 'secondary-action'}`}
         data-element-key={`action:${index}`}
         href={siteHref(action.href)}
         {...(isExternal(action.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      >{action.label}</a>
+      >
+        <span class="action-label">{action.label}</span>
+        {treatment === 'arrow' && <span class="action-arrow" aria-hidden="true">&#8594;</span>}
+      </a>
     ))}
   </div>
 )}

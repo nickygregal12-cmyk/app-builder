@@ -28,6 +28,7 @@ import { structuralSignature } from './visual-direction.mjs';
 /** The nine signals §5C names, mapped to where each already lives. */
 export const SIGNALS = Object.freeze([
   { id: 'sequence', label: 'section/presentation sequence', from: 'sequence' },
+  { id: 'actionTreatment', label: 'action family', from: 'axes.actionTreatment' },
   { id: 'heroStrategy', label: 'hero strategy', from: 'axes.heroStrategy' },
   { id: 'gridFamily', label: 'layout/grid family', from: 'axes.gridFamily' },
   { id: 'layoutFamily', label: 'layout pattern', from: 'axes.layoutFamily' },
@@ -66,6 +67,7 @@ export function crossBuildSignature({ build, composition, design, direction = nu
       // A sequence is compared as a whole: the same section types in the same
       // order across two unrelated businesses is the finding, not any one page.
       sequence: JSON.stringify(signature.sequence.map((page) => page.presentation)),
+      actionTreatment: signature.axes.actionTreatment ?? null,
       heroStrategy: signature.axes.heroStrategy ?? null,
       gridFamily: signature.axes.gridFamily ?? null,
       layoutFamily: signature.axes.layoutFamily ?? null,

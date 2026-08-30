@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Named visual directions. A direction is a coherent set of art-direction decisions that differ STRUCTURALLY from the others — hero strategy, grid family, section order, heading treatment, responsive composition — not by palette, radius or token values. Every field here has a renderer or composer consumer; a dimension nothing reads would be a knob on a picture of a machine. `assetAppetite` is checked against Visual Asset Readiness before a direction may become a candidate, so 'no publishable imagery' is an art-direction input rather than a late defect.",
+  "description": "Named visual directions. A direction is a coherent set of art-direction decisions that differ STRUCTURALLY from the others \u2014 hero strategy, grid family, section order, heading treatment, responsive composition \u2014 not by palette, radius or token values. Every field here has a renderer or composer consumer; a dimension nothing reads would be a knob on a picture of a machine. `assetAppetite` is checked against Visual Asset Readiness before a direction may become a candidate, so 'no publishable imagery' is an art-direction input rather than a late defect.",
   "projectTypeCandidates": {
     "marketing-site": [
       "structured-practice",
@@ -84,7 +84,8 @@
           "location-list",
           "contact-panel"
         ],
-        "distinctiveMoment": "figure-index"
+        "distinctiveMoment": "figure-index",
+        "actionTreatment": "outlined"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
@@ -122,7 +123,8 @@
           "location-list",
           "contact-panel"
         ],
-        "distinctiveMoment": "lead-statement"
+        "distinctiveMoment": "lead-statement",
+        "actionTreatment": "underline"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -160,7 +162,8 @@
           "location-list",
           "contact-panel"
         ],
-        "distinctiveMoment": "full-bleed-lead"
+        "distinctiveMoment": "full-bleed-lead",
+        "actionTreatment": "block"
       },
       "assetAppetite": "imagery-required",
       "responsive": {
@@ -191,7 +194,8 @@
         "headingTreatment": "plain",
         "ctaPlacement": "closing",
         "sectionOrder": [],
-        "distinctiveMoment": "none"
+        "distinctiveMoment": "none",
+        "actionTreatment": "solid"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -229,7 +233,8 @@
           "gallery",
           "contact-panel"
         ],
-        "distinctiveMoment": "figure-index"
+        "distinctiveMoment": "figure-index",
+        "actionTreatment": "arrow"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { describeDevServer } from './lib/rendering-source.mjs';
-import { SIGNAL_KINDS } from './lib/browser-signals.mjs';
+import { SIGNAL_KINDS, retryViolatesMutation } from './lib/browser-signals.mjs';
 
 /**
  * The review packet for the generated-application journey lane.
@@ -160,7 +160,13 @@ export function summariseSignals(journeys) {
       }
     }
   }
-  return { byKind, declarationsUsed, unwatched, maskedByRetry: journeys.filter((journey) => journey.maskedByRetry).map((journey) => journey.journey) };
+  return {
+    byKind,
+    declarationsUsed,
+    unwatched,
+    maskedByRetry: journeys.filter((journey) => journey.maskedByRetry).map((journey) => journey.journey),
+    retriedAfterMutation: journeys.filter((journey) => journey.retriedAfterMutation).map((journey) => journey.journey),
+  };
 }
 
 const attemptSignals = (attempt) => {
@@ -170,12 +176,18 @@ const attemptSignals = (attempt) => {
 
 export function buildPacket({ report, tests, captureFiles }) {
   const journeys = tests.map((entry) => {
-    const attempts = entry.attempts.map((attempt) => ({
-      attempt: attempt.attempt,
-      status: attempt.status,
-      durationMs: attempt.durationMs,
-      signals: attemptSignals(attempt),
-    }));
+    const attempts = entry.attempts.map((attempt) => {
+      const signals = attemptSignals(attempt);
+      return {
+        attempt: attempt.attempt,
+        status: attempt.status,
+        durationMs: attempt.durationMs,
+        // Lifted out of the attachment so the retry rule and a reader can both
+        // see it without unpacking the signal record.
+        mutations: signals?.mutations ?? [],
+        signals,
+      };
+    });
     const final = attempts.at(-1) ?? null;
     return {
       journey: entry.title,
@@ -183,6 +195,16 @@ export function buildPacket({ report, tests, captureFiles }) {
       status: entry.status,
       captures: captureFiles.get(entry.title) ?? [],
       attempts,
+      // Whether this journey wrote anything, and whether a retry then ran on
+      // top of what it wrote. `retriedAfterMutation` is the invalid combination
+      // whatever the outcome: a pass on the second attempt is a pass from a
+      // state the seed never described.
+      mutated: attempts.some((attempt) => attempt.mutations.length > 0),
+      retriedAfterMutation: retryViolatesMutation(attempts),
+      // A journey that passed first time and one that needed a second go are
+      // different evidence, and a packet that renders both as "passed" hides
+      // the distinction the reader most needs.
+      outcome: attempts.length > 1 && final?.status === 'passed' ? 'flaky-pass' : (final?.status ?? 'unknown'),
       // Named, because this is the shape in which a lane lies to itself: the
       // job goes green, the summary says "flaky", and what the browser reported
       // on the attempt that failed is never read by anyone.
@@ -254,7 +276,8 @@ function reviewMarkdown(packet) {
     const gated = journey.attempts.some((attempt) => attempt.signals)
       ? journey.attempts.reduce((total, attempt) => total + (attempt.signals?.counts.gated ?? 0), 0)
       : 'not recorded';
-    const result = journey.maskedByRetry ? `${journey.status} (masked by retry)` : journey.status;
+    const flags = [journey.maskedByRetry ? 'masked by retry' : null, journey.retriedAfterMutation ? 'retried after a write' : null].filter(Boolean);
+    const result = flags.length ? `${journey.outcome} (${flags.join('; ')})` : journey.outcome;
     lines.push(`| ${journey.capability} | ${journey.journey} | ${result} | ${journey.attempts.length} | ${journey.captures.length} | ${gated} |`);
   }
   lines.push('', '## What the browser reported', '');
@@ -309,6 +332,12 @@ function main() {
   for (const journey of packet.signals.maskedByRetry) {
     console.error(`"${journey}" reported an undeclared browser error and then passed on retry. The retry is not the answer to it.`);
   }
+  // The invariant this lane's first hosted run argued for. A journey that wrote
+  // and was then rerun did not start where the seed put it, so neither its pass
+  // nor its failure describes the journey the seed set up.
+  for (const journey of packet.signals.retriedAfterMutation) {
+    console.error(`"${journey}" wrote to the database and was then retried. The retry ran against what the first attempt left behind, so its result is not evidence about the seeded state.`);
+  }
   for (const entry of packet.reconciliation.missing) {
     console.error(`${entry.file}: expected ${entry.expected} journey(ies), ran ${entry.ran}. A lane that lost a journey publishes a shorter green run, not a faster one.`);
   }
@@ -320,7 +349,8 @@ function main() {
   const failed = !packet.reconciliation.complete
     || packet.reconciliation.unexpected.length > 0
     || packet.signals.unwatched > 0
-    || packet.signals.maskedByRetry.length > 0;
+    || packet.signals.maskedByRetry.length > 0
+    || packet.signals.retriedAfterMutation.length > 0;
   if (failed) process.exit(1);
 }
 

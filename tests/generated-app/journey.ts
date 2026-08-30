@@ -4,6 +4,7 @@ import {
   HARNESS_DECLARATIONS,
   consoleSignalKind,
   describeGatedSignals,
+  isMutation,
   summariseJourneySignals,
 } from '../../tooling/lib/browser-signals.mjs';
 
@@ -60,7 +61,17 @@ export type JourneySignals = {
  */
 const BODY_LIMIT = 400;
 
-function collect(page: Page, sink: Signal[], pending: Promise<unknown>[]) {
+/**
+ * How many writes to remember.
+ *
+ * Only ever read as "was there one", so the list exists to tell a reader which
+ * writes they were rather than to be complete.
+ */
+const MUTATION_CAP = 50;
+
+type Mutation = { method: string; url: string; status: number };
+
+function collect(page: Page, sink: Signal[], pending: Promise<unknown>[], mutations: Mutation[]) {
   const at = () => sink.length;
   page.on('pageerror', (error) => {
     sink.push({ kind: 'page-error', text: error.stack ?? String(error), url: page.url(), at: at() });
@@ -80,6 +91,12 @@ function collect(page: Page, sink: Signal[], pending: Promise<unknown>[]) {
     });
   });
   page.on('response', (response) => {
+    // Recorded before the error filter below, because a write that succeeded is
+    // exactly the case this needs to see and is never an error.
+    const method = response.request().method();
+    if (isMutation({ method, status: response.status() }) && mutations.length < MUTATION_CAP) {
+      mutations.push({ method, url: response.url(), status: response.status() });
+    }
     if (response.status() < 400) return;
     const signal: Signal = {
       kind: 'http-error',
@@ -103,9 +120,9 @@ function collect(page: Page, sink: Signal[], pending: Promise<unknown>[]) {
   });
 }
 
-function watch(context: BrowserContext, sink: Signal[], pending: Promise<unknown>[]) {
-  for (const page of context.pages()) collect(page, sink, pending);
-  context.on('page', (page) => collect(page, sink, pending));
+function watch(context: BrowserContext, sink: Signal[], pending: Promise<unknown>[], mutations: Mutation[]) {
+  for (const page of context.pages()) collect(page, sink, pending, mutations);
+  context.on('page', (page) => collect(page, sink, pending, mutations));
 }
 
 export const test = base.extend<{ journeySignals: JourneySignals }>({
@@ -113,9 +130,10 @@ export const test = base.extend<{ journeySignals: JourneySignals }>({
     async ({ context, browser }, use, testInfo) => {
       const sink: Signal[] = [];
       const pending: Promise<unknown>[] = [];
+      const mutations: Mutation[] = [];
       const declarations: Declaration[] = [...HARNESS_DECLARATIONS];
 
-      watch(context, sink, pending);
+      watch(context, sink, pending, mutations);
 
       // The notifications journey is three people, so it opens its own contexts
       // through the worker-scoped `browser` rather than using the one this
@@ -133,7 +151,7 @@ export const test = base.extend<{ journeySignals: JourneySignals }>({
       const newContext = browser.newContext.bind(browser);
       browser.newContext = async (...args) => {
         const created = await newContext(...args);
-        watch(created, sink, pending);
+        watch(created, sink, pending, mutations);
         return created;
       };
 
@@ -152,7 +170,7 @@ export const test = base.extend<{ journeySignals: JourneySignals }>({
 
       const summary = summariseJourneySignals(sink, declarations);
       await testInfo.attach('browser-signals', {
-        body: JSON.stringify({ schemaVersion: 1, journey: testInfo.title, file: testInfo.titlePath[0], declarations, ...summary }, null, 2),
+        body: JSON.stringify({ schemaVersion: 1, journey: testInfo.title, file: testInfo.titlePath[0], declarations, mutations, ...summary }, null, 2),
         contentType: 'application/json',
       });
 

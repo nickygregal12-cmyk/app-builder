@@ -41,7 +41,24 @@ const EVIDENCE = '.app-builder/generated-app-journey';
 export default defineConfig({
   testDir: './tests/generated-app',
   fullyParallel: false,
-  retries: process.env.CI ? 1 : 0,
+  // Zero, and not because retries are disliked.
+  //
+  // Every journey here signs in and writes: a record, a file, a notification
+  // read-state, a decision. The seed that puts the database in a known state is
+  // a CI step that runs once, before Playwright starts, so a second attempt
+  // begins wherever the first one stopped. The lane's first instrumented run
+  // showed what that costs — the decision journey failed after writing its
+  // decision, and the retry went looking for a "submit decision" control the
+  // application had correctly replaced with "change decision". That failure was
+  // loud. The quiet version is the one to fear: an attempt fails mid-write, the
+  // retry runs on top of the result and goes green, and a pass from a state the
+  // seed never described is published as evidence the journey works.
+  //
+  // A retry here would need a deterministic reset to the same named seed before
+  // each attempt. Until something provides that, one attempt is the honest
+  // number, and `retryViolatesMutation` in the evidence step enforces the rule
+  // rather than trusting this line to stay at zero.
+  retries: 0,
   workers: 1,
   // A machine-readable result beside the human one. Before this the lane
   // reported to a terminal and nowhere else, so a green run left no record of

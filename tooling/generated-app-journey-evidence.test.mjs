@@ -10,6 +10,8 @@ import {
   SIGNAL_CAP,
   classifySignal,
   findDeclaration,
+  isMutation,
+  retryViolatesMutation,
   summariseJourneySignals,
 } from './lib/browser-signals.mjs';
 import { EXPECTED_JOURNEYS, buildPacket, flattenTests, reconcileJourneys } from './generated-app-journey-evidence.mjs';
@@ -148,6 +150,93 @@ test('no generated-application journey can opt out of being watched', () => {
       }
     }
   }
+});
+
+/**
+ * The retry rule, and why it is about the write rather than the outcome.
+ *
+ * A journey that wrote and was then rerun did not start where the seed put it.
+ * Both attempts passing is not a defence: the second one still began somewhere
+ * the seed never described, so its pass is not evidence about the journey the
+ * seed set up.
+ */
+test('a retry after a successful write is refused whatever the outcome', () => {
+  const wrote = [{ method: 'POST', url: '/rest/v1/records', status: 201 }];
+
+  assert.equal(retryViolatesMutation([{ mutations: wrote }]), false, 'one attempt is never a violation');
+  assert.equal(retryViolatesMutation([{ mutations: [] }, { mutations: [] }]), false, 'a read-only journey may be retried');
+  assert.equal(
+    retryViolatesMutation([{ mutations: wrote, status: 'failed' }, { mutations: [], status: 'passed' }]),
+    true,
+    'the classic laundering case: wrote, failed, retried, green',
+  );
+  assert.equal(
+    retryViolatesMutation([{ mutations: wrote, status: 'passed' }, { mutations: wrote, status: 'passed' }]),
+    true,
+    'both attempts passing does not make the second one evidence about the seeded state',
+  );
+
+  // A write the server refused changed nothing, so it cannot poison a retry.
+  // This is what keeps the rule usable rather than a blanket ban: journeys that
+  // deliberately provoke a refusal stay retryable.
+  assert.equal(isMutation({ method: 'POST', status: 403 }), false);
+  assert.equal(isMutation({ method: 'POST', status: 409 }), false);
+  assert.equal(isMutation({ method: 'GET', status: 200 }), false);
+  assert.equal(isMutation({ method: 'POST', status: 201 }), true);
+  assert.equal(isMutation({ method: 'PATCH', status: 204 }), true);
+  assert.equal(isMutation({ method: 'DELETE', status: 200 }), true);
+});
+
+test('the packet refuses a run in which a mutating journey was retried', () => {
+  const attach = (mutations) => ({
+    name: 'browser-signals',
+    contentType: 'application/json',
+    body: Buffer.from(JSON.stringify({ counts: { gated: 0, declared: 0, observed: 0 }, clean: true, signals: [], mutations })).toString('base64'),
+  });
+  const report = {
+    suites: [{
+      file: 'tests/generated-app/records.spec.ts',
+      suites: [{
+        specs: [{
+          title: 'a contributor can see, create, edit and persist their organisation records',
+          tests: [{ results: [
+            { status: 'failed', attachments: [attach([{ method: 'POST', url: '/rest/v1/records', status: 201 }])] },
+            { status: 'passed', attachments: [attach([])] },
+          ] }],
+        }],
+      }],
+    }],
+  };
+  const packet = buildPacket({ report, tests: flattenTests(report), captureFiles: new Map() });
+  const journey = packet.journeys[0];
+  assert.equal(journey.mutated, true);
+  assert.equal(journey.retriedAfterMutation, true);
+  assert.equal(journey.outcome, 'flaky-pass', 'a pass that needed two goes is not a first-attempt pass');
+  assert.deepEqual(packet.signals.retriedAfterMutation, [journey.journey]);
+});
+
+test('a first-attempt pass and a flaky pass are different outcomes in the packet', () => {
+  const clean = { name: 'browser-signals', contentType: 'application/json', body: Buffer.from(JSON.stringify({ counts: { gated: 0, declared: 0, observed: 0 }, clean: true, signals: [], mutations: [] })).toString('base64') };
+  const build = (results) => {
+    const report = { suites: [{ file: 'tests/generated-app/admin.spec.ts', suites: [{ specs: [{ title: 'x', tests: [{ results }] }] }] }] };
+    return buildPacket({ report, tests: flattenTests(report), captureFiles: new Map() }).journeys[0];
+  };
+  assert.equal(build([{ status: 'passed', attachments: [clean] }]).outcome, 'passed');
+  assert.equal(build([{ status: 'failed', attachments: [clean] }, { status: 'passed', attachments: [clean] }]).outcome, 'flaky-pass');
+});
+
+/**
+ * The configuration and the rule must not be able to drift apart. The comment
+ * in the config explains why the number is zero; this is what notices when
+ * somebody changes it back without providing the reset that would justify it.
+ */
+test('the mutating lane does not retry', () => {
+  const config = read('playwright.generated-app.config.ts');
+  assert.match(
+    config,
+    /^\s*retries: 0,\s*$/m,
+    'every journey in this lane writes, and the seed runs once before Playwright starts, so a second attempt does not start where the seed put it.',
+  );
 });
 
 test('the lane publishes something on a green run', () => {

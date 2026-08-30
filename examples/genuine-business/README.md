@@ -1,4 +1,13 @@
-# Phase 3.8E operator-authored acceptance input
+# Genuine-business corpus inputs
+
+The frozen inputs and recorded verdicts for the real businesses the factory has
+been run against. Each case keeps its approved input so a later factory version
+reruns the same truth rather than a new interpretation of it.
+
+- **nbm Construction Cost Consultants** — case 1, the Phase 3.8E acceptance run.
+- **MGB Decor** — case 2, run as an explicit prototype. See the last section.
+
+## Phase 3.8E operator-authored acceptance input
 
 `nbm-genuine-business-acceptance.xlsx` is the workbook the owner approved as
 source material for the Phase 3.8E genuine-business trial against **nbm
@@ -134,3 +143,73 @@ professional-services template rather than as this practice.
 That is the split the pair was kept to record. Do not read v1's hierarchy or
 credibility scores as design evidence, and do not read v2's improvement as the
 rework having happened — it has not started.
+
+## `mgb-approved-intake.v1.json` — corpus case 2, as a prototype
+
+MGB Decor is a Glasgow painting and decorating business and the second
+genuine-business case. It exists to answer one question NBM could not: is the
+component-vocabulary convergence recorded in `docs/PHASE_4D_VISUAL_DEBT.md`
+cross-project, or an artefact of one thinly-evidenced professional-services
+business? A craft trade whose product is photographs of finished rooms is about
+as far from a cost consultancy as the corpus can currently reach.
+
+`build-mgb-intake-bundle.mjs` regenerates the bundle byte-for-byte and
+`tooling/mgb-corpus-intake.test.mjs` asserts that it does:
+
+```bash
+node examples/genuine-business/build-mgb-intake-bundle.mjs
+```
+
+### It is a prototype input, and says so
+
+Unlike the nbm workbook, this input was not assembled for a launch. The owner
+supplied enough real business fact to build and judge a site, and did not supply
+production contact details, review evidence, project histories, asset bytes or a
+domain. The bundle therefore carries three kinds of statement that must never
+merge into one another:
+
+| | Example | What it is |
+| --- | --- | --- |
+| Owner-supplied fact | founded 2020, eight staff, the eight services, Glasgow and the West, fully insured | Real, and the site may rely on it |
+| Public reference location | the Facebook, Instagram and Companies House URLs | A place to look. Not permission to publish, and not ingested in this run |
+| Prototype placeholder | `123456789`, `test@mgb.com` | Present so the quote and contact journeys can be exercised. Never MGB's contact details |
+
+`tooling/mgb-corpus-intake.test.mjs` is written as one test per promotion the
+bundle must stay incapable of: a public profile becoming publication rights, a
+placeholder becoming a verified fact, a rights declaration without bytes
+becoming an ingested asset, "founded 2020" becoming an incorporation date, an
+unsupplied qualification becoming a published claim, and a preferred domain
+becoming an owned one.
+
+### What is deliberately not claimed
+
+The owner granted prototype rights over the MGB logo and two project
+photographs. **The files were never handed over.** The rights decision is
+recorded, and nothing else is: no asset is marked approved, no hash is invented,
+`assetStatus` and `publishUseAllowed` stay off, and the run ingested nothing. A
+rights declaration is not an asset. `trust` is left unanswered on the same
+principle that left it unanswered for nbm — trial finding F23 — and
+`project.siteUrl` is unset, so the build asserts no canonical address for a
+domain nobody owns.
+
+### What the questionnaire could not record
+
+Seven gaps are kept in `intake.feedback` rather than being dropped or invented
+around, because principle 8 asks intake to propose versioned changes rather than
+rewrite itself. The ones a second local-service business would hit again:
+
+- **WhatsApp** is the owner's named secondary conversion and `conversion` has no
+  option for it, so it is recorded as `other` and composition drops it with
+  `declared-conversion-unsupported:other`.
+- **Insurance status** is the single genuine trust fact MGB has, and `trust`
+  offers only testimonials, accreditations, case studies, project photos, awards
+  and client logos — all of which would be false here.
+- **Social profiles.** `project-manifest.schema.json` models
+  `company.socialProfiles` and composition already binds them as a first-class
+  contact route, its own comment noting that linking to a public profile is not
+  republishing it. No questionnaire answer and no Manifest builder populates the
+  field, so a business whose only web presence is Instagram cannot link to it.
+- **Photographs on a quote request**, which is the most useful thing a
+  decorating enquiry can carry. Enabling `uploads` moves a marketing site onto
+  the application renderer under `config/renderers.json`, so the requirement is
+  real, unmet, and recorded rather than silently enabled or silently dropped.

@@ -4,8 +4,8 @@
   "currentPhase": "4.4",
   "currentStage": "Phase 4.4 — product proof through high-value application capability",
   "status": "active",
-  "blockedBy": "No engineering blocker. The second genuine-business case is owner-blocked on approved facts and explicit asset-level usage rights; that does not block the serious-application, quality-integrity or release tracks.",
-  "nextStage": "Advance Phase 4.4 through the four outcome tracks in docs/ROADMAP.md: close bounded quality-truth gaps, run the owner-blocked second genuine-business case when approved inputs arrive, prove one bounded serious-application slice, and establish accepted-build release promotion. New capabilities are pulled only by those outcomes or a demonstrated reusable defect.",
+  "blockedBy": "No engineering blocker and no owner blocker for prototype work. MGB Decor supplied approved facts, prototype intent and asset-level rights for a logo and two project photographs, so the second genuine-business case is unblocked as a governed prototype/product-proof run. Promoting that run to a public launch still needs production contact details, review evidence, asset bytes, domain ownership and deployment/legal decisions.",
+  "nextStage": "Advance Phase 4.4 through the four outcome tracks in docs/ROADMAP.md: close bounded quality-truth gaps, carry the MGB Decor prototype through defect diagnosis and frozen rerun, prove one bounded serious-application slice, and establish accepted-build release promotion. New capabilities are pulled only by those outcomes or a demonstrated reusable defect.",
   "activeWork": [
     "quality-truth-closure",
     "second-genuine-business-proof",
@@ -14,7 +14,7 @@
   ],
   "outstandingProductGates": [
     "quality-truth-closure: derived requirement coverage remains open.",
-    "second-genuine-business-proof: MGB Decor requires owner-approved facts and asset-level usage rights before replayable intake can be frozen.",
+    "second-genuine-business-proof: the MGB Decor approved intake is frozen and replayable at examples/genuine-business/mgb-approved-intake.v1.json, and the prototype has been generated and reviewed. Outstanding: independent visual/product review, and — for launch rather than proof — production contact details, approved review evidence, asset bytes, project histories and domain ownership.",
     "bounded-serious-application-benchmark: the database half of the first Predictor-class vertical slice runs against real PostgreSQL through the scheduled-decisions recipe and tooling/application-journey-benchmark-acceptance.sql, with the scoring rule left to the product. The browser journey against the generated backend, independent product evidence and the frozen rerun that measures the reusable correction burden are still outstanding.",
     "accepted-build-release-lifecycle: no real generated product has proved explicit promotion of an identified accepted revision/artifact through production smoke verification, release record and rollback target.",
     "visual-maturity: unpaid and deferred; best independent mean 6.55 and floor 4.8 against required 8.5/6.5. It must pass before any best-in-class visual or proven-website claim."

@@ -1,0 +1,752 @@
+{
+  "schemaVersion": 1,
+  "bundleId": "intake-mgb-decor-prototype-v1",
+  "createdAt": "2026-08-30T00:00:00.000Z",
+  "provenance": {
+    "factoryEngineVersion": 4,
+    "producedBy": "operator-authored",
+    "note": "MGB Decor genuine-business corpus case 2, prototype/product-proof intake v1. Owner-supplied facts with clearly separated prototype placeholders and reference-only public sources. This is not a launch input: production contact details, review evidence, project histories, asset bytes and domain ownership remain outstanding and are recorded as intake feedback rather than invented."
+  },
+  "questionnaire": {
+    "version": "1.3.0",
+    "projectType": "marketing-site",
+    "mode": "thorough",
+    "questionIds": [
+      "project_type",
+      "project_name",
+      "primary_goal",
+      "target_users",
+      "must_have",
+      "major_surfaces",
+      "out_of_scope",
+      "existing_inputs",
+      "design_control",
+      "cost_priority",
+      "expected_scale",
+      "hard_constraints",
+      "company_identity",
+      "services",
+      "locations",
+      "conversion",
+      "trust",
+      "contact_details",
+      "seo_priority",
+      "content_approval"
+    ],
+    "requiredQuestionIds": [
+      "project_type",
+      "project_name",
+      "primary_goal",
+      "target_users",
+      "must_have",
+      "company_identity",
+      "services"
+    ]
+  },
+  "intake": {
+    "answers": {
+      "project_type": "marketing-site",
+      "project_name": "MGB Decor",
+      "primary_goal": "Generate qualified quote and WhatsApp enquiries while presenting MGB Decor as an established, skilled and trustworthy decorating business.",
+      "target_users": "Primarily homeowners, landlords and residential customers in Glasgow and the West who need a room, a house or a rental property decorated. Also builders, developers and contractor partners commissioning new-build, refurbishment or commercial decorating, and offices, shops and other trades who need a reliable decorating team.",
+      "must_have": [
+        "Understand what MGB Decor does",
+        "See what the work looks like",
+        "Understand whether MGB takes residential, commercial or contractor work",
+        "Understand that MGB covers Glasgow and the West",
+        "Request a quote",
+        "Start a WhatsApp conversation"
+      ],
+      "major_surfaces": [
+        "Home",
+        "Services",
+        "Our Work",
+        "About",
+        "Contact"
+      ],
+      "out_of_scope": [
+        "A dedicated Areas Served page; service-area information belongs on the pages that already exist",
+        "A blog",
+        "A public booking or calendar system, and any internal enquiry tracking",
+        "Customer portal, billing, CMS, ecommerce, authentication, review integration and CRM",
+        "Customer reviews or testimonials, because no owner-approved review text or provenance exists yet",
+        "Named clients, named commercial customers and factual project histories, none of which were supplied",
+        "Awards, ratings, review counts, customer counts, workmanship guarantees, accreditations, qualifications and trade memberships, none of which the owner has supplied",
+        "Photograph upload on the quote form: the uploads capability moves a marketing site onto the application renderer, so the requirement is preserved as unmet rather than built in this run"
+      ],
+      "existing_inputs": [
+        "logo/brand",
+        "photos"
+      ],
+      "design_control": "show-design-directions",
+      "hard_constraints": [
+        "Owner-supplied facts, prototype placeholders and public reference locations must stay distinguishable from one another",
+        "The prototype phone and email values are placeholders for product testing and must never be recorded as verified MGB contact details",
+        "\"Founded 2020\" is owner-supplied business history and must not be published as a legal incorporation date",
+        "Company number SC690594 is owner-supplied; no register fact may be published until the Companies House source is ingested",
+        "No invented awards, ratings, review counts, customer numbers, guarantees, accreditations, qualifications or years-of-experience claims",
+        "The service area is Glasgow and the West; no mileage radius may be invented",
+        "Imagery must be owner-approved MGB work or clearly labelled prototype placeholder, never stock painting photography presented as MGB work",
+        "Avoid paint-splatter clichés, badge clutter, tacky emojis and black-and-gold luxury-trades styling; the logo blue is an accent and the rainbow is rare",
+        "Mobile must make the quote and WhatsApp journey obvious rather than collapsing the page"
+      ],
+      "company_identity": {
+        "name": "MGB Decor",
+        "legalName": "MGB Decor Ltd",
+        "description": "Painting and decorating business founded in 2020 and run by Gary and Mick with a team of eight. MGB is Mick, Gary and Billy. Based in Glasgow, working across Glasgow and the West and travelling further for suitable work. An experienced decorating team taking on domestic, commercial, new-build and refurbishment decorating. Owner-supplied company number: SC690594."
+      },
+      "services": [
+        "Interior painting and decorating",
+        "Exterior painting and decorating",
+        "Wallpapering",
+        "Wallpaper removal",
+        "Commercial decorating",
+        "New-build decorating",
+        "Property refurbishment",
+        "Ames taping"
+      ],
+      "locations": [
+        "Glasgow",
+        "West of Scotland"
+      ],
+      "conversion": [
+        "quote request",
+        "call",
+        "email",
+        "contact form",
+        "other"
+      ],
+      "contact_details": {
+        "phone": "123456789",
+        "email": "test@mgb.com"
+      },
+      "cost_priority": "lowest-sensible-cost",
+      "expected_scale": "under-1000",
+      "seo_priority": "important",
+      "content_approval": "me"
+    },
+    "acceptedDefaults": [
+      {
+        "questionId": "cost_priority",
+        "value": "lowest-sensible-cost",
+        "detail": "Default accepted unchanged."
+      },
+      {
+        "questionId": "expected_scale",
+        "value": "under-1000",
+        "detail": "Default accepted unchanged."
+      },
+      {
+        "questionId": "seo_priority",
+        "value": "important",
+        "detail": "Default accepted unchanged."
+      },
+      {
+        "questionId": "content_approval",
+        "value": "me",
+        "detail": "Default accepted unchanged."
+      }
+    ],
+    "capabilityDecisions": {},
+    "sourceReferences": [
+      {
+        "id": "mgb-facebook",
+        "kind": "url",
+        "label": "MGB Decor Facebook page",
+        "uri": "https://www.facebook.com/mgbdecor2020/?locale=en_GB",
+        "provenance": "existing-site",
+        "purpose": "The owner-supplied identifier for MGB’s Facebook presence. Reference only: a public profile is a place to look, not permission to republish the photographs, reviews or third-party material on it.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "facebook",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-instagram",
+        "kind": "url",
+        "label": "MGB Decor Instagram profile",
+        "uri": "https://www.instagram.com/mgbdecor2020/",
+        "provenance": "existing-site",
+        "purpose": "The owner-supplied identifier for MGB’s Instagram presence. Reference only, on the same rule as the Facebook page.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "instagram",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-companies-house-psc",
+        "kind": "url",
+        "label": "Companies House persons with significant control, SC690594",
+        "uri": "https://find-and-update.company-information.service.gov.uk/company/SC690594/persons-with-significant-control",
+        "provenance": "external-research",
+        "purpose": "Where the owner-supplied company number could be checked. Not ingested in this run, so no incorporation date, register status or officer fact is asserted anywhere in this bundle.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "other-public",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-logo",
+        "kind": "logo",
+        "label": "MGB Decor logo",
+        "provenance": "user-supplied",
+        "purpose": "The owner explicitly authorised prototype use of the MGB logo. The file itself was never handed over, so no bytes were ingested, no hash exists and nothing publishable was derived from it. Rights recorded; asset outstanding.",
+        "rightsStatus": "approved-for-use",
+        "sourceRole": "primary-brand",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-project-photo-1",
+        "kind": "image",
+        "label": "MGB Decor project photograph 1",
+        "provenance": "user-supplied",
+        "purpose": "One of two project photographs the owner authorised for prototype use. No people are intentionally present and no third-party photographer restriction was supplied. The file was never handed over: rights recorded, asset outstanding, nothing ingested.",
+        "rightsStatus": "approved-for-use",
+        "sourceRole": "brand-supporting",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-project-photo-2",
+        "kind": "image",
+        "label": "MGB Decor project photograph 2",
+        "provenance": "user-supplied",
+        "purpose": "The second owner-authorised project photograph, on the same terms as the first. Rights recorded, asset outstanding, nothing ingested.",
+        "rightsStatus": "approved-for-use",
+        "sourceRole": "brand-supporting",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      }
+    ],
+    "feedback": [
+      {
+        "id": "mgb-feedback-whatsapp-conversion",
+        "type": "missing-requirement",
+        "questionId": "conversion",
+        "detail": "WhatsApp is a first-class enquiry route for this business and the second thing the owner asked the site to do. `conversion` has no option for it, so it is recorded as `other`, which loses which channel was meant. A local-service business reached through social referrals needs messaging as a named conversion.",
+        "nextValue": "whatsapp",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-feedback-insurance-trust",
+        "type": "missing-requirement",
+        "questionId": "trust",
+        "detail": "MGB supplied exactly one genuine trust fact — the business is fully insured — and `trust` cannot express it. The available options are testimonials, accreditations, case studies, project photos, awards and client logos, all of which would be false here. Insurance and workmanship guarantee are the two trust facts a local trade most often actually has.",
+        "nextValue": "fully insured (owner-supplied, unpublished in this run for want of a questionnaire home)",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-feedback-placeholder-contact",
+        "type": "missing-requirement",
+        "questionId": "contact_details",
+        "detail": "The phone and email in this bundle are prototype placeholders, and `contact_details` has no way to say so. A contact value carries no verification state, so nothing downstream can tell a placeholder from a checked business fact. This bundle keeps the distinction in prose, which is weaker than the machine-readable separation the rest of the intake contract has.",
+        "nextValue": "123456789 / test@mgb.com — prototype placeholders, never verified MGB contact details",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-feedback-social-profiles",
+        "type": "missing-requirement",
+        "detail": "MGB’s only web presence is Facebook and Instagram. `project-manifest.schema.json` models `company.socialProfiles` and composition already binds them as a first-class contact route — its own comment says linking to a public profile is not republishing it — but no questionnaire answer and no Manifest builder populates the field. The intake carries the URLs as reference-only sources and the built site cannot link to them.",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-feedback-quote-photo-upload",
+        "type": "missing-requirement",
+        "detail": "The owner wants customers to attach photographs to a quote request, which is the single most useful thing a decorating enquiry can carry. Enabling `uploads` moves a marketing site to the application renderer under `config/renderers.json`, turning an SEO-critical local site into a single-document application. The requirement is real, unmet, and not excluded by the owner; it is recorded here rather than dropped.",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-feedback-asset-bytes-outstanding",
+        "type": "missing-requirement",
+        "detail": "The owner approved prototype use of a logo and two project photographs. The bytes were never supplied. `source-reference.schema.json` can record the rights decision but has no way to say \"rights granted, asset outstanding\" — the closest available signal is withholding `assetStatus` and `publishUseAllowed`, which reads the same as \"no decision made\". A rights declaration without bytes must never be able to look like an ingested asset.",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-feedback-preferred-domain",
+        "type": "missing-requirement",
+        "detail": "The owner prefers `mgbdecor.com`. Nothing establishes that it is available, owned or configured, and the questionnaire has no field for a domain preference as distinct from a decided deployment address. The Manifest `siteUrl` is therefore left unset, so the build asserts no canonical URL — which is correct, but the preference itself has nowhere durable to live.",
+        "createdAt": "2026-08-30T00:00:00.000Z"
+      }
+    ]
+  },
+  "buildContract": {
+    "version": 2,
+    "status": "approved",
+    "project": {
+      "name": "MGB Decor",
+      "type": "marketing-site",
+      "primaryGoal": "Generate qualified quote and WhatsApp enquiries while presenting MGB Decor as an established, skilled and trustworthy decorating business.",
+      "targetUsers": "Primarily homeowners, landlords and residential customers in Glasgow and the West who need a room, a house or a rental property decorated. Also builders, developers and contractor partners commissioning new-build, refurbishment or commercial decorating, and offices, shops and other trades who need a reliable decorating team."
+    },
+    "audience": {
+      "summary": "Primarily homeowners, landlords and residential customers in Glasgow and the West who need a room, a house or a rental property decorated. Also builders, developers and contractor partners commissioning new-build, refurbishment or commercial decorating, and offices, shops and other trades who need a reliable decorating team.",
+      "roles": []
+    },
+    "entities": [],
+    "company": {
+      "identity": {
+        "name": "MGB Decor",
+        "legalName": "MGB Decor Ltd",
+        "description": "Painting and decorating business founded in 2020 and run by Gary and Mick with a team of eight. MGB is Mick, Gary and Billy. Based in Glasgow, working across Glasgow and the West and travelling further for suitable work. An experienced decorating team taking on domestic, commercial, new-build and refurbishment decorating. Owner-supplied company number: SC690594."
+      },
+      "services": [
+        "Interior painting and decorating",
+        "Exterior painting and decorating",
+        "Wallpapering",
+        "Wallpaper removal",
+        "Commercial decorating",
+        "New-build decorating",
+        "Property refurbishment",
+        "Ames taping"
+      ],
+      "locations": [
+        "Glasgow",
+        "West of Scotland"
+      ],
+      "contactDetails": {
+        "phone": "123456789",
+        "email": "test@mgb.com"
+      },
+      "trustSignals": [],
+      "conversionGoals": [
+        "quote request",
+        "call",
+        "email",
+        "contact form",
+        "other"
+      ]
+    },
+    "constraints": {
+      "hard": [
+        "Owner-supplied facts, prototype placeholders and public reference locations must stay distinguishable from one another",
+        "The prototype phone and email values are placeholders for product testing and must never be recorded as verified MGB contact details",
+        "\"Founded 2020\" is owner-supplied business history and must not be published as a legal incorporation date",
+        "Company number SC690594 is owner-supplied; no register fact may be published until the Companies House source is ingested",
+        "No invented awards, ratings, review counts, customer numbers, guarantees, accreditations, qualifications or years-of-experience claims",
+        "The service area is Glasgow and the West; no mileage radius may be invented",
+        "Imagery must be owner-approved MGB work or clearly labelled prototype placeholder, never stock painting photography presented as MGB work",
+        "Avoid paint-splatter clichés, badge clutter, tacky emojis and black-and-gold luxury-trades styling; the logo blue is an accent and the rainbow is rare",
+        "Mobile must make the quote and WhatsApp journey obvious rather than collapsing the page"
+      ],
+      "expectedScale": "under-1000",
+      "sensitivity": "",
+      "tenantModel": "",
+      "integrations": [],
+      "existingData": [],
+      "uploadTypes": [],
+      "customCapabilities": [],
+      "excludedCapabilities": [],
+      "unresolvedCapabilities": []
+    },
+    "coreJourneys": [
+      "Understand what MGB Decor does",
+      "See what the work looks like",
+      "Understand whether MGB takes residential, commercial or contractor work",
+      "Understand that MGB covers Glasgow and the West",
+      "Request a quote",
+      "Start a WhatsApp conversation"
+    ],
+    "majorSurfaces": [
+      "Home",
+      "Services",
+      "Our Work",
+      "About",
+      "Contact",
+      "Locations"
+    ],
+    "requestedModules": [
+      "analytics",
+      "lead-generation",
+      "observability",
+      "seo"
+    ],
+    "enabledModules": [
+      "analytics",
+      "lead-generation",
+      "observability",
+      "seo"
+    ],
+    "customWorkModules": [],
+    "excludedModules": [],
+    "capabilityPlan": [
+      {
+        "module": "analytics",
+        "availability": "ready",
+        "decision": "include"
+      },
+      {
+        "module": "lead-generation",
+        "availability": "ready",
+        "decision": "include"
+      },
+      {
+        "module": "observability",
+        "availability": "ready",
+        "decision": "include"
+      },
+      {
+        "module": "seo",
+        "availability": "ready",
+        "decision": "include"
+      }
+    ],
+    "infrastructure": {
+      "backend": "none",
+      "deployment": "netlify"
+    },
+    "brandDesignDirection": "show-design-directions",
+    "designDirection": "show-design-directions",
+    "sourceInputs": [
+      {
+        "id": "mgb-facebook",
+        "kind": "url",
+        "label": "MGB Decor Facebook page",
+        "uri": "https://www.facebook.com/mgbdecor2020/?locale=en_GB",
+        "provenance": "existing-site",
+        "purpose": "The owner-supplied identifier for MGB’s Facebook presence. Reference only: a public profile is a place to look, not permission to republish the photographs, reviews or third-party material on it.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "facebook",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-instagram",
+        "kind": "url",
+        "label": "MGB Decor Instagram profile",
+        "uri": "https://www.instagram.com/mgbdecor2020/",
+        "provenance": "existing-site",
+        "purpose": "The owner-supplied identifier for MGB’s Instagram presence. Reference only, on the same rule as the Facebook page.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "instagram",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-companies-house-psc",
+        "kind": "url",
+        "label": "Companies House persons with significant control, SC690594",
+        "uri": "https://find-and-update.company-information.service.gov.uk/company/SC690594/persons-with-significant-control",
+        "provenance": "external-research",
+        "purpose": "Where the owner-supplied company number could be checked. Not ingested in this run, so no incorporation date, register status or officer fact is asserted anywhere in this bundle.",
+        "rightsStatus": "reference-only",
+        "sourceRole": "research",
+        "sourceChannel": "other-public",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-logo",
+        "kind": "logo",
+        "label": "MGB Decor logo",
+        "provenance": "user-supplied",
+        "purpose": "The owner explicitly authorised prototype use of the MGB logo. The file itself was never handed over, so no bytes were ingested, no hash exists and nothing publishable was derived from it. Rights recorded; asset outstanding.",
+        "rightsStatus": "approved-for-use",
+        "sourceRole": "primary-brand",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-project-photo-1",
+        "kind": "image",
+        "label": "MGB Decor project photograph 1",
+        "provenance": "user-supplied",
+        "purpose": "One of two project photographs the owner authorised for prototype use. No people are intentionally present and no third-party photographer restriction was supplied. The file was never handed over: rights recorded, asset outstanding, nothing ingested.",
+        "rightsStatus": "approved-for-use",
+        "sourceRole": "brand-supporting",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      },
+      {
+        "id": "mgb-project-photo-2",
+        "kind": "image",
+        "label": "MGB Decor project photograph 2",
+        "provenance": "user-supplied",
+        "purpose": "The second owner-authorised project photograph, on the same terms as the first. Rights recorded, asset outstanding, nothing ingested.",
+        "rightsStatus": "approved-for-use",
+        "sourceRole": "brand-supporting",
+        "sourceChannel": "upload",
+        "instructionAuthority": "none",
+        "publishUseAllowed": false,
+        "recordedAt": "2026-08-30T00:00:00.000Z"
+      }
+    ],
+    "explicitlyExcluded": [
+      "A dedicated Areas Served page; service-area information belongs on the pages that already exist",
+      "A blog",
+      "A public booking or calendar system, and any internal enquiry tracking",
+      "Customer portal, billing, CMS, ecommerce, authentication, review integration and CRM",
+      "Customer reviews or testimonials, because no owner-approved review text or provenance exists yet",
+      "Named clients, named commercial customers and factual project histories, none of which were supplied",
+      "Awards, ratings, review counts, customer counts, workmanship guarantees, accreditations, qualifications and trade memberships, none of which the owner has supplied",
+      "Photograph upload on the quote form: the uploads capability moves a marketing site onto the application renderer, so the requirement is preserved as unmet rather than built in this run"
+    ],
+    "acceptanceCriteria": [
+      "V1 supports: Understand what MGB Decor does",
+      "V1 supports: See what the work looks like",
+      "V1 supports: Understand whether MGB takes residential, commercial or contractor work",
+      "V1 supports: Understand that MGB covers Glasgow and the West",
+      "V1 supports: Request a quote",
+      "V1 supports: Start a WhatsApp conversation"
+    ],
+    "unresolvedHighImpactQuestions": [],
+    "unresolvedCapabilityDecisions": [],
+    "ambiguityFollowUp": {
+      "version": 1,
+      "required": false,
+      "maxQuestions": 3,
+      "aiAllowed": true,
+      "budget": {
+        "maxTokens": 1200,
+        "modelClass": "economy"
+      },
+      "candidates": []
+    },
+    "estimatedAiCostMode": {
+      "mode": "economy",
+      "maxBuildCostGbp": 5
+    },
+    "approvedAt": "2026-08-30T00:00:00.000Z"
+  },
+  "buildContractHash": "b05b11bb3df6b1f1fd462ab5881e1a12dfbc8ccfe2678d6e78dc3333e069b274",
+  "projectManifest": {
+    "schemaVersion": 2,
+    "project": {
+      "name": "MGB Decor",
+      "slug": "mgb-decor",
+      "type": "marketing-site",
+      "primaryGoal": "Generate qualified quote and WhatsApp enquiries while presenting MGB Decor as an established, skilled and trustworthy decorating business."
+    },
+    "audience": {
+      "summary": "Primarily homeowners, landlords and residential customers in Glasgow and the West who need a room, a house or a rental property decorated. Also builders, developers and contractor partners commissioning new-build, refurbishment or commercial decorating, and offices, shops and other trades who need a reliable decorating team.",
+      "roles": []
+    },
+    "journeys": [
+      "Understand what MGB Decor does",
+      "See what the work looks like",
+      "Understand whether MGB takes residential, commercial or contractor work",
+      "Understand that MGB covers Glasgow and the West",
+      "Request a quote",
+      "Start a WhatsApp conversation"
+    ],
+    "majorSurfaces": [
+      "Home",
+      "Services",
+      "Our Work",
+      "About",
+      "Contact",
+      "Locations"
+    ],
+    "entities": [],
+    "company": {
+      "identity": {
+        "name": "MGB Decor",
+        "legalName": "MGB Decor Ltd",
+        "description": "Painting and decorating business founded in 2020 and run by Gary and Mick with a team of eight. MGB is Mick, Gary and Billy. Based in Glasgow, working across Glasgow and the West and travelling further for suitable work. An experienced decorating team taking on domestic, commercial, new-build and refurbishment decorating. Owner-supplied company number: SC690594."
+      },
+      "services": [
+        "Interior painting and decorating",
+        "Exterior painting and decorating",
+        "Wallpapering",
+        "Wallpaper removal",
+        "Commercial decorating",
+        "New-build decorating",
+        "Property refurbishment",
+        "Ames taping"
+      ],
+      "locations": [
+        "Glasgow",
+        "West of Scotland"
+      ],
+      "contactDetails": {
+        "phone": "123456789",
+        "email": "test@mgb.com"
+      },
+      "trustSignals": [],
+      "conversionGoals": [
+        "quote request",
+        "call",
+        "email",
+        "contact form",
+        "other"
+      ]
+    },
+    "constraints": {
+      "hard": [
+        "Owner-supplied facts, prototype placeholders and public reference locations must stay distinguishable from one another",
+        "The prototype phone and email values are placeholders for product testing and must never be recorded as verified MGB contact details",
+        "\"Founded 2020\" is owner-supplied business history and must not be published as a legal incorporation date",
+        "Company number SC690594 is owner-supplied; no register fact may be published until the Companies House source is ingested",
+        "No invented awards, ratings, review counts, customer numbers, guarantees, accreditations, qualifications or years-of-experience claims",
+        "The service area is Glasgow and the West; no mileage radius may be invented",
+        "Imagery must be owner-approved MGB work or clearly labelled prototype placeholder, never stock painting photography presented as MGB work",
+        "Avoid paint-splatter clichés, badge clutter, tacky emojis and black-and-gold luxury-trades styling; the logo blue is an accent and the rainbow is rare",
+        "Mobile must make the quote and WhatsApp journey obvious rather than collapsing the page"
+      ],
+      "expectedScale": "under-1000",
+      "sensitivity": "",
+      "tenantModel": "",
+      "integrations": [],
+      "existingData": [],
+      "uploadTypes": [],
+      "customCapabilities": [],
+      "excludedCapabilities": [],
+      "unresolvedCapabilities": []
+    },
+    "modules": {
+      "auth": false,
+      "profiles": false,
+      "organisations": false,
+      "admin": false,
+      "records": false,
+      "billing": false,
+      "email": false,
+      "notifications": false,
+      "uploads": false,
+      "search": false,
+      "audit-log": false,
+      "feature-flags": false,
+      "analytics": true,
+      "observability": true,
+      "seo": true,
+      "lead-generation": true,
+      "pwa": false,
+      "ai": false,
+      "jobs": false,
+      "integrations": false,
+      "feedback": false
+    },
+    "infrastructure": {
+      "backend": "none",
+      "deployment": "netlify"
+    },
+    "aiBudget": {
+      "mode": "economy",
+      "maxBuildCostGbp": 5
+    },
+    "brand": {
+      "designControl": "show-design-directions"
+    },
+    "inputs": {
+      "inventory": [
+        "logo/brand",
+        "photos"
+      ],
+      "sources": [
+        {
+          "id": "mgb-facebook",
+          "kind": "url",
+          "label": "MGB Decor Facebook page",
+          "uri": "https://www.facebook.com/mgbdecor2020/?locale=en_GB",
+          "provenance": "existing-site",
+          "purpose": "The owner-supplied identifier for MGB’s Facebook presence. Reference only: a public profile is a place to look, not permission to republish the photographs, reviews or third-party material on it.",
+          "rightsStatus": "reference-only",
+          "sourceRole": "research",
+          "sourceChannel": "facebook",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-30T00:00:00.000Z"
+        },
+        {
+          "id": "mgb-instagram",
+          "kind": "url",
+          "label": "MGB Decor Instagram profile",
+          "uri": "https://www.instagram.com/mgbdecor2020/",
+          "provenance": "existing-site",
+          "purpose": "The owner-supplied identifier for MGB’s Instagram presence. Reference only, on the same rule as the Facebook page.",
+          "rightsStatus": "reference-only",
+          "sourceRole": "research",
+          "sourceChannel": "instagram",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-30T00:00:00.000Z"
+        },
+        {
+          "id": "mgb-companies-house-psc",
+          "kind": "url",
+          "label": "Companies House persons with significant control, SC690594",
+          "uri": "https://find-and-update.company-information.service.gov.uk/company/SC690594/persons-with-significant-control",
+          "provenance": "external-research",
+          "purpose": "Where the owner-supplied company number could be checked. Not ingested in this run, so no incorporation date, register status or officer fact is asserted anywhere in this bundle.",
+          "rightsStatus": "reference-only",
+          "sourceRole": "research",
+          "sourceChannel": "other-public",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-30T00:00:00.000Z"
+        },
+        {
+          "id": "mgb-logo",
+          "kind": "logo",
+          "label": "MGB Decor logo",
+          "provenance": "user-supplied",
+          "purpose": "The owner explicitly authorised prototype use of the MGB logo. The file itself was never handed over, so no bytes were ingested, no hash exists and nothing publishable was derived from it. Rights recorded; asset outstanding.",
+          "rightsStatus": "approved-for-use",
+          "sourceRole": "primary-brand",
+          "sourceChannel": "upload",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-30T00:00:00.000Z"
+        },
+        {
+          "id": "mgb-project-photo-1",
+          "kind": "image",
+          "label": "MGB Decor project photograph 1",
+          "provenance": "user-supplied",
+          "purpose": "One of two project photographs the owner authorised for prototype use. No people are intentionally present and no third-party photographer restriction was supplied. The file was never handed over: rights recorded, asset outstanding, nothing ingested.",
+          "rightsStatus": "approved-for-use",
+          "sourceRole": "brand-supporting",
+          "sourceChannel": "upload",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-30T00:00:00.000Z"
+        },
+        {
+          "id": "mgb-project-photo-2",
+          "kind": "image",
+          "label": "MGB Decor project photograph 2",
+          "provenance": "user-supplied",
+          "purpose": "The second owner-authorised project photograph, on the same terms as the first. Rights recorded, asset outstanding, nothing ingested.",
+          "rightsStatus": "approved-for-use",
+          "sourceRole": "brand-supporting",
+          "sourceChannel": "upload",
+          "instructionAuthority": "none",
+          "publishUseAllowed": false,
+          "recordedAt": "2026-08-30T00:00:00.000Z"
+        }
+      ]
+    },
+    "outOfScope": [
+      "A dedicated Areas Served page; service-area information belongs on the pages that already exist",
+      "A blog",
+      "A public booking or calendar system, and any internal enquiry tracking",
+      "Customer portal, billing, CMS, ecommerce, authentication, review integration and CRM",
+      "Customer reviews or testimonials, because no owner-approved review text or provenance exists yet",
+      "Named clients, named commercial customers and factual project histories, none of which were supplied",
+      "Awards, ratings, review counts, customer counts, workmanship guarantees, accreditations, qualifications and trade memberships, none of which the owner has supplied",
+      "Photograph upload on the quote form: the uploads capability moves a marketing site onto the application renderer, so the requirement is preserved as unmet rather than built in this run"
+    ]
+  },
+  "projectManifestHash": "0778cb8631d7b2ea5910a939176af2862cb48170629777308f9cfd108f6ca8d0"
+}

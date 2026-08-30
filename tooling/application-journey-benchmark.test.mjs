@@ -185,6 +185,53 @@ test('the leaderboard ordering cannot end in a tie', () => {
 });
 
 // ---------------------------------------------------------------------------
+// The link between the frozen contract and the run that measures something.
+// ---------------------------------------------------------------------------
+
+const ACCEPTANCE_FILE = 'tooling/application-journey-benchmark-acceptance.sql';
+
+test('every frozen scenario is executed by the benchmark acceptance, not merely declared', () => {
+  // A contract nobody runs is a wish. The failure this prevents is quiet and
+  // easy: a scenario that becomes awkward to set up gets dropped from the SQL,
+  // the acceptance stays green because it no longer attempts it, and the
+  // benchmark still lists it as though it were proved.
+  const acceptance = fs.readFileSync(path.join(REPOSITORY_ROOT, ACCEPTANCE_FILE), 'utf8');
+  const missing = benchmark.scenarios.filter((entry) => !acceptance.includes(`[${entry.id}]`)).map((entry) => entry.id);
+  assert.deepEqual(missing, [], `frozen scenarios with no executed assertion in ${ACCEPTANCE_FILE}`);
+
+  // And the reverse, because a tag for a scenario that no longer exists is a
+  // test claiming to prove something the contract stopped asking for.
+  const declared = new Set(benchmark.scenarios.map((entry) => entry.id));
+  // Anchored on the opening quote of a test description. An unanchored `[...]`
+  // also matches every `array[1]` in the file.
+  const tagged = [...acceptance.matchAll(/'\[([a-z0-9-]+)\]/g)].map((match) => match[1]);
+  const unknown = [...new Set(tagged)].filter((id) => !declared.has(id));
+  assert.deepEqual(unknown, [], `${ACCEPTANCE_FILE} tags assertions with scenario ids the frozen benchmark does not declare`);
+});
+
+test('the executed acceptance asserts the refusal reasons the contract froze', () => {
+  // The reasons are part of the contract, not commentary on it. A product that
+  // refuses a late decision with a generic permissions error has satisfied the
+  // scenario's `expect` and told the person nothing about what went wrong.
+  const acceptance = fs.readFileSync(path.join(REPOSITORY_ROOT, ACCEPTANCE_FILE), 'utf8');
+  const missing = benchmark.scenarios
+    .filter((entry) => entry.expect === 'refused' && typeof entry.reason === 'string')
+    .filter((entry) => !acceptance.includes(entry.reason))
+    .map((entry) => entry.id);
+
+  // The isolation refusals are the deliberate exception: they are enforced by
+  // filtering the row away, so there is no error message to assert and there
+  // must not be one. Distinguishing "not yours" from "no such row" is how one
+  // competitor confirms another competitor's decision exists.
+  const enforcedBySilence = new Set(scenariosOfKind('isolation').map((entry) => entry.id));
+  assert.deepEqual(
+    missing.filter((id) => !enforcedBySilence.has(id)),
+    [],
+    'a frozen refusal reason is never asserted, so the product could refuse for a different reason and still pass',
+  );
+});
+
+// ---------------------------------------------------------------------------
 // The benchmark rule: extract capability from the difficulty, do not hard-code
 // the reference application.
 // ---------------------------------------------------------------------------

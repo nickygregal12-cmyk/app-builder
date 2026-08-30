@@ -6,6 +6,7 @@
     "organisations": {"description":"Multi-tenant organisations, memberships and roles","status":"ready","defaultEnabled":false},
     "admin": {"description":"Generic admin/back-office foundation","status":"ready","defaultEnabled":false},
     "records": {"description":"Organisation-owned domain records with role-differentiated access and a bounded archive operation","status":"ready","defaultEnabled":false},
+    "scheduled-decisions": {"description":"Entities with a server-authoritative decision deadline, per-identity decisions revealed at lock, official-result ingestion, idempotent settlement and a totally ordered leaderboard","status":"ready","defaultEnabled":false,"implementationRecipe":"scheduled-decisions","requiresModules":["auth","organisations"]},
     "billing": {"description":"Subscriptions, plans and entitlement abstraction","status":"planned","defaultEnabled":false},
     "email": {"description":"Transactional email abstraction and templates","status":"planned","defaultEnabled":false},
     "notifications": {"description":"Organisation- and recipient-scoped in-app notifications raised by real application events","status":"ready","defaultEnabled":false,"implementationRecipe":"notifications","requiresModules":["auth","organisations","records"]},

@@ -427,6 +427,7 @@
       "organisations": false,
       "admin": false,
       "records": false,
+      "scheduled-decisions": false,
       "billing": false,
       "email": false,
       "notifications": false,
@@ -501,5 +502,5 @@
       "Online payment, client portal or document exchange"
     ]
   },
-  "projectManifestHash": "4008df3f160eae07dd2216a5ada60863fcf1517e5fc5c66c24ea940a1d87e093"
+  "projectManifestHash": "fec97c5328015d0ea67c3a2d74e3dc75a3d19735ff80d0fd06dc07b9f086dfbe"
 }

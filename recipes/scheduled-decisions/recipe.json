@@ -1,0 +1,15 @@
+{
+  "schemaVersion":1,
+  "id":"scheduled-decisions",
+  "module":"scheduled-decisions",
+  "version":"1.0.0",
+  "status":"ready",
+  "compatibleTemplates":["react-vite-neutral"],
+  "entry":"src/features/scheduled-decisions/index.ts",
+  "files":["src/features/scheduled-decisions/index.ts"],
+  "requires":["auth","organisations"],
+  "requiresAdapters":["supabase"],
+  "conflicts":[],
+  "package":{"dependencies":{},"devDependencies":{},"scripts":{}},
+  "database":{"adapter":"supabase","fragments":["database/scheduled-decisions.sql"]}
+}

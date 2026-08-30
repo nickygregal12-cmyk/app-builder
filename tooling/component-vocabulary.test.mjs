@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
+import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, TYPOGRAPHY_STRATEGIES, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8');
@@ -120,6 +120,52 @@ test('the opening composes even when there is no photograph to place', () => {
   // A two-column opening squeezed onto a phone is the "desktop with fewer
   // columns" mobile this repository refuses elsewhere.
   assert.match(css, /max-width:\s*899px[\s\S]{0,200}hero-compose-columns[\s\S]{0,120}display:\s*block/, 'columns must collapse on a phone deliberately');
+});
+
+test('typographic character is a category change, not a size change', () => {
+  assert.deepEqual([...TYPOGRAPHY_STRATEGIES], ['neutral', 'editorial', 'technical', 'bold']);
+  assert.equal(DEFAULT_COMPOSITION_DIMENSIONS.typographyStrategy, 'neutral');
+
+  const css = read('templates/shared/presentation/styles.css');
+  // The point is the pairing category. A strategy that only moved the scale
+  // would be the thing the previous candidate sets already varied without
+  // changing how any of them read.
+  assert.match(css, /\.type-editorial \{[^}]*--font-display:[^;]*serif/, 'editorial must actually change the display family to a serif');
+  assert.match(css, /\.type-technical \{[^}]*--font-display:[^;]*mono/, 'technical must actually change the display family to a mono');
+  // And each still has to carry its own scale/weight/tracking/measure, or it is
+  // a typeface swap rather than a strategy.
+  for (const strategy of ['editorial', 'technical', 'bold']) {
+    const block = css.match(new RegExp(`\\.type-${strategy} \\{([^}]*)\\}`));
+    assert.ok(block, `${strategy} declares no token block`);
+    for (const token of ['--display-weight', '--display-tracking', '--display-leading', '--display-measure']) {
+      assert.ok(block[1].includes(token), `${strategy} does not set ${token}`);
+    }
+  }
+
+  // No font bytes may enter a generated repository: nothing to license, nothing
+  // to preload, no layout shift, no network dependency in the output.
+  assert.doesNotMatch(css, /@font-face|fonts\.googleapis|fonts\.gstatic/, 'the typography families must stay on system stacks');
+});
+
+test('an external source may only name roles that exist and actually design', () => {
+  const sources = json('config/external-sources.json').sources;
+  const roles = new Set(Object.keys(json('config/agent-roles.json').roles));
+  // Reviewers are deliberately excluded from design prior art: a critic that
+  // read the same catalogue as the producer is a weaker critic, which is the
+  // separation rule 17 exists for.
+  const reviewers = new Set(['visual-critic', 'design-critic', 'independent-second-opinion', 'red-team', 'product-critic', 'ux-critic', 'ia-critic']);
+  for (const [id, source] of Object.entries(sources)) {
+    for (const role of source.allowedRoles ?? []) {
+      assert.ok(roles.has(role), `${id} grants itself to "${role}", which is not a role in config/agent-roles.json`);
+      assert.ok(!reviewers.has(role), `${id} grants design prior art to the reviewer role "${role}"`);
+    }
+    // A source that may be loaded has to be pinned and licensed first.
+    if ((source.allowedRoles ?? []).length) {
+      assert.ok(source.pinnedRef, `${id} is loadable but is not pinned to a commit`);
+      assert.ok(source.license, `${id} is loadable but records no licence`);
+      assert.equal(source.evaluationStatus, 'evaluated', `${id} is loadable but was never evaluated`);
+    }
+  }
 });
 
 test('the family reaches the structural signature, so two candidates can differ by it', () => {

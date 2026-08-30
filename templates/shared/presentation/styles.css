@@ -887,3 +887,79 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 @media (max-width: 899px) {
   .hero-section.hero-compose-columns .hero-copy-column { display: block; }
 }
+
+/* ---------------------------------------------------------------------------
+   Typographic character.
+
+   `--font-display` and `--font-body` were the same Inter stack in every
+   direction, so every heading, label, nav item and paragraph on every candidate
+   was set the same way. Typography is the only thing present on every element
+   of every page, which is what made it the strongest remaining source of
+   sameness once the openings and closings had been separated.
+
+   The lever is the category, not the size: a serif display against a sans body
+   is a different kind of document from a mono-labelled register however the
+   scale is tuned. Each strategy therefore carries scale, weight, tracking, case
+   and measure as well as the stack.
+
+   Every stack is a system stack. No font bytes enter a generated repository, so
+   there is nothing to license, nothing to preload, no layout shift while a
+   webfont loads, and no network dependency in the output. That is a deliberate
+   choice over a decorative webfont: the character difference below is carried
+   by families every device already has.
+--------------------------------------------------------------------------- */
+
+/* Editorial — a serif voice for the headings against a sans body. The largest
+   single change in character available without shipping a font. */
+.type-editorial {
+  --font-display: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --display-weight: 600;
+  --display-tracking: -0.012em;
+  --display-leading: 1.06;
+  --display-measure: 17ch;
+  --eyebrow-transform: none;
+  --eyebrow-tracking: 0.02em;
+}
+.type-editorial h1, .type-editorial h2 { font-weight: var(--display-weight); letter-spacing: var(--display-tracking); line-height: var(--display-leading); }
+.type-editorial .hero-copy, .type-editorial .section-copy { font-size: var(--text-lg); line-height: 1.62; }
+
+/* Technical — a mono voice for labels and headings. Information-forward, tight,
+   upper-case eyebrows: the register of a document rather than a brochure. */
+.type-technical {
+  --font-display: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --display-weight: 600;
+  --display-tracking: -0.02em;
+  --display-leading: 1.08;
+  --display-measure: 20ch;
+  --eyebrow-transform: uppercase;
+  --eyebrow-tracking: 0.14em;
+}
+.type-technical h1, .type-technical h2, .type-technical h3 { font-weight: var(--display-weight); letter-spacing: var(--display-tracking); line-height: var(--display-leading); }
+.type-technical .eyebrow, .type-technical .contact-grid span, .type-technical .item-index {
+  font-family: var(--font-display);
+  text-transform: var(--eyebrow-transform);
+  letter-spacing: var(--eyebrow-tracking);
+}
+.type-technical .section-actions a { font-family: var(--font-display); letter-spacing: 0.01em; }
+
+/* Bold — the sans stack pushed to a display voice. Heavier, tighter, shorter
+   measure; the opening becomes the statement. */
+.type-bold {
+  --display-weight: 800;
+  --display-tracking: -0.035em;
+  --display-leading: 0.96;
+  --display-measure: 13ch;
+}
+.type-bold h1 { font-weight: var(--display-weight); letter-spacing: var(--display-tracking); line-height: var(--display-leading); }
+.type-bold h2 { font-weight: 750; letter-spacing: -0.025em; }
+
+/* Neutral is the existing pairing and deliberately adds nothing, so a project
+   that names no strategy renders exactly what it rendered before. */
+
+/* The measure a strategy asks for reaches the display text it was chosen for. */
+.type-editorial .hero-section h1,
+.type-technical .hero-section h1,
+.type-bold .hero-section h1 { max-width: var(--display-measure); }
+
+/* Eyebrows follow the strategy where one is set, and are untouched otherwise. */
+.type-editorial .eyebrow { text-transform: var(--eyebrow-transform); letter-spacing: var(--eyebrow-tracking); }

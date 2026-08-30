@@ -307,7 +307,7 @@
       "id": "nextlevelbuilder-ui-ux-pro-max-skill",
       "repository": "nextlevelbuilder/ui-ux-pro-max-skill",
       "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
-      "adoption": "reference-only",
+      "adoption": "adopted-pinned",
       "rating": 9.5,
       "useFor": [
         "deterministic design-knowledge catalogue prior art"
@@ -316,20 +316,24 @@
         "industry/product classification",
         "style, palette and typography retrieval",
         "landing-page pattern and anti-pattern datasets",
-        "deterministic search-based retrieval instead of prompt recall"
+        "deterministic search-based retrieval instead of prompt recall",
+        "font-pairing category as the axis of typographic character rather than scale"
       ],
       "doNotAdopt": [
         "its own MASTER.md design authority"
       ],
-      "pinnedRef": null,
-      "license": null,
-      "allowedRoles": [],
+      "pinnedRef": "8bd29e775453ebcae52b6e6514fbf134df0c5770",
+      "license": "MIT",
+      "allowedRoles": [
+        "art-direction",
+        "design-system"
+      ],
       "contextTokensEstimate": null,
-      "securityReview": "not-required",
+      "securityReview": "passed",
       "updatePolicy": "none",
-      "evaluationStatus": "not-evaluated",
+      "evaluationStatus": "evaluated",
       "instructionAuthority": "none",
-      "notes": "Informs packages/design-intelligence in docs/DESIGN_INTELLIGENCE.md. DesignSystemSpec remains the only design authority."
+      "notes": "Informs packages/design-intelligence in docs/DESIGN_INTELLIGENCE.md. DesignSystemSpec remains the only design authority. Adopted 2026-08-30 as prior art at the pinned commit, which was upstream HEAD when checked; MIT, Next Level Builder 2024. Evaluation: the useful part is a catalogue rather than executable guidance \u2014 74 font pairings keyed by category (serif+sans, sans+sans, display+sans, mono+sans) with mood and intended use. That category axis is what informed typographyStrategy: typographic character changes with the pairing category, not with size or weight, which is what earlier nbm candidate sets kept varying without effect. Security review, scoped to design roles reading its catalogues: every md/csv/json scanned for instruction-injection shapes and credentials; none found, and the only API_KEY strings are setup documentation for the upstream project's own Gemini and Google Fonts tooling, which this repository neither runs nor vendors. No file is copied in and nothing from it reaches a generated application: system font stacks were chosen over its Google Fonts data so no font bytes, licence obligation or network dependency enters generated output."
     },
     "leonxlnx-taste-skill": {
       "id": "leonxlnx-taste-skill",
@@ -1162,7 +1166,7 @@
         "rapid internal-tool implementation prior art; deferred rather than under evaluation"
       ],
       "borrowedIdeas": [
-        "the breadth of application components an internal tool actually needs — data tables, date and time inputs, notifications, modals — as a coverage checklist",
+        "the breadth of application components an internal tool actually needs \u2014 data tables, date and time inputs, notifications, modals \u2014 as a coverage checklist",
         "a theming contract that carries colour scales, spacing, radius and typography in one object"
       ],
       "doNotAdopt": [

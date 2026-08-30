@@ -822,3 +822,57 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .cta-section.cta-register { flex-direction: column; gap: 20px; }
   .cta-section.cta-banner .cta-inner { flex-direction: column; align-items: flex-start; }
 }
+
+/* ---------------------------------------------------------------------------
+   The opening composition family.
+
+   `hero-{strategy}` above decides where a photograph goes. With no photograph
+   every strategy renders the same copy-only block, which is why nbm — which has
+   none — opened identically in every candidate. These decide how the opening is
+   composed when type is what it has, and they compose with the strategy rather
+   than replacing it.
+--------------------------------------------------------------------------- */
+
+.hero-section .hero-rule { display: block; width: 96px; height: 4px; background: var(--color-accent); margin-bottom: 28px; }
+
+/* Columns — the claim on the left, the reading copy and the ask on the right.
+   A two-column opening rather than one stack. */
+@media (min-width: 900px) {
+  .hero-section.hero-compose-columns:not(.has-image):not(.has-backdrop) .hero-copy-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    column-gap: clamp(40px, 6vw, 96px);
+    align-items: start;
+  }
+  .hero-section.hero-compose-columns .hero-copy-column > h1 { grid-column: 1; margin: 0; }
+  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy,
+  .hero-section.hero-compose-columns .hero-copy-column > .section-actions { grid-column: 2; }
+  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy { margin-top: 0; }
+}
+
+/* Statement — the opening is the claim. Oversized display type under a rule,
+   copy kept short, the ask directly beneath. */
+.hero-section.hero-compose-statement .hero-copy-column > h1 {
+  font-size: clamp(2.75rem, 7.5vw, 6rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  max-width: 14ch;
+}
+.hero-section.hero-compose-statement .hero-copy { max-width: 46ch; font-size: var(--text-lg); }
+
+/* Centred — a measured, symmetrical opening. */
+.hero-section.hero-compose-centred .hero-copy-column {
+  max-width: 62ch;
+  margin-inline: auto;
+  text-align: center;
+}
+.hero-section.hero-compose-centred .hero-copy-column > .hero-copy { margin-inline: auto; }
+.hero-section.hero-compose-centred .section-actions { justify-content: center; }
+.hero-section.hero-compose-centred .hero-rule { margin-inline: auto; }
+
+/* On a phone every opening is one column. `columns` is a desktop composition,
+   and forcing a two-column grid onto 390px would be the "desktop with fewer
+   columns" mobile this repository already refuses. */
+@media (max-width: 899px) {
+  .hero-section.hero-compose-columns .hero-copy-column { display: block; }
+}

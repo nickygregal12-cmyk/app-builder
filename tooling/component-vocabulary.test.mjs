@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { ACTION_TREATMENTS, CTA_COMPOSITIONS, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
+import { ACTION_TREATMENTS, CTA_COMPOSITIONS, HERO_COMPOSITIONS, DEFAULT_COMPOSITION_DIMENSIONS, structuralSignature } from './lib/visual-direction.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8');
@@ -94,6 +94,25 @@ test('the closing-ask composition changes the DOM, not only the class', () => {
   assert.ok(bodies.length >= 2, 'every composition must render the same heading binding');
 });
 
+test('the opening composes even when there is no photograph to place', () => {
+  assert.deepEqual([...HERO_COMPOSITIONS], ['stacked', 'columns', 'statement', 'centred']);
+  assert.equal(DEFAULT_COMPOSITION_DIMENSIONS.heroComposition, 'stacked');
+
+  const source = read('templates/astro-static-content/files/src/components/Section.astro');
+  assert.match(source, /data-hero-composition=\{HERO_COMPOSITION\}/, 'the rendered opening composition must be inspectable');
+  assert.match(source, /hero-compose-\$\{HERO_COMPOSITION\}/, 'the composition must reach the class list');
+
+  const css = read('templates/shared/presentation/styles.css');
+  // The point of this axis is that it works without a `lead` asset, so the
+  // rules must not be scoped behind the image-carrying classes.
+  assert.match(css, /\.hero-compose-columns[\s\S]{0,400}grid-template-columns/, 'columns must be a two-column opening');
+  assert.match(css, /\.hero-compose-statement[\s\S]{0,240}font-size:\s*clamp/, 'statement must change the display scale, not the colour');
+  assert.match(css, /\.hero-compose-centred[\s\S]{0,240}margin-inline:\s*auto/, 'centred must actually centre');
+  // A two-column opening squeezed onto a phone is the "desktop with fewer
+  // columns" mobile this repository refuses elsewhere.
+  assert.match(css, /max-width:\s*899px[\s\S]{0,200}hero-compose-columns[\s\S]{0,120}display:\s*block/, 'columns must collapse on a phone deliberately');
+});
+
 test('the family reaches the structural signature, so two candidates can differ by it', () => {
   const base = { id: 'a', artDirection: { dimensions: { ...DEFAULT_COMPOSITION_DIMENSIONS } } };
   const other = { id: 'b', artDirection: { dimensions: { ...DEFAULT_COMPOSITION_DIMENSIONS, actionTreatment: 'underline' } } };
@@ -122,6 +141,11 @@ test('every direction chooses a closing-ask composition, and the candidate set s
   const nbm = ['structured-practice', 'editorial-authority', 'schedule-register']
     .map((id) => directions[id].composition.ctaComposition);
   assert.equal(new Set(nbm).size, 3, `the three imagery-free directions close identically: ${nbm.join(', ')}`);
+
+  // And they must open three different ways too, for the same reason.
+  const openings = ['structured-practice', 'editorial-authority', 'schedule-register']
+    .map((id) => directions[id].composition.heroComposition);
+  assert.equal(new Set(openings).size, 3, `the three imagery-free directions open identically: ${openings.join(', ')}`);
 });
 
 test('every direction chooses an action family, and they are not all the same one', () => {

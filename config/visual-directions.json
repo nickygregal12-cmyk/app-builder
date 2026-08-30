@@ -86,7 +86,8 @@
         ],
         "distinctiveMoment": "figure-index",
         "actionTreatment": "outlined",
-        "ctaComposition": "register"
+        "ctaComposition": "register",
+        "heroComposition": "columns"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {
@@ -126,7 +127,8 @@
         ],
         "distinctiveMoment": "lead-statement",
         "actionTreatment": "underline",
-        "ctaComposition": "editorial"
+        "ctaComposition": "editorial",
+        "heroComposition": "statement"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -166,7 +168,8 @@
         ],
         "distinctiveMoment": "full-bleed-lead",
         "actionTreatment": "block",
-        "ctaComposition": "banner"
+        "ctaComposition": "banner",
+        "heroComposition": "stacked"
       },
       "assetAppetite": "imagery-required",
       "responsive": {
@@ -199,7 +202,8 @@
         "sectionOrder": [],
         "distinctiveMoment": "none",
         "actionTreatment": "solid",
-        "ctaComposition": "panel"
+        "ctaComposition": "panel",
+        "heroComposition": "stacked"
       },
       "assetAppetite": "typographic",
       "responsive": {
@@ -239,7 +243,8 @@
         ],
         "distinctiveMoment": "figure-index",
         "actionTreatment": "arrow",
-        "ctaComposition": "banner"
+        "ctaComposition": "banner",
+        "heroComposition": "centred"
       },
       "assetAppetite": "imagery-optional",
       "responsive": {

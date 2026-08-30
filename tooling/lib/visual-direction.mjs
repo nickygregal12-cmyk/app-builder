@@ -75,6 +75,21 @@ export const ACTION_TREATMENTS = Object.freeze(['solid', 'outlined', 'underline'
  */
 export const CTA_COMPOSITIONS = Object.freeze(['panel', 'editorial', 'banner', 'register']);
 
+/**
+ * How the opening is composed, independently of where its picture goes.
+ *
+ * `heroStrategy` decides what happens to a photograph — beside, behind, below
+ * or none. That is the right axis when there is a photograph, and it is why
+ * every imagery-free candidate opened the same way: with no `lead` asset,
+ * `split`, `editorial` and `immersive` all collapse to the same copy-only
+ * block, and nbm has no photographs at all.
+ *
+ * This is the other half, and it is the half that decides how an opening reads
+ * when type is all it has: one column, two columns, a full-width statement, or
+ * a centred measure. It composes with `heroStrategy` rather than replacing it.
+ */
+export const HERO_COMPOSITIONS = Object.freeze(['stacked', 'columns', 'statement', 'centred']);
+
 export const HERO_STRATEGIES = Object.freeze(['split', 'editorial', 'immersive', 'utility']);
 export const GRID_FAMILIES = Object.freeze(['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows']);
 export const HEADING_TREATMENTS = Object.freeze(['plain', 'ruled', 'numbered']);
@@ -111,6 +126,7 @@ const CONVERSION_TYPES = Object.freeze(['contact-panel', 'enquiry-form', 'cta'])
 const ORDER = Object.freeze({
   actionTreatment: ACTION_TREATMENTS,
   ctaComposition: CTA_COMPOSITIONS,
+  heroComposition: HERO_COMPOSITIONS,
   heroStrategy: HERO_STRATEGIES,
   gridFamily: GRID_FAMILIES,
   headingTreatment: HEADING_TREATMENTS,
@@ -133,6 +149,8 @@ export const DEFAULT_COMPOSITION_DIMENSIONS = Object.freeze({
   // `panel` is the inset dark rectangle every build rendered before this axis,
   // so a project naming no composition renders what it rendered yesterday.
   ctaComposition: 'panel',
+  // What every build opened with before this axis existed.
+  heroComposition: 'stacked',
   heroStrategy: 'split',
   gridFamily: 'symmetric',
   headingTreatment: 'plain',
@@ -366,6 +384,7 @@ export function visualDirectionClasses({ id = null, artDirection = null, shellCl
     // the treatment it chose without every treatment having to know about it.
     `actions-${dimensions.actionTreatment}`,
     `cta-composition-${dimensions.ctaComposition}`,
+    `hero-composition-${dimensions.heroComposition}`,
     `grid-${dimensions.gridFamily}`,
     `headings-${dimensions.headingTreatment}`,
     `moment-${dimensions.distinctiveMoment}`,
@@ -556,6 +575,7 @@ export function structuralSignature({ direction, composition, design = null }) {
     axes: {
       actionTreatment: dimensions.actionTreatment,
       ctaComposition: dimensions.ctaComposition,
+      heroComposition: dimensions.heroComposition,
       heroStrategy: dimensions.heroStrategy,
       gridFamily: dimensions.gridFamily,
       headingTreatment: dimensions.headingTreatment,

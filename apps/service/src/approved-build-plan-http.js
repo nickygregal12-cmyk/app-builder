@@ -9,6 +9,20 @@ function assertClosedBody(body, required, allowed, label) {
   return body;
 }
 
+function executionResponse(executed) {
+  const result = executed.result ?? {};
+  return {
+    plan: executed.plan,
+    execution: executed.execution,
+    build: {
+      projectId: executed.plan.projectId,
+      taskId: result.task?.id ?? null,
+      checkpointId: result.checkpoint?.id ?? null,
+      compositionHash: result.composition?.compositionHash ?? null,
+    },
+  };
+}
+
 export async function handleApprovedBuildPlanHttp({ request, route, service, readJson }) {
   if (request.method === 'GET' && route.action === 'approved-build-plans') {
     return { handled: true, status: 200, value: { plans: listApprovedProjectBuildPlans(service, route.projectId) } };
@@ -37,7 +51,7 @@ export async function handleApprovedBuildPlanHttp({ request, route, service, rea
       'Approved build plan execution',
     );
     const executed = await executeApprovedProjectBuildPlan(service, route.projectId, body);
-    return { handled: true, status: 200, value: executed };
+    return { handled: true, status: 200, value: executionResponse(executed) };
   }
 
   const readRoute = route.action?.match(/^approved-build-plans\/([^/]+)$/);

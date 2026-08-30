@@ -63,12 +63,27 @@ const NAVIGATION_FAMILY: NavigationFamily = (NAVIGATION_FAMILIES as readonly str
 
 const navigation = [...composed.pages].filter((entry) => entry.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order);
 
-// The conversion action belongs in a working header and nowhere else. An
-// editorial masthead that grew a filled button would stop being one, and a
-// register header is a document index rather than a place to sell from.
-const headerAction = NAVIGATION_FAMILY === 'utility' || NAVIGATION_FAMILY === 'centred'
-  ? composed.pages.find((entry) => entry.id === page.id)?.primaryAction ?? null
-  : null;
+/**
+ * The conversion action a working header carries.
+ *
+ * Two rules, both learned from the same defect. It belongs in a working header
+ * and nowhere else — an editorial masthead that grew a filled button would stop
+ * being one, and a register header is a document index rather than a place to
+ * sell from.
+ *
+ * And it is the *site's* action, taken from the entry page, rather than
+ * whatever the current page happens to declare. Reading it per page put the
+ * not-found page's "Back to home" recovery link in the header, so a visitor who
+ * mistyped an address was offered the same link twice and the header advertised
+ * a route out instead of a way to make contact. A header ask that changes with
+ * the page is not a header ask.
+ *
+ * A page outside the navigation carries none at all: the recovery surface is
+ * reached by accident and is not a place to convert from.
+ */
+const conversionAction = navigation[0]?.primaryAction ?? null;
+const carriesHeaderAction = (NAVIGATION_FAMILY === 'utility' || NAVIGATION_FAMILY === 'centred') && page.navigation.visible;
+const headerAction = carriesHeaderAction ? conversionAction : null;
 
 // Everything in the footer is business information. Factory diagnostics stay
 // development-only: publishing them put build metadata in front of customers.

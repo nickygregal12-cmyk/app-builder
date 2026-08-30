@@ -373,6 +373,25 @@ test('the disclosure is operable by keyboard and closes on Escape', () => {
   );
 });
 
+/**
+ * The defect the header family shipped, found by a browser and nothing else.
+ *
+ * The working header read its action from the page that was open. On the
+ * not-found surface that page's `primaryAction` is a "Back to home" recovery
+ * link, so a visitor who mistyped an address was offered the same link twice
+ * and the header advertised a route out instead of a way to make contact. Every
+ * unit test passed; the generated-site browser lane caught it.
+ */
+test('the header ask is the site\'s, and a page nobody navigated to has none', () => {
+  for (const source of [
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    read('templates/astro-static-content/files/src/layouts/SiteLayout.astro'),
+  ]) {
+    assert.match(source, /navigation\[0\]\?\.primaryAction/, 'the header ask must come from the entry page, not from whichever page is open');
+    assert.match(source, /navigation\.visible/, 'a surface outside the navigation must carry no header ask');
+  }
+});
+
 test('every direction chooses a header, and the imagery-free set spans them', () => {
   const directions = json('config/visual-directions.json').directions;
   for (const [id, direction] of Object.entries(directions)) {

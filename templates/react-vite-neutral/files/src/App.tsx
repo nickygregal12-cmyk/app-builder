@@ -572,10 +572,15 @@ export default function App() {
     setMenuOpen(false);
     navigate(event, href);
   };
-  // The conversion action belongs in a working header and nowhere else. An
-  // editorial masthead that grew a filled button would stop being one, and a
-  // register header is a document index rather than a place to sell from.
-  const headerAction = NAVIGATION_FAMILY === 'utility' || NAVIGATION_FAMILY === 'centred' ? currentPage.primaryAction : null;
+  // The conversion action a working header carries. It belongs in a working
+  // header and nowhere else, and it is the *site's* action — taken from the
+  // entry page rather than from whichever page is open. Reading it per page put
+  // the not-found page's "Back to home" recovery link in the header, so a
+  // visitor who mistyped an address was offered the same link twice. A page
+  // outside the navigation carries none at all.
+  const headerAction = (NAVIGATION_FAMILY === 'utility' || NAVIGATION_FAMILY === 'centred') && currentPage.navigation.visible
+    ? navigation[0]?.primaryAction ?? null
+    : null;
   return <div className={`site-frame ${SHELL_CLASSES}`} data-scenario={currentScenario}>
     {/* The families differ in structure, not paint. `centred` puts the brand on
         its own row above the destinations, so it needs a wrapper the others do

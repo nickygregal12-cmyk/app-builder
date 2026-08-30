@@ -118,6 +118,29 @@ test('both renderers agree about the family', () => {
   }
 });
 
+/**
+ * The gap that let a broken axis reach CI.
+ *
+ * `npm run check` typechecks the Console workspace; the generated projects are
+ * typechecked by `npm run benchmark:acceptance`, which installs and builds and
+ * therefore only runs hosted. So a new dimension added to the contract but not
+ * to the template's own `VisualDirection` type passed every local gate and
+ * failed six generated projects in CI with `Property 'actionTreatment' does not
+ * exist`. This is that check, made local and cheap.
+ */
+test('the template type knows every composition dimension the contract can send it', () => {
+  const source = read('templates/react-vite-neutral/files/src/App.tsx');
+  const declared = source.match(/dimensions\?:\s*\{([^}]*)\}/);
+  assert.ok(declared, 'the generated app must declare the dimensions it is willing to read');
+
+  for (const axis of Object.keys(DEFAULT_COMPOSITION_DIMENSIONS)) {
+    assert.ok(
+      declared[1].includes(`${axis}?:`),
+      `the template's VisualDirection type does not list ${axis}, so every generated project fails its own tsc the moment a direction sends it.`,
+    );
+  }
+});
+
 test('the stylesheet gives every treatment something a token could not', () => {
   const css = read('templates/shared/presentation/styles.css');
   // Each treatment has to be different in a way `--layout-radius` and

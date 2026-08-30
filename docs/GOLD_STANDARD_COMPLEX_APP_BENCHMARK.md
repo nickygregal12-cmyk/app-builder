@@ -122,6 +122,28 @@ The first serious benchmark iteration should prove enough vertical slices to est
 
 Full parity with every reference-product feature is not required initially. Increase scope only as reusable factory capabilities become proven.
 
+## The frozen slice
+
+The first bounded slice is frozen in `config/application-journey-benchmarks.json` and validated by
+`tooling/application-journey-benchmark.test.mjs`. It holds the journey above still — states and
+transitions with their authority, the server-authoritative lock, the provisional/official boundary,
+the settlement identity key, the scoring rule's single source of truth, and a leaderboard ordering
+that cannot end in a tie — together with the scenarios that make each of those non-vacuous.
+
+The rules exist because a frozen benchmark that can quietly get easier is not frozen. Each one was
+planted and observed to fail: a state added with no way out of it, the post-lock refusals deleted,
+an isolation case whose competing identity is the owner themselves, a provisional result allowed to
+settle, a settlement repeat pointed at a settlement that never happened, the unique key dropped from
+the ordering chain, and a benchmark-domain term written into a factory recipe.
+
+The last of those is the benchmark rule above, made mechanical: the benchmark declares its own
+football vocabulary, and that vocabulary is checked against `config/`, `recipes/`, `schemas/`,
+`packages/`, `templates/` and `adapters/`. Extracting reusable capability is a judgement; not
+hard-coding the reference application is now a check.
+
+Nothing has been measured against the frozen slice yet. Freezing the target is not evidence about
+the factory — it is what makes the first measurement, and the rerun after it, mean anything.
+
 ## Required build sequence
 
 A Predictor-class application must not go directly from questionnaire to bulk implementation.

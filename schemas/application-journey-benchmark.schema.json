@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/application-journey-benchmark.schema.json",
+  "title": "App Builder Application Journey Benchmark",
+  "description": "The frozen acceptance contract for one bounded serious-application journey: scheduled entity -> user decision -> server-authoritative deadline/lock -> official result -> deterministic settlement -> persisted score -> leaderboard. This is an acceptance authority, not a product authority. Nothing in a generated application dispatches against it; it states what a generated application must be shown to do, and what the benchmark's own domain vocabulary is so that vocabulary can be kept out of factory registries, recipes, templates and shared schemas. Every field here is read by tooling/application-journey-benchmark.test.mjs — a declared rule with no consumer is a benchmark failure even when the prose is right.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "benchmarkVersion",
+    "id",
+    "title",
+    "rationale",
+    "domain",
+    "lifecycle",
+    "lock",
+    "officialResult",
+    "settlement",
+    "scoring",
+    "leaderboard",
+    "identities",
+    "scenarios"
+  ],
+  "properties": {
+    "benchmarkVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "rationale": { "type": "string", "minLength": 1, "description": "Why this journey is the one held, in one sentence." },
+
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "vocabulary"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "vocabulary": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "description": "Terms that belong to this benchmark's domain and must never appear in factory registries, recipes, templates or shared schemas. Generic nouns do not belong here: a term is listed because a factory surface containing it would prove the reference application had been hard-coded."
+        }
+      }
+    },
+
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial", "terminal", "states", "transitions"],
+      "properties": {
+        "initial": { "type": "string", "minLength": 1 },
+        "terminal": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "states": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["description"],
+            "properties": { "description": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to", "trigger", "authority"],
+            "properties": {
+              "from": { "type": "string", "minLength": 1 },
+              "to": { "type": "string", "minLength": 1 },
+              "trigger": { "type": "string", "minLength": 1 },
+              "guard": { "type": "string", "minLength": 1 },
+              "authority": {
+                "enum": ["server", "official-source"],
+                "description": "Who may cause this transition. A transition a client can cause is not a guard."
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "authority", "afterLockDecision", "refusalReason"],
+      "properties": {
+        "trigger": { "type": "string", "minLength": 1, "description": "The lifecycle transition trigger that closes the decision window." },
+        "authority": { "const": "server", "description": "A deadline the client evaluates is a suggestion." },
+        "afterLockDecision": { "const": "refused" },
+        "refusalReason": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "officialResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "provisionalStatuses", "officialStatus", "correctionPolicy"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "provisionalStatuses": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Statuses the external source can report that must never settle. Provisional provider data being mistaken for official domain truth is a recorded failure class."
+        },
+        "officialStatus": { "type": "string", "minLength": 1 },
+        "correctionPolicy": { "type": "string", "minLength": 1, "description": "What happens when an already-settled official result is corrected." }
+      }
+    },
+
+    "settlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["idempotent", "identityKey"],
+      "properties": {
+        "idempotent": { "const": true },
+        "identityKey": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "The fields that identify one settlement. Repeating it must not change a score; an identity key that permits duplicates is a recorded failure class."
+        }
+      }
+    },
+
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deterministic", "rule", "singleSourceOfTruth"],
+      "properties": {
+        "deterministic": { "const": true },
+        "rule": { "type": "string", "minLength": 1 },
+        "singleSourceOfTruth": { "type": "string", "minLength": 1, "description": "Where the rule lives. One business rule defined in both SQL and TypeScript is a recorded failure class." }
+      }
+    },
+
+    "leaderboard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orderBy", "uniqueKey"],
+      "properties": {
+        "orderBy": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "direction"],
+            "properties": {
+              "field": { "type": "string", "minLength": 1 },
+              "direction": { "enum": ["asc", "desc"] }
+            }
+          },
+          "description": "The ordering chain. Its last entry must be the uniqueKey, or two rows can tie and the ranking is not deterministic."
+        },
+        "uniqueKey": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "identities": {
+      "type": "array",
+      "minItems": 2,
+      "description": "At least two, because isolation proved against a single identity is proved against nothing.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "label": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "actor", "subject", "phase", "action", "expect"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "kind": {
+            "enum": ["decision", "isolation", "ingestion", "settlement", "ranking"],
+            "description": "Which required property this scenario is evidence for."
+          },
+          "actor": { "type": "string", "minLength": 1, "description": "An identity id." },
+          "subject": { "type": "string", "minLength": 1, "description": "What is being acted on. Two scenarios about the same subject and actor are comparable." },
+          "phase": { "enum": ["pre-lock", "locked", "settled"] },
+          "action": { "type": "string", "minLength": 1 },
+          "expect": { "enum": ["accepted", "refused", "unchanged", "ranked"] },
+          "reason": { "type": "string", "minLength": 1 },
+          "resultStatus": { "type": "string", "minLength": 1, "description": "For ingestion scenarios: the status the external source reported." },
+          "repeatOf": { "type": "string", "minLength": 1, "description": "For settlement scenarios: the id of the scenario this one repeats." }
+        }
+      }
+    }
+  }
+}

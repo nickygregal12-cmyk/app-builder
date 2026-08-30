@@ -253,6 +253,10 @@
       "reason": "Risk classifications are produced by the control plane and consumed by conditional review routing; migrate when a runtime dispatches against them."
     },
     {
+      "schema": "application-journey-benchmark.schema.json",
+      "reason": "The bounded serious-application benchmark is an acceptance authority read only by its own benchmark test. Nothing in a generated application dispatches against it, and it should not become a factory contract family: that is how the reference application gets hard-coded into the factory."
+    },
+    {
       "schema": "routing-benchmark-case.schema.json",
       "reason": "Routing benchmark cases are read only by the deterministic routing benchmark and the control-plane doctor; migrate if a runtime ever dispatches against them."
     },

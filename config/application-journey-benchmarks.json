@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "description": "The frozen bounded serious-application benchmark. One vertical slice, held still so that a rerun measures the factory rather than a moved target. Validated and executed by tooling/application-journey-benchmark.test.mjs against schemas/application-journey-benchmark.schema.json. The domain is football because the reference product is; the vocabulary below is declared precisely so it can be kept out of every factory surface.",
+  "benchmark": {
+    "benchmarkVersion": 1,
+    "id": "scheduled-decision-settlement-v1",
+    "title": "Scheduled entity, locked decision, official settlement, ranked score",
+    "rationale": "This is the shortest journey that still forces server-authoritative time, an external truth boundary, idempotent settlement and per-identity isolation to all be real at once.",
+
+    "domain": {
+      "label": "Football match predictions",
+      "vocabulary": [
+        "kickoff",
+        "gameweek",
+        "matchday",
+        "goalscorer",
+        "fulltime",
+        "groupstage",
+        "penalty-shootout"
+      ]
+    },
+
+    "lifecycle": {
+      "initial": "scheduled",
+      "terminal": ["settled", "voided"],
+      "states": {
+        "scheduled": { "description": "The entity exists with a future deadline. Decisions are open." },
+        "locked": { "description": "The deadline has passed. Decisions are closed and existing ones become visible." },
+        "awaiting-official": { "description": "The event has finished but no official result has been accepted yet." },
+        "settled": { "description": "An official result was accepted and every decision has been scored." },
+        "voided": { "description": "The event will not produce an official result. Decisions are discarded, not scored." }
+      },
+      "transitions": [
+        { "from": "scheduled", "to": "locked", "trigger": "deadline-reached", "guard": "server clock is at or past the stored deadline", "authority": "server" },
+        { "from": "scheduled", "to": "voided", "trigger": "cancelled", "guard": "the official source reports the event will not take place", "authority": "official-source" },
+        { "from": "locked", "to": "awaiting-official", "trigger": "event-finished", "guard": "the official source reports play has concluded", "authority": "official-source" },
+        { "from": "locked", "to": "voided", "trigger": "abandoned", "guard": "the official source reports the event was abandoned", "authority": "official-source" },
+        { "from": "awaiting-official", "to": "settled", "trigger": "official-result-accepted", "guard": "the reported status is the official status, not a provisional one", "authority": "official-source" },
+        { "from": "awaiting-official", "to": "voided", "trigger": "result-withdrawn", "guard": "the official source withdraws the event", "authority": "official-source" }
+      ]
+    },
+
+    "lock": {
+      "trigger": "deadline-reached",
+      "authority": "server",
+      "afterLockDecision": "refused",
+      "refusalReason": "The decision window for this entity closed at its stored deadline."
+    },
+
+    "officialResult": {
+      "source": "single configured official results feed, recorded with provenance and observation time",
+      "provisionalStatuses": ["in-progress", "unconfirmed", "provisional"],
+      "officialStatus": "confirmed",
+      "correctionPolicy": "A corrected official result re-runs settlement under the same identity key and replaces the score. The correction is recorded; the previous score is not silently overwritten without one."
+    },
+
+    "settlement": {
+      "idempotent": true,
+      "identityKey": ["entityId", "identityId", "officialResultVersion"]
+    },
+
+    "scoring": {
+      "deterministic": true,
+      "rule": "Exact outcome scores 3; correct direction with wrong margin scores 1; anything else scores 0.",
+      "singleSourceOfTruth": "one database function, called by the settlement path and by nothing else"
+    },
+
+    "leaderboard": {
+      "orderBy": [
+        { "field": "totalScore", "direction": "desc" },
+        { "field": "exactCount", "direction": "desc" },
+        { "field": "identityId", "direction": "asc" }
+      ],
+      "uniqueKey": "identityId"
+    },
+
+    "identities": [
+      { "id": "identity-a", "label": "A competitor with an early decision" },
+      { "id": "identity-b", "label": "A competing identity whose data must never be visible to A" }
+    ],
+
+    "scenarios": [
+      {
+        "id": "pre-lock-decision-accepted",
+        "kind": "decision",
+        "actor": "identity-a",
+        "subject": "entity-1",
+        "phase": "pre-lock",
+        "action": "submit a decision before the stored deadline",
+        "expect": "accepted"
+      },
+      {
+        "id": "post-lock-decision-refused",
+        "kind": "decision",
+        "actor": "identity-a",
+        "subject": "entity-1",
+        "phase": "locked",
+        "action": "submit a decision for the same entity after the stored deadline",
+        "expect": "refused",
+        "reason": "The decision window for this entity closed at its stored deadline."
+      },
+      {
+        "id": "post-lock-amendment-refused",
+        "kind": "decision",
+        "actor": "identity-a",
+        "subject": "entity-1",
+        "phase": "locked",
+        "action": "amend the accepted pre-lock decision after the deadline",
+        "expect": "refused",
+        "reason": "A locked decision is not editable, including by the identity that made it."
+      },
+      {
+        "id": "competing-identity-cannot-read",
+        "kind": "isolation",
+        "actor": "identity-b",
+        "subject": "entity-1",
+        "phase": "pre-lock",
+        "action": "read identity-a's decision for the same entity while it is still open",
+        "expect": "refused",
+        "reason": "Open decisions are private to the identity that made them until the entity locks."
+      },
+      {
+        "id": "competing-identity-cannot-amend",
+        "kind": "isolation",
+        "actor": "identity-b",
+        "subject": "entity-1",
+        "phase": "pre-lock",
+        "action": "amend identity-a's decision for the same entity",
+        "expect": "refused",
+        "reason": "A decision is owned by one identity."
+      },
+      {
+        "id": "provisional-result-does-not-settle",
+        "kind": "ingestion",
+        "actor": "identity-a",
+        "subject": "entity-1",
+        "phase": "locked",
+        "action": "the official source reports a score while play is still under way",
+        "expect": "unchanged",
+        "resultStatus": "in-progress",
+        "reason": "Provisional provider data is not official domain truth and must not settle."
+      },
+      {
+        "id": "official-result-settles",
+        "kind": "settlement",
+        "actor": "identity-a",
+        "subject": "entity-1",
+        "phase": "settled",
+        "action": "the official source confirms the result and settlement runs",
+        "expect": "accepted",
+        "resultStatus": "confirmed"
+      },
+      {
+        "id": "repeat-settlement-unchanged",
+        "kind": "settlement",
+        "actor": "identity-a",
+        "subject": "entity-1",
+        "phase": "settled",
+        "action": "settlement runs again for the same entity, identity and official result version",
+        "expect": "unchanged",
+        "repeatOf": "official-result-settles",
+        "reason": "The identity key already covers this settlement, so repeating it scores nothing further."
+      },
+      {
+        "id": "leaderboard-is-ordered",
+        "kind": "ranking",
+        "actor": "identity-a",
+        "subject": "leaderboard",
+        "phase": "settled",
+        "action": "read the leaderboard with both identities settled on the same entity",
+        "expect": "ranked",
+        "reason": "Two settled identities with the same total must still order deterministically."
+      }
+    ]
+  }
+}

@@ -43,6 +43,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { lockDigest, sourceDigest } from './lib/build-identity.mjs';
 import { compileAxeReport, compositionHashOf, readAxeMeasurements } from './lib/axe-evidence.mjs';
 
 const ROOT = process.cwd();
@@ -60,6 +61,22 @@ const MEASUREMENTS = path.join(EVIDENCE, 'measurements');
  */
 const PROJECT_DIR = process.env.APP_BUILDER_ACCESSIBILITY_PROJECT ?? '.tmp/generated-acceptance-marketing-site';
 export const REQUIRED_VIEWPORTS = Object.freeze(['desktop-chromium', 'mobile-chromium']);
+
+/**
+ * The digests of the tree the dev server served.
+ *
+ * Either digest can legitimately be unavailable — a project with no lockfile
+ * has no lock digest — and an unavailable one is recorded as null rather than
+ * omitted, so a reader can tell "nobody could compute this" from "this report
+ * is an older shape".
+ */
+function digestsOf(projectDir) {
+  const safely = (compute) => { try { return compute(); } catch { return null; } };
+  return {
+    sourceDigest: safely(() => sourceDigest(projectDir)),
+    lockDigest: safely(() => lockDigest(projectDir)),
+  };
+}
 
 function declaredRoutes(projectDir) {
   const file = path.join(projectDir, '.app-builder/composition.json');
@@ -88,6 +105,10 @@ function main() {
     viewports: REQUIRED_VIEWPORTS,
     compositionHash: compositionHashOf(PROJECT_DIR),
     projectDir: PROJECT_DIR,
+    // What the browser actually served: this source tree, with this lockfile.
+    // Computed by the repository's own build-identity functions so the values
+    // mean the same thing here as everywhere else.
+    boundTo: digestsOf(PROJECT_DIR),
   });
 
   fs.mkdirSync(EVIDENCE, { recursive: true });
@@ -96,6 +117,7 @@ function main() {
 
   const blocking = report.findings.filter((finding) => finding.impact === 'serious' || finding.impact === 'critical');
   console.log(`Build:    compositionHash ${report.compositionHash ?? '(none — this evidence is bound to no build)'}`);
+  console.log(`Measured: ${report.measuredAgainst.join(', ') || '(nothing — this evidence names no artifact component)'}`);
   console.log(`Audited:  ${report.auditsRecorded}/${report.auditsExpected} route/viewport pairs across ${report.viewports.length} viewport(s)`);
   console.log(`Findings: ${report.findings.length} (${blocking.length} serious or critical)`);
   for (const entry of report.notAudited) {

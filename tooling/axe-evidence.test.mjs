@@ -198,3 +198,53 @@ test('the report states what an automated pass does not prove', () => {
   assert.ok(report.doesNotProve.some((sentence) => sentence.startsWith('Conformance.')));
   assert.ok(report.doesNotProve.some((sentence) => sentence.includes('assistive technology')));
 });
+
+// --- Which part of the artifact this is evidence about ------------------------------
+
+test('a dev-server audit names the source and lock it served, and refuses the output', () => {
+  const report = compileAxeReport({
+    measurements: cleanMeasurements(), declaredRoutes: ROUTES, viewports: VIEWPORTS, compositionHash: BUILD,
+    boundTo: { sourceDigest: 'a'.repeat(64), lockDigest: 'b'.repeat(64) },
+  });
+
+  assert.deepEqual(report.measuredAgainst, ['lockDigest', 'sourceDigest']);
+  assert.equal(report.boundTo.sourceDigest, 'a'.repeat(64));
+
+  // The component it must never claim. Naming it would file a dev-server audit
+  // as evidence about a shipping artifact.
+  assert.ok(!report.measuredAgainst.includes('outputDigest'));
+  const refused = report.notMeasuredAgainst.find((entry) => entry.component === 'outputDigest');
+  assert.ok(refused, 'outputDigest is absent rather than refused, so its absence reads as an oversight');
+  assert.match(refused.reason, /Nothing was built/);
+});
+
+test('the components this report names are ones the evidence contract recognises', async () => {
+  const { EVIDENCE_BOUND_COMPONENTS } = await import('@app-builder/control-plane/artifact-evidence');
+  const report = compileAxeReport({
+    measurements: cleanMeasurements(), declaredRoutes: ROUTES, viewports: VIEWPORTS, compositionHash: BUILD,
+    boundTo: { sourceDigest: 'a'.repeat(64), lockDigest: 'b'.repeat(64) },
+  });
+
+  for (const component of [...report.measuredAgainst, ...report.notMeasuredAgainst.map((entry) => entry.component)]) {
+    assert.ok(EVIDENCE_BOUND_COMPONENTS.includes(component), `${component} is not an identity component evidence can be measured against`);
+  }
+});
+
+test('a digest the lane could not compute is null and is not claimed as measured', () => {
+  const report = compileAxeReport({
+    measurements: cleanMeasurements(), declaredRoutes: ROUTES, viewports: VIEWPORTS, compositionHash: BUILD,
+    boundTo: { sourceDigest: 'a'.repeat(64), lockDigest: null },
+  });
+
+  assert.deepEqual(report.measuredAgainst, ['sourceDigest']);
+  assert.equal(report.boundTo.lockDigest, null, 'an uncomputable digest must be recorded as null rather than dropped');
+});
+
+test('a report with no digests at all claims to be measured against nothing', () => {
+  // `bindArtifactEvidence` refuses evidence that names nothing rather than
+  // reading it as being about everything. This report must be refusable the
+  // same way instead of quietly claiming coverage it does not have.
+  const report = compileAxeReport({ measurements: cleanMeasurements(), declaredRoutes: ROUTES, viewports: VIEWPORTS, compositionHash: BUILD });
+  assert.deepEqual(report.measuredAgainst, []);
+  assert.equal(report.boundTo, null);
+});

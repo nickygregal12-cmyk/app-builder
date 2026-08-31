@@ -43,6 +43,25 @@
  * which is the same distinction `npm run evidence:generated-app` already draws
  * and for the same reason. The artifact says so in a field rather than in a
  * comment, so a reader who never opens this file still sees it.
+ *
+ * ## Which part of the artifact it was measured against
+ *
+ * `packages/control-plane/src/artifact-evidence.js` asks evidence to name the
+ * identity components it is about, and refuses evidence that names nothing
+ * rather than reading it as being about everything. A composition hash does not
+ * answer that question: two builds of one composition can install different
+ * dependency graphs and produce different bytes, and both carry the same hash.
+ *
+ * A dev-server audit is about the **source and the lockfile** it served. It is
+ * emphatically not about `outputDigest`, because nothing was built — so that
+ * component is named in `notMeasuredAgainst` with the reason, rather than left
+ * out where its absence would read as an oversight. Claiming it would be the
+ * most damaging thing this report could do: an accessibility pass over a dev
+ * server, filed as evidence about a shipping artifact.
+ *
+ * The digests come from `tooling/lib/build-identity.mjs` rather than being
+ * computed here, so that what this names as the source it served is the same
+ * value everything else in the repository means by it.
  */
 
 import fs from 'node:fs';
@@ -63,8 +82,9 @@ export const NOT_AUDITED = 'route-not-audited';
  * @param {object[]} input.declaredRoutes  the routes the composition declares
  * @param {string[]} input.viewports       the viewport projects the lane claims to cover
  * @param {string|null} input.compositionHash  the build this is evidence for
+ * @param {object|null} input.boundTo  { sourceDigest, lockDigest } of the project actually served
  */
-export function compileAxeReport({ measurements = [], declaredRoutes = [], viewports = [], compositionHash = null, projectDir = null } = {}) {
+export function compileAxeReport({ measurements = [], declaredRoutes = [], viewports = [], compositionHash = null, projectDir = null, boundTo = null } = {}) {
   const findings = [];
 
   for (const measurement of measurements) {
@@ -125,6 +145,19 @@ export function compileAxeReport({ measurements = [], declaredRoutes = [], viewp
     // standard from the word "accessibility".
     standard: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
     viewports,
+
+    /**
+     * The identity components this run is evidence about, and the one it is not.
+     *
+     * `boundTo` carries the digests themselves so a later reader can check them
+     * without re-running anything, and null when the lane could not establish
+     * one — an absent digest is stated rather than omitted.
+     */
+    measuredAgainst: boundTo ? Object.keys(boundTo).filter((key) => boundTo[key] !== null).sort() : [],
+    boundTo: boundTo ?? null,
+    notMeasuredAgainst: [
+      { component: 'outputDigest', reason: 'Nothing was built. This lane serves the generated project\'s dev server, so there is no built output for it to have measured, and naming it would file a dev-server audit as evidence about a shipping artifact.' },
+    ],
 
     routesDeclared: declaredRoutes.length,
     routesAudited: new Set(measurements.map((entry) => entry.route)).size,

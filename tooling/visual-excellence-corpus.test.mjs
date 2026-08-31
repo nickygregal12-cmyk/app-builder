@@ -257,16 +257,25 @@ test('the benchmark composes, and what it cannot yet fill is recorded rather tha
     assert.ok(composed.includes(PACK.companyProfile.accreditations[0].name), 'an award did not survive composition');
 
     // The honest gaps, named. Two are the asset gap and will close when the
-    // bytes arrive. Three are capability: Studio, Expertise and Approach are
-    // approved surfaces the composer has no vocabulary to fill, and it says so
-    // rather than emitting a heading over nothing and calling it a page.
+    // bytes arrive.
+    //
+    // Studio and Expertise used to be here too. They were never a source
+    // problem: five source-backed people and ten approved services were sitting
+    // in the pack, and the composer had no vocabulary that recognised those
+    // surface names, so it never asked for them.
+    //
+    // Approach remains, and remains honestly. The pack carries positioning and a
+    // point of view but no structured methodology — no stages, no process — so
+    // there is nothing for a process surface to bind. `unrecognised-surface-purpose`
+    // says which kind of empty this is: the composer has no purpose for the name,
+    // rather than a purpose that came back empty-handed. Inventing stages to fill
+    // the page would be the one genuinely unacceptable fix.
     const warnings = composition.warnings.map(String).sort();
     assert.deepEqual(warnings, [
       'declared-proof-missing:project photos',
       'empty-declared-surface:Approach',
-      'empty-declared-surface:Expertise',
-      'empty-declared-surface:Studio',
       'no-publishable-imagery',
+      'unrecognised-surface-purpose:Approach',
     ], 'the benchmark\'s known gaps changed; close one deliberately or explain the new one');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

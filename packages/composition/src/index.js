@@ -616,10 +616,129 @@ function ctaSection(pageId, pack, manifest, actions, index) {
   ], actions);
 }
 
+/**
+ * What a surface is *for*, and the approved truth that answers it.
+ *
+ * This was a chain of `else if`s testing the surface's name, and the shape of it
+ * hid a defect that only showed up once a business declared a rich information
+ * architecture. A studio with five source-backed people declared **Studio**, and
+ * `studio` appeared in none of the tests, so the page fell through every branch
+ * to the application default — journeys and entities, both empty on a marketing
+ * site — and shipped with a heading and nothing under it. The same happened to
+ * **Expertise** with ten approved services behind it. The truth was ingested,
+ * survived into the pack, and had nowhere to be asked for.
+ *
+ * Written as a table, the vocabulary is the thing being maintained rather than
+ * an accident of how the conditions were ordered. Each purpose says which names
+ * mean it and which approved truth it consumes, so adding a synonym is a data
+ * change and the omissions are visible by reading it.
+ *
+ * It stays a small vocabulary on purpose. Every builder it calls returns null
+ * when its truth is absent, so a purpose can only ever surface material the
+ * sources actually carry — matching a name never invents content, and a surface
+ * whose truth genuinely does not exist still composes empty and still says so.
+ *
+ * Order is significant: the first purpose whose names match wins. `coverage`
+ * precedes `practice` so that a firm's "Practice areas" is still read as the
+ * places it works rather than as a page about the firm.
+ */
+const SURFACE_PURPOSES = Object.freeze([
+  {
+    id: 'offering',
+    // What the business sells. `expertise`, `capabilit` and `what we do` are the
+    // words professional-services firms reach for instead of "Services".
+    names: /service|product|offering|expertise|capabilit|discipline|what we do/,
+    build: ({ pageId, pack, manifest, push }) => {
+      push(servicesSection(pageId, pack, manifest));
+      push(projectsSection(pageId, pack));
+    },
+  },
+  {
+    id: 'showcase',
+    // `work` is bounded deliberately. Unbounded, it also matched **Workspace** —
+    // the b2b-saas application surface — which routed it to the portfolio branch,
+    // gave it a gallery and a project list it could never fill, and left it
+    // carrying no content. `carriesContent` then dropped it as unfillable, so
+    // every generated B2B SaaS application has silently shipped without the one
+    // surface its own project type declares it is worked in. A marketing site's
+    // "Work" and "Our works" still match; "Workspace" no longer does.
+    names: /\bworks?\b|gallery|portfolio|project|case stud/,
+    build: ({ pageId, pack, manifest, assetDecisions, push }) => {
+      push(gallerySection(pageId, pack, manifest, assetDecisions));
+      push(projectsSection(pageId, pack));
+    },
+  },
+  {
+    id: 'coverage',
+    names: /location|area|where we work/,
+    build: ({ pageId, pack, manifest, push }) => push(locationsSection(pageId, pack, manifest)),
+  },
+  {
+    id: 'practice',
+    // Who the business is. A studio, a practice and a firm are the same surface
+    // under three house styles.
+    names: /about|team|people|\bstudio\b|\bpractice\b|\bfirm\b|who we are/,
+    build: ({ pageId, pack, manifest, push }) => {
+      // Only when there is something to say. A description this cannot find used
+      // to leave a `rich-text` section carrying nothing but the word "About" —
+      // a heading over blank space, which `carriesContent` then counted as
+      // content, so the page was never reported empty either. Every other
+      // builder returns null without its truth and this one now does too.
+      const description = projectDescriptionBinding(pack, manifest);
+      if (description) push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), description]));
+      push(peopleSection(pageId, pack));
+      push(proofSection(pageId, pack));
+    },
+  },
+  {
+    id: 'conversion',
+    names: /contact|quote|book/,
+    build: ({ pageId, pack, manifest, push }) => {
+      push(contactSection(pageId, pack, manifest));
+      push(enquiryFormSection(pageId, manifest));
+    },
+  },
+  {
+    id: 'library',
+    names: /content|article|post|news|detail/,
+    build: ({ pageId, pack, push }) => push(contentSection(pageId, pack)),
+  },
+  {
+    id: 'application',
+    names: /dashboard|workspace|record|experience|input|result|history|admin|setting|profile/,
+    build: ({ pageId, manifest, lower, push }) => {
+      // The records surface goes on the workspace rather than on every
+      // application page: a dashboard summarises, a workspace is worked in, and
+      // putting a full CRUD panel behind Settings would be a filing cabinet in a
+      // cupboard. `sectionsForPage` dedupes by id, so a project whose surfaces
+      // include both still gets one.
+      //
+      // Notifications go the other way for the same reason. Catching up is what
+      // opening a dashboard is FOR, so the panel sits above the summary rather
+      // than beside the work — and it is placed first, because a person who has
+      // been told something needs to see it before they start.
+      if (/dashboard|notification|activity|alert/.test(lower)) push(notificationsSection(pageId, manifest));
+      if (/workspace|record/.test(lower)) push(tenantRecordsSection(pageId, manifest));
+      if (/workspace|schedule|decision/.test(lower)) push(scheduledDecisionsSection(pageId, manifest));
+      if (/workspace|file|document/.test(lower)) push(organisationFilesSection(pageId, manifest));
+      if (/admin|setting/.test(lower)) push(administrationSection(pageId, manifest));
+      push(entitiesSection(pageId, manifest));
+      push(journeysSection(pageId, manifest));
+    },
+  },
+]);
+
+/** The purpose a surface name declares, or null when its name says nothing. */
+export function surfacePurposeFor(surface) {
+  const lower = String(surface ?? '').toLowerCase();
+  return SURFACE_PURPOSES.find((purpose) => purpose.names.test(lower)) ?? null;
+}
+
 function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, ctaActions, assetDecisions }) {
   const lower = surface.toLowerCase();
   const output = [hero(pageId, surface, index, manifest, pack, heroActions, assetDecisions)];
   const isHome = index === 0 || lower === 'home';
+  const push = (item) => output.push(item);
 
   if (isHome) {
     output.push(servicesSection(pageId, pack, manifest));
@@ -630,51 +749,16 @@ function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, 
     output.push(proofSection(pageId, pack));
     output.push(locationsSection(pageId, pack, manifest));
     output.push(contactSection(pageId, pack, manifest));
-  } else if (/service|product|offering/.test(lower)) {
-    output.push(servicesSection(pageId, pack, manifest));
-    output.push(projectsSection(pageId, pack));
-  } else if (/about|team|people/.test(lower)) {
-    output.push(section(`${pageId}-about`, 'rich-text', 'Describe the organisation using approved or source-backed information', [manifestBinding('title', 'About'), projectDescriptionBinding(pack, manifest)]));
-    output.push(peopleSection(pageId, pack));
-    output.push(proofSection(pageId, pack));
-  } else if (/\bworks?\b|gallery|portfolio|project/.test(lower)) {
-    // `work` is bounded deliberately. Unbounded, it also matched **Workspace** —
-    // the b2b-saas application surface — which routed it to the portfolio branch,
-    // gave it a gallery and a project list it could never fill, and left it
-    // carrying no content. `carriesContent` then dropped it as unfillable, so
-    // every generated B2B SaaS application has silently shipped without the one
-    // surface its own project type declares it is worked in. A marketing site's
-    // "Work" and "Our works" still match; "Workspace" no longer does.
-    output.push(gallerySection(pageId, pack, manifest, assetDecisions));
-    output.push(projectsSection(pageId, pack));
-  } else if (/location|area/.test(lower)) {
-    output.push(locationsSection(pageId, pack, manifest));
-  } else if (/contact|quote|book/.test(lower)) {
-    output.push(contactSection(pageId, pack, manifest));
-    output.push(enquiryFormSection(pageId, manifest));
-  } else if (/content|article|post|news|detail/.test(lower)) {
-    output.push(contentSection(pageId, pack));
-  } else if (/dashboard|workspace|record|experience|input|result|history|admin|setting|profile/.test(lower)) {
-    // The records surface goes on the workspace rather than on every
-    // application page: a dashboard summarises, a workspace is worked in, and
-    // putting a full CRUD panel behind Settings would be a filing cabinet in a
-    // cupboard. `sectionsForPage` dedupes by id, so a project whose surfaces
-    // include both still gets one.
-    //
-    // Notifications go the other way for the same reason. Catching up is what
-    // opening a dashboard is FOR, so the panel sits above the summary rather
-    // than beside the work — and it is placed first, because a person who has
-    // been told something needs to see it before they start.
-    if (/dashboard|notification|activity|alert/.test(lower)) output.push(notificationsSection(pageId, manifest));
-    if (/workspace|record/.test(lower)) output.push(tenantRecordsSection(pageId, manifest));
-    if (/workspace|schedule|decision/.test(lower)) output.push(scheduledDecisionsSection(pageId, manifest));
-    if (/workspace|file|document/.test(lower)) output.push(organisationFilesSection(pageId, manifest));
-    if (/admin|setting/.test(lower)) output.push(administrationSection(pageId, manifest));
-    output.push(entitiesSection(pageId, manifest));
-    output.push(journeysSection(pageId, manifest));
   } else {
-    output.push(journeysSection(pageId, manifest));
-    output.push(entitiesSection(pageId, manifest));
+    const purpose = surfacePurposeFor(surface);
+    if (purpose) purpose.build({ pageId, pack, manifest, assetDecisions, lower, push });
+    else {
+      // A name the vocabulary does not recognise. The application defaults are
+      // the only safe guess, and on a marketing site they are empty — which is
+      // the honest outcome and is reported as such rather than padded.
+      output.push(journeysSection(pageId, manifest));
+      output.push(entitiesSection(pageId, manifest));
+    }
   }
 
   if (!/contact|quote|book/.test(lower)) output.push(ctaSection(pageId, pack, manifest, ctaActions, index));
@@ -713,6 +797,39 @@ function surfacesFor(manifest) {
 // generated site whose sources happen to be thin — and it is named
 // `unfillable-surface`.
 const CHROME_SECTIONS = new Set(['hero', 'cta']);
+
+/**
+ * Whether the approved truth could have filled this surface.
+ *
+ * An empty declared surface has two completely different causes and they were
+ * previously indistinguishable. MGB Decor declares **Our Work** and has no
+ * project material and no publishable imagery: nothing could fill that page, the
+ * warning is honest, and inventing projects to satisfy it would be the worst
+ * possible fix. Ardwell & Roe declares **Studio** with five source-backed people
+ * behind it: everything needed was present and the composer simply never asked
+ * for it.
+ *
+ * The first is a gap in the sources and belongs to the operator. The second is a
+ * defect in the factory. Reporting them with the same words is how the second
+ * one survived — it read as "thin input", which is the explanation this whole
+ * corpus exists to remove.
+ *
+ * So an empty declared surface is asked one further question: did the composer
+ * recognise what this surface was for at all? A surface whose name matched a
+ * purpose was asked the right question and the sources had no answer — that is
+ * MGB's case and the warning stands alone. A surface whose name matched nothing
+ * was never asked, and that is reported separately as
+ * `unrecognised-surface-purpose`, because the fix is in the factory's vocabulary
+ * or in the source pack rather than in the operator's expectations.
+ *
+ * The distinction is deliberately about recognition rather than about how much
+ * truth exists. Asking "could some purpose have filled this?" would have to
+ * guess which purpose, and a guess is exactly how a page ends up padded with
+ * whatever material was nearest.
+ */
+function surfacePurposeRecognised(surface) {
+  return surfacePurposeFor(surface) !== null;
+}
 
 function carriesContent(pageSections) {
   return pageSections.some((item) => {
@@ -788,6 +905,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
   const sections = [];
   const unfillable = [];
   const emptyDeclared = [];
+  const unrecognisedPurpose = [];
   const pages = [];
   surfaces.forEach((surface, index) => {
     const slug = index === 0 ? 'home' : slugify(surface.name);
@@ -821,6 +939,10 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       // not one warning attached. A gap the operator has to fix is only a gap
       // they can see.
       emptyDeclared.push(surface.name);
+      // Which of the two empty cases this is. Without it, a surface the
+      // composer never understood is indistinguishable from one the sources
+      // could not support, and the first reads as thin input.
+      if (!surfacePurposeRecognised(surface.name)) unrecognisedPurpose.push(surface.name);
     }
     sections.push(...pageSections);
     pages.push({
@@ -858,6 +980,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       ...warningsFor(manifest, knowledgePack, assetDecisions, plan),
       ...unfillable.map((name) => `unfillable-surface:${name}`),
       ...emptyDeclared.map((name) => `empty-declared-surface:${name}`),
+      ...unrecognisedPurpose.map((name) => `unrecognised-surface-purpose:${name}`),
     ],
   };
   return { ...base, compositionHash: hash(base) };

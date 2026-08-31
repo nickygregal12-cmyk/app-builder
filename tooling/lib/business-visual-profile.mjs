@@ -112,7 +112,16 @@ function evidenceDepth(company) {
  */
 function showcaseIntent(majorSurfaces, composition) {
   const declared = majorSurfaces.filter((surface) => SHOWCASE_SURFACES.test(String(surface).trim()));
-  const empty = list(composition?.warnings).filter((warning) => warning.startsWith('empty-declared-surface:'));
+  // Only an empty *showcase* surface argues against showing work. Any empty
+  // declared surface used to count, which meant an unrelated gap elsewhere on
+  // the site decided this: a studio with a full Work page and a full project
+  // story read as `work-led-unproven` because its Approach page had nothing in
+  // it, and the strongest available argument against an imagery-led direction
+  // turned out to be a page about process. The question is whether the work
+  // surfaces have work in them, so only those are consulted.
+  const empty = list(composition?.warnings)
+    .filter((warning) => warning.startsWith('empty-declared-surface:'))
+    .filter((warning) => SHOWCASE_SURFACES.test(warning.slice('empty-declared-surface:'.length).trim()));
   const value = !declared.length ? 'information-led' : empty.length ? 'work-led-unproven' : 'work-led';
   return signal('showcaseIntent', value, {
     field: 'project.majorSurfaces, composition.warnings',

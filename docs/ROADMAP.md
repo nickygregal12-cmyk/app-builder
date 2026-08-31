@@ -204,6 +204,10 @@ Contract, Manifest, capability-integrity, composition, journey and evidence cont
 `source revision -> build artifact -> preview -> evidence -> independent review -> approved revision
 -> production promotion -> smoke/health verification -> release record -> rollback target`
 Production is explicit promotion of the accepted identity, never whatever is open in a worktree. A stateful product may later require backend identity, migration state, scoped secrets, integration environment and scenario data. A static site does not need database branching.
+
+Started. The ladder is defined and enforced — `contract-approved -> materialized -> buildable -> behavior-verified -> quality-accepted -> release-candidate -> released -> production-verified`, one rung at a time, with append-only identity so changed bytes cannot inherit the evidence of the bytes they replaced. Authority: `docs/PRODUCTION_COMPLETENESS.md`; code: `packages/control-plane/src/artifact-lifecycle.js`.
+
+Next, and blocking every rung above the second: **reproducible build identity**. `buildable` requires a lockfile digest, an exact declared Node/npm pair and a recorded output digest, and the factory currently produces none of the three — generated repositories ship without a resolved lockfile, verification installs with `npm install`, handover tells the owner to do the same, and the root declares `node >=22.13` with CI on floating `node-version: 22`. Until that closes, every project projects to `materialized` at best and the ladder has nowhere to go.
 ### Outcome-first structure — owner intent over owner solution
 
 Principle 24 says the factory may supersede an owner's *proposed solution* when evidence supports a

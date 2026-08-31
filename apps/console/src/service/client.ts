@@ -11,7 +11,10 @@ export type ProjectSummary = {
   name: string;
   type: string;
   slug: string;
+  /** Legacy build progress. `verified` means a build once ran, not that this artifact is reproducible or accepted. */
   state: string;
+  /** The canonical lifecycle claim, or null when the project carries no exact artifact identity for one to be about. */
+  lifecycle: { lifecycleState: string | null; basis: string; missing: string[]; legacyState: string | null };
   workspacePath: string | null;
   manifestVersion: number;
   knowledgePackHash: string | null;

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/artifact-revision.schema.json",
+  "title": "App Builder Artifact Revision",
+  "description": "One candidate product revision, and the single lifecycle it travels. Before this contract the factory used `generated`, `verified`, `launchable`, convergence and visual promotion to describe different narrow facts, which made it possible to read `build succeeded` as `ready to release`. Each state here names exactly one earned guarantee and nothing beyond it. Identity is append-only: a component may be recorded once, and changed bytes cannot inherit the evidence of the bytes they replaced — rework forks a child revision that re-earns every state below it.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "projectId", "parentRevisionId", "producedBy", "lifecycleState", "identity", "history", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "parentRevisionId": {
+      "type": ["string", "null"],
+      "description": "The revision this one reworks. Null for the first revision of an approved contract."
+    },
+    "producedBy": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Who or what materialised this revision. Recorded so the reducer can refuse a producer that accepts its own work (principle 17)."
+    },
+    "lifecycleState": {
+      "type": "string",
+      "enum": [
+        "contract-approved",
+        "materialized",
+        "buildable",
+        "behavior-verified",
+        "quality-accepted",
+        "release-candidate",
+        "released",
+        "production-verified",
+        "superseded",
+        "withdrawn",
+        "rejected"
+      ],
+      "description": "The first eight are the success ladder, in order, each earned only from the one before it. The last three are terminal dispositions and are never success states."
+    },
+    "identity": {
+      "type": "object",
+      "description": "What this revision exactly is. Every component starts null, is written once by the transition that earns it, and refuses a second, different value.",
+      "required": ["contractDigest", "sourceDigest", "lockDigest", "toolchain", "outputDigest", "deployId"],
+      "properties": {
+        "contractDigest": {
+          "anyOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"type": "null"}],
+          "description": "The approved Product Contract this revision is built against."
+        },
+        "sourceDigest": {
+          "anyOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"type": "null"}],
+          "description": "The generated source tree. Changing it is a different revision, not an edit to this one."
+        },
+        "lockDigest": {
+          "anyOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"type": "null"}],
+          "description": "The dependency lockfile the build resolved against. An exact source tree over floating transitive dependencies is not an exact artifact."
+        },
+        "toolchain": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": ["node", "npm"],
+              "properties": {
+                "node": {"type": "string", "minLength": 1},
+                "npm": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            },
+            {"type": "null"}
+          ],
+          "description": "The exact declared Node and npm pair the build ran under."
+        },
+        "outputDigest": {
+          "anyOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"type": "null"}],
+          "description": "The built output manifest. This is what behaviour, quality and release evidence is about; the source alone is not."
+        },
+        "deployId": {
+          "anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}],
+          "description": "The provider's own identifier for the exact published deploy. Set when the revision is released and never rewritten."
+        }
+      },
+      "additionalProperties": false
+    },
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Every transition this revision has made, in order. The reducer appends; nothing rewrites.",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "actor", "basis", "evidenceRefs", "at"],
+        "properties": {
+          "from": {
+            "anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}],
+            "description": "Null only for the transition that created the revision."
+          },
+          "to": {"type": "string", "minLength": 1},
+          "actor": {"type": "string", "minLength": 1},
+          "basis": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Why this state was earned, in one sentence a person can check against the evidence."
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "description": "Identifiers of the artifacts that earned the state. The lifecycle records which evidence was claimed; binding it to this revision's digests belongs to the evidence reducer."
+          },
+          "at": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "createdAt": {"type": "string", "minLength": 1},
+    "updatedAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

@@ -161,6 +161,14 @@
       "boundary": "One bounded, targeted revision of one visual candidate; written by the factory service when an independent review returns a candidate for rework.",
       "schemaHash": "56b6d1a4b13bee6262e02e7d7bb342a0c75c56b6da110a67cf600b34013968d0",
       "typesHash": "f9d8c2b494a226f13591d8be2a707a8b90683672dda15dc43d6a26cd46d4fc8b"
+    },
+    {
+      "id": "artifact-revision",
+      "schema": "artifact-revision.schema.json",
+      "typeName": "AppBuilderArtifactRevision",
+      "boundary": "The one lifecycle a candidate product travels, from an approved contract to a production-verified deploy. Written by the control-plane lifecycle reducer and read by the service and Console wherever readiness is stated.",
+      "schemaHash": "1f4878713c294971849c48084db792f8a1aaab98a903158cf6d7f4916fb087ae",
+      "typesHash": "98a386f8a26f50d85d7238210030ef73da482ab6e9d182951945e966c874b040"
     }
   ],
   "pending": [

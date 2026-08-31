@@ -4,74 +4,190 @@
   "title": "App Builder Agent Role Spec",
   "description": "Machine-readable definition of one specialist agent role. A role is a decision boundary plus a bounded context, tool and mutation scope — not a personality.",
   "type": "object",
-  "required": ["id", "kind", "purpose", "stageClass", "reads", "writes", "mayNot", "skills", "policyId", "routeId", "contextCeilingTokens", "budget", "stopCriteria"],
+  "required": [
+    "id",
+    "kind",
+    "purpose",
+    "stageClass",
+    "reads",
+    "writes",
+    "mayNot",
+    "skills",
+    "policyId",
+    "routeId",
+    "contextCeilingTokens",
+    "budget",
+    "stopCriteria"
+  ],
   "properties": {
-    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
     "kind": {
-      "enum": ["creator", "reviewer"],
+      "enum": [
+        "creator",
+        "reviewer"
+      ],
       "description": "Creators author artifacts and always require an independent reviewer. Reviewers issue verdicts and never author the artifact they judge."
     },
-    "purpose": {"type": "string", "minLength": 1},
-    "stageClass": {"enum": ["intake", "research", "product", "structure", "experience", "content", "brand", "design", "composition", "implementation", "verification", "release"]},
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The decisions this role decides for itself, in prose. The counterpart to mayNot: that field says where a role must stop, and until now nothing said what it is the expert in. Principle 24 makes the difference matter — a decision listed here is one the factory owns rather than one an owner is expected to specify, so a role with real authority can be told from a role that only assembles what it was handed."
+    },
+    "stageClass": {
+      "enum": [
+        "intake",
+        "research",
+        "product",
+        "structure",
+        "experience",
+        "content",
+        "brand",
+        "design",
+        "composition",
+        "implementation",
+        "verification",
+        "release"
+      ]
+    },
     "reads": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "Artifact kinds this role may receive. The context packet builder must not hand it anything else."
     },
     "writes": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "Artifact kinds this role may author. A reviewer may only write ReviewVerdict-class artifacts."
     },
     "mayNot": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "Explicit decision boundaries this role must not cross, in prose, for reviewers and humans."
     },
     "skills": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "Skill ids from config/skill-registry.json. Roles never load the whole skill library."
     },
-    "policyId": {"type": "string", "minLength": 1, "description": "Capability policy id from config/agent-policies.json."},
-    "routeId": {"type": "string", "minLength": 1, "description": "Context route id from config/agent-routing.json."},
-    "contextCeilingTokens": {"type": "integer", "minimum": 1000, "description": "Role ceiling; must not exceed the route ceiling."},
+    "policyId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Capability policy id from config/agent-policies.json."
+    },
+    "routeId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Context route id from config/agent-routing.json."
+    },
+    "contextCeilingTokens": {
+      "type": "integer",
+      "minimum": 1000,
+      "description": "Role ceiling; must not exceed the route ceiling."
+    },
     "mutationScopes": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "Repository scope rules this role may declare in a ChangeSet. Empty means the role may not mutate the repository."
     },
     "budget": {
       "type": "object",
-      "required": ["maxIterations", "maxRuntimeMs", "maxCostGbp", "maxTokens"],
+      "required": [
+        "maxIterations",
+        "maxRuntimeMs",
+        "maxCostGbp",
+        "maxTokens"
+      ],
       "properties": {
-        "maxIterations": {"type": "integer", "minimum": 1},
-        "maxRuntimeMs": {"type": "integer", "minimum": 1000},
-        "maxCostGbp": {"type": "number", "minimum": 0},
-        "maxTokens": {"type": "integer", "minimum": 0}
+        "maxIterations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxRuntimeMs": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "maxCostGbp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxTokens": {
+          "type": "integer",
+          "minimum": 0
+        }
       },
       "additionalProperties": false
     },
     "reviewedBy": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "Reviewer role ids permitted to promote this role's work. Must never contain the role itself."
     },
-    "stopCriteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-    "escalatesTo": {"type": ["string", "null"], "description": "Role id to escalate to when stop criteria are hit without a promotable artifact."},
+    "stopCriteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "escalatesTo": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Role id to escalate to when stop criteria are hit without a promotable artifact."
+    },
     "priorArt": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "description": "External source ids from config/external-sources.json that informed this role. Prior art is never authority."
     },
-    "status": {"enum": ["planned", "foundation", "active"]}
+    "status": {
+      "enum": [
+        "planned",
+        "foundation",
+        "active"
+      ]
+    }
   },
   "additionalProperties": false
 }

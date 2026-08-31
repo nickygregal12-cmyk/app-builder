@@ -511,14 +511,24 @@
       ],
       "stopCriteria": [
         "every required surface has a place in the hierarchy",
-        "labels are validated or explicitly assumed"
+        "labels are validated or explicitly assumed",
+        "the hierarchy can state which journeys it serves, and no high-frequency task is reachable only through secondary navigation"
       ],
       "escalatesTo": "product-critic",
       "priorArt": [
         "rampstackco-claude-skills",
         "coreyhaines31-marketingskills"
       ],
-      "status": "planned"
+      "status": "planned",
+      "owns": [
+        "the user mental model the hierarchy is built on",
+        "task hierarchy, and which journeys the structure is optimised for",
+        "sitemap, application surface map and URL hierarchy",
+        "navigation model and depth of the critical path",
+        "taxonomy and labels",
+        "progressive disclosure and findability",
+        "where desktop and mobile information architecture legitimately differ"
+      ]
     },
     "ia-critic": {
       "id": "ia-critic",
@@ -926,7 +936,7 @@
     "composition": {
       "id": "composition",
       "kind": "creator",
-      "purpose": "Composes pages and sections from approved structure, content and design contracts using the presentation registry.",
+      "purpose": "Decides the structure of a surface — hierarchy, prominence, ordering, grouping, density and responsive prioritisation — and composes it from approved structure, content and design contracts using the presentation registry.",
       "stageClass": "composition",
       "reads": [
         "ProductSpec",
@@ -946,7 +956,9 @@
       "mayNot": [
         "invent components outside the presentation registry",
         "change information architecture",
-        "bypass design tokens"
+        "redefine approved product scope",
+        "bypass design tokens",
+        "treat a stacked desktop column order as a mobile composition"
       ],
       "skills": [
         "section-composition"
@@ -966,14 +978,28 @@
       ],
       "stopCriteria": [
         "every page in the information architecture is composed",
-        "no section bypasses the design system"
+        "no section bypasses the design system",
+        "each surface has one visible primary task, and the composition can say why each important element occupies its position",
+        "mobile prioritisation is stated rather than inherited from desktop order"
       ],
       "escalatesTo": "information-architect",
       "priorArt": [
         "21st-dev-registry",
         "storybookjs-mcp"
       ],
-      "status": "planned"
+      "status": "planned",
+      "owns": [
+        "page and screen hierarchy",
+        "module prominence and relative scale",
+        "above-the-fold strategy and primary task visibility",
+        "section order and spatial grouping",
+        "information density",
+        "which of a sidebar, tabs, rail, list or grid suits the task",
+        "competing calls to action, and whether secondary information is genuinely secondary",
+        "progressive disclosure",
+        "desktop area utilisation",
+        "responsive reprioritisation — order, prominence, navigation method and density may all differ on a phone"
+      ]
     },
     "solution-architect": {
       "id": "solution-architect",

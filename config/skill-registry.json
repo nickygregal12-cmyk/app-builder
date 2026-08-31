@@ -504,7 +504,7 @@
     },
     "information-architecture": {
       "id": "information-architecture",
-      "purpose": "Model mental models, sitemap, taxonomy, labels and content hierarchy, and validate rather than guess.",
+      "purpose": "Model mental models, task hierarchy, sitemap, surface map, navigation, taxonomy, URL hierarchy, labels and content hierarchy from task frequency, urgency and critical-path depth, and justify why the hierarchy serves the important journeys rather than generating a plausible sitemap. Validate deterministically wherever possible: orphan surfaces, competing destinations and buried high-frequency tasks are checks, not opinions.",
       "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",
@@ -764,7 +764,7 @@
     },
     "section-composition": {
       "id": "section-composition",
-      "purpose": "Compose pages and sections from registered presentation entries without inventing a second system.",
+      "purpose": "Decide the structure of a surface — hierarchy, prominence, above-the-fold strategy, ordering, grouping, density, competing calls to action, progressive disclosure and responsive reprioritisation — and compose it from registered presentation entries without inventing a second system. A valid PageSpec is not a good layout; this skill owns the difference.",
       "loadClass": "domain",
       "lifecycle": "planned",
       "version": "0.1.0",

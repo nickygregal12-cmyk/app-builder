@@ -170,12 +170,83 @@ Contract, Manifest, capability-integrity, composition, journey and evidence cont
 `source revision -> build artifact -> preview -> evidence -> independent review -> approved revision
 -> production promotion -> smoke/health verification -> release record -> rollback target`
 Production is explicit promotion of the accepted identity, never whatever is open in a worktree. A stateful product may later require backend identity, migration state, scoped secrets, integration environment and scenario data. A static site does not need database branching.
+### Outcome-first structure — owner intent over owner solution
+
+Principle 24 says the factory may supersede an owner's *proposed solution* when evidence supports a
+better one, and must obey facts, business rules and anything marked non-negotiable. Today only the
+principle exists. What is missing is the machinery that makes it real, and the proof that it works.
+
+The whole programme is sequenced by dependency, not by appetite. Each stage is earned by the one
+before it; none of it displaces the current `NOW`.
+
+**A — intake semantics.** Extend the Build Contract/intake session so an owner statement carries a
+classification (`fact`, `goal`, `business-rule`, `hard-requirement`, `constraint`, `preference`,
+`reference`, `suggested-solution`, `open-question`) rather than arriving as undifferentiated prose,
+and so a `suggested-solution` is a falsifiable hypothesis with an inferred goal, an affected journey
+and the evidence that would settle it. Add the deviation record — suggestion, inferred goal, evidence,
+selected solution, why it is better, confidence, whether owner approval is genuinely required — for
+material divergences only. Add the escalation policy that says which decisions the factory owns
+outright. Extend the existing contracts; do not start a second intake system.
+
+**B — IA capability.** `information-architecture` is a planned placeholder with a null path. Build it,
+give it frozen benchmark cases across simple marketing, professional services, B2B SaaS, internal tool,
+consumer app, information-heavy dashboard, multi-context product, mobile-first product and brownfield
+redesign, and evaluate it on quality, task-path and hierarchy correctness, reviewer agreement,
+regressions, tokens, runtime and cost. Complete the Rampstack prior-art evaluation already scoped in
+`config/external-sources.json`. Add category-convention evidence only where deterministic knowledge is
+insufficient, and never as a stored per-industry template.
+
+**C — structural composition.** Decide whether a `CompositionPlan`/`WireframeSpec` between
+`InformationArchitectureSpec`/`UXFlowSpec` and `PageSpec`/`SectionSpec` materially improves reasoning,
+review and testability — and drop it if it does not. `yhassy-wireframe-skill` is registered as prior art
+for exactly that question. Replace project-type-only layout defaults with selection from task shape:
+primary tasks, frequency, urgency, surface count, density, switching frequency, create/monitor/browse
+orientation, mobile importance and navigation depth, keeping the deterministic fallbacks. Produce two or
+three materially different structural candidates for hard surfaces only, and compare them on hierarchy
+before any styling exists.
+
+**D — structural quality enforcement.** A gate that can fail a technically valid but structurally weak
+composition, extending the existing IA/UX critics before anyone adds a `composition-critic`. Plus
+deterministic StructuralLint for the defects that are not matters of taste: no visible primary task,
+several competing primary actions, a high-frequency task buried behind secondary navigation, orphan
+routes, duplicated destinations, a mobile composition that is only the desktop order stacked, a required
+surface missing from the hierarchy.
+
+**E — anti-vibe proof.** The benchmark that decides whether any of this worked. Bad-owner-suggestion
+resistance: hide a high-frequency destination under More, add widgets to fix a hierarchy problem, three
+equal cards where one action should dominate, a state library the state complexity does not warrant, a
+modal where the task wants a page, "modern" as gradients and glass. Each case must distinguish goal
+understood, weak proposal rejected, sound proposal kept, hard requirement obeyed and preference respected
+where alternatives are equivalent. Its twin matters as much: ambiguity cases where the factory must ask
+because it genuinely cannot know, scored on unnecessary questions as well as missed ones. Then human
+steering burden as a tracked metric, optimised against accepted quality rather than to zero.
+
+**F — brownfield structure.** Extend the sequence below so structural diagnosis precedes mutation:
+routes and screens, navigation graph, key journeys, rendered desktop/mobile baseline, IA diagnosis,
+composition diagnosis, protected behaviours, then the bounded change. This is the path for a product
+whose problem is "everything exists but it is badly organised".
+
+**G — Console visibility.** Make the factory's reasoning inspectable — goal, owner suggestion, decision,
+reason, confidence, and whether the owner is genuinely needed — plus a structural preview before
+expensive stages. Visibility and optional intervention, not another mandatory human gate.
+
+**Adaptive questionnaire.** Sequenced with A because it is the same problem at the front door. The
+existing questionnaire already has typed questions, `when` conditionals, defaults, `depth` and `impact`,
+and its own principles already promise "allow explicit decide-for-me answers" — but no question offers
+one. What is missing is scenario-card and ranking question types, a first-class `recommend` answer,
+answer provenance separating owner-selected from factory-recommended and factory-inferred, dependency
+invalidation when an earlier answer changes, and contradiction detection before the build starts. Every
+one of those needs a Console renderer to be real; adding the fields alone would be a knob nothing reads.
+The point is token efficiency as much as usability: `accessModel = public-marketing-private-app` is a
+value the pipeline can act on deterministically, where the prose it replaces has to be re-interpreted by
+a model on every read.
+
 ### Brownfield adoption
 
-`repo + optional URL -> frozen baseline -> understanding -> design-system assimilation -> diagnosis
--> Improvement Contract -> bounded ChangeSet -> evidence -> independent review -> before/after -> PR
--> release`
-Read before mutate. Preserve `demonstrated`, `inferred`, `unproven` and `not-applicable`: a dependency, folder or file does not prove runtime behaviour. Predictor becomes a hard brownfield benchmark only after exact-revision behavioural and rendered baselines can protect known-good behaviour.
+`repo + optional URL -> frozen baseline -> understanding -> design-system assimilation -> IA and
+composition diagnosis -> Improvement Contract -> bounded ChangeSet -> evidence -> independent review
+-> before/after -> PR -> release`
+Read before mutate. Preserve `demonstrated`, `inferred`, `unproven` and `not-applicable`: a dependency, folder or file does not prove runtime behaviour. Structural diagnosis is part of understanding, not part of the change: a navigation graph, the key journeys and a rendered desktop/mobile baseline are what let a redesign be judged against the product it replaced. Predictor becomes a hard brownfield benchmark only after exact-revision behavioural and rendered baselines can protect known-good behaviour.
 ### Static versus application rendering
 
 Use the static/content renderer for public marketing/content sites needing crawlable route documents.
@@ -193,6 +264,10 @@ The SPA renderer is valid for authenticated/stateful applications; one crawlable
 | A real remote Factory service is required | Design an authenticated remote boundary |
 | Several corpus cases can support comparison | Add richer factory-learning metrics, not a dashboard before data |
 | A professional visual-maturity claim approaches | Calibrate visual reviewers against reference and expert-human evidence |
+| A build obeys a weak owner suggestion that a specialist should have superseded | Start the outcome-first programme at stage A rather than fixing that build |
+| An owner statement's classification changes what the factory should do with it | Extend the Build Contract with owner-input semantics |
+| A structurally weak composition passes every existing gate | Add the composition gate and the StructuralLint rules that would have caught it |
+| A frozen IA benchmark case exists that the planned skill cannot answer | Build the `information-architecture` skill against it |
 ## EXPLICITLY NOT NOW
 
 - another NBM visual/CSS loop or pre-evidence Presentation Registry redesign;
@@ -231,6 +306,8 @@ CI and merge only that tested head. Avoid overlapping full browser/database/muta
 | Working on | Read |
 | --- | --- |
 | Current state/sequence | `config/factory-status.json`, this roadmap |
+| Owner intent vs owner solution | `AGENTS.md` principle 24, then this roadmap's outcome-first stages |
+| IA, composition structure, anti-vibe benchmarks | This roadmap's outcome-first stages, `config/agent-roles.json`, `config/skill-registry.json` |
 | Database/file upgrade lifecycle | `docs/PLATFORM_PARITY_PROGRAMME.md`, `packages/control-plane/src/upgrades.js` |
 | Engineering gates/evidence/requirements | `docs/ENGINEERING_QUALITY_PROGRAMME.md` |
 | MGB/genuine-business acceptance | `docs/GENUINE_BUSINESS_ACCEPTANCE.md` |

@@ -149,6 +149,120 @@ Every generated asset should retain enough durable metadata to reproduce/audit i
 
 Prefer provider-neutral generation/edit adapters rather than coupling DesignSystemSpec or generated repositories to one image model. Deterministic graphics remain cheaper and preferred when they can satisfy the art direction. Activate this capability only when real corpus output shows missing visual material is the limiting factor; do not generate media merely because an image model is available.
 
+### 2.1.1 The lane, end to end — and where it currently stops
+
+The pipeline a generated asset would travel is not new architecture. It is the existing visual pipeline with one
+missing segment, and naming the whole path is what keeps the segment small:
+
+`product truth -> IA/composition -> ArtDirectionPlan -> DesignSystemSpec -> asset requirement -> media provider
+-> AssetCandidate -> critique -> accepted asset -> existing asset optimisation and governance -> rendered browser
+evidence`
+
+Everything before `media provider` exists. Everything after `accepted asset` exists: the Sharp optimiser produces
+responsive widths and crop candidates around a recorded focal point, `schemas/asset-decision.schema.json` carries the
+per-asset publication decision with its rights declaration, and the browser lanes photograph the result. The segment
+that does not exist is the middle: **a provider returns bytes, and nothing models the candidate those bytes arrive
+as.**
+
+`AssetCandidate` is that missing record, and it is deliberately shaped like the one the factory already uses for
+whole visual directions. `schemas/visual-candidate-set.schema.json` states one frozen truth for a set, holds several
+genuinely different candidates against it, promotes exactly one, and keeps every rejected candidate's evidence and
+reason rather than deleting it. Per-asset generation is the same shape one level down, and should reuse it rather
+than invent a second candidate vocabulary:
+
+- the `ImagePlan` job the candidate answers, and the frozen asset requirement shared by every candidate in the set;
+- provider and model identity as recorded at generation time, plus the exact brief sent;
+- the result — bytes, content hash, dimensions, format, whether transparency survived;
+- cost, retries and latency for this candidate specifically, separated from the cost of the accepted one;
+- provenance: `provenance: generated`, the inputs it was conditioned on, and the timestamp;
+- the critique that ranked it, and the acceptance or rejection with its reason.
+
+An accepted candidate then becomes an ordinary ingested asset and stops being special. That boundary is the whole
+design: generation is a way of *obtaining* bytes, and every rule about what may be published applies afterwards,
+unchanged.
+
+### 2.1.2 What generated media may never become
+
+§2.1 already says generated media is synthetic design material rather than source evidence. The protections that
+sentence implies are worth stating as refusals, because the failure mode is quiet:
+
+- **no fake completed projects** — an image may not depict work the business has not done, and a project frame in a
+  portfolio is a factual claim about a building that exists;
+- **no invented people** — no staff photograph, customer likeness or founder portrait that was never supplied;
+- **no generated testimonials, accreditations, certifications or awards**, in an image or beside one;
+- **no fabricated product or business proof** — inventory, premises, vehicles, equipment, capacity or scale;
+- **no edit that changes what a real photograph asserts.** Recropping an owner's photograph is a crop; adding a
+  building to it is a claim.
+
+The permitted material is design material: abstract and geometric artwork, texture, pattern, branded motif,
+illustration, diagram, background composition, and typographic or graphic treatment. The test is whether a reader
+could reasonably take the image as a statement about the world. If they could, it must be supplied and rights-cleared,
+not generated.
+
+`examples/visual-excellence/` is the deliberate exception that proves the boundary rather than breaching it: its
+imagery depicts an invented company, every bundle declares `businessReality: fictional`, and
+`tooling/visual-excellence-corpus.test.mjs` fails if that declaration is lost. Benchmark imagery is publishable within
+the benchmark and nowhere else.
+
+### 2.1.3 Provider benchmark — App Builder tasks, not leaderboard scores
+
+When this capability is activated, providers are benchmarked on the factory's own asset tasks. A published
+image-model comparison measures a different question against different prompts, and cannot answer whether a provider
+can hold six frames of one invented building consistent.
+
+The benchmark corpus already exists and needs nothing invented for it.
+`examples/visual-excellence/ardwell-roe-asset-plan.v1.json` specifies 27 assets across seven roles, 17 of them
+required, and `ardwell-roe-asset-recipes.v1.md` carries the provider-neutral brief for each. The task classes are the
+plan's own roles:
+
+| Task class | Drawn from | What it is actually testing |
+| --- | --- | --- |
+| Premium hero raster | `ar-home-hero-01/02` | the single most demanding frame, at wide crop tolerance |
+| Coherent project set | six projects × primary/supporting/detail | cross-asset consistency — the same building, materials and grade across three frames |
+| Reference-image editing | any project frame plus a supplied reference | fidelity to material and light the brief fixes, rather than reinvention |
+| Vector illustration | `ar-brand-wordmark` | editable geometry, not a bitmap in an SVG wrapper |
+| Brand motif, icon and diagram | brand and detail roles | restraint and system fit, where most providers over-decorate |
+| Transparent asset | brand and social roles | alpha that survives generation, encoding and the optimiser |
+| Responsive extension and crop | hero and social roles at their declared aspects | whether one frame survives every breakpoint the plan asks for |
+| Typography inside an image | *deliberately empty* | the recipes forbid legible text in every photograph; a task class with no consumer is not run |
+
+Measure, per task class:
+
+visual quality; business relevance; art-direction adherence to the stated photographic language; reference fidelity;
+cross-asset consistency; text fidelity where the class involves any; vector editability; retries to an accepted
+result; latency; cost per accepted asset rather than per candidate; output file quality after the existing optimiser
+has run; and rights and provenance compatibility with commercial publication by the end business.
+
+**Select per task, not overall.** A provider that wins premium hero raster has proved nothing about vector output or
+about holding a project set together. `config/capability-providers.json` records this as `candidateFor` on each
+provider and refuses `adopted` without a won task.
+
+Candidates registered for that benchmark — none adopted, none ready — are OpenAI's GPT Image family, Google's Gemini
+image family, Recraft for vector, and FLUX from Black Forest Labs as the cost and self-hostable data-boundary route.
+Ideogram is registered as a *conditional* candidate only: typography-inside-an-image is exactly what the Ardwell &
+Roe recipes forbid, so its speciality has no demonstrated consumer here and it does not enter the benchmark until one
+appears. Availability and pricing are refreshed at activation time rather than recorded here, because both move
+faster than this document is reviewed.
+
+### 2.1.4 Activation condition
+
+**Not earned now, and the reason is specific rather than general caution.** PR #233 made arriving image bytes an
+input operation: `build-ardwell-roe-knowledge-pack.mjs --assets <dir>` ingests, validates, hashes and binds bytes to
+their planned asset IDs from whichever governed source the owner authorises. The benchmark therefore already has a
+working path to its bytes, and a benchmark that can be run is not a consumer for building a second way to run it.
+
+This activates when **either**:
+
+- a real project records missing publishable imagery as the measured limiting factor on its visual result — the
+  §2.1 condition, unchanged; **or**
+- the governed input path is shown insufficient for the Ardwell & Roe floor, meaning bytes cannot be obtained that
+  way rather than merely that generating them in-repository would be more convenient.
+
+Until then the correct state is the one recorded now: contract placed, benchmark defined, candidates registered,
+nothing implemented. Generated imagery is also explicitly **not** an answer to the Phase 4D component-vocabulary
+finding. A build whose defect is a repeated pill button still has that defect behind a better photograph, and visual
+maturity is not claimed because the assets improved.
+
 ---
 
 # 3. Phase 4.3 / new Phase 4.4 slice — production application capability breadth
@@ -642,6 +756,65 @@ If the incident cannot yet be reproduced, keep the diagnosis and proposed change
 
 A post-launch agent uses the same capability/grant/environment boundaries as a build agent. Production changes remain approval-gated.
 
+## 11.1 ProductBehaviourEvidence — the return path
+
+The maintenance workflows above already assume a signal to react to, and one class of signal has no contract: **what
+real users did.** The factory can specify, build, review and release a product, and has no way to learn from what
+happened next. Errors and performance have monitoring; behaviour has nothing. That is the gap, and it is a gap in the
+*return* direction rather than a missing feature — `config/modules.json` already ships a provider-neutral `analytics`
+module that instruments a generated app, and §6.2 of `docs/BEST_IN_CLASS_CAPABILITIES.md` already plans controlled
+experiments. Neither of those brings anything back to the factory.
+
+`ProductBehaviourEvidence` is the smallest thing that closes it: a bounded, summarised, provider-neutral record,
+diagnosed against decisions the factory actually made. It extends the existing evidence family — the same discipline
+as `rendered-evidence`, where a claim names its subject, build and environment or is refused — rather than starting a
+second analytics authority.
+
+**What it may carry:** user journey paths; funnel and drop-off; dead clicks; rage clicks; navigation backtracking;
+repeated failed interactions; form abandonment; device and viewport distribution; Core Web Vitals field data where the
+product collects it; and session-replay *references* where that capability is separately adopted.
+
+**What it must carry, or be refused:**
+
+- the released revision and environment. Behaviour evidence about an unnamed build is the "proof of proof" failure the
+  roadmap's durable guardrails already refuse for every other kind of evidence;
+- the approved journey, IA node or composition decision each signal is diagnosed against, so a finding lands on
+  something the factory decided rather than floating free;
+- **sample size, observation frequency and confidence, all three.** An insufficient sample stays insufficient. It is
+  never summarised into a confident sentence, and "we only saw four sessions" is the finding;
+- an explicit correlation-not-causation marker. Behaviour evidence is a reason to investigate, never a proof of cause.
+
+**What it may never do.** Analytics cannot silently redefine the ProductSpec, the approved journeys or the business
+goal. A finding proposes a candidate change through the ordinary review path, or it does nothing. A metric that moved
+is not permission to change what the product is for.
+
+**Privacy is a capture-time property, not a reporting filter.** Masking is on by default and fails closed; form
+inputs, credentials, payment details and personal data are excluded at capture rather than filtered at read. Raw
+session replay is never pumped wholesale into a model: a replay is reduced to a bounded friction signal with a count
+and a reference, and the reference is what a *person* opens. Session replay is therefore recorded as a separate
+capability in `config/capability-providers.json` with a stricter contract, so adopting behaviour evidence cannot
+quietly enable recording.
+
+**The loop this is for:**
+
+`release -> behaviour evidence -> diagnosis against approved journeys/IA/composition -> candidate improvement ->
+preview/test -> optional experiment -> independent review -> promote or revert -> compound learning only after
+repeated evidence`
+
+The last clause is the one that matters most and is easiest to lose. One product's evidence is one product's
+evidence. A finding becomes a factory-level lesson only after it recurs across materially different projects — the
+same rule the roadmap already applies to the Phase 4D convergence hypothesis, which one business was explicitly not
+allowed to settle.
+
+PostHog is registered as a candidate implementation adapter for the evidence half. It is not the contract, and its
+event vocabulary must never become one: a finding that can only be expressed in one vendor's terms is a finding the
+factory does not own.
+
+**Activation condition.** A real product must be released and running against a named accepted revision. Outcome D in
+`docs/ROADMAP.md` — accepted build to release — has to close first, because there is currently no released product for
+anything to be evidence about. Building the return path before there is a release to return from would be a contract
+with no producer and no consumer.
+
 ---
 
 # 12. Later optional parity — generated applications as agent-accessible products
@@ -670,6 +843,13 @@ Do not prioritize this before the core build/edit/deploy/integration experience 
 | Research-agent public-web execution | Phase 5 after public-egress proof |
 | Drag/reorder/component swap/responsive visual editing | Phase 4B/4D |
 | Provenance-aware generated visual-asset lane | Phase 4D/4.3, only when corpus evidence shows missing publishable assets limit quality |
+| `AssetCandidate` + media provider benchmark (§2.1.1–2.1.4) | Phase 4D/4.3 with the lane above; the governed input path already supplies benchmark bytes, so this is not currently earned |
+| Vector/SVG generation as a distinct capability | With the lane above; the deterministic icon and typographic routes come first |
+| Image editing, extension and background treatment | After raster; the deterministic Sharp crop candidates serve most of what looks like an editing need |
+| Generated video | Later optional; only when an approved ArtDirectionPlan pulls it and every web-delivery control is enforceable |
+| Governed structured web extraction adapter | Phase 4.3/5; only if a real project's ingestion fails on the existing crawler |
+| `ProductBehaviourEvidence` return path (§11.1) | Phase 7/8, after Outcome D closes and a real product is released |
+| Session replay reduced to friction signals | Phase 7/8, after behaviour evidence has produced a finding it cannot diagnose |
 | CMS editing surface + content operations | Phase 4.3 |
 | Localization workflow | Phase 4.3 |
 | Existing-product baseline, diagnosis and improvement contract | Phase 4.3 |

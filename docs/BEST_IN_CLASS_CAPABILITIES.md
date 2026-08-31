@@ -653,6 +653,10 @@ but their implementation detail stays in the authority that can actually consume
 | Privacy-safe deterministic scenario-data factory | **9.0/10** | `docs/PRODUCTION_COMPLETENESS.md` Phase 6; first consumer should be complex/stateful acceptance that currently needs hand-written fixtures |
 | Owner-suggestion resistance — a suggested solution is a hypothesis, not a requirement | **9.6/10** | `AGENTS.md` principle 24 and the escalation policy in `docs/PRODUCT.md`; the routing half is already held executably by three cases in `config/agent-routing-benchmarks.json`, the behavioural benchmark is stage E of the outcome-first programme in `docs/ROADMAP.md` |
 | Structural composition quality — a valid `PageSpec` is not a good layout | **9.4/10** | `docs/COMPOSITION.md`; judged by the existing `ia-critic`/`ux-critic`, with deterministic structural lint activating only when a real composition records a defect those two missed |
+| `ProductBehaviourEvidence` — the factory learns nothing from a released product | **9.3/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §11.1; activates after Outcome D closes and a real product is released. The build direction is instrumented; the return direction does not exist |
+| `AssetCandidate` — a generated asset with cost, provenance and a critique | **8.8/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §2.1.1; the pipeline exists either side of it. Not earned while the governed input path supplies benchmark bytes |
+| Vector output as a capability rather than a format option | **8.5/10** | `docs/VISUAL_EXCELLENCE.md` §5; editability is the measurement, and the icon and typographic routes come first |
+| Governed structured web extraction | **7.5/10** | `docs/CONTENT_INTELLIGENCE.md`; only if a real project's ingestion fails on the existing crawler, and only if a candidate beats the browser tooling already registered |
 
 These do **not** create seven new programmes. They extend existing contracts and gates. No new package,
 model, connector or schema is justified merely by this list; the first real consumer decides the
@@ -691,7 +695,25 @@ Do **not** adopt these by default merely because they appeared in research:
 - a per-industry layout or template catalogue derived from category conventions; a convention is evidence for a composition decision, never a layout the factory installs;
 - a second questionnaire, intake or owner-decision system beside `questionnaires/`, the Build Contract and `docs/PRODUCT.md`;
 - another design authority — Garden's `web-design-engineer` included — on top of Design Intelligence, UI UX Pro Max, Impeccable and the existing art-direction, design-system, composition and critic roles, unless a benchmark names the specific missing mechanism;
-- CrewAI, LangChain, Dify or any further multi-agent control plane; the existing control plane is already ahead of the execution plane.
+- CrewAI, LangChain, Dify or any further multi-agent control plane; the existing control plane is already ahead of the execution plane;
+- an image, vector, editing or video provider inside `config/provider-profiles.json`; that registry is model
+  execution, and `modelId`, `maxOutputTokens`, `structuredOutput` and `eligibleRoles` describe nothing about a
+  bitmap. `config/capability-providers.json` is the separate home, and it adopts nothing;
+- one media interface spanning raster, vector, editing and video; each has a genuinely different contract, and a
+  shared shape wide enough to hold all four would constrain none of them;
+- a typography-in-image specialist while the corpus recipes forbid legible text in every photograph;
+- a second cost system, budget or currency for non-token spend; `usage.costGbp` and `maxCostGbp` already work in
+  money, and `docs/CREDIT-EFFICIENCY.md` records the one additive field that would finish the job;
+- Firecrawl, or any hosted crawler, as an ingestion authority rather than one execution backend behind
+  `normalizeWebsite`;
+- PostHog's event vocabulary as the product-behaviour contract; the adapter may be evaluated, the contract stays
+  App Builder's;
+- raw session replay as model context, or a replay capability enabled as a side effect of adopting behaviour
+  evidence;
+- generated video added to widen the media list rather than because an approved ArtDirectionPlan pulled it;
+- maps, geocoding, third-party brand/logo lookup, speech and 3D generation as registered capabilities; they were
+  considered with this group and left out, because none has a consumer and a registry of things nobody needs is a
+  shopping list.
 
 ## 10. Priority bands
 

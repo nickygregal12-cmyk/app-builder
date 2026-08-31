@@ -4,7 +4,7 @@
   "caseId": "ardwell-roe",
   "businessReality": "fictional",
   "description": "The asset specification for the Ardwell & Roe visual-ceiling benchmark. This is a PLAN, not an inventory: `bytes: absent` means the file does not exist yet. Nothing here claims an asset the factory holds. The floor below is what a run must satisfy before it may be called an ideal-input baseline, and tooling/lib/benchmark-asset-readiness.mjs is what enforces it.",
-  "providerNeutral": "No image provider is named here or anywhere in this repository. The requirement is governed synthetic bytes with explicit provenance and publication permission; where they are produced is not the factory's business, and switching source must never require a code change.",
+  "providerNeutral": "No image provider is named in this corpus, and a test enforces it over every file in this directory. The requirement is governed synthetic bytes with explicit provenance and publication permission; where they are produced is not the factory's business, and switching source must never require a code change. Provider candidates for a benchmark that has not been earned are recorded separately in config/capability-providers.json and are not part of this plan's contract.",
   "floor": {
     "requiredAssetsPresent": "all",
     "minimumProjectsWithPrimary": 4,

@@ -290,6 +290,9 @@ The SPA renderer is valid for authenticated/stateful applications; one crawlable
 | An owner statement's classification changes what the factory should do with it | Extend the Build Contract with owner-input semantics |
 | A structurally weak composition passes every existing gate | Add the composition gate and the StructuralLint rules that would have caught it |
 | A frozen IA benchmark case exists that the planned skill cannot answer | Build the `information-architecture` skill against it |
+| A real project's visual result is measurably limited by missing publishable imagery, or the governed input path cannot meet the Ardwell & Roe asset floor | Implement the smallest `AssetCandidate` lane and run the §2.1.3 provider benchmark per task class |
+| A real project's ingestion fails on the existing crawler — client-rendered page, linked PDF, unrecoverable structure | Evaluate a structured extraction backend behind `normalizeWebsite`, against the browser tooling already registered |
+| A real product is released against a named accepted revision | Build the `ProductBehaviourEvidence` return path so the factory can learn from what users did |
 ## EXPLICITLY NOT NOW
 
 - another NBM visual/CSS loop or pre-evidence Presentation Registry redesign;
@@ -299,7 +302,11 @@ The SPA renderer is valid for authenticated/stateful applications; one crawlable
 - another orchestration framework, more roles/providers merely because they exist, or broad runtime
   promotion before product proof;
 - FactoryService, SQLite/event-ledger, project-type or whole-Console rewrites based on size/taste;
-- a full typed-error migration, tiny-corpus intelligence dashboard or whole Predictor implementation.
+- a full typed-error migration, tiny-corpus intelligence dashboard or whole Predictor implementation;
+- an image, vector, editing or video generation lane, a hosted crawler, or a behaviour-analytics adapter. Contracts,
+  benchmarks and provider candidates are placed in `config/capability-providers.json` and the authorities it names,
+  and every one of them is deferred with a revival condition above. Product proof outranks provider shopping: a
+  capability is implemented when a benchmark or a real project has created the consumer, not when the API looks good.
 These may be valuable later. They are not earned now.
 ## DURABLE GUARDRAILS
 

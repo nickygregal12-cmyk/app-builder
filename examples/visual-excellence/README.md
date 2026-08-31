@@ -68,9 +68,16 @@ which assets are missing.
 
 The plan and the recipes exist so that generating the bytes is a mechanical
 step for whichever governed image source the owner authorises. **No provider is
-named anywhere in this repository**, and nothing here should ever name one: the
-factory's requirement is *governed synthetic bytes with explicit provenance and
-publication permission*, and where they come from is not its business.
+named anywhere in this corpus**, and nothing here should ever name one — a test
+enforces it over every file in this directory. The factory's requirement is
+*governed synthetic bytes with explicit provenance and publication permission*,
+and where they come from is not its business.
+
+Provider *candidates*, for a benchmark that has not been earned and does not run,
+are recorded once in `config/capability-providers.json` under the ordinary
+registration-is-not-adoption rules. That is a separate question from this one:
+this directory states what the bytes must be, and nothing here may ever depend on
+who produced them.
 
 ### The ingestion protocol
 

@@ -27,6 +27,8 @@ import { assessBenchmarkAssetReadiness } from './lib/benchmark-asset-readiness.m
 import { classifyCandidateTruthReadiness } from './lib/candidate-truth-readiness.mjs';
 import { validateContract } from '../packages/contracts/src/index.js';
 import { writeVisualReviewPacket } from './lib/visual-review-report.mjs';
+import { FactoryStore } from '../apps/service/src/store.js';
+import { FactoryService } from '../apps/service/src/factory-service.js';
 
 const ROOT = 'examples/visual-excellence';
 const read = (file) => JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
@@ -213,6 +215,59 @@ test('a reviewer opening this benchmark is told the business does not exist', ()
     const html = fs.readFileSync(path.join(packet.root, 'index.html'), 'utf8');
     assert.match(html, /Fictional benchmark business/i);
     assert.match(html, /may be published as a real business/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/**
+ * What the factory does with ideal input, measured before the photographs exist.
+ *
+ * This is not the visual ceiling and must not be read as it — that measurement
+ * needs the imagery and is deliberately not frozen yet. But composition happens
+ * long before a browser does, and the gaps it exposes are real now: an approved
+ * surface that composes to nothing is missing capability, not missing pictures,
+ * and no photograph would fill it.
+ *
+ * The numbers are asserted rather than printed so that closing a gap is a
+ * deliberate act with a visible diff, and so that losing one cannot happen
+ * quietly.
+ */
+test('the benchmark composes, and what it cannot yet fill is recorded rather than discovered later', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-excellence-compose-'));
+  try {
+    const store = new FactoryStore({ stateRoot: path.join(root, 'state') });
+    const service = new FactoryService({ store, workspacesRoot: path.join(root, 'workspaces'), factoryRoot: process.cwd() });
+    const { project } = await service.replayIntakeBundle(BUNDLE, { knowledgePack: PACK });
+    const full = service.requireProject(project.id);
+    const { composition } = service.frozenProductTruth(project.id);
+
+    // Every approved surface reaches the composition as a page. A surface the
+    // owner approved and the factory silently dropped would be the worse
+    // failure, because nothing downstream would ever mention it.
+    assert.equal(full.manifest.majorSurfaces.length, 7);
+    assert.ok(composition.pages.length >= full.manifest.majorSurfaces.length,
+      `${composition.pages.length} page(s) for ${full.manifest.majorSurfaces.length} approved surface(s)`);
+
+    // The rich truth survives into the composition rather than being ingested
+    // and then dropped between the pack and the page.
+    const composed = JSON.stringify(composition);
+    assert.ok(composed.includes(PACK.companyProfile.projects[0].name), 'a project name did not survive composition');
+    assert.ok(composed.includes(PACK.companyProfile.people[0].name), 'a person did not survive composition');
+    assert.ok(composed.includes(PACK.companyProfile.accreditations[0].name), 'an award did not survive composition');
+
+    // The honest gaps, named. Two are the asset gap and will close when the
+    // bytes arrive. Three are capability: Studio, Expertise and Approach are
+    // approved surfaces the composer has no vocabulary to fill, and it says so
+    // rather than emitting a heading over nothing and calling it a page.
+    const warnings = composition.warnings.map(String).sort();
+    assert.deepEqual(warnings, [
+      'declared-proof-missing:project photos',
+      'empty-declared-surface:Approach',
+      'empty-declared-surface:Expertise',
+      'empty-declared-surface:Studio',
+      'no-publishable-imagery',
+    ], 'the benchmark\'s known gaps changed; close one deliberately or explain the new one');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

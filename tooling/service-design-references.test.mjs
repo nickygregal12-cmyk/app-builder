@@ -296,15 +296,20 @@ test('an avoided structural trait refuses a direction rather than generating one
       url: 'https://reference.example/quiet',
       preference: 'like',
       influence: 'strong',
-      disliked: ['indexed-rows'],
+      disliked: ['indexed-rows', 'asymmetric-composition'],
     }, { capture: { lookup: async () => [{ address: '93.184.216.34' }], launch: async () => browserStub() } });
     await setDesignReferenceApproval(service, project.id, reference.referenceId, { state: 'approved', approvedBy: 'owner' });
 
     // This project has no publishable photography, so the imagery-led direction
-    // was already refused. Refusing the indexed-rows direction as well leaves
-    // one, and one is not a choice — so the set is refused, and the refusal
-    // names the reference that caused it rather than reporting a shortage of
-    // directions the operator cannot explain.
+    // was already refused. Refusing the row-based directions and the asymmetric
+    // one as well leaves a single direction, and one is not a choice — so the
+    // set is refused, and the refusal names the reference that caused it rather
+    // than reporting a shortage of directions the operator cannot explain.
+    //
+    // Both traits are needed to reach one. `indexed-rows` alone used to be
+    // enough, and stopped being when `service-forward` gave an imagery-poor
+    // marketing site a fourth eligible direction — which is the registry doing
+    // its job, not this guarantee weakening.
     await assert.rejects(
       () => service.generateVisualCandidates(project.id, { createdBy: CREATOR }),
       (error) => {

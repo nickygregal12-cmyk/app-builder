@@ -24,7 +24,7 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-function loadBuild(dir) {
+export function loadBuild(dir) {
   const stateDir = path.join(dir, '.app-builder');
   const compositionPath = path.join(stateDir, 'composition.json');
   const projectPath = path.join(stateDir, 'project.json');
@@ -38,7 +38,26 @@ function loadBuild(dir) {
     // A promoted direction lives on the design record. A build with none signs
     // from the composition alone, which is the honest reading of a project that
     // never ran a candidate set.
-    direction: design?.visualDirection ?? null,
+    //
+    // The field is `visualDirectionId`, and this read `visualDirection` — which
+    // no record has ever carried. So `direction` was null for every build ever
+    // measured, `structuralSignature` fell back to the default dimensions, and
+    // the diagnostic reported "solid / panel / stacked / utility / neutral"
+    // uniformly over sets whose candidates demonstrably render an underlined
+    // ask, an editorial masthead and a serif voice. It then explained the
+    // reading it had produced — "no build in this set carries a promoted
+    // visual direction" — which was true of its own parse and not of the
+    // builds. An instrument whose null case looks exactly like the finding it
+    // exists to detect will report that finding forever.
+    //
+    // `structuralSignature` wants `.artDirection.dimensions`, which the design
+    // record already has; only the identity has to be renamed onto the shape
+    // it expects. Adapting here rather than in the signature keeps the shared
+    // definition of "structurally different" identical for the candidate-set
+    // gate that also uses it.
+    direction: design?.visualDirectionId
+      ? { id: design.visualDirectionId, artDirection: design.artDirection }
+      : null,
   });
 }
 

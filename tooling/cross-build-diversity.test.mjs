@@ -111,3 +111,56 @@ test('a set that did promote directions drops the caveat, because then the unifo
   assert.ok(!describeCrossBuildDiversity(report).some((line) => /No build in this set carries a promoted visual direction/.test(line)));
   assert.equal(report.signals.heroStrategy.commonest, 'editorial', 'a promoted direction is what the signature reads once one exists');
 });
+
+/**
+ * The bug that made the instrument agree with itself forever.
+ *
+ * Every test above builds its `direction` by hand, so none of them exercised
+ * the one place the value is *read* — and that read named `visualDirection`
+ * while every project record on disk carries `visualDirectionId`. The result
+ * was not a crash: `structuralSignature` fell back to the default dimensions,
+ * so the diagnostic reported "solid / panel / stacked / utility / neutral"
+ * uniformly, over candidate sets that demonstrably render an underlined ask,
+ * an editorial masthead and a serif voice. It then printed a confident
+ * explanation of the reading — "no build in this set carries a promoted visual
+ * direction" — which was true of its own parse and false of the builds.
+ *
+ * An instrument whose failure mode is indistinguishable from the finding it
+ * exists to detect will report that finding forever, so this reads a record
+ * shaped the way the generator actually writes one.
+ */
+test('the diagnostic reads the direction a real project record carries', async () => {
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const nodePath = await import('node:path');
+  const { loadBuild } = await import('./anti-template-diagnostic.mjs');
+
+  const dir = fs.mkdtempSync(nodePath.join(os.tmpdir(), 'anti-template-'));
+  const state = nodePath.join(dir, '.app-builder');
+  fs.mkdirSync(state, { recursive: true });
+  fs.writeFileSync(nodePath.join(state, 'composition.json'), JSON.stringify(composition(HOME)));
+  // The field names are the generator's, not this test's invention: a composed
+  // design records the direction it resolved as `visualDirectionId`.
+  fs.writeFileSync(nodePath.join(state, 'project.json'), JSON.stringify({
+    composedDesign: {
+      patternId: 'public-marketing',
+      density: 'relaxed',
+      visualDirectionId: 'editorial-authority',
+      brand: { typography: { voice: 'humanist-sans' } },
+      artDirection: {
+        dimensions: { actionTreatment: 'underline', navigationFamily: 'editorial', typographyStrategy: 'editorial', gridFamily: 'editorial-rows' },
+        responsive: { mobileHero: 'copy-only', mobileSectionOrder: 'as-desktop', mobileDensity: 'as-desktop', mobileMotion: 'as-desktop' },
+      },
+    },
+  }));
+
+  const signature = loadBuild(dir);
+  fs.rmSync(dir, { recursive: true, force: true });
+
+  assert.ok(signature, 'a build with a composition and a project record must be readable');
+  assert.equal(signature.directionPromoted, true, 'a build carrying a direction id must be counted as carrying one');
+  assert.equal(signature.signals.actionTreatment, 'underline', 'the signature fell back to the default action family instead of reading the build');
+  assert.equal(signature.signals.navigationFamily, 'editorial');
+  assert.equal(signature.signals.typographyStrategy, 'editorial');
+  assert.equal(signature.signals.gridFamily, 'editorial-rows');
+});

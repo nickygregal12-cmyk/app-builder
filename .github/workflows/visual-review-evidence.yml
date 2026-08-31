@@ -7,6 +7,7 @@ on:
       - '.github/workflows/visual-review-evidence.yml'
       - 'tooling/visual-candidate-acceptance.mjs'
       - 'tooling/lib/visual-review-report.mjs'
+      - 'tooling/lib/candidate-portability.mjs'
       - 'apps/service/src/visual-candidates.js'
       - 'templates/react-vite-neutral/**'
       - 'config/visual-directions.json'
@@ -42,18 +43,30 @@ jobs:
     # research locations and three assets whose bytes never arrived, so there is
     # no pack to freeze, and inventing an empty one to look source-backed is
     # exactly what the candidate truth guard refuses.
+    #
+    # A case declares what applies to it rather than the lane assuming it. Two
+    # genuine businesses both want capture and both want their candidates proven
+    # portable, so today the flags agree — but a benchmark case joining this
+    # matrix will want an asset-readiness gate that means nothing for a real
+    # company, and a case that only wants a screenshot should not be made to
+    # claim more. Declaring per case is what stops the next entry being a copied
+    # job with one line changed.
     strategy:
       fail-fast: false
       matrix:
         include:
           - business: nbm
+            corpus: genuine-business
             bundle: examples/genuine-business/nbm-approved-intake.v1.json
             knowledge: examples/genuine-business/nbm-approved-knowledge.v1.json
             out: .app-builder/visual-review
+            portability: 'required'
           - business: mgb
+            corpus: genuine-business
             bundle: examples/genuine-business/mgb-approved-intake.v1.json
             knowledge: ''
             out: .app-builder/visual-review-mgb
+            portability: 'required'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -114,6 +127,37 @@ jobs:
             }
             console.log(`${report.business}: ${actual}`);
             for (const note of report.truthReadiness.notes) console.log(`  ${note}`);
+          ' '${{ matrix.out }}/report.json'
+
+      # Proven before anybody is asked to review, which is the whole point.
+      #
+      # The acceptance runner already refuses to capture a candidate that cannot
+      # build, so reaching this step means the repositories stood up. What is
+      # asserted here is that the evidence *says so* — a packet whose portability
+      # summary went missing would hand a reviewer the same pictures with the
+      # precondition silently dropped, and silence reads as fine.
+      - name: Assert candidate portability was proven and recorded
+        if: matrix.portability == 'required'
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const summary = report.portability;
+            if (!summary) {
+              console.error("The report carries no portability summary, so nothing proves these candidates are repositories anybody could ship.");
+              process.exit(1);
+            }
+            if (!summary.allPortable) {
+              console.error(`Only ${summary.portable}/${summary.total} candidate(s) are portable.`);
+              for (const shortfall of summary.shortfalls) console.error(`  ${shortfall}`);
+              process.exit(1);
+            }
+            console.log(`${report.business}: ${summary.portable}/${summary.total} candidate(s) portable, ${summary.cleanInstalls} clean install(s), ${summary.totalArtifactBytes} byte(s) shipped.`);
+            for (const candidate of report.candidates) {
+              const p = candidate.portability;
+              if (!p) continue;
+              console.log(`  ${candidate.candidateId}: ${p.artifact.fileCount} file(s), ${p.artifact.documentCount} document(s), renderer ${p.renderer.actual ?? "undeclared"} — ${p.factoryIndependence.detail}`);
+            }
           ' '${{ matrix.out }}/report.json'
 
       # The packet is the reviewer's surface, so it is what travels.

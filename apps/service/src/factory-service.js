@@ -9,7 +9,8 @@ import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
-import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, serveBuiltArtifact, verifyCandidate } from './visual-candidates.js';
+import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, serveBuiltArtifact, verifyCandidatePortability } from './visual-candidates.js';
+import { assertPortableForReview } from '../../../tooling/lib/candidate-portability.mjs';
 import { designReferenceInfluence } from './visual-references.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
@@ -1428,10 +1429,27 @@ export class FactoryService {
         workspace,
         compositionHash: build.composition.compositionHash,
         designSystemSpecHash: hashOf(spec),
+        // Which renderer actually produced this candidate. A direction changes
+        // presentation and never capability, so this is expected to be identical
+        // across the set — recorded per candidate precisely so that the
+        // expectation is checkable rather than assumed.
+        renderer: build.plan.template?.renderer ?? null,
       };
     });
 
-    const set = this.writeVisualCandidateSet(projectId, { ...setId, candidates });
+    // The set's renderer, agreed rather than declared. A candidate that came
+    // through a different renderer is not a variant of the product, and a
+    // comparison across the set would be comparing two different things.
+    const renderers = [...new Set(candidates.map((candidate) => candidate.renderer))];
+    if (renderers.length > 1) {
+      throw new Error(`Candidates in this set were built through different renderers (${renderers.join(', ')}). A visual direction changes presentation, not the renderer.`);
+    }
+
+    const set = this.writeVisualCandidateSet(projectId, {
+      ...setId,
+      frozenTruth: { ...setId.frozenTruth, renderer: renderers[0] ?? null },
+      candidates,
+    });
     await this.store.recordEvent(createEvent({
       projectId,
       type: 'visual.candidates.generated',
@@ -1500,10 +1518,22 @@ export class FactoryService {
     // transition it has already made.
     const pending = set.candidates.filter((candidate) => candidate.state === 'draft' && candidate.workspace);
     if (!pending.length) throw new Error(`Every candidate in set ${set.setId} has already been photographed.`);
-    installSharedDependencies(pending.map((candidate) => candidate.workspace));
+    const installs = installSharedDependencies(pending.map((candidate) => candidate.workspace));
     const captured = [];
+    const portabilityRecords = [];
     for (const candidate of pending) {
-      const dist = verifyCandidate(candidate.workspace);
+      // Proven before the picture is taken, and recorded beside it. A reviewer
+      // is about to be asked to judge this repository, and the questions that
+      // decide whether it is a product at all — does it build, does it ship
+      // anything, is it free of the factory — must be answered before the
+      // review rather than at promotion, which is after it.
+      const { dist, portability } = verifyCandidatePortability(candidate.workspace, {
+        candidateId: candidate.candidateId,
+        install: installs.get(candidate.workspace) ?? null,
+        renderer: candidate.renderer ?? null,
+        expectedRenderer: set.frozenTruth.renderer ?? null,
+      });
+      portabilityRecords.push(portability);
       const server = await serveBuiltArtifact(dist);
       try {
         const composition = JSON.parse(fs.readFileSync(path.join(candidate.workspace, '.app-builder/composition.json'), 'utf8'));
@@ -1541,11 +1571,16 @@ export class FactoryService {
           fs.writeFileSync(path.join(directory, captureFile(result.id)), result.bytes);
         }
         fs.writeFileSync(path.join(directory, 'evidence.json'), `${JSON.stringify(evidence, null, 2)}\n`);
-        captured.push(recordCandidateEvidence(candidate, { evidenceId: evidence.id, designLint }));
+        captured.push({ ...recordCandidateEvidence(candidate, { evidenceId: evidence.id, designLint }), portability });
       } finally {
         await server.close();
       }
     }
+
+    // Every candidate in the set, or the set is not reviewable. Three candidates
+    // of which one cannot build are not three candidates, and a comparison
+    // across them is not the comparison the reviewer was asked for.
+    assertPortableForReview(portabilityRecords);
 
     const byId = new Map(captured.map((candidate) => [candidate.candidateId, candidate]));
     const updated = this.writeVisualCandidateSet(projectId, {

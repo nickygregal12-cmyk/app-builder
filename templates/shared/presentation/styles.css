@@ -480,6 +480,54 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .panel-asymmetric > .panel-lead h3 { margin-bottom: 14px; font-size: var(--text-2xl) }
 .panel-asymmetric .panel-support { display: grid; gap: 12px; align-content: start }
 
+/* The stagger. -----------------------------------------------------------------
+   Asymmetry for a set of bare names, where the lead form would be a lie.
+
+   `.panel-lead` says "this one first". A business that supplied eight service
+   names and no descriptions has not said which comes first, and a page that
+   picks one publishes a hierarchy its own truth does not contain. So the widths
+   cycle by position over a six-column field: entry six is as wide as entry one,
+   nothing is elevated, and the set still refuses to read as the regular grid
+   every other direction produces.
+
+   The cycle is deliberately not an alternating pair, because two repeating
+   widths read as a rule rather than as a rhythm. */
+.plain-list.panel-staggered {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+  align-items: start;
+  list-style: none;
+  padding: 0;
+}
+.plain-list.panel-staggered > li { grid-column: span 2 }
+.plain-list.panel-staggered > li:nth-child(5n+1) { grid-column: span 4 }
+.plain-list.panel-staggered > li:nth-child(5n+4) { grid-column: span 3 }
+.plain-list.panel-staggered > li:nth-child(5n+5) { grid-column: span 3 }
+
+/* A register of names. The index is a real element, so it survives being read
+   without the stylesheet, and the row is a ruled line rather than a box. */
+.plain-list.panel-named-register { list-style: none; padding: 0; display: grid; gap: 0 }
+.plain-list.panel-named-register > li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(14px, 2vw, 28px);
+  align-items: baseline;
+  padding: clamp(12px, 1.4vw, 18px) 0;
+  border-top: 1px solid var(--color-border);
+}
+.plain-list.panel-named-register > li:last-child { border-bottom: 1px solid var(--color-border) }
+
+/* One column on a phone: a six-column stagger at 390px is six illegible
+   slivers, and the order the grammar already has does its job there. */
+@media (max-width: 640px) {
+  .plain-list.panel-staggered { grid-template-columns: minmax(0, 1fr) }
+  .plain-list.panel-staggered > li,
+  .plain-list.panel-staggered > li:nth-child(5n+1),
+  .plain-list.panel-staggered > li:nth-child(5n+4),
+  .plain-list.panel-staggered > li:nth-child(5n+5) { grid-column: auto }
+}
+
 /* A register is a register on every section, not only the one the direction
    was designed around. Two reviews called the secondary content sparse and
    repetitive, and a schedule that reverts to cards for locations and contact

@@ -60,6 +60,10 @@ for (const definition of canonical) {
     lintScope: false,
   };
   let durationMs = 0;
+  // Declared with the case, not with the install, because the report is written
+  // outside the `generate` branch: a case that never generated still reports,
+  // and it reports a null identity rather than crashing the benchmark.
+  let identity = null;
 
   if (gates.generate) {
     const packagePath = path.join(directory, 'package.json');
@@ -76,7 +80,6 @@ for (const definition of canonical) {
     // `npm install` did all three implicitly and proved none of them: it
     // re-resolves from ranges every time, so a green benchmark said the
     // generated project installs, never that it installs the same thing twice.
-    let identity = null;
     let install = { ok: false, durationMs: 0 };
     try {
       const lock = resolveLockfile(directory);

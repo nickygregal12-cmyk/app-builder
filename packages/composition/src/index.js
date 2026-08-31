@@ -137,9 +137,49 @@ function assetCrop(asset, role) {
   return list(asset.variants).find((variant) => variant.role === role) ?? null;
 }
 
+/**
+ * What a photograph is for, where the pack knows.
+ *
+ * An asset may declare the role it was produced for. Most packs do not — a
+ * company that uploaded a folder of photographs has told the factory nothing
+ * about which is which — so every rule below falls through to the previous
+ * behaviour when the field is absent, and a pack without roles composes exactly
+ * what it composed before.
+ *
+ * Where the roles *are* known, ignoring them is not neutral. The Ardwell & Roe
+ * benchmark supplied a wordmark, a social card, twelve project frames and two
+ * founder portraits; the opening picked the wordmark because it was first in
+ * the pack, and "Recent work" showed the founders' faces and the social card
+ * alongside the buildings. An independent reviewer scored imagery-suitability
+ * zero and asked for project photography that was already there.
+ */
+const NOT_WORK_ROLES = Object.freeze(['brand', 'social', 'portrait']);
+const LEAD_ROLES = Object.freeze(['hero', 'project-primary']);
+
+function assetRole(asset) {
+  return typeof asset?.role === 'string' ? asset.role : null;
+}
+
+/** Imagery of the work itself: never the mark, the share card or a face. */
+function workAssets(pack, assetDecisions) {
+  const assets = publishableAssets(pack, assetDecisions);
+  const roled = assets.filter((asset) => assetRole(asset));
+  if (!roled.length) return assets;
+  return assets.filter((asset) => !NOT_WORK_ROLES.includes(assetRole(asset)));
+}
+
 function leadAsset(pack, assetDecisions) {
   const assets = publishableAssets(pack, assetDecisions);
-  return assets.find((asset) => assetCrop(asset, 'hero-16x9')) ?? assets[0] ?? null;
+  const work = workAssets(pack, assetDecisions);
+  // A declared lead frame first, then anything wide enough to open a page, then
+  // any picture of the work. `assets[0]` remains the last resort, because a pack
+  // that says nothing about its assets still has to open with something.
+  return work.find((asset) => LEAD_ROLES.includes(assetRole(asset)) && assetCrop(asset, 'hero-16x9'))
+    ?? work.find((asset) => LEAD_ROLES.includes(assetRole(asset)))
+    ?? work.find((asset) => assetCrop(asset, 'hero-16x9'))
+    ?? work[0]
+    ?? assets[0]
+    ?? null;
 }
 
 function serviceAreaBinding(pack, manifest) {
@@ -560,7 +600,8 @@ function socialWorkActions(pack, manifest) {
 
 function gallerySection(pageId, pack, manifest, assetDecisions) {
   const lead = leadAsset(pack, assetDecisions);
-  const assets = publishableAssets(pack, assetDecisions).filter((asset) => asset.id !== lead?.id);
+  // The work, not the whole asset inventory.
+  const assets = workAssets(pack, assetDecisions).filter((asset) => asset.id !== lead?.id);
   const actions = socialWorkActions(pack, manifest);
   if (!assets.length && !actions.length) return null;
   return section(`${pageId}-gallery`, 'gallery', 'Show approved work and point to where the rest of it lives', [

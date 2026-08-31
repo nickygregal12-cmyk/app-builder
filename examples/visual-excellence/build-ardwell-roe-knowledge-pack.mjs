@@ -310,9 +310,28 @@ const base = {
   // to record here. Listing them would require inventing a hash for a file that
   // does not exist, which is the one thing a pack must never do. They stay
   // `asset-right-without-bytes` on the manifest until the bytes arrive.
+  // The document sources always, and an asset source once its bytes exist.
+  //
+  // This used to be the document sources alone, with a comment explaining that
+  // the wordmark and photography sources carry rights rather than bytes and
+  // that inventing a hash for a file that does not exist is the one thing a
+  // pack must never do. Both halves were right; what was missing was the case
+  // where the bytes arrive. Ingesting them produced a pack whose assets
+  // referenced two sources it did not contain, and validation refused it —
+  // correctly, and only at the moment somebody first supplied the images.
+  //
+  // The hash is still never invented. An asset source is hashed over the
+  // content hashes of the assets actually ingested against it, sorted so the
+  // pack stays byte-stable, so it is derived from real bytes and changes when
+  // they do.
   sources: bundle.projectManifest.inputs.sources
-    .filter((source) => documentText.has(source.id))
-    .map((source) => ({ ...source, contentHash: sha256(documentText.get(source.id)) })),
+    .filter((source) => documentText.has(source.id) || ingestion.assets.some((asset) => asset.sourceId === source.id))
+    .map((source) => ({
+      ...source,
+      contentHash: documentText.has(source.id)
+        ? sha256(documentText.get(source.id))
+        : sha256(ingestion.assets.filter((asset) => asset.sourceId === source.id).map((asset) => asset.contentHash).sort().join('\n')),
+    })),
   facts,
   companyProfile,
   brand: {

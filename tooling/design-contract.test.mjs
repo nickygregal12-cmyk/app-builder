@@ -241,3 +241,31 @@ test('the headline actually multiplies by the fit', () => {
   const tokens = fs.readFileSync(new URL('../templates/shared/presentation/tokens.css', import.meta.url), 'utf8');
   assert.match(tokens, /--display-fit:\s*1;/, 'a project compiled before this existed must default to the full step');
 });
+
+/**
+ * One declaration per token.
+ *
+ * `--color-scrim` was declared twice in the same block: once as the RGB triplet
+ * the immersive hero composes its gradient from, and once — added later, for the
+ * disclosed navigation panel — as a complete colour. The second won, so
+ * `rgb(var(--color-scrim) / 24%)` became `rgb(rgb(...) / 24%)`, the gradient was
+ * invalid, and the hero lost the scrim its white text depends on. Nothing
+ * failed: both lines are legal custom-property declarations, both resolve, and
+ * DesignLint's rule is about colour literals rather than about duplication.
+ *
+ * The token file is one block of declarations, so a repeated name is always a
+ * mistake rather than a cascade someone intended.
+ */
+test('no token is declared twice in the token source', () => {
+  const tokens = fs.readFileSync(new URL('../templates/shared/presentation/tokens.css', import.meta.url), 'utf8');
+  const seen = new Map();
+  for (const match of tokens.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gm)) {
+    seen.set(match[1], (seen.get(match[1]) ?? 0) + 1);
+  }
+  const repeated = [...seen.entries()].filter(([, count]) => count > 1).map(([name]) => name);
+  assert.deepEqual(
+    repeated,
+    [],
+    `${repeated.join(', ')} declared more than once. The later declaration silently wins, and a consumer written against the earlier one breaks without failing.`,
+  );
+});

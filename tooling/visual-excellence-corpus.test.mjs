@@ -160,14 +160,29 @@ test('an asset plan is a plan, and never claims a file it does not have', () => 
     'the benchmark must require governed synthetic bytes, not a named provider');
 });
 
+/**
+ * The bytes arrived on 2026-08-31, so this now asserts the other half.
+ *
+ * It used to read the committed pack and assert `ready: false`, which was true
+ * of a pack with no assets in it and stopped being a statement about the gate
+ * the moment one had them. What it exists to protect is the refusal itself —
+ * that an image-poor run cannot be labelled an ideal-input baseline — so that is
+ * asserted directly, against a pack short of the floor, and the committed pack
+ * is asserted to be over it.
+ */
 test('the readiness gate refuses to call an image-poor run an ideal-input baseline', () => {
+  const poor = assessBenchmarkAssetReadiness({ plan: PLAN, presentAssetIds: [] });
+  assert.equal(poor.ready, false, 'a run with no bytes may never be frozen as a baseline');
+  assert.equal(poor.baselineFreezable, false);
+  assert.equal(poor.runLabel, 'asset-incomplete-development-run');
+  assert.ok(poor.missingRequired.length > 0, 'the refusal must name what is missing');
+  assert.match(poor.reason, /measures the asset gap/);
+
+  // And the committed pack now clears the floor, which is what changed.
   const present = PACK.assets.map((asset) => asset.id);
   const readiness = assessBenchmarkAssetReadiness({ plan: PLAN, presentAssetIds: present });
-  assert.equal(readiness.ready, false, 'no bytes have been ingested, so nothing may be frozen');
-  assert.equal(readiness.baselineFreezable, false);
-  assert.equal(readiness.runLabel, 'asset-incomplete-development-run');
-  assert.ok(readiness.missingRequired.length > 0, 'the refusal must name what is missing');
-  assert.match(readiness.reason, /measures the asset gap/);
+  assert.equal(readiness.ready, true, `the ingested set should meet the floor: ${readiness.shortfalls.join(' ')}`);
+  assert.equal(readiness.runLabel, 'ideal-input-visual-ceiling-baseline');
 });
 
 test('the gate passes once the floor is met, and only then', () => {
@@ -270,11 +285,16 @@ test('the benchmark composes, and what it cannot yet fill is recorded rather tha
     // says which kind of empty this is: the composer has no purpose for the name,
     // rather than a purpose that came back empty-handed. Inventing stages to fill
     // the page would be the one genuinely unacceptable fix.
+    // `declared-proof-missing:project photos` and `no-publishable-imagery` were
+    // here until 2026-08-31 and are closed deliberately: seventeen governed
+    // synthetic frames were produced against the asset plan and ingested, so the
+    // pack now carries the photography it always declared rights to.
+    //
+    // Approach remains, and remains honestly. Inventing stages to fill it is
+    // still the one genuinely unacceptable fix.
     const warnings = composition.warnings.map(String).sort();
     assert.deepEqual(warnings, [
-      'declared-proof-missing:project photos',
       'empty-declared-surface:Approach',
-      'no-publishable-imagery',
       'unrecognised-surface-purpose:Approach',
     ], 'the benchmark\'s known gaps changed; close one deliberately or explain the new one');
   } finally {

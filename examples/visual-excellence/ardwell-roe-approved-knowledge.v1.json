@@ -69,6 +69,36 @@
       "publishUseAllowed": true,
       "recordedAt": "2026-08-31T00:00:00.000Z",
       "contentHash": "ac97ff65078971cc4f71aedd02eb52319873c009434fb5669fb31af845ee79e2"
+    },
+    {
+      "id": "ardwell-roe-wordmark",
+      "kind": "logo",
+      "label": "Ardwell & Roe wordmark",
+      "provenance": "generated",
+      "purpose": "The studio wordmark. Rights are granted for benchmark publication; the bytes are produced separately by whichever governed image source the owner authorises, against the brief in ardwell-roe-asset-recipes.v1.md. Until they exist this is a right without a file, and the asset plan is what says so.",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "primary-brand",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "recordedAt": "2026-08-31T00:00:00.000Z",
+      "contentHash": "03fe1eed618049ca57c2d02804888afc13f845b29de023532d9fc9565ccc3b26"
+    },
+    {
+      "id": "ardwell-roe-photography",
+      "kind": "image",
+      "label": "Ardwell & Roe project and studio photography set",
+      "provenance": "generated",
+      "purpose": "The photographic set the benchmark exists to test: project hero and supporting frames, material details, and studio portraits. Fully cleared for benchmark publication. The bytes are generated separately against the recipes; the asset plan tracks which have arrived.",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "recordedAt": "2026-08-31T00:00:00.000Z",
+      "contentHash": "7ff3f4f59d97797460830595c5b6c198ed298aff51e1a7299017715e1b956474"
     }
   ],
   "facts": [
@@ -742,7 +772,433 @@
     "referenceOnlyAssetIds": [],
     "generatedBrandClaims": []
   },
-  "assets": [],
+  "assets": [
+    {
+      "id": "ar-brand-wordmark",
+      "sourceId": "ardwell-roe-wordmark",
+      "kind": "image",
+      "contentHash": "ca45057dfc133d318e8d3635a86147bbb59e29cfce780a8d91b6a446782f698d",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "primary-brand",
+      "role": "brand",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 1400,
+      "height": 1400,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 1400,
+          "height": 1400,
+          "uri": "ar-brand-wordmark.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-home-hero-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "10ba6fed7ea9d7258b92cc68758e3944040bba6a9c07fb56694157f9b3b7ad64",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "hero",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1152,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1152,
+          "uri": "ar-home-hero-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-social-og",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "e3d71b77cd6aa5b8262c0e9de8108a0f7001fb724608795950b7962a2aa38580",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "social",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 2048,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 2048,
+          "uri": "ar-social-og.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-cargo-house-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "a8d0438cb91b77e3d2ac4fd50d62da1e2d3c6161fee1fef6985861ba4c5b239c",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-primary",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-cargo-house-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-cargo-house-02",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "2c0611f55c249139fa4048e3ec0fbcfd6678972d8c81032158fa71dde314dee4",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-supporting",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-cargo-house-02.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-ashcombe-barn-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "28a26042659ada1668555bb33cf24f5969ee7cf7fd87544509b7cba2a457986c",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-primary",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-ashcombe-barn-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-ashcombe-barn-02",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "33b17e7d601638a6ac311b68371f840826fbef1bd4c4f0e254f7c78f45e63e34",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-supporting",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-ashcombe-barn-02.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-bottle-works-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "3ed4ae44b9d11ab69098e57db1ba20e358c9a6ae41b07df5864443e8e7387b9c",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-primary",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-bottle-works-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-bottle-works-02",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "54bf2d7c5bc34a1f8e223a9c28381c2be35c059580f71915145b64f2841459d4",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-supporting",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-bottle-works-02.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-quarry-lane-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "198bbf6bbe89220711c0d66b1aad69486032f66ad55ada7bd0123906540c9986",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-primary",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-quarry-lane-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-quarry-lane-02",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "03106107a185fe797ea7815de1a965e690c9cb093718a16192a8ee0c6c4539f4",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-supporting",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-quarry-lane-02.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-tidewell-studio-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "f6bb63721a388bd195674da3736b965bda16f0d743afad71ff8e01efbb498b79",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-primary",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-tidewell-studio-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-tidewell-studio-02",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "fcc69bdeb3a59579ce7ea3095cc17f4365ad7c9b6acb55b3bd1745366ef4eb5a",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-supporting",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-tidewell-studio-02.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-pilgrim-street-01",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "6f0629ce48d1851c67e0cbfdb3e4188acddb80306603b1fc5dbfb7801912a058",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-primary",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-pilgrim-street-01.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-project-pilgrim-street-02",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "f58fe60445f15fc8f82e6d2de60d9b1cad9e82075a8a702c659915a6fa5ba5ed",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "project-supporting",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 2048,
+      "height": 1536,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 2048,
+          "height": 1536,
+          "uri": "ar-project-pilgrim-street-02.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-portrait-nella-ardwell",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "e61cf75f1568513a1a11a40c020f4080670716eb833de168f9500aa20a926001",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "portrait",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 1536,
+      "height": 2048,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 1536,
+          "height": 2048,
+          "uri": "ar-portrait-nella-ardwell.png"
+        }
+      ]
+    },
+    {
+      "id": "ar-portrait-tomas-roe",
+      "sourceId": "ardwell-roe-photography",
+      "kind": "image",
+      "contentHash": "888f6024347e4df2f40da52e46d7b049c7c0f032e88d1eabc06e7407898ba80a",
+      "provenance": "generated",
+      "rightsStatus": "approved-for-use",
+      "assetStatus": "approved",
+      "sourceRole": "content",
+      "role": "portrait",
+      "sourceChannel": "upload",
+      "instructionAuthority": "none",
+      "publishUseAllowed": true,
+      "width": 1536,
+      "height": 2048,
+      "variants": [
+        {
+          "role": "original",
+          "format": "png",
+          "width": 1536,
+          "height": 2048,
+          "uri": "ar-portrait-tomas-roe.png"
+        }
+      ]
+    }
+  ],
   "content": [
     {
       "id": "content-ardwell-roe-studio-brief",
@@ -859,5 +1315,5 @@
   "requirements": [],
   "research": [],
   "generatedCopy": [],
-  "packHash": "78009df094259040eb87fd83832d667ce430a8d187ca04697f89ba8c5b2942f1"
+  "packHash": "cfa3195fa20a4301677a0339b5f7ea2933649f023a1d5b862c4f8dd1ab019c87"
 }

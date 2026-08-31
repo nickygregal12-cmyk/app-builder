@@ -125,11 +125,35 @@ export function itemTitle(value: unknown): string {
 // project lifecycle." is a field name leaking onto a client's website.
 const PROSE_FIELDS = ['description', 'summary', 'detail', 'details', 'body', 'excerpt'];
 
+/**
+ * What a card says about an item, as against everything the record holds.
+ *
+ * This returned every primitive field, which is right for a service with a
+ * sentence and wrong for anything richer. The Ardwell & Roe benchmark supplies
+ * project dossiers of nine fields — location, category, completion, floor area,
+ * client, photographer and a paragraph — and rendering all of them turned six
+ * projects into some four thousand pixels of small print. Two independent
+ * reviews asked for the same thing in the same words: reduce the copy density
+ * and let a card summarise.
+ *
+ * Prose first, because the sentence is what the item means, then a few
+ * identifying facts. The cap only bites on records rich enough to need it: a
+ * service with one description is unchanged, and a bare name still has nothing
+ * to show.
+ */
+const CARD_DETAIL_LIMIT = 4;
+
 export function itemDetail(value: unknown): string[] {
   const entries = primitiveEntries(value).filter(([key]) => !['name', 'title', 'quote', 'value', 'label'].includes(key));
-  return entries.map(([key, item]) => (PROSE_FIELDS.includes(key.toLowerCase())
-    ? String(item)
-    : `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`));
+  const rendered = entries.map(([key, item]) => ({
+    prose: PROSE_FIELDS.includes(key.toLowerCase()),
+    text: PROSE_FIELDS.includes(key.toLowerCase())
+      ? String(item)
+      : `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`,
+  }));
+  return [...rendered.filter((entry) => entry.prose), ...rendered.filter((entry) => !entry.prose)]
+    .slice(0, CARD_DETAIL_LIMIT)
+    .map((entry) => entry.text);
 }
 
 export type SocialProfile = { platform: string; url: string };

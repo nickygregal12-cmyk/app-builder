@@ -1339,7 +1339,7 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
         */}
         {snapshot.project.workspacePath && <section className="builder-panel result-panel" aria-label="Generated repository">
           <span className="builder-kicker">Your website</span>
-          <p className="builder-empty">An ordinary repository. Copy it anywhere, <code>npm install &amp;&amp; npm run dev</code>, and it runs with no dependency on this factory.</p>
+          <p className="builder-empty">An ordinary repository. Copy it anywhere, <code>npm ci &amp;&amp; npm run dev</code>, and it runs the exact dependency graph it was verified against, with no dependency on this factory.</p>
           <dl className="builder-definition">
             <div><dt>Repository</dt><dd><code className="result-path">{snapshot.project.workspacePath}</code></dd></div>
             <div><dt>Build</dt><dd>{snapshot.project.state === 'verified' ? 'installs, checks and builds on its own' : snapshot.project.state === 'generated' ? 'generated — not verified yet' : snapshot.project.state}</dd></div>

@@ -15,6 +15,17 @@ export type ProjectSummary = {
   state: string;
   /** The canonical lifecycle claim, or null when the project carries no exact artifact identity for one to be about. */
   lifecycle: { lifecycleState: string | null; basis: string; missing: string[]; legacyState: string | null };
+  /** What the last verification installed from, ran under and built. Null until one recorded it. */
+  buildIdentity: {
+    sourceDigest: string;
+    lockDigest: string;
+    toolchain: { node: string; npm: string | null };
+    outputDigest: string;
+    outputFiles: number;
+    reproducible: boolean;
+    toolchainSummary: string;
+    recordedAt: string;
+  } | null;
   workspacePath: string | null;
   manifestVersion: number;
   knowledgePackHash: string | null;

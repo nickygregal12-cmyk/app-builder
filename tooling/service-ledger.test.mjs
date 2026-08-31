@@ -6,6 +6,7 @@ import test from 'node:test';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
 import { createFactoryHttpServer } from '../apps/service/src/http.js';
+import { buildOutputManifest, lockDigest, sourceDigest } from './lib/build-identity.mjs';
 
 function manifest(slug = 'service-test') {
   return {
@@ -64,6 +65,20 @@ test('real service lifecycle persists generation verification preview and metric
     assert.equal(verified.task.state, 'succeeded');
     assert.ok(fs.existsSync(path.join(result.workspace, 'dist')));
 
+    // Verification installed from a lockfile it resolved, and wrote down what
+    // it built. Without these four, `verified` is only "a build once ran".
+    assert.ok(fs.existsSync(path.join(result.workspace, 'package-lock.json')), 'verification resolves the generated project a lockfile');
+    const identity = verified.project.buildIdentity ?? service.getProject(project.id).buildIdentity;
+    assert.equal(identity.sourceDigest, sourceDigest(result.workspace));
+    assert.equal(identity.lockDigest, lockDigest(result.workspace));
+    assert.equal(identity.outputDigest, buildOutputManifest(path.join(result.workspace, 'dist')).digest);
+    assert.equal(identity.toolchain.node, process.versions.node);
+    assert.ok(identity.outputFiles > 0);
+
+    const recordedManifest = JSON.parse(fs.readFileSync(path.join(result.workspace, '.app-builder/output-manifest.json'), 'utf8'));
+    assert.equal(recordedManifest.digest, identity.outputDigest);
+    assert.equal(recordedManifest.files.length, identity.outputFiles);
+
     const preview = await service.startPreview(project.id);
     assert.equal(preview.state, 'running');
     // The operator-facing preview state is a path through the Console boundary.
@@ -106,16 +121,18 @@ test('real service lifecycle persists generation verification preview and metric
       'repository.generated',
       'build.succeeded',
       'quality.started',
+      'quality.lock.resolved',
       'quality.install.succeeded',
       'quality.check.succeeded',
       'quality.build.succeeded',
+      'quality.identity.recorded',
       'quality.succeeded',
       'preview.started',
       'preview.stopped',
     ]);
-    assert.deepEqual(service.listEvents(project.id, { afterSequence: events[8].sequence }).map((event) => event.type), ['preview.started', 'preview.stopped']);
+    assert.deepEqual(service.listEvents(project.id, { afterSequence: events[10].sequence }).map((event) => event.type), ['preview.started', 'preview.stopped']);
     const metrics = service.metrics(project.id);
-    assert.equal(metrics.eventCount, 11);
+    assert.equal(metrics.eventCount, 13);
     assert.equal(metrics.costGbp, 0);
     assert.equal(metrics.inputTokens, 0);
     assert.equal(metrics.outputTokens, 0);

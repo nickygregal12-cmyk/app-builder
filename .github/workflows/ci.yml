@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - run: npm ci --no-audit --no-fund
       - run: npm run check
       - run: npm run build
@@ -103,7 +103,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - run: npm ci --no-audit --no-fund
 
       - name: Mutation strength of the safety logic
@@ -127,7 +127,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - run: npm ci --no-audit --no-fund
 
       # Stage Q12. Runs against a disposable local PostgreSQL cluster rather than the Supabase

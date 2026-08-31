@@ -64,11 +64,13 @@ document owns which decision, and the order to read things in.
 ## Run it yourself
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-That starts the factory service on `127.0.0.1:4310` and the Builder Console on `127.0.0.1:5173`. Node 22.13 or newer is the only prerequisite for local deterministic build/preview work; external integrations are only needed when a selected workflow actually calls them.
+That starts the factory service on `127.0.0.1:4310` and the Builder Console on `127.0.0.1:5173`. External integrations are only needed when a selected workflow actually calls them.
+
+The build toolchain is declared exactly in `config/toolchain.json` and read from `.nvmrc`; `npm run doctor` reports where your host stands against it. A host on a different Node or npm can still intake, generate, verify, preview, edit and export — the one thing it cannot do is record a reproducible build identity, so nothing built on it can claim `buildable`.
 
 `npm run dev` starts a factory it owns. If either port is already taken it says so and stops, rather than
 starting a Console against a factory it did not start — those are different factories, with different
@@ -102,14 +104,14 @@ In the Console you can today:
 - choose supported presentation variants and structured design controls;
 - govern ingested assets and publication decisions.
 
-Generated projects are ordinary repositories. `.app-builder/workspaces/` holds local development outputs; copy a generated repository anywhere, `npm install && npm run dev`, and it runs with no dependency on the factory runtime.
+Generated projects are ordinary repositories. `.app-builder/workspaces/` holds local development outputs; copy a generated repository anywhere, `npm ci && npm run dev`, and it runs the exact dependency graph it was verified against, with no dependency on the factory runtime.
 
 Still planned: richer click-to-edit visual manipulation and deployment from the Console. Until the deployment product slice lands, a finished generated repository is deployed through its own ordinary platform workflow. The ordered path from here to a finished core product is the top of `docs/ROADMAP.md`.
 
 ## Commands
 
 ```bash
-npm install
+npm ci
 npm run doctor
 npm run agent:route -- "Signup does not work"
 npm run agent:bench

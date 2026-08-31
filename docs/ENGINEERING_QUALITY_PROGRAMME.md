@@ -39,6 +39,29 @@ the lockfile. Each of those three was planted and observed to fail before the ru
 Deliberately not broadened into a dependency-management programme: the lockfile pins what is already
 declared and no version was changed to land it.
 
+### Generated build identity — closed
+
+The same defect, one layer down and one repository over. A generated project had no lockfile at all,
+verification installed it with `npm install`, the handover told its owner to do the same, and nothing
+looked at what was built — so two verifications of one source tree could install two different
+dependency graphs, produce two different artifacts, and both report success.
+
+Verification now resolves the lockfile once, installs *from* it with `npm ci`, refuses if the lock
+moved during installation, and records four digests: source, lock, toolchain and built output. The
+source digest excludes the lockfile so a dependency-only change and a code-only change stay
+distinguishable; the output digest is computed from the built files rather than inferred from the
+inputs, because the point is to notice when identical inputs did not produce identical output.
+
+The toolchain is one exact Node/npm pair in `config/toolchain.json`, read from `.nvmrc` by every
+workflow — `node-version: 22` looked pinned and floated. Recording is unconditional and claiming is
+not: a host that is not running the declared pair produces a complete, honest record and cannot state
+that the artifact is reproducible. `tooling/build-identity.test.mjs` and `tooling/toolchain.test.mjs`
+keep both closed; `tooling/artifact-lifecycle.test.mjs` holds the rule that a recorded identity under
+an undeclared toolchain does not reach `buildable`.
+
+Deliberately not broadened into an offline mirror, a second package manager or Node 24 support. None
+of those is what made a build unreproducible.
+
 ## Tool responsibility map
 
 Every tool answers exactly one question. An agent picks a tool by the question it has, never by the

@@ -523,11 +523,15 @@ function writeHandover(projectDir, manifest, plan, databaseFragments) {
     '## Commands',
     '',
     '```bash',
-    'npm install',
+    'npm ci',
     'npm run check',
     'npm run build',
     'npm run dev',
     '```',
+    '',
+    '`npm ci` installs the exact dependency graph recorded in `package-lock.json` \u2014 the one this project was checked and built against. `npm install` re-resolves that graph from version ranges, so use it only when you are deliberately changing a dependency, and commit the lockfile it writes.',
+    '',
+    'The factory resolves the lockfile when it verifies the build. If you are starting from a workspace that was never verified, `package-lock.json` will be absent: run `npm install` once to resolve it, commit the result, and use `npm ci` from then on.',
     '',
   );
   fs.mkdirSync(path.join(projectDir, 'docs'), { recursive: true });
@@ -537,7 +541,7 @@ function writeHandover(projectDir, manifest, plan, databaseFragments) {
 function writeReadme(projectDir, manifest, plan) {
   const adapterLines = plan.adapters.length ? plan.adapters.map((adapter) => `- ${adapter.id} ${adapter.version} (${adapter.kind})`).join('\n') : '- none';
   const recipeLines = plan.recipes.length ? plan.recipes.map((recipe) => `- ${recipe.id} ${recipe.version}`).join('\n') : '- none';
-  fs.writeFileSync(path.join(projectDir, 'README.md'), `# ${manifest.project.name}\n\n${manifest.project.primaryGoal}\n\n## Generated foundation\n\n- Template: ${plan.template.id} ${plan.template.version}\n- Project type: ${manifest.project.type}\n- Layout: ${plan.design.patternId}\n- Portable design system: \`.product/design-system.json\`\n- App Builder runtime dependency: none\n\n## Infrastructure adapters\n\n${adapterLines}\n\n## Installed recipes\n\n${recipeLines}\n\nSee \`docs/HANDOVER.md\` for environment, database, deployment and scenario notes.\n\n## Commands\n\n\`\`\`bash\nnpm install\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n`);
+  fs.writeFileSync(path.join(projectDir, 'README.md'), `# ${manifest.project.name}\n\n${manifest.project.primaryGoal}\n\n## Generated foundation\n\n- Template: ${plan.template.id} ${plan.template.version}\n- Project type: ${manifest.project.type}\n- Layout: ${plan.design.patternId}\n- Portable design system: \`.product/design-system.json\`\n- App Builder runtime dependency: none\n\n## Infrastructure adapters\n\n${adapterLines}\n\n## Installed recipes\n\n${recipeLines}\n\nSee \`docs/HANDOVER.md\` for environment, database, deployment and scenario notes.\n\n## Commands\n\n\`\`\`bash\nnpm ci\nnpm run check\nnpm run build\nnpm run dev\n\`\`\`\n\n\`npm ci\` installs the exact graph in \`package-lock.json\`. \`npm install\` re-resolves it; use that only when changing a dependency, and commit the lockfile.\n`);
 }
 
 /**

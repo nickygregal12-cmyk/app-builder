@@ -4,6 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
 import { loadPresentationManifest, undeclaredComponents } from './lib/presentation-registry.mjs';
+import { describeToolchain } from './lib/toolchain.mjs';
 
 const root = process.cwd();
 const required = [
@@ -220,3 +221,9 @@ for (const base of scanRoots) {
 
 if (failed) process.exit(1);
 console.log('App Builder doctor: intake, renderers, templates, adapters, ready defaults, layouts, scenarios, recipes, renderer implementations, database fragments, browser acceptance and contamination guard are valid.');
+
+// Reported, never failed. A host without the declared pair can do every one of
+// the things above; the one thing it cannot do is state a reproducible build
+// identity, and a doctor that exited non-zero over that would be refusing work
+// it is perfectly able to do.
+console.log(`Build toolchain: ${describeToolchain().summary}`);

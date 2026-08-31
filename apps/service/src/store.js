@@ -26,6 +26,7 @@ export class FactoryStore {
         manifest_json TEXT NOT NULL,
         knowledge_pack_json TEXT,
         intake_bundle_json TEXT,
+        build_identity_json TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -74,6 +75,10 @@ export class FactoryStore {
     // asking an operator to discard their projects.
     const columns = this.db.prepare('PRAGMA table_info(projects)').all().map((column) => column.name);
     if (!columns.includes('intake_bundle_json')) this.db.exec('ALTER TABLE projects ADD COLUMN intake_bundle_json TEXT');
+    // Likewise for the build identity. A project verified before verification
+    // recorded one keeps a null here, which is the honest answer: nothing about
+    // that build's dependency graph, toolchain or output was written down.
+    if (!columns.includes('build_identity_json')) this.db.exec('ALTER TABLE projects ADD COLUMN build_identity_json TEXT');
 
     // Opening the store is where a lost projection is found. A crash between
     // the ledger append and the projection insert leaves the read model short,
@@ -84,8 +89,8 @@ export class FactoryStore {
 
   upsertProject(project) {
     this.db.prepare(`
-      INSERT INTO projects (id,name,type,slug,state,workspace_path,manifest_json,knowledge_pack_json,intake_bundle_json,created_at,updated_at)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)
+      INSERT INTO projects (id,name,type,slug,state,workspace_path,manifest_json,knowledge_pack_json,intake_bundle_json,build_identity_json,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
       ON CONFLICT(id) DO UPDATE SET
         name=excluded.name,
         type=excluded.type,
@@ -95,8 +100,9 @@ export class FactoryStore {
         manifest_json=excluded.manifest_json,
         knowledge_pack_json=excluded.knowledge_pack_json,
         intake_bundle_json=COALESCE(excluded.intake_bundle_json, projects.intake_bundle_json),
+        build_identity_json=COALESCE(excluded.build_identity_json, projects.build_identity_json),
         updated_at=excluded.updated_at
-    `).run(project.id, project.name, project.type, project.slug, project.state, project.workspacePath ?? null, json(project.manifest), project.knowledgePack ? json(project.knowledgePack) : null, project.intakeBundle ? json(project.intakeBundle) : null, project.createdAt, project.updatedAt);
+    `).run(project.id, project.name, project.type, project.slug, project.state, project.workspacePath ?? null, json(project.manifest), project.knowledgePack ? json(project.knowledgePack) : null, project.intakeBundle ? json(project.intakeBundle) : null, project.buildIdentity ? json(project.buildIdentity) : null, project.createdAt, project.updatedAt);
     return this.getProject(project.id);
   }
 
@@ -113,6 +119,7 @@ export class FactoryStore {
       manifest: parse(row.manifest_json),
       knowledgePack: parse(row.knowledge_pack_json),
       intakeBundle: parse(row.intake_bundle_json),
+      buildIdentity: parse(row.build_identity_json),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

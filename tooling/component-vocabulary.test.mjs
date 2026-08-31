@@ -285,6 +285,105 @@ test('every grammar says what it does on a phone', () => {
   assert.match(css, /max-width:\s*880px[\s\S]*?\.panel-asymmetric \{[^}]*grid-template-columns:\s*1fr/, 'a showcase becomes an ordered stack');
 });
 
+/**
+ * How many items there are is a layout input, not a detail.
+ *
+ * The regular grids were `repeat(3, ...)` whatever they held. nbm has four
+ * services and four contact fields, so both rendered three across and one
+ * stranded beside a third of a row of nothing — on the same page, in every
+ * direction, because the count never reached the layout. It is the most
+ * template-looking thing a generated page can do and no direction could fix it,
+ * since every direction inherited the same constant.
+ *
+ * A quantity query keeps this in the one stylesheet both renderers share, so
+ * the static and application outputs cannot drift apart on it.
+ */
+test('a regular grid answers how many items it has', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  for (const [count, columns] of [[4, 2], [2, 2], [1, 1]]) {
+    const rule = new RegExp(`:has\\(> :last-child:nth-child\\(${count}\\)\\)[\\s\\S]{0,400}?grid-template-columns:\\s*(?:repeat\\(${columns},|minmax)`);
+    assert.match(css, rule, `a set of ${count} still takes the default column count rather than ${columns}`);
+  }
+  // The count rule must not reach the grammars that compose their own tracks.
+  assert.ok(
+    !/\.item-grid:has\(> :last-child/.test(css),
+    'the count rule is unscoped, so it overrides the editorial, register and showcase grammars a direction chose',
+  );
+});
+
+/**
+ * A quantity query is more specific than the plain class the responsive rules
+ * use, so left unbounded it wins inside every media query too. The first
+ * version of the rule above did exactly that: two columns survived to 390px,
+ * where four service cards became eight narrow lines and an email address broke
+ * mid-word. Below the disclosure width the column count belongs to the
+ * responsive cascade, which already answers it.
+ */
+test('the count rule cannot outrank the responsive cascade', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const index = css.search(/:has\(> :last-child:nth-child\(4\)\)/);
+  assert.ok(index > -1, 'no quantity query is present at all');
+  const opener = css.lastIndexOf('@media', index);
+  assert.ok(opener > -1, 'the quantity query sits outside any media query, so it applies at every width');
+  const query = css.slice(opener, css.indexOf('{', opener));
+  assert.match(query, /min-width/, `the quantity query is bounded by "${query.trim()}", which does not restrict it to wide viewports`);
+});
+
+/**
+ * A name takes the room a name needs.
+ *
+ * `.plain-list` was `repeat(auto-fit, minmax(220px, 1fr))`, and `auto-fit`
+ * collapses the empty tracks and stretches what survives across the whole
+ * measure. Two locations — "Glasgow" and "Edinburgh" — therefore rendered as
+ * two 570px slabs each holding one word, in every direction, because the rule
+ * never asked how much the items had to say.
+ */
+test('a set of bare names is not stretched across the measure', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const base = css.match(/(?:^|\n)\.plain-list \{([^}]*)\}/);
+  assert.ok(base, 'the bare-name list has no base rule');
+  assert.doesNotMatch(
+    base[1],
+    /auto-fit/,
+    'the bare-name list stretches its items to fill the measure, so two short names become two half-page slabs',
+  );
+  assert.match(base[1], /display:\s*flex/, 'the bare-name list should size its items to their content');
+});
+
+/**
+ * One row, one number.
+ *
+ * The register renders its index as a real element — that is what lets it
+ * survive being read without a stylesheet — and two other rules draw a counter
+ * for a schedule-rows list that has none: the figure-index moment, and the
+ * grid's own numbering for location, entity and content lists. On MGB Decor,
+ * whose direction declares both `schedule-rows` and `figure-index`, all of them
+ * fired: eight services and two locations each rendered "01 01".
+ *
+ * A guard for the first collision already existed and was written for the
+ * detailed `.content-card` form, so it missed the bare-name register entirely.
+ * Both forms are asserted here, and the ordering matters as much as the rules —
+ * the guards and the counters are the same specificity, so a guard that moved
+ * above its counter would silently stop working.
+ */
+test('a register that numbers itself is not numbered twice', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const guards = [
+    { counter: /\.moment-figure-index \.section-item-grid \.plain-list li::after \{/, guard: /\.moment-figure-index \.panel-schedule-rows\.plain-list > li::after \{[^}]*content:\s*none/ },
+    { counter: /\.grid-schedule-rows \.section-location-list \.plain-list li::after,/, guard: /\.grid-schedule-rows \.plain-list\.panel-named-register > li::after \{[^}]*content:\s*none/ },
+  ];
+  for (const { counter, guard } of guards) {
+    assert.match(css, counter, 'the counter this guard exists for is gone; the guard may be stale');
+    assert.match(css, guard, 'a schedule-rows list that renders its own index still gets a second, generated number');
+    assert.ok(
+      css.search(guard) > css.search(counter),
+      'the guard is the same specificity as the counter it suppresses, so it has to come after it',
+    );
+  }
+  // The detailed form's guard, which existed first and must not be lost.
+  assert.match(css, /\.moment-figure-index \.panel-schedule-rows > \.content-card::after \{[^}]*content:\s*none/);
+});
+
 test('every direction chooses a panel grammar, and the imagery-free set spans them', () => {
   const directions = json('config/visual-directions.json').directions;
   for (const [id, direction] of Object.entries(directions)) {
@@ -363,16 +462,78 @@ test('every family marks the current page, and not all of them with a pill', () 
   }
 });
 
-test('every family discloses on a phone, in its own character', () => {
+/**
+ * The width the disclosure begins at, read rather than assumed.
+ *
+ * This used to slice from the literal `@media (max-width: 720px)`, which made
+ * the test a restatement of one number instead of a statement about the
+ * header. Returning the block the disclosure actually lives in lets the test
+ * below check both halves of the contract — that every family collapses, and
+ * that the stylesheet and the script agree about where.
+ */
+function disclosureBlock(css) {
+  for (const match of css.matchAll(/@media \(max-width: (\d+)px\) \{/g)) {
+    const start = match.index + match[0].length;
+    let depth = 1;
+    let index = start;
+    while (index < css.length && depth > 0) {
+      if (css[index] === '{') depth += 1;
+      if (css[index] === '}') depth -= 1;
+      index += 1;
+    }
+    const body = css.slice(start, index - 1);
+    if (/\.site-header \.nav-toggle \{[^}]*display:\s*inline-flex/.test(body)) {
+      return { breakpoint: Number(match[1]), body };
+    }
+  }
+  return null;
+}
+
+test('every family discloses once the row will not fit, in its own character', () => {
   const css = read('templates/shared/presentation/styles.css');
-  const mobile = css.slice(css.indexOf('@media (max-width: 720px)'));
+  const disclosure = disclosureBlock(css);
+  assert.ok(disclosure, 'no media block turns the header into a disclosure at any width');
+  const mobile = disclosure.body;
   // One disclosure, applied to the header rather than to one treatment: the
   // two-row bar is retired and no family may opt out of collapsing.
-  assert.match(mobile, /\.site-header \.nav-toggle \{[^}]*display:\s*inline-flex/, 'the control must appear on a phone for every family');
+  assert.match(mobile, /\.site-header \.nav-toggle \{[^}]*display:\s*inline-flex/, 'the control must appear for every family');
   assert.match(mobile, /\.site-header nav\[data-open="false"\] \{[^}]*display:\s*none/, 'the panel must collapse');
   // And each family keeps what makes it that family.
-  assert.match(mobile, /\.nav-register nav a \{[^}]*grid-template-columns/, 'the register keeps its numbering on a phone');
+  assert.match(mobile, /\.nav-register nav a \{[^}]*grid-template-columns/, 'the register keeps its numbering in the panel');
   assert.match(mobile, /\.nav-editorial nav a\.active \{[^}]*border-bottom-color/, 'the editorial masthead keeps its rule rather than gaining a fill');
+});
+
+/**
+ * The band where the header was neither a bar nor a panel.
+ *
+ * The stylesheet disclosed at 720 and the script has always asked
+ * `matchMedia('(max-width: 880px)')`, so between those two widths — a portrait
+ * tablet at 768 is exactly there — five destinations and a filled action
+ * wrapped onto a ragged second row. That is the "loose" two-row header the
+ * fourth independent review named, surviving in the one viewport band nothing
+ * ever photographed: every browser project in every suite was a phone or a
+ * desktop.
+ *
+ * Two numbers that have to agree and live in different files will drift again,
+ * so this asserts they match rather than asserting either one's value.
+ */
+test('the stylesheet and the script agree where the navigation discloses', () => {
+  const disclosure = disclosureBlock(read('templates/shared/presentation/styles.css'));
+  assert.ok(disclosure, 'no media block turns the header into a disclosure at any width');
+  for (const file of [
+    'templates/astro-static-content/files/src/layouts/SiteLayout.astro',
+    'templates/react-vite-neutral/files/src/App.tsx',
+  ]) {
+    const source = read(file);
+    const scripted = source.match(/matchMedia\('\(max-width: (\d+)px\)'\)/);
+    assert.ok(scripted, `${file} does not gate the disclosure behaviour on a width at all`);
+    assert.equal(
+      Number(scripted[1]),
+      disclosure.breakpoint,
+      `${file} opens the panel below ${scripted[1]}px while the stylesheet collapses the bar below ${disclosure.breakpoint}px. `
+      + 'Between those widths the header is neither a bar nor a panel, which is how the ragged two-row tablet header shipped.',
+    );
+  }
 });
 
 test('the disclosure is operable by keyboard and closes on Escape', () => {

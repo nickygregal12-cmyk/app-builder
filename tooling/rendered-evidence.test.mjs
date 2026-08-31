@@ -143,7 +143,7 @@ test('an interaction state is planned only where the build has the section for i
     composition: composeProject({ manifest: manifest('no-form') }),
     stateMatrix: deriveStateMatrix(composeProject({ manifest: manifest('no-form') }), launchRules),
   });
-  assert.equal(withoutForm.captures.some((capture) => capture.state.interaction), false);
+  assert.equal(withoutForm.captures.some((capture) => capture.state.interaction === 'enquiry-submit-failed'), false);
 
   const composition = composeProject({ manifest: manifest('with-form', { 'lead-generation': true }) });
   const withForm = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
@@ -151,6 +151,27 @@ test('an interaction state is planned only where the build has the section for i
   assert.equal(interactions.length, VIEWPORTS.length, 'the failure state is worth seeing at every viewport');
   assert.match(interactions[0].state.proves, /not evidence that a successful submission works/);
   assert.equal(INTERACTIONS['enquiry-submit-failed'].requiresSectionType, 'enquiry-form');
+});
+
+/**
+ * The header is not a section, so it qualifies by viewport instead.
+ *
+ * Every capture in every set photographed the navigation closed, and the
+ * seventh independent review asked for the opened state before calling
+ * responsive navigation complete. It is on every route, so it cannot be gated
+ * on a section type; and it exists only below the disclosure width, so a
+ * desktop picture of a bar that never collapsed would prove nothing.
+ */
+test('the disclosed navigation is planned on every route, and only where it discloses', () => {
+  const composition = composeProject({ manifest: manifest('no-form') });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
+  const opened = plan.captures.filter((capture) => capture.state.interaction === 'navigation-disclosed');
+
+  assert.equal(INTERACTIONS['navigation-disclosed'].requiresSectionType, null, 'the header is on every route, not in a section');
+  assert.equal(opened.length, composition.pages.length, 'every route should photograph its own navigation panel');
+  assert.deepEqual([...new Set(opened.map((capture) => capture.viewport))], ['mobile'], 'the panel only exists below the disclosure width');
+  assert.equal(opened.every((capture) => capture.state.risk === 'high'), true);
+  assert.match(opened[0].state.proves, /not evidence that any destination in it resolves/);
 });
 
 test('an evidence set validates, hashes what was captured and drops what was not', () => {

@@ -54,6 +54,18 @@
   --radius-pill: 999px;
   --space-unit: 0.25rem;
   --section-space: clamp(56px, 7vw, 104px);
+  /* What one side of a section boundary contributes.
+
+     `--section-space` is the rhythm a visitor perceives *between* two sections.
+     It used to be the padding on each side of every one of them, so the gap was
+     always two of it: the relaxed density asked for 132px and produced 264px,
+     and every candidate in the sixth independent review was told to remove
+     "large areas of inert space". Deriving the padding here keeps the density
+     control meaning what it says, and keeps the hero's own multipliers in
+     proportion with the sections beneath it rather than drifting to twice
+     their scale. Not half, because these sections alternate background and a
+     heading on the colour boundary is its own defect. */
+  --section-pad: calc(var(--section-space) * 0.6);
   /* Responsive composition. A direction decides whether a phone gets the same
      rhythm as a desktop, and this is the one decision of that plan that is a
      value rather than a structure a class has to change. */

@@ -477,12 +477,21 @@ breakpoints.* `tooling/portability.test.mjs` holds both the fix and the requirem
 a viewport the mobile breakpoint applies to.
 
 **Anti-template.** Eight builds, and eight of eleven signals were **uniform**; only section sequence
-and layout pattern varied. The diagnostic reports the cause rather than leaving it to be inferred: no
-build in that set carries a promoted visual direction, so every one signs from the default composition
-dimensions. The finding is therefore that the direction machinery is *unused by ordinary builds* —
-which is what the outstanding 4D verdict means in practice — and **not** that the factory answers
-different businesses the same way. That second claim needs a set where directions have been promoted,
-and no such set exists yet.
+and layout pattern varied. The diagnostic reported the cause as: no build in that set carries a
+promoted visual direction, so every one signs from the default composition dimensions.
+
+**That reading was withdrawn on 2026-08-31: it was an instrument defect, not a finding.** The
+diagnostic read `design.visualDirection` and every project record carries `visualDirectionId`, so
+`direction` was null for every build it ever measured and the signature fell back to the default
+dimensions — over sets whose builds demonstrably render an underlined ask, an editorial masthead and
+a serif voice. It then explained its own null case in the sentence above. A diagnostic whose failure
+mode is indistinguishable from the finding it exists to detect will report that finding forever, so
+the read is now exercised by a test that loads a record shaped the way the generator writes one.
+
+What the fixed diagnostic reports is in `docs/PHASE_4D_VISUAL_DEBT.md` §2a: over six builds from two
+unrelated businesses, two signals are uniform rather than eight of eleven, and the convergence that
+survives is between two businesses that chose the *same* direction — which is a different and
+sharper question than the one this paragraph used to pose.
 
 ### What this means for the freeze
 

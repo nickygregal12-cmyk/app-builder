@@ -7,14 +7,14 @@ body { background: var(--color-page); color: var(--color-text); font-family: var
 .site-header-brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0 }
 .site-brand { font-size: 1.05rem; font-weight: 800; letter-spacing: -.02em; color: var(--color-ink); text-decoration: none }
 .site-header nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end }
-.site-header .nav-toggle { display: none; align-items: center; gap: 6px; padding: 9px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-ink); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer }
+.site-header .nav-toggle { display: none; align-items: center; gap: 6px; padding: 9px 14px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); color: var(--color-ink); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer }
 .site-header .nav-toggle:hover { background: var(--color-surface-muted) }
 .site-header nav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-pill); color: var(--color-text-muted); font-size: .9rem; font-weight: 600; text-decoration: none; transition: background var(--motion-duration-fast) var(--motion-ease), color var(--motion-duration-fast) var(--motion-ease) }
 .site-header nav a:hover { background: var(--color-surface-muted); color: var(--color-ink) }
 .site-header nav a.active { background: var(--color-ink); color: var(--color-text-inverse) }
 /* The conversion action a working header carries. Families that are not
    working headers do not render it at all rather than hiding it. */
-.nav-action { display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-accent-contrast); font-size: .88rem; font-weight: 700; text-decoration: none; white-space: nowrap }
+.nav-action { display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border-radius: var(--layout-radius); background: var(--color-accent); color: var(--color-accent-contrast); font-size: .88rem; font-weight: 700; text-decoration: none; white-space: nowrap }
 .nav-action:hover { background: var(--color-ink); color: var(--color-text-inverse) }
 .app-shell { flex: 1 }
 /* A disclosure control that has not been enhanced is hidden rather than left
@@ -81,7 +81,24 @@ body { background: var(--color-page); color: var(--color-text); font-family: var
 
 /* Section rhythm. Alternating ground replaces the hairline rule that used to
    sit under every section and flattened the whole page. ------------------ */
-.page-section { padding: var(--section-space) max(20px, calc((100vw - var(--layout-max-width)) / 2)) }
+/* `--section-space` is the rhythm *between* sections, so each side of a
+   boundary contributes part of it rather than all of it.
+
+   It used to be the padding on both sides of every section, which meant the
+   gap a visitor actually sees was two of them: the relaxed density declares
+   132px and delivered 264px, and measured on the editorial candidate the
+   visible gaps between one section's last line and the next section's first
+   were 344, 300, 260 and 260px. All three candidates in the sixth independent
+   review were told to remove "large areas of inert space" and "excessive empty
+   desktop space"; this is where it came from. It read as a content problem and
+   was arithmetic — no direction could tune it, because every direction doubled
+   whatever it asked for.
+
+   Deliberately not zero on one side. These sections alternate background, so a
+   band whose heading sat on the colour boundary would trade one defect for
+   another; a little over half keeps the band a band and still lands the
+   boundary near the declared figure. */
+.page-section { padding: var(--section-pad) max(20px, calc((100vw - var(--layout-max-width)) / 2)) }
 /* The hero and the closing call to action set their own ground, so they are
    excluded rather than overridden — a lower-specificity override lost to this
    selector and put white text on a tinted background. */
@@ -101,8 +118,8 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 /* Hero density scales the section rhythm rather than replacing it, so the
    design contract's rhythm and the section's variant compose instead of one
    silently winning. */
-.hero-section.variant-primary { padding-top: calc(var(--section-space) * var(--hero-scale)); padding-bottom: calc(var(--section-space) * var(--hero-scale)) }
-.hero-section.variant-compact { padding-top: calc(var(--section-space) * 0.65); padding-bottom: calc(var(--section-space) * 0.65) }
+.hero-section.variant-primary { padding-top: calc(var(--section-pad) * var(--hero-scale)); padding-bottom: calc(var(--section-pad) * var(--hero-scale)) }
+.hero-section.variant-compact { padding-top: calc(var(--section-pad) * 0.65); padding-bottom: calc(var(--section-pad) * 0.65) }
 .hero-section.has-image { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: clamp(32px, 5vw, 72px); align-items: center }
 .hero-copy-column { display: flex; flex-direction: column; align-items: flex-start; min-width: 0 }
 .hero-image { display: block }
@@ -110,7 +127,17 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 
 /* Actions -------------------------------------------------------------- */
 .section-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 32px }
-.button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 22px; border: 1px solid transparent; border-radius: var(--radius-pill); font-size: .95rem; font-weight: 700; text-decoration: none; transition: transform var(--motion-duration-fast) var(--motion-ease), box-shadow var(--motion-duration-fast) var(--motion-ease), background var(--motion-duration-fast) var(--motion-ease) }
+/* A control is shaped by the corner the direction chose.
+
+   This was a hard `--radius-pill`, so `design.radius` reached the panels, the
+   cards and the images and stopped at the most looked-at element on the page:
+   a direction that declared square corners still asked in a 999px capsule.
+   Two independent reviews named pill buttons as a reason every candidate read
+   as template-derived, and it was the one named cause that no axis and no
+   token could reach. `--layout-radius` is the direction's own declaration, so
+   a square register is now square all the way down and a soft direction stays
+   soft. */
+.button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 22px; border: 1px solid transparent; border-radius: var(--layout-radius); font-size: .95rem; font-weight: 700; text-decoration: none; transition: transform var(--motion-duration-fast) var(--motion-ease), box-shadow var(--motion-duration-fast) var(--motion-ease), background var(--motion-duration-fast) var(--motion-ease) }
 .primary-action { background: var(--color-accent); color: var(--color-accent-contrast); box-shadow: var(--shadow-soft) }
 .primary-action:hover { transform: translateY(var(--motion-hover-lift)); box-shadow: var(--shadow-lifted) }
 .secondary-action { background: var(--color-surface); border-color: var(--color-border-strong); color: var(--color-ink) }
@@ -121,13 +148,67 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .content-card { padding: 26px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); box-shadow: var(--shadow-soft) }
 .content-card h3 { margin-bottom: 10px }
 .content-card p { margin: 8px 0 0; color: var(--color-text-muted); font-size: .92rem }
-.plain-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none }
-.plain-list li { position: relative; padding: 22px 24px 22px 30px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-lg); font-weight: 650; box-shadow: var(--shadow-soft) }
+/* A set of bare names sizes to the names.
+
+   This was `repeat(auto-fit, minmax(220px, 1fr))`, and `auto-fit` collapses the
+   empty tracks and then stretches what is left across the whole measure. Two
+   locations — "Glasgow" and "Edinburgh" — therefore rendered as two 570px slabs
+   each containing one word, in every direction, because the rule never asked
+   how much the items had to say. A name is a name at any viewport width: it
+   takes the room it needs and the row ends where the names end. */
+.plain-list { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none }
+.plain-list li { position: relative; max-inline-size: 100%; padding: 22px 24px 22px 30px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-lg); font-weight: 650; overflow-wrap: anywhere; box-shadow: var(--shadow-soft) }
 .plain-list li::before { content: ''; position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-accent) }
 .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 32px; list-style: none; margin: 28px 0 0; padding: 0 }
 .feature-list li { display: grid; gap: 4px; padding: 14px 0 14px 18px; border-left: 2px solid var(--color-accent-line) }
 .feature-list strong { color: var(--color-ink); font-size: var(--text-base); font-weight: 700 }
 .feature-list span { color: var(--color-text-muted); font-size: .88rem; line-height: 1.55 }
+
+/* How many, not just what ------------------------------------------------
+
+   The regular grids were `repeat(3, ...)` whatever they held, so the column
+   count was a constant and the item count was ignored. Four services rendered
+   as three cards and one stranded card beside a third of a row of nothing, and
+   the same happened to four contact fields on the same page — the single most
+   template-looking thing in the rendered evidence, and it happened in every
+   direction because the count never reached the layout.
+
+   A quantity query is the fix rather than a renderer change: a set's size is
+   already in the DOM, so both renderers get this from the one stylesheet they
+   share and cannot drift apart on it. `> :last-child:nth-child(N)` matches a
+   child that is both the Nth and the last, which is exactly "there are N".
+
+   Only the symmetric grammar is addressed. The others — editorial rows, the
+   schedule register, the asymmetric showcase — compose their own structure
+   further down this file and decide their own tracks; a count rule reaching
+   into those would override the grammar the direction chose.
+
+   Wide viewports only, and that bound is load-bearing rather than tidy. A
+   quantity query is more specific than the plain `.item-grid` the responsive
+   rules below use, so unbounded it wins inside every media query too: the
+   first version of this held two columns all the way down to 390px, where
+   four service cards became eight narrow lines and an email address broke
+   mid-word. Below 880px the column count is not a composition choice — it is
+   the responsive cascade's, and it already answers it. */
+@media (min-width: 881px) {
+  /* Four is two-by-two. Three-plus-one is the orphan the evidence kept showing. */
+  .item-grid.panel-symmetric:has(> :last-child:nth-child(4)),
+  .contact-section.panel-symmetric .contact-grid:has(> :last-child:nth-child(4)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* One and two fill the row they need rather than a third of the page each. */
+  .item-grid.panel-symmetric:has(> :last-child:nth-child(2)),
+  .contact-section.panel-symmetric .contact-grid:has(> :last-child:nth-child(2)),
+  .gallery-grid:has(> :last-child:nth-child(2)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .item-grid.panel-symmetric:has(> :last-child:nth-child(1)),
+  .contact-section.panel-symmetric .contact-grid:has(> :last-child:nth-child(1)),
+  .gallery-grid:has(> :last-child:nth-child(1)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
 /* Gallery -------------------------------------------------------------- */
 .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px }
@@ -158,7 +239,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .enquiry-actions p { margin: 0; color: var(--color-text-muted); font-size: .9rem }
 
 /* Closing call to action ------------------------------------------------ */
-.cta-section { display: flex; align-items: center; justify-content: space-between; gap: 40px; margin: 0 max(20px, calc((100vw - var(--layout-max-width)) / 2)) var(--section-space); padding: clamp(40px, 5vw, 64px); border-radius: calc(var(--layout-radius) * 1.5); background: var(--color-surface-inverse); color: var(--color-text-inverse) }
+.cta-section { display: flex; align-items: center; justify-content: space-between; gap: 40px; margin: 0 max(20px, calc((100vw - var(--layout-max-width)) / 2)) var(--section-pad); padding: clamp(40px, 5vw, 64px); border-radius: calc(var(--layout-radius) * 1.5); background: var(--color-surface-inverse); color: var(--color-text-inverse) }
 .cta-section h2, .cta-section p { color: var(--color-text-inverse) }
 .cta-section p { max-width: 52ch; margin: 12px 0 0; opacity: .78; font-size: var(--text-lg) }
 .cta-section .section-actions { margin-top: 0 }
@@ -221,7 +302,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .hero-section.hero-immersive.has-backdrop .secondary-action { background: transparent; border-color: var(--color-text-inverse); color: var(--color-text-inverse) }
 
 /* A surface that is worked in opens on one line and gets out of the way. */
-.hero-section.hero-utility { padding-top: calc(var(--section-space) * 0.55); padding-bottom: calc(var(--section-space) * 0.55) }
+.hero-section.hero-utility { padding-top: calc(var(--section-pad) * 0.55); padding-bottom: calc(var(--section-pad) * 0.55) }
 .hero-section.hero-utility .hero-copy-column { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; width: 100% }
 .hero-section.hero-utility h1 { font-size: var(--text-3xl); max-width: none; grid-column: 1 }
 .hero-section.hero-utility .hero-copy { grid-column: 1; margin-top: 8px }
@@ -461,6 +542,17 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .moment-figure-index .panel-schedule-rows > .content-card { padding-top: 20px }
 .moment-figure-index .panel-schedule-rows > .content-card::after { content: none }
 .moment-figure-index .panel-schedule-rows .panel-index { font-size: var(--text-xl) }
+/* The same collision, in the form the guard above missed.
+
+   A register of *bare names* is an `<ol class="plain-list panel-schedule-rows
+   panel-named-register">` whose children are plain `li`, not `.content-card` —
+   so the rule above did not match it and the moment drew its plate anyway.
+   MGB Decor's eight services and two locations each rendered two numerals, a
+   small one and a large one, on every row of the home page. The register's own
+   index is a real element and already provides the gutter, so the moment's
+   counter and its 62px indent both come off. */
+.moment-figure-index .panel-schedule-rows.plain-list > li::after { content: none }
+.moment-figure-index .panel-schedule-rows.plain-list > li { padding-left: 0 }
 
 /* A showcase. --------------------------------------------------------------
    One entry carries the argument and the rest support it, which is a
@@ -556,6 +648,16 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   font-weight: 700;
   letter-spacing: .08em;
 }
+/* Unless the list already numbers itself.
+
+   These three draw a counter for a schedule-rows list that has none. A named
+   register *does* — `.panel-index` is a real element in the document, which is
+   the whole reason the register survives being read without a stylesheet — so
+   on MGB Decor's Locations the two ran together and every row carried "01 01".
+   Placed after the block rather than merged into it because these selectors and
+   the guard higher up are the same specificity, and the later one wins. */
+.grid-schedule-rows .plain-list.panel-named-register > li::after { content: none }
+.grid-schedule-rows .plain-list.panel-named-register > li { padding-left: 0 }
 /* The contact panel is a set of rows in the middle of the page like any other,
    and it was the one that stayed outside the grammar. Two directions that
    differed in their opening, their items, their closing ask and their typeface
@@ -706,7 +808,25 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .cta-section { flex-direction: column; align-items: flex-start; gap: 28px }
 }
 
-@media (max-width: 720px) {
+/* The navigation discloses wherever the bar would otherwise wrap.
+
+   This was `max-width: 720px` while the disclosure script beside it has always
+   asked `matchMedia('(max-width: 880px)')`, so the stylesheet and the behaviour
+   disagreed about where the panel begins. The band between them is a real
+   viewport — a portrait tablet at 768 — and in it the bar was neither a bar nor
+   a panel: five destinations and a filled action wrapped onto a ragged second
+   row, which is precisely the "loose" two-row header the fourth independent
+   review named and which `inline-wrap` was retired to remove. It survived at
+   the tablet because only the phone was ever photographed.
+
+   880 is not a new number. It is the width at which the page already gives up
+   its third column, so the header now stops being a row at the same width the
+   content stops being a grid.
+
+   Only the header moves here. The phone-only rules below — content order,
+   density, motion, the single-column collapse — stay at 720 because they are
+   about a phone rather than about a row that no longer fits. */
+@media (max-width: 880px) {
   /* Not `position: relative`. The disclosure panel below is absolutely
      positioned and needs a positioned ancestor, and `relative` is the reflex
      answer — but the header is already `position: sticky`, which is a
@@ -714,7 +834,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      silently replaced the sticky, so on every phone, in every engine, the
      navigation scrolled away with the page. Nothing caught it because nothing
      asked a mobile viewport whether the header stayed put. */
-  /* Every family discloses on a phone, in its own character.
+  /* Every family discloses once the row will not fit, in its own character.
      `responsive.navigation` used to decide whether the row collapsed while
      nothing decided what the row was; the family owns both now, and its
      `inline-wrap` value — the two-row bar the fourth independent review called
@@ -752,6 +872,9 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .nav-centred { flex-direction: row; text-align: left; padding-top: 14px; padding-bottom: 14px }
   .nav-centred nav { justify-content: stretch }
   .nav-centred nav a { text-align: left }
+}
+
+@media (max-width: 720px) {
   h1 { max-width: none }
   .item-grid, .gallery-grid, .contact-grid, .section-location-list .item-grid, .section-entity-list .item-grid, .section-content-list .item-grid { grid-template-columns: 1fr }
   .site-footer { flex-direction: column; gap: 26px }
@@ -773,11 +896,31 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      responsive plan overruling the art direction rather than expressing it.
      A `mid-page` ask is a different declaration and still moves. */
   .mobile-order-conversion-first .app-shell { display: flex; flex-direction: column }
-  .mobile-order-conversion-first .page-section { order: 2 }
+  .mobile-order-conversion-first .page-section { order: 3 }
   .mobile-order-conversion-first .hero-section { order: 0 }
+  /* What the business does comes before how to reach it.
+     Contact used to sit at order 1, directly under the opening, so a phone
+     visitor met an email address, a phone number, a postal address and a
+     website before a single word about what the practice sells — and then met
+     the same details again in the footer. Two independent reviews said so
+     in almost the same sentence: "the visitor encounters the business offering
+     before duplicated contact information", and "services and expertise lead
+     before repeated contact content".
+     The declaration is still honoured and still means something: on a phone
+     the offering is one screen from the ask rather than five, which is the
+     conversion-first intent. It was the ordering that was wrong, not the
+     wanting of it. */
+  .mobile-order-conversion-first .section-item-grid { order: 1 }
   .mobile-order-conversion-first .contact-section,
-  .mobile-order-conversion-first .section-enquiry-form { order: 1 }
-  .mobile-order-conversion-first.cta-mid-page .cta-section { order: 1 }
+  .mobile-order-conversion-first .section-enquiry-form { order: 2 }
+  /* A mid-page ask needs a middle to be in.
+     This hoisted on every page, and an About page is a hero, an explanation
+     and a closing ask — so the ask landed above the only content it was asking
+     about, and the seventh independent review found "the About CTA appearing
+     before the company explanation". The declaration is still honoured where
+     the page has an offering for the ask to follow; where it has none, the ask
+     keeps its place in the document rather than jumping to the front of it. */
+  .mobile-order-conversion-first.cta-mid-page .app-shell:has(.section-item-grid) .cta-section { order: 2 }
 
   /* Hero composition. The picture goes first, last, or not at all. */
   .mobile-hero-image-first .hero-section.has-image { display: flex; flex-direction: column-reverse }
@@ -789,7 +932,10 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   /* Density. The one decision of the plan that is a value, so the token does
      the work and no class is needed: a build that asked for the same rhythm
      compiles a scale of 1 and this rule changes nothing. */
-  .page-section { padding-top: calc(var(--section-space) * var(--mobile-section-space-scale)); padding-bottom: calc(var(--section-space) * var(--mobile-section-space-scale)) }
+  /* The same halving as the desktop rule above, so a plan that asked for the
+     same rhythm still gets the same rhythm and a `tighter` one still tightens
+     from where the page actually sits. */
+  .page-section { padding-top: calc(var(--section-pad) * var(--mobile-section-space-scale)); padding-bottom: calc(var(--section-pad) * var(--mobile-section-space-scale)) }
 
   /* Motion. A redeclaration of two motion properties rather than a third
      token, because what changes here is which values the existing ones take. */
@@ -876,11 +1022,26 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   color: var(--color-ink);
 }
 
-/* Outlined — the same footprint as solid, carried by a rule rather than a fill. */
+/* Outlined — a compact rectangle carried by a rule. Deliberately not solid's
+   footprint.
+
+   It used to be exactly solid's footprint with the fill swapped for a border,
+   which is the narrowest reading of "a different action family": two of the
+   three boxed treatments differed only in whether they were filled. The
+   independent reviewer named "pill buttons" as a template tell in the fourth
+   review and again in the sixth, after this axis existed — because both
+   treatments it could see were still the same 999px capsule. A quieter ask is
+   also a smaller and squarer one, so the shape carries the difference too. */
 .button.action-outlined {
   background: transparent;
   color: var(--color-text);
   border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  /* Smaller than solid's 48px and no smaller than the 44px touch target, so a
+     quieter ask is a smaller one and still not a harder one to hit. */
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 600;
   box-shadow: none;
 }
 .button.action-outlined.primary-action { border-color: var(--color-accent); color: var(--color-accent); }
@@ -1036,10 +1197,16 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
     column-gap: clamp(40px, 6vw, 96px);
     align-items: start;
   }
-  .hero-section.hero-compose-columns .hero-copy-column > h1 { grid-column: 1; margin: 0; }
-  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy,
-  .hero-section.hero-compose-columns .hero-copy-column > .section-actions { grid-column: 2; }
-  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy { margin-top: 0; }
+  .hero-section.hero-compose-columns .hero-copy-column > h1 { grid-column: 1; grid-row: 1; margin: 0; }
+  .hero-section.hero-compose-columns .hero-copy-column > .hero-copy { grid-column: 2; grid-row: 1; margin-top: 0; }
+  /* The ask sits under the claim, not under the column that happens to be
+     taller. It was in column 2 row 2, and row 1's height is set by the
+     headline rather than by the paragraph beside it — so a four-line company
+     name left the button floating some 110px below the sentence it belonged
+     to, with nothing in between. Under the headline it is directly beneath the
+     thing it is answering, and the row cannot open a hole underneath the
+     paragraph. */
+  .hero-section.hero-compose-columns .hero-copy-column > .section-actions { grid-column: 1; grid-row: 2; margin-top: clamp(20px, 2vw, 30px); }
 }
 
 /* Statement — the opening is the claim. Oversized display type under a rule,

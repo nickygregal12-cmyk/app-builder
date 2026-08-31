@@ -57,6 +57,24 @@ async function perform(page, interaction) {
     }
     return;
   }
+  if (interaction === 'navigation-disclosed') {
+    const { outcome } = INTERACTIONS[interaction];
+    const control = page.locator(outcome.control);
+    // The control is `hidden` until the disclosure script runs, so waiting for
+    // it is also how this waits for the behaviour to be live rather than for a
+    // fixed delay.
+    await control.waitFor({ state: 'visible', timeout: 5000 });
+    await control.click();
+    const panel = page.locator(outcome.panel);
+    await panel.waitFor({ state: 'visible', timeout: 5000 });
+    // Opened, not merely clicked. A picture of a panel that stayed shut would
+    // assert a state the capture never reached.
+    const open = await panel.getAttribute('data-open');
+    if (open !== outcome.reached) {
+      throw new Error(`Interaction ${interaction} did not reach its state: the panel reported data-open=${JSON.stringify(open)}.`);
+    }
+    return;
+  }
   throw new Error(`Unknown evidence interaction: ${interaction}`);
 }
 

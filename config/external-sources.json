@@ -182,23 +182,32 @@
       "adoption": "reference-only",
       "rating": 9.8,
       "useFor": [
-        "information architecture methodology"
+        "information architecture methodology",
+        "competitor and category experience audit method",
+        "vertical/category composition conventions",
+        "journey mapping method",
+        "usability-testing method for structural review"
       ],
       "borrowedIdeas": [
         "mental models before sitemaps",
         "card sorting, tree testing and first-click validation",
-        "label and taxonomy discipline"
+        "label and taxonomy discipline",
+        "auditing how excellent products in a category place the same tasks, as evidence rather than as a template",
+        "journey mapping as the input that justifies a hierarchy, not decoration after it"
       ],
-      "doNotAdopt": [],
+      "doNotAdopt": [
+        "hard-coded per-industry site templates — category conventions inform a composition decision, they do not become a stored layout for that industry",
+        "a second IA authority beside InformationArchitectureSpec"
+      ],
       "pinnedRef": null,
       "license": null,
       "allowedRoles": [],
       "contextTokensEstimate": null,
       "securityReview": "not-required",
       "updatePolicy": "none",
-      "evaluationStatus": "not-evaluated",
+      "evaluationStatus": "in-evaluation",
       "instructionAuthority": "none",
-      "notes": "Informs the information-architect role and the IA gate criteria."
+      "notes": "Informs the information-architect role and the IA gate criteria. Evaluation scope is the information-architecture, competitor-experience-audit, vertical-site-conventions, journey-mapping and usability-testing skills; the question for vertical-site-conventions specifically is whether category convention can improve composition decisions without becoming an industry template. Borrow mechanisms into the existing IA/UX/composition skills; install nothing."
     },
     "magnus919-agent-skills": {
       "id": "magnus919-agent-skills",
@@ -333,7 +342,7 @@
       "updatePolicy": "none",
       "evaluationStatus": "evaluated",
       "instructionAuthority": "none",
-      "notes": "Informs packages/design-intelligence in docs/DESIGN_INTELLIGENCE.md. DesignSystemSpec remains the only design authority. Adopted 2026-08-30 as prior art at the pinned commit, which was upstream HEAD when checked; MIT, Next Level Builder 2024. Evaluation: the useful part is a catalogue rather than executable guidance \u2014 74 font pairings keyed by category (serif+sans, sans+sans, display+sans, mono+sans) with mood and intended use. That category axis is what informed typographyStrategy: typographic character changes with the pairing category, not with size or weight, which is what earlier nbm candidate sets kept varying without effect. Security review, scoped to design roles reading its catalogues: every md/csv/json scanned for instruction-injection shapes and credentials; none found, and the only API_KEY strings are setup documentation for the upstream project's own Gemini and Google Fonts tooling, which this repository neither runs nor vendors. No file is copied in and nothing from it reaches a generated application: system font stacks were chosen over its Google Fonts data so no font bytes, licence obligation or network dependency enters generated output."
+      "notes": "Informs packages/design-intelligence in docs/DESIGN_INTELLIGENCE.md. DesignSystemSpec remains the only design authority. Adopted 2026-08-30 as prior art at the pinned commit, which was upstream HEAD when checked; MIT, Next Level Builder 2024. Evaluation: the useful part is a catalogue rather than executable guidance — 74 font pairings keyed by category (serif+sans, sans+sans, display+sans, mono+sans) with mood and intended use. That category axis is what informed typographyStrategy: typographic character changes with the pairing category, not with size or weight, which is what earlier nbm candidate sets kept varying without effect. Security review, scoped to design roles reading its catalogues: every md/csv/json scanned for instruction-injection shapes and credentials; none found, and the only API_KEY strings are setup documentation for the upstream project's own Gemini and Google Fonts tooling, which this repository neither runs nor vendors. No file is copied in and nothing from it reaches a generated application: system font stacks were chosen over its Google Fonts data so no font bytes, licence obligation or network dependency enters generated output."
     },
     "leonxlnx-taste-skill": {
       "id": "leonxlnx-taste-skill",
@@ -1166,7 +1175,7 @@
         "rapid internal-tool implementation prior art; deferred rather than under evaluation"
       ],
       "borrowedIdeas": [
-        "the breadth of application components an internal tool actually needs \u2014 data tables, date and time inputs, notifications, modals \u2014 as a coverage checklist",
+        "the breadth of application components an internal tool actually needs — data tables, date and time inputs, notifications, modals — as a coverage checklist",
         "a theming contract that carries colour scales, spacing, radius and typography in one object"
       ],
       "doNotAdopt": [
@@ -1183,6 +1192,59 @@
       "evaluationStatus": "not-evaluated",
       "instructionAuthority": "none",
       "notes": "Deferred, not a candidate. A fully styled library carries its own visual identity and a large theming runtime, which is the opposite of the anti-template bar in docs/VISUAL_EXCELLENCE.md, so broad adoption would over-constrain generated identity. Revisit only if a real internal-tool project shows that speed of assembly rather than identity is the binding constraint, and then only for that class."
+    },
+    "yhassy-wireframe-skill": {
+      "id": "yhassy-wireframe-skill",
+      "repository": "yhassy/wireframe-skill",
+      "url": "https://github.com/yhassy/wireframe-skill",
+      "adoption": "candidate",
+      "rating": 6.5,
+      "useFor": [
+        "machine-readable low-fidelity structural layout, evaluated as prior art for a CompositionPlan/WireframeSpec"
+      ],
+      "borrowedIdeas": [
+        "structure expressed as data rather than as markup, so it can be diffed, linted and compared",
+        "a browser-renderable preview of structure before any visual styling exists",
+        "separating structural intent from visual treatment so a hierarchy problem cannot hide behind polish"
+      ],
+      "doNotAdopt": [
+        "its wireframe schema wholesale — PageSpec/SectionSpec already exist and an intermediate artifact must extend them rather than start a second composition vocabulary",
+        "wireframe generation as a rendering path; the evaluation is about structural reasoning, not about a second renderer"
+      ],
+      "pinnedRef": "948d4331343b18d913d5bc502da72ed0c5f19101",
+      "license": "MIT",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Registered as prior art for the CompositionPlan/WireframeSpec investigation. No role may load it until that investigation decides an intermediate artifact is earned; registration is not adoption."
+    },
+    "vercel-labs-agent-browser": {
+      "id": "vercel-labs-agent-browser",
+      "repository": "vercel-labs/agent-browser",
+      "url": "https://github.com/vercel-labs/agent-browser",
+      "adoption": "candidate",
+      "rating": 7.5,
+      "useFor": [
+        "third candidate in the existing browser-tooling evaluation, judged against Playwright MCP and Chrome DevTools MCP"
+      ],
+      "borrowedIdeas": [
+        "accessibility-tree-first interaction, which is cheaper in agent context than screenshot-first control"
+      ],
+      "doNotAdopt": [
+        "a third parallel browser stack — this is adopted only if it replaces one of the two existing candidates on measured context efficiency, runtime/network inspection and brownfield reconnaissance, and is rejected outright if the existing pair is better"
+      ],
+      "pinnedRef": "118af8eef1eebe21b949c3cf677d468330da7a46",
+      "license": "Apache-2.0",
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Evaluation candidate only, and explicitly a comparison rather than an addition: the browser lane ends with at most two tools."
     }
   }
 }

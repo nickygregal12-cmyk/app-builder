@@ -70,6 +70,19 @@ Build a personal, low-credit AI app/website factory. App Builder should solve re
 21. **An ambiguous task orients before it routes.** A prompt whose subsystem cannot be determined stays unclassified and proceeds through bounded orientation. Guessing an expensive specialist is worse than reading a little first.
 22. **Real product evidence earns architectural expansion.** Once the professional-output completeness gate in `docs/VISUAL_EXCELLENCE.md` is genuinely usable, the factory enters a product-proof freeze: run deliberately varied real businesses from replayable inputs, fix only the reusable defects they expose, rerun the same inputs and let measured evidence decide what expands next. Security, data-loss and durability blockers may interrupt that freeze; roadmap enthusiasm may not.
 23. **Machines record current state; humans record why.** `config/factory-status.json` and the registries are the machine-readable truth about what is done, active and outstanding. Prose authorities explain reasoning and decisions and should point at that state rather than restate it, so advancing a stage cannot leave several documents disagreeing about the present.
+24. **Owner intent is authoritative; an owner's proposed solution is a candidate.** Facts, outcomes,
+    business rules, rights decisions and anything the owner marks non-negotiable are authoritative and
+    are never quietly downgraded — principle 7 and hard-constraint enforcement are unchanged by this.
+    Proposed layouts, navigation patterns, components, libraries, state management and implementation
+    approaches are *hypotheses about how to reach the outcome*, and the factory is permitted — expected —
+    to supersede one when specialist evidence supports a better answer. "Users must be able to switch
+    competition from every screen" is a requirement; "put competitions in a dropdown" is a proposal.
+    Treating those as the same instruction is how a plausible suggestion becomes product authority
+    without ever being tested. Where the factory materially diverges it records the owner's suggestion,
+    the goal it inferred, the evidence and why the selected solution is better; where it genuinely lacks
+    information it asks, rather than choosing confidently in the dark. Asking is for unknown facts,
+    business policy, rights, legal and cost judgement, destructive actions and genuinely equivalent
+    subjective directions — not for implementation choices the factory is the expert in.
 
 ## Context budgets
 

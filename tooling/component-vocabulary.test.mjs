@@ -350,6 +350,40 @@ test('a set of bare names is not stretched across the measure', () => {
   assert.match(base[1], /display:\s*flex/, 'the bare-name list should size its items to their content');
 });
 
+/**
+ * One row, one number.
+ *
+ * The register renders its index as a real element — that is what lets it
+ * survive being read without a stylesheet — and two other rules draw a counter
+ * for a schedule-rows list that has none: the figure-index moment, and the
+ * grid's own numbering for location, entity and content lists. On MGB Decor,
+ * whose direction declares both `schedule-rows` and `figure-index`, all of them
+ * fired: eight services and two locations each rendered "01 01".
+ *
+ * A guard for the first collision already existed and was written for the
+ * detailed `.content-card` form, so it missed the bare-name register entirely.
+ * Both forms are asserted here, and the ordering matters as much as the rules —
+ * the guards and the counters are the same specificity, so a guard that moved
+ * above its counter would silently stop working.
+ */
+test('a register that numbers itself is not numbered twice', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const guards = [
+    { counter: /\.moment-figure-index \.section-item-grid \.plain-list li::after \{/, guard: /\.moment-figure-index \.panel-schedule-rows\.plain-list > li::after \{[^}]*content:\s*none/ },
+    { counter: /\.grid-schedule-rows \.section-location-list \.plain-list li::after,/, guard: /\.grid-schedule-rows \.plain-list\.panel-named-register > li::after \{[^}]*content:\s*none/ },
+  ];
+  for (const { counter, guard } of guards) {
+    assert.match(css, counter, 'the counter this guard exists for is gone; the guard may be stale');
+    assert.match(css, guard, 'a schedule-rows list that renders its own index still gets a second, generated number');
+    assert.ok(
+      css.search(guard) > css.search(counter),
+      'the guard is the same specificity as the counter it suppresses, so it has to come after it',
+    );
+  }
+  // The detailed form's guard, which existed first and must not be lost.
+  assert.match(css, /\.moment-figure-index \.panel-schedule-rows > \.content-card::after \{[^}]*content:\s*none/);
+});
+
 test('every direction chooses a panel grammar, and the imagery-free set spans them', () => {
   const directions = json('config/visual-directions.json').directions;
   for (const [id, direction] of Object.entries(directions)) {

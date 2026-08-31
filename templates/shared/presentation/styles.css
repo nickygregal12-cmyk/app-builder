@@ -239,7 +239,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .enquiry-actions p { margin: 0; color: var(--color-text-muted); font-size: .9rem }
 
 /* Closing call to action ------------------------------------------------ */
-.cta-section { display: flex; align-items: center; justify-content: space-between; gap: 40px; margin: 0 max(20px, calc((100vw - var(--layout-max-width)) / 2)) var(--section-space); padding: clamp(40px, 5vw, 64px); border-radius: calc(var(--layout-radius) * 1.5); background: var(--color-surface-inverse); color: var(--color-text-inverse) }
+.cta-section { display: flex; align-items: center; justify-content: space-between; gap: 40px; margin: 0 max(20px, calc((100vw - var(--layout-max-width)) / 2)) var(--section-pad); padding: clamp(40px, 5vw, 64px); border-radius: calc(var(--layout-radius) * 1.5); background: var(--color-surface-inverse); color: var(--color-text-inverse) }
 .cta-section h2, .cta-section p { color: var(--color-text-inverse) }
 .cta-section p { max-width: 52ch; margin: 12px 0 0; opacity: .78; font-size: var(--text-lg) }
 .cta-section .section-actions { margin-top: 0 }
@@ -542,6 +542,17 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .moment-figure-index .panel-schedule-rows > .content-card { padding-top: 20px }
 .moment-figure-index .panel-schedule-rows > .content-card::after { content: none }
 .moment-figure-index .panel-schedule-rows .panel-index { font-size: var(--text-xl) }
+/* The same collision, in the form the guard above missed.
+
+   A register of *bare names* is an `<ol class="plain-list panel-schedule-rows
+   panel-named-register">` whose children are plain `li`, not `.content-card` —
+   so the rule above did not match it and the moment drew its plate anyway.
+   MGB Decor's eight services and two locations each rendered two numerals, a
+   small one and a large one, on every row of the home page. The register's own
+   index is a real element and already provides the gutter, so the moment's
+   counter and its 62px indent both come off. */
+.moment-figure-index .panel-schedule-rows.plain-list > li::after { content: none }
+.moment-figure-index .panel-schedule-rows.plain-list > li { padding-left: 0 }
 
 /* A showcase. --------------------------------------------------------------
    One entry carries the argument and the rest support it, which is a
@@ -637,6 +648,16 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   font-weight: 700;
   letter-spacing: .08em;
 }
+/* Unless the list already numbers itself.
+
+   These three draw a counter for a schedule-rows list that has none. A named
+   register *does* — `.panel-index` is a real element in the document, which is
+   the whole reason the register survives being read without a stylesheet — so
+   on MGB Decor's Locations the two ran together and every row carried "01 01".
+   Placed after the block rather than merged into it because these selectors and
+   the guard higher up are the same specificity, and the later one wins. */
+.grid-schedule-rows .plain-list.panel-named-register > li::after { content: none }
+.grid-schedule-rows .plain-list.panel-named-register > li { padding-left: 0 }
 /* The contact panel is a set of rows in the middle of the page like any other,
    and it was the one that stayed outside the grammar. Two directions that
    differed in their opening, their items, their closing ask and their typeface

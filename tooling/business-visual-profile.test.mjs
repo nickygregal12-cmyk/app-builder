@@ -158,3 +158,131 @@ test('a direction that suits nothing still competes rather than being refused', 
   assert.ok(eligible.some((direction) => direction.id === 'structured-practice'), 'a poor fit is not a refusal; a set of three has to come from somewhere');
   assert.ok(!refused.some((entry) => entry.reason === 'lower-business-fit'), 'nothing was dropped for fit here, because only three were eligible');
 });
+
+/**
+ * The failure mode this whole mechanism could quietly become.
+ *
+ * With two genuine businesses in the corpus, a selector that learned
+ * `nbm -> editorial` and `mgb -> register` would pass every test above while
+ * having understood nothing. It would also be invisible: the rankings would look
+ * considered and the reasons would read plausibly.
+ *
+ * These are the tests that make that impossible to fake. Identity must not
+ * reach the decision, and a real change in design need must.
+ */
+
+/** The same business, renamed. Nothing a designer would care about has moved. */
+function renamed(slug, name) {
+  const manifest = structuredClone(bundle(slug).projectManifest);
+  manifest.project.name = name;
+  manifest.project.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  manifest.company.identity.name = name;
+  manifest.company.identity.legalName = `${name} Ltd`;
+  return manifest;
+}
+
+function selectManifest(manifest, composition = null) {
+  const assetReadiness = typographic();
+  const businessProfile = deriveBusinessVisualProfile({ manifest, composition, assetReadiness });
+  const selection = selectVisualDirections({ projectType: 'marketing-site', registry, assetReadiness, composition, businessProfile });
+  return { profile: businessProfile, selection };
+}
+
+test('changing only the company name changes nothing about the selection', () => {
+  for (const slug of ['nbm', 'mgb']) {
+    const original = selectManifest(bundle(slug).projectManifest);
+    const swapped = selectManifest(renamed(slug, 'Ordinary Trading Company'));
+
+    assert.deepEqual(swapped.profile.values, original.profile.values, `${slug}: a rename must not move a single derived signal`);
+    assert.deepEqual(
+      swapped.selection.fit,
+      original.selection.fit,
+      `${slug}: a rename must not change the ranking, or the selector has learned the company rather than the business`,
+    );
+  }
+});
+
+test('two differently-named businesses with the same design needs get the same directions', () => {
+  // The generalisation claim, stated as a test: design need decides, identity
+  // does not. Two local services with the same shape should be treated alike
+  // however they are called.
+  const first = selectManifest(renamed('mgb', 'Northern Coatings'));
+  const second = selectManifest(renamed('mgb', 'Southside Painters'));
+  assert.deepEqual(first.profile.values, second.profile.values);
+  assert.deepEqual(
+    first.selection.eligible.map((direction) => direction.id),
+    second.selection.eligible.map((direction) => direction.id),
+  );
+});
+
+test('no company name appears anywhere in the derived profile', () => {
+  for (const slug of ['nbm', 'mgb']) {
+    const manifest = bundle(slug).projectManifest;
+    const serialised = JSON.stringify(deriveBusinessVisualProfile({ manifest, composition: null, assetReadiness: typographic() }));
+    for (const token of manifest.project.name.split(/\s+/).filter((word) => word.length > 3)) {
+      assert.doesNotMatch(serialised, new RegExp(token, 'i'), `${token} must not reach a presentation decision`);
+    }
+  }
+});
+
+test('a meaningful change in design need does change the fit', () => {
+  const base = selectManifest(bundle('nbm').projectManifest);
+
+  // Perturb the shape rather than the identity: the same practice, if it grew
+  // into a broad catalogue with a work surface to show.
+  const grown = structuredClone(bundle('nbm').projectManifest);
+  grown.company.services = [...grown.company.services, 'Contract Administration', 'Feasibility Studies', 'Dispute Resolution', 'Asset Capture'];
+  grown.majorSurfaces = [...grown.majorSurfaces, 'Our Work'];
+  const changed = selectManifest(grown);
+
+  assert.equal(base.profile.values.serviceBreadth, 'focused');
+  assert.equal(changed.profile.values.serviceBreadth, 'broad', 'eight services is a different design problem from four');
+  assert.notEqual(changed.profile.values.showcaseIntent, base.profile.values.showcaseIntent);
+  assert.notDeepEqual(
+    changed.selection.fit.map((entry) => entry.directionId),
+    base.selection.fit.map((entry) => entry.directionId),
+    'a business that changed shape should be ranked differently, or the signals are decorative',
+  );
+});
+
+test('the same business replayed twice selects identically', () => {
+  for (const slug of ['nbm', 'mgb']) {
+    const first = selectManifest(bundle(slug).projectManifest);
+    const second = selectManifest(bundle(slug).projectManifest);
+    assert.deepEqual(second.selection.fit, first.selection.fit, `${slug}: selection must be deterministic`);
+    assert.deepEqual(second.profile, first.profile);
+  }
+});
+
+test('a synthetic profile with no corpus lineage still ranks sensibly', () => {
+  // Nothing here comes from either real business, which is the point: the rules
+  // must work on a shape they have never seen rather than on two remembered
+  // companies.
+  const synthetic = {
+    project: { name: 'Synthetic Fixture', type: 'marketing-site' },
+    journeys: ['Read the argument', 'Get in touch'],
+    majorSurfaces: ['Home', 'About', 'Contact'],
+    company: { services: ['One service'], locations: [], trustSignals: ['Chartered member'], conversionGoals: ['contact form'] },
+  };
+  const { profile, selection } = selectManifest(synthetic);
+  assert.equal(profile.values.serviceBreadth, 'focused');
+  assert.equal(profile.values.evidenceDepth, 'evidenced');
+  assert.equal(profile.values.showcaseIntent, 'information-led');
+  assert.equal(profile.values.serviceReach, 'broad');
+  // A focused, evidenced, information-led practice is what structured-practice
+  // and editorial-authority are for; the register is not.
+  assert.ok(['structured-practice', 'editorial-authority'].includes(selection.fit[0].directionId));
+  assert.ok(selection.fit[0].score > 0, 'a clearly-shaped business should match something');
+});
+
+test('business fit never argues an invalid direction into existence', () => {
+  // Ranking runs after refusal, and must stay there. An imagery-led business
+  // whose imagery is not publishable still cannot have immersive-lead.
+  const showcase = structuredClone(bundle('mgb').projectManifest);
+  const { selection } = selectManifest(showcase);
+  assert.ok(
+    selection.refused.some((entry) => entry.directionId === 'immersive-lead' && entry.reason === 'imagery-not-available'),
+    'no publishable imagery must still refuse an imagery-required direction, whatever the business fit says',
+  );
+  assert.ok(!selection.eligible.some((direction) => direction.id === 'immersive-lead'));
+});

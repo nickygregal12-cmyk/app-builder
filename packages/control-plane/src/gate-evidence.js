@@ -79,6 +79,10 @@ export function assertProducerRegistry(registry, gates) {
     text(producer.command, `Producer ${producerId} command`);
     text(producer.artifactKind, `Producer ${producerId} artifactKind`);
     text(producer.buildRefField, `Producer ${producerId} buildRefField`);
+    // Which run produces this artifact. Without it, integrity cannot tell a
+    // lane that failed to produce its own evidence from one that was never
+    // going to, and every check produced elsewhere reads as broken wiring.
+    text(producer.lane, `Producer ${producerId} lane`);
   }
   return { producerCount: Object.keys(producers).length, checkCount: Object.keys(checks).length };
 }
@@ -292,9 +296,11 @@ export function summariseResolutions(resolutions) {
  * threshold, and prevents an unpaid product gate from masquerading as broken
  * evidence wiring.
  */
-export function evaluateEvidenceIntegrity({ resolutions, registry }) {
+export function evaluateEvidenceIntegrity({ resolutions, registry, lane = null }) {
   const byGate = new Map((resolutions ?? []).map((entry) => [entry.gateId, entry]));
+  const producers = registry?.producers ?? {};
   const failures = [];
+  const otherLanes = [];
   let expectedChecks = 0;
   let resolvedChecks = 0;
 
@@ -303,6 +309,17 @@ export function evaluateEvidenceIntegrity({ resolutions, registry }) {
     // A registry can serve several pipeline classes. A check is expected in
     // this lane only when its owning gate is one of this lane's resolutions.
     if (!gate) continue;
+
+    // And only when this lane is the one that produces it. A lane builds one
+    // thing and measures it; a producer that builds a different project cannot
+    // answer for this build, and calling that broken evidence wiring is what
+    // kept three real producers unregistered rather than admitting the gate
+    // they answer is measured somewhere else.
+    const producerLane = producers[check.producer]?.lane ?? null;
+    if (lane && producerLane && producerLane !== lane) {
+      otherLanes.push({ checkId: check.id, gateId: check.gate, producerId: check.producer, lane: producerLane });
+      continue;
+    }
     expectedChecks += 1;
     const resolution = gate.checks.find((entry) => entry.id === check.id);
     if (!resolution) {
@@ -316,6 +333,11 @@ export function evaluateEvidenceIntegrity({ resolutions, registry }) {
 
   return {
     status: failures.length === 0 && expectedChecks > 0 ? 'pass' : 'fail',
+    lane,
+    // Named rather than silently skipped. A check this lane does not produce is
+    // still a check somebody has to run, and a reader who cannot see which ones
+    // were deferred cannot tell coverage from omission.
+    deferredToOtherLanes: otherLanes,
     expectedChecks,
     resolvedChecks,
     failures,

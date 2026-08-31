@@ -56,14 +56,34 @@ test('every producer names a command somebody can actually run', () => {
   }
 });
 
-test('the command that collects evidence writes every artifact the registry promises', () => {
+test('the command that collects evidence writes every artifact its own lane promises', () => {
   // The registry says where each artifact lands. `tooling/gate-evidence.mjs` is
-  // what puts it there, and it resolves the path from this file — so the check
-  // that matters is that it publishes every registered producer, not that a
-  // string appears twice.
+  // what puts it there for its own lane, and it resolves the path from this
+  // file — so the check that matters is that it publishes every producer that
+  // lane owns, not that a string appears twice.
+  //
+  // Scoped by lane since a producer may belong to another one. A browser lane
+  // builds and serves its own project; requiring gate-evidence.mjs to mention
+  // it would be requiring one lane to write another lane's evidence, which is
+  // the conflation this registry stopped making.
   const source = fs.readFileSync('tooling/gate-evidence.mjs', 'utf8');
-  for (const id of Object.keys(REGISTRY.producers)) {
+  for (const [id, producer] of Object.entries(REGISTRY.producers)) {
+    if (producer.lane !== 'gate-evidence') continue;
     assert.ok(source.includes(`'${id}'`), `gate-evidence.mjs never publishes producer ${id}, so its check can only ever be artifact-missing`);
+  }
+});
+
+test('a producer outside the gate-evidence lane is run by a command CI actually invokes', () => {
+  // Its artifact has to come from somewhere. A producer in its own lane whose
+  // command nothing runs is registered evidence that can only ever be missing,
+  // which is worse than leaving the check unanswered and honest.
+  const workflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8');
+  for (const producer of Object.values(REGISTRY.producers)) {
+    if (producer.lane === 'gate-evidence') continue;
+    assert.ok(
+      workflow.includes(producer.command),
+      `${producer.id} is in the ${producer.lane} lane and CI never runs ${producer.command}, so its artifact would never exist`,
+    );
   }
 });
 

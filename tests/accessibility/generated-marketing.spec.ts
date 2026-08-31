@@ -1,6 +1,37 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
+import type { TestInfo } from '@playwright/test';
 import { expect, test } from './journey';
 import { composedRoutes } from './routes';
+
+/**
+ * Where this lane leaves evidence a gate can read.
+ *
+ * The axe result is attached to the Playwright report as well, and that
+ * attachment is for a person. `tooling/accessibility-evidence.mjs` compiles
+ * what is written here into the artifact `axe-serious-critical` resolves
+ * against — a test report is not an artifact, and the check went unanswered for
+ * exactly that reason.
+ *
+ * One file per viewport project, so two projects never write the same file.
+ */
+const EVIDENCE = '.app-builder/accessibility/measurements';
+
+function record(testInfo: TestInfo, measurement: Record<string, unknown>) {
+  fs.mkdirSync(EVIDENCE, { recursive: true });
+  const file = path.join(EVIDENCE, `${testInfo.project.name}.json`);
+  const existing = fs.existsSync(file)
+    ? JSON.parse(fs.readFileSync(file, 'utf8'))
+    : { schemaVersion: 1, viewport: testInfo.project.name, measurements: [] };
+  existing.measurements = existing.measurements.filter(
+    (entry: Record<string, unknown>) => entry.route !== measurement.route,
+  );
+  existing.measurements.push(measurement);
+  existing.measurements.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+    String(a.route).localeCompare(String(b.route)));
+  fs.writeFileSync(file, `${JSON.stringify(existing, null, 2)}\n`);
+}
 
 /**
  * The generated marketing app, audited at the pages it actually has.
@@ -51,6 +82,23 @@ for (const { route, pageId, notFound } of composedRoutes('.tmp/generated-accepta
     await testInfo.attach('axe-accessibility-results', {
       body: JSON.stringify({ pageId, route, ...result }, null, 2),
       contentType: 'application/json',
+    });
+
+    // Recorded before the assertion, so a run that fails still leaves evidence
+    // of what it found. Evidence that only survives a passing run describes a
+    // product that never has problems.
+    record(testInfo, {
+      route,
+      pageId,
+      viewport: testInfo.project.name,
+      violations: result.violations.map((violation) => ({
+        id: violation.id,
+        impact: violation.impact,
+        help: violation.help,
+        nodes: violation.nodes,
+      })),
+      passes: result.passes.length,
+      incomplete: result.incomplete.length,
     });
 
     const blocking = result.violations.filter((violation) => violation.impact && blockingImpacts.has(violation.impact));

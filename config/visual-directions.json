@@ -6,6 +6,7 @@
       "structured-practice",
       "editorial-authority",
       "schedule-register",
+      "service-forward",
       "immersive-lead"
     ],
     "content-site": [
@@ -317,6 +318,67 @@
         "showcaseIntent": [
           "information-led",
           "work-led-unproven"
+        ]
+      }
+    },
+    "service-forward": {
+      "label": "Service forward",
+      "purpose": "Expressive and conversion-led without a single photograph. The opening is a large typographic statement rather than a picture, services are the argument and are laid out asymmetrically so a broad list reads as a considered offer rather than a table, and the ask is an edge-to-edge band a visitor meets before the page ends. For a business whose work is skilled but unphotographed and whose page exists to be acted on: the expressive vocabulary was previously reachable only through immersive-lead, which requires imagery, so any business without publishable photography was left with the restrained forms whatever its actual character. This is a general answer to expressive-and-imagery-poor, not a category of trade.",
+      "design": {
+        "density": "comfortable",
+        "maxWidth": "74rem",
+        "radius": "0.25rem"
+      },
+      "artDirection": {
+        "layoutVariance": "varied",
+        "motionIntensity": "subtle",
+        "visualDistinctiveness": "expressive",
+        "restraintLevel": "low"
+      },
+      "composition": {
+        "heroStrategy": "split",
+        "gridFamily": "asymmetric",
+        "headingTreatment": "plain",
+        "ctaPlacement": "mid-page",
+        "sectionOrder": [
+          "item-grid",
+          "proof-grid",
+          "location-list",
+          "people-grid",
+          "gallery",
+          "contact-panel"
+        ],
+        "distinctiveMoment": "figure-index",
+        "actionTreatment": "block",
+        "ctaComposition": "panel",
+        "heroComposition": "stacked",
+        "typographyStrategy": "bold",
+        "navigationFamily": "centred"
+      },
+      "assetAppetite": "imagery-optional",
+      "responsive": {
+        "mobileHero": "copy-first",
+        "mobileSectionOrder": "conversion-first",
+        "mobileDensity": "tighter",
+        "mobileMotion": "reduced"
+      },
+      "suits": {
+        "contentDensity": [
+          "compact"
+        ],
+        "serviceBreadth": [
+          "broad"
+        ],
+        "conversionEmphasis": [
+          "high"
+        ],
+        "showcaseIntent": [
+          "work-led",
+          "work-led-unproven"
+        ],
+        "assetMode": [
+          "typographic",
+          "imagery-supporting"
         ]
       }
     }

@@ -103,8 +103,14 @@ test('selection ranks the same eligible directions differently for the two busin
   );
 
   assert.equal(nbm.fit[0].directionId, 'editorial-authority', 'a focused, information-led practice leads with the editorial direction');
-  assert.equal(mgb.fit[0].directionId, 'schedule-register', 'a broad, dense service catalogue leads with the register');
-  assert.ok(nbm.fit[0].score > mgb.fit[0].score || nbm.fit[0].directionId !== mgb.fit[0].directionId);
+  assert.equal(mgb.fit[0].directionId, 'service-forward', 'a broad, conversion-led catalogue with no photography leads with the expressive service direction');
+
+  // Different sets, not merely a different order over one set. This is the
+  // assertion the whole exercise exists to make true.
+  const nbmSet = new Set(nbm.eligible.map((direction) => direction.id));
+  const mgbSet = new Set(mgb.eligible.map((direction) => direction.id));
+  assert.ok([...mgbSet].some((id) => !nbmSet.has(id)), 'mgb must be offered something nbm is not');
+  assert.ok([...nbmSet].some((id) => !mgbSet.has(id)), 'nbm must be offered something mgb is not');
 });
 
 test('every chosen direction records why it was chosen', () => {
@@ -119,27 +125,20 @@ test('every chosen direction records why it was chosen', () => {
 });
 
 /**
- * The measurement that specifies the next piece of work.
+ * The shelf is no longer empty, and this is where that was measured.
  *
- * MGB's third direction scores zero: it is eligible, it renders, and nothing
- * about this business argues for it. That is not a bug in the ranking — it is
- * the ranking reporting that the registry has no third answer for a broad,
- * conversion-led, imagery-poor catalogue, and a tie resolved on registry order
- * is what a set looks like when the shelf is empty.
- *
- * This asserts the ranking is honest about that rather than flattering it. When
- * a direction is added that genuinely serves this shape, this test should fail
- * and be updated with the better score, which is the point.
+ * Before `service-forward`, MGB's third direction scored zero: eligible, it
+ * rendered, and nothing about the business argued for it. That zero was the
+ * registry reporting it had no answer for a broad, conversion-led, imagery-poor
+ * catalogue, and the previous version of this test held it deliberately so that
+ * adding such a direction would fail here. It did.
  */
-test('a direction nothing argues for scores zero rather than being flattered', () => {
+test('every direction offered to mgb is now there for a reason', () => {
   const { fit } = selectionFor('mgb');
-  const weakest = fit[fit.length - 1];
-  assert.equal(weakest.score, 0);
-  assert.deepEqual(weakest.matched, []);
-  assert.ok(
-    fit.filter((entry) => entry.score === 0).length >= 1,
-    'the registry currently offers marketing sites three imagery-poor directions; a zero here is the shelf being empty, not the ranking failing',
-  );
+  for (const entry of fit) {
+    assert.ok(entry.score > 0, `${entry.directionId} was offered to mgb without a single signal arguing for it`);
+  }
+  assert.ok(fit[0].score >= 4, 'the leading direction should be a strong match, not the least-bad of three');
 });
 
 test('without a profile, selection behaves exactly as it did before', () => {
@@ -150,13 +149,21 @@ test('without a profile, selection behaves exactly as it did before', () => {
   assert.equal(before.fit, undefined, 'no profile means no fit was computed, rather than a fit computed from nothing');
 });
 
-test('a direction that suits nothing still competes rather than being refused', () => {
+test('losing on fit is recorded as a ranking, not as an impossibility', () => {
   const profile = profileFor('mgb');
-  const scored = scoreDirectionAgainstProfile(registry.directions['structured-practice'], profile);
-  assert.equal(scored.score, 0);
+  assert.equal(scoreDirectionAgainstProfile(registry.directions['structured-practice'], profile).score, 0);
+
   const { eligible, refused } = selectionFor('mgb');
-  assert.ok(eligible.some((direction) => direction.id === 'structured-practice'), 'a poor fit is not a refusal; a set of three has to come from somewhere');
-  assert.ok(!refused.some((entry) => entry.reason === 'lower-business-fit'), 'nothing was dropped for fit here, because only three were eligible');
+  assert.ok(!eligible.some((direction) => direction.id === 'structured-practice'));
+
+  // The distinction that matters to an operator comparing two businesses: this
+  // direction could have rendered and was simply a worse answer, which is not
+  // the same statement as "no photography made it impossible".
+  const dropped = refused.find((entry) => entry.directionId === 'structured-practice');
+  assert.equal(dropped.reason, 'lower-business-fit');
+  assert.match(dropped.detail, /It was eligible; it was not the best fit\./);
+  const impossible = refused.find((entry) => entry.directionId === 'immersive-lead');
+  assert.equal(impossible.reason, 'imagery-not-available');
 });
 
 /**

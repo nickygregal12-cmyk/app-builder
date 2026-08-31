@@ -55,8 +55,17 @@ function nextWorkspace(root, slug, limit = 50) {
   throw new Error(`Refusing to allocate more than ${limit} build workspaces for ${slug}.`);
 }
 
+/**
+ * What the service says about a project over its own boundary.
+ *
+ * Asserted against its own contract on the way out. The Console reads this
+ * shape from a generated type, so a field renamed here and not in the schema
+ * would compile on both sides and display nothing — which is exactly what
+ * happened twice by hand before this family existed. Validating the projection
+ * is cheap and turns that into a refusal at the boundary that produced it.
+ */
 function summary(project) {
-  return {
+  return assertContract('project-summary', {
     id: project.id,
     name: project.name,
     type: project.type,
@@ -80,7 +89,7 @@ function summary(project) {
     approvedIntakeBundleId: project.intakeBundle?.bundleId ?? null,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
-  };
+  });
 }
 
 function commandFailure(command, args, result) {

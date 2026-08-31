@@ -17,6 +17,7 @@ import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEviden
 import { compileDesignLintReport, templateTokenDefaults } from '../../../tooling/lib/design-lint.mjs';
 import { compileAssetReadiness } from '../../../tooling/lib/asset-readiness.mjs';
 import { classifyCandidateTruthReadiness } from '../../../tooling/lib/candidate-truth-readiness.mjs';
+import { deriveBusinessVisualProfile } from '../../../tooling/lib/business-visual-profile.mjs';
 import { applyVisualDirection, compileVisualDirection, loadVisualDirections, selectVisualDirections, structuralSignature } from '../../../tooling/lib/visual-direction.mjs';
 import { validateBespokePresentation, writeBespokePresentation } from '../../../tooling/lib/bespoke-presentation.mjs';
 import { buildCandidateSet, decideCandidateSet, loadVisualQualityGate, promoteCandidate, recordCandidateEvidence, recordReview, reviewCriteriaFor, summariseCandidateSet } from '../../../tooling/lib/visual-candidates.mjs';
@@ -1358,10 +1359,16 @@ export class FactoryService {
     // direction, and it belongs in the signature so a candidate set generated
     // across different shells is still comparable.
     const layoutPatternId = JSON.parse(fs.readFileSync(path.join(this.factoryRoot, 'config/layout-patterns.json'), 'utf8')).projectTypeDefaults?.[frozenTruth.projectType] ?? null;
-    const { eligible, refused } = selectVisualDirections({
+    // What sort of visual problem this business presents, derived from what it
+    // already approved. Two marketing sites with no photography used to be
+    // indistinguishable to selection and therefore received the same three
+    // directions; this is the fact that tells them apart.
+    const businessProfile = deriveBusinessVisualProfile({ manifest: project.manifest, composition, assetReadiness });
+    const { eligible, refused, fit } = selectVisualDirections({
       projectType: frozenTruth.projectType,
       registry,
       assetReadiness,
+      businessProfile,
       // The frozen composition, so a direction whose distinctive moment has
       // nothing to render here is refused rather than generated as a decision
       // that shows nothing.
@@ -1391,6 +1398,8 @@ export class FactoryService {
       frozenTruth,
       assetReadiness,
       truthReadiness,
+      businessProfile,
+      directionFit: fit ?? null,
       refusedDirections: refused,
       createdBy,
       candidates: eligible.map((direction) => this.draftCandidate(direction, composition, layoutPatternId)),

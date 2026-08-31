@@ -97,6 +97,18 @@
         "mobileSectionOrder": "conversion-first",
         "mobileDensity": "tighter",
         "mobileMotion": "as-desktop"
+      },
+      "suits": {
+        "serviceBreadth": [
+          "focused"
+        ],
+        "contentDensity": [
+          "comfortable",
+          "relaxed"
+        ],
+        "evidenceDepth": [
+          "evidenced"
+        ]
       }
     },
     "editorial-authority": {
@@ -139,6 +151,20 @@
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "as-desktop",
         "mobileMotion": "as-desktop"
+      },
+      "suits": {
+        "contentDensity": [
+          "relaxed"
+        ],
+        "serviceBreadth": [
+          "focused"
+        ],
+        "showcaseIntent": [
+          "information-led"
+        ],
+        "assetMode": [
+          "typographic"
+        ]
       }
     },
     "immersive-lead": {
@@ -181,6 +207,17 @@
         "mobileSectionOrder": "conversion-first",
         "mobileDensity": "as-desktop",
         "mobileMotion": "reduced"
+      },
+      "suits": {
+        "assetMode": [
+          "imagery-led"
+        ],
+        "showcaseIntent": [
+          "work-led"
+        ],
+        "evidenceDepth": [
+          "evidenced"
+        ]
       }
     },
     "dense-utility": {
@@ -216,6 +253,17 @@
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "tighter",
         "mobileMotion": "reduced"
+      },
+      "suits": {
+        "contentDensity": [
+          "compact"
+        ],
+        "serviceBreadth": [
+          "broad"
+        ],
+        "conversionEmphasis": [
+          "high"
+        ]
       }
     },
     "schedule-register": {
@@ -258,6 +306,18 @@
         "mobileSectionOrder": "as-desktop",
         "mobileDensity": "tighter",
         "mobileMotion": "reduced"
+      },
+      "suits": {
+        "contentDensity": [
+          "compact"
+        ],
+        "serviceBreadth": [
+          "broad"
+        ],
+        "showcaseIntent": [
+          "information-led",
+          "work-led-unproven"
+        ]
       }
     }
   }

@@ -35,6 +35,7 @@ import path from 'node:path';
 import { rehashComposition } from '../../packages/composition/src/index.js';
 import { DEFAULT_ART_DIRECTION, LAYOUT_VARIANCE_ORDER, RESTRAINT_LEVELS, VISUAL_DISTINCTIVENESS_ORDER, compileArtDirectionPlan } from './art-direction.mjs';
 import { MOTION_INTENSITY_ORDER } from './motion-contract.mjs';
+import { scoreDirectionAgainstProfile } from './business-visual-profile.mjs';
 
 /**
  * The action family — what a call to action is actually made of.
@@ -797,7 +798,17 @@ const MOMENT_REQUIREMENTS = Object.freeze({
  * moment rule for public-facing types, and — where a composition is supplied —
  * whether that moment has anything to render.
  */
-export function selectVisualDirections({ projectType, registry, assetReadiness = null, composition = null, requested = null, referenceInfluence = null } = {}) {
+/**
+ * How many candidates a set carries.
+ *
+ * Once directions are ranked rather than merely filtered, "everything that
+ * survived" stops being an answer: a wider pool would hand a reviewer six
+ * near-identical pages instead of three considered ones. Three is what the
+ * quality gate and the review packet are built around.
+ */
+const CANDIDATE_SET_SIZE = 3;
+
+export function selectVisualDirections({ projectType, registry, assetReadiness = null, composition = null, requested = null, referenceInfluence = null, businessProfile = null } = {}) {
   const offered = requested ?? registry?.projectTypeCandidates?.[projectType] ?? [];
   const eligible = [];
   const refused = [];
@@ -819,7 +830,39 @@ export function selectVisualDirections({ projectType, registry, assetReadiness =
     if (reason) refused.push({ directionId: id, ...reason });
     else eligible.push(direction);
   }
-  return { eligible, refused };
+
+  // Without a profile this is exactly the previous behaviour, which is what an
+  // explicit `requested` set and every synthetic fixture rely on.
+  if (!businessProfile) return { eligible, refused };
+
+  // Rank by how well each direction suits this particular business, keeping the
+  // registry's project-type order as the tie-break. A business whose signals
+  // distinguish nothing therefore gets precisely what it got before: this is
+  // meant to change the answer where businesses differ, not churn it where they
+  // do not.
+  const order = new Map(offered.map((id, index) => [id, index]));
+  const scored = eligible
+    .map((direction) => ({ direction, ...scoreDirectionAgainstProfile(registry?.directions?.[direction.id], businessProfile) }))
+    .sort((left, right) => right.score - left.score || order.get(left.direction.id) - order.get(right.direction.id));
+
+  const chosen = scored.slice(0, CANDIDATE_SET_SIZE);
+  // A direction that lost on fit is not a refusal — it could have rendered, and
+  // saying so is the difference between "this was wrong for you" and "this was
+  // impossible". An operator comparing two businesses needs to see which.
+  for (const entry of scored.slice(CANDIDATE_SET_SIZE)) {
+    refused.push({
+      directionId: entry.direction.id,
+      reason: 'lower-business-fit',
+      detail: `${entry.direction.id} suits ${entry.matched.length ? entry.matched.join(', ') : 'none of this business\'s derived signals'}, which ranked below the ${CANDIDATE_SET_SIZE} chosen. It was eligible; it was not the best fit.`,
+    });
+  }
+
+  return {
+    eligible: chosen.map((entry) => entry.direction),
+    refused,
+    // Why this set and not another, recorded for the candidate set to carry.
+    fit: chosen.map((entry) => ({ directionId: entry.direction.id, score: entry.score, matched: entry.matched })),
+  };
 }
 
 function refusalReason(direction, { projectType, assetReadiness, composition }) {

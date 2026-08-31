@@ -513,7 +513,7 @@ export function summariseCandidateSet(set, gate = null) {
  * candidates are the same build in other colours is refused rather than
  * rendered three times and compared by a person who then says so.
  */
-export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetReadiness, truthReadiness = null, candidates, refusedDirections = [], createdBy } = {}) {
+export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetReadiness, truthReadiness = null, businessProfile = null, directionFit = null, candidates, refusedDirections = [], createdBy } = {}) {
   if (!projectId) throw new Error('A visual candidate set belongs to a project.');
   if (!createdAt) throw new Error('A visual candidate set records when it was created.');
   // No default. The runtime that drives a generation is the one that may not
@@ -579,6 +579,16 @@ export function buildCandidateSet({ projectId, createdAt, frozenTruth, assetRead
         notes: truthReadiness.truthBasis.notes,
       }
       : null,
+    // Why this business got these directions and not the others.
+    //
+    // Two marketing sites with no photography used to be indistinguishable to
+    // selection, so both received the same three. Recording the derived signals
+    // beside the fit means a reviewer comparing two businesses can see whether
+    // a shared direction was a considered match or the absence of a decision.
+    businessProfile: businessProfile
+      ? { projectType: businessProfile.projectType, signals: businessProfile.signals }
+      : null,
+    directionFit,
     diversity: {
       distinct: diversity.distinct,
       minimumDifferingPlanes: MINIMUM_DIFFERING_PLANES,

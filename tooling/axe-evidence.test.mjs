@@ -20,40 +20,22 @@ const PIPELINES = JSON.parse(fs.readFileSync('config/agent-pipelines.json', 'utf
 const BUILD = 'sha256:composition';
 
 /**
- * The registration this artifact is shaped for, held here rather than in
- * `config/gate-producers.json`.
+ * The real registration, read from the registry rather than restated here.
  *
- * It is not registered yet, and the reason is a fact about the two commands
- * rather than about this file. `evaluateEvidenceIntegrity` fails on any
- * registered check that resolves `not-run`, and `npm run gates:evidence` exits
- * non-zero when integrity fails. That command builds the NBM project; this lane
- * audits the generated acceptance marketing site. Two builds, two composition
- * hashes — so a registered `axe-serious-critical` would resolve to
- * `evidence-for-another-build` on every run and take CI down with it.
+ * It was unregisterable until #251. `evaluateEvidenceIntegrity` used to fail on
+ * any registered check that resolved `not-run`, and `npm run gates:evidence`
+ * exits non-zero when integrity fails — so a check whose producer builds a
+ * different project would have taken CI down on every run. #251 made integrity
+ * ask whether the lane that ran completed its own evidence, and named that as
+ * what kept three real producers unregistered. This is one of the three.
  *
- * Registering it therefore needs the two lanes to agree on one build first,
- * which is a decision about what the accessibility gate measures and not
- * something a producer entry can paper over. Until then the check stays in
- * `unregistered`, honestly, and these tests hold the artifact to the contract it
- * will have to satisfy on the day it is registered.
+ * Read from the file so a test cannot pass against a registration that does not
+ * exist. An earlier version of these tests held a copy of the intended entry,
+ * which was right while there was nothing to read and would now be a fixture
+ * agreeing with itself.
  */
-const INTENDED_PRODUCER = {
-  id: 'axe-accessibility',
-  command: 'npm run test:e2e:accessibility',
-  artifactKind: 'AccessibilityReport',
-  artifact: '.app-builder/accessibility/report.json',
-  buildRefField: 'compositionHash',
-};
-const INTENDED_CHECK = {
-  id: 'axe-serious-critical',
-  gate: 'accessibility',
-  producer: 'axe-accessibility',
-  findingsField: 'findings',
-  findingIdField: 'impact',
-  failOnFindings: ['critical', 'serious'],
-  coverageField: 'auditsRecorded',
-  coverageLabel: 'route/viewport pairs audited',
-};
+const INTENDED_PRODUCER = REGISTRY.producers['axe-accessibility'];
+const INTENDED_CHECK = REGISTRY.checks['axe-serious-critical'];
 const VIEWPORTS = ['desktop-chromium', 'mobile-chromium'];
 const ROUTES = [{ route: '/', pageId: 'home' }, { route: '/contact', pageId: 'contact' }];
 
@@ -79,12 +61,35 @@ test('the check this artifact answers is one the accessibility gate really decla
   assert.ok(PIPELINES.gates[INTENDED_CHECK.gate].requiredEvidence.includes(INTENDED_PRODUCER.artifactKind));
 });
 
-test('axe-serious-critical is still recorded as unanswered, because it still is', () => {
-  // The artifact exists now and nothing reads it, and the registry says so.
-  // Removing it from this list before the two lanes share a build would make
-  // the list a survey rather than a record of gaps.
-  assert.ok(REGISTRY.unregistered.checks.includes('axe-serious-critical'));
-  assert.equal(REGISTRY.checks['axe-serious-critical'], undefined);
+test('axe-serious-critical is registered, in its own lane, and no longer listed as unanswered', () => {
+  assert.ok(!REGISTRY.unregistered.checks.includes('axe-serious-critical'));
+  assert.equal(INTENDED_CHECK.gate, 'accessibility');
+
+  // Its own lane is the whole reason it can be registered. A producer in the
+  // gate-evidence lane would have to answer for the project that command
+  // builds, and this one builds and serves its own.
+  assert.equal(INTENDED_PRODUCER.lane, 'accessibility');
+  assert.notEqual(INTENDED_PRODUCER.lane, 'gate-evidence');
+
+  // The other two are still open, and saying so is the point of the list.
+  assert.deepEqual(REGISTRY.unregistered.checks, ['e2e-tests', 'executed-rls-acceptance']);
+});
+
+test('the gate-evidence lane defers this check rather than failing on it', async () => {
+  const { evaluateEvidenceIntegrity } = await import('@app-builder/control-plane/gate-evidence');
+  // The accessibility gate resolved with its check not-run, exactly as it would
+  // be in a gates:evidence run that never produced an axe artifact.
+  const resolutions = [{ gateId: 'accessibility', checks: [{ id: 'axe-serious-critical', status: 'not-run', reason: 'artifact-missing' }] }];
+
+  const own = evaluateEvidenceIntegrity({ resolutions, registry: REGISTRY, lane: 'accessibility' });
+  assert.equal(own.status, 'fail', 'its own lane must still be answerable for it');
+
+  const other = evaluateEvidenceIntegrity({ resolutions, registry: REGISTRY, lane: 'gate-evidence' });
+  assert.ok(other.deferredToOtherLanes.some((entry) => entry.checkId === 'axe-serious-critical'));
+  assert.ok(
+    !other.failures.some((entry) => entry.checkId === 'axe-serious-critical'),
+    'the gate-evidence lane was held responsible for a check another lane produces',
+  );
 });
 
 test('the accessibility gate would still want a person even with this check passing', () => {

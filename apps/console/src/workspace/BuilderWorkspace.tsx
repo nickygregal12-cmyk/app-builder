@@ -637,10 +637,12 @@ function scopedCriteria(packets: Record<string, VisualReviewPacket>) {
   return [...seen].map(([id, question]) => ({ id, question }));
 }
 
-function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
+function VisualCandidatePanel({ projectId, set, summary, activeDirectionId, onAdopt, onChanged, onError }: {
   projectId: string;
   set: VisualCandidateSet | null;
   summary: VisualCandidateSetSummary | null;
+  activeDirectionId: string | null;
+  onAdopt: (directionId: string) => Promise<void>;
   onChanged: (next: VisualCandidateSet) => void;
   onError: (message: string) => void;
 }) {
@@ -909,6 +911,32 @@ function VisualCandidatePanel({ projectId, set, summary, onChanged, onError }: {
               {busy === `promote-${candidate.candidateId}` ? 'Promoting…' : 'Promote this one'}
             </button>}
           </div>}
+
+          {/* Working with a direction is not accepting it.
+            *
+            * Promotion is a reviewed decision: a named person, a rationale, and
+            * a score against every criterion. It records that somebody judged
+            * this design, and that rule is right and is not relaxed here.
+            *
+            * But an owner building their own site is not conducting an
+            * acceptance review, and the two used to be the same door. They could
+            * generate three directions and compare them, and then had no way to
+            * carry on with one: the only route to seeing a chosen direction in
+            * their own preview was to file a verdict they had not made. So the
+            * ordinary path writes the ordinary thing — a design choice, the same
+            * kind the density and radius controls write — with no claim attached
+            * about anybody having judged it.
+            */}
+          <div className="candidate-adopt">
+            {activeDirectionId === candidate.directionId
+              ? <p><strong>In use.</strong> Your site is built this way.</p>
+              : <>
+                <button type="button" className="secondary compact" disabled={busy !== null} onClick={() => act(`adopt-${candidate.directionId}`, async () => { await onAdopt(candidate.directionId); return set; })}>
+                  {busy === `adopt-${candidate.directionId}` ? 'Switching…' : 'Build my site this way'}
+                </button>
+                <small>A working choice, not an acceptance. Rebuild to see it.</small>
+              </>}
+          </div>
         </article>;
       })}</div>
 
@@ -1407,6 +1435,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
             projectId={projectId}
             set={snapshot.visualCandidates}
             summary={snapshot.visualCandidateSummary}
+            activeDirectionId={snapshot.design?.design.visualDirectionId ?? null}
+            onAdopt={(directionId) => chooseDesign({ visualDirection: directionId })}
             onChanged={(next) => setSnapshot((current) => (current ? { ...current, visualCandidates: next } : current))}
             onError={setError}
           /></div>

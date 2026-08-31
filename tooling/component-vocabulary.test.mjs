@@ -78,7 +78,11 @@ test('the closing ask is a composition family and not a repaint', () => {
   // The panel hands its actions inverse ink. A composition without the dark
   // ground that kept it would render the ask invisible — the exact defect the
   // action family shipped and had to be fixed for.
-  assert.match(css, /cta-editorial \.action-link[\s\S]{0,200}color:\s*var\(--color-accent\)/, 'a light composition must re-colour its actions');
+  // The window is wide enough for the whole selector list, which now names
+  // every treatment rather than the two that happened to be in use: a bound
+  // tight enough to break when a treatment is *added* to the correction was
+  // measuring the length of the list rather than the rule.
+  assert.match(css, /cta-editorial \.action-link[\s\S]{0,600}color:\s*var\(--color-accent\)/, 'a light composition must re-colour its actions');
 });
 
 test('the closing-ask composition changes the DOM, not only the class', () => {
@@ -775,4 +779,64 @@ test('the stylesheet gives every treatment something a token could not', () => {
       `${treatment} must take the closing panel's inverse ink, or it renders dark on a dark ground`,
     );
   }
+});
+
+/**
+ * The closing ask has to be readable in every composition that can hold it.
+ *
+ * `.cta-section` hands its actions `--color-text-inverse`, which is right on the
+ * dark panel and wrong everywhere else. The correction for the light grounds —
+ * `cta-editorial` and `cta-register` — listed `action-link` and
+ * `action-outlined` and omitted `action-block`, and nothing noticed because no
+ * light-ground direction had chosen that treatment. The first business whose
+ * conversion emphasis moved `editorial-authority` to a block ask got a closing
+ * call to action in near-white on off-white.
+ *
+ * Derived from the treatment list rather than written out, so adding a
+ * treatment fails here instead of shipping an invisible control.
+ */
+test('every action treatment stays readable on a light closing composition', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const boxed = ['action-outlined', 'action-block'];
+  for (const composition of ['cta-editorial', 'cta-register']) {
+    for (const treatment of boxed) {
+      const rule = new RegExp(`\\.cta-section\\.${composition} \\.button\\.${treatment}[^{]*\\{[^}]*color:\\s*var\\(--color-accent\\)`);
+      assert.match(
+        css,
+        rule,
+        `${treatment} keeps the dark panel's inverse ink inside ${composition}, so the ask renders invisibly on a light ground.`,
+      );
+    }
+    assert.match(
+      css,
+      new RegExp(`\\.cta-section\\.${composition} \\.action-link[^{]*\\{[^}]*color:\\s*var\\(--color-accent\\)`),
+      `the text treatments lose their colour correction inside ${composition}`,
+    );
+  }
+});
+
+/**
+ * An open menu covers the screen it was opened over.
+ *
+ * The panel used to stop after its last destination, so a slice of the page
+ * showed beneath it — on the home page, the hero's opening paragraph and a
+ * dangling rule with the heading hidden above them. Two independent reviews
+ * read that as the navigation clipping the page and colliding with its content,
+ * and a fragment of a page under a menu does look broken whatever caused it.
+ *
+ * Held as a property of the panel rather than as a screenshot: the ground has
+ * to reach the bottom of the viewport, and it must not cost layout, or the page
+ * jumps by a screen height every time somebody opens the menu.
+ */
+test('the disclosed panel leaves no fragment of the page showing under it', () => {
+  const css = read('templates/shared/presentation/styles.css');
+  const rule = css.match(/\.site-header nav\[data-open="true"\]\s*\{([^}]*)\}/);
+  assert.ok(rule, 'the open panel has no rule of its own, so it stops wherever its last destination does');
+  // Dimmed rather than covered. A panel that stopped short left a fragment of
+  // the page showing and two reviews called it clipping; one that filled the
+  // screen was called "sparse links placed on an empty sheet" by all three.
+  // Both were answers to how much the panel should cover; what mattered was
+  // that the page underneath reads as behind it.
+  assert.match(rule[1], /box-shadow:[^;]*var\(--color-scrim\)/, 'the page behind an open panel must be dimmed, or a fragment of it reads as a broken page');
+  assert.doesNotMatch(rule[1], /padding-bottom:\s*100dvh/, 'filling the screen for five destinations reads as an empty sheet');
 });

@@ -379,3 +379,25 @@ test('a desktop capture is never compared against a phone one', () => {
   const composition = { pages: [{ id: 'a', sectionIds: ['s1'] }, { id: 'b', sectionIds: ['s1', 's2'] }] };
   assert.deepEqual(findDegenerateRouteCaptures({ composition, captures }), [], 'different widths are not comparable evidence');
 });
+
+/**
+ * The disclosed navigation is evidence about a screen, not about a document.
+ *
+ * Its panel is anchored to the sticky header and overlays what is beneath it,
+ * so a `fullPage` capture is the whole page with a menu floating over the top —
+ * a picture of something no visitor sees. Three independent reviews read it as
+ * the navigation clipping and removing the page's introduction and marked
+ * responsive quality down for it, which is a defect in the frame rather than in
+ * the product.
+ */
+test('a state that overlays the page is photographed as a screen', () => {
+  assert.equal(INTERACTIONS['navigation-disclosed'].frame, 'viewport', 'the disclosed panel must be captured as a screen, or its evidence misrepresents it');
+  // Every other state is a document, and stays one: the enquiry outcome can sit
+  // below the fold and a viewport capture would cut it off.
+  for (const [name, interaction] of Object.entries(INTERACTIONS)) {
+    if (name === 'navigation-disclosed') continue;
+    assert.notEqual(interaction.frame, 'viewport', `${name} would lose anything below the fold`);
+  }
+  const source = fs.readFileSync(new URL('./lib/rendered-evidence-capture.mjs', import.meta.url), 'utf8');
+  assert.match(source, /fullPage:\s*frame\s*!==\s*'viewport'/, 'the capture must honour the declared frame rather than always photographing the document');
+});

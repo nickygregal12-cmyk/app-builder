@@ -363,7 +363,53 @@ function assertOneOf(scale, value, field, directionId) {
  * dimensions ride alongside it in the same plan: a second plan would be a
  * second place a build's presentation could be decided.
  */
-export function compileVisualDirection(directionId, registry, { referenceInfluence = null, overrides = null } = {}) {
+/**
+ * The axes a direction lets the business move, and to what.
+ *
+ * A direction used to be a complete prebuilt theme: the business profile chose
+ * *which* theme and then had no say in what it rendered, so two companies whose
+ * derived signals differed on three of seven readings still received the same
+ * website whenever they ranked the same direction first. Measured over nbm and
+ * MGB Decor, two builds of `editorial-authority` differed in 1 of 16
+ * anti-template signals, and the one was section sequence — which comes from
+ * the content, not from the design.
+ *
+ * `adapts` is the direction saying which parts of itself are strategy and which
+ * are consequence. `editorial-authority` means "typography-led and document-like";
+ * it does not have to mean serif headings and ruled entries regardless of whether
+ * the business has four services to explain or eight to list.
+ *
+ * Bounded on purpose, in three ways. A direction may only offer axes it names;
+ * it may only offer *values* it names, so it can never quietly become another
+ * direction; and every resulting value is validated against the same scale the
+ * registry uses, so an adaptation cannot express anything a direction could not
+ * have declared itself. There is no industry in here and there cannot be — the
+ * only input is the derived signal set, so "broad service list" is what moves a
+ * grid, not "decorator".
+ */
+function applyBusinessAdaptations(entry, profile, directionId) {
+  const adjustments = [];
+  const adapted = { composition: {}, design: {} };
+  if (!profile?.values || !entry?.adapts) return { adapted, adjustments };
+
+  for (const group of ['composition', 'design']) {
+    for (const [axis, rule] of Object.entries(entry.adapts[group] ?? {})) {
+      const signalValue = profile.values[rule?.signal];
+      if (signalValue === undefined) continue;
+      const next = rule?.when?.[signalValue];
+      if (next === undefined) continue;
+      const from = group === 'composition'
+        ? entry.composition?.[axis] ?? DEFAULT_COMPOSITION_DIMENSIONS[axis]
+        : entry.design?.[axis];
+      if (next === from) continue;
+      adapted[group][axis] = next;
+      adjustments.push({ axis, group, signal: rule.signal, signalValue, from: from ?? null, to: next, directionId });
+    }
+  }
+  return { adapted, adjustments };
+}
+
+export function compileVisualDirection(directionId, registry, { referenceInfluence = null, overrides = null, businessProfile = null } = {}) {
   const entry = registry?.directions?.[directionId];
   if (!entry) throw new Error(`Unknown visual direction: ${String(directionId)}.`);
 
@@ -371,7 +417,14 @@ export function compileVisualDirection(directionId, registry, { referenceInfluen
   // against exactly the same scales. A revision that could name a value the
   // registry cannot express would be a second direction registry written by
   // whoever wrote the verdict.
-  const composition = { ...DEFAULT_COMPOSITION_DIMENSIONS, ...entry.composition, ...overrides?.composition };
+  // The business sits between what the direction declared and what a rework
+  // explicitly asked for: a derived adaptation may change what the direction
+  // assumed, and a reviewer who named a value still outranks the derivation.
+  const { adapted, adjustments: businessAdjustments } = applyBusinessAdaptations(entry, businessProfile, directionId);
+
+  const composition = { ...DEFAULT_COMPOSITION_DIMENSIONS, ...entry.composition, ...adapted.composition, ...overrides?.composition };
+  // Validated on the same scales as everything else, so an adaptation cannot
+  // name a value the registry could not have expressed.
   for (const [field, scale] of Object.entries(ORDER)) assertOneOf(scale, composition[field], field, directionId);
   const responsive = { ...DEFAULT_RESPONSIVE_PLAN, ...entry.responsive, ...overrides?.responsive };
   for (const [field, scale] of Object.entries(RESPONSIVE_ORDER)) assertOneOf(scale, responsive[field], field, directionId);
@@ -385,7 +438,7 @@ export function compileVisualDirection(directionId, registry, { referenceInfluen
   // the one authority and overwriting what it decided: `restraintLevel` still
   // clamps a reference's ambition and still records the clamp.
   const declaredIntent = { ...DEFAULT_ART_DIRECTION, ...entry.artDirection, ...overrides?.artDirection };
-  const declaredDesign = { ...entry.design, ...overrides?.design };
+  const declaredDesign = { ...entry.design, ...adapted.design, ...overrides?.design };
   const adjustments = [];
   if (referenceInfluence) {
     for (const axis of PLAN_AXES) {
@@ -425,6 +478,14 @@ export function compileVisualDirection(directionId, registry, { referenceInfluen
       ...(referenceInfluence
         ? { referenceAdjustments: adjustments, referenceIds: [...(referenceInfluence.referenceIds ?? [])] }
         : {}),
+      // What this business changed about the direction, and which reading of
+      // its own approved intake did it. Recorded for the same reason reference
+      // adjustments are: a reviewer looking at two builds of one direction that
+      // do not match has to be able to see why without re-deriving it, and an
+      // operator who disagrees needs the signal to argue with rather than the
+      // pixel. Absent when nothing moved, so a business whose signals the
+      // direction does not read compiles exactly what it compiled before.
+      ...(businessAdjustments.length ? { businessAdjustments } : {}),
       ...(overrides ? { reworkOverrides: { ...overrides.artDirection, ...overrides.design, ...overrides.composition, ...overrides.responsive } } : {}),
     },
     sectionOrder,
@@ -825,7 +886,11 @@ export function selectVisualDirections({ projectType, registry, assetReadiness =
       });
       continue;
     }
-    const direction = compileVisualDirection(id, registry, { referenceInfluence });
+    // The profile is what chooses between directions *and* what tunes the one
+    // it chose. Passing it only to the ranking is what made two businesses that
+    // differ on three of seven signals receive the same website: the reading was
+    // computed, used to sort, and then thrown away.
+    const direction = compileVisualDirection(id, registry, { referenceInfluence, businessProfile });
     const reason = refusalReason(direction, { projectType, assetReadiness, composition });
     if (reason) refused.push({ directionId: id, ...reason });
     else eligible.push(direction);

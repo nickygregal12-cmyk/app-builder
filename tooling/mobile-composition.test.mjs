@@ -168,3 +168,31 @@ test('every destination stays in the document and stays visible', () => {
 test('the retired two-row bar does not come back', () => {
   assert.doesNotMatch(STYLES_CSS, /nav-inline-wrap|nav-inline-scroll/, 'the loose wrapping row and the scroller are both retired');
 });
+
+/**
+ * A phone must not invent a third section order.
+ *
+ * Conversion-first hoists the offering and the contact details. Locations sat in
+ * the ordinary band and therefore fell behind contact, so the phone read hero,
+ * services, contact, locations while the desktop read hero, services, locations,
+ * contact — and two independent reviews named it in one round, as "the late
+ * Locations section on the home page" and "inconsistent home-page section
+ * ordering across breakpoints".
+ */
+test('conversion-first keeps coverage with the offering rather than behind the ask', () => {
+  const orderOf = (selector) => {
+    const lines = STYLES_CSS.split('\n');
+    const at = lines.findIndex((line) => line.includes(selector));
+    assert.notEqual(at, -1, `${selector} has no mobile order at all`);
+    for (let i = at; i < Math.min(at + 4, lines.length); i += 1) {
+      const found = lines[i].match(/order:\s*(\d+)/);
+      if (found) return Number(found[1]);
+    }
+    throw new Error(`${selector} names no order`);
+  };
+  const offering = orderOf('.mobile-order-conversion-first .section-item-grid');
+  const coverage = orderOf('.mobile-order-conversion-first .section-location-list');
+  const contact = orderOf('.mobile-order-conversion-first .contact-section');
+  assert.equal(coverage, offering, 'coverage belongs with the offering, not in the band that falls behind the ask');
+  assert.ok(offering < contact, 'the offering must still come before the contact details');
+});

@@ -85,6 +85,19 @@ export const INTERACTIONS = Object.freeze({
     axis: 'navigation',
     state: 'open',
     risk: 'high',
+    /**
+     * A screen, not a document.
+     *
+     * Every other capture is `fullPage`, which is right for a page and wrong
+     * for this one: the panel is anchored to the sticky header and overlays
+     * whatever is beneath it, so a full-page image is the entire document with
+     * a menu floating over the top of it — something no visitor ever sees.
+     * Three independent reviews read exactly that picture as the navigation
+     * clipping, obscuring and removing the page's introduction, and marked
+     * responsive quality down for it. The panel covering the screen it was
+     * opened over is the behaviour; the frame was the defect.
+     */
+    frame: 'viewport',
     proves: 'What the disclosed navigation panel looks like open, in the family this direction chose. It is not evidence that any destination in it resolves.',
     outcome: Object.freeze({
       control: '.site-header .nav-toggle',

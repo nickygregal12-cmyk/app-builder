@@ -5,6 +5,7 @@ import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, writeDesignArtifacts } fro
 import { artDirectionIntent, compileArtDirectionPlan } from './art-direction.mjs';
 import { compileBrandSpec } from './brand-spec.mjs';
 import { compileVisualDirection } from './visual-direction.mjs';
+import { deriveBusinessVisualProfile } from './business-visual-profile.mjs';
 import { loadRenderers, resolveRendererVariant, selectRenderer } from './renderer-selection.mjs';
 import { applyDocumentHead, composeDocumentHead } from './document-head.mjs';
 
@@ -149,12 +150,12 @@ function resolveRecipeClosure(recipeIds, templateId, catalog, factoryRoot, selec
  * replays it the way it replays a chosen density, and a rejected candidate
  * leaves nothing behind for a rebuild to pick up.
  */
-function selectVisualDirection(catalog, designChoices, referenceInfluence, overrides) {
+function selectVisualDirection(catalog, designChoices, referenceInfluence, overrides, businessProfile) {
   const chosen = designChoices?.visualDirection;
-  return chosen ? compileVisualDirection(chosen, catalog.visualDirections, { referenceInfluence, overrides }) : null;
+  return chosen ? compileVisualDirection(chosen, catalog.visualDirections, { referenceInfluence, overrides, businessProfile }) : null;
 }
 
-function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null, factoryRoot = process.cwd(), referenceInfluence = null, reworkOverrides = null) {
+function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = null, factoryRoot = process.cwd(), referenceInfluence = null, reworkOverrides = null, businessProfile = null) {
   const patternId = catalog.layouts.projectTypeDefaults?.[manifest.project.type];
   const pattern = catalog.layouts.patterns?.[patternId];
   if (!pattern) throw new Error(`No layout pattern for project type ${manifest.project.type}.`);
@@ -168,13 +169,28 @@ function selectDesign(manifest, catalog, designChoices = {}, knowledgePack = nul
   // and brings its own rhythm, measure and corner with it: a direction whose
   // grid contradicted its spacing would not be a direction. The pattern still
   // owns the shell, because the shell is what kind of application this is.
-  const direction = selectVisualDirection(catalog, designChoices, referenceInfluence, reworkOverrides);
+  // The business the direction is being compiled *for*.
+  //
+  // Supplied by the candidate lane, which derives it from the composition and
+  // the asset readiness as well as the manifest and must not be second-guessed
+  // here: a profile derived twice from different inputs would let a candidate
+  // record and the repository it describes disagree about what was built.
+  //
+  // Derived from the manifest when nobody supplied one, so an ordinary build
+  // adapts too. Without this the adaptation would only exist inside candidate
+  // generation, and the promoted repository — the thing that actually ships —
+  // would rebuild itself back into the unadapted direction.
+  const profile = businessProfile ?? deriveBusinessVisualProfile({ manifest });
+  const direction = selectVisualDirection(catalog, designChoices, referenceInfluence, reworkOverrides, profile);
   const artDirection = direction ? direction.artDirection : compileArtDirectionPlan(artDirectionIntent(pattern));
   const composed = {
     patternId,
     ...patternDesign,
     ...direction?.design,
     visualDirectionId: direction?.id ?? null,
+    // The words the display type actually has to set. A step chosen for the
+    // direction and not for the name is how a four-line headline happens.
+    displayName: manifest?.project?.name ?? null,
     accentColor: brand.accent.value,
     brand,
     artDirection,
@@ -190,7 +206,7 @@ function selectScenarios(manifest, catalog) {
   return [...new Set(values)];
 }
 
-export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null, referenceInfluence = null, reworkOverrides = null } = {}) {
+export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null, referenceInfluence = null, reworkOverrides = null, businessProfile = null } = {}) {
   // Phase 4.2. A project type no longer resolves straight to one template: it
   // selects a renderer, and the renderer names the template that implements it.
   // Everything after this line is unchanged by which renderer was chosen, which
@@ -223,7 +239,7 @@ export function buildGenerationPlan(manifest, { factoryRoot = process.cwd(), cat
     recipes: resolveRecipeClosure(recipeIds, template.id, catalog, factoryRoot, adapterIds, selection.rendererId),
     enabledModules,
     missingModules,
-    ...selectDesign(manifest, catalog, designChoices, knowledgePack, factoryRoot, referenceInfluence, reworkOverrides),
+    ...selectDesign(manifest, catalog, designChoices, knowledgePack, factoryRoot, referenceInfluence, reworkOverrides, businessProfile),
     scenarios: selectScenarios(manifest, catalog),
   };
 }
@@ -567,8 +583,8 @@ function initializeRepository(projectDir) {
   return result.status === 0;
 }
 
-export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null, referenceInfluence = null, reworkOverrides = null } = {}) {
-  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices, knowledgePack, referenceInfluence, reworkOverrides });
+export function generateProject(manifest, outputDir, { factoryRoot = process.cwd(), catalog = loadCatalog(factoryRoot), designChoices = {}, knowledgePack = null, referenceInfluence = null, reworkOverrides = null, businessProfile = null } = {}) {
+  const plan = buildGenerationPlan(manifest, { factoryRoot, catalog, designChoices, knowledgePack, referenceInfluence, reworkOverrides, businessProfile });
   if (plan.missingModules.length) throw new Error(`No ready deterministic recipe for enabled module(s): ${plan.missingModules.join(', ')}.`);
   const out = path.resolve(outputDir);
   if (fs.existsSync(out)) throw new Error(`Refusing to overwrite existing directory: ${out}`);

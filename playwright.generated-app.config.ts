@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { generatedPreviewEnv } from './tooling/lib/generated-preview.mjs';
+import { lanePort, laneServer, laneUrl } from './tooling/lib/e2e-server.mjs';
 
 // A host that already has a Chromium should not have to fetch another.
 const launchOptions = { executablePath: process.env.APP_BUILDER_BROWSER_EXECUTABLE };
@@ -69,7 +70,7 @@ export default defineConfig({
     ['json', { outputFile: `${EVIDENCE}/playwright-report.json` }],
   ],
   use: {
-    baseURL: 'http://127.0.0.1:4373',
+    baseURL: laneUrl('generated-app'),
     trace: 'retain-on-failure',
     // `on`, not `only-on-failure`. The stage criterion this lane is held to is
     // that rendered product evidence receives independent review, and under
@@ -81,12 +82,13 @@ export default defineConfig({
     launchOptions,
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: `${requireStack} npm --prefix ${GENERATED} run dev -- --host 127.0.0.1 --port 4373`,
+  // This lane publishes a review packet, so the identity of the server it
+  // photographed is part of the claim. It shared 4373 with the accessibility
+  // lane and could be answered by any other worktree; now the port is this
+  // checkout's and the lane starts the server itself.
+  webServer: laneServer({
+    lane: 'generated-app',
+    command: `${requireStack} npm --prefix ${GENERATED} run dev -- --host 127.0.0.1 --port ${lanePort('generated-app')}`,
     env: { ...generatedPreviewEnv(GENERATED), VITE_SUPABASE_URL: supabaseUrl, VITE_SUPABASE_PUBLISHABLE_KEY: supabaseKey },
-    url: 'http://127.0.0.1:4373',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 },
-  },
+  }),
 });

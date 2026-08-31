@@ -1576,6 +1576,12 @@ export class FactoryService {
         // The direction is the only thing that differs between candidates. Every
         // other input is the project's own.
         designChoices: { ...this.readDesignChoices(projectId).choices, visualDirection: candidate.directionId },
+        // The same reading that chose and tuned the direction, so the workspace
+        // compiles the candidate that was drafted rather than re-deriving the
+        // direction from its id alone. Without it the record said one thing and
+        // the repository it describes built another: the adaptation reached the
+        // candidate set and never reached the site.
+        businessProfile,
         referenceInfluence,
         projectId,
         factoryRoot: this.factoryRoot,

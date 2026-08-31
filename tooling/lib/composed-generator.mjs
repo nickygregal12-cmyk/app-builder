@@ -4,6 +4,7 @@ import { assertContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, composeProject, deriveElementIdentities, stripContentOverrides, stripSectionVariants } from '../../packages/composition/src/index.js';
 import { generateProject } from './generator.mjs';
 import { applyVisualDirection } from './visual-direction.mjs';
+import { deriveBusinessVisualProfile } from './business-visual-profile.mjs';
 import { auditComposedPresentation, compilePresentationRegistry, loadPresentationManifest } from './presentation-registry.mjs';
 
 function writeJson(file, value) {
@@ -98,8 +99,23 @@ function writeElementIdentityIndex(outputDir, { composition, template, projectId
   return index;
 }
 
-export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], designChoices = {}, projectId = null, factoryRoot = process.cwd(), catalog, referenceInfluence = null, reworkOverrides = null } = {}) {
-  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, referenceInfluence, reworkOverrides, ...(catalog ? { catalog } : {}) });
+export function generateComposedProject(manifest, outputDir, { knowledgePack = null, assetSourceDir = null, contentOverrides = [], assetDecisions = [], sectionVariants = [], designChoices = {}, projectId = null, factoryRoot = process.cwd(), catalog, referenceInfluence = null, reworkOverrides = null, businessProfile = null } = {}) {
+  // Composed before the design is chosen, because the design now reads it.
+  //
+  // Two of the signals a direction may adapt on — how much the page carries and
+  // whether it shows work or explains it — are readings of the composition, not
+  // of the manifest alone. Deriving them from the manifest by itself gives a
+  // different answer: nbm reads `relaxed` rather than `comfortable`, MGB reads
+  // `work-led` rather than `work-led-unproven`. If the candidate lane derived
+  // one profile and a later rebuild derived another, the site that ships would
+  // not be the site that was reviewed, which is the kind of divergence a
+  // promotion record exists to prevent.
+  //
+  // A supplied profile always wins: the candidate lane has asset readiness as
+  // well, and must not be second-guessed by a weaker derivation here.
+  const composed = composeProject({ manifest, knowledgePack, assetDecisions });
+  const profile = businessProfile ?? deriveBusinessVisualProfile({ manifest, composition: composed });
+  const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, referenceInfluence, reworkOverrides, businessProfile: profile, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its
   // contract is enforced. Declaring the family was not enough on its own: two
   // new section types reached generated projects without ever being added to
@@ -111,7 +127,7 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   // a human edit and a chosen presentation come last, because a person who
   // changed something must not have it changed back by a direction.
   const composition = assertContract('composition', applySectionVariants(applyContentOverrides(
-    applyVisualDirection(composeProject({ manifest, knowledgePack, assetDecisions }), plan.direction),
+    applyVisualDirection(composed, plan.direction),
     contentOverrides,
   ), sectionVariants));
   const out = path.resolve(outputDir);

@@ -201,6 +201,24 @@
               }
             },
             "referenceIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "businessAdjustments": {
+              "type": "array",
+              "description": "What this business changed about the direction it chose, and which derived signal did it. A direction declares which axes it will let a business move and to which values; this is the record of the ones that moved, so a reviewer comparing two builds of one direction can see why they differ without re-deriving it, and an operator who disagrees has the reading to argue with rather than the pixel. Absent when nothing moved.",
+              "items": {
+                "type": "object",
+                "required": ["axis", "group", "signal", "signalValue", "to"],
+                "properties": {
+                  "axis": {"type": "string", "minLength": 1},
+                  "group": {"enum": ["composition", "design"]},
+                  "signal": {"type": "string", "minLength": 1},
+                  "signalValue": {"type": "string", "minLength": 1},
+                  "from": {"type": ["string", "null"]},
+                  "to": {"type": "string", "minLength": 1},
+                  "directionId": {"type": "string", "minLength": 1}
+                },
+                "additionalProperties": false
+              }
+            },
             "reworkOverrides": {
               "type": "object",
               "description": "The axis values a bounded rework pass asked this revision to differ by, flattened from its plan. Present only on a revised candidate."

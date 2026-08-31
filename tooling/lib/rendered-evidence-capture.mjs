@@ -171,7 +171,12 @@ export async function captureEvidence({ plan, baseUrl, launch = null, onCapture 
         }
         await settleLazyImages(page);
         await assertRenderedIdentity(page, capture);
-        const bytes = await page.screenshot({ fullPage: true, animations: 'disabled', type: 'png' });
+        // A state may declare that its evidence is a screen rather than a
+        // document. Only the disclosed navigation does: its panel overlays what
+        // it was opened over, so a full-page image shows a menu floating above
+        // an entire page and reads as the navigation having removed it.
+        const frame = capture.state.interaction ? INTERACTIONS[capture.state.interaction]?.frame : null;
+        const bytes = await page.screenshot({ fullPage: frame !== 'viewport', animations: 'disabled', type: 'png' });
         results.push({ id: capture.id, bytes });
         if (onCapture) onCapture(capture);
       } catch (error) {

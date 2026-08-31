@@ -34,13 +34,33 @@ function classesFor({ ctaPlacement = 'closing', mobileSectionOrder = 'conversion
  * 150MB dependency. The rendered behaviour is proved separately by the
  * candidate capture run.
  */
+/**
+ * The order an ordinary section takes under conversion-first.
+ *
+ * Read rather than assumed. "Hoisted" means "ahead of the sections that did not
+ * ask to move", which is a comparison, not a particular integer — and pinning
+ * the integer is what made this file fail when the ordering gained a step so
+ * that the offering could come before the contact details.
+ */
+function defaultSectionOrder() {
+  const rule = STYLES_CSS.split('\n').find((line) => /\.mobile-order-conversion-first \.page-section \{/.test(line));
+  const order = rule?.match(/order:\s*(\d+)/);
+  if (!order) throw new Error('conversion-first no longer gives ordinary sections an order at all');
+  return Number(order[1]);
+}
+
 function hoistsCtaSection(classes) {
   const shell = new Set(classes.split(/\s+/).filter(Boolean));
-  // Every `order: 1` rule that mentions .cta-section, and whether this shell
-  // satisfies the classes that rule requires of the shell element.
+  const ordinary = defaultSectionOrder();
+  // Every rule that orders .cta-section ahead of an ordinary section, and
+  // whether this shell satisfies the classes that rule requires of the shell.
   return STYLES_CSS
     .split('\n')
-    .filter((line) => line.includes('.cta-section') && line.includes('order: 1'))
+    .filter((line) => {
+      if (!line.includes('.cta-section')) return false;
+      const order = line.match(/order:\s*(\d+)/);
+      return Boolean(order) && Number(order[1]) < ordinary;
+    })
     .some((line) => {
       // The shell classes the rule demands, which is everything it names
       // except the section it is targeting.
@@ -50,6 +70,41 @@ function hoistsCtaSection(classes) {
       return required.every((name) => shell.has(name));
     });
 }
+
+/**
+ * What the sixth independent review asked for, held so it cannot regress.
+ *
+ * Contact used to sit directly under the opening on a phone, so a visitor met
+ * an email address, a phone number, a postal address and a website before a
+ * word about what the practice sells — and met them again in the footer. Two
+ * of the three candidates were told to fix it in nearly the same sentence.
+ * Conversion-first is still honoured; the offering simply comes first.
+ */
+test('conversion-first shows the offering before the contact details', () => {
+  const orderOf = (selector) => {
+    const line = STYLES_CSS.split('\n').find((entry) => entry.includes(selector) && /order:\s*\d+/.test(entry));
+    // The rule may be the last selector of a group, so walk back for its block.
+    if (line) return Number(line.match(/order:\s*(\d+)/)[1]);
+    const lines = STYLES_CSS.split('\n');
+    const at = lines.findIndex((entry) => entry.includes(selector));
+    if (at === -1) return null;
+    for (let i = at; i < Math.min(at + 4, lines.length); i += 1) {
+      const found = lines[i].match(/order:\s*(\d+)/);
+      if (found) return Number(found[1]);
+    }
+    return null;
+  };
+  const offering = orderOf('.mobile-order-conversion-first .section-item-grid');
+  const contact = orderOf('.mobile-order-conversion-first .contact-section');
+  assert.ok(offering !== null, 'conversion-first does not order the offering at all');
+  assert.ok(contact !== null, 'conversion-first does not order the contact details at all');
+  assert.ok(
+    offering < contact,
+    `conversion-first puts the contact details (order ${contact}) at or before the offering (order ${offering}), `
+    + 'so a phone visitor meets an address before they learn what the business does.',
+  );
+  assert.ok(contact < defaultSectionOrder(), 'contact detail must still be pulled forward — conversion-first has to mean something');
+});
 
 test('a closing call to action is not hoisted above the page on a phone', () => {
   // The rejected build: conversion-first plus a closing ask produced /services

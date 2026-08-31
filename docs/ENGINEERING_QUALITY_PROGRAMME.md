@@ -62,6 +62,38 @@ an undeclared toolchain does not reach `buildable`.
 Deliberately not broadened into an offline mirror, a second package manager or Node 24 support. None
 of those is what made a build unreproducible.
 
+### Why three real producers stayed unregistered — a lane, not a gap
+
+`e2e-tests`, `axe-serious-critical` and `executed-rls-acceptance` are named by their gates and
+answered by nothing, and the obvious reading — nobody wrote the producer — is wrong for at least two
+of them. The artifacts exist. What did not exist was a way to say that they are about a different
+build.
+
+`npm run gates:evidence` builds the NBM genuine-business project and measures it. The accessibility
+audit and the browser journey measure the generated acceptance application. Two builds, two
+composition hashes — so a registered check resolved `evidence-for-another-build` every time, and
+because `evaluateEvidenceIntegrity` treats any registered check resolving `not-run` as broken
+evidence wiring, registering one took the whole `verify` job down with it. The rational response was
+to leave three real producers out of the registry, which is how a missing rule becomes a permanent
+gap in coverage.
+
+A check now belongs to the **lane** that produces its artifact, declared per producer in
+`config/gate-producers.json`. Integrity asks whether the lane that ran completed its own evidence,
+not whether every lane ran, and checks produced elsewhere are listed in `deferredToOtherLanes` rather
+than skipped — deferred and covered must not read the same. A caller that does not name its lane gets
+the strict reading, because that is the safe default for code that has not said what it did.
+
+This does not make those gates pass, and is not meant to. The accessibility gate genuinely has no
+evidence about the NBM build, and `not-run` is the honest status for it. What changes is that the
+producer can be registered, so the gate says "measured, in another lane, about another artifact"
+instead of "nobody has built this".
+
+**What is still open, and is the harder half.** For a release candidate, every required gate must be
+satisfied by evidence about *one* artifact. Lanes make today's situation honest; they do not make the
+evidence converge. That needs the accessibility and browser lanes to run against the same artifact
+the deterministic producers measured, rather than each building their own — which is a change to how
+the lanes are driven, not to how their results are read.
+
 ## Tool responsibility map
 
 Every tool answers exactly one question. An agent picks a tool by the question it has, never by the

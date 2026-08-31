@@ -54,4 +54,76 @@ subjective, consequential or unknowable; and **escalate** for conflicting eviden
 security/production boundaries or policy approval. Track owner decisions required per accepted build
 alongside prompts and edits; reducing prompts by hiding consequential choices is not product progress.
 
+## Owner intent, owner solutions and escalation
+
+`AGENTS.md` principle 24 states the rule: owner intent is authoritative, an owner's proposed solution
+is a candidate. This section is the policy that follows from it — what the factory decides for itself,
+and what it is genuinely required to ask. `docs/ROADMAP.md` sequences the machinery; nothing here is a
+second copy of that sequence.
+
+An owner writes in one register but says several different kinds of thing, and the classification
+vocabulary exists because treating them alike is the failure mode:
+
+> "Users need to switch between their workspaces quickly" is a requirement.
+> "I'd prefer something like the app I already use" is a reference.
+> "Put the workspaces in a dropdown" is a proposed solution.
+> "Workspace switching must be available from every screen" is a hard requirement.
+
+Facts, business rules, hard requirements and anything marked non-negotiable stay authoritative and are
+never quietly downgraded; the existing hard-constraint semantics are unchanged. A suggested solution is
+carried as a hypothesis with the goal it serves, the journey it affects and the evidence that would
+settle it, and it may end accepted, modified or rejected.
+
+### What the factory decides, and what it asks
+
+The four interaction classes above are the mechanism; this is the policy they encode, and it is the
+part a role reaches for when deciding whether to stop and ask.
+
+The factory normally **decides**: the navigation model; sidebar versus tabs versus top navigation; page
+hierarchy and section ordering; component choice; information density; responsive rearrangement; CSS
+and layout implementation; state-management implementation; framework and library detail; API
+patterns; accessibility implementation; and technical architecture wherever the requirements permit
+alternatives. Each role's `owns` list in `config/agent-roles.json` is the machine-readable half of
+this.
+
+It **asks** for: unknown facts; business-policy decisions; genuine scope ambiguity; rights and
+licensing approval; legal, compliance and commercial judgement; destructive or production actions;
+material cost commitments; two or more genuinely equivalent subjective product directions; and
+explicit brand preference where evidence cannot distinguish the alternatives.
+
+It does not ask merely because an agent can think of several implementation options. A question the
+factory's own expertise, registries or deterministic rules already answer is a cost, not diligence —
+and confidently deciding something it genuinely could not know is the opposite failure, equally
+counted.
+
+**Human steering burden** is measured for the same reason cost and edits are: clarification questions
+per build, owner decisions required, manual edits, owner overrides, rejected factory decisions, rework
+caused by bad initial assumptions, owner waiting time and model spend caused by avoidable ambiguity.
+It is not optimised to zero — hiding a consequential choice is not progress. The target is the minimum
+steering compatible with high accepted quality and safe decisions, which is the same optimisation as
+Accepted Quality Efficiency: a £0, zero-edit 6.5/10 site is not preferable to a low-cost,
+two-intervention 9/10 site.
+
+## The adaptive questionnaire
+
+Intake is a structured product interview, not a wall of text boxes, and the reason is as much economic
+as it is ergonomic. An answer captured as a stable value is an answer no model has to re-interpret:
+`accessModel = public-marketing-private-app` deterministically informs route planning, IA,
+authentication requirements, SEO, navigation, the ProductSpec, architecture and acceptance tests, where
+"yes users need accounts but I still want people to see the homepage" informs a re-reading.
+
+What exists today and must not be rebuilt beside itself: versioned questionnaires per project type in
+`questionnaires/v1/` with a shared base; typed questions (`single-select`, `multi-select`, `boolean`,
+`list`, `text`, `textarea`, `url`, `company-identity`, `contact-details`); conditional visibility
+through `when` (`equals`, `notEquals`, `in`, `includes`, `truthy`); quick/standard/thorough depth;
+defaults recorded as decisions rather than silence; high-impact ambiguity follow-ups; and bundle drift
+detection that refuses to replay old answers against changed questions. The gap and its sequence are in
+`docs/ROADMAP.md`.
+
+Two rules bound whatever is added. Questions are about outcomes, never about implementation the factory
+should decide — "who needs access and when" rather than "should authentication use middleware" — and
+free text stays wherever the answer genuinely carries nuance options would flatten. Question changes
+remain versioned and reviewed (principle 8): the factory proposes questionnaire improvements from
+project evidence and never silently rewrites its own discovery process.
+
 The best-in-class capability backlog and adoption rules live in `docs/BEST_IN_CLASS_CAPABILITIES.md`. What "finished" means lives in `docs/MASTER_PLAN.md`; the order it is reached in lives in `docs/ROADMAP.md`.

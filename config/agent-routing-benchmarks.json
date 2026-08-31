@@ -204,6 +204,43 @@
       "maxAuthorities": 1,
       "maxSelectedRoles": 2,
       "maxSelectedSkills": 2
+    },
+    {
+      "id": "owner-navigation-suggestion-is-an-ia-question",
+      "prompt": "The owner asked to move the reports section under a More menu because the navigation structure looks cluttered",
+      "rationale": "An owner-proposed navigation placement is a hypothesis about task hierarchy, so it reaches the information architect and its independent critic rather than an implementer who would simply move the item.",
+      "requiredRoutes": ["information-architecture"],
+      "requiredRoles": ["information-architect", "ia-critic"],
+      "requiredSkills": ["information-architecture"],
+      "forbiddenRoles": ["frontend-implementation", "art-direction", "design-system", "seo-aeo"],
+      "forbiddenSkills": ["frontend-implementation", "art-direction", "design-system-authoring"],
+      "maxAuthorities": 2,
+      "maxSelectedRoles": 2,
+      "maxSelectedSkills": 1
+    },
+    {
+      "id": "owner-layout-suggestion-is-a-composition-question",
+      "prompt": "Make the home screen more exciting by adding more widgets above the fold",
+      "rationale": "A request for more content above the fold is usually a hierarchy problem wearing a content problem's clothes, so it routes to composition and the UX critic rather than to art direction.",
+      "requiredRoutes": ["structural-composition"],
+      "requiredRoles": ["composition", "ux-critic"],
+      "requiredSkills": ["section-composition"],
+      "forbiddenRoles": ["art-direction", "visual-critic", "design-system", "frontend-implementation"],
+      "forbiddenSkills": ["art-direction", "design-critique", "design-system-authoring", "frontend-implementation"],
+      "maxAuthorities": 1,
+      "maxSelectedRoles": 2,
+      "maxSelectedSkills": 1
+    },
+    {
+      "id": "owner-proposed-library-stays-unclassified",
+      "prompt": "Add Zustand for this state",
+      "rationale": "A named library is a proposed solution, not a subsystem. It must not become an implementation instruction by routing; bounded orientation decides whether the state complexity warrants it at all.",
+      "expectUnclassified": true,
+      "forbiddenRoles": ["frontend-implementation", "solution-architect", "state-matrix"],
+      "forbiddenSkills": ["frontend-implementation", "state-matrix-derivation"],
+      "maxAuthorities": 0,
+      "maxSelectedRoles": 0,
+      "maxSelectedSkills": 0
     }
   ]
 }

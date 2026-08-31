@@ -185,8 +185,10 @@ classification (`fact`, `goal`, `business-rule`, `hard-requirement`, `constraint
 and so a `suggested-solution` is a falsifiable hypothesis with an inferred goal, an affected journey
 and the evidence that would settle it. Add the deviation record — suggestion, inferred goal, evidence,
 selected solution, why it is better, confidence, whether owner approval is genuinely required — for
-material divergences only. Add the escalation policy that says which decisions the factory owns
-outright. Extend the existing contracts; do not start a second intake system.
+material divergences only. The escalation policy that says which decisions the factory owns outright
+and which it must genuinely ask about is written in `docs/PRODUCT.md`; this stage is the machinery that
+enforces it, not a second copy of it. Extend the existing contracts; do not start a second intake
+system.
 
 **B — IA capability.** `information-architecture` is a planned placeholder with a null path. Build it,
 give it frozen benchmark cases across simple marketing, professional services, B2B SaaS, internal tool,
@@ -217,8 +219,14 @@ resistance: hide a high-frequency destination under More, add widgets to fix a h
 equal cards where one action should dominate, a state library the state complexity does not warrant, a
 modal where the task wants a page, "modern" as gradients and glass. Each case must distinguish goal
 understood, weak proposal rejected, sound proposal kept, hard requirement obeyed and preference respected
-where alternatives are equivalent. Its twin matters as much: ambiguity cases where the factory must ask
-because it genuinely cannot know, scored on unnecessary questions as well as missed ones. Then human
+where alternatives are equivalent. The *routing* half of this is already executable and does not need
+this stage: `config/agent-routing.json` now carries `information-architecture` and
+`structural-composition` lanes, and three cases in `config/agent-routing-benchmarks.json` hold that an
+owner's navigation placement reaches the information architect rather than an implementer, that "add
+more widgets above the fold" reaches composition rather than art direction, and that a named state
+library stays unclassified. What stage E adds is the behavioural half, which needs executing roles. Its
+twin matters as much: ambiguity cases where the factory must ask because it genuinely cannot know,
+scored on unnecessary questions as well as missed ones. Then human
 steering burden as a tracked metric, optimised against accepted quality rather than to zero.
 
 **F — brownfield structure.** Extend the sequence below so structural diagnosis precedes mutation:
@@ -232,14 +240,28 @@ expensive stages. Visibility and optional intervention, not another mandatory hu
 
 **Adaptive questionnaire.** Sequenced with A because it is the same problem at the front door. The
 existing questionnaire already has typed questions, `when` conditionals, defaults, `depth` and `impact`,
-and its own principles already promise "allow explicit decide-for-me answers" — but no question offers
-one. What is missing is scenario-card and ranking question types, a first-class `recommend` answer,
+and its own principles already promise "allow explicit decide-for-me answers". Four questions do offer
+one — `tenant_model` and `billing_model` in `b2b-saas`, `payment_model` in `consumer-app`, `authors` in
+`content-site` — and what happens when an owner picks it is the sharper finding: `decide for me` is in
+`AMBIGUOUS_VALUES`, so `buildAmbiguityFollowUpRequest` returns a required follow-up asking the owner
+the same question again, reason "High-impact answer is explicitly ambiguous", while the literal string
+stays in the durable contract and `tenant_model` silently behaves as individual-user. Delegation is
+currently read as confusion. That is principle 24 inverted at the front door, and it is the first thing
+this lane fixes. Beyond it: scenario-card and ranking question types, a first-class `recommend` answer,
 answer provenance separating owner-selected from factory-recommended and factory-inferred, dependency
 invalidation when an earlier answer changes, and contradiction detection before the build starts. Every
 one of those needs a Console renderer to be real; adding the fields alone would be a knob nothing reads.
 The point is token efficiency as much as usability: `accessModel = public-marketing-private-app` is a
 value the pipeline can act on deterministically, where the prose it replaces has to be re-interpreted by
 a model on every read.
+
+One sequencing constraint holds this lane closed until Outcome B's comparison is taken, and it is
+mechanical rather than a preference. The two frozen genuine-business intakes are replayed against the
+questionnaire they were approved on: `detectIntakeBundleDrift` raises `questionnaire-version-changed`
+at **blocking** severity whenever the version moves, and both bundles record `1.3.0`. Every change
+above alters the questions, so it bumps that version and makes both frozen inputs un-replayable until
+they are re-approved — and rerunning an unedited frozen input is Outcome B's whole method. When this
+lane does open, re-approving both bundles is part of the same change rather than a follow-up.
 
 ### Brownfield adoption
 

@@ -125,7 +125,16 @@ in an expensive irrelevant one has failed the case. Held examples:
   implementation;
 - `Restyle the pricing cards` → ordinary presentation review; **not** adversarial security review;
 - `Clean up this broken journey and fix the bug` → still a defect; simplification is not selected
-  while behaviour is wrong.
+  while behaviour is wrong;
+- an owner's navigation placement (`move the reports section under a More menu because the navigation
+  structure looks cluttered`) → the information architect and its critic; **not** frontend
+  implementation, art direction or the design system, because a placement is a hypothesis about task
+  hierarchy rather than a change request;
+- an owner's layout remedy (`make the home screen more exciting by adding more widgets above the
+  fold`) → composition and the UX critic; **not** art direction, because "more content" is usually a
+  hierarchy problem in disguise;
+- an owner's named library (`Add Zustand for this state`) → **unclassified**. A library names no
+  subsystem, and routing must not be the thing that turns a proposal into an instruction.
 
 Run them with `npm run agent:bench`; inspect a single prompt with `npm run agent:route -- "TASK"`.
 The same harness is the comparison bench for skill evaluation: the same task and the same context
@@ -198,13 +207,30 @@ definition is in `config/agent-roles.json`; the shape below shows what a role lo
 | verification | — | `browser-qa`, `runtime-debug`, `accessibility`, `performance`, `seo-aeo`, `security`, `code-reviewer`, `design-critic`, `red-team`, `differential-reviewer`, `independent-second-opinion` |
 | release | `compound-learning` | `journey-closure`, `environment-guardian`, `ship-release` |
 
-Two boundaries are worth stating explicitly because they are easy to blur:
+Three boundaries are worth stating explicitly because they are easy to blur:
 
 - **UX is not visual design.** `ux-interaction` owns flows, states, recovery and interaction
   expectations. `art-direction` owns the look. Neither may overwrite the other.
 - **Browser QA is not runtime debugging.** `browser-qa` answers "does the product work?".
   `runtime-debug` answers "why does the browser behave this way?" using console, network, runtime
   state and performance traces.
+- **Structure is not decoration, and a valid artifact is not a good one.** `information-architect`
+  and `composition` declare what they decide in `owns`; their structural quality is judged by
+  `ia-critic` and `ux-critic`, whose `mayNot` forbids the specific failure that matters — passing a
+  hierarchy because it is complete while a high-frequency task is buried in it, or passing a
+  composition because its `PageSpec` validates while the primary task is not visible on the surface
+  that owns it. No `composition-critic` exists, and one is added only if benchmark evidence shows
+  those two cannot reliably judge composition. Authority: `docs/COMPOSITION.md`.
+
+**Owner intent versus owner solutions (principle 24).** `owns` and `mayNot` are the two halves of it:
+`owns` says what a role is the expert in and therefore decides without asking, `mayNot` says where it
+must stop. Several roles now carry the matching boundary — `requirements-interviewer` may not record a
+proposed solution as a hard requirement, `information-architect` may not adopt a suggested navigation
+placement untested, `ux-interaction` may not adopt a proposed interaction container,
+`art-direction` may not apply a named visual treatment literally, and `solution-architect` may not
+adopt a library because it was named. The classification travels in `IntakeBrief` and a material
+divergence is recorded in `ProductDecision`. The escalation policy those boundaries enforce — what the
+factory decides, what it must ask — lives in `docs/PRODUCT.md`.
 
 ## Routing by project class, not one universal pipeline
 

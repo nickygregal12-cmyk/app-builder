@@ -7,7 +7,7 @@
   ],
   "artifacts": {
     "IntakeBrief": {
-      "description": "Reviewed statement of what the owner asked for, before research or specification.",
+      "description": "Reviewed statement of what the owner asked for, before research or specification. Each material owner statement is classified — fact, goal, business-rule, hard-requirement, constraint, preference, reference, suggested-solution or open-question — because a proposed layout, component, navigation pattern, library or architecture is a candidate solution and only a hard requirement is authoritative (principle 24).",
       "deterministic": false,
       "schema": null,
       "status": "planned"
@@ -37,7 +37,7 @@
       "status": "planned"
     },
     "ProductDecision": {
-      "description": "Opportunity/assumption/risk decisions taken before a specification is written.",
+      "description": "Opportunity/assumption/risk decisions taken before a specification is written, and the record for any material divergence from an owner-suggested solution: the original suggestion, the goal inferred behind it, its classification, the evidence considered, the selected solution, why it is better, confidence and whether owner approval is genuinely required.",
       "deterministic": false,
       "schema": null,
       "status": "planned"
@@ -251,7 +251,7 @@
     "requirements-interviewer": {
       "id": "requirements-interviewer",
       "kind": "creator",
-      "purpose": "Turns rough owner input into an explicit, contradiction-free intake brief before any research or build spend.",
+      "purpose": "Turns rough owner input into an explicit, contradiction-free intake brief before any research or build spend, classifying each material statement so a fact, a hard requirement and a suggested solution do not arrive downstream as one undifferentiated instruction.",
       "stageClass": "intake",
       "reads": [
         "IntakeBrief",
@@ -264,7 +264,10 @@
       "mayNot": [
         "invent requirements the owner did not state",
         "start implementation",
-        "approve its own brief"
+        "approve its own brief",
+        "record an owner-proposed layout, component, navigation pattern, library or architecture as a hard requirement unless the owner marked it non-negotiable",
+        "downgrade or reinterpret a requirement the owner marked non-negotiable",
+        "ask the owner a question the factory's own expertise, registries or deterministic rules already answer"
       ],
       "skills": [
         "requirements-interview"
@@ -284,6 +287,8 @@
       ],
       "stopCriteria": [
         "all high-impact questions answered or explicitly deferred",
+        "every material owner statement carries a classification and, where it is a suggested solution, the goal it is meant to serve",
+        "contradictory answers are resolved or recorded as a single targeted clarification",
         "intake budget reached"
       ],
       "escalatesTo": "product-critic",
@@ -491,7 +496,8 @@
       "mayNot": [
         "write production implementation",
         "redefine approved product scope",
-        "alter BrandSpec"
+        "alter BrandSpec",
+        "adopt an owner-suggested navigation placement without testing it against task frequency, urgency and navigation depth"
       ],
       "skills": [
         "information-architecture"
@@ -533,7 +539,7 @@
     "ia-critic": {
       "id": "ia-critic",
       "kind": "reviewer",
-      "purpose": "Independently judges whether the information architecture matches user mental models and product scope.",
+      "purpose": "Independently judges whether the information architecture matches user mental models and product scope, and whether the hierarchy actually serves the journeys that justified it rather than merely being internally consistent.",
       "stageClass": "structure",
       "reads": [
         "ProductSpec",
@@ -545,7 +551,8 @@
       ],
       "mayNot": [
         "author or edit the information architecture",
-        "write implementation code"
+        "write implementation code",
+        "accept a hierarchy because it is complete and well-formed when a high-frequency task is buried in it"
       ],
       "skills": [
         "information-architecture"
@@ -586,7 +593,8 @@
       "mayNot": [
         "choose final art direction or typography palette",
         "implement visual styling",
-        "change product scope"
+        "change product scope",
+        "adopt an owner-proposed interaction container — modal, drawer, page or inline — without deciding which one the task actually needs"
       ],
       "skills": [
         "ux-interaction-design"
@@ -616,7 +624,7 @@
     "ux-critic": {
       "id": "ux-critic",
       "kind": "reviewer",
-      "purpose": "Independently judges flow completeness, recoverability and interaction quality.",
+      "purpose": "Independently judges flow completeness, recoverability and interaction quality, and the structural quality of the composed surfaces those flows run on — primary-task prominence, hierarchy, competing actions, grouping, density and responsive reprioritisation.",
       "stageClass": "experience",
       "reads": [
         "ProductSpec",
@@ -631,7 +639,9 @@
       ],
       "mayNot": [
         "author or edit UX flows",
-        "write implementation code"
+        "author or edit a composition",
+        "write implementation code",
+        "pass a composition because it is schema-valid and complete when the primary task is not visible on the surface that owns it"
       ],
       "skills": [
         "ux-interaction-design"
@@ -648,7 +658,8 @@
       },
       "reviewedBy": [],
       "stopCriteria": [
-        "a verdict is issued for every named criterion"
+        "a verdict is issued for every named criterion",
+        "each reviewed surface has a verdict on primary-task prominence and on its mobile reprioritisation"
       ],
       "escalatesTo": null,
       "priorArt": [
@@ -809,7 +820,8 @@
       "mayNot": [
         "edit the design system tokens directly",
         "write implementation code",
-        "approve its own direction"
+        "approve its own direction",
+        "apply a named visual treatment an owner asked for as a literal instruction; the desired quality is translated into a visual language, and the treatment is one candidate expression of it"
       ],
       "skills": [
         "art-direction",
@@ -958,7 +970,9 @@
         "change information architecture",
         "redefine approved product scope",
         "bypass design tokens",
-        "treat a stacked desktop column order as a mobile composition"
+        "treat a stacked desktop column order as a mobile composition",
+        "select a layout family from the project type alone when approved task, frequency, density and journey evidence can decide it",
+        "treat a schema-valid PageSpec as evidence that the structure is good"
       ],
       "skills": [
         "section-composition"
@@ -985,7 +999,8 @@
       "escalatesTo": "information-architect",
       "priorArt": [
         "21st-dev-registry",
-        "storybookjs-mcp"
+        "storybookjs-mcp",
+        "yhassy-wireframe-skill"
       ],
       "status": "planned",
       "owns": [
@@ -1018,7 +1033,8 @@
       "mayNot": [
         "implement production code",
         "approve its own security posture",
-        "grant itself capabilities"
+        "grant itself capabilities",
+        "adopt an owner-named library or pattern because it was named; a proposal is adopted only when the product's actual complexity warrants it over the simpler option already available"
       ],
       "skills": [
         "api-and-interface-design"

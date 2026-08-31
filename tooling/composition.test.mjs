@@ -390,3 +390,99 @@ test('a manifest that declares no conversion goal still gets one route to the bu
   assert.deepEqual(composition.pages[0].primaryAction, { label: 'Contact', href: '/contact' });
   assert.deepEqual(composition.warnings.filter((item) => item.startsWith('declared-conversion-unsupported:')), []);
 });
+
+/**
+ * Surfaces a business declares, and the truth that should answer them.
+ *
+ * The defect these cover: routing used to test the surface's name against a
+ * chain of conditions, and a name outside that vocabulary fell through to the
+ * application defaults — journeys and entities, both empty on a marketing site.
+ * A studio with five source-backed people declared "Studio" and shipped a
+ * heading with nothing under it. The material was ingested, survived into the
+ * pack, and had nowhere to be asked for.
+ */
+
+function packWith(profile) {
+  return { schemaVersion: 1, packHash: 'p'.repeat(64), facts: [], companyProfile: profile, assets: [], sources: [] };
+}
+
+const PEOPLE = [
+  { id: 'e1', sourceId: 's1', name: 'Nella Ardwell', role: 'Founding director' },
+  { id: 'e2', sourceId: 's1', name: 'Tomas Roe', role: 'Founding director' },
+];
+
+function surfaceManifest(surfaces) {
+  return { schemaVersion: 2, project: { name: 'Declared Co', slug: 'declared', type: 'marketing-site', primaryGoal: 'Win work' }, majorSurfaces: ['Home', ...surfaces], modules: {} };
+}
+
+function sectionsOn(composition, path) {
+  const page = composition.pages.find((entry) => entry.path === path);
+  return composition.sections.filter((item) => page.sectionIds.includes(item.id)).map((item) => item.type);
+}
+
+test('a people surface is filled whatever the business calls it', () => {
+  // Studio, Practice and Firm are the same surface under three house styles, and
+  // a business does not owe the factory the word "About".
+  for (const name of ['Studio', 'About', 'Our team', 'People', 'The practice', 'Our firm']) {
+    const composition = composeProject({ manifest: surfaceManifest([name]), knowledgePack: packWith({ people: PEOPLE }) });
+    const types = sectionsOn(composition, `/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
+    assert.ok(types.includes('people-grid'), `${name} did not reach the people it had: ${types.join(', ')}`);
+    assert.deepEqual(composition.warnings.filter((item) => item.startsWith('empty-declared-surface:')), [],
+      `${name} composed empty despite source-backed people`);
+  }
+});
+
+test('an offering surface is filled whatever the business calls it', () => {
+  const services = [{ id: 'e1', sourceId: 's1', name: 'Refurbishment and extension' }, { id: 'e2', sourceId: 's1', name: 'Adaptive reuse' }];
+  for (const name of ['Expertise', 'Services', 'Capabilities', 'What we do', 'Disciplines']) {
+    const composition = composeProject({ manifest: surfaceManifest([name]), knowledgePack: packWith({ services }) });
+    const types = sectionsOn(composition, `/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
+    assert.ok(types.includes('item-grid'), `${name} did not reach the services it had: ${types.join(', ')}`);
+  }
+});
+
+test('a declared surface with no compatible truth stays empty and says so', () => {
+  // MGB Decor's case, and it must not be "fixed". The business declared Our Work
+  // and supplied no project material and no publishable imagery. Nothing could
+  // fill that page, and inventing projects to satisfy the warning would be the
+  // worst possible outcome.
+  const composition = composeProject({ manifest: surfaceManifest(['Our Work']), knowledgePack: packWith({ services: [{ id: 'e1', sourceId: 's1', name: 'Interior painting' }] }) });
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('empty-declared-surface:')), ['empty-declared-surface:Our Work']);
+  // Recognised, and genuinely unanswerable. Not a vocabulary failure.
+  assert.deepEqual(composition.warnings.filter((item) => item.startsWith('unrecognised-surface-purpose:')), []);
+});
+
+test('a surface the composer has no purpose for is reported as such, not as thin input', () => {
+  // The two empty cases are different problems with different owners, and
+  // reporting both as "empty" is how the first one survived: it read as thin
+  // input, which is the explanation the benchmark exists to remove.
+  const composition = composeProject({ manifest: surfaceManifest(['Approach']), knowledgePack: packWith({ people: PEOPLE }) });
+  assert.ok(composition.warnings.includes('unrecognised-surface-purpose:Approach'));
+  assert.ok(composition.warnings.includes('empty-declared-surface:Approach'));
+});
+
+test('matching a surface name never invents content', () => {
+  // Every builder a purpose calls returns null without its truth, so recognising
+  // a name can only ever surface material the sources actually carry.
+  const composition = composeProject({ manifest: surfaceManifest(['Studio', 'Expertise']), knowledgePack: packWith({}) });
+  for (const path of ['/studio', '/expertise']) {
+    const types = sectionsOn(composition, path);
+    assert.deepEqual(types.filter((type) => !['hero', 'cta'].includes(type)), [],
+      `${path} bound content from a pack that had none`);
+  }
+  assert.deepEqual(
+    composition.warnings.filter((item) => item.startsWith('empty-declared-surface:')).sort(),
+    ['empty-declared-surface:Expertise', 'empty-declared-surface:Studio'],
+  );
+});
+
+test('a firm\'s "Practice areas" is still where it works, not who it is', () => {
+  // `practice` had to join the people vocabulary for "The practice" to route, and
+  // the obvious collision is a law firm's practice areas. Coverage is tested
+  // first for exactly this reason.
+  const composition = composeProject({
+    manifest: surfaceManifest(['Practice areas']),
+    knowledgePack: packWith({ serviceAreas: [{ value: 'Bristol', factId: null }], people: PEOPLE }),
+  });
+  assert.ok(sectionsOn(composition, '/practice-areas').includes('location-list'));
+});

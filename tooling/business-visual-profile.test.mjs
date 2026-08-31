@@ -293,3 +293,29 @@ test('business fit never argues an invalid direction into existence', () => {
   );
   assert.ok(!selection.eligible.some((direction) => direction.id === 'immersive-lead'));
 });
+
+test('only an empty work surface argues against showing work', () => {
+  // A studio with a full Work page and a full project story read as
+  // `work-led-unproven` because its Approach page was empty. Any
+  // `empty-declared-surface` warning counted, so the strongest available
+  // argument against an imagery-led direction was a page about process — and
+  // the business that most wanted its photography shown was the one told it had
+  // not proven it had any.
+  const manifest = { schemaVersion: 2, project: { name: 'Studio', slug: 'studio', type: 'marketing-site', primaryGoal: 'Win commissions' }, majorSurfaces: ['Home', 'Work', 'Approach'], company: {}, modules: {} };
+  const unrelatedGap = deriveBusinessVisualProfile({
+    manifest,
+    composition: { sections: [], warnings: ['empty-declared-surface:Approach'] },
+    assetReadiness: typographic(),
+  });
+  assert.equal(unrelatedGap.values.showcaseIntent, 'work-led',
+    'a gap on a non-work surface must not decide whether the work surfaces have work in them');
+
+  // MGB's case, which must keep working: the empty surface IS the work surface.
+  const workGap = deriveBusinessVisualProfile({
+    manifest,
+    composition: { sections: [], warnings: ['empty-declared-surface:Work'] },
+    assetReadiness: typographic(),
+  });
+  assert.equal(workGap.values.showcaseIntent, 'work-led-unproven');
+  assert.match(workGap.signals.find((signal) => signal.id === 'showcaseIntent').because, /the material does not/);
+});

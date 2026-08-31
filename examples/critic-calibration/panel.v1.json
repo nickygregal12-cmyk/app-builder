@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "authority": "critic-calibration-panel",
+  "corpus": "CC1",
+  "rubric": "examples/critic-calibration/rubric.v1.md",
+  "$comment": "The structure adjudicated human scores will occupy, deliberately empty. It is committed empty rather than omitted so that the shape is reviewed before anybody's time is spent producing scores that do not fit it, and so the gap is visible in the repository rather than remembered.",
+  "status": "awaiting-reviewers",
+  "blockedBy": {
+    "owner": [
+      "Two or more qualified reviewers who did not create the artifacts. Independence is the point: a panel drawn from whoever built the corpus produces one opinion recorded several times.",
+      "A commitment to the blinded order before scoring begins, and to the 8.5/6.5 bar before scores are seen. Agreeing the threshold afterwards is how a failed gate becomes a passed one."
+    ],
+    "notBlockedBy": [
+      "Engineering. The corpus, the rubric, the blinding and the measurement all exist and run today; what they lack is people."
+    ]
+  },
+  "blindingSeed": null,
+  "reviewers": [],
+  "scores": [],
+  "adjudicated": [],
+  "$fields": {
+    "reviewers": "{ id, role, independentOfCreation: true }",
+    "scores": "{ reviewerId, itemId, criterionScores: [{ criterion, score, note }], verdict }",
+    "adjudicated": "{ itemId, criterionScores: [{ criterion, score }], meanScore, verdict, disagreements: [{ criterion, spread, resolution }] }"
+  }
+}

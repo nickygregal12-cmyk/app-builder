@@ -270,6 +270,41 @@
 
 /* No pill. No shadow. No radius. An action is a word with a rule under it, which is what
    the rest of the page is made of. */
+
+/* The independent review scored conversion-clarity 6.7 and named the cause: the primary ask
+   carried the same understated treatment as every secondary link, so a convinced visitor had
+   nothing to move toward. The answer is not a pill button — it is that the *primary* ask is
+   built from the page's own materials at a weight nothing else uses: a filled block, square,
+   because nothing in this design is rounded. */
+.ask-lead {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  font-size: var(--t-lg);
+  letter-spacing: -0.01em;
+  padding: 0.85em 1.6em;
+  border: 2px solid var(--ink);
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.ask-lead:hover { background: var(--brass); border-color: var(--brass); color: var(--paper); }
+.ink-panel .ask-lead { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+.ink-panel .ask-lead:hover { background: var(--brass-bright); border-color: var(--brass-bright); color: var(--ink); }
+
+/* An invitation placed where conviction actually happens, rather than only at the end. */
+.invite {
+  display: grid; grid-template-columns: 1fr auto; gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-4) 0;
+  border-top: 2px solid var(--brass);
+  border-bottom: var(--rule);
+}
+.invite p { margin: 0; font-family: var(--font-serif); font-size: var(--t-xl); max-width: 30ch; line-height: 1.25; }
+@media (max-width: 720px) {
+  .invite { grid-template-columns: 1fr; align-items: start; }
+  .ask-lead { width: 100%; text-align: center; }
+}
+
 .ask {
   display: inline-block;
   font-size: var(--t-lg);

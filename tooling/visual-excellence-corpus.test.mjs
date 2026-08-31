@@ -18,6 +18,7 @@
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
@@ -25,6 +26,7 @@ import { createHash } from 'node:crypto';
 import { assessBenchmarkAssetReadiness } from './lib/benchmark-asset-readiness.mjs';
 import { classifyCandidateTruthReadiness } from './lib/candidate-truth-readiness.mjs';
 import { validateContract } from '../packages/contracts/src/index.js';
+import { writeVisualReviewPacket } from './lib/visual-review-report.mjs';
 
 const ROOT = 'examples/visual-excellence';
 const read = (file) => JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
@@ -181,4 +183,37 @@ test('the gate passes once the floor is met, and only then', () => {
 test('the gate is generic, and knows nothing about this business', () => {
   const source = fs.readFileSync('tooling/lib/benchmark-asset-readiness.mjs', 'utf8');
   assert.doesNotMatch(source, /ardwell|roe|nbm|mgb/i, 'the readiness gate must not know a case by name');
+});
+
+test('a reviewer opening this benchmark is told the business does not exist', () => {
+  // The end of the chain the declaration exists for. It is no use having the
+  // bundle say `fictional` if the surface a reviewer actually opens does not,
+  // so the real bundle is carried through to a real packet here rather than a
+  // fixture that could drift from it.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-excellence-packet-'));
+  try {
+    const packet = writeVisualReviewPacket({
+      outputDir: path.join(root, 'packet'),
+      business: BUNDLE.projectManifest.project.name,
+      truthBasis: BUNDLE.provenance.benchmark,
+      set: {
+        setId: 'candidates-0123456789abcdef',
+        projectId: 'project-benchmark',
+        createdAt: '2026-08-31T00:00:00.000Z',
+        frozenTruth: { projectType: 'marketing-site', manifestVersion: 1, knowledgePackHash: PACK.packHash, baselineCompositionHash: 'a'.repeat(64) },
+        assetReadiness: { strategy: 'typography-led', supportsImageryLed: false, strategyReason: 'No bytes have been ingested yet.' },
+        diversity: { distinct: true },
+        candidates: [],
+        promotedCandidateId: null,
+      },
+      criteria: [],
+      readEvidence: () => null,
+      readCapture: () => null,
+    });
+    const html = fs.readFileSync(path.join(packet.root, 'index.html'), 'utf8');
+    assert.match(html, /Fictional benchmark business/i);
+    assert.match(html, /may be published as a real business/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

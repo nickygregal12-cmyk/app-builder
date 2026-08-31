@@ -63,6 +63,39 @@ function definition(entries) {
  * repository.
  */
 /**
+ * Whether the company in these pictures exists.
+ *
+ * A visual-ceiling benchmark is a fictional business by construction — invented
+ * projects, invented awards, invented testimonials and invented people, written
+ * to be rich enough that input quality stops being the limiter. Handed to a
+ * reviewer without a label, that material is indistinguishable from a real
+ * practice's, and a reviewer has every reason to read it as one. They might
+ * check an award. They might weigh a testimonial. They would be judging claims
+ * about a company that does not exist.
+ *
+ * So a benchmark packet says so before it says anything else — first element in
+ * the body, before the business name. A real business's packet carries no banner
+ * at all, which is why the banner means something: absence is the ordinary case
+ * rather than a missing field.
+ */
+function renderTruthBasis(truthBasis) {
+  if (!truthBasis || truthBasis.businessReality !== 'fictional') return '';
+  return `
+  <aside class="truth-basis" role="note">
+    <p class="truth-basis-headline">Fictional benchmark business — ideal-input visual-ceiling test</p>
+    <p>Every company, person, project, client, testimonial, award and photograph in this packet was invented to measure the factory. <strong>None of it is a claim about a real company</strong>, none of it can be verified against anything, and none of it may be published as a real business's website.</p>
+    <p class="truth-basis-detail">Judge the composition, the messaging and the imagery exactly as you would for a real client. Do not judge, verify or act on the facts themselves.</p>
+    ${definition([
+      ['Business reality', truthBasis.businessReality],
+      ['Why it exists', truthBasis.truthPurpose ?? 'unstated'],
+      ['Publication', truthBasis.publicationAllowed ?? 'unstated'],
+      ['External verification', truthBasis.externalVerification ?? 'unstated'],
+      ['Corpus', truthBasis.corpus ?? 'unstated'],
+    ])}
+  </aside>`;
+}
+
+/**
  * The one line a reviewer needs about the repository behind the pictures.
  *
  * Deliberately terse and deliberately present. A reviewer is here to judge the
@@ -125,6 +158,16 @@ function renderIndex(packet) {
   .portability code { font: 12px/1.4 ui-monospace, monospace; }
   .portability.broken { color: #8a2b20; }
   .portability.unknown { color: #777; font-style: italic; }
+  .truth-basis { border: 2px solid #8a2b20; border-radius: 12px; padding: 16px 18px; margin: 0 0 28px; background: #fdf3f1; color: #3d1410; }
+  .truth-basis p { margin: 0 0 8px; }
+  .truth-basis-headline { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.86rem; }
+  .truth-basis-detail { font-size: 0.88rem; }
+  .truth-basis dl { margin-bottom: 0; }
+  .truth-basis dt { color: #6b3129; }
+  @media (prefers-color-scheme: dark) {
+    .truth-basis { background: #2a100c; color: #f6ded9; border-color: #b4483a; }
+    .truth-basis dt { color: #d9a79e; }
+  }
   .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px; }
   figure { margin: 0; }
   figure a { display: block; border-radius: 8px; }
@@ -140,6 +183,7 @@ function renderIndex(packet) {
 </style>
 </head>
 <body>
+  ${renderTruthBasis(packet.truthBasis)}
   <h1>Visual review — ${escapeHtml(packet.business)}</h1>
   <p class="lede">${escapeHtml(packet.candidates.length)} candidate(s) over one frozen product truth. ${escapeHtml(packet.setOutcome === 'undecided' ? 'No decision recorded yet.' : `Set ${packet.setOutcome}.`)}</p>
   <h2>What every candidate shares</h2>
@@ -177,7 +221,7 @@ function renderIndex(packet) {
  * it does not know where the factory keeps its evidence, and a test does not
  * need a factory to prove the packet carries what it claims.
  */
-export function writeVisualReviewPacket({ outputDir, business, set, criteria, qualityGate = null, designReferences = [], readEvidence, readCapture }) {
+export function writeVisualReviewPacket({ outputDir, business, set, criteria, qualityGate = null, designReferences = [], truthBasis = null, readEvidence, readCapture }) {
   if (!outputDir) throw new Error('A visual review packet needs somewhere to be written.');
   if (!set?.setId) throw new Error('A visual review packet is written from a candidate set.');
   const root = path.resolve(outputDir);
@@ -222,6 +266,10 @@ export function writeVisualReviewPacket({ outputDir, business, set, criteria, qu
   const packet = {
     schemaVersion: 1,
     business,
+    // Null for a real company, and null is the ordinary case rather than a
+    // missing field. Only an invented business carries this, which is what
+    // makes its presence unambiguous.
+    truthBasis,
     setId: set.setId,
     projectId: set.projectId,
     createdAt: set.createdAt,

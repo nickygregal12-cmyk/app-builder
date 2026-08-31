@@ -150,6 +150,15 @@ try {
   console.log(`Truth basis: ${truthReadiness.status}`);
   for (const note of truthReadiness.truthBasis.notes) console.log(`  ${note}`);
 
+  // Said first and said loudly. A benchmark's testimonials, awards, projects and
+  // people were invented, and a reviewer handed them without a label has every
+  // reason to read them as claims about a real company.
+  const benchmark = bundle.provenance?.benchmark ?? null;
+  if (benchmark) {
+    console.log(`FICTIONAL BENCHMARK BUSINESS — ${benchmark.truthPurpose}`);
+    console.log(`  Nothing here describes a real company. Publication: ${benchmark.publicationAllowed}; external verification: ${benchmark.externalVerification}; corpus: ${benchmark.corpus}.`);
+  }
+
   // The canonical build first. A candidate set is a choice over a project that
   // already has an answer, not a substitute for having one.
   const baseline = await service.generateProject(project.id);
@@ -188,6 +197,10 @@ try {
   const portable = writeVisualReviewPacket({
     outputDir: path.join(root, 'packet'),
     business: bundle.projectManifest.project.name,
+    // Carried from the bundle rather than inferred from a path or a name. The
+    // declaration travels with the input, so a benchmark replayed from anywhere
+    // still arrives at a reviewer labelled as one.
+    truthBasis: bundle.provenance?.benchmark ?? null,
     set: captured,
     criteria: packets[0]?.criteria ?? [],
     qualityGate: service.visualQualityGate(),
@@ -240,6 +253,9 @@ try {
     schemaVersion: 1,
     business: bundle.projectManifest.project.name,
     bundleId: bundle.bundleId,
+    // Whether the company these candidates describe exists. Absent for a real
+    // business, which is why its presence is unambiguous.
+    truthBasis: bundle.provenance?.benchmark ?? null,
     // The exact inputs, so a reviewer knows which business and which material
     // produced the screenshots they are judging.
     inputs: {

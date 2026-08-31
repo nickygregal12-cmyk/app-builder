@@ -25,14 +25,21 @@ const WORKFLOW = '.github/workflows/visual-review-evidence.yml';
  * Still excluded, and the reason the assertion is an exact list rather than a
  * prefix: workspaces, the SQLite database, raw sources and the rest of Factory
  * state are not review evidence.
+ *
+ * The directory is `${{ matrix.out }}` because the job runs once per genuine
+ * business. That moves where the boundary is written without moving the
+ * boundary: the entries below are still an exact list, and `every matrix output
+ * directory stays inside .app-builder` is asserted separately, so a new case
+ * cannot quietly point the allowlist at somewhere else.
  */
+const OUT = '${{ matrix.out }}';
 const ALLOWED_UPLOADS = [
-  '.app-builder/visual-review/report.json',
-  '.app-builder/visual-review/review-packets.json',
-  '.app-builder/visual-review/packet/index.html',
-  '.app-builder/visual-review/packet/review.json',
-  '.app-builder/visual-review/packet/captures/*.png',
-  '.app-builder/visual-review/service/**/captures/*.png',
+  `${OUT}/report.json`,
+  `${OUT}/review-packets.json`,
+  `${OUT}/packet/index.html`,
+  `${OUT}/packet/review.json`,
+  `${OUT}/packet/captures/*.png`,
+  `${OUT}/service/**/captures/*.png`,
 ];
 
 function uploadPaths(text) {
@@ -64,6 +71,45 @@ test('remote visual review publishes only detached review evidence', () => {
 });
 
 /**
+ * The allowlist is templated, so what it can expand to is part of the boundary.
+ *
+ * Every upload path is now relative to a matrix value. A case whose `out` were
+ * a workspace, an absolute path or a parent traversal would publish exactly the
+ * Factory state the exact list above exists to keep in, and the list itself
+ * would still read as correct.
+ */
+test('every genuine-business case writes its evidence inside the factory state directory', () => {
+  const text = fs.readFileSync(WORKFLOW, 'utf8');
+  const outputs = [...text.matchAll(/^\s+out:\s*(\S+)\s*$/gm)].map((match) => match[1]);
+  assert.ok(outputs.length >= 2, 'the matrix should carry more than one genuine business, or it is a hard-coded job with extra ceremony');
+  assert.equal(new Set(outputs).size, outputs.length, 'two cases writing to one directory would overwrite each other\'s evidence');
+  for (const out of outputs) {
+    assert.match(out, /^\.app-builder\/[A-Za-z0-9._-]+$/, `${out} must be a single directory inside .app-builder`);
+    assert.doesNotMatch(out, /\.\./, 'no parent traversal');
+  }
+});
+
+/**
+ * Each case must say which business it is and where its truth comes from.
+ *
+ * A matrix entry with a bundle and no declared knowledge is the legitimate case
+ * — a business with nothing to ingest — and it has to stay distinguishable from
+ * an entry where somebody forgot the pack, because the two produce different
+ * evidence and only one of them is honest about it.
+ */
+test('every genuine-business case declares its bundle and its artifact name', () => {
+  const text = fs.readFileSync(WORKFLOW, 'utf8');
+  const businesses = [...text.matchAll(/^\s+- business:\s*(\S+)\s*$/gm)].map((match) => match[1]);
+  const bundles = [...text.matchAll(/^\s+bundle:\s*(\S+)\s*$/gm)].map((match) => match[1]);
+  assert.equal(businesses.length, bundles.length, 'every case names a business and a bundle');
+  for (const bundle of bundles) {
+    assert.match(bundle, /^examples\/genuine-business\/.+\.json$/);
+    assert.ok(fs.existsSync(bundle), `${bundle} must exist, or the hosted run fails after installing Chromium`);
+  }
+  assert.match(text, /name:\s*\$\{\{\s*matrix\.business\s*\}\}-visual-review-/, 'artifacts must be named per business, or one case overwrites the other\'s upload');
+});
+
+/**
  * The reviewer has to receive the packet, not just the pictures.
  *
  * The captures alone are 36 PNGs named by candidate, route and viewport, with
@@ -76,11 +122,11 @@ test('remote visual review publishes only detached review evidence', () => {
 test('the hosted evidence run uploads the packet a reviewer opens, not only its captures', () => {
   const paths = uploadPaths(fs.readFileSync(WORKFLOW, 'utf8'));
   assert.ok(
-    paths.includes('.app-builder/visual-review/packet/index.html'),
+    paths.includes(`${OUT}/packet/index.html`),
     'the portable packet index must travel with the captures, or the download cannot be reviewed',
   );
   assert.ok(
-    paths.some((entry) => entry.startsWith('.app-builder/visual-review/packet/captures/')),
+    paths.some((entry) => entry.startsWith(`${OUT}/packet/captures/`)),
     'the packet index is relative to its own captures; uploading it without them publishes a page of broken images',
   );
 });
@@ -100,10 +146,21 @@ function requiredRuntimeEnv(text) {
   return [...new Set([...text.matchAll(/process\.env\.(APP_BUILDER_[A-Z0-9_]+)/g)].map((match) => match[1]))].sort();
 }
 
-/** The `env:` keys declared on the step that runs a given command. */
+/**
+ * The step that invokes a given command, however it is written.
+ *
+ * Matched on the command being *invoked* rather than on `run: <command>`
+ * exactly, because the acceptance run is now a multi-line block that passes the
+ * business as arguments. Pinning the single-line form would make this assert the
+ * shape of the command instead of the guarantee it carries.
+ *
+ * The invocation test is not decoration: the script's path also appears in this
+ * workflow's `paths:` trigger list, and matching that line instead finds a step
+ * with no `env:` and reports the identity as undeclared when it is declared.
+ */
 function stepEnv(text, command) {
   const lines = text.split('\n');
-  const runIndex = lines.findIndex((line) => line.includes(`run: ${command}`));
+  const runIndex = lines.findIndex((line) => line.includes(command) && (/^\s*(node|npm)\s/.test(line) || /run:/.test(line)));
   assert.notEqual(runIndex, -1, `${WORKFLOW} must run ${command}.`);
 
   let start = runIndex;
@@ -147,7 +204,7 @@ test('the hosted evidence run declares the runtime identity the acceptance scrip
   const required = requiredRuntimeEnv(fs.readFileSync(ACCEPTANCE, 'utf8'));
   assert.ok(required.length > 0, `${ACCEPTANCE} should read its runtime identity from the environment.`);
 
-  const declared = stepEnv(fs.readFileSync(WORKFLOW, 'utf8'), 'npm run acceptance:visual-candidates');
+  const declared = stepEnv(fs.readFileSync(WORKFLOW, 'utf8'), ACCEPTANCE);
   const missing = required.filter((name) => !declared.includes(name));
   assert.deepEqual(
     missing,
@@ -161,7 +218,7 @@ const CONSOLE_WORKSPACE = 'apps/console/src/workspace/BuilderWorkspace.tsx';
 /** The `env:` values declared on the step that runs a given command. */
 function stepEnvValues(text, command) {
   const lines = text.split('\n');
-  const runIndex = lines.findIndex((line) => line.includes(`run: ${command}`));
+  const runIndex = lines.findIndex((line) => line.includes(command) && (/^\s*(node|npm)\s/.test(line) || /run:/.test(line)));
   let start = runIndex;
   while (start >= 0 && !/^\s*- /.test(lines[start])) start -= 1;
   const stepIndent = lines[start].indexOf('-');
@@ -186,7 +243,7 @@ function stepEnvValues(text, command) {
  * decision made by accident of location.
  */
 test('the hosted evidence run authors candidates as the same factory identity the Console does', () => {
-  const declared = stepEnvValues(fs.readFileSync(WORKFLOW, 'utf8'), 'npm run acceptance:visual-candidates');
+  const declared = stepEnvValues(fs.readFileSync(WORKFLOW, 'utf8'), ACCEPTANCE);
   const consoleSource = fs.readFileSync(CONSOLE_WORKSPACE, 'utf8');
   const author = consoleSource.match(/const FACTORY_AUTHOR = \{([^}]+)\}/);
   assert.ok(author, `${CONSOLE_WORKSPACE} must declare FACTORY_AUTHOR, the identity deterministic generation is authored under.`);

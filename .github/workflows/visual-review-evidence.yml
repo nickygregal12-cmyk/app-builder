@@ -10,7 +10,9 @@ on:
       - 'apps/service/src/visual-candidates.js'
       - 'templates/react-vite-neutral/**'
       - 'config/visual-directions.json'
+      - 'tooling/lib/candidate-truth-readiness.mjs'
       - 'examples/genuine-business/nbm-approved-intake.v1.json'
+      - 'examples/genuine-business/mgb-approved-intake.v1.json'
 
 permissions:
   contents: read
@@ -26,6 +28,32 @@ jobs:
   evidence:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # One job per genuine business, from one definition.
+    #
+    # This job was nbm's, hard-coded, and that was honest while there was one
+    # genuine business. It is also why no hosted evidence exists for the second
+    # one. The question Phase 4D exists to answer cannot be asked of a single
+    # company — three candidates for one business show variety within a truth,
+    # not that the factory builds different-looking sites for different
+    # businesses — so the case is a matrix entry rather than a copied job.
+    #
+    # `knowledge` is empty for a business with nothing to ingest. That is a real
+    # state rather than a missing value: mgb's approved intake declares three
+    # research locations and three assets whose bytes never arrived, so there is
+    # no pack to freeze, and inventing an empty one to look source-backed is
+    # exactly what the candidate truth guard refuses.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - business: nbm
+            bundle: examples/genuine-business/nbm-approved-intake.v1.json
+            knowledge: examples/genuine-business/nbm-approved-knowledge.v1.json
+            out: .app-builder/visual-review
+          - business: mgb
+            bundle: examples/genuine-business/mgb-approved-intake.v1.json
+            knowledge: ''
+            out: .app-builder/visual-review-mgb
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -55,11 +83,38 @@ jobs:
       # This job supplies no `--verdicts` and promotes nothing; the identity is
       # the durable provenance stamped on the evidence, which is what a later
       # reviewer's independence is checked against.
-      - name: Generate genuine-business visual review evidence
+      - name: Generate genuine-business visual review evidence (${{ matrix.business }})
         env:
           APP_BUILDER_RUNTIME_VENDOR: app-builder
           APP_BUILDER_RUNTIME_MODEL: deterministic-composition
-        run: npm run acceptance:visual-candidates
+        run: |
+          node tooling/visual-candidate-acceptance.mjs \
+            --bundle '${{ matrix.bundle }}' \
+            ${{ matrix.knowledge && format('--knowledge ''{0}''', matrix.knowledge) || '' }} \
+            --out '${{ matrix.out }}'
+
+      # What the reviewer is judging, failed loudly rather than read later.
+      #
+      # A packet that quietly reports owner-approved intake as though somebody
+      # had verified it is worse than no packet, and the difference is invisible
+      # in a screenshot. So the recorded truth basis is asserted here: nbm must
+      # come back source-backed by its frozen pack, and mgb must come back as
+      # approved intake with its gaps named.
+      - name: Assert the recorded truth basis
+        env:
+          EXPECTED: ${{ matrix.knowledge && 'ingested-knowledge-pack' || 'approved-intake-truth-with-source-gaps' }}
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const actual = report.truthReadiness?.status;
+            if (actual !== process.env.EXPECTED) {
+              console.error(`Truth basis is ${actual}, expected ${process.env.EXPECTED}.`);
+              process.exit(1);
+            }
+            console.log(`${report.business}: ${actual}`);
+            for (const note of report.truthReadiness.notes) console.log(`  ${note}`);
+          ' '${{ matrix.out }}/report.json'
 
       # The packet is the reviewer's surface, so it is what travels.
       #
@@ -77,14 +132,14 @@ jobs:
       - name: Upload detached review evidence only
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: nbm-visual-review-${{ github.event.pull_request.head.sha || github.sha }}
+          name: ${{ matrix.business }}-visual-review-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            .app-builder/visual-review/report.json
-            .app-builder/visual-review/review-packets.json
-            .app-builder/visual-review/packet/index.html
-            .app-builder/visual-review/packet/review.json
-            .app-builder/visual-review/packet/captures/*.png
-            .app-builder/visual-review/service/**/captures/*.png
+            ${{ matrix.out }}/report.json
+            ${{ matrix.out }}/review-packets.json
+            ${{ matrix.out }}/packet/index.html
+            ${{ matrix.out }}/packet/review.json
+            ${{ matrix.out }}/packet/captures/*.png
+            ${{ matrix.out }}/service/**/captures/*.png
           if-no-files-found: error
           retention-days: 7
           compression-level: 0

@@ -30,7 +30,36 @@ const grammar = panelGrammar(directed.artDirection?.dimensions?.gridFamily, list
 const named = shape === 'list';
 const [lead, ...supporting] = list;
 ---
-{list.length > 0 && named && (
+{/* A set of bare names, and the hole every grammar used to fall into.
+
+    `named` is the shape a set takes when no item carries a sentence, which is
+    what a business looks like before anything has been ingested for it. Every
+    grammar branch below is guarded by `!named`, so a named set reached none of
+    them: it rendered one `plain-list` and had the chosen grammar written onto
+    its class and its data attribute anyway. The evidence said
+    `data-panel-grammar="asymmetric"` while the DOM was the symmetric one, which
+    is the exact config-only difference the signature excludes tokens to avoid.
+    A direction could choose a grammar and eight service names still came out
+    the same shape.
+
+    A name cannot carry the editorial or the lead form -- both need a sentence
+    to set apart -- so those stay a plain list honestly. The stagger and the
+    register are the two forms a bare name can carry, and they now do. */}
+{list.length > 0 && named && grammar === 'asymmetric' && (
+  <ul class="plain-list panel-asymmetric panel-staggered" data-panel-grammar="asymmetric" data-panel-shape="named">
+    {list.map((item) => <li>{itemTitle(item)}</li>)}
+  </ul>
+)}
+
+{list.length > 0 && named && grammar === 'schedule-rows' && (
+  <ol class="plain-list panel-schedule-rows panel-named-register" data-panel-grammar="schedule-rows" data-panel-shape="named">
+    {list.map((item, index) => (
+      <li><span class="panel-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{itemTitle(item)}</li>
+    ))}
+  </ol>
+)}
+
+{list.length > 0 && named && grammar !== 'asymmetric' && grammar !== 'schedule-rows' && (
   <ul class={`plain-list panel-${grammar}`} data-panel-grammar={grammar} data-panel-shape="named">
     {list.map((item) => <li>{itemTitle(item)}</li>)}
   </ul>

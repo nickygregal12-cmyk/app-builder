@@ -188,11 +188,31 @@ test('a grammar the content cannot carry is refused rather than rendered badly',
   // dominant *over*. Rendering the declared grammar faithfully for one thin
   // item produces a lead panel with nothing beside it: a page that reads as
   // broken rather than art-directed.
+  // The guarantee is that the *lead* form is never reached by a set with
+  // nothing to be dominant over. It used to be enforced by discarding the
+  // grammar entirely, which also discarded it for sets that could carry a
+  // different asymmetric form -- and that is why a business with eight
+  // undescribed services rendered the symmetric grid while its evidence
+  // reported `asymmetric`. The guard moved to where the lead form renders.
+  assert.match(
+    read('templates/react-vite-neutral/files/src/App.tsx'),
+    /grammar === 'asymmetric' && detailed/,
+    'the react lead form must require detail',
+  );
+  assert.match(
+    read('templates/astro-static-content/files/src/components/Items.astro'),
+    /!named && grammar === 'asymmetric'/,
+    'the astro lead form must be reachable only by a set that is not bare names',
+  );
+
+  // And a bare-name set must now actually differ per grammar rather than
+  // carrying the grammar as a class over identical DOM.
   for (const source of [
     read('templates/react-vite-neutral/files/src/App.tsx'),
-    read('templates/astro-static-content/files/src/lib/composition.ts'),
+    read('templates/astro-static-content/files/src/components/Items.astro'),
   ]) {
-    assert.match(source, /length >= 3 && detailed \? 'asymmetric' : 'symmetric'/, 'the showcase must be refused for a set that cannot carry it');
+    assert.match(source, /panel-asymmetric panel-staggered/, 'a bare-name set must take the stagger under an asymmetric grammar');
+    assert.match(source, /panel-schedule-rows panel-named-register/, 'a bare-name set must take the register under a schedule grammar');
   }
 });
 

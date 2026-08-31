@@ -183,13 +183,29 @@ export type PanelGrammar = (typeof PANEL_GRAMMARS)[number];
  * The other three carry both a detailed and a names-only form themselves, so
  * they are never refused.
  */
+/**
+ * Which asymmetric form a set can carry.
+ *
+ * `lead` makes the first entry a sibling of the group, which says "this one
+ * first". Where nothing in the approved truth distinguishes one entry from
+ * another that is a hierarchy the page would be inventing, so a set of bare
+ * names composes as a positional `stagger` instead: the widths cycle, the
+ * fourth entry is as wide as the first, and nothing is elevated.
+ */
+export function panelAsymmetricShape(values: readonly unknown[]): 'lead' | 'stagger' {
+  return values.some((item) => itemDetail(item).length > 0) ? 'lead' : 'stagger';
+}
+
 export function panelGrammar(declared: string | undefined, values: readonly unknown[]): PanelGrammar {
   const grammar: PanelGrammar = (PANEL_GRAMMARS as readonly string[]).includes(declared ?? '')
     ? (declared as PanelGrammar)
     : 'symmetric';
   if (grammar !== 'asymmetric') return grammar;
-  const detailed = values.some((item) => itemDetail(item).length > 0);
-  return values.length >= 3 && detailed ? 'asymmetric' : 'symmetric';
+  // A set of bare names used to fall back to `symmetric`, which discarded the
+  // declared grammar rather than adapting it and is why a business with eight
+  // undescribed services presented the same middle in every direction. It still
+  // composes asymmetrically; `panelAsymmetricShape` says as which form.
+  return values.length >= 3 ? 'asymmetric' : 'symmetric';
 }
 
 /**

@@ -230,8 +230,10 @@ function panelGrammarFor(declared: string | undefined, values: readonly unknown[
     ? (declared as PanelGrammar)
     : 'symmetric';
   if (grammar !== 'asymmetric') return grammar;
-  const detailed = values.some((item) => itemDetail(item).length > 0);
-  return values.length >= 3 && detailed ? 'asymmetric' : 'symmetric';
+  // The lead form still needs detail, and is guarded where it renders. A set of
+  // bare names keeps the declared grammar and takes the stagger instead, which
+  // is why this no longer discards it here.
+  return values.length >= 3 ? 'asymmetric' : 'symmetric';
 }
 
 const GRID_FAMILY = directed.artDirection?.dimensions?.gridFamily;
@@ -249,9 +251,24 @@ function Items({ values, variant }: { values: unknown; variant?: string }) {
   const shape = variant === 'cards' || variant === 'list' || variant === 'features' ? variant : (detailed ? 'cards' : 'list');
   const grammar = panelGrammarFor(GRID_FAMILY, values);
 
-  // Items that are nothing but a name are a different amount of content rather
-  // than a different presentation of it, so every grammar shows them as a list
-  // and styles it as its own.
+  // A set of bare names, and the hole every grammar used to fall into. It
+  // rendered one list and had the chosen grammar written onto its class and its
+  // data attribute anyway, so the evidence said `asymmetric` while the DOM was
+  // the symmetric one. A name cannot carry the editorial or the lead form --
+  // both need a sentence to set apart -- so those stay a list honestly. The
+  // stagger and the register are the two forms a bare name can carry.
+  if (shape === 'list' && grammar === 'asymmetric') {
+    return <ul className="plain-list panel-asymmetric panel-staggered" data-panel-grammar="asymmetric" data-panel-shape="named">
+      {values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}
+    </ul>;
+  }
+  if (shape === 'list' && grammar === 'schedule-rows') {
+    return <ol className="plain-list panel-schedule-rows panel-named-register" data-panel-grammar="schedule-rows" data-panel-shape="named">
+      {values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>
+        <span className="panel-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{itemTitle(item)}
+      </li>)}
+    </ol>;
+  }
   if (shape === 'list') {
     return <ul className={`plain-list panel-${grammar}`} data-panel-grammar={grammar} data-panel-shape="named">
       {values.map((item, index) => <li key={`${itemTitle(item)}-${index}`}>{itemTitle(item)}</li>)}
@@ -285,7 +302,10 @@ function Items({ values, variant }: { values: unknown; variant?: string }) {
   // The first entry is the one the page is arguing with, so it is a sibling of
   // the group rather than the first cell of it — which is also what makes the
   // phone order obvious: lead, then the rest.
-  if (grammar === 'asymmetric') {
+  // The lead form, and the guarantee that it is only reached by a set that can
+  // carry it: `shape === 'list'` above has already taken every set with no
+  // detail, so a lead panel always has something to be dominant over.
+  if (grammar === 'asymmetric' && detailed) {
     const [lead, ...supporting] = values;
     return <div className="item-grid panel-asymmetric" data-panel-grammar="asymmetric" data-panel-shape="detailed">
       <article className="content-card panel-lead">

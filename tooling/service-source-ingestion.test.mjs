@@ -80,7 +80,7 @@ test('service ingestion normalises supplied files into the project knowledge pac
     assert.equal(pack.packHash, result.knowledge.packHash);
     assert.ok(pack.facts.every((fact) => pack.sources.some((entry) => entry.id === fact.sourceId)));
 
-    assert.deepEqual(service.listEvents(project.id).map((event) => event.type), ['sources.ingestion.started', 'sources.ingested']);
+    assert.deepEqual(service.listEvents(project.id).map((event) => event.type), ['mutation.decided', 'sources.ingestion.started', 'sources.ingested']);
     assert.match(service.latestCheckpoint(project.id).nextAction, /generate the project/i);
   } finally {
     await service.close();
@@ -219,7 +219,7 @@ test('remote ingestion cannot be pointed at private-network addresses and fails 
     // failed durable task rather than a silent no-op.
     await assert.rejects(() => service.ingestSources(project.id, parseSourceRequests([{ uri: siteUrl }])), /private|loopback|not allowed|blocked|unsafe/i);
     assert.equal(service.listTasks(project.id).at(-1).state, 'failed');
-    assert.deepEqual(service.listEvents(project.id).map((event) => event.type), ['sources.ingestion.started', 'sources.ingestion.failed']);
+    assert.deepEqual(service.listEvents(project.id).map((event) => event.type), ['mutation.decided', 'sources.ingestion.started', 'sources.ingestion.failed']);
   } finally {
     await new Promise((resolve) => site.close(resolve));
     await service.close();

@@ -116,10 +116,12 @@ test('real service lifecycle persists generation verification preview and metric
     assert.equal(tasks.every((task) => task.state === 'succeeded'), true);
     const events = service.listEvents(project.id);
     assert.deepEqual(events.map((event) => event.type), [
+      'mutation.decided',
       'build.started',
       'composition.materialised',
       'repository.generated',
       'build.succeeded',
+      'mutation.decided',
       'quality.started',
       'quality.lock.resolved',
       'quality.install.succeeded',
@@ -127,12 +129,24 @@ test('real service lifecycle persists generation verification preview and metric
       'quality.build.succeeded',
       'quality.identity.recorded',
       'quality.succeeded',
+      'mutation.decided',
       'preview.started',
+      'mutation.decided',
       'preview.stopped',
     ]);
-    assert.deepEqual(service.listEvents(project.id, { afterSequence: events[10].sequence }).map((event) => event.type), ['preview.started', 'preview.stopped']);
+
+    // Each operation is preceded by the decision that allowed it, and the
+    // decision says which door the request came through. These calls are
+    // in-process, so all four say `internal` — and that is the point: a caller
+    // with no transport to be stopped at is still decided.
+    const decided = events.filter((event) => event.type === 'mutation.decided');
+    assert.deepEqual(decided.map((event) => event.payload.operation), ['project.generate', 'project.verify', 'project.preview.start', 'project.preview.stop']);
+    assert.deepEqual([...new Set(decided.map((event) => event.payload.surface))], ['internal']);
+    assert.deepEqual([...new Set(decided.map((event) => event.payload.basis))], ['workspace-policy-before-contract-approval', 'workspace-policy']);
+
+    assert.deepEqual(service.listEvents(project.id, { afterSequence: events[12].sequence }).map((event) => event.type), ['mutation.decided', 'preview.started', 'mutation.decided', 'preview.stopped']);
     const metrics = service.metrics(project.id);
-    assert.equal(metrics.eventCount, 13);
+    assert.equal(metrics.eventCount, 17);
     assert.equal(metrics.costGbp, 0);
     assert.equal(metrics.inputTokens, 0);
     assert.equal(metrics.outputTokens, 0);
@@ -198,8 +212,13 @@ test('local HTTP facade exposes bounded project state and never returns integrat
     assert.ok(composition.composition.pages.length > 0);
     const events = await fetch(`${base}/projects/project-http-test/events`).then((response) => response.json());
     assert.equal(events.events.at(-1).type, 'build.succeeded');
+    // The same call made over HTTP is decided as `http`, where the in-process
+    // lifecycle above is decided as `internal`. One decision, two doors.
+    const decided = events.events.filter((event) => event.type === 'mutation.decided');
+    assert.deepEqual(decided.map((event) => event.payload.surface), ['http']);
+    assert.equal(decided[0].payload.operation, 'project.generate');
     const metrics = await fetch(`${base}/projects/project-http-test/metrics`).then((response) => response.json());
-    assert.equal(metrics.metrics.eventCount, 4);
+    assert.equal(metrics.metrics.eventCount, 5);
     const checkpoint = await fetch(`${base}/projects/project-http-test/checkpoint`).then((response) => response.json());
     assert.equal(checkpoint.checkpoint.projectId, 'project-http-test');
   } finally {

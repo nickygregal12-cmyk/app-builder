@@ -32,6 +32,9 @@ import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
 import { assertLockUnmoved, buildOutputManifest, resolveLockfile, sourceDigest } from '../../../tooling/lib/build-identity.mjs';
 import { declaredToolchain, describeToolchain, runningToolchain } from '../../../tooling/lib/toolchain.mjs';
+import { assertMutationRegistered, decideMutation } from './mutation-decision.js';
+import { listApprovedBuildPlans } from './approved-build-plan-store.js';
+import { authorizeAction } from './action-authorization-service.js';
 
 function safeChild(root, name) {
   const base = path.resolve(root);
@@ -225,6 +228,9 @@ export class FactoryService {
    * so what is persisted is this factory's own output from those answers.
    */
   approveIntake(intake) {
+    // Decided, not recorded: there is no project stream to write into, which
+    // the registry says outright rather than leaving as a silent gap.
+    assertMutationRegistered('project.intake.approve');
     return mintApprovedIntakeBundle(intake ?? {});
   }
 
@@ -257,6 +263,7 @@ export class FactoryService {
    * one another and against an earlier run.
    */
   async replayIntakeBundle(bundle, { knowledgePack = null } = {}) {
+    await this.decideMutation('project.intake.replay', null);
     const replayed = replayApprovedIntake(bundle);
     const project = this.createProject({
       manifest: replayed.projectManifest,
@@ -281,6 +288,9 @@ export class FactoryService {
   }
 
   createProject({ manifest, knowledgePack = null, id = null, intakeBundle = null }) {
+    // Decided, not recorded: this creates the project every event stream is
+    // keyed on, so at the moment of the decision there is nothing to key on.
+    assertMutationRegistered('project.create');
     const errors = validateManifest(manifest);
     if (errors.length) throw new Error(`Invalid project manifest: ${errors.join('; ')}`);
     if (knowledgePack) {
@@ -420,6 +430,7 @@ export class FactoryService {
    * discarding how someone set the design.
    */
   async writeDesignChoices(projectId, choices) {
+    await this.decideMutation('project.design.write', projectId);
     const project = this.requireProject(projectId);
     const merged = { ...this.readDesignChoices(projectId).choices, ...assertDesignChoices(choices, { factoryRoot: this.factoryRoot }) };
     // A control set back to nothing returns to what the factory selected rather
@@ -516,6 +527,7 @@ export class FactoryService {
   }
 
   async writeSectionVariants(projectId, choices, change = null) {
+    await this.decideMutation('project.section-variants.write', projectId);
     const project = this.requireProject(projectId);
     const document = assertContract('section-variant', { schemaVersion: 1, projectId, choices });
     fs.mkdirSync(path.dirname(this.sectionVariantsPath(projectId)), { recursive: true });
@@ -561,6 +573,7 @@ export class FactoryService {
   }
 
   async writeAssetDecisions(projectId, decisions, change = null) {
+    await this.decideMutation('project.asset-decisions.write', projectId);
     this.requireProject(projectId);
     const document = assertContract('asset-decision', { schemaVersion: 1, projectId, decisions });
     fs.mkdirSync(path.dirname(this.assetDecisionsPath(projectId)), { recursive: true });
@@ -596,6 +609,7 @@ export class FactoryService {
    * the override file: a later rebuild replays it over freshly composed output.
    */
   async saveOverrides(projectId, overrides) {
+    await this.decideMutation('project.overrides.write', projectId);
     const project = this.requireProject(projectId);
     const document = assertContract('content-override', {
       schemaVersion: 1,
@@ -810,6 +824,7 @@ export class FactoryService {
    * travels with the pictures rather than being remembered by whoever ran it.
    */
   async captureRenderedEvidence(projectId, { against = 'preview' } = {}) {
+    await this.decideMutation('project.evidence.capture', projectId);
     const { project, workspace } = this.requireWorkspace(projectId);
     if (against !== 'preview' && against !== 'built-artifact') {
       throw new Error(`Rendered evidence can be captured against 'preview' or 'built-artifact', not ${JSON.stringify(against)}.`);
@@ -1040,6 +1055,34 @@ export class FactoryService {
    * produced it. Both default to the previous behaviour, so existing callers
    * are unchanged.
    */
+  /**
+   * The one decision about changing durable state.
+   *
+   * Every mutating method calls this before it does anything, so the question
+   * "was this allowed" is answered in one place for every way into the factory
+   * rather than once per transport. It throws rather than returning a flag: a
+   * caller that forgets to check a boolean is the bypass this exists to close.
+   */
+  decideMutation(operationId, projectId, options = {}) {
+    return decideMutation(this, operationId, projectId, options);
+  }
+
+  /**
+   * Has an owner frozen this project's inputs into an approved plan?
+   *
+   * Once they have, `project.generate` is only reachable through that plan, and
+   * every other route is refused. Before they have, a workspace build is the
+   * operator's own scratch.
+   */
+  hasApprovedBuildPlan(projectId) {
+    return listApprovedBuildPlans(this.store, projectId).length > 0;
+  }
+
+  /** Delegated so an authorization's semantics are decided in exactly one place. */
+  authorizeAction(projectId, request) {
+    return authorizeAction(this, projectId, request);
+  }
+
   async recordOperationalEvent(projectId, type, payload = {}, usage = {}, { taskId = null, actor = 'factory-service' } = {}) {
     this.requireProject(projectId);
     return this.store.recordEvent(createEvent({ projectId, taskId, type, actor, payload, usage }));
@@ -1052,6 +1095,7 @@ export class FactoryService {
    * recompose path yet.
    */
   async ingestSources(projectId, requests) {
+    await this.decideMutation('project.sources.ingest', projectId);
     let project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');
 
@@ -1135,6 +1179,7 @@ export class FactoryService {
    * sources arrived and then that one was withdrawn.
    */
   async ingestSourcesForReplacement(projectId, requests) {
+    await this.decideMutation('project.sources.ingest-replacement', projectId);
     const project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');
     const { pack, added } = await this.ingestion.ingest(projectId, requests);
@@ -1143,7 +1188,8 @@ export class FactoryService {
     return { pack, added };
   }
 
-  async generateProject(projectId) {
+  async generateProject(projectId, options = {}) {
+    await this.decideMutation('project.generate', projectId, options);
     let project = this.requireProject(projectId);
     if (project.state === 'generating') throw new Error('Project generation is already running.');
     const { workspace, version } = nextWorkspace(this.workspacesRoot, project.slug);
@@ -1247,6 +1293,7 @@ export class FactoryService {
   }
 
   async verifyProject(projectId) {
+    await this.decideMutation('project.verify', projectId);
     let { project, workspace } = this.requireWorkspace(projectId);
     let task = createTask({
       projectId,
@@ -1402,6 +1449,7 @@ export class FactoryService {
   // `createdBy` has no default: the runtime that drives a generation is the one
   // barred from later promoting it, so it has to say who it is.
   async generateVisualCandidates(projectId, { directions = null, createdBy, now = new Date().toISOString() } = {}) {
+    await this.decideMutation('project.candidates.generate', projectId);
     const project = this.requireProject(projectId);
     const existing = this.readVisualCandidateSet(projectId);
     if (existing && !existing.promotedCandidateId) {
@@ -1565,6 +1613,7 @@ export class FactoryService {
    * photographed at one is not a comparison.
    */
   async captureVisualCandidateEvidence(projectId, { capturedAt = new Date().toISOString() } = {}) {
+    await this.decideMutation('project.candidates.capture', projectId);
     const set = this.readVisualCandidateSet(projectId);
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
     if (set.promotedCandidateId) throw new Error(`This set already promoted ${set.promotedCandidateId}.`);
@@ -1731,6 +1780,7 @@ export class FactoryService {
   }
 
   async recordVisualCandidateReview(projectId, candidateId, review) {
+    await this.decideMutation('project.candidates.review', projectId);
     const set = this.readVisualCandidateSet(projectId);
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
     const candidate = set.candidates.find((entry) => entry.candidateId === candidateId);
@@ -1774,6 +1824,7 @@ export class FactoryService {
    * one bounded pass rather than quietly promoting the least bad one.
    */
   async decideVisualCandidateSet(projectId, { outcome, decidedBy, rationale = null } = {}) {
+    await this.decideMutation('project.candidates.decide', projectId);
     const set = this.readVisualCandidateSet(projectId);
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
     const decided = decideCandidateSet(set, { outcome, decidedBy, rationale, decidedAt: new Date().toISOString() });
@@ -1802,6 +1853,7 @@ export class FactoryService {
    * refuses a revision whose composition hash moved.
    */
   async reworkVisualCandidate(projectId, candidateId, { plannedBy = 'design-critic' } = {}) {
+    await this.decideMutation('project.candidates.rework', projectId);
     const project = this.requireProject(projectId);
     const set = this.readVisualCandidateSet(projectId);
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
@@ -1909,6 +1961,7 @@ export class FactoryService {
    * record of which is the product.
    */
   async promoteVisualCandidate(projectId, candidateId, { promotedBy, rationale = null } = {}) {
+    await this.decideMutation('project.candidates.promote', projectId);
     const project = this.requireProject(projectId);
     const set = this.readVisualCandidateSet(projectId);
     if (!set) throw new Error(`Project ${projectId} has no visual candidate set.`);
@@ -1980,6 +2033,7 @@ export class FactoryService {
   }
 
   async startPreview(projectId) {
+    await this.decideMutation('project.preview.start', projectId);
     const { workspace } = this.requireWorkspace(projectId);
     const existing = this.previewStatus(projectId);
     if (existing.state === 'running' || existing.state === 'starting') return existing;
@@ -2023,6 +2077,7 @@ export class FactoryService {
   }
 
   async stopPreview(projectId) {
+    await this.decideMutation('project.preview.stop', projectId);
     this.requireProject(projectId);
     const preview = this.previews.get(projectId);
     if (!preview || preview.process.exitCode !== null) {

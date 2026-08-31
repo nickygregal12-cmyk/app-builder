@@ -8,6 +8,8 @@ import { FactoryStore } from '../apps/service/src/store.js';
 import { approvedBuildHash, approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, mintApprovedBuildPlan } from '../apps/service/src/approved-build-plan.js';
 import { approveProjectBuildPlan, executeApprovedProjectBuildPlan } from '../apps/service/src/approved-build-plan-service.js';
 import { handleApprovedBuildPlanHttp } from '../apps/service/src/approved-build-plan-http.js';
+import { decideMutation } from '../apps/service/src/mutation-decision.js';
+import { listApprovedBuildPlans } from '../apps/service/src/approved-build-plan-store.js';
 import { FACTORY_TOOL_CONTRACT_VERSION, FACTORY_TOOLS } from '../apps/service/src/tool-contract.js';
 
 const HASH = 'a'.repeat(64);
@@ -50,7 +52,13 @@ function serviceFixture({ generate = null } = {}) {
     readDesignChoices: () => ({ schemaVersion: 1, projectId, choices: state.designChoices }),
     designReferenceInfluence: () => state.referenceInfluence,
     readBespokePresentations: () => ({ schemaVersion: 1, projectId, presentations: state.bespokePresentations }),
-    async generateProject(id) {
+    // The double takes the real decision. A stub that skipped it would make
+    // these tests pass against a service the approved-plan path could no longer
+    // drive — which is the whole failure route parity is about.
+    decideMutation: (operationId, id, options) => decideMutation(service, operationId, id, options),
+    hasApprovedBuildPlan: (id) => listApprovedBuildPlans(store, id).length > 0,
+    async generateProject(id, options = {}) {
+      await this.decideMutation('project.generate', id, options);
       generateCalls += 1;
       try {
         const result = generate

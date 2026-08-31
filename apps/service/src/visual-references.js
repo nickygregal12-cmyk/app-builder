@@ -152,6 +152,7 @@ function intentFrom(input = {}) {
  * so nobody mistakes a description for a measurement.
  */
 export async function addDesignReference(service, projectId, request = {}, options = {}) {
+  await service.decideMutation('project.design-references.add', projectId);
   service.requireProject(projectId);
   const existing = listDesignReferences(service, projectId);
   if (existing.length >= REFERENCE_LIMITS.maxReferencesPerProject) {
@@ -243,6 +244,7 @@ export async function addDesignReference(service, projectId, request = {}, optio
  * analysis records, enforced at the one place it could be violated.
  */
 export async function updateDesignReferenceIntent(service, projectId, referenceId, intent = {}) {
+  await service.decideMutation('project.design-references.intent', projectId);
   const current = readDesignReference(service, projectId, referenceId);
   if (!current) throw new Error(`No design reference ${referenceId} on this project.`);
   const traitRegistry = loadReferenceTraits(service.factoryRoot);
@@ -272,6 +274,7 @@ export async function updateDesignReferenceIntent(service, projectId, referenceI
 export const REFERENCE_APPROVAL_STATES = Object.freeze(['draft', 'approved', 'disabled']);
 
 export async function setDesignReferenceApproval(service, projectId, referenceId, { state, approvedBy = 'console', now = new Date().toISOString() } = {}) {
+  await service.decideMutation('project.design-references.approval', projectId);
   if (!REFERENCE_APPROVAL_STATES.includes(state)) {
     throw new Error(`Unknown design-reference approval state: ${String(state)}. It offers: ${REFERENCE_APPROVAL_STATES.join(', ')}.`);
   }
@@ -294,6 +297,7 @@ export async function setDesignReferenceApproval(service, projectId, referenceId
 }
 
 export async function removeDesignReference(service, projectId, referenceId) {
+  await service.decideMutation('project.design-references.remove', projectId);
   const current = readDesignReference(service, projectId, referenceId);
   if (!current) throw new Error(`No design reference ${referenceId} on this project.`);
   fs.rmSync(referenceDirectory(service, projectId, referenceId), { recursive: true, force: true });

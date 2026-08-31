@@ -60,6 +60,7 @@ export async function approveActionAuthorization(service, projectId, input = {})
   const existing = getActionAuthorizationByApprovalId(service.store, projectId, input.operation, input?.approval?.approvalId);
   if (existing) return existing;
 
+  await service.decideMutation('project.authorization.approve', projectId);
   const authorization = assertContract('action-authorization', mintActionAuthorization({ ...input, projectId }));
   recordActionAuthorization(service.store, authorization);
   await record(service, projectId, 'action-authorization.approved', {
@@ -97,6 +98,7 @@ export async function revokeProjectActionAuthorization(service, projectId, autho
   if (!getActionAuthorization(service.store, projectId, authorizationId)) {
     throw new AuthorizationError('unknown-authorization', `No authorization ${authorizationId} exists for project ${projectId}.`);
   }
+  await service.decideMutation('project.authorization.revoke', projectId);
   const result = revokeActionAuthorization(service.store, { projectId, authorizationId, revokedBy: String(revokedBy ?? 'operator'), reason, revokedAt });
   if (result.revoked) {
     await record(service, projectId, 'action-authorization.revoked', { authorizationId, revokedBy, reason: reason ?? null, revokedAt });

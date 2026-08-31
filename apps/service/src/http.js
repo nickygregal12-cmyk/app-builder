@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import http from 'node:http';
 import { parseSourceRequests } from './ingestion.js';
 import { factoryToolContract } from './tool-contract.js';
+import { MutationRefused, runOnSurface } from './mutation-decision.js';
+import { AuthorizationError } from '@app-builder/control-plane/action-authorization';
 import { updateProjectSourceGovernance } from './source-governance.js';
 import { assetInventory, decideProjectAsset, recropProjectAsset, replaceProjectAsset } from './asset-governance.js';
 import { chooseSectionVariant, sectionVariantOptions } from './section-variants.js';
@@ -93,7 +95,11 @@ export function createFactoryHttpServer({ service, servicePort = null, instance 
   // through a generated preview, are refused as destinations even if preview
   // state were somehow corrupted.
   const previewProxy = createPreviewProxy({ service, reservedPorts: [servicePort, ...NEVER_PROXIED_PORTS].filter((port) => Number.isInteger(port)) });
-  const server = http.createServer(async (request, response) => {
+  // Every HTTP request runs tagged as the `http` surface, so a decision taken
+  // deep inside the service knows which door the request came through without
+  // the request being able to say. The Builder Console is a client of this
+  // server and has no other way in.
+  const server = http.createServer(async (request, response) => runOnSurface('http', async () => {
     try {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
       const previewRoute = previewProxyRoute(url.pathname);
@@ -317,10 +323,16 @@ export function createFactoryHttpServer({ service, servicePort = null, instance 
       return send(response, 405, { error: 'method-not-allowed' });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      // A refused decision is the caller being told no, not the service
+      // failing. Reporting it as a 500 would make a working control look like
+      // an outage, which is how a control gets "fixed" by being removed.
+      if (error instanceof MutationRefused || error instanceof AuthorizationError) {
+        return send(response, 403, { error: 'refused', refusal: error.refusal, message });
+      }
       const status = classifyServiceError(message);
       return send(response, status, { error: 'request-failed', message });
     }
-  });
+  }));
 
   // The generated app's dev client opens an HMR socket at the same origin and
   // path as its assets. Anything that is not a live preview upgrade is closed.

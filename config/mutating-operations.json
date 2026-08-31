@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "description": "Every operation that changes durable factory state, and what deciding it requires. The approved-build-plan path fingerprints and freezes its inputs and can be spent once, and it guarded exactly one operation while the same effect stayed reachable by other means. A guarantee one route enforces is not a guarantee, so the set of mutating operations is enumerated here rather than discovered, and apps/service/src/mutation-decision.js is the one place a decision is made about any of them.",
+  "rules": [
+    "There are three ways into the factory: an HTTP request, a broker socket message, and an in-process call. The Builder Console and the MCP adapter are clients of the first two and are not separate transports, so a decision taken inside the service is taken for all of them.",
+    "The surface is determined by the entry point, never claimed by the caller. A request that could name its own surface could name a more privileged one.",
+    "Deny by default. An operation that is not registered here has no decision to take and is refused, so a new mutating route cannot appear unguarded.",
+    "Every decision is recorded before the operation runs, permitted or refused. `recorded` is a decision with a policy basis, not an absence of one — the distinction that matters downstream is which basis an artifact was produced under, not whether anything was written down.",
+    "`required-after-contract-approval` is the closure of the original bypass. Before an owner approves a contract, a workspace build is the operator's own scratch. After approval, the approved-plan path is the only way to build that project, and every other route is refused — which is what makes freezing the approved inputs mean something.",
+    "Risk and environment are stated per operation because they decide what a later package may escalate. Nothing escalates itself: moving an operation to `required` is a reviewed change to this file."
+  ],
+  "authorizationModes": {
+    "recorded": "A decision is taken and recorded with its policy basis. No ActionAuthorization document is needed, because the effect is bounded to the operator's own workspace and is reversible by repeating the operation.",
+    "required": "An ActionAuthorization must be presented, must match this operation and the exact current base, and is consumed. Missing or wrong is a refusal on every surface.",
+    "required-after-contract-approval": "`recorded` until the project has an approved build plan; `required` from then on. The approved plan is the authorization, and it is spent through the same decision."
+  },
+  "operations": [
+    {
+      "id": "project.create",
+      "method": "createProject",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "ledgerRecord": false,
+      "ledgerRecordReason": "This creates the project every event stream is keyed on, so at the moment of the decision there is no stream to record it into. It is decided synchronously and enforced the same way; escalating it would need an operation that can record its own decision.",
+      "effect": "Creates a durable project from a validated manifest. Nothing is generated and no bytes leave the factory."
+    },
+    {
+      "id": "project.intake.approve",
+      "method": "approveIntake",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "ledgerRecord": false,
+      "ledgerRecordReason": "Minting a bundle from an intake does not act on a project, so there is no project stream to record the decision into.",
+      "effect": "Mints an approved intake bundle. This is a record of what the owner approved, not permission to act on it."
+    },
+    {
+      "id": "project.intake.replay",
+      "method": "replayIntakeBundle",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Recreates a project from a previously approved intake bundle, reporting drift rather than absorbing it."
+    },
+    {
+      "id": "project.sources.ingest",
+      "method": "ingestSources",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Normalises supplied or fetched source material into the project's knowledge pack. Rights and publication permission are decided by source governance, not here."
+    },
+    {
+      "id": "project.sources.ingest-replacement",
+      "method": "ingestSourcesForReplacement",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Ingests bytes that replace an existing governed asset."
+    },
+    {
+      "id": "project.source.governance.update",
+      "module": "apps/service/src/source-governance.js",
+      "method": "updateProjectSourceGovernance",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "escalationCandidate": "Approving a source for use is a rights decision, and rights decisions are what stop fabricated proof reaching a published product. It stays recorded only while nothing is published; it escalates with the first release lane.",
+      "effect": "Records whether a source may be used, referenced only, or not used at all."
+    },
+    {
+      "id": "project.assets.recrop",
+      "module": "apps/service/src/asset-governance.js",
+      "method": "recropProjectAsset",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Moves an asset's focal point and re-derives its crops. The original bytes are untouched."
+    },
+    {
+      "id": "project.assets.replace",
+      "module": "apps/service/src/asset-governance.js",
+      "method": "replaceProjectAsset",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "escalationCandidate": "Replacing bytes changes what a build publishes without changing the composition that was reviewed. It escalates with the release lane, where the accepted artifact must be the published one.",
+      "effect": "Replaces the bytes behind a governed asset."
+    },
+    {
+      "id": "project.assets.decide",
+      "module": "apps/service/src/asset-governance.js",
+      "method": "decideProjectAsset",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "escalationCandidate": "Same as source governance: this is the publication-permission decision for one asset.",
+      "effect": "Records an asset's rights and publication decision, and any crop review."
+    },
+    {
+      "id": "project.design.write",
+      "method": "writeDesignChoices",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Records bounded design controls. A working choice, never an acceptance."
+    },
+    {
+      "id": "project.section-variants.write",
+      "method": "writeSectionVariants",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Chooses or clears the presentation variant of one composed section."
+    },
+    {
+      "id": "project.asset-decisions.write",
+      "method": "writeAssetDecisions",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Persists the project's asset decision set."
+    },
+    {
+      "id": "project.overrides.write",
+      "method": "saveOverrides",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Saves direct content edits over composed bindings. Provenance is retained; an edited binding is marked as edited rather than promoted to a fact."
+    },
+    {
+      "id": "project.evidence.capture",
+      "method": "captureRenderedEvidence",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Drives a browser over the preview and stores rendered captures. Read-only about the product; it writes only evidence."
+    },
+    {
+      "id": "project.generate",
+      "method": "generateProject",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "required-after-contract-approval",
+      "satisfiedBy": "approved-build-plan",
+      "effect": "Materialises the project's source tree over its workspace. This is the operation the approved-build-plan path exists to govern, and the one every other route could previously reach around it."
+    },
+    {
+      "id": "project.verify",
+      "method": "verifyProject",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Resolves the generated project's lockfile, installs from it, runs its checks, builds it and records the resulting build identity. It changes the workspace but decides nothing about the product."
+    },
+    {
+      "id": "project.candidates.generate",
+      "method": "generateVisualCandidates",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Materialises several presentations of the same approved facts as separate candidate workspaces."
+    },
+    {
+      "id": "project.candidates.capture",
+      "method": "captureVisualCandidateEvidence",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Photographs candidate builds for review."
+    },
+    {
+      "id": "project.candidates.review",
+      "method": "recordVisualCandidateReview",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "escalationCandidate": "A review verdict is an independence claim. It already refuses a reviewer who produced the candidate; it escalates when a model rather than a person can issue one.",
+      "effect": "Records a named reviewer's scored verdict against frozen criteria."
+    },
+    {
+      "id": "project.candidates.decide",
+      "method": "decideVisualCandidateSet",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Records the decision over a reviewed candidate set."
+    },
+    {
+      "id": "project.candidates.rework",
+      "method": "reworkVisualCandidate",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Produces a bounded revision of one candidate against a rework plan and a remaining budget."
+    },
+    {
+      "id": "project.candidates.promote",
+      "method": "promoteVisualCandidate",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "escalationCandidate": "Promotion carries a reviewed acceptance into the project's own build. It escalates with the release lane.",
+      "effect": "Adopts an accepted candidate's presentation as the project's."
+    },
+    {
+      "id": "project.design-references.add",
+      "module": "apps/service/src/visual-references.js",
+      "method": "addDesignReference",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Registers a design reference as prior art. It informs direction and is never copied."
+    },
+    {
+      "id": "project.design-references.intent",
+      "module": "apps/service/src/visual-references.js",
+      "method": "updateDesignReferenceIntent",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Records what a reference is being used for."
+    },
+    {
+      "id": "project.design-references.approval",
+      "module": "apps/service/src/visual-references.js",
+      "method": "setDesignReferenceApproval",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Approves or withdraws a reference's influence on the build."
+    },
+    {
+      "id": "project.design-references.remove",
+      "module": "apps/service/src/visual-references.js",
+      "method": "removeDesignReference",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Removes a design reference and its captures."
+    },
+    {
+      "id": "project.preview.start",
+      "method": "startPreview",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Starts a service-managed preview process over the generated workspace, bound to loopback and reachable only through the service's own path."
+    },
+    {
+      "id": "project.preview.stop",
+      "method": "stopPreview",
+      "risk": "low",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Stops the preview process."
+    },
+    {
+      "id": "project.approved-build-plan.approve",
+      "module": "apps/service/src/approved-build-plan-service.js",
+      "method": "approveProjectBuildPlan",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Fingerprints and freezes the project's approved inputs into a single-use plan. Approving is not acting; the plan is spent by the execute operation."
+    },
+    {
+      "id": "project.approved-build-plan.execute",
+      "module": "apps/service/src/approved-build-plan-service.js",
+      "method": "executeApprovedProjectBuildPlan",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "required",
+      "satisfiedBy": "approved-build-plan",
+      "migration": "The plan is the older, narrower authorization: it holds the same freeze, drift-refusal and consume-once guarantees for exactly one operation. It is decided through this registry so there is one record, but it is still a second document. Migrating it onto ActionAuthorization is outstanding work and is named in docs/FACTORY_CONTROL_PLANE.md.",
+      "effect": "Generates the project from frozen approved inputs, spending the plan."
+    },
+    {
+      "id": "project.authorization.approve",
+      "module": "apps/service/src/action-authorization-service.js",
+      "method": "approveActionAuthorization",
+      "risk": "high",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Mints an ActionAuthorization. Minting refuses a proposer who is also the approver; it cannot itself require one, because that is where the chain would not terminate."
+    },
+    {
+      "id": "project.authorization.revoke",
+      "module": "apps/service/src/action-authorization-service.js",
+      "method": "revokeProjectActionAuthorization",
+      "risk": "medium",
+      "environment": "workspace",
+      "authorization": "recorded",
+      "effect": "Withdraws an unspent authorization. Revoking only ever removes permission."
+    }
+  ]
+}

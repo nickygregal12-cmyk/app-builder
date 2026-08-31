@@ -36,6 +36,7 @@ import {
   verifyCapabilityGrant,
 } from '@app-builder/control-plane/capabilities';
 import { parseSourceRequests } from './ingestion.js';
+import { runOnSurface } from './mutation-decision.js';
 
 export const BROKER_ENDPOINT = '/operation';
 export const GRANT_HEADER = 'x-app-builder-grant';
@@ -245,7 +246,10 @@ export function createAgentBroker({ service, registry, secret, clock = () => new
     }
 
     try {
-      const value = await BROKER_OPERATIONS[operation](service, { projectId, args: body?.arguments ?? {} });
+      // Tagged as the `broker` surface, so a decision taken inside the service
+      // knows a sandboxed task asked rather than the operator. The task cannot
+      // name its own surface; the socket it reached decides it.
+      const value = await runOnSurface('broker', () => BROKER_OPERATIONS[operation](service, { projectId, args: body?.arguments ?? {} }));
       // A creation authorised before its project existed would otherwise be the
       // one dispatch with no durable record of who asked for it.
       if (!recorded) await append(entry);

@@ -50,7 +50,11 @@ test('source governance cannot diverge from an already attached knowledge pack',
       /before knowledge ingestion is attached/,
     );
     assert.equal(service.getManifest('project-knowledge').inputs.sources[0].rightsStatus, 'unknown');
-    assert.equal(service.listEvents('project-knowledge').length, 0);
+    // No governance record, which is the point. The decision to attempt it is
+    // recorded, because it was genuinely taken.
+    const events = service.listEvents('project-knowledge');
+    assert.deepEqual(events.filter((event) => event.type === 'source.governance.updated'), []);
+    assert.deepEqual(events.map((event) => event.type), ['mutation.decided']);
   } finally {
     await service.close();
     store.close();

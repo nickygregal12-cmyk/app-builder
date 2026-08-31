@@ -88,6 +88,12 @@ function label(value: string) {
 
 function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   const payload = event.payload;
+  // Decisions are shown, not hidden. A refusal is the operator's answer to "why
+  // did nothing happen", and a permission says which authority the work was
+  // done under — an approved plan and ordinary workspace policy are different
+  // facts about the same build.
+  if (event.type === 'mutation.decided') return `${String(payload.operation ?? 'operation')} allowed · ${label(String(payload.basis ?? 'policy'))} · via ${String(payload.surface ?? 'internal')}`;
+  if (event.type === 'mutation.refused') return `${String(payload.operation ?? 'operation')} refused · ${label(String(payload.refusal ?? 'refused'))}`;
   if (event.type === 'sources.ingested') return `${String((payload.added as unknown[] | undefined)?.length ?? 0)} source(s) · ${String(payload.factCount ?? 0)} facts · ${String(payload.assetCount ?? 0)} assets`;
   if (event.type === 'sources.ingestion.started') return `Normalising ${String(payload.requested ?? 0)} source(s)`;
   if (event.type === 'composition.materialised') return `${String(payload.pages ?? 0)} pages · ${String(payload.sections ?? 0)} sections`;

@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import Frame from '../components/Frame.astro';
+import { studio, people, awards } from '../data/studio';
+const founders = people.filter((p) => p.portrait);
+const rest = people.filter((p) => !p.portrait);
+---
+<Base title="Studio — Ardwell & Roe" description="Eleven people in Bristol. Two directors who run every project they take from first sketch to handover.">
+  <section class="section-tight grid">
+    <div class="c-1-8">
+      <p class="label">Studio</p>
+      <h1 class="display" style="margin-top: var(--s-2);">The same two people, first sketch to handover.</h1>
+    </div>
+    <div class="c-1-5">
+      <p class="lede" style="margin-top: var(--s-4);">{studio.positioning}</p>
+    </div>
+  </section>
+
+  <section class="section grid">
+    {founders.map((person) => (
+      <article class="founder">
+        <Frame slug={person.portrait!} alt={`${person.name}, ${person.role}.`} ratio="3/4" sizes="(max-width: 900px) 100vw, 28vw" />
+        <div class="founder-meta">
+          <h2 class="work-name" style="font-size: var(--t-xl);">{person.name}</h2>
+          <p class="label">{person.role}</p>
+          <p class="prose" style="margin-top: var(--s-2);">{person.note}</p>
+        </div>
+      </article>
+    ))}
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-3"><p class="label">And</p></div>
+    <div class="c-5-7">
+      <ul class="roster">
+        {rest.map((person) => (
+          <li>
+            <h3>{person.name}<span>{person.role}</span></h3>
+            <p>{person.note}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section grid rule-top">
+    <div class="c-1-3"><p class="label">Recognition</p></div>
+    <div class="c-5-7">
+      <ul class="roster">
+        {awards.map((entry) => (
+          <li><h3>{entry.award}<span>{entry.project} · {entry.year}</span></h3></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+<style>
+  .founder { grid-column: span 6; display: grid; grid-template-columns: 5fr 7fr; gap: var(--s-3); align-items: start; }
+  .roster { list-style: none; margin: 0; padding: 0; }
+  .roster li { padding: var(--s-3) 0; border-top: var(--rule); }
+  .roster h3 { margin: 0 0 var(--s-1); font-size: var(--t-lg); font-weight: 500; display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+  .roster h3 span { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); align-self: center; }
+  .roster p { margin: 0; max-width: var(--measure); color: var(--ink-soft); }
+  @media (max-width: 900px) { .founder { grid-column: 1 / -1; grid-template-columns: 1fr; margin-bottom: var(--s-4); } }
+</style>

@@ -1,0 +1,258 @@
+[
+  {
+    "slug": "ashcombe-barn-exterior",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 2048
+    },
+    "aspect": 1,
+    "bytes": {
+      "avif": 200261,
+      "jpeg": 403140,
+      "sourcePng": 7268469
+    },
+    "lqip": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAABQBACdASoYABgAPwFoqk+rJaOiMBgMAWAgCWMAAC6NDQxGcqJeO1sFIn2AAP6QCiyELvsfCL+NylyBjj1BTVobmWHcPOroC6VLRuV5Pr0zzNvhLjO7NFMnVbCQPuvU5SEHSm0/+nGavOEdvaF2I9iiJXZj4AAA"
+  },
+  {
+    "slug": "ashcombe-barn-primary",
+    "role": "primary",
+    "width": 1800,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 141803,
+      "jpeg": 316767,
+      "sourcePng": 4919720
+    },
+    "lqip": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAAAwBACdASoYABIAPvVmqU6qpaQiMAwBUB6JZQDGfCHWjfKwwvBr0YmwiTIA/ucXbL+SbBTPHqWj3zONQJHEXaCDgqkqFGo0VZKGyHfPm3AqX+7l2B940KI6a+MfDz6rxEJXgAAA"
+  },
+  {
+    "slug": "ashcombe-barn-section",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 168585,
+      "jpeg": 351386,
+      "sourcePng": 5587214
+    },
+    "lqip": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAADwBACdASoYABIAPwFwrlCrJqQisBgIAWAgCWUAvkgPRIiN4y9K7McGXqMCiPLvaAAA/tXkbhOxIKexS02lzlhMFYz4C64YsfXh/4j8augWeTYBB+h4GZXC3+46Cg8qdqBJ848Wg2rAg6Dj1AMJCx0Sg9/QUAAA"
+  },
+  {
+    "slug": "bottle-works-bar",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 130168,
+      "jpeg": 300874,
+      "sourcePng": 5228640
+    },
+    "lqip": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAAAwBACdASoYABIAPwFurlErJiQusBgIAdAgCWUAygAKLFWLw0sOofwgzGAA3mNB7q35/7rbYwNIUHiZyWVpH6sjQFLwzf1e9u434XciYfubL511UUPa+5GMekuDYTjGxNKJ3TZMAAA="
+  },
+  {
+    "slug": "bottle-works-primary",
+    "role": "primary",
+    "width": 1800,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 143612,
+      "jpeg": 332141,
+      "sourcePng": 5073119
+    },
+    "lqip": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAADwBACdASoYABIAPwFsrU6rJiQiMAgBYCAJZwDLpCHgTVWl063u52OZ/oCvq71s5BAA/ujLMXiv/MyTmLLSy+d0fh4L9vmtDM7ppfdRFtn1mCPtDsCrlhvVRUMYmJ92W3BUGkKAAAA="
+  },
+  {
+    "slug": "cargo-house-primary",
+    "role": "primary",
+    "width": 1800,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 83685,
+      "jpeg": 207144,
+      "sourcePng": 4291383
+    },
+    "lqip": "data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAACwBACdASoYABIAPwFur1CrJiQisBgIAWAgCWMAuwAQ7BJ2ylLO2y8FNC3izPzAAP7TAVUZoZI8r5v/AjHX3h0TYnNnmZo9K27WZSAD+l3WcsUfADesInv9seLTmKat/G2GpEgLoWAAAA=="
+  },
+  {
+    "slug": "cargo-house-section",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 76667,
+      "jpeg": 170312,
+      "sourcePng": 4592946
+    },
+    "lqip": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAADwBACdASoYABIAPwFqsFErJaSisBgIAWAgCWUAuwAQ6SU1qIgBugXve/hxyB0AjAAA/tMQ1XC968dzwAQbeMZTPSHeUeqwzstuBreDYjZDlOgRie9triHdyBV2b402D6lAwAAA"
+  },
+  {
+    "slug": "hero-barn-wide",
+    "role": "hero",
+    "width": 2400,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1152
+    },
+    "aspect": 1.7778,
+    "bytes": {
+      "avif": 174565,
+      "jpeg": 359267,
+      "sourcePng": 4146987
+    },
+    "lqip": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAACQAwCdASoYAA4APwFqrk6rJiQiMAgBYCAJYwCdACHagFwBPImAAP641XkjbXL+br6mOU6129RzFDtfBRpr/nxztrFUTfBCJKaggUhkBzWAAA=="
+  },
+  {
+    "slug": "pilgrim-street-joinery",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 60479,
+      "jpeg": 168273,
+      "sourcePng": 4362932
+    },
+    "lqip": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAABQBQCdASoYABIAPwFwrFErJiQiqA1RYCAJQBOmW0g2Y620fxG44Buh6ET+Sl6Pl+bTaQAA/WnWzQRWUhMEq/vdE9DOrWpkASi0MZjNFbUl3/DS1N2/yFMXb1JSZrwVUyxG6ldKkG9D8UtqN9CXlgGAAAA="
+  },
+  {
+    "slug": "pilgrim-street-primary",
+    "role": "primary",
+    "width": 1800,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 75271,
+      "jpeg": 193854,
+      "sourcePng": 4391746
+    },
+    "lqip": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAACQBACdASoYABIAPvlkq06qpSQiN/VYAVAfCUAAAnQMdjqaUNiKTMKxYbUnSgAA2cHffwgK1DazQkfIdY5bNv86tk9cdWiqkOdQfGsfw877tKSqNaKapAAA"
+  },
+  {
+    "slug": "portrait-nella-ardwell",
+    "role": "portrait",
+    "width": 1000,
+    "intrinsic": {
+      "width": 1536,
+      "height": 2048
+    },
+    "aspect": 0.75,
+    "bytes": {
+      "avif": 26280,
+      "jpeg": 75219,
+      "sourcePng": 3797409
+    },
+    "lqip": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAABQBQCdASoYACAAPwFur1ArJiQiqA1RYCAJZwDM0EIZx0MFQEyPdfLIwor7lFV5TdX8awAA/mrHRji/vZl/h5TioSLjbZcw9B/M1L1OScD3o0dsAXpah66QftIkf3vyE8SNrn7xDzi0jtwoXenNaUuPuEYWhZ01YVEF97AA"
+  },
+  {
+    "slug": "portrait-tomas-roe",
+    "role": "portrait",
+    "width": 1000,
+    "intrinsic": {
+      "width": 1536,
+      "height": 2048
+    },
+    "aspect": 0.75,
+    "bytes": {
+      "avif": 34304,
+      "jpeg": 96601,
+      "sourcePng": 4200975
+    },
+    "lqip": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAAAwBQCdASoYACAAPwFmrk8rJSQiMBgMAWAgCWcAAOvUer14yf8PROLZPbrHJ20xllXL0AD+66tBy57E7GegrPe86aOrZKrIjVBRqI3KeIgoX5APDMrv9SYxqHFjMU2N+jT6vHN6Fyz9DXR2g89qNR+drrrTYkziNfVKuhwA"
+  },
+  {
+    "slug": "quarry-lane-link",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 109475,
+      "jpeg": 234776,
+      "sourcePng": 4840572
+    },
+    "lqip": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAABQBACdASoYABIAPu1gqU6pryQjN/qoAeAdiWcAyJgh2kWwEd/XlxWYG9gAAP7TG0jYS7+BGsORgVclxtrtMOH+0wfCJYT42SbXIyxRfqiLpDJMjOYdxa+AAAA="
+  },
+  {
+    "slug": "quarry-lane-primary",
+    "role": "primary",
+    "width": 1800,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 146521,
+      "jpeg": 303749,
+      "sourcePng": 4875807
+    },
+    "lqip": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADwAwCdASoYABIAPwFqrE6rJiQiMAgBYCAJZQC+SCHezkW0No0cn3XwAP5SqdLSZIIoMfPWKNDUKm+iXiROCscdsUc4xitWmNypbAYAAAA="
+  },
+  {
+    "slug": "tidewell-primary",
+    "role": "primary",
+    "width": 1800,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 73622,
+      "jpeg": 214334,
+      "sourcePng": 4213192
+    },
+    "lqip": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAACQBACdASoYABIAPvlsrk6qpqSiMBgMAVAfCWcAy2gMLt1vbF9t2l9IEu0pseAA/slr8JAsxdC2/iJJvycq1yPYkxGL2ExPLHzAqt5Ox5kh9xagzSm7S/kQmnWntvdpbyJyK4CfgAA="
+  },
+  {
+    "slug": "tidewell-writing",
+    "role": "secondary",
+    "width": 1600,
+    "intrinsic": {
+      "width": 2048,
+      "height": 1536
+    },
+    "aspect": 1.3333,
+    "bytes": {
+      "avif": 51799,
+      "jpeg": 144713,
+      "sourcePng": 4075384
+    },
+    "lqip": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAABQBACdASoYABIAPwFyrVCrJyQnMBgIAWAgCWUAwvgQ54hrv9IsZKRBgd5AAP7TZmYOCkLR0Mqkb69Zh/6u5duNicehXwxjtmlfPoVu/EZPSMReoy02DLXwS6P/q7K0AAA="
+  }
+]

@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import Frame from '../../components/Frame.astro';
+import { projects } from '../../data/studio';
+---
+<Base title="Work — Ardwell & Roe" description="Six projects: houses, adaptive reuse, hospitality and workplace, across the South West and South Wales.">
+  <section class="section-tight grid">
+    <div class="c-1-8">
+      <p class="label">Work</p>
+      <h1 class="display" style="margin-top: var(--s-2);">Six buildings we were asked to change.</h1>
+    </div>
+  </section>
+  <section class="grid">
+    {projects.map((project) => (
+      <article class="work-item">
+        <Frame slug={project.primary} alt={`${project.name}, ${project.place}. ${project.summary}`} ratio="4/3" sizes="(max-width: 900px) 100vw, 58vw" class="work-frame" />
+        <div class="work-meta">
+          <p class="label">{project.type} · {project.place} · {project.year}</p>
+          <h2 class="work-name"><a href={`/work/${project.slug}`}>{project.name}</a></h2>
+          <p class="work-summary">{project.summary}</p>
+          <div class="outcome">
+            <span class="outcome-figure">{project.outcome.figure}</span>
+            <span class="outcome-caption">{project.outcome.caption}</span>
+          </div>
+        </div>
+      </article>
+    ))}
+  </section>
+</Base>

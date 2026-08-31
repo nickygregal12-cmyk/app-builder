@@ -1,0 +1,79 @@
+---
+import '../styles/tokens.css';
+import '../styles/site.css';
+import { studio } from '../data/studio';
+
+interface Props { title: string; description: string; theme?: 'paper' | 'ink'; }
+const { title, description, theme = 'paper' } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const nav = [
+  { href: '/work', label: 'Work' },
+  { href: '/studio', label: 'Studio' },
+  { href: '/contact', label: 'Enquiries' },
+];
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme={theme}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%2317150F'/><rect x='3' y='3' width='10' height='10' fill='none' stroke='%238A6A24' stroke-width='1'/></svg>" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <a class="mark" href="/">
+        <span class="mark-name">Ardwell &amp; Roe</span>
+        <span class="mark-sub">Architecture &amp; interior architecture, Bristol</span>
+      </a>
+      <nav aria-label="Primary">
+        <ul>
+          {nav.map((item) => (
+            <li>
+              <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="foot">
+      <div class="foot-grid">
+        <div class="foot-block">
+          <h2 class="foot-name">Ardwell &amp; Roe</h2>
+          <p class="foot-principle">{studio.principle}</p>
+        </div>
+        <div class="foot-block">
+          <h3>Studio</h3>
+          <address>
+            {studio.contact.address.split(', ').map((line) => <span>{line}</span>)}
+          </address>
+        </div>
+        <div class="foot-block">
+          <h3>Enquiries</h3>
+          <p>
+            <a href={`mailto:${studio.contact.email}`}>{studio.contact.email}</a><br />
+            <a href={`tel:${studio.contact.phone.replace(/\s/g, '')}`}>{studio.contact.phone}</a>
+          </p>
+        </div>
+        <div class="foot-block">
+          <h3>Working across</h3>
+          <p>{studio.regions.join(' · ')}</p>
+        </div>
+      </div>
+      <p class="foot-note">
+        {studio.legalName} · Founded {studio.founded}
+        <span class="foot-fiction">Fictional studio. Gold Reference prototype — hand-built, not produced by App Builder.</span>
+      </p>
+    </footer>
+  </body>
+</html>

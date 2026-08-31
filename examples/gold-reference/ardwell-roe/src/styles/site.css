@@ -1,0 +1,348 @@
+/*
+ * Ardwell & Roe — composition.
+ *
+ * The organising rule is the studio's own: repair rather than replacement. There is a grid,
+ * it is visible, and content is inserted into it — sometimes breaking its line, the way the
+ * Ashcombe Barn timber rooms sit inside the stone shell without touching it. That is why the
+ * hero statement overlaps the photograph instead of sitting in a band beneath it, and why the
+ * work index alternates rather than stacking.
+ *
+ * It is worth naming what this costs the factory. A generated page is a vertical stack of
+ * full-width bands, one section per band, and `applyVisualDirection` cannot add, drop or
+ * overlap one. Nothing here would survive that constraint.
+ */
+
+/* ------------------------------------------------------------------ shell */
+
+.skip {
+  position: absolute; left: -9999px;
+  background: var(--ink); color: var(--paper);
+  padding: var(--s-2) var(--s-3); z-index: 100;
+}
+.skip:focus { left: var(--gutter); top: var(--s-2); }
+
+.masthead {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--gutter);
+  border-bottom: var(--rule);
+}
+
+.mark { text-decoration: none; display: block; }
+.mark-name {
+  display: block;
+  font-size: var(--t-lg); font-weight: 500;
+  letter-spacing: -0.015em; line-height: 1.1;
+}
+.mark-sub {
+  display: block; margin-top: 0.35em;
+  font-size: var(--t-xs); color: var(--ink-mute);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.masthead nav ul {
+  display: flex; gap: var(--s-3);
+  margin: 0; padding: 0; list-style: none;
+}
+.masthead nav a {
+  text-decoration: none;
+  font-size: var(--t-sm); letter-spacing: 0.04em;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+}
+.masthead nav a:hover { border-bottom-color: var(--ink); }
+.masthead nav a[aria-current='page'] { border-bottom-color: var(--brass); }
+
+/* ------------------------------------------------------------------- grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--s-3) var(--s-3);
+  padding-inline: var(--gutter);
+  max-width: var(--max);
+  margin-inline: auto;
+}
+
+.bleed { padding-inline: 0; max-width: none; }
+
+/* Placement as classes, not inline styles.
+   The first pass set `style="grid-column: 1 / span 6"` on every column, and an inline style
+   cannot be overridden by a media query — so at 390px the lede and the facts table were still
+   side by side in six columns each, and the closing statement was four words wide. Placement
+   has to live where the breakpoints can reach it. */
+.c-full { grid-column: 1 / -1; }
+.c-1-3 { grid-column: 1 / span 3; }
+.c-1-4 { grid-column: 1 / span 4; }
+.c-1-5 { grid-column: 1 / span 5; }
+.c-1-6 { grid-column: 1 / span 6; }
+.c-1-7 { grid-column: 1 / span 7; }
+.c-1-8 { grid-column: 1 / span 8; }
+.c-5-7 { grid-column: 5 / span 7; }
+.c-6-6 { grid-column: 6 / span 6; }
+.c-7-5 { grid-column: 7 / span 5; }
+.c-8-4 { grid-column: 8 / span 4; }
+.c-9-4 { grid-column: 9 / span 4; }
+.end { align-self: end; }
+
+/* ------------------------------------------------------------------- type */
+
+.display {
+  font-size: var(--t-display);
+  line-height: var(--lh-display);
+  letter-spacing: -0.035em;
+  font-weight: 500;
+  margin: 0;
+  /* A display headline that runs past three lines is a defect, not a long name. */
+  text-wrap: balance;
+}
+
+.serif { font-family: var(--font-serif); font-weight: 400; }
+
+.lede {
+  font-size: var(--t-xl);
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  max-width: var(--measure-tight);
+  margin: 0;
+}
+
+.prose { max-width: var(--measure); }
+.prose p { margin: 0 0 1em; }
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------- hero */
+
+.hero { position: relative; }
+
+.hero-frame { width: 100%; }
+.hero-frame :global(img) { filter: saturate(0.92); }
+
+/* The insertion. A paper block cut into the photograph, overlapping its lower-left corner —
+   the composition the factory cannot express, because a section there is a band and a band
+   cannot overlap the band above it. */
+.hero-cut {
+  position: relative;
+  z-index: 2;
+  /* Was clamp(-14rem, -14vw, -5rem), which ate the entire image at 1440 and left a 60px
+     strip on a phone. The panel is inserted into the picture; it does not replace it. */
+  margin-top: clamp(-7rem, -6vw, -3rem);
+  margin-left: var(--gutter);
+  margin-right: auto;
+  max-width: min(58rem, calc(100% - var(--gutter) * 2));
+  background: var(--paper);
+  padding: var(--s-5) var(--s-5) var(--s-4) 0;
+}
+.hero-cut::before {
+  /* The block reads as inserted rather than floating: it carries the paper across to the
+     left edge so it meets the page, and is bounded above by a brass line. */
+  content: '';
+  position: absolute; inset: 0 auto 0 calc(var(--gutter) * -1);
+  width: var(--gutter);
+  background: var(--paper);
+}
+.hero-cut::after {
+  content: '';
+  position: absolute; top: 0; left: calc(var(--gutter) * -1); right: 0;
+  height: 2px; background: var(--brass);
+}
+
+.hero-principle {
+  font-family: var(--font-serif);
+  font-size: var(--t-xxl);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: var(--s-3) 0 0;
+  max-width: 22ch;
+}
+
+/* ---------------------------------------------------------------- section */
+
+.section { padding-block: var(--s-6); }
+.section-tight { padding-block: var(--s-5); }
+/* The opening statement sits close to the hero it answers; a full section's air above it
+   read as a gap rather than as space. */
+.section-statement { padding-block: var(--s-5) var(--s-4); }
+
+/* One padding, applied once. The factory shipped `--section-space` on both sides of every
+   section, so a direction asking for 132px produced a 264px gap and no direction could
+   have tuned it. */
+
+.rule-top { border-top: var(--rule); }
+
+/* ------------------------------------------------------------------- work */
+
+.work-item {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: end;
+  row-gap: var(--s-3);
+  padding-block: var(--s-6);
+  border-top: var(--rule);
+}
+
+.work-item .work-frame { grid-column: 1 / span 7; }
+.work-item .work-meta { grid-column: 9 / span 4; }
+
+/* The gait: every second entry reverses, so the page has a rhythm rather than a stack.
+   Not decoration — it is what stops six projects reading as six cards.
+
+   `nth-of-type`, not `nth-child`: the section also contains a heading div, so `nth-child`
+   counted it and reversed the wrong entries — the first project came out mirrored and the
+   `.lead` rules below were being overridden by a selector that should never have matched it. */
+.work-item:nth-of-type(even) .work-frame { grid-column: 6 / span 7; grid-row: 1; }
+.work-item:nth-of-type(even) .work-meta { grid-column: 1 / span 4; grid-row: 1; }
+
+/* One project at full measure, declared last so it wins over the alternation. Four frames at
+   one size is a stack; a stack with a lead is a composition, and it is the cheapest way to
+   give a page a sense of scale. */
+.work-item.lead { padding-top: var(--s-3); border-top: none; }
+.work-item.lead .work-frame,
+.work-item.lead:nth-of-type(even) .work-frame { grid-column: 1 / -1; grid-row: auto; }
+.work-item.lead .work-meta,
+.work-item.lead:nth-of-type(even) .work-meta { grid-column: 1 / span 5; grid-row: auto; }
+.work-item.lead .work-name { font-size: clamp(2.5rem, 5.2vw, 4.75rem); }
+.work-item.lead .work-summary { max-width: 46ch; }
+
+.work-name {
+  font-family: var(--font-serif);
+  font-size: var(--t-xxl);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--s-1);
+}
+.work-name a { text-decoration: none; }
+.work-name a:hover { color: var(--brass); }
+
+.work-place { margin: 0 0 var(--s-3); color: var(--ink-mute); font-size: var(--t-sm); }
+.work-summary { margin: 0 0 var(--s-3); max-width: 38ch; }
+
+/* -------------------------------------------------- the distinctive moment */
+
+/* The measured outcome. Most practice sites have adjectives here; this studio has numbers,
+   so the number is set at a size nobody else gives it. */
+.outcome { border-top: 2px solid var(--brass); padding-top: var(--s-2); }
+.outcome-figure {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: block;
+}
+.outcome-caption {
+  display: block; margin-top: 0.5em;
+  font-size: var(--t-sm); color: var(--ink-soft);
+  max-width: 32ch;
+}
+
+/* ------------------------------------------------------------------ quote */
+
+.quote {
+  font-family: var(--font-serif);
+  font-size: var(--t-xl);
+  line-height: 1.4;
+  letter-spacing: -0.008em;
+  margin: 0;
+}
+.quote-attrib {
+  display: block; margin-top: var(--s-2);
+  font-family: var(--font-grotesque);
+  font-size: var(--t-sm); color: var(--ink-mute);
+  letter-spacing: 0.02em;
+}
+
+/* ------------------------------------------------------------------- dark */
+
+.ink-panel { background: var(--ink); color: var(--paper-deep); }
+.ink-panel .label { color: #9AA0A6; }
+.ink-panel a { color: var(--paper); }
+
+/* ---------------------------------------------------------------- actions */
+
+/* No pill. No shadow. No radius. An action is a word with a rule under it, which is what
+   the rest of the page is made of. */
+.ask {
+  display: inline-block;
+  font-size: var(--t-lg);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  padding-bottom: 0.15em;
+  border-bottom: 2px solid var(--brass);
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+.ask:hover { color: var(--brass); border-bottom-color: currentColor; }
+.ink-panel .ask { border-bottom-color: var(--brass-bright); }
+.ink-panel .ask:hover { color: var(--brass-bright); }
+
+/* ----------------------------------------------------------------- footer */
+
+.foot {
+  border-top: var(--rule-strong);
+  padding: var(--s-6) var(--gutter) var(--s-4);
+  margin-top: var(--s-7);
+}
+.foot-grid {
+  display: grid; gap: var(--s-4);
+  grid-template-columns: repeat(12, 1fr);
+  max-width: var(--max); margin-inline: auto;
+}
+.foot-block:first-child { grid-column: 1 / span 5; }
+.foot-block { grid-column: span 2; }
+.foot-name { font-size: var(--t-xl); font-weight: 500; margin: 0 0 var(--s-2); letter-spacing: -0.02em; }
+.foot-principle { font-family: var(--font-serif); font-size: var(--t-lg); margin: 0; max-width: 30ch; color: var(--ink-soft); }
+.foot-block h3 { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 var(--s-2); font-weight: 400; }
+.foot-block p, .foot-block address { margin: 0; font-style: normal; font-size: var(--t-sm); line-height: 1.7; }
+.foot-block address span { display: block; }
+.foot-note {
+  max-width: var(--max); margin: var(--s-5) auto 0;
+  padding-top: var(--s-2); border-top: var(--rule);
+  font-size: var(--t-xs); color: var(--ink-mute);
+  display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------- responsive */
+
+/* Not a collapse. The alternating rhythm becomes a single column where the frame leads and
+   the metadata reads as a caption set beneath it — and the measured outcome stays large,
+   because it is the reason to keep scrolling. */
+@media (max-width: 900px) {
+  .c-1-3, .c-1-4, .c-1-5, .c-1-6, .c-1-7, .c-1-8,
+  .c-5-7, .c-6-6, .c-7-5, .c-8-4, .c-9-4 { grid-column: 1 / -1; }
+
+  .work-item,
+  .work-item:nth-child(even) {
+    display: block;
+    padding-block: var(--s-5);
+  }
+  .work-item .work-frame,
+  .work-item:nth-child(even) .work-frame { margin-bottom: var(--s-3); }
+  .work-meta, .work-item:nth-child(even) .work-meta { grid-column: auto; }
+  .work-summary { max-width: none; }
+
+  .hero-cut {
+    margin-top: -2.5rem;
+    padding: var(--s-4) var(--s-3) var(--s-3) 0;
+    max-width: calc(100% - var(--gutter));
+  }
+
+  .foot-grid { grid-template-columns: repeat(2, 1fr); }
+  .foot-block:first-child { grid-column: 1 / -1; }
+  .foot-block { grid-column: span 1; }
+
+  .masthead { flex-direction: column; gap: var(--s-2); }
+  .masthead nav ul { gap: var(--s-3); }
+}
+
+@media (max-width: 520px) {
+  .foot-grid { grid-template-columns: 1fr; }
+  .foot-block { grid-column: 1 / -1; }
+}

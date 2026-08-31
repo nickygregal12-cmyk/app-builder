@@ -2,6 +2,48 @@
 
 Phase 3.6B joins approved Project Manifest v2 requirements and the trusted Phase 3 knowledge pack into stable product structure before any generative implementation work.
 
+## Structural quality and layout selection
+
+The `composition` role's `owns` list in `config/agent-roles.json` is the machine-readable statement of
+what composition decides. Two consequences of it belong here, because they constrain this subsystem
+rather than that registry entry.
+
+**A schema-valid `PageSpec` is not a good layout.** Structural quality is judged, not asserted by the
+producer: primary-task prominence, task-completion path, information hierarchy, scanability, critical
+information visibility, cognitive load, navigation depth, grouping, the number of competing actions,
+category expectations, responsive behaviour, accessibility implications and fit with the actual
+journeys. That judgement belongs to the existing `ia-critic` and `ux-critic`, whose `mayNot` now names
+the specific failure: passing a hierarchy because it is complete while a high-frequency task is buried
+in it, or passing a composition because its `PageSpec` validates while the primary task is not visible
+on the surface that owns it. No `composition-critic` exists, and one is added only if benchmark
+evidence shows those two cannot reliably judge composition — another permanent reviewer is a cost paid
+on every build.
+
+**Layout family is selected from task shape, with project type as the fallback.**
+`config/layout-patterns.json` maps each project type to a default — marketing to `public-marketing`,
+B2B SaaS to `app-sidebar`, consumer to `app-focused`, internal tool to `app-dense`, content to
+`editorial`, AI app to `workspace`. Those defaults stay, because a build must always be able to select
+a family without spending a model call. They are not sufficient product reasoning: project type is a
+weak proxy for what actually decides a layout, which is the shape of the work — the primary tasks and
+how often they happen, whether anything is deadline-bearing, how many major surfaces exist, density and
+data complexity, role complexity, context-switching frequency, whether the product is oriented to
+creating, monitoring or browsing, how much mobile matters, the navigation depth the journeys imply, and
+the business visual profile where relevant. The intended rule is `product/task shape -> layout
+candidates`, with `project type -> layout` as the answer when that evidence is absent rather than as
+the first answer.
+
+For a contested surface — typically a home, dashboard or workspace — composition may produce two or
+three materially different structural candidates and compare them on the criteria above before
+typography, colour, motion and polish exist to obscure the difference, recording why the winner won.
+Variants are produced because the surface is genuinely contested, never to fill a quota: a simple page
+gets one confident composition.
+
+`ResponsiveCompositionPlan` already carries mobile content order, navigation treatment, hero stacking,
+density and motion, and the template reads them. What matters upstream is that the mobile composition
+may legitimately change order, prominence, navigation method, density, progressive disclosure and
+interaction pattern, because the same user goal can need a different spatial answer on a phone.
+`desktop columns -> stacked mobile columns` is one valid outcome, never the definition.
+
 ## Contracts
 
 - `ContentBinding` records value origin plus source/fact/entity IDs and whether the value was generated.

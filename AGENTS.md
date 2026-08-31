@@ -119,6 +119,7 @@ these. Everything else references rather than restates.
 | Current phase, active stage, outstanding gates, deferrals | `config/factory-status.json` | — |
 | What comes next, in what order, on what evidence | `docs/ROADMAP.md` | — |
 | What App Builder becomes, and what "finished" means | `docs/MASTER_PLAN.md` | `docs/PRODUCT.md`, `docs/ARCHITECTURE.md` |
+| Owner intent, intake semantics, the escalation policy and the adaptive questionnaire | `docs/PRODUCT.md` | `questionnaires/`, `packages/factory-core/`, `schemas/build-contract.schema.json`, `apps/console/src/intake/` |
 | Visual/brand quality bar, art direction, the professional-output gate | `docs/VISUAL_EXCELLENCE.md` | `templates/`, `packages/factory-core/`, visual tooling and tests |
 | Design machinery — tokens, DesignSystemSpec, DesignLint, element identity | `docs/DESIGN_INTELLIGENCE.md` | `templates/shared/presentation/`, `config/visual-*.json` |
 | Composition — pages, sections, bindings, provenance | `docs/COMPOSITION.md` | `packages/factory-core/`, composition tests |

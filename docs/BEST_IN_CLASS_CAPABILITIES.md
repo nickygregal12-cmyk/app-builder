@@ -369,11 +369,12 @@ Governing rules, enforced by the control-plane doctor and `tooling/agent-archite
   repositories ship their own master design document or workflow engine; those parts are recorded in
   `doNotAdopt` precisely because installing them wholesale would create a competing authority.
 
-Current registry state: 45 sources, of which fifteen are candidates — the seven agent/tooling
+Current registry state: 47 sources, of which seventeen are candidates — the seven agent/tooling
 candidates (`vercel-labs/agent-skills`, `style-dictionary`, `microsoft/playwright-mcp`,
 `ChromeDevTools/chrome-devtools-mcp`, `GoogleChrome/lighthouse-ci`, `tldraw`,
-`quickdrawjs/quickdraw`) and the eight implementation/skill candidates recorded in §8.6 — and the
-remainder are reference-only. Nothing is adopted or loadable by any role today.
+`quickdrawjs/quickdraw`), the eight implementation/skill candidates recorded in §8.6 and the two
+structural/browser candidates in §8.6.11 — and the remainder are reference-only. One source is
+adopted-pinned; nothing is loadable by any role today.
 
 ## 8.5 Internal prior-art audit: the development-agent operating system
 
@@ -601,6 +602,38 @@ time, manual edits, portability and maintainability.
 | `frontend-design` beats the incumbent frontend/art-direction skills | `frontend-implementation`, `art-direction` | the incumbent skills are authored and have a baseline to compare against |
 | AccessLint specialist review beats the current pipeline | Playwright + axe baseline, `accessibility-review` | a real project ships an accessibility defect the baseline did not catch |
 
+### 8.6.11 Structural wireframes and agent-facing browsers — two comparative candidates
+
+Both were registered as candidates for the outcome-first structure programme. Both are pinned,
+security-review pending, loadable by no role, and both exist to answer a comparison rather than to be
+installed.
+
+**`yhassy/wireframe-skill` — MIT, 6.5/10.** A JSON structural layout plus a self-contained
+browser-renderable preview, with no npm or build dependency. The rating is deliberately moderate: the
+implementation is small and the schema is not the interesting part. What is interesting is the
+discipline of expressing structure as data that can be diffed, linted and compared, and of keeping
+structural intent separate from visual treatment so a hierarchy problem cannot hide behind polish. It
+is prior art for exactly one open question — whether a `CompositionPlan`/`WireframeSpec` earns its
+place between `InformationArchitectureSpec`/`UXFlowSpec` and `PageSpec`/`SectionSpec` — and the order
+of work is fixed: extend the existing composition contracts first, and add an intermediate artifact
+only when a real composition shows the jump loses reasoning that review and testing need.
+Architectural symmetry is not a reason.
+
+**`vercel-labs/agent-browser` — Apache-2.0, 7.5/10.** A Rust CLI and MCP server with a persistent
+daemon, accessibility-tree snapshots, deterministic element refs, snapshot filtering as an explicit
+context-cost control, HAR recording, axe audits and Web Vitals. It is a **third candidate in an
+existing evaluation, not a third stack**: it is adopted only if it measurably replaces
+`microsoft/playwright-mcp`, `ChromeDevTools/chrome-devtools-mcp` or both on context efficiency,
+browser understanding, accessibility-tree interaction, screenshots, network/runtime inspection,
+brownfield reconnaissance and operational simplicity — and rejected outright if the existing pair is
+better. The browser lane ends with at most two tools. Deterministic Playwright specs remain the
+acceptance base whatever wins, and a native binary that downloads its own browser needs the security
+review before anything else.
+
+Neither activates now. The first activates when a real composition records the IA-to-`PageSpec` jump as
+a defect; the second when browser-tool context cost or brownfield reconnaissance is a measured
+bottleneck rather than a plausible one.
+
 ## 8.7 Evidence-driven differentiators beyond headline builder parity
 
 A 2026-08-28 parity audit found that the obvious competitor features — planning, visual editing,
@@ -618,6 +651,8 @@ but their implementation detail stays in the authority that can actually consume
 | Incident -> reproduction -> regression -> reviewed repair | **9.4/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §11; production auto-repair remains unproven when the incident cannot be reproduced |
 | Provenance-aware generated visual assets | **9.2/10** | `docs/PLATFORM_PARITY_PROGRAMME.md` §2.1; activate only when a real project's lack of publishable imagery is the visual bottleneck |
 | Privacy-safe deterministic scenario-data factory | **9.0/10** | `docs/PRODUCTION_COMPLETENESS.md` Phase 6; first consumer should be complex/stateful acceptance that currently needs hand-written fixtures |
+| Owner-suggestion resistance — a suggested solution is a hypothesis, not a requirement | **9.6/10** | `AGENTS.md` principle 24 and the escalation policy in `docs/PRODUCT.md`; the routing half is already held executably by three cases in `config/agent-routing-benchmarks.json`, the behavioural benchmark is stage E of the outcome-first programme in `docs/ROADMAP.md` |
+| Structural composition quality — a valid `PageSpec` is not a good layout | **9.4/10** | `docs/COMPOSITION.md`; judged by the existing `ia-critic`/`ux-critic`, with deterministic structural lint activating only when a real composition records a defect those two missed |
 
 These do **not** create seven new programmes. They extend existing contracts and gates. No new package,
 model, connector or schema is justified merely by this list; the first real consumer decides the
@@ -649,7 +684,14 @@ Do **not** adopt these by default merely because they appeared in research:
 - shadcn as a mandatory generated-app dependency, or its styling stack as the generated identity;
 - the upstream `frontend-design` skill installed wholesale in place of the local frontend/art-direction skills;
 - AccessLint replacing the deterministic axe baseline, or its CLI/MCP server as a generated-app dependency;
-- Mantine, or any fully styled component library, as a broad default across project classes.
+- Mantine, or any fully styled component library, as a broad default across project classes;
+- a third browser stack running beside `microsoft/playwright-mcp` and `ChromeDevTools/chrome-devtools-mcp`;
+- an intermediate composition artifact added for architectural symmetry rather than because a real composition proved the IA-to-`PageSpec` jump loses structural reasoning;
+- a permanent `composition-critic` role while `ia-critic` and `ux-critic` have not been shown to miss structural defects;
+- a per-industry layout or template catalogue derived from category conventions; a convention is evidence for a composition decision, never a layout the factory installs;
+- a second questionnaire, intake or owner-decision system beside `questionnaires/`, the Build Contract and `docs/PRODUCT.md`;
+- another design authority — Garden's `web-design-engineer` included — on top of Design Intelligence, UI UX Pro Max, Impeccable and the existing art-direction, design-system, composition and critic roles, unless a benchmark names the specific missing mechanism;
+- CrewAI, LangChain, Dify or any further multi-agent control plane; the existing control plane is already ahead of the execution plane.
 
 ## 10. Priority bands
 

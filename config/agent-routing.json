@@ -117,6 +117,24 @@
       "authorities": []
     },
     {
+      "id": "information-architecture",
+      "priority": 187,
+      "contextRoute": "specification",
+      "keywords": ["information architecture", "navigation structure", "navigation model", "site structure", "task hierarchy", "content hierarchy", "url hierarchy", "taxonomy", "findability"],
+      "roles": ["information-architect", "ia-critic"],
+      "skills": ["information-architecture"],
+      "authorities": ["docs/PRODUCT.md", "docs/COMPOSITION.md"]
+    },
+    {
+      "id": "structural-composition",
+      "priority": 185,
+      "contextRoute": "specification",
+      "keywords": ["page structure", "screen structure", "layout structure", "screen layout", "dashboard layout", "above the fold", "section order", "visual hierarchy", "wireframe", "more widgets"],
+      "roles": ["composition", "ux-critic"],
+      "skills": ["section-composition"],
+      "authorities": ["docs/COMPOSITION.md"]
+    },
+    {
       "id": "art-direction",
       "priority": 184,
       "contextRoute": "visual-review",

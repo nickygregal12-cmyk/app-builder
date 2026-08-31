@@ -96,7 +96,12 @@ test('Builder Console drives governed sources, generation, verification and prev
   await page.getByRole('button', { name: 'Verify build' }).click();
   await expect(page.locator('.state-pill')).toHaveText('verified', { timeout: 60_000 });
   await expect(page.getByText('quality · build · succeeded')).toBeVisible();
-  await expect(page.getByText('Dependencies installed')).toBeVisible();
+  // Verification says which of the two things it did. `npm install` resolves
+  // and installs at once and proves neither; installing from a lockfile it
+  // resolved separately is the claim the ledger now carries.
+  await expect(page.getByText('Dependency graph resolved')).toBeVisible();
+  await expect(page.getByText('Installed from the lockfile')).toBeVisible();
+  await expect(page.getByText(/Build identity [0-9a-f]{12} across \d+ file\(s\)/)).toBeVisible();
 
   // Every request the preview makes, and what came back, is recorded so the
   // boundary can be proved rather than assumed: a remote operator only ever

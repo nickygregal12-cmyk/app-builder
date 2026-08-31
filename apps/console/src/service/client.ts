@@ -295,7 +295,9 @@ export type SectionVariantOption = {
  * it. Every control has a declared set of values; this is a contract, not a
  * stylesheet. */
 export type DesignContract = {
-  design: { patternId: string; label: string; accentColor: string; maxWidth: string; radius: string; density: string };
+  // `visualDirectionId` is null until a direction is chosen, and it is what the
+  // compare view reads to know which candidate the site is currently built as.
+  design: { patternId: string; label: string; accentColor: string; maxWidth: string; radius: string; density: string; visualDirectionId: string | null };
   chosen: Record<string, string>;
   controls: Array<{ control: string; label: string; value: string; options: Array<{ id: string; label: string; purpose: string }> }>;
   accentContrastMinimum: number;

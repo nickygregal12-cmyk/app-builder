@@ -93,10 +93,32 @@ function sourceKindForFile(file: File): SourceKind {
 function ListField({ question, value, onChange }: { question: Question; value: AnswerValue; onChange: (value: AnswerValue) => void }) {
   const canonical = (Array.isArray(value) ? value.map((item) => String(item ?? '')) : []).join('\n');
   const [draft, setDraft] = useState(canonical);
+  /**
+   * While this field has focus, the keystrokes are the truth.
+   *
+   * The resync below used to run whatever the operator was doing, guarded only
+   * by comparing the draft to the canonical value. Those are two different
+   * renders: a resync carrying the *previous* canonical value can land between
+   * a keystroke and the parent's updated one, decide the draft disagrees, and
+   * put the older text back — silently deleting a character somebody watched
+   * themselves type into a question that becomes the Build Contract.
+   *
+   * It is rare and it is real: CI caught it as "Request a fixed prie quote".
+   */
+  const typing = useRef(false);
   useEffect(() => {
+    if (typing.current) return;
     setDraft((current) => (normalizeListAnswer(current).join('\n') === canonical ? current : canonical));
   }, [canonical]);
-  return <div><textarea aria-label={question.label} rows={6} value={draft} placeholder="One item per line" onChange={(event) => { setDraft(event.target.value); onChange(normalizeListAnswer(event.target.value)); }} /><p className="field-note">One item per line. Keep these concrete — they become part of the Build Contract.</p></div>;
+  return <div><textarea
+    aria-label={question.label}
+    rows={6}
+    value={draft}
+    placeholder="One item per line"
+    onFocus={() => { typing.current = true; }}
+    onBlur={() => { typing.current = false; setDraft(canonical); }}
+    onChange={(event) => { setDraft(event.target.value); onChange(normalizeListAnswer(event.target.value)); }}
+  /><p className="field-note">One item per line. Keep these concrete — they become part of the Build Contract.</p></div>;
 }
 
 function QuestionField({ question, value, onChange }: { question: Question; value: AnswerValue; onChange: (value: AnswerValue) => void }) {

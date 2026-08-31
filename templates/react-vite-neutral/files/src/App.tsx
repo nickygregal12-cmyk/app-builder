@@ -624,6 +624,15 @@ export default function App() {
         aria-label="Primary navigation"
         data-open={menuOpen ? 'true' : 'false'}
         onKeyDown={(event) => { if (event.key === 'Escape') setMenuOpen(false); }}
+        // A destination inside a collapsed panel is still in the document and
+        // still focusable, so a keyboard reader could tab into a panel nobody
+        // can see. The static renderer has opened on focus since the disclosure
+        // shipped; this renderer never did, so the same keyboard journey lost
+        // its focus ring into an invisible panel in one of the two outputs.
+        // React's onFocus bubbles, which is the focusin the other renderer uses.
+        // The width is the one the stylesheet collapses the bar at, and a test
+        // holds the two in agreement rather than trusting this comment.
+        onFocus={() => { if (window.matchMedia('(max-width: 880px)').matches) setMenuOpen(true); }}
       >{navigation.map((page, index) => <a className={page.id === currentPage.id ? 'active' : ''} href={siteHref(page.path)} aria-current={page.id === currentPage.id ? 'page' : undefined} onClick={(event) => followLink(event, page.path)} key={page.id}>
         {NAVIGATION_FAMILY === 'register' && <span className="nav-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>}
         <span className="nav-label">{page.navigation.label}</span>

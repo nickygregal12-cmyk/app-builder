@@ -121,13 +121,67 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .content-card { padding: 26px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); box-shadow: var(--shadow-soft) }
 .content-card h3 { margin-bottom: 10px }
 .content-card p { margin: 8px 0 0; color: var(--color-text-muted); font-size: .92rem }
-.plain-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none }
-.plain-list li { position: relative; padding: 22px 24px 22px 30px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-lg); font-weight: 650; box-shadow: var(--shadow-soft) }
+/* A set of bare names sizes to the names.
+
+   This was `repeat(auto-fit, minmax(220px, 1fr))`, and `auto-fit` collapses the
+   empty tracks and then stretches what is left across the whole measure. Two
+   locations — "Glasgow" and "Edinburgh" — therefore rendered as two 570px slabs
+   each containing one word, in every direction, because the rule never asked
+   how much the items had to say. A name is a name at any viewport width: it
+   takes the room it needs and the row ends where the names end. */
+.plain-list { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none }
+.plain-list li { position: relative; max-inline-size: 100%; padding: 22px 24px 22px 30px; border: 1px solid var(--color-border); border-radius: var(--layout-radius); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-lg); font-weight: 650; overflow-wrap: anywhere; box-shadow: var(--shadow-soft) }
 .plain-list li::before { content: ''; position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-accent) }
 .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 32px; list-style: none; margin: 28px 0 0; padding: 0 }
 .feature-list li { display: grid; gap: 4px; padding: 14px 0 14px 18px; border-left: 2px solid var(--color-accent-line) }
 .feature-list strong { color: var(--color-ink); font-size: var(--text-base); font-weight: 700 }
 .feature-list span { color: var(--color-text-muted); font-size: .88rem; line-height: 1.55 }
+
+/* How many, not just what ------------------------------------------------
+
+   The regular grids were `repeat(3, ...)` whatever they held, so the column
+   count was a constant and the item count was ignored. Four services rendered
+   as three cards and one stranded card beside a third of a row of nothing, and
+   the same happened to four contact fields on the same page — the single most
+   template-looking thing in the rendered evidence, and it happened in every
+   direction because the count never reached the layout.
+
+   A quantity query is the fix rather than a renderer change: a set's size is
+   already in the DOM, so both renderers get this from the one stylesheet they
+   share and cannot drift apart on it. `> :last-child:nth-child(N)` matches a
+   child that is both the Nth and the last, which is exactly "there are N".
+
+   Only the symmetric grammar is addressed. The others — editorial rows, the
+   schedule register, the asymmetric showcase — compose their own structure
+   further down this file and decide their own tracks; a count rule reaching
+   into those would override the grammar the direction chose.
+
+   Wide viewports only, and that bound is load-bearing rather than tidy. A
+   quantity query is more specific than the plain `.item-grid` the responsive
+   rules below use, so unbounded it wins inside every media query too: the
+   first version of this held two columns all the way down to 390px, where
+   four service cards became eight narrow lines and an email address broke
+   mid-word. Below 880px the column count is not a composition choice — it is
+   the responsive cascade's, and it already answers it. */
+@media (min-width: 881px) {
+  /* Four is two-by-two. Three-plus-one is the orphan the evidence kept showing. */
+  .item-grid.panel-symmetric:has(> :last-child:nth-child(4)),
+  .contact-section.panel-symmetric .contact-grid:has(> :last-child:nth-child(4)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* One and two fill the row they need rather than a third of the page each. */
+  .item-grid.panel-symmetric:has(> :last-child:nth-child(2)),
+  .contact-section.panel-symmetric .contact-grid:has(> :last-child:nth-child(2)),
+  .gallery-grid:has(> :last-child:nth-child(2)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .item-grid.panel-symmetric:has(> :last-child:nth-child(1)),
+  .contact-section.panel-symmetric .contact-grid:has(> :last-child:nth-child(1)),
+  .gallery-grid:has(> :last-child:nth-child(1)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
 /* Gallery -------------------------------------------------------------- */
 .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px }
@@ -706,7 +760,25 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .cta-section { flex-direction: column; align-items: flex-start; gap: 28px }
 }
 
-@media (max-width: 720px) {
+/* The navigation discloses wherever the bar would otherwise wrap.
+
+   This was `max-width: 720px` while the disclosure script beside it has always
+   asked `matchMedia('(max-width: 880px)')`, so the stylesheet and the behaviour
+   disagreed about where the panel begins. The band between them is a real
+   viewport — a portrait tablet at 768 — and in it the bar was neither a bar nor
+   a panel: five destinations and a filled action wrapped onto a ragged second
+   row, which is precisely the "loose" two-row header the fourth independent
+   review named and which `inline-wrap` was retired to remove. It survived at
+   the tablet because only the phone was ever photographed.
+
+   880 is not a new number. It is the width at which the page already gives up
+   its third column, so the header now stops being a row at the same width the
+   content stops being a grid.
+
+   Only the header moves here. The phone-only rules below — content order,
+   density, motion, the single-column collapse — stay at 720 because they are
+   about a phone rather than about a row that no longer fits. */
+@media (max-width: 880px) {
   /* Not `position: relative`. The disclosure panel below is absolutely
      positioned and needs a positioned ancestor, and `relative` is the reflex
      answer — but the header is already `position: sticky`, which is a
@@ -714,7 +786,7 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      silently replaced the sticky, so on every phone, in every engine, the
      navigation scrolled away with the page. Nothing caught it because nothing
      asked a mobile viewport whether the header stayed put. */
-  /* Every family discloses on a phone, in its own character.
+  /* Every family discloses once the row will not fit, in its own character.
      `responsive.navigation` used to decide whether the row collapsed while
      nothing decided what the row was; the family owns both now, and its
      `inline-wrap` value — the two-row bar the fourth independent review called
@@ -752,6 +824,9 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .nav-centred { flex-direction: row; text-align: left; padding-top: 14px; padding-bottom: 14px }
   .nav-centred nav { justify-content: stretch }
   .nav-centred nav a { text-align: left }
+}
+
+@media (max-width: 720px) {
   h1 { max-width: none }
   .item-grid, .gallery-grid, .contact-grid, .section-location-list .item-grid, .section-entity-list .item-grid, .section-content-list .item-grid { grid-template-columns: 1fr }
   .site-footer { flex-direction: column; gap: 26px }

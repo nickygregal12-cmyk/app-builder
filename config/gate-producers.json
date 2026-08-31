@@ -53,7 +53,7 @@
       "contract": "config/payload-budgets.json",
       "artifact": ".app-builder/gate-evidence/payload-budget.json",
       "buildRefField": "compositionHash",
-      "reads": "A built repository \u2014 installed and built as an ordinary project \u2014 held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
+      "reads": "A built repository — installed and built as an ordinary project — held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
     },
     "secret-scan": {
       "id": "secret-scan",
@@ -98,6 +98,17 @@
       "artifact": ".app-builder/gate-evidence/seo-aeo.json",
       "buildRefField": "compositionHash",
       "reads": "The built documents a visitor is actually served, from the generated repository's own dist. Not the composition: a composer can decide a perfect title for every route and the renderer can still ship one document that says something else, and only the second is what a crawler receives."
+    },
+    "axe-accessibility": {
+      "id": "axe-accessibility",
+      "command": "npm run test:e2e:accessibility",
+      "lane": "accessibility",
+      "implementation": "tooling/lib/axe-evidence.mjs compileAxeReport",
+      "artifactKind": "AccessibilityReport",
+      "contract": "tooling/lib/axe-evidence.mjs",
+      "artifact": ".app-builder/accessibility/report.json",
+      "buildRefField": "compositionHash",
+      "reads": "Real axe passes over the routes the audited build's own composition declares, at both viewport projects, against that build's dev server. A separate lane from gate-evidence: it builds and serves its own project, so it cannot answer for the project gate-evidence builds and is deferred rather than failed there."
     }
   },
   "checks": {
@@ -138,7 +149,7 @@
       "failOnFindings": [
         "violation"
       ],
-      "why": "A DesignLint violation is an invariant that broke \u2014 unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
+      "why": "A DesignLint violation is an invariant that broke — unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
     },
     "design-system-lint": {
       "id": "design-system-lint",
@@ -223,7 +234,7 @@
       "failOnFindings": [
         "unit-tests-failed"
       ],
-      "why": "The generated project's own test script. Exit zero is not the whole verdict \u2014 a suite that ran nothing exits zero too \u2014 so the TAP plan travels as the coverage number.",
+      "why": "The generated project's own test script. Exit zero is not the whole verdict — a suite that ran nothing exits zero too — so the TAP plan travels as the coverage number.",
       "coverageField": "unitTests",
       "coverageLabel": "tests in the generated project's own suite"
     },
@@ -247,22 +258,35 @@
       "why": "Crawlability and answerability are properties of what shipped, not of what was composed. The advisory findings the scanner also records - a withheld canonical when no site URL is known, a title longer than consumers display - are deliberately absent here, because failing a build for not knowing its own deployment URL would punish the factory's refusal to invent one.",
       "coverageField": "documentsScanned",
       "coverageLabel": "documents in the built output"
+    },
+    "axe-serious-critical": {
+      "id": "axe-serious-critical",
+      "gate": "accessibility",
+      "producer": "axe-accessibility",
+      "findingsField": "findings",
+      "findingIdField": "impact",
+      "failOnFindings": [
+        "critical",
+        "serious"
+      ],
+      "why": "axe's own severity, used as axe means it. Moderate and minor violations are recorded in the same findings array and do not fail the gate, because they are a judgement about this product rather than a broken invariant. A declared route the lane did not audit is recorded as a critical finding of its own: the decision rule fails on findings, so without that an audit of nothing would be a clean pass, which is the failure tests/accessibility/routes.ts already has a scar from.",
+      "coverageField": "auditsRecorded",
+      "coverageLabel": "route/viewport pairs audited"
     }
   },
   "unregistered": {
-    "description": "Deterministic checks named by a registered gate that no producer answers yet. Two of the three now have a real producer that writes a real artifact; what stopped them being registered was never a missing artifact. `npm run gates:evidence` builds the NBM genuine-business project and measures that, while the accessibility audit and the browser journey measure the generated acceptance application \u2014 two builds, two composition hashes \u2014 so a registered check resolved `evidence-for-another-build` on every run and took the verify job with it. Lanes are the rule that says so: a check is expected in the lane that produces it. Registering these therefore needs each producer to declare its lane and to record the artifact revision it measured, so the gate is not-run for this build honestly rather than absent.",
+    "description": "Deterministic checks named by a registered gate that no producer answers yet. Two of the three now have a real producer that writes a real artifact; what stopped them being registered was never a missing artifact. `npm run gates:evidence` builds the NBM genuine-business project and measures that, while the accessibility audit and the browser journey measure the generated acceptance application — two builds, two composition hashes — so a registered check resolved `evidence-for-another-build` on every run and took the verify job with it. Lanes are the rule that says so: a check is expected in the lane that produces it. Registering these therefore needs each producer to declare its lane and to record the artifact revision it measured, so the gate is not-run for this build honestly rather than absent.",
     "checks": [
       "e2e-tests",
-      "axe-serious-critical",
       "executed-rls-acceptance"
     ]
   },
   "lanes": {
     "description": "Which run produces a check's artifact. A lane builds one thing and measures it; a check is expected only in the lane that produces it, and a check produced elsewhere is not this lane's evidence wiring to answer for.",
     "known": {
-      "gate-evidence": "npm run gates:evidence \u2014 builds the NBM genuine-business project through the ordinary service and runs the deterministic producers over it.",
-      "accessibility": "npm run test:e2e:accessibility \u2014 audits the generated acceptance marketing site with axe at two viewports.",
-      "browser-journey": "npm run test:e2e:generated-app \u2014 drives the generated application's own interface.",
+      "gate-evidence": "npm run gates:evidence — builds the NBM genuine-business project through the ordinary service and runs the deterministic producers over it.",
+      "accessibility": "npm run test:e2e:accessibility — audits the generated acceptance marketing site with axe at two viewports.",
+      "browser-journey": "npm run test:e2e:generated-app — drives the generated application's own interface.",
       "database-acceptance": "the executed Supabase/PostgreSQL acceptance run."
     }
   }

@@ -38,6 +38,43 @@
       },
       "additionalProperties": false
     },
+    "businessProfile": {
+      "type": ["object", "null"],
+      "description": "What sort of visual problem this business presents, derived from approved intake. Selection used to see only the project type and the asset inventory, so two marketing sites with no photography were indistinguishable and received the same three directions. Every signal names the field it was read from and why, because this informs a design decision a person is entitled to disagree with and an opaque score cannot be argued with. It is not a source of truth: it invents no fact, alters no service, route, content or right, and only decides which treatment presents what is already approved.",
+      "required": ["projectType", "signals"],
+      "properties": {
+        "projectType": {"type": ["string", "null"]},
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "value", "field", "because"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "value": {"type": "string", "minLength": 1},
+              "field": {"type": "string", "minLength": 1},
+              "because": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "directionFit": {
+      "type": ["array", "null"],
+      "description": "How well each chosen direction suits this business, and which derived signals it matched. A score of zero is a real answer: the direction was eligible and nothing about this business argued for it, which is what a tie-break resolved on registry order looks like.",
+      "items": {
+        "type": "object",
+        "required": ["directionId", "score", "matched"],
+        "properties": {
+          "directionId": {"type": "string", "minLength": 1},
+          "score": {"type": "integer", "minimum": 0},
+          "matched": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    },
     "truthReadiness": {
       "type": ["object", "null"],
       "description": "What this set's product truth is actually made of. A manifest declaring sources is not the same as a run having read them, and the difference decides whether candidates may be generated at all: material content left unread starves the truth and is refused, while a research location nobody read and an approved asset whose bytes never arrived are recorded gaps rather than defects. Present so a reviewer judging these candidates knows whether they are looking at ingested source-backed truth or owner-approved intake with gaps, and never reads the second as the first.",
@@ -85,7 +122,7 @@
         "required": ["directionId", "reason", "detail"],
         "properties": {
           "directionId": {"type": "string", "minLength": 1},
-          "reason": {"enum": ["imagery-not-available", "no-distinctive-moment", "custom-presentation-required", "reference-avoids-trait"]},
+          "reason": {"enum": ["imagery-not-available", "no-distinctive-moment", "custom-presentation-required", "reference-avoids-trait", "lower-business-fit"]},
           "detail": {"type": "string", "minLength": 1}
         },
         "additionalProperties": false

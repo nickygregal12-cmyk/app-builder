@@ -41,6 +41,18 @@ Two properties carry the weight:
 
 `launchable` survives as a launch-audit field and is not a readiness verdict. No surface may present it as one.
 
+### Evidence belongs to one artifact
+
+The factory already refused another build's evidence: each producer's report records a `compositionHash`, and a report carrying a different one is not read. That refusal is real and too weak. A composition hash is not an artifact — two builds of one composition can install different dependency graphs, run under different toolchains and produce different bytes, which is precisely what the reproducibility work established, and every one of them carries the same hash. A behaviour report measured against yesterday's output therefore satisfies the freshness check for today's.
+
+`packages/control-plane/src/artifact-evidence.js` binds evidence to an ArtifactRevision instead, and most of the closure is arithmetic rather than a new rule. Identity is append-only, so changing source, lock or output is not an edit but a different revision with a different id and no evidence of its own. Nothing is invalidated; the evidence stays perfectly valid, about a revision nobody is releasing.
+
+What still needs checking is the small set of ways evidence and artifact can be brought together dishonestly, and each is a named refusal: `evidence-unbound`, `evidence-for-another-revision`, `evidence-identity-mismatch` (the artifact or the evidence was substituted), `evidence-ahead-of-artifact` (measured against something not yet recorded) and `evidence-names-nothing`. Evidence records *which* identity components it was measured against, because "this artifact passed" and "some artifact passed" are different claims.
+
+Revisions are a projection of the ledger, not a second store: `reduceArtifactRevisions` takes the project's own event stream and returns its revisions, so rebuilding is replaying. A revision exists only where an owner approved a contract — an ungoverned workspace build has nothing to be `contract-approved` about, and inventing a contract digest so the ladder had somewhere to start would be the overclaim the ladder exists to prevent.
+
+**Migration state.** The eight registered gate producers still record `compositionHash` and are read as before; a resolution now carries `boundToArtifact`, which is false for them. A producer that records the artifact revision it measured gets the stronger check immediately. Refusing every existing producer the day this landed would have replaced a weak check with no check at all, so the seam is additive and the migration is per producer.
+
 ## Phase 4C — presentation-state contracts
 
 The Presentation Registry / Component Manifest / DesignSystemSpec work must model **stateful presentation**, not only the ideal loaded state.

@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { createEvent } from '@app-builder/control-plane';
 import { contractSchema } from '@app-builder/contracts';
 import { approvedBuildHash, approvedBuildStateEvidence, assertApprovedBuildPlanExecutable, assertApprovedBuildPlanIdentity, mintApprovedBuildPlan } from './approved-build-plan.js';
+import { openArtifactRevision } from './artifact-revision-service.js';
 import { claimApprovedBuildPlanExecution, getApprovedBuildPlan, getApprovedBuildPlanByApprovalId, getApprovedBuildPlanExecution, listApprovedBuildPlans, recordApprovedBuildPlan } from './approved-build-plan-store.js';
 
 const OPAQUE_ID = /^[A-Za-z0-9._:-]{1,120}$/;
@@ -196,6 +197,15 @@ export async function approveProjectBuildPlan(service, projectId, { approvalId, 
   const snapshot = currentApprovedBuildSnapshot(service, projectId);
   const plan = mintApprovedBuildPlan({ projectId, approvalId, source: snapshot.evidence, approvedAt, ...(planId ? { planId } : {}) });
   recordApprovedBuildPlan(service.store, plan);
+  // The approved plan is the contract, so this is where the ladder starts. An
+  // ungoverned build has nothing to be `contract-approved` about and opens no
+  // revision, which is also why it can never be released.
+  await openArtifactRevision(service, projectId, {
+    contractDigest: plan.source.projectStateHash,
+    approvedBy: `operator:${plan.approval.approvalId}`,
+    basis: `Owner approved build plan ${plan.planId}, freezing the project's inputs at ${plan.source.projectStateHash.slice(0, 12)}.`,
+    at: plan.approval.approvedAt,
+  });
   await service.store.recordEvent(createEvent({
     projectId,
     type: 'approved-build-plan.approved',

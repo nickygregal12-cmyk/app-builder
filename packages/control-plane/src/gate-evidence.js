@@ -35,6 +35,7 @@ export const EVIDENCE_REFUSALS = Object.freeze([
   'artifact-unreadable',
   'evidence-for-another-project',
   'evidence-for-another-build',
+  'evidence-for-another-artifact-revision',
   'build-reference-missing',
   'conflicting-evidence',
 ]);
@@ -83,7 +84,7 @@ export function assertProducerRegistry(registry, gates) {
 }
 
 function refuse(checkId, gateId, producerId, reason, detail) {
-  return { id: checkId, gateId, producerId, status: 'not-run', reason, detail, ref: null, hash: null, coverage: null };
+  return { id: checkId, gateId, producerId, status: 'not-run', reason, detail, ref: null, hash: null, coverage: null, boundToArtifact: false };
 }
 
 /**
@@ -136,6 +137,22 @@ export function decideCheck({ check, producer, artifact, build }) {
     return refuse(checkId, gateId, producerId, 'evidence-for-another-build', `${producer.buildRefField} ${recorded} is not this build's ${build.buildRef}.`);
   }
 
+  // A composition hash is not an artifact. Two builds of one composition can
+  // install different dependency graphs and produce different bytes, and every
+  // one of them carries the same hash — so the check above cannot tell a report
+  // about today's output from one about yesterday's.
+  //
+  // A producer that records the artifact revision it measured gets the stronger
+  // check. One that does not is read as before and reported as unbound, because
+  // refusing every existing producer the day this landed would have replaced a
+  // weak check with no check at all. `boundToArtifact` is what a promotion rule
+  // reads when it needs the difference.
+  const measuredRevision = value.artifactRevisionId ?? null;
+  if (build?.artifactRevisionId && measuredRevision && measuredRevision !== build.artifactRevisionId) {
+    return refuse(checkId, gateId, producerId, 'evidence-for-another-artifact-revision', `evidence measured artifact revision ${measuredRevision}, not ${build.artifactRevisionId}.`);
+  }
+  const boundToArtifact = Boolean(build?.artifactRevisionId && measuredRevision && measuredRevision === build.artifactRevisionId);
+
   const findings = Array.isArray(value[check.findingsField]) ? value[check.findingsField] : null;
   if (findings === null) {
     return refuse(checkId, gateId, producerId, 'artifact-unreadable', `${artifact.ref} has no ${check.findingsField} array.`);
@@ -153,6 +170,7 @@ export function decideCheck({ check, producer, artifact, build }) {
     ref: artifact.ref,
     hash: artifact.hash ?? null,
     coverage: coverageOf(check, value),
+    boundToArtifact,
   };
 }
 

@@ -35,6 +35,41 @@ The following cannot satisfy Phase 3.8E:
 
 The existing Acme scenario remains useful CI regression coverage and is intentionally named `synthetic-mixed-source` in commands and workflow labels.
 
+## Qualifying a business before the trial
+
+Everything above describes a *passing run*. It does not answer the question that
+comes first: given this business and what has been supplied for it, is there a
+run here at all — and if there is, does it end at a reviewable prototype or at a
+published website?
+
+```bash
+npm run qualify:business -- --bundle examples/genuine-business/nbm-approved-intake.v1.json
+npm run qualify:business -- --bundle <file> --authority publication,assets,domain
+```
+
+Two answers, because a business can be ready for one and not the other. A
+**proof run** needs facts and material and no permission to publish, because
+nothing is published. A **launch** needs everything the proof run needed plus a
+real contact destination, asset rights and authority to publish.
+
+Gaps are classified by who has to act — content somebody can collect,
+`optional-content` that never blocks anything, and `owner-authority` decisions no
+amount of engineering closes. A checklist reporting twelve blockers of unknown
+kind reads as "not ready" and gets put down; one reporting two facts to collect
+and one decision to make gets acted on.
+
+Run against the two committed bundles today: nbm is proof-qualified and blocked
+for launch on three owner decisions; MGB Decor is proof-qualified and blocked on
+those plus its contact details, which are `test@mgb.com` and `123456789`. That
+is the same finding `config/factory-status.json` records in prose, derived from
+the bundle rather than written down by hand — and it was knowable before a line
+of MGB was generated.
+
+Suspected placeholders are questions rather than refusals. A real business may
+have a phone number that looks odd, and telling somebody their genuine details
+are fake is the expensive direction to be wrong in, so the rule that fired is
+always named and the finding is something to confirm.
+
 ## Evidence layout
 
 Keep the evidence file beside the artifacts it references so the validator can prove file existence and hashes without accepting arbitrary filesystem paths. A typical run directory is:

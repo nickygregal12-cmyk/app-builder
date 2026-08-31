@@ -12,6 +12,15 @@ on:
       - 'templates/react-vite-neutral/**'
       - 'config/visual-directions.json'
       - 'tooling/lib/candidate-truth-readiness.mjs'
+      # What every generated page is made of, and what decides which directions
+      # are offered. A change to either alters every screenshot this lane exists
+      # to produce, and both were missing: the change that gave Studio and
+      # Expertise their content — new sections on every page of a rich business —
+      # produced no hosted evidence at all, because the lane was not watching the
+      # composer.
+      - 'packages/composition/src/**'
+      - 'tooling/lib/business-visual-profile.mjs'
+      - 'tooling/lib/asset-readiness.mjs'
       - 'examples/genuine-business/nbm-approved-intake.v1.json'
       - 'examples/genuine-business/mgb-approved-intake.v1.json'
 

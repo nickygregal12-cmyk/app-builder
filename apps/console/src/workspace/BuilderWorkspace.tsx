@@ -1273,6 +1273,9 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
   const builtKnowledgeHash = snapshot?.composition?.input?.knowledgePackHash ?? null;
   const builtDecisionsHash = snapshot?.composition?.input?.assetDecisionsHash ?? null;
   const built = Boolean(snapshot?.project.workspacePath);
+  // The revision the live repository is at, so the result panel can name the
+  // exact state an operator is being handed rather than just a directory.
+  const latestCheckpoint = snapshot?.checkpoints?.length ? snapshot.checkpoints[snapshot.checkpoints.length - 1] : null;
   const knowledgeIsNewerThanBuild = built && (snapshot?.project.knowledgePackHash ?? null) !== builtKnowledgeHash;
   // An asset decision changes what the build would publish, so it makes the
   // live repository stale in exactly the way new source material does.
@@ -1324,6 +1327,25 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           <p>{snapshot.project.slug}</p>
           <dl className="builder-definition"><div><dt>Manifest</dt><dd>v{snapshot.project.manifestVersion}</dd></div><div><dt>Knowledge</dt><dd>{snapshot.project.knowledgePackHash ? 'attached' : 'manifest only'}</dd></div><div><dt>Workspace</dt><dd>{snapshot.project.workspacePath ? 'materialised' : 'not generated'}</dd></div></dl>
         </section>
+
+        {/*
+          Where the website actually is.
+          A generated project is an ordinary repository, and until this panel
+          existed the Console never said where it had put one. "Workspace:
+          materialised" tells an operator that something happened somewhere.
+          Finding it meant reading the service log or knowing the directory
+          layout, which is the kind of knowledge this product exists to remove.
+        */}
+        {snapshot.project.workspacePath && <section className="builder-panel result-panel" aria-label="Generated repository">
+          <span className="builder-kicker">Your website</span>
+          <p className="builder-empty">An ordinary repository. Copy it anywhere, <code>npm install &amp;&amp; npm run dev</code>, and it runs with no dependency on this factory.</p>
+          <dl className="builder-definition">
+            <div><dt>Repository</dt><dd><code className="result-path">{snapshot.project.workspacePath}</code></dd></div>
+            <div><dt>Build</dt><dd>{snapshot.project.state === 'verified' ? 'installs, checks and builds on its own' : snapshot.project.state === 'generated' ? 'generated — not verified yet' : snapshot.project.state}</dd></div>
+            {latestCheckpoint && <div><dt>Revision</dt><dd><code className="result-path">{latestCheckpoint.id}</code></dd></div>}
+          </dl>
+          <button type="button" className="secondary compact" onClick={() => navigator.clipboard?.writeText(snapshot.project.workspacePath ?? '')}>Copy path</button>
+        </section>}
 
         <section className="builder-panel source-governance-panel" aria-label="Source and asset rights">
           <div className="panel-title-row"><span className="builder-kicker">Sources & rights</span><span>{snapshot.sources.length}</span></div>

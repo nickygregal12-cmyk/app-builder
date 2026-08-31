@@ -56,6 +56,101 @@ distinctive-moment 5.2`.
 
 ---
 
+## 2a. The 2026-08-31 reviews, and what they cost to fix
+
+**Still not passed.** Two further independent reviews ran on 2026-08-31, both by
+an OpenAI GPT-5 `design-critic` over evidence an Anthropic runtime produced. The
+threshold is untouched; these are added because the record above is what a later
+session reads instead of re-deriving it.
+
+**The reviewer was never actually unavailable.** `config/factory-status.json`
+records the independent verdict as blocked partly because "the only
+different-vendor reviewer executes the Codex CLI, which is not installed on this
+host". It is installed, at `/home/predictor/.local/bin/codex`, and authenticated;
+`npm run review:codex -- --packet <dir> --authorise` runs end to end and produced
+both reviews below. The host model-execution switch at
+`/etc/app-builder/model-execution.json` is a different lane and is still
+`enabled: false`; this reviewer is an operator tool driving a CLI, and it refuses
+to run without `--authorise`. The status file's other two reasons stood: they
+were the packet adapter, which the portable packet now satisfies, and cost.
+
+| Review | Candidate | Verdict | Mean | Floor | distinctiveness | distinctive-moment |
+| --- | --- | --- | --- | --- | --- | --- |
+| v5 | editorial-authority | rework | 6.10 | 3.2 | 4.8 | 3.2 |
+| v5 | structured-practice | rework | 5.94 | 2.8 | 4.5 | 2.8 |
+| v5 | service-forward | rework | 5.56 | 4.0 | 4.5 | 4.0 |
+| v6 | editorial-authority | rework | **6.31** | 3.5 | 4.8 | 3.5 |
+| v6 | structured-practice | rework | 5.94 | 3.5 | 4.5 | 3.5 |
+| v6 | service-forward | rework | **6.26** | 4.5 | 4.8 | 4.5 |
+
+Between the two, three reusable defects the v5 critic named on *every* candidate
+were fixed, and the same benchmark reran:
+
+- **section rhythm was arithmetic, not taste.** `--section-space` was the padding
+  on both sides of every section, so the gap a visitor sees was two of it. The
+  relaxed density asked for 132px and produced 264px; measured gaps on the
+  editorial candidate were 344, 300, 260 and 260px, and are now 206, 196, 156
+  and 208. No direction could have tuned this, because every direction doubled
+  whatever it asked for;
+- **the action family never changed shape.** `.button` hard-coded a 999px
+  capsule, so "pill buttons" — named in v4 and again in v5, after the action axis
+  existed — was literally true of every treatment that was a box. Controls take
+  `--layout-radius` now, which is the direction's own declaration;
+- **conversion-first put the contact details before the offering** on a phone,
+  and then repeated them in the footer. Two of three v5 verdicts said so in
+  nearly the same sentence.
+
+**The criterion floor rose on all three candidates** (2.8/3.2/4.0 → 3.5/3.5/4.5)
+and two means rose materially. **`distinctiveness` did not move: 4.8, 4.5, 4.5 →
+4.8, 4.5, 4.8.** That is the eighth and ninth consecutive measurement of the same
+flat number, and it is consistent with §3 below rather than a refutation of it —
+rhythm, shape and ordering are not what it is measuring.
+
+### The anti-template diagnostic was measuring itself
+
+§9 of `docs/VISUAL_EXCELLENCE.md` records the diagnostic's first run as "eight
+builds, and eight of eleven signals were **uniform**", explained by no build
+carrying a promoted direction. **That reading was an instrument defect.** The
+diagnostic read `design.visualDirection`; every project record on disk carries
+`visualDirectionId`. The read never matched, so `direction` was null for every
+build ever measured, the signature fell back to the default dimensions, and the
+tool reported `solid / panel / stacked / utility / neutral` over sets whose
+builds demonstrably render an underlined ask, an editorial masthead and a serif
+voice — then printed a confident explanation of its own null case. A diagnostic
+whose failure mode is indistinguishable from the finding it exists to detect will
+report that finding forever.
+
+Fixed, and with the read exercised by a test that loads a record shaped the way
+the generator writes one. Over the same three nbm candidates it now reports three
+uniform signals rather than fourteen, and pairs differing in 10 to 13 of 16.
+
+### What two businesses actually showed
+
+Run over six builds — three nbm candidates and three MGB Decor candidates, two
+unrelated companies — only two signals are uniform, and both honestly so: they
+are both marketing sites, and both resolved the same typographic voice. Direction
+selection is genuinely business-driven; MGB chose `schedule-register` where nbm
+chose `structured-practice`, and each refusal names its reason.
+
+**The convergence that remains is between businesses that land on the same
+direction.** nbm's `editorial-authority` and MGB's `editorial-authority` differ in
+**1 of 16 signals** — section sequence — and compile the *same* accent
+`#315b72` and the same voice `humanist-sans`. That is close to this document's own
+definition of a template, and it is the next architectural question: a direction
+currently determines the whole vocabulary, and the business contributes content,
+section order and nothing else a visitor can see.
+
+It was not fixed here, for a reason rather than for lack of time. The accent is
+`origin: "derived"` with empty `sourceIds` on both, and the cause is upstream:
+nbm's approved knowledge pack carries `brand.colors: []` and
+`brand.fontFamilies: []`, so BrandSpec is correctly falling back rather than
+failing. Re-ingesting that pack would change the frozen truth every review in
+this document was measured against, and the frozen-corpus protocol in
+`docs/GENUINE_BUSINESS_ACCEPTANCE.md` makes that an owner decision, not a
+repository edit. Whether a direction should be the sole determinant of vocabulary
+is likewise an architecture decision, and deterministic composition is a
+protected guarantee.
+
 ## 3. The finding that matters
 
 Interventions targeted at named criteria moved those criteria. The gate did not move, because one

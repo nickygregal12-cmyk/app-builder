@@ -35,6 +35,7 @@ import { declaredToolchain, describeToolchain, runningToolchain } from '../../..
 import { assertMutationRegistered, decideMutation } from './mutation-decision.js';
 import { listApprovedBuildPlans } from './approved-build-plan-store.js';
 import { authorizeAction } from './action-authorization-service.js';
+import { advanceProjectArtifactRevision, liveProjectArtifactRevision, projectArtifactRevisions } from './artifact-revision-service.js';
 
 function safeChild(root, name) {
   const base = path.resolve(root);
@@ -1083,6 +1084,23 @@ export class FactoryService {
     return authorizeAction(this, projectId, request);
   }
 
+  /**
+   * The project's artifact revisions, rebuilt from its own event stream.
+   *
+   * There is no revisions table to read: a read model that cannot be
+   * reconstructed is a second source of truth, and this one is a replay.
+   */
+  artifactRevisions(projectId) {
+    this.requireProject(projectId);
+    return [...projectArtifactRevisions(this, projectId).values()];
+  }
+
+  /** The one revision currently being built, or null for an ungoverned build. */
+  liveArtifactRevision(projectId) {
+    this.requireProject(projectId);
+    return liveProjectArtifactRevision(this, projectId);
+  }
+
   async recordOperationalEvent(projectId, type, payload = {}, usage = {}, { taskId = null, actor = 'factory-service' } = {}) {
     this.requireProject(projectId);
     return this.store.recordEvent(createEvent({ projectId, taskId, type, actor, payload, usage }));
@@ -1279,6 +1297,17 @@ export class FactoryService {
       task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
       this.store.upsertTask(task);
       project = this.store.upsertProject({ ...project, state: 'generated', workspacePath: workspace, updatedAt: new Date().toISOString() });
+
+      // A governed build's revision reaches `materialized` here and no further:
+      // a source tree exists and hashes to a digest, which is the whole of what
+      // that state asserts. Nothing yet says it installs, builds or behaves.
+      await advanceProjectArtifactRevision(this, projectId, 'materialized', {
+        from: 'contract-approved',
+        identity: { sourceDigest: sourceDigest(workspace) },
+        actor: 'factory-generator',
+        basis: `Generated ${project.name} from the approved contract into ${path.basename(workspace)}.`,
+      });
+
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.succeeded', actor: 'factory-service', payload: { checkpointId: checkpoint.id, workspace }, usage: { durationMs: Date.now() - started } }));
       return { project: summary(project), task, checkpoint, composition, workspace };
     } catch (error) {
@@ -1374,6 +1403,20 @@ export class FactoryService {
       this.store.recordCheckpoint(checkpoint);
       task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
       this.store.upsertTask(task);
+      // `buildable` is the claim that this exact source, with this exact
+      // lockfile, under this exact toolchain, produced this exact output. All
+      // four are recorded above, so this is the one rung the factory can earn
+      // without asking anybody anything — and it is refused when the toolchain
+      // was not the declared one, because then the fourth is not true.
+      if (position.supported) {
+        await advanceProjectArtifactRevision(this, projectId, 'buildable', {
+          from: 'materialized',
+          identity: { lockDigest: lock.digest, toolchain, outputDigest: output.digest },
+          actor: 'factory-verifier',
+          basis: `Installed from lockfile ${lock.digest.slice(0, 12)} under node ${toolchain.node} / npm ${toolchain.npm} and built output ${output.digest.slice(0, 12)}.`,
+        });
+      }
+
       project = this.store.upsertProject({ ...project, state: 'verified', buildIdentity, updatedAt: new Date().toISOString() });
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'quality.succeeded', actor: 'factory-service', payload: { checkpointId: checkpoint.id }, usage: { durationMs: Date.now() - started } }));
       return { project: summary(project), task, checkpoint };

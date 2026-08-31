@@ -21,6 +21,7 @@ import {
   CHECK_STATUSES,
   EVIDENCE_REFUSALS,
   assertProducerRegistry,
+  decideCheck,
   evaluateEvidenceIntegrity,
   resolveGateResults,
   summariseResolutions,
@@ -426,4 +427,34 @@ test('the asset-rights audit passes only what was cleared, and says how much it 
   const empty = auditAssetRights({ assets: {}, compositionHash: BUILD_REF });
   assert.equal(empty.clean, true);
   assert.equal(empty.published, 0);
+});
+
+test('evidence that names a different artifact revision is refused, and evidence that names none is reported as unbound', () => {
+  // A composition hash is not an artifact: two builds of one composition can
+  // install different graphs and produce different bytes and both carry it. So
+  // a producer that records which artifact revision it measured gets the
+  // stronger check, and one that does not is read as before and marked.
+  const check = { id: 'c', gate: 'g', producer: 'p', findingsField: 'findings', findingIdField: 'check', failOnFindings: ['bad'] };
+  const producer = { id: 'p', command: 'npm run gates:evidence', artifactKind: 'R', buildRefField: 'compositionHash' };
+  const build = { projectId: 'project-1', buildRef: 'composition-1', artifactRevisionId: 'revision-1' };
+  const artifact = (extra) => ({ ref: '.app-builder/x.json', projectId: 'project-1', value: { compositionHash: 'composition-1', findings: [], ...extra } });
+
+  const bound = decideCheck({ check, producer, artifact: artifact({ artifactRevisionId: 'revision-1' }), build });
+  assert.equal(bound.status, 'pass');
+  assert.equal(bound.boundToArtifact, true);
+
+  const elsewhere = decideCheck({ check, producer, artifact: artifact({ artifactRevisionId: 'revision-2' }), build });
+  assert.equal(elsewhere.status, 'not-run');
+  assert.equal(elsewhere.reason, 'evidence-for-another-artifact-revision');
+  assert.equal(elsewhere.boundToArtifact, false);
+
+  const legacy = decideCheck({ check, producer, artifact: artifact({}), build });
+  assert.equal(legacy.status, 'pass', 'a producer that predates artifact binding still answers its gate');
+  assert.equal(legacy.boundToArtifact, false, 'and says it was not bound, so a promotion rule can tell the difference');
+
+  // With no artifact revision in play at all, nothing is bound and nothing is
+  // refused for not being bound.
+  const unversioned = decideCheck({ check, producer, artifact: artifact({ artifactRevisionId: 'revision-2' }), build: { projectId: 'project-1', buildRef: 'composition-1' } });
+  assert.equal(unversioned.status, 'pass');
+  assert.equal(unversioned.boundToArtifact, false);
 });

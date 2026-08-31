@@ -24,6 +24,23 @@ Existing factory work already prevents several common vibe-coding failure modes:
 
 Do not duplicate those systems. The additions below make the remaining implicit professional-finish requirements explicit and assign them to the stages that can actually consume them.
 
+## The one readiness ladder
+
+Those systems answered different narrow questions and none of them answered "is this exact artifact fit to publish". `generated` meant a directory existed; `verified` meant a build once exited zero under a dependency resolution nobody recorded; `launchable` meant the deterministic launch audit found no blocker finding, which it can report while rendered evidence is missing entirely; visual promotion meant a person preferred one candidate to another. Read together they could be mistaken for readiness, and that mistake is the reason a release ladder exists at all.
+
+`schemas/artifact-revision.schema.json` and `packages/control-plane/src/artifact-lifecycle.js` are the authority. The eight success states are earned strictly in order, each only from the one below it:
+
+`contract-approved` → `materialized` → `buildable` → `behavior-verified` → `quality-accepted` → `release-candidate` → `released` → `production-verified`
+
+Each state's own `notMeaning` is recorded beside its meaning in `ARTIFACT_LIFECYCLE_SEMANTICS`, because every one of those lines is a claim somebody could otherwise make from the state name alone. `superseded`, `withdrawn` and `rejected` are ends, never rungs; a failed attempt is an attempt and belongs to the attempt record, not to the artifact.
+
+Two properties carry the weight:
+
+- **Identity is append-only.** A revision records its contract, source, lock, toolchain, output and deploy identity once each. A second, different value is refused, so changed bytes cannot inherit the evidence of the bytes they replaced. Rework forks a child revision that starts again at `contract-approved` and re-earns everything below it, and the parent is superseded rather than edited.
+- **Legacy data is read honestly.** `projectLegacyProjectState` maps a historical `verified` project to `materialized` at best, never to `buildable`. Legacy verification installed with `npm install`, ran under whatever toolchain the host had and recorded no output digest; `buildable` asserts all three. Projecting one onto the other would convert every historical project into a reproducibility claim nobody made.
+
+`launchable` survives as a launch-audit field and is not a readiness verdict. No surface may present it as one.
+
 ## Phase 4C — presentation-state contracts
 
 The Presentation Registry / Component Manifest / DesignSystemSpec work must model **stateful presentation**, not only the ideal loaded state.

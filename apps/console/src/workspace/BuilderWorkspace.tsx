@@ -392,9 +392,10 @@ function ProductReviewPanel({ review }: { review: ProductReview }) {
   return <section className="builder-panel review-panel" aria-label="Product review">
     <div className="panel-title-row">
       <span className="builder-kicker">What this build needs</span>
-      <span className={review.launchable ? 'rights-pill publishable' : 'rights-pill'}>{review.launchable ? 'launchable' : `${review.summary.blocker} blocking`}</span>
+      <span className={review.launchable ? 'rights-pill publishable' : 'rights-pill'}>{review.launchable ? 'no blocking findings' : `${review.summary.blocker} blocking`}</span>
     </div>
     <p className="builder-empty">{review.predictedManualEdits} edit{review.predictedManualEdits === 1 ? '' : 's'} predicted before a person would call this finished.</p>
+    {review.launchable && <p className="builder-empty">That is what the deterministic checks can see, not a readiness verdict. Rendered evidence, an independent review and a release approval are separate things this build has not been given.</p>}
 
     {review.opportunities.length === 0
       ? <p className="builder-empty">Nothing the deterministic checks can name. Rendered evidence and a human review are what judge it from here.</p>

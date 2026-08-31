@@ -6,6 +6,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { assertContract, validateContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, assertEditableElement, assetDecisionsHash, bindingElementKey, composeProject, elementRef, resolveElementIdentity, stripContentOverrides, stripSectionVariants } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
+import { projectLegacyProjectState } from '@app-builder/control-plane/artifact-lifecycle';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
@@ -54,7 +55,14 @@ function summary(project) {
     name: project.name,
     type: project.type,
     slug: project.slug,
+    // `state` is the legacy build-progress word — `generated` means a directory
+    // exists and `verified` means a build once succeeded under a resolution
+    // nobody recorded. `lifecycle` is the canonical claim, and for legacy
+    // projects it is deliberately null: they carry a workspace path rather than
+    // an artifact identity, so there is nothing exact for a lifecycle to be
+    // about. `basis` says which of the two it is.
     state: project.state,
+    lifecycle: projectLegacyProjectState(project),
     workspacePath: project.workspacePath,
     manifestVersion: project.manifest.schemaVersion ?? 1,
     knowledgePackHash: project.knowledgePack?.packHash ?? null,

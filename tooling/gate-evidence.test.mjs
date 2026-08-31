@@ -287,8 +287,58 @@ test('resolved product failure does not become an evidence-system failure', () =
   });
   assert.equal(resolutions[0].status, 'fail');
   assert.deepEqual(evaluateEvidenceIntegrity({ resolutions, registry: REGISTRY }), {
-    status: 'pass', expectedChecks: 2, resolvedChecks: 2, failures: [],
+    status: 'pass', lane: null, deferredToOtherLanes: [], expectedChecks: 2, resolvedChecks: 2, failures: [],
   });
+});
+
+test('a check another lane produces is deferred, and one this lane owes is still a failure', () => {
+  // The registration blocker, as a rule rather than as a decision not to
+  // register. `gates:evidence` builds one project and measures it; the
+  // accessibility audit builds a different one. A check produced over there
+  // resolving `not-run` here is not broken wiring — it is a gate measured
+  // somewhere else, and treating the two the same is what kept three real
+  // producers out of the registry.
+  const registry = {
+    producers: {
+      'launch-readiness': { ...REGISTRY.producers['launch-readiness'], lane: 'gate-evidence' },
+      'axe-accessibility': { id: 'axe-accessibility', command: 'npm run test:e2e:accessibility', lane: 'accessibility', artifactKind: 'AxeReport', buildRefField: 'compositionHash' },
+    },
+    checks: {
+      'fact-provenance-check': REGISTRY.checks['fact-provenance-check'],
+      'axe-serious-critical': { id: 'axe-serious-critical', gate: 'provenance', producer: 'axe-accessibility', findingsField: 'findings', findingIdField: 'check', failOnFindings: ['serious', 'critical'] },
+    },
+  };
+  const resolutions = [{
+    gateId: 'provenance',
+    checks: [
+      { id: 'fact-provenance-check', status: 'pass' },
+      { id: 'axe-serious-critical', status: 'not-run', reason: 'evidence-for-another-build' },
+    ],
+  }];
+
+  const inLane = evaluateEvidenceIntegrity({ resolutions, registry, lane: 'gate-evidence' });
+  assert.equal(inLane.status, 'pass', 'a check another lane produces must not fail this lane');
+  assert.equal(inLane.expectedChecks, 1);
+  assert.deepEqual(inLane.deferredToOtherLanes.map((entry) => entry.checkId), ['axe-serious-critical'], 'and it is named, so deferred cannot be mistaken for covered');
+
+  // The lane that does own it still has to produce it.
+  const owning = evaluateEvidenceIntegrity({ resolutions, registry, lane: 'accessibility' });
+  assert.equal(owning.status, 'fail');
+  assert.deepEqual(owning.failures.map((entry) => entry.checkId), ['axe-serious-critical']);
+
+  // And with no lane declared, nothing is deferred — the stricter reading,
+  // which is the right default for a caller that has not said what it ran.
+  const unscoped = evaluateEvidenceIntegrity({ resolutions, registry });
+  assert.equal(unscoped.status, 'fail');
+  assert.deepEqual(unscoped.deferredToOtherLanes, []);
+});
+
+test('a producer that does not say which lane makes it is refused', () => {
+  const registry = {
+    producers: { p: { id: 'p', command: 'npm run x', artifactKind: 'R', buildRefField: 'compositionHash' } },
+    checks: {},
+  };
+  assert.throws(() => assertProducerRegistry(registry, GATES), /Producer p lane is required/);
 });
 
 // ---------------------------------------------------------------------------

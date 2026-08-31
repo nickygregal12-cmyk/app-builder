@@ -7,12 +7,14 @@
     "A deterministic check never stands in for a person. A gate declaring requiresIndependentReviewer stays not-run until a verdict exists, however many of its checks pass.",
     "A check declared here must be named by the gate it claims, and may be declared once. Both are refusals, because two producers disagreeing about one status would be decided by read order.",
     "Registering a producer is a reviewed change, and so is removing one. A gate that used to be measured and is no longer becomes not-run, which is the honest report.",
-    "A pass over nothing is still a pass, and hides that. Where a producer records how many subjects it examined, the check declares that field so the number travels with the status."
+    "A pass over nothing is still a pass, and hides that. Where a producer records how many subjects it examined, the check declares that field so the number travels with the status.",
+    "A check belongs to the lane that produces its artifact. Integrity asks whether the lane that ran completed its own evidence, not whether every lane ran: a check whose producer builds a different project cannot answer for this build, and treating that as broken wiring is what kept three real producers unregistered."
   ],
   "producers": {
     "launch-readiness": {
       "id": "launch-readiness",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/launch-readiness.mjs auditLaunchReadiness",
       "artifactKind": "LaunchReadinessReport",
       "contract": "schemas/launch-readiness-report.schema.json",
@@ -23,6 +25,7 @@
     "design-lint": {
       "id": "design-lint",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/design-lint.mjs compileDesignLintReport",
       "artifactKind": "DesignLintReport",
       "contract": "schemas/design-contract.schema.json",
@@ -33,6 +36,7 @@
     "asset-rights": {
       "id": "asset-rights",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/asset-rights.mjs auditAssetRights",
       "artifactKind": "AssetRightsReport",
       "contract": "schemas/knowledge-pack.schema.json",
@@ -43,16 +47,18 @@
     "payload-budget": {
       "id": "payload-budget",
       "command": "npm run audit:payload",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/payload-budget.mjs measureBuildPayload + evaluatePayloadBudgets",
       "artifactKind": "PayloadReport",
       "contract": "config/payload-budgets.json",
       "artifact": ".app-builder/gate-evidence/payload-budget.json",
       "buildRefField": "compositionHash",
-      "reads": "A built repository — installed and built as an ordinary project — held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
+      "reads": "A built repository \u2014 installed and built as an ordinary project \u2014 held against the class budgets recorded from a measured baseline. Measuring the source instead would be a budget on the wrong number."
     },
     "secret-scan": {
       "id": "secret-scan",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/security-evidence.mjs auditCommittedSecrets",
       "artifactKind": "SecretScanReport",
       "contract": "tooling/lib/secret-scan.mjs",
@@ -63,6 +69,7 @@
     "dependency-audit": {
       "id": "dependency-audit",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/security-evidence.mjs auditDependencyAdvisories",
       "artifactKind": "DependencyAuditReport",
       "contract": "tooling/lib/security-evidence.mjs",
@@ -73,6 +80,7 @@
     "generated-checks": {
       "id": "generated-checks",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/generated-check-evidence.mjs summariseGeneratedChecks",
       "artifactKind": "GeneratedCheckReport",
       "contract": "tooling/lib/generated-check-evidence.mjs",
@@ -83,6 +91,7 @@
     "seo-aeo-scanner": {
       "id": "seo-aeo-scanner",
       "command": "npm run gates:evidence",
+      "lane": "gate-evidence",
       "implementation": "tooling/lib/seo-aeo.mjs readBuiltDocuments + scanSeoAeo",
       "artifactKind": "SeoReport",
       "contract": "tooling/lib/seo-aeo.mjs",
@@ -129,7 +138,7 @@
       "failOnFindings": [
         "violation"
       ],
-      "why": "A DesignLint violation is an invariant that broke — unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
+      "why": "A DesignLint violation is an invariant that broke \u2014 unreadable text, a token that stopped resolving. Warnings and recommendations are a person's call and never fail the gate."
     },
     "design-system-lint": {
       "id": "design-system-lint",
@@ -214,7 +223,7 @@
       "failOnFindings": [
         "unit-tests-failed"
       ],
-      "why": "The generated project's own test script. Exit zero is not the whole verdict — a suite that ran nothing exits zero too — so the TAP plan travels as the coverage number.",
+      "why": "The generated project's own test script. Exit zero is not the whole verdict \u2014 a suite that ran nothing exits zero too \u2014 so the TAP plan travels as the coverage number.",
       "coverageField": "unitTests",
       "coverageLabel": "tests in the generated project's own suite"
     },
@@ -241,11 +250,20 @@
     }
   },
   "unregistered": {
-    "description": "Deterministic checks named by a registered gate that no producer answers yet. They are listed so the gap is visible rather than discovered by a gate that never resolves. Nothing reads this list; it is documentation of what is still not-run.",
+    "description": "Deterministic checks named by a registered gate that no producer answers yet. Two of the three now have a real producer that writes a real artifact; what stopped them being registered was never a missing artifact. `npm run gates:evidence` builds the NBM genuine-business project and measures that, while the accessibility audit and the browser journey measure the generated acceptance application \u2014 two builds, two composition hashes \u2014 so a registered check resolved `evidence-for-another-build` on every run and took the verify job with it. Lanes are the rule that says so: a check is expected in the lane that produces it. Registering these therefore needs each producer to declare its lane and to record the artifact revision it measured, so the gate is not-run for this build honestly rather than absent.",
     "checks": [
       "e2e-tests",
       "axe-serious-critical",
       "executed-rls-acceptance"
     ]
+  },
+  "lanes": {
+    "description": "Which run produces a check's artifact. A lane builds one thing and measures it; a check is expected only in the lane that produces it, and a check produced elsewhere is not this lane's evidence wiring to answer for.",
+    "known": {
+      "gate-evidence": "npm run gates:evidence \u2014 builds the NBM genuine-business project through the ordinary service and runs the deterministic producers over it.",
+      "accessibility": "npm run test:e2e:accessibility \u2014 audits the generated acceptance marketing site with axe at two viewports.",
+      "browser-journey": "npm run test:e2e:generated-app \u2014 drives the generated application's own interface.",
+      "database-acceptance": "the executed Supabase/PostgreSQL acceptance run."
+    }
   }
 }

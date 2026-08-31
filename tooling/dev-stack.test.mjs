@@ -133,4 +133,35 @@ test('the launcher tells the Console which factory it started', () => {
   assert.match(source, /APP_BUILDER_SERVICE_INSTANCE/);
   // Readiness must be a statement about our own service, not about the port.
   assert.match(source, /payload\?\.instance === serviceInstance/);
+  // The Console needs it too: pointing the proxy somewhere is not arriving there.
+  const consoleChild = source.slice(source.indexOf('@app-builder/console'));
+  assert.match(consoleChild, /APP_BUILDER_SERVICE_INSTANCE/);
+});
+
+/**
+ * Getting the proxy target right once is not the same as staying there.
+ *
+ * A dev server restart re-reads its config, and in that window this Console was
+ * observed listing another factory's businesses on the same host. A project
+ * list looks identical whoever it came from, so the Console has to check rather
+ * than assume — otherwise the failure has no symptom at all.
+ */
+test('the Console is told which factory it was started against', () => {
+  const source = readFileSync('apps/console/vite.config.ts', 'utf8');
+  assert.match(source, /__APP_BUILDER_EXPECTED_INSTANCE__/);
+  assert.match(source, /APP_BUILDER_SERVICE_INSTANCE/);
+});
+
+test('the Console refuses a factory it was not started against rather than rendering its projects', () => {
+  const source = readFileSync('apps/console/src/ConsoleRoot.tsx', 'utf8');
+  assert.match(source, /__APP_BUILDER_EXPECTED_INSTANCE__/);
+  assert.match(source, /'mismatch'/);
+  // The refusal has to replace the surfaces, not sit above them: a warning over
+  // a working project list is still somebody else's project list.
+  const mismatchGuard = source.match(/if \(identity === 'mismatch'\) return[\s\S]{0,400}/);
+  assert.ok(mismatchGuard, 'a mismatch must short-circuit the whole Console');
+  assert.match(mismatchGuard[0], /not started against/i);
+  // No declared expectation is the ordinary `npm run console` case and must not
+  // invent a complaint.
+  assert.match(source, /'unknown'/);
 });

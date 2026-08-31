@@ -92,9 +92,13 @@ function eventSummary(event: WorkspaceSnapshot['events'][number]) {
   if (event.type === 'sources.ingestion.started') return `Normalising ${String(payload.requested ?? 0)} source(s)`;
   if (event.type === 'composition.materialised') return `${String(payload.pages ?? 0)} pages · ${String(payload.sections ?? 0)} sections`;
   if (event.type === 'repository.generated') return 'Standalone repository materialised';
-  if (event.type === 'quality.install.succeeded') return `Dependencies installed · ${duration(event.usage.durationMs)}`;
+  if (event.type === 'quality.lock.resolved') return payload.alreadyPresent ? `Dependency graph already resolved · ${String(payload.lockDigest ?? '').slice(0, 12)}` : `Dependency graph resolved · ${String(payload.lockDigest ?? '').slice(0, 12)} · ${duration(event.usage.durationMs)}`;
+  if (event.type === 'quality.install.succeeded') return `Installed from the lockfile · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.check.succeeded') return `Checks passed · ${duration(event.usage.durationMs)}`;
   if (event.type === 'quality.build.succeeded') return `Production build passed · ${duration(event.usage.durationMs)}`;
+  // Says what was recorded and whether it is reproducible, because "identity
+  // recorded" and "identity you could rebuild from" are different claims.
+  if (event.type === 'quality.identity.recorded') return `Build identity ${String(payload.outputDigest ?? '').slice(0, 12)} across ${String(payload.outputFiles ?? 0)} file(s) · ${payload.reproducible ? 'declared toolchain' : 'undeclared toolchain, not reproducible'}`;
   if (event.type === 'source.governance.updated') return `${String(payload.sourceId ?? 'Source')} · ${label(String(payload.decision ?? 'updated'))}`;
   if (event.type === 'design.contract.updated') return `${((payload.controls as string[] | undefined) ?? []).join(', ') || 'design'} set`;
   if (event.type === 'section.variant.chosen') return payload.variant ? `${String(payload.sectionId ?? 'Section')} · ${label(String(payload.variant))}` : `${String(payload.sectionId ?? 'Section')} · back to composed`;

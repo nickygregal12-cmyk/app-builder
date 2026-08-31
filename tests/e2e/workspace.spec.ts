@@ -247,10 +247,11 @@ test('Builder Console drives governed sources, generation, verification and prev
 
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
-  // 11 build/quality/preview events, one source governance decision, the save
+  // 13 build/quality/preview events, one source governance decision, the save
   // and revert of one content edit, the choice and clearing of one section
   // presentation, one design choice, and the start and completion of one
-  // evidence capture.
-  await expect(page.getByLabel('Project metrics').getByText('19', { exact: true })).toBeVisible();
+  // evidence capture. Verification contributes two of the thirteen that it did
+  // not before: the lockfile it resolved, and the build identity it recorded.
+  await expect(page.getByLabel('Project metrics').getByText('21', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

@@ -416,9 +416,33 @@ function hero(pageId, surface, index, manifest, pack, actions, assetDecisions) {
   return section(`${pageId}-hero`, 'hero', `Introduce ${surface}`, [title, body], actions, lead ? [lead.id] : [], index === 0 ? 'primary' : 'compact');
 }
 
-function servicesSection(pageId, pack, manifest) {
-  const items = entityBinding('items', pack, 'services', list(manifest?.company?.services));
-  if (!items) return null;
+/**
+ * How much of a set the home page shows.
+ *
+ * The home page composed every section it could and every item in each of them.
+ * That is right for a business with four services and nothing else; the Ardwell
+ * & Roe benchmark has ten services, six projects, twelve photographs and nine
+ * pieces of proof, and the home page became 9,217px of full inventory while a
+ * dedicated page for the same content sat one click away carrying an identical
+ * list. Two independent reviews asked for the same thing: stop stacking the
+ * whole desktop content inventory, and let the page summarise.
+ *
+ * A preview only where there is somewhere to go. A business whose surfaces do
+ * not include a page for its work has nowhere else to show it, so its home page
+ * still shows everything — capping there would hide content rather than defer
+ * it.
+ */
+const HOME_PREVIEW = Object.freeze({ services: 6, projects: 3, gallery: 6, proof: 4 });
+
+function previewOf(binding, limit) {
+  if (!binding || !Array.isArray(binding.value) || !limit || binding.value.length <= limit) return binding;
+  return { ...binding, value: binding.value.slice(0, limit) };
+}
+
+function servicesSection(pageId, pack, manifest, limit = null) {
+  const full = entityBinding('items', pack, 'services', list(manifest?.company?.services));
+  if (!full) return null;
+  const items = previewOf(full, limit);
   return section(`${pageId}-services`, 'item-grid', 'Present services or products', [
     manifestBinding('title', 'Services'),
     items,
@@ -473,9 +497,10 @@ function peopleSection(pageId, pack) {
   return section(`${pageId}-people`, 'people-grid', 'Introduce source-backed people or team members', [manifestBinding('title', 'People'), items], [], [], itemVariant(items.value));
 }
 
-function projectsSection(pageId, pack) {
-  const items = entityBinding('items', pack, 'projects');
-  if (!items) return null;
+function projectsSection(pageId, pack, limit = null) {
+  const full = entityBinding('items', pack, 'projects');
+  if (!full) return null;
+  const items = previewOf(full, limit);
   return section(`${pageId}-projects`, 'item-grid', 'Present source-backed projects or case studies', [manifestBinding('title', 'Projects'), items], [], [], itemVariant(items.value));
 }
 
@@ -598,10 +623,11 @@ function socialWorkActions(pack, manifest) {
     .map((profile) => ({ label: `More work on ${String(profile.platform).replace(/^./, (letter) => letter.toUpperCase())}`, href: profile.url }));
 }
 
-function gallerySection(pageId, pack, manifest, assetDecisions) {
+function gallerySection(pageId, pack, manifest, assetDecisions, limit = null) {
   const lead = leadAsset(pack, assetDecisions);
   // The work, not the whole asset inventory.
-  const assets = workAssets(pack, assetDecisions).filter((asset) => asset.id !== lead?.id);
+  const all = workAssets(pack, assetDecisions).filter((asset) => asset.id !== lead?.id);
+  const assets = limit && all.length > limit ? all.slice(0, limit) : all;
   const actions = socialWorkActions(pack, manifest);
   if (!assets.length && !actions.length) return null;
   return section(`${pageId}-gallery`, 'gallery', 'Show approved work and point to where the rest of it lives', [
@@ -775,18 +801,22 @@ export function surfacePurposeFor(surface) {
   return SURFACE_PURPOSES.find((purpose) => purpose.names.test(lower)) ?? null;
 }
 
-function sectionsForPage({ surface, pageId, index, manifest, pack, heroActions, ctaActions, assetDecisions }) {
+function sectionsForPage({ surface, surfaces = [], pageId, index, manifest, pack, heroActions, ctaActions, assetDecisions }) {
   const lower = surface.toLowerCase();
   const output = [hero(pageId, surface, index, manifest, pack, heroActions, assetDecisions)];
   const isHome = index === 0 || lower === 'home';
   const push = (item) => output.push(item);
 
   if (isHome) {
-    output.push(servicesSection(pageId, pack, manifest));
+    // A home page previews what another page carries in full, and carries in
+    // full whatever has no page of its own.
+    const covered = (id) => list(surfaces).some((name, position) => position > 0 && surfacePurposeFor(name)?.id === id);
+    const cap = (id, limit) => (covered(id) ? limit : null);
+    output.push(servicesSection(pageId, pack, manifest, cap('offering', HOME_PREVIEW.services)));
     output.push(entitiesSection(pageId, manifest));
     output.push(journeysSection(pageId, manifest));
-    output.push(gallerySection(pageId, pack, manifest, assetDecisions));
-    output.push(projectsSection(pageId, pack));
+    output.push(gallerySection(pageId, pack, manifest, assetDecisions, cap('showcase', HOME_PREVIEW.gallery)));
+    output.push(projectsSection(pageId, pack, cap('showcase', HOME_PREVIEW.projects)));
     output.push(proofSection(pageId, pack));
     output.push(locationsSection(pageId, pack, manifest));
     output.push(contactSection(pageId, pack, manifest));
@@ -872,6 +902,31 @@ function surfacePurposeRecognised(surface) {
   return surfacePurposeFor(surface) !== null;
 }
 
+/**
+ * What a page actually offers, as against what it is called.
+ *
+ * Two surface names can resolve to the same purpose — "Work" and "Project
+ * story" both read as the portfolio — and the composer then builds the same
+ * sections from the same sources twice and publishes both. Ardwell & Roe
+ * shipped `/work` and `/project-story` carrying an identical gallery and an
+ * identical project list, and two independent reviews said so in the same
+ * words: give them genuinely different purposes, or stop publishing the same
+ * page twice.
+ *
+ * Nobody declared "publish this twice". A surface whose name the operator
+ * approved is still honoured wherever it composes something of its own; this
+ * only catches the case where it composes nothing another page has not already
+ * said, which is a duplicate rather than an intention.
+ *
+ * Compared on rendered content rather than on section type, so two pages that
+ * happen to share a shape but say different things both survive.
+ */
+function pageContentSignature(pageSections) {
+  return JSON.stringify(pageSections
+    .filter((item) => !CHROME_SECTIONS.has(item.type))
+    .map((item) => [item.type, item.bindings.map((entry) => [entry.key, entry.value]), item.assetIds]));
+}
+
 function carriesContent(pageSections) {
   return pageSections.some((item) => {
     if (!CHROME_SECTIONS.has(item.type)) return true;
@@ -946,6 +1001,8 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
   const sections = [];
   const unfillable = [];
   const emptyDeclared = [];
+  const duplicateSurfaces = [];
+  const publishedSignatures = new Map();
   const unrecognisedPurpose = [];
   const pages = [];
   surfaces.forEach((surface, index) => {
@@ -962,7 +1019,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
     const isContactSurface = /contact|quote|book/i.test(surface.name);
     const heroActions = isContactSurface ? available : available.slice(0, 1);
     const pageSections = sectionsForPage({
-      surface: surface.name, pageId, index, manifest, pack: knowledgePack, assetDecisions,
+      surface: surface.name, surfaces: surfaces.map((entry) => entry.name), pageId, index, manifest, pack: knowledgePack, assetDecisions,
       heroActions,
       ctaActions: available.slice(0, 2),
     });
@@ -985,6 +1042,19 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       // could not support, and the first reads as thin input.
       if (!surfacePurposeRecognised(surface.name)) unrecognisedPurpose.push(surface.name);
     }
+    // A surface that composes nothing another page has not already said is a
+    // duplicate, not a second intention.
+    const signature = pageContentSignature(pageSections);
+    if (index > 0 && signature !== '[]' && publishedSignatures.has(signature)) {
+      duplicateSurfaces.push(`${surface.name} (same content as ${publishedSignatures.get(signature)})`);
+      return;
+    }
+    // The home page is not a duplicate of anything: it previews what the
+    // dedicated pages carry, and where a business has few enough items the
+    // preview *is* the full set. A destination in the navigation still has to
+    // exist. Only two dedicated surfaces saying the same thing is the defect.
+    if (index > 0 && signature !== '[]') publishedSignatures.set(signature, surface.name);
+
     sections.push(...pageSections);
     pages.push({
       id: pageId,
@@ -1021,6 +1091,7 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       ...warningsFor(manifest, knowledgePack, assetDecisions, plan),
       ...unfillable.map((name) => `unfillable-surface:${name}`),
       ...emptyDeclared.map((name) => `empty-declared-surface:${name}`),
+      ...duplicateSurfaces.map((name) => `duplicate-surface:${name}`),
       ...unrecognisedPurpose.map((name) => `unrecognised-surface-purpose:${name}`),
     ],
   };

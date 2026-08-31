@@ -261,7 +261,11 @@ test('the benchmark composes, and what it cannot yet fill is recorded rather tha
     // owner approved and the factory silently dropped would be the worse
     // failure, because nothing downstream would ever mention it.
     assert.equal(full.manifest.majorSurfaces.length, 7);
-    assert.ok(composition.pages.length >= full.manifest.majorSurfaces.length,
+    // Every approved surface reaches the composition except one the composer
+    // found to be a duplicate of another, which is named in the warnings below.
+    const duplicates = composition.warnings.filter((entry) => String(entry).startsWith('duplicate-surface:')).length;
+    assert.equal(duplicates, 1, 'the benchmark declares exactly one surface that duplicates another');
+    assert.ok(composition.pages.length >= full.manifest.majorSurfaces.length - duplicates,
       `${composition.pages.length} page(s) for ${full.manifest.majorSurfaces.length} approved surface(s)`);
 
     // The rich truth survives into the composition rather than being ingested
@@ -292,11 +296,20 @@ test('the benchmark composes, and what it cannot yet fill is recorded rather tha
     //
     // Approach remains, and remains honestly. Inventing stages to fill it is
     // still the one genuinely unacceptable fix.
+    // `duplicate-surface:Project story` is a gap in the *corpus*, not in the
+    // factory: the bundle declares two surfaces that both read as the portfolio,
+    // and they composed the same gallery and the same project list. Publishing
+    // both is what two independent reviews called effectively duplicate pages,
+    // so the second is no longer published and the reason is recorded here.
     const warnings = composition.warnings.map(String).sort();
     assert.deepEqual(warnings, [
+      'duplicate-surface:Project story (same content as Work)',
       'empty-declared-surface:Approach',
       'unrecognised-surface-purpose:Approach',
     ], 'the benchmark\'s known gaps changed; close one deliberately or explain the new one');
+
+    // And the page is genuinely gone rather than merely warned about.
+    assert.equal(composition.pages.some((page) => page.path === '/project-story'), false);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

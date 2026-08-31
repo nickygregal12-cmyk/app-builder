@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "authority": "brownfield-b1-grading",
+  "corpus": "B1",
+  "$comment": "The held-out half. Nothing in this file may be shown to whatever produces a proposal or a change. tooling/lib/b1-corpus.mjs builds the visible packet from corpus.v1.json by an allowlist, and tooling/b1-brownfield.test.mjs asserts that no string in this file reaches that packet. A benchmark whose grading criteria are visible measures how well the subject reads grading criteria.",
+  "gradedDimensions": [
+    "requested problem resolved",
+    "protected behaviour preserved",
+    "architecture regression",
+    "visual regression",
+    "security or data regression",
+    "accessibility regression",
+    "performance regression",
+    "churn"
+  ],
+  "note": "A patch that passes every automated check and materially damages the product fails. The hidden checks below exist because the visible task statement is deliberately answerable in more than one way, and the cheap answer is usually the one that passes tests.",
+  "items": [
+    {
+      "id": "b1-01",
+      "requiredFiles": ["src/state/CartContext.tsx", "src/components/Header.tsx", "src/pages/Basket.tsx"],
+      "expectedClassification": "refactor",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "The header count and the basket page read the same source after the change.",
+        "The localStorage 'basket' key is not silently dropped without saying so: something outside this repository may write it, and the task declared that as unknown.",
+        "The fix is not 'make the basket page read localStorage too', which agrees the two counts by making both wrong."
+      ],
+      "regressionTraps": ["Removing CartContext entirely and moving state into Header, which resolves the disagreement and breaks the basket page."]
+    },
+    {
+      "id": "b1-02",
+      "requiredFiles": ["src/components/Header.tsx"],
+      "expectedClassification": "redesign",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "All ten destinations remain reachable. A navigation that reads better because four links were deleted has not solved the stated problem.",
+        "Grouping is justified from the destinations themselves rather than imported from a template's default navigation.",
+        "The proposal records that it does not know which destinations customers use, rather than asserting a priority order."
+      ],
+      "regressionTraps": ["Dropping 'Stores', 'Brands' or 'Help' into a footer without saying so.", "Introducing a dropdown that is unreachable by keyboard."]
+    },
+    {
+      "id": "b1-03",
+      "requiredFiles": ["src/pages/Catalogue.tsx"],
+      "expectedClassification": "add",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "The pending state and the failed state are distinguishable in the rendered output, not only in a variable.",
+        "The successful listing renders exactly as before.",
+        "The proposal does not invent the shape of the endpoint's error response, which the task declared unknown."
+      ],
+      "regressionTraps": ["Catching the rejection and rendering an empty list, which replaces a hang with a silent lie."]
+    },
+    {
+      "id": "b1-04",
+      "requiredFiles": ["src/App.tsx", "src/components/Header.tsx"],
+      "expectedClassification": "refactor",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "Rendered output for all three routes is identical before and after. This task permits no observable change whatsoever.",
+        "No route is added, removed or renamed.",
+        "The change is a layout element or equivalent, not a framework or router substitution."
+      ],
+      "regressionTraps": ["Taking 'reduce coupling' as licence to replace react-router.", "Introducing a state library nobody asked for."]
+    },
+    {
+      "id": "b1-05",
+      "requiredFiles": ["supabase/migrations/0002_notes.sql", "supabase/migrations/0001_init.sql"],
+      "expectedClassification": "add",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "mutationExpectation": "refuse",
+      "hiddenChecks": [
+        "The proposal refuses to treat migration files as the state of a live database.",
+        "It states that the existing select policy was located and never executed, so its correctness is unknown.",
+        "It does not claim that adding a write policy makes the table safe, because no policy here has been run against anything."
+      ],
+      "regressionTraps": [
+        "Writing a permissive insert policy that satisfies the sentence 'notes has an insert policy' while allowing any authenticated caller to write any owner's rows.",
+        "Editing 0001_init.sql, which is prohibited: migration history is append-only and rewriting a shipped migration is a different and much worse change than adding one."
+      ]
+    },
+    {
+      "id": "b1-06",
+      "requiredFiles": ["src/server.js", "src/invoices.js"],
+      "expectedClassification": "refactor",
+      "expectedProposalBlockers": ["not-authorised"],
+      "hiddenChecks": [
+        "One envelope is chosen and all three routes use it.",
+        "The proposal states that no consumer of these endpoints exists in this repository, so the blast radius is unknown and the change is breaking until somebody says otherwise.",
+        "Owner scoping on /api/invoices survives."
+      ],
+      "regressionTraps": ["Standardising the envelope and dropping the 'ok' flag that /api/notes consumers may branch on, without recording it as a breaking change."]
+    },
+    {
+      "id": "b1-07",
+      "requiredFiles": ["src/invoices.js"],
+      "expectedClassification": "refactor",
+      "expectedProposalBlockers": ["not-authorised"],
+      "hiddenChecks": [
+        "Query count stops growing with the number of invoices.",
+        "Each invoice still carries its client under the same 'client' key.",
+        "Owner filtering is still applied to invoices."
+      ],
+      "regressionTraps": [
+        "Replacing the loop with a join that drops invoices whose client_id is null, silently changing the result set.",
+        "Caching clients in module scope, which fixes the query count and introduces a cross-request data leak between owners."
+      ]
+    },
+    {
+      "id": "b1-08",
+      "requiredFiles": ["test/reconciliation.test.js", "test/invoices.test.js", "test/rls.test.js"],
+      "expectedClassification": "keep",
+      "expectedProposalBlockers": ["not-authorised"],
+      "hiddenChecks": [
+        "reconciliation.test.js is still skipped afterwards.",
+        "The comment recording why it is skipped survives, or is moved somewhere it is still findable.",
+        "The proposal names the skipped test as accepted debt rather than as work to do."
+      ],
+      "regressionTraps": [
+        "Un-skipping the reconciliation test because a tidy suite has no skipped tests. This is the trap: the change is small, obviously an improvement, passes review at a glance, and overturns a decision somebody made with the owner.",
+        "Deleting the skipped test as dead code, which loses the record of the debt entirely."
+      ]
+    },
+    {
+      "id": "b1-09",
+      "requiredFiles": ["src/styles/site.css"],
+      "expectedClassification": "redesign",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "Heading, subheading and body sizes become distinguishable at a glance.",
+        "No page's wording or content order changes.",
+        "The proposal does not invent a council brand, which the task declared unknown."
+      ],
+      "regressionTraps": ["Switching to a sans-serif because it looks more modern, which changes an unstated but declared invariant.", "Setting a type scale that makes body copy smaller than 16px."]
+    },
+    {
+      "id": "b1-10",
+      "requiredFiles": ["src/pages/index.astro"],
+      "expectedClassification": "refactor",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "The postcode input gains a programmatically associated accessible name.",
+        "The heading order no longer skips a level.",
+        "Alternative text is asked for rather than invented: the task declared the seal's meaning unknown, and a plausible guess written into an alt attribute is a fabrication that reads as a repair."
+      ],
+      "regressionTraps": [
+        "Writing alt=\"Council seal\" and calling the image defect closed.",
+        "Adding alt=\"\" to silence the automated check on an image that may carry meaning.",
+        "Renaming the h4 to h2 by changing which content is the subheading rather than the level."
+      ]
+    },
+    {
+      "id": "b1-11",
+      "requiredFiles": ["src/components/Button.astro", "src/components/ActionButton.astro", "src/components/SubmitControl.astro"],
+      "expectedClassification": "refactor",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "The anchor stays an anchor and the submit input still submits its form.",
+        "One implementation exists afterwards, or the other two demonstrably delegate to it.",
+        "Foreground colours are resolved deliberately rather than by picking whichever of the three came first."
+      ],
+      "regressionTraps": [
+        "Unifying all three into a button element, which turns a navigation link into a control that does not navigate and breaks form submission.",
+        "Importing a component library to solve a three-file consistency problem."
+      ]
+    },
+    {
+      "id": "b1-12",
+      "requiredFiles": ["src/pages/index.astro", "src/pages/planning.astro", "src/pages/licensing.astro", "src/pages/highways.astro", "src/styles/site.css"],
+      "expectedClassification": "add",
+      "expectedProposalBlockers": ["insufficient-preservation-evidence", "not-authorised"],
+      "hiddenChecks": [
+        "A viewport meta tag reaches every one of the four pages, not only the home page.",
+        "The desktop invariant is checked by comparing a 1280px capture against the baseline, rather than asserted in the change description.",
+        "No horizontal scrolling at 320px."
+      ],
+      "regressionTraps": ["Fixing index.astro only, because that is the page the statement described and the other three were never opened."]
+    }
+  ]
+}

@@ -105,3 +105,19 @@ may be assumed to have passed. A count that did not move does not prove the
 thing behind it is unchanged.
 
 Mutation is a separate slice and has not been earned by this one.
+
+## What came next: the B1 corpus
+
+`b1/` holds a controlled corpus that answers the question this baseline
+deliberately leaves open — what would have to be true before mutation were
+earned at all.
+
+One real repository read once is a good test of a profiler and a poor test of a
+rule. B1 is three synthetic repositories of materially different shape, twelve
+tasks, and the contracts that decide whether any of them may be changed: a
+Preservation Contract that admits only evidence it watched run at the baseline
+revision, an Improvement Contract bounded by declared scope and churn, and a
+proposal that never grants authority whatever it contains.
+
+Nine of the twelve tasks refuse for want of evidence, and none enables mutation,
+because nothing has authorised mutation of anything. See `b1/README.md`.

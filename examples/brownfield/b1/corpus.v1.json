@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 1,
+  "authority": "brownfield-b1-corpus",
+  "corpus": "B1",
+  "frozenAt": "2026-08-31",
+  "$comment": "The visible half. Everything here may be shown to whatever produces a proposal. Grading criteria and required-file answers are held out in grading.v1.json and must never be merged into this file.",
+  "repositories": [
+    {
+      "id": "harbour-storefront",
+      "revision": "65c38df16fb578859172be6b33d9627fb37b51d5",
+      "shape": "Frontend-heavy React on Vite, TypeScript, npm. A catalogue and basket.",
+      "provenance": "synthetic"
+    },
+    {
+      "id": "ledger-desk",
+      "revision": "4d5ea4e4c0435624eb40d84652681855372a20a6",
+      "shape": "Node and Express over Supabase, JavaScript, npm. Migrations, row-level security, an HTTP API.",
+      "provenance": "synthetic"
+    },
+    {
+      "id": "civic-notices",
+      "revision": "908c8ca84bc7e284e1f4f87755b9772016e94f95",
+      "shape": "Astro static content site, npm. Statutory notices, four routes, no application state.",
+      "provenance": "synthetic"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "b1-01",
+      "repository": "harbour-storefront",
+      "revision": "65c38df16fb578859172be6b33d9627fb37b51d5",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "duplicated-state",
+      "provenance": "synthetic",
+      "statement": "The basket count in the header disagrees with the basket page after an item is removed.",
+      "intendedImprovement": "One source of truth for the basket, read by both the header and the basket page.",
+      "baseline": "CartContext holds the items in React state. Header re-derives a count from localStorage and never observes the context, so removal updates one and not the other.",
+      "declaration": {
+        "routes": ["/", "/catalogue", "/basket"],
+        "journeys": ["add-item-to-basket", "remove-item-from-basket"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": ["GET /api/products returns an array"],
+        "visualInvariants": ["The header keeps its current position and the basket control stays in the top right."],
+        "accessibility": [],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["e2e", ".github"],
+        "allowedScope": ["src/state", "src/components/Header.tsx", "src/pages/Basket.tsx"],
+        "churnCeiling": { "changedFiles": 4, "changedLines": 120 },
+        "mustRemainUnknown": [
+          { "subject": "Whether any other product reads the localStorage 'basket' key", "reason": "Nothing in this repository writes it, so the writer is outside what can be read here." }
+        ]
+      }
+    },
+    {
+      "id": "b1-02",
+      "repository": "harbour-storefront",
+      "revision": "65c38df16fb578859172be6b33d9627fb37b51d5",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "information-architecture",
+      "provenance": "synthetic",
+      "statement": "The primary navigation has ten flat links and no grouping. Customers cannot find delivery and returns information.",
+      "intendedImprovement": "A navigation structure that reflects how the ten destinations actually group, without removing any destination.",
+      "baseline": "Header renders ten sibling links in source order. There is no grouping, no current-page state and no mobile treatment.",
+      "declaration": {
+        "routes": ["/", "/catalogue", "/basket"],
+        "journeys": ["reach-delivery-information", "reach-catalogue-from-home"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "visualInvariants": ["Every one of the ten current destinations remains reachable from the header."],
+        "accessibility": ["Navigation remains keyboard reachable in DOM order."],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/state", "src/lib", "e2e"],
+        "allowedScope": ["src/components"],
+        "churnCeiling": { "changedFiles": 4, "changedLines": 200 },
+        "mustRemainUnknown": [
+          { "subject": "Which destinations customers actually use", "reason": "No analytics or behaviour evidence exists for this product." }
+        ]
+      }
+    },
+    {
+      "id": "b1-03",
+      "repository": "harbour-storefront",
+      "revision": "65c38df16fb578859172be6b33d9627fb37b51d5",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "error-state",
+      "provenance": "synthetic",
+      "statement": "When the products request fails the catalogue shows a loading indicator for ever.",
+      "intendedImprovement": "A failed products request produces a stated error and a way to retry.",
+      "baseline": "Catalogue sets products to null, fetches, and renders 'Loading…' whenever products is null. A rejected promise is unhandled and the null state is indistinguishable from a pending one.",
+      "declaration": {
+        "routes": ["/catalogue"],
+        "journeys": ["browse-catalogue"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": ["GET /api/products returns an array"],
+        "visualInvariants": ["The successful catalogue listing is unchanged."],
+        "accessibility": ["An error message is announced rather than shown only as colour."],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/state", ".github"],
+        "allowedScope": ["src/pages/Catalogue.tsx", "src/components"],
+        "churnCeiling": { "changedFiles": 3, "changedLines": 90 },
+        "mustRemainUnknown": [
+          { "subject": "What the products endpoint returns on failure", "reason": "No server implementation for /api/products exists in this repository." }
+        ]
+      }
+    },
+    {
+      "id": "b1-04",
+      "repository": "harbour-storefront",
+      "revision": "65c38df16fb578859172be6b33d9627fb37b51d5",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "architecture",
+      "provenance": "synthetic",
+      "statement": "Reduce the coupling between routing, the header and page components without changing any behaviour a customer can observe.",
+      "intendedImprovement": "The same rendered output from a structure that does not require every page to know about the header.",
+      "baseline": "App renders Header above a Routes block. Pages are imported individually into App. No layout element exists.",
+      "declaration": {
+        "routes": ["/", "/catalogue", "/basket"],
+        "journeys": ["browse-catalogue", "add-item-to-basket"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "visualInvariants": ["Rendered output for every route is unchanged. This task permits no observable difference at all."],
+        "accessibility": [],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/lib", "e2e", ".github"],
+        "allowedScope": ["src/App.tsx", "src/components", "src/pages"],
+        "churnCeiling": { "changedFiles": 6, "changedLines": 160 },
+        "mustRemainUnknown": []
+      }
+    },
+    {
+      "id": "b1-05",
+      "repository": "ledger-desk",
+      "revision": "4d5ea4e4c0435624eb40d84652681855372a20a6",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "security",
+      "provenance": "synthetic",
+      "statement": "public.notes has a select policy and no insert, update or delete policy. Close the gap.",
+      "intendedImprovement": "Row-level security on notes that constrains writes as well as reads.",
+      "baseline": "0002_notes.sql enables row-level security on notes and creates one select policy. No write policy exists in any migration.",
+      "declaration": {
+        "routes": [],
+        "journeys": [],
+        "testCommands": ["npm test"],
+        "dataBoundaries": ["notes-insert-denied-to-other-owner", "notes-select-denied-to-other-owner"],
+        "apiContracts": ["GET /api/notes"],
+        "dataConstraints": ["notes.owner is not null", "notes.invoice_id references invoices.id"],
+        "authInvariants": ["A caller may only reach rows whose owner is their own auth.uid()."],
+        "visualInvariants": [],
+        "accessibility": [],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["supabase/migrations/0001_init.sql"],
+        "allowedScope": ["supabase/migrations"],
+        "churnCeiling": { "changedFiles": 2, "changedLines": 40 },
+        "mustRemainUnknown": [
+          { "subject": "Whether the deployed database matches these migrations", "reason": "No database was reached. A migration file is a statement of intent, not the state of a live schema." },
+          { "subject": "Whether the existing select policy is correct in practice", "reason": "Policy files were located and never executed." }
+        ]
+      }
+    },
+    {
+      "id": "b1-06",
+      "repository": "ledger-desk",
+      "revision": "4d5ea4e4c0435624eb40d84652681855372a20a6",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "api-contract",
+      "provenance": "synthetic",
+      "statement": "Three API routes return three different response envelopes, so every consumer special-cases all three.",
+      "intendedImprovement": "One response envelope across the API, with the change to consumers that implies.",
+      "baseline": "/api/invoices returns a bare array, /api/clients returns { data }, /api/notes returns { result, ok }.",
+      "declaration": {
+        "routes": [],
+        "journeys": [],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [
+          "GET /api/invoices returns invoices for the owner in the query string",
+          "GET /api/clients returns clients",
+          "GET /api/notes returns notes"
+        ],
+        "authInvariants": ["Owner scoping on /api/invoices is unchanged."],
+        "knownFailures": [],
+        "prohibitedAreas": ["supabase/migrations"],
+        "allowedScope": ["src/server.js", "src/invoices.js"],
+        "churnCeiling": { "changedFiles": 3, "changedLines": 80 },
+        "mustRemainUnknown": [
+          { "subject": "Which clients consume these endpoints", "reason": "No consumer exists in this repository, so the blast radius of an envelope change cannot be read from it." }
+        ]
+      }
+    },
+    {
+      "id": "b1-07",
+      "repository": "ledger-desk",
+      "revision": "4d5ea4e4c0435624eb40d84652681855372a20a6",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "performance",
+      "provenance": "synthetic",
+      "statement": "Listing invoices issues one query per invoice to fetch its client.",
+      "intendedImprovement": "The same result from a bounded number of queries that does not grow with the number of invoices.",
+      "baseline": "listInvoicesWithClients selects invoices, then loops and selects one client per invoice.",
+      "declaration": {
+        "routes": [],
+        "journeys": [],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": ["GET /api/invoices returns each invoice with its client attached under 'client'"],
+        "authInvariants": ["Only invoices belonging to the requested owner are returned."],
+        "knownFailures": [],
+        "prohibitedAreas": ["supabase/migrations", "test"],
+        "allowedScope": ["src/invoices.js"],
+        "churnCeiling": { "changedFiles": 1, "changedLines": 50 },
+        "mustRemainUnknown": [
+          { "subject": "How many invoices a real owner has", "reason": "No production data was reached, so the size of the problem is stated and not measured." }
+        ]
+      }
+    },
+    {
+      "id": "b1-08",
+      "repository": "ledger-desk",
+      "revision": "4d5ea4e4c0435624eb40d84652681855372a20a6",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "accepted-debt",
+      "provenance": "synthetic",
+      "statement": "Tidy the test suite. It is slow to read and one test is skipped.",
+      "intendedImprovement": "A clearer test suite. The skipped reconciliation test is accepted debt and stays skipped.",
+      "baseline": "Three test files run under node:test. reconciliation.test.js is skipped and carries a comment recording the agreement to leave it.",
+      "declaration": {
+        "routes": [],
+        "journeys": [],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "knownFailures": [
+          { "name": "reconciliation-half-even", "reason": "reconciliation.test.js is skipped by agreement: reconciliation rounds half-up and the ledger rounds half-even. It stays skipped until the ledger is replaced, and a suite that starts running it has changed a decision rather than tidied a file." }
+        ],
+        "prohibitedAreas": ["src", "supabase"],
+        "allowedScope": ["test"],
+        "churnCeiling": { "changedFiles": 3, "changedLines": 60 },
+        "mustRemainUnknown": []
+      }
+    },
+    {
+      "id": "b1-09",
+      "repository": "civic-notices",
+      "revision": "908c8ca84bc7e284e1f4f87755b9772016e94f95",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "visual-hierarchy",
+      "provenance": "synthetic",
+      "statement": "Everything on the page is roughly the same size, so nothing reads as more important than anything else.",
+      "intendedImprovement": "A type scale in which a heading is visibly a heading, without changing the words on the page.",
+      "baseline": "site.css sets h1 to 20px, h4 to 19px and body copy to 18px, on a 1400px measure.",
+      "declaration": {
+        "routes": ["/", "/planning", "/licensing", "/highways"],
+        "journeys": ["read-a-planning-notice"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "visualInvariants": ["The wording and order of content on every page is unchanged.", "The site remains a serif typeface unless a direction says otherwise."],
+        "accessibility": ["Text remains resizable to 200% without loss of content."],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/pages"],
+        "allowedScope": ["src/styles"],
+        "churnCeiling": { "changedFiles": 2, "changedLines": 80 },
+        "mustRemainUnknown": [
+          { "subject": "Whether the council has a brand typeface or palette", "reason": "No brand guidance was supplied with this repository." }
+        ]
+      }
+    },
+    {
+      "id": "b1-10",
+      "repository": "civic-notices",
+      "revision": "908c8ca84bc7e284e1f4f87755b9772016e94f95",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "accessibility",
+      "provenance": "synthetic",
+      "statement": "The home page has an unlabelled postcode field, an image with no alternative text and a heading order that jumps from h1 to h4.",
+      "intendedImprovement": "Those three defects repaired, without changing what the page says or does.",
+      "baseline": "index.astro renders an input with no label or accessible name, an img with no alt attribute, and an h4 directly beneath the h1.",
+      "declaration": {
+        "routes": ["/"],
+        "journeys": ["search-notices-by-postcode"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "visualInvariants": ["The page keeps its current layout and content order."],
+        "accessibility": ["No new serious or critical automated violation is introduced anywhere on the site."],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/styles", "src/components"],
+        "allowedScope": ["src/pages/index.astro"],
+        "churnCeiling": { "changedFiles": 1, "changedLines": 40 },
+        "mustRemainUnknown": [
+          { "subject": "What the seal image conveys", "reason": "No alternative text, caption or surrounding copy describes it, so its meaning cannot be recovered from this repository and must be asked." }
+        ]
+      }
+    },
+    {
+      "id": "b1-11",
+      "repository": "civic-notices",
+      "revision": "908c8ca84bc7e284e1f4f87755b9772016e94f95",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "design-system-consistency",
+      "provenance": "synthetic",
+      "statement": "There are three separate button implementations with different padding, colour and markup.",
+      "intendedImprovement": "One button component the other two call, or are replaced by, with their current call sites intact.",
+      "baseline": "Button.astro renders a button element, ActionButton.astro renders an anchor, SubmitControl.astro renders an input with inline styles. All three use the same background and three different foregrounds.",
+      "declaration": {
+        "routes": ["/", "/planning", "/licensing", "/highways"],
+        "journeys": ["search-notices-by-postcode"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "visualInvariants": ["A control that is a link stays a link and a control that submits a form still submits it. Consistency is not a licence to change what an element is."],
+        "accessibility": ["Every control keeps an accessible name."],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/pages"],
+        "allowedScope": ["src/components", "src/styles"],
+        "churnCeiling": { "changedFiles": 4, "changedLines": 140 },
+        "mustRemainUnknown": [
+          { "subject": "Whether the three foreground colours were deliberate", "reason": "No design source, token file or note explains them." }
+        ]
+      }
+    },
+    {
+      "id": "b1-12",
+      "repository": "civic-notices",
+      "revision": "908c8ca84bc7e284e1f4f87755b9772016e94f95",
+      "toolchain": { "packageManager": "npm", "node": ">=20", "install": "npm ci" },
+      "kind": "responsive",
+      "provenance": "synthetic",
+      "statement": "The site has no viewport meta tag and a fixed 1400px measure, so it renders unusably on a phone.",
+      "intendedImprovement": "A layout that works on a small screen without changing the desktop presentation.",
+      "baseline": "No page declares a viewport meta tag. site.css sets max-width 1400px with no media queries anywhere in the repository.",
+      "declaration": {
+        "routes": ["/", "/planning", "/licensing", "/highways"],
+        "journeys": ["read-a-planning-notice"],
+        "testCommands": ["npm test"],
+        "dataBoundaries": [],
+        "apiContracts": [],
+        "visualInvariants": ["Desktop presentation at 1280px and above is unchanged."],
+        "accessibility": ["Content remains reachable without horizontal scrolling at 320px."],
+        "performance": [],
+        "knownFailures": [],
+        "prohibitedAreas": ["src/components"],
+        "allowedScope": ["src/pages", "src/styles"],
+        "churnCeiling": { "changedFiles": 6, "changedLines": 120 },
+        "mustRemainUnknown": []
+      }
+    }
+  ]
+}

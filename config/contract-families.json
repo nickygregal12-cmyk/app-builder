@@ -169,6 +169,14 @@
       "boundary": "The one lifecycle a candidate product travels, from an approved contract to a production-verified deploy. Written by the control-plane lifecycle reducer and read by the service and Console wherever readiness is stated.",
       "schemaHash": "1f4878713c294971849c48084db792f8a1aaab98a903158cf6d7f4916fb087ae",
       "typesHash": "98a386f8a26f50d85d7238210030ef73da482ab6e9d182951945e966c874b040"
+    },
+    {
+      "id": "action-authorization",
+      "schema": "action-authorization.schema.json",
+      "typeName": "ActionAuthorization",
+      "boundary": "Permission for one exact operation against one exact base, once. Minted by the service on explicit operator approval and required by every mutating route.",
+      "schemaHash": "708cf2f8598c4fffee861b3e7e58eb2e0f669e5c0ef6c1a2766a68b59a4df1d4",
+      "typesHash": "9f7a7ba2c3619c075c45142b98659a554470676c1b9dd6e6c890efce469495f5"
     }
   ],
   "pending": [

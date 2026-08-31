@@ -249,6 +249,35 @@ Capabilities are deny-by-default and task-scoped. Example actions include:
 
 Production deployment, unrestricted secrets and production database mutation require explicit approval and are not granted to ordinary implementation/review agents.
 
+### Three approvals, deliberately not one
+
+A capability says what kind of thing an actor may do. It does not say that *this*
+action, against *this* exact base, is permitted *now*. Three separate objects answer
+three separate questions, and collapsing any two of them is how approving a plan
+quietly becomes permission to do everything the plan touches:
+
+| Object | Approves | Does not approve |
+| --- | --- | --- |
+| Product Contract Approval | what should be built — facts, constraints, journeys, criteria, budget | any particular mutation, or publication |
+| **ActionAuthorization** | one exact operation, against one exact base, once | anything else the operation could have touched |
+| Release Approval | publishing one exact artifact to one exact target | rebuilding, or a different artifact |
+
+`schemas/action-authorization.schema.json` and
+`packages/control-plane/src/action-authorization.js` own the second. It binds project,
+operation, exact base digest, file scope, environment, risk, budget, expiry,
+idempotency key, proposer and approver, and is single-use. The proposer may not be the
+approver (principle 17), scope may be narrowed by a caller and never widened, and
+"once" is decided by a unique constraint rather than a read — two callers can both read
+"not yet consumed", and only one can win an insert.
+
+This generalises `ApprovedBuildPlan`, which held exactly these guarantees for
+`project.generate` while the same effect stayed reachable through the HTTP service, the
+MCP adapter, the agent broker and internal callers, none of which asked for one. **The
+contract existing does not close that.** Route parity is a separate, unfinished piece
+of work: until every equivalent mutating route is proved — adversarially — to reach the
+same decision, the guarantee is one route's guarantee. `tooling/action-authorization.test.mjs`
+holds the contract; the parity tests do not exist yet.
+
 ## Environment boundary
 
 Before the Console/runtime exposes powerful database/deploy operations, `development`, `preview` and `production` must be explicit identities.

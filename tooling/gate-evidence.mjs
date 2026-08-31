@@ -44,7 +44,13 @@ import { scanRepository } from './lib/secret-scan.mjs';
 import { auditCommittedSecrets, auditDependencyAdvisories } from './lib/security-evidence.mjs';
 import { readBuiltDocuments, scanSeoAeo } from './lib/seo-aeo.mjs';
 import { GENERATED_CHECKS, summariseGeneratedChecks } from './lib/generated-check-evidence.mjs';
+import { assertLockUnmoved, resolveLockfile } from './lib/build-identity.mjs';
 
+// This command is one lane: it builds the NBM project and measures that. A
+// check produced by another lane — the accessibility audit, the browser
+// journey, the executed database acceptance — answers a gate about a different
+// artifact, and this run is not the place its absence is reported.
+const LANE = 'gate-evidence';
 const BUNDLE = 'examples/genuine-business/nbm-approved-intake.v1.json';
 const PIPELINE_ID = 'marketing-site';
 
@@ -117,8 +123,14 @@ if (!designLint) throw new Error('The build produced no DesignLintReport, so the
 // measured from source is a budget on the wrong number. This is the one
 // expensive step in the command and it is what makes the performance gate's
 // check answerable at all.
-const build = spawnSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
+// Resolve the graph once, then install from it, the same way verification and
+// the deterministic-build benchmark do. Installing with `npm install` here
+// would measure a payload for a dependency graph resolved at this moment, and
+// the budget would be about a build nobody else can reproduce.
+const lock = resolveLockfile(generated.workspace);
+const build = spawnSync('npm', ['ci', '--no-audit', '--no-fund'], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
 if (build.status !== 0) throw new Error(`The generated repository did not install:\n${(build.stderr || '').split('\n').slice(-6).join('\n')}`);
+assertLockUnmoved(generated.workspace, lock.digest);
 const built = spawnSync('npm', ['run', 'build'], { cwd: generated.workspace, encoding: 'utf8', stdio: 'pipe' });
 if (built.status !== 0) throw new Error(`The generated repository did not build:\n${(built.stderr || '').split('\n').slice(-6).join('\n')}`);
 const projectType = manifest.project.type;
@@ -228,7 +240,7 @@ const report = evaluateConvergence({
 });
 
 const summary = summariseResolutions(resolutions);
-const integrity = evaluateEvidenceIntegrity({ resolutions, registry });
+const integrity = evaluateEvidenceIntegrity({ resolutions, registry, lane: LANE });
 fs.writeFileSync(
   path.join(root, 'report.json'),
   `${JSON.stringify({

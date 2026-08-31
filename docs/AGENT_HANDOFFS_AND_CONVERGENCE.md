@@ -153,6 +153,29 @@ checks have no producer and are listed as such: `e2e-tests`, `axe-serious-critic
 lanes own; the third needs a live Postgres with the generated policies applied, which is the
 `database-security` CI job's.
 
+### What `axe-serious-critical` is actually waiting for
+
+Not an artifact any more. The accessibility lane was already running real axe passes over
+composition-derived routes at two viewports; what it produced was a Playwright attachment, which a
+person can open and a gate cannot resolve. `npm run test:e2e:accessibility` now also writes
+`.app-builder/accessibility/report.json` — bound to the `compositionHash` of the project it audited,
+with coverage recorded as a grid of route by viewport, and a declared route the lane did not audit
+emitted as a `critical` finding so that an audit of nothing cannot read as a clean pass.
+
+It is still unregistered, and the reason is worth stating because it applies to `e2e-tests` equally.
+`evaluateEvidenceIntegrity` fails on any registered check that resolves `not-run`, and
+`npm run gates:evidence` exits non-zero when integrity fails. That command builds the NBM
+genuine-business project; the accessibility lane audits the generated acceptance marketing site. Two
+builds, two composition hashes — so a registered check would resolve to `evidence-for-another-build`
+on every run and take the `verify` job with it.
+
+That is not a sequencing problem and no reordering of CI fixes it. **A browser-lane check can be
+registered only once its lane and `gates:evidence` audit one build**, which is a decision about what
+the accessibility gate measures rather than something a producer entry can express. Until then the
+check stays on the unanswered list, where it belongs, and the artifact waits for it —
+`tooling/axe-evidence.test.mjs` holds that artifact to the contract it will have to satisfy on the
+day the two lanes agree.
+
 `seo-aeo-scanner` reads the **built documents** rather than the composition, for the same reason the
 payload budget does: what a renderer emits is a separate fact from what a composer decided, and only
 the first is what a crawler receives. It records findings and no score — `gates.seo` sets

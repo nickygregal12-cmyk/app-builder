@@ -42,6 +42,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
 
+import { mintActionAuthorization } from '@app-builder/control-plane/action-authorization';
+
 import { profileRepositoryTree } from './lib/brownfield-profile.mjs';
 import { deriveBaseline } from './lib/brownfield-baseline.mjs';
 import { derivePreservationContract } from './lib/preservation-contract.mjs';
@@ -254,6 +256,120 @@ for (const repository of corpus.repositories) {
   else discardRepository(materialised.root);
 }
 
+// --- The authorisation binding, demonstrated against a real repository -------------
+//
+// Every task above ends with mutation disabled because the benchmark grants
+// nothing, and that proves the refusal rather than the check: a contract that
+// refused every authorisation ever offered would produce exactly the same
+// output. This is the other half.
+//
+// It runs on a repository of its own so the read-only assertions above still
+// cover only what they claim. This copy is deliberately changed, because the
+// property being demonstrated is what happens when it is.
+
+console.log('--- authorisation binding ---');
+
+let authorisationDemonstration = null;
+
+const demo = materialiseRepository('ledger-desk');
+const demoDeclaration = {
+  journeys: [],
+  dataBoundaries: [],
+  testCommands: ['npm test'],
+  allowedScope: ['src/invoices.js'],
+  prohibitedAreas: ['supabase/migrations', 'test'],
+  churnCeiling: { changedFiles: 1, changedLines: 50 },
+  mustRemainUnknown: [],
+};
+
+function observeDemo(root, revision) {
+  const attempt = executeCheck(root, 'npm test');
+  return attempt.ran
+    ? [{ kind: 'executed-check', name: 'npm test', outcome: attempt.outcome, revision, source: attempt.detail }]
+    : [];
+}
+
+function demoGit(root, args) {
+  return spawnSync('git', ['-c', 'commit.gpgsign=false', ...args], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: 'pipe',
+    env: {
+      PATH: process.env.PATH,
+      HOME: process.env.HOME,
+      GIT_TERMINAL_PROMPT: '0',
+      GIT_AUTHOR_NAME: 'B1 demo', GIT_AUTHOR_EMAIL: 'b1@app-builder.invalid', GIT_AUTHOR_DATE: '2026-02-01T00:00:00+00:00',
+      GIT_COMMITTER_NAME: 'B1 demo', GIT_COMMITTER_EMAIL: 'b1@app-builder.invalid', GIT_COMMITTER_DATE: '2026-02-01T00:00:00+00:00',
+    },
+  });
+}
+
+try {
+  const before = deriveBaseline(profileRepositoryTree(demo.root));
+  const beforeObservations = observeDemo(demo.root, before.revision);
+
+  // Granted against the profile hash of the read the evidence came from. Not
+  // against a branch, a path or a name: those all survive the thing they point
+  // at being replaced.
+  const authorisation = mintActionAuthorization({
+    projectId: 'b1-ledger-desk',
+    operation: 'brownfield.mutate',
+    base: { kind: 'project-state', digest: before.profileHash },
+    scope: { files: ['src/**'], environment: 'workspace', risk: 'medium' },
+    budget: { maxCostGbp: 0, maxTokens: 20000, maxRuntimeMs: 600000, maxIterations: 2 },
+    proposedBy: 'brownfield-implementation',
+    approval: { mode: 'explicit-local-operator', approvalId: 'approval-b1-demo', approvedBy: 'owner' },
+    idempotencyKey: 'idem-b1-demo',
+    expiresAt: '2099-01-01T00:00:00.000Z',
+  });
+  const context = {
+    projectId: 'b1-ledger-desk',
+    operation: 'brownfield.mutate',
+    expectedHash: authorisation.authorizationHash,
+    environment: 'workspace',
+  };
+
+  const granted = derivePreservationContract({
+    baseline: before, declaration: demoDeclaration, observations: beforeObservations, authorisation, authorisationContext: context,
+  });
+  console.log(`  at ${before.revision.slice(0, 12)}  evidence ${granted.mutation.evidenceAdequate ? 'adequate' : 'INADEQUATE'}  authorisation ${granted.mutation.authorised ? 'valid' : 'refused'}  mutation ${granted.mutation.enabled ? 'ENABLED' : 'disabled'}`);
+  expect(granted.mutation.enabled === true, `The demonstration failed to enable mutation with real evidence and a real grant: ${granted.mutation.refusals.join(' ')}`);
+
+  // The repository moves. Committed, so the working tree stays clean and the
+  // baseline stays usable — otherwise the drift would be hidden behind a
+  // refusal about uncommitted changes, and this would demonstrate the wrong
+  // thing.
+  fs.writeFileSync(path.join(demo.root, 'src/reporting.js'), 'export const summarise = (invoices) => invoices.length;\n');
+  demoGit(demo.root, ['add', '-A']);
+  demoGit(demo.root, ['commit', '--quiet', '-m', 'add a reporting helper']);
+
+  const after = deriveBaseline(profileRepositoryTree(demo.root));
+  // Fresh evidence at the new revision, so the only thing left to fail is the
+  // grant. Re-observing is the point: an agent that gathered new evidence and
+  // kept its old permission is the situation this refuses.
+  const afterObservations = observeDemo(demo.root, after.revision);
+
+  const drifted = derivePreservationContract({
+    baseline: after, declaration: demoDeclaration, observations: afterObservations, authorisation, authorisationContext: context,
+  });
+  console.log(`  at ${after.revision.slice(0, 12)}  evidence ${drifted.mutation.evidenceAdequate ? 'adequate' : 'INADEQUATE'}  authorisation ${drifted.mutation.authorisationRefusal ?? 'valid'}  mutation ${drifted.mutation.enabled ? 'ENABLED' : 'disabled'}`);
+
+  expect(after.profileHash !== before.profileHash, 'The repository was changed and its profile hash did not move, so nothing could have drifted.');
+  expect(drifted.mutation.evidenceAdequate === true, 'The re-observed evidence was not adequate, so this demonstrates evidence rather than authorisation.');
+  expect(drifted.mutation.authorisationRefusal === 'base-drifted', `Expected base-drifted and got ${drifted.mutation.authorisationRefusal ?? 'no refusal'}.`);
+  expect(drifted.mutation.enabled === false, 'A grant made against a state the repository has left still enabled mutation.');
+
+  console.log('  permission granted against one state of a repository did not survive that state changing.\n');
+  authorisationDemonstration = {
+    repository: demo.id,
+    grantedAt: { revision: before.revision, profileHash: before.profileHash, mutationEnabled: granted.mutation.enabled },
+    afterChange: { revision: after.revision, profileHash: after.profileHash, evidenceAdequate: drifted.mutation.evidenceAdequate, authorisationRefusal: drifted.mutation.authorisationRefusal, mutationEnabled: drifted.mutation.enabled },
+    shows: 'Evidence was re-observed at the new revision and stayed adequate, so the grant is the only thing that failed. Permission is bound to the state it was granted against.',
+  };
+} finally {
+  discardRepository(demo.root);
+}
+
 // --- Report -----------------------------------------------------------------------
 
 fs.mkdirSync(outDir, { recursive: true });
@@ -266,6 +382,9 @@ const report = {
   tasks: results.length,
   evidenceAdequate: results.filter((entry) => entry.evidenceAdequate).length,
   mutationEnabled: results.filter((entry) => entry.mutationEnabled).length,
+  // Separate from the tasks on purpose. No corpus task enables mutation; this
+  // is a demonstration on its own copy that the check works in both directions.
+  authorisationDemonstration,
   results,
 };
 fs.writeFileSync(path.join(outDir, 'b1-report.json'), `${JSON.stringify(report, null, 2)}\n`);
@@ -275,6 +394,7 @@ console.log(`  tasks                    ${results.length}`);
 console.log(`  preservation evidence adequate   ${report.evidenceAdequate}`);
 console.log(`  mutation enabled                 ${report.mutationEnabled}`);
 console.log(`  retrieval measured               0 (no model retrieval has run against this corpus)`);
+console.log(`  authorisation binding            demonstrated on a separate copy: enabled once, then refused as base-drifted`);
 console.log(`\n  report: ${path.relative(process.cwd(), path.join(outDir, 'b1-report.json'))}`);
 
 console.log('\n== Result ==\n');

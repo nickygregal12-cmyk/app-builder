@@ -127,6 +127,30 @@ one blocker — `not-authorised` — and that the other nine report two. Those a
 different problems with different owners, and collapsing them into one boolean
 would make a missing owner decision look like a missing test.
 
+### The check runs in both directions
+
+Twelve refusals prove the refusal and not the check: a contract that refused
+every grant ever offered would produce identical output. So the run ends with a
+demonstration on a separate copy of `ledger-desk` — separate so the read-only
+assertions above still cover only what they claim, because this copy is
+deliberately changed.
+
+```
+--- authorisation binding ---
+  at 4d5ea4e4c043  evidence adequate  authorisation valid          mutation ENABLED
+  at 6b40a2be654c  evidence adequate  authorisation base-drifted   mutation disabled
+```
+
+A real `ActionAuthorization` is minted against the profile hash of the read the
+evidence came from, and with real executed evidence the contract enables
+mutation — the only place in this corpus where it does. Then a commit lands, the
+repository is re-profiled, and **the evidence is re-observed at the new
+revision** so it stays adequate. The grant is the only thing left to fail, and
+it fails as `base-drifted`.
+
+Re-observing is the point. An agent that gathered fresh evidence and kept its
+old permission is exactly the situation this refuses.
+
 ### Retrieval is instrumented and unmeasured
 
 `measureRetrieval()` records files considered, files used, search iterations and

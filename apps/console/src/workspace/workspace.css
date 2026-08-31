@@ -3,4 +3,5 @@
 
 .result-panel .result-path{display:block;word-break:break-all;font-size:.72rem;line-height:1.45;color:#c7c7bc;background:#1b1b18;border:1px solid #2e2e29;border-radius:7px;padding:6px 8px}
 .result-panel code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.result-panel .builder-definition{margin-bottom:10px}
+.result-panel .builder-definition{display:block;margin-bottom:10px}
+.result-panel .builder-definition>div{display:block;margin-bottom:8px}

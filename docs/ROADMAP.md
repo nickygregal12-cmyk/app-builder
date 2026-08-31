@@ -24,23 +24,23 @@ Statuses are deliberately small:
 - **LATER** — real work whose prerequisites have not earned it.
 ### Current phase and priority
 
-**Phase 4.4 — product proof through high-value application capability. Active.**
+**Phase 4.4 — usable website builder v0.1: join the existing subsystems into a path an operator can walk from a browser. Active.**
 
-> **NOW: run the bounded serious-application benchmark.**
-The three bounded truth/safety stages are merged, so the next highest-value work is making one difficult product journey reveal which reusable application primitives the factory actually lacks.
+> **NOW: join the existing subsystems into a website builder the owner can use.**
+The serious-application benchmark ran, and what it produced is evidence waiting on two owner actions and one adapter — not work that is executable today. Meanwhile the factory has intake, contracts, durable projects, ingestion, composition, generation, verification, preview, candidates, editing and export, and no proven path through them from a browser. That is the highest-value work, and it is the thesis this roadmap already states: shift from factory-building to factory-using.
 ## EXECUTION MAP
 
 ```text
 database-upgrade honesty (done)
   -> gate-evidence CI truth (done)
   -> reproducible root npm ci (done)
-  -> bounded serious-application benchmark (NOW)
-  -> fix smallest reusable failures
-  -> rerun the frozen benchmark
+  -> bounded serious-application benchmark (ran; verdict WAITING — OWNER INPUT)
+  -> usable website builder v0.1 vertical slice (NOW)
   -> mature requirement coverage
   -> accepted artifact -> release -> verification -> rollback
   -> only then earn larger migration/autonomy work
 MGB Decor: owner facts/rights supplied; frozen prototype input runs PARALLEL through the current factory
+Synthetic visual ceiling: PARALLEL, WAITING FOR EXTERNAL ASSETS — the image bytes are an input, not a stage
 Provider/operator continuity: PARALLEL infrastructure, never the product sequence
 ```
 ### Outcome A — quality truth closure
@@ -51,9 +51,43 @@ Completed: ordinary CI runs the integrated producer → resolver → convergence
 
 Completed: the root lockfile is tracked and every workflow installs with `npm ci`, so a fresh checkout reproduces the exact dependency graph instead of resolving a new one (`tooling/root-install-reproducibility.test.mjs` keeps it closed).
 
+### Outcome E — a website builder the owner can use
+
+## [NOW] Stage: Usable Website Builder v0.1 vertical slice
+
+**Outcome**
+One marketing/business website goes from idea to a usable generated repository **without leaving the browser**:
+
+`intake -> Build Contract -> durable project -> sources/assets -> generate -> verify -> preview -> visual candidates -> promote -> direct edit -> result`
+
+**Why now**
+The architecture is further ahead than the product. Every part of that path exists and is separately proven; the path itself was not. This stage is joining, not building — a capability that already works but cannot be reached from the Console is, to the owner, a capability the product does not have.
+
+**Scope**
+Marketing/business websites only. The other five project types keep their architecture and are not productised here. Deployment is explicitly *not* in v0.1: a locally usable builder that intakes, generates, previews, edits, verifies and exports is a product.
+
+**Do**
+
+1. ~~Give the stack an operator entry point that starts a factory it owns.~~ — done. `npm run dev` fixed the service to 4310 and treated any `{ok:true}` on that port as its own service being ready, so on a host already running the factory under systemd it printed a success banner and pointed the Console at a factory with a different state root. Ports are configurable, readiness is checked against an instance token the launcher minted, and `npm run console` exists for the case where the resident factory is the one you want.
+2. ~~Make an approved contract lead somewhere.~~ — done. Approval offered three downloads and no next step; creating the project lives on the Builder screen and approval now hands over to it.
+3. ~~Show a preview that is what was generated.~~ — done. Asset URIs were emitted relative to the site root while links were rebased through `siteHref`, so every preview — always mounted under a sub-path — asked the host origin for its pictures and rendered a broken image. Identical at a domain root, which is why a built deployment never showed it.
+4. Carry the same project through candidates, promotion, direct edit and result/export, fixing what the path actually blocks on.
+
+**Do not**
+
+- productise B2B SaaS, consumer, AI-first, internal-tool or content-site intake in this stage;
+- build deployment, CMS, localisation, Figma import, billing or marketplace;
+- treat a benchmark finding as this stage's work unless it blocks this path;
+- rebuild an operation that already exists in tooling — connect the Console to it.
+
+**Evidence that closes this stage**
+A fresh browser and a fresh project complete the whole path with no manual internal-script workaround, the generated repository builds on its own, and the result is reachable from the Console. Known P2/P3 issues are allowed; unresolved P0/P1 are not.
+
 ### Outcome C — bounded serious-application benchmark
 
-## [NOW] Stage: Bounded serious-application benchmark
+## [WAITING — OWNER INPUT] Stage: Bounded serious-application benchmark
+
+**Why it is not NOW.** Every executable criterion below is closed. What is left is the independent verdict, and that is blocked by two owner actions and one adapter, none of which this stage can unblock by working harder. Keep the evidence; do not reopen the slice. It returns to the main track when the reviewer can read a journey packet and is authorised to run.
 
 **Outcome**
 One portable generated application proves this domain journey against a real generated backend:

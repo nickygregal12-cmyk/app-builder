@@ -2,15 +2,19 @@
   "schemaVersion": 1,
   "$comment": "Machine-readable current state only. docs/ROADMAP.md owns sequence; specialist authorities own reasoning and evidence.",
   "currentPhase": "4.4",
-  "currentStage": "Phase 4.4 — product proof through high-value application capability",
+  "currentStage": "Phase 4.4 — usable website builder v0.1: join the existing subsystems into a path an operator can walk from a browser",
   "status": "active",
   "blockedBy": "No engineering blocker and no owner blocker for prototype work. MGB Decor supplied approved facts, prototype intent and asset-level rights for a logo and two project photographs, so the second genuine-business case is unblocked as a governed prototype/product-proof run. Promoting that run to a public launch still needs production contact details, review evidence, asset bytes, domain ownership and deployment/legal decisions.",
-  "nextStage": "Advance Phase 4.4 through the four outcome tracks in docs/ROADMAP.md: close bounded quality-truth gaps, carry the MGB Decor prototype through defect diagnosis and frozen rerun, prove one bounded serious-application slice, and establish accepted-build release promotion. New capabilities are pulled only by those outcomes or a demonstrated reusable defect.",
+  "nextStage": "Carry one marketing/business website from intake to a usable generated repository without leaving the Builder Console, fixing only what that path blocks on. The serious-application benchmark ran and its remaining criterion is an independent verdict blocked by two owner actions and one reviewer adapter, so it is waiting rather than executable; the synthetic visual ceiling is waiting for external image bytes. Neither is the thing stopping the owner using App Builder today.",
   "activeWork": [
+    "usable-website-builder-v01",
     "quality-truth-closure",
     "second-genuine-business-proof",
-    "bounded-serious-application-benchmark",
     "accepted-build-release-lifecycle"
+  ],
+  "waitingWork": [
+    "bounded-serious-application-benchmark: every executable criterion is closed; the independent verdict needs the host model-execution switch enabled, a different-vendor reviewer CLI installed, and a journey-packet adapter.",
+    "synthetic-visual-ceiling: the flagship corpus and its review labelling are merged; the rich asset bytes are an external input that has not arrived."
   ],
   "outstandingProductGates": [
     "quality-truth-closure: derived requirement coverage remains open.",

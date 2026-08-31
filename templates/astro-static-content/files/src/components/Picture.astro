@@ -1,4 +1,5 @@
 ---
+import { siteHref } from '../lib/composition';
 import type { GeneratedAsset, AssetVariant } from '../lib/composition';
 
 interface Props { asset: GeneratedAsset; role: string; class?: string; sizes: string }
@@ -13,14 +14,20 @@ const byWidth = (list: readonly AssetVariant[]) => [...list].sort((a, b) => (a.w
 const webp = byWidth(responsive.filter((variant) => variant.format === 'webp'));
 const avif = byWidth(responsive.filter((variant) => variant.format === 'avif'));
 const fallback = crop ?? webp.at(-1) ?? asset.variants[0];
-const srcSet = (list: readonly AssetVariant[]) => list.map((variant) => `${variant.uri} ${variant.width}w`).join(', ');
+// An asset URI is declared relative to the site root, exactly like an in-site
+// link, so it needs the same rebasing. Links went through `siteHref` and images
+// did not, so a site served under a sub-path — which is what every preview is —
+// asked the host root for its pictures and got a broken image back on a page
+// that otherwise worked. `siteHref` is the identity function at a domain root,
+// so an ordinary deployment is unchanged.
+const srcSet = (list: readonly AssetVariant[]) => list.map((variant) => `${siteHref(variant.uri)} ${variant.width}w`).join(', ');
 ---
 {fallback && (
   <picture class={className} data-element-key={`asset:${asset.id}`}>
     {!crop && avif.length > 0 && <source type="image/avif" srcset={srcSet(avif)} sizes={sizes} />}
     {!crop && webp.length > 0 && <source type="image/webp" srcset={srcSet(webp)} sizes={sizes} />}
     <img
-      src={fallback.uri}
+      src={siteHref(fallback.uri)}
       width={fallback.width ?? undefined}
       height={fallback.height ?? undefined}
       alt={asset.alt ?? ''}

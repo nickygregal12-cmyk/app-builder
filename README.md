@@ -8,7 +8,7 @@ App Builder is designed around one rule:
 
 The long-term goal is a private builder that can accept an idea, company details, URLs, documents, spreadsheets, screenshots, logos, images, design references and existing repositories; turn them into a reviewed Build Contract; compose real pages and application surfaces from proven capabilities and trusted source material; use AI only for genuinely novel work; test and visually review the result; and deploy an ordinary portable repository.
 
-## Current milestone: Phase 4.4 — product proof through high-value application capability
+## Current milestone: Phase 4.4 — usable website builder v0.1: join the existing subsystems into a path an operator can walk from a browser
 
 Where the project actually is, what is blocked and what is deferred: `config/factory-status.json`
 (machine-readable) and `docs/ROADMAP.md` (ordered, human-readable). This section does not restate them.
@@ -70,7 +70,23 @@ npm run dev
 
 That starts the factory service on `127.0.0.1:4310` and the Builder Console on `127.0.0.1:5173`. Node 22.13 or newer is the only prerequisite for local deterministic build/preview work; external integrations are only needed when a selected workflow actually calls them.
 
-On the hosted Hetzner setup the Factory normally runs under systemd. Start only the Console when the service already owns port 4310 rather than launching a duplicate Factory with `npm run dev`.
+`npm run dev` starts a factory it owns. If either port is already taken it says so and stops, rather than
+starting a Console against a factory it did not start — those are different factories, with different
+state roots and different projects.
+
+Two cases where that matters:
+
+```bash
+# A factory is already running (systemd on the hosted Hetzner setup) and it is the one you want.
+npm run console
+
+# You want a second, separate factory alongside it — its own state, its own projects.
+npm run dev -- --service-port 4410 --console-port 5273
+```
+
+`--service-port`/`--console-port` also read `APP_BUILDER_SERVICE_PORT` and `APP_BUILDER_CONSOLE_PORT`.
+The Console proxies to whichever factory it was pointed at, so `npm run console` against a non-default
+port is `APP_BUILDER_SERVICE_PORT=4410 npm run console`.
 
 In the Console you can today:
 
@@ -111,6 +127,7 @@ npm run create-app -- --manifest examples/project-manifest.example.json --out /t
 npm run service
 npm run mcp
 npm run dev
+npm run console
 ```
 
 ## Repository map

@@ -86,7 +86,7 @@ export function classifyServiceError(message) {
 // ephemeral-port allocator never colliding with them.
 const NEVER_PROXIED_PORTS = [4096, 4097];
 
-export function createFactoryHttpServer({ service, servicePort = null }) {
+export function createFactoryHttpServer({ service, servicePort = null, instance = null }) {
   // A preview runs on an OS-assigned ephemeral port, so no control surface can
   // legitimately be one. Naming them anyway makes the invariant executable: the
   // factory's own port, and the OpenCode host ports that must never be reachable
@@ -99,7 +99,11 @@ export function createFactoryHttpServer({ service, servicePort = null }) {
       const previewRoute = previewProxyRoute(url.pathname);
       if (previewRoute) return previewProxy.handleRequest(request, response, previewRoute, url);
       if (url.pathname === '/preview' || url.pathname.startsWith('/preview/')) return send(response, 404, { error: 'preview-not-running' });
-      if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { ok: true, service: 'app-builder', version: 2 });
+      // `instance` is how a caller tells this factory apart from another one
+      // answering the same port. A health check that only says "a factory is
+      // here" is enough to start a Console against a stranger's state root, so
+      // a launcher that started its own service states which one it expects.
+      if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { ok: true, service: 'app-builder', version: 2, ...(instance ? { instance } : {}) });
       if (request.method === 'GET' && url.pathname === '/tools') return send(response, 200, factoryToolContract());
       if (request.method === 'GET' && url.pathname === '/integrations') return send(response, 200, { integrations: service.integrationStatus() });
       if (request.method === 'GET' && url.pathname === '/projects') return send(response, 200, { projects: service.listProjects() });

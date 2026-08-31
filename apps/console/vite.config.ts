@@ -39,12 +39,49 @@ function refusePreviewFrameRequests() {
   };
 }
 
+/**
+ * Which factory this Console talks to.
+ *
+ * One machine can hold more than one — a service running under systemd on the
+ * default port, and a stack started from a checkout on another. A hard-coded
+ * target meant the Console always reached whichever factory owned 4310, so a
+ * second stack could not be run and, when one was, its Console silently drove
+ * the wrong factory's projects.
+ */
+function factoryTarget(): string {
+  const host = process.env.APP_BUILDER_SERVICE_HOST ?? '127.0.0.1';
+  const raw = process.env.APP_BUILDER_SERVICE_PORT ?? '4310';
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`APP_BUILDER_SERVICE_PORT must be a valid TCP port; received "${raw}".`);
+  }
+  return `http://${host}:${port}`;
+}
+
+const target = factoryTarget();
+
+/**
+ * Which factory the Console was started against.
+ *
+ * Pointing the proxy at the right target is not the same as arriving there. A
+ * dev server restart re-reads this file, and during that window the Console was
+ * observed serving another factory's projects — a real one, on the same host,
+ * with real businesses in it. Nothing said so: a project list is a project list.
+ *
+ * So the launcher's instance token is compiled in, and the Console checks the
+ * factory that answers against the one it was started for. Empty when nobody
+ * declared an expectation — `npm run console` against a resident factory — and
+ * in that case the Console has nothing to verify and does not pretend to.
+ */
+const expectedInstance = process.env.APP_BUILDER_SERVICE_INSTANCE ?? '';
+
 export default defineConfig({
+  define: { __APP_BUILDER_EXPECTED_INSTANCE__: JSON.stringify(expectedInstance) },
   plugins: [react(), refusePreviewFrameRequests()],
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4310',
+        target,
         changeOrigin: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -53,7 +90,7 @@ export default defineConfig({
       // app emits resolves without a host-loopback address. No rewrite: the
       // path must match on both sides or the generated app's own base breaks.
       '/preview': {
-        target: 'http://127.0.0.1:4310',
+        target,
         changeOrigin: false,
         ws: true,
       },

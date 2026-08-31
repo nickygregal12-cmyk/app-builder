@@ -619,3 +619,191 @@ test('the shell class list is compiled once and describes the direction the buil
   // No direction, no classes. A build that never chose one keeps its old shell.
   assert.equal(visualDirectionClasses({ id: null, shellClass: 'layout-public' }), 'layout-public');
 });
+
+/**
+ * The convergence these adaptations exist to break.
+ *
+ * A direction used to be a complete prebuilt theme. The business profile chose
+ * *which* theme and then had no say in what it rendered, so nbm and MGB Decor —
+ * whose derived signals disagree on three of seven readings — received the same
+ * website whenever they ranked the same direction first. Measured across the two
+ * corpora, two builds of `editorial-authority` differed in 1 of 16 anti-template
+ * signals, and that one was section sequence, which comes from the content
+ * rather than from the design.
+ */
+test('two businesses that differ do not get the same website from the same direction', async () => {
+  const { deriveBusinessVisualProfile } = await import('./lib/business-visual-profile.mjs');
+  const registry = JSON.parse(fs.readFileSync(new URL('../config/visual-directions.json', import.meta.url), 'utf8'));
+  const profileFor = (bundle) => deriveBusinessVisualProfile({
+    manifest: JSON.parse(fs.readFileSync(new URL(`../examples/genuine-business/${bundle}`, import.meta.url), 'utf8')).projectManifest,
+  });
+  const nbm = profileFor('nbm-approved-intake.v1.json');
+  const mgb = profileFor('mgb-approved-intake.v1.json');
+
+  // The premise: these two businesses really do read differently. If this ever
+  // stops being true the test below is measuring nothing.
+  const differingSignals = Object.keys(nbm.values).filter((key) => nbm.values[key] !== mgb.values[key]);
+  assert.ok(differingSignals.length >= 3, `the two corpus businesses now agree on almost everything (${differingSignals.join(', ') || 'all signals'}), so this can no longer test convergence`);
+
+  for (const directionId of ['editorial-authority', 'service-forward', 'structured-practice']) {
+    const left = compileVisualDirection(directionId, registry, { businessProfile: nbm });
+    const right = compileVisualDirection(directionId, registry, { businessProfile: mgb });
+    const axes = ['gridFamily', 'typographyStrategy', 'actionTreatment', 'ctaComposition', 'navigationFamily', 'heroComposition', 'headingTreatment'];
+    const moved = axes.filter((axis) => left.artDirection.dimensions[axis] !== right.artDirection.dimensions[axis]);
+    const rhythmMoved = left.design.density !== right.design.density;
+    assert.ok(
+      moved.length + (rhythmMoved ? 1 : 0) >= 2,
+      `${directionId} renders these two businesses the same way. It moved ${moved.length ? moved.join(', ') : 'no component axis'}${rhythmMoved ? ' and the rhythm' : ' and not the rhythm'}, which is the prebuilt-theme behaviour the adaptation layer exists to end.`,
+    );
+  }
+});
+
+test('a direction adapts only where the business gives it a reason, and records what moved', async () => {
+  const { deriveBusinessVisualProfile } = await import('./lib/business-visual-profile.mjs');
+  const registry = JSON.parse(fs.readFileSync(new URL('../config/visual-directions.json', import.meta.url), 'utf8'));
+  const nbm = deriveBusinessVisualProfile({
+    manifest: JSON.parse(fs.readFileSync(new URL('../examples/genuine-business/nbm-approved-intake.v1.json', import.meta.url), 'utf8')).projectManifest,
+  });
+
+  // No profile is the behaviour every synthetic fixture and every explicit
+  // `requested` set relies on, so it must be untouched.
+  const plain = compileVisualDirection('editorial-authority', registry);
+  assert.equal(plain.artDirection.businessAdjustments, undefined, 'a build with no business profile must not gain an empty provenance record');
+  assert.equal(plain.artDirection.dimensions.gridFamily, registry.directions['editorial-authority'].composition.gridFamily);
+
+  // Two identical readings must produce identical builds: this separates
+  // businesses that differ, it does not add variety for its own sake.
+  const twin = compileVisualDirection('editorial-authority', registry, { businessProfile: nbm });
+  const twinAgain = compileVisualDirection('editorial-authority', registry, { businessProfile: { ...nbm } });
+  assert.deepEqual(twin.artDirection.dimensions, twinAgain.artDirection.dimensions, 'the same reading must compile the same direction');
+
+  // Whatever moved names the signal that moved it, so an operator can argue
+  // with the reading rather than with the pixel.
+  const adjusted = compileVisualDirection('editorial-authority', registry, {
+    businessProfile: { values: { ...nbm.values, serviceBreadth: 'broad' } },
+  });
+  const record = (adjusted.artDirection.businessAdjustments ?? []).find((entry) => entry.axis === 'gridFamily');
+  assert.ok(record, 'a direction that changed its panel grammar must say so');
+  assert.equal(record.signal, 'serviceBreadth');
+  assert.equal(record.signalValue, 'broad');
+  assert.equal(record.from, 'editorial-rows');
+  assert.equal(adjusted.artDirection.dimensions.gridFamily, record.to);
+});
+
+test('a reviewer\'s rework still outranks a derived adaptation', async () => {
+  const { deriveBusinessVisualProfile } = await import('./lib/business-visual-profile.mjs');
+  const registry = JSON.parse(fs.readFileSync(new URL('../config/visual-directions.json', import.meta.url), 'utf8'));
+  const broad = deriveBusinessVisualProfile({
+    manifest: JSON.parse(fs.readFileSync(new URL('../examples/genuine-business/mgb-approved-intake.v1.json', import.meta.url), 'utf8')).projectManifest,
+  });
+  const derived = compileVisualDirection('editorial-authority', registry, { businessProfile: broad });
+  assert.equal(derived.artDirection.dimensions.gridFamily, 'schedule-rows');
+
+  const reworked = compileVisualDirection('editorial-authority', registry, {
+    businessProfile: broad,
+    overrides: { composition: { gridFamily: 'symmetric' } },
+  });
+  assert.equal(
+    reworked.artDirection.dimensions.gridFamily,
+    'symmetric',
+    'a derivation that outranked an explicit rework would make a reviewer\'s decision unenforceable',
+  );
+});
+
+/**
+ * An adaptation must not be able to say something the registry could not.
+ *
+ * The bound is what stops `adapts` becoming a second, weaker direction registry
+ * written in a corner of the first one.
+ */
+test('every adaptation a direction offers is a value that direction could have declared', () => {
+  const registry = JSON.parse(fs.readFileSync(new URL('../config/visual-directions.json', import.meta.url), 'utf8'));
+  const scales = {
+    composition: {
+      gridFamily: ['symmetric', 'asymmetric', 'editorial-rows', 'schedule-rows'],
+      typographyStrategy: ['neutral', 'editorial', 'technical', 'bold'],
+      actionTreatment: ['solid', 'outlined', 'underline', 'arrow', 'block'],
+      ctaComposition: ['panel', 'editorial', 'banner', 'register'],
+      navigationFamily: ['utility', 'editorial', 'register', 'centred'],
+      heroComposition: ['stacked', 'columns', 'statement', 'centred'],
+      headingTreatment: ['plain', 'ruled', 'numbered'],
+      ctaPlacement: ['closing', 'mid-page'],
+    },
+    design: { density: ['relaxed', 'comfortable', 'compact', 'dense'] },
+  };
+  const knownSignals = ['conversionEmphasis', 'serviceBreadth', 'evidenceDepth', 'showcaseIntent', 'contentDensity', 'serviceReach', 'assetMode'];
+
+  for (const [directionId, direction] of Object.entries(registry.directions)) {
+    for (const group of ['composition', 'design']) {
+      for (const [axis, rule] of Object.entries(direction.adapts?.[group] ?? {})) {
+        assert.ok(scales[group][axis], `${directionId} adapts ${group}.${axis}, which is not an axis with a scale`);
+        assert.ok(knownSignals.includes(rule.signal), `${directionId} adapts ${axis} on "${rule.signal}", which deriveBusinessVisualProfile does not produce`);
+        for (const [signalValue, value] of Object.entries(rule.when ?? {})) {
+          assert.ok(
+            scales[group][axis].includes(value),
+            `${directionId} would set ${axis} to "${value}" when ${rule.signal} is "${signalValue}", which is off the scale for that axis`,
+          );
+        }
+      }
+    }
+  }
+});
+
+/**
+ * What the candidate lane knows and a rebuild does not.
+ *
+ * The candidate lane derives its profile from the manifest, the composition
+ * *and* asset readiness. `generateComposedProject` — which is what a promoted
+ * repository rebuilds through — has the first two and not the third, because
+ * publication rights are settled by source governance and are not an input a
+ * cloned repository carries.
+ *
+ * So a direction that adapted on `assetMode` would compile one way for the
+ * candidate somebody reviewed and another way for the site that ships. The
+ * remaining signals are readings of the manifest and the composition, and both
+ * paths have those.
+ */
+test('a direction only adapts on signals a rebuild can derive for itself', () => {
+  const registry = JSON.parse(fs.readFileSync(new URL('../config/visual-directions.json', import.meta.url), 'utf8'));
+  const unavailableToARebuild = ['assetMode'];
+  for (const [directionId, direction] of Object.entries(registry.directions)) {
+    for (const group of ['composition', 'design']) {
+      for (const [axis, rule] of Object.entries(direction.adapts?.[group] ?? {})) {
+        assert.ok(
+          !unavailableToARebuild.includes(rule.signal),
+          `${directionId} adapts ${axis} on "${rule.signal}", which only the candidate lane can read. `
+          + 'The promoted repository would rebuild itself into a different design from the one that was reviewed.',
+        );
+      }
+    }
+  }
+});
+
+/**
+ * Rhythm tightens; it does not loosen.
+ *
+ * A business carrying a lot may compress a direction's declared spacing. One
+ * carrying little may not stretch it: sparse content in a looser rhythm is
+ * exactly the "large areas of inert space" an independent review named across
+ * every candidate, and it is not something to reintroduce through a derived
+ * signal. It also keeps density free as the axis an approved design reference
+ * moves — the reference lane demonstrates influence by loosening it, and a
+ * derivation that had already loosened it would leave that lane proving
+ * nothing.
+ */
+test('a business may tighten a direction\'s rhythm and may not loosen it', () => {
+  const registry = JSON.parse(fs.readFileSync(new URL('../config/visual-directions.json', import.meta.url), 'utf8'));
+  const tighter = ['relaxed', 'comfortable', 'compact', 'dense'];
+  for (const [directionId, direction] of Object.entries(registry.directions)) {
+    const rule = direction.adapts?.design?.density;
+    if (!rule) continue;
+    const declared = direction.design.density;
+    for (const [signalValue, value] of Object.entries(rule.when ?? {})) {
+      assert.ok(
+        tighter.indexOf(value) >= tighter.indexOf(declared),
+        `${directionId} would loosen its rhythm from ${declared} to ${value} when ${rule.signal} is ${signalValue}. `
+        + 'Sparse content in a looser rhythm is the inert space the reviews kept naming.',
+      );
+    }
+  }
+});

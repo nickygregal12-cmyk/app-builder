@@ -105,8 +105,17 @@ body { background: var(--color-page); color: var(--color-text); font-family: var
 .page-section:nth-of-type(even):not(.hero-section):not(.cta-section) { background: var(--section-alt-ground) }
 
 h1, h2, h3 { color: var(--color-ink); margin: 0; font-family: var(--font-display) }
-h1 { font-size: var(--text-4xl); line-height: 1.03; letter-spacing: -.035em; max-width: var(--display-measure) }
-h2 { font-size: var(--text-3xl); line-height: 1.08; letter-spacing: -.025em }
+h1 { font-size: calc(var(--text-4xl) * var(--display-fit)); line-height: 1.03; letter-spacing: -.035em; max-width: var(--display-measure) }
+/* The whole display register moves with the fit, not the headline alone.
+
+   Fitting only `h1` bought two lines and paid for them with a flat hierarchy:
+   at 0.72 the opening of `structured-practice` set at the same size as the
+   section headings beneath it, which is impeccable's `flat-type-hierarchy` —
+   the defect one rule up from the one being fixed. A display scale is a ratio
+   between steps, so the fit has to apply to the scale rather than to a single
+   element, and then a long name simply runs the page at a slightly smaller
+   display register with its hierarchy intact. */
+h2 { font-size: calc(var(--text-3xl) * var(--display-fit)); line-height: 1.08; letter-spacing: -.025em }
 h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .hero-copy, .section-copy { max-width: 58ch; margin: 20px 0 0; color: var(--color-text-muted); font-size: var(--text-lg); line-height: 1.65 }
 .section-heading { margin-bottom: 36px }
@@ -848,6 +857,33 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .site-header .nav-action { display: none }
   .site-header nav { position: absolute; top: 100%; right: 0; left: 0; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px; border-bottom: 1px solid var(--color-border); background: var(--color-page); box-shadow: var(--shadow-raised) }
   .site-header nav[data-open="false"] { display: none }
+  /* An open menu covers the screen it was opened over, rather than a slice of it.
+
+     The panel overlaid the page and stopped after its last destination, so what
+     showed underneath was whatever happened to be there — on the home page, the
+     hero's opening paragraph and a dangling rule with the heading hidden above
+     them. Two independent reviews read that as the navigation clipping the page
+     and colliding with its content, and they were reading it correctly: a
+     fragment of a page under a menu looks broken whatever caused it.
+
+     The padding paints the panel's own ground to the bottom of the viewport and
+     the negative margin takes that height back out of the layout, so nothing
+     moves and nothing shows through. It is the ordinary full-screen menu a phone
+     expects, without a scrim element, a scroll lock or a line of script. */
+  /* The page behind the panel is dimmed, not covered and not left showing.
+
+     Two earlier attempts bracketed this. A panel that stopped after its last
+     destination left a fragment of the page beneath it, and two reviews called
+     that clipping. Filling the screen removed the fragment and all three
+     candidates then called the result "sparse links placed on an empty sheet" —
+     which it was, for five destinations. Both attempts were answers to "how
+     much should the panel cover"; the question was what the page underneath
+     should look like. Dimmed, it reads as behind, so the panel needs to be no
+     larger than its contents and nothing underneath reads as broken.
+
+     The scrim is the panel's own spread shadow, so it needs no element, no
+     script and no scroll lock, and it disappears with the panel. */
+  .site-header nav[data-open="true"] { box-shadow: 0 0 0 100dvh var(--color-scrim), var(--shadow-raised) }
   .site-header nav a { padding: 12px 14px; border-radius: var(--radius-md); font-size: 1rem }
 
   /* The conversion action a working header carries does not disappear on the
@@ -910,7 +946,18 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      the offering is one screen from the ask rather than five, which is the
      conversion-first intent. It was the ordering that was wrong, not the
      wanting of it. */
-  .mobile-order-conversion-first .section-item-grid { order: 1 }
+  /* What the business does, and where it does it.
+     Locations sat in the ordinary band and therefore fell *behind* the contact
+     details, so a phone read hero, services, contact, locations while the
+     desktop read hero, services, locations, contact. Two independent reviews
+     named it — "the late Locations section on the home page", and "inconsistent
+     home-page section ordering across breakpoints". For a business chosen partly
+     on being nearby, coverage is part of the offer rather than a detail after
+     the ask, and keeping it with the offering makes the phone order the desktop
+     order with contact pulled forward, instead of a third arrangement nobody
+     designed. */
+  .mobile-order-conversion-first .section-item-grid,
+  .mobile-order-conversion-first .section-location-list { order: 1 }
   .mobile-order-conversion-first .contact-section,
   .mobile-order-conversion-first .section-enquiry-form { order: 2 }
   /* A mid-page ask needs a middle to be in.
@@ -1155,11 +1202,23 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 .cta-section.cta-register p { color: var(--color-text-muted); opacity: 1; margin: 8px 0 0; font-size: var(--text-base, 1rem); }
 
 /* A composition without the dark ground must not keep the inverse ink the
-   panel handed its actions, or the ask disappears into the page. */
+   panel handed its actions, or the ask disappears into the page.
+
+   `action-block` was missing from this list and the omission was invisible
+   while no light-ground direction chose that treatment. The moment
+   `editorial-authority` adapted its action to `block` for a business whose
+   conversion emphasis is high, its closing ask rendered in near-white on
+   off-white — the exact defect the sentence above describes, in the one
+   treatment it forgot. Every boxed and unboxed treatment the closing ask can
+   take belongs here, so a future adaptation cannot reopen it. */
 .cta-section.cta-editorial .action-link,
 .cta-section.cta-register .action-link,
 .cta-section.cta-editorial .button.action-outlined,
-.cta-section.cta-register .button.action-outlined {
+.cta-section.cta-register .button.action-outlined,
+.cta-section.cta-editorial .button.action-block,
+.cta-section.cta-register .button.action-block,
+.cta-section.cta-editorial .button.action-block.primary-action,
+.cta-section.cta-register .button.action-block.primary-action {
   color: var(--color-accent);
   border-color: var(--color-accent);
 }

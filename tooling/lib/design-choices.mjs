@@ -163,6 +163,46 @@ export function applyDesignChoices(design, choices = {}, options = {}) {
  * A design contract that does not compile is a prompt. Every property here is
  * one the stylesheet actually uses.
  */
+/**
+ * How much display type a name can carry before it stops being a headline.
+ *
+ * A display step is chosen for the direction, not for the words it has to set,
+ * so a long company name simply wrapped: "nbm Construction Cost Consultants" at
+ * 67px set over **four lines** in `structured-practice` at both 1440 and 390,
+ * and over four on a phone in `service-forward`. Both adopted design catalogues
+ * name that as a defect rather than as a long name — impeccable classifies it
+ * `oversized-h1`, and leonxlnx/taste-skill states the rule in the strongest
+ * terms available to it: a display headline of four or more lines is a failure,
+ * and the answer is a smaller step rather than a shorter company. The seventh
+ * independent review reached the same place from the other end and asked for
+ * oversized headings to be rebalanced.
+ *
+ * A ratio rather than a breakpoint, so it is continuous: a short name is
+ * untouched, and a long one is reduced by the amount it is long by. MGB Decor
+ * keeps its full display size; nbm loses about a fifth of it and sets in three.
+ *
+ * The longest single word matters as much as the total, because a word cannot
+ * break: `Consultants` is what decides the narrowest column this can sit in.
+ */
+export function displayFit(name) {
+  const text = String(name ?? '').trim();
+  if (!text) return 1;
+  const longestWord = text.split(/\s+/).reduce((longest, word) => Math.max(longest, word.length), 0);
+  // Two independent pressures, and the tighter one wins. `COMFORTABLE_DISPLAY`
+  // is the length a display line carries at full size without wrapping past
+  // three lines at the measures these directions use.
+  const byLength = COMFORTABLE_DISPLAY / Math.max(text.length, COMFORTABLE_DISPLAY);
+  const byWord = COMFORTABLE_WORD / Math.max(longestWord, COMFORTABLE_WORD);
+  // Floored, because past a point the answer is a shorter name rather than
+  // six-point type, and a headline that has stopped being a headline is not an
+  // improvement on one that wrapped.
+  return Math.max(MINIMUM_DISPLAY_FIT, Math.min(byLength, byWord));
+}
+
+const COMFORTABLE_DISPLAY = 22;
+const COMFORTABLE_WORD = 11;
+const MINIMUM_DISPLAY_FIT = 0.72;
+
 export function compileDesignTokens(design) {
   const density = DENSITIES[design.density] ?? DENSITIES.comfortable;
   const brand = design.brand ?? compileBrandSpec();
@@ -174,6 +214,8 @@ export function compileDesignTokens(design) {
     '--layout-max-width': design.maxWidth,
     '--layout-radius': design.radius,
     '--section-space': density.sectionSpace,
+    // The display step, fitted to the name it has to set.
+    '--display-fit': String(displayFit(design.displayName)),
     ...artDirectionTokens(artDirection),
     ...motionTokens(artDirection.motion),
     // The responsive half of the art direction. Mobile is where a direction

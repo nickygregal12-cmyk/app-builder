@@ -348,52 +348,66 @@
       "id": "leonxlnx-taste-skill",
       "repository": "leonxlnx/taste-skill",
       "url": "https://github.com/leonxlnx/taste-skill",
-      "adoption": "reference-only",
+      "adoption": "adopted-pinned",
       "rating": 8,
       "useFor": [
-        "art direction and anti-default heuristics"
+        "anti-default art-direction heuristics"
       ],
       "borrowedIdeas": [
-        "brief inference",
-        "anti-slop heuristics",
-        "variance/density/distinctiveness as explicit dimensions"
+        "variance, motion and density as explicit dials rather than prompt adjectives",
+        "a hard-rule pre-flight check before a design is accepted",
+        "a display headline that runs past three lines is a defect rather than a long name",
+        "meta-labels such as \"SECTION 01\" read as cheap rather than as structure"
       ],
       "doNotAdopt": [
+        "randomisation as the method — deterministic composition is a protected guarantee here, and a design that differs per run cannot be reviewed or replayed",
+        "its named typefaces (Satoshi, Cabinet Grotesk, Outfit, Geist), which are webfonts this repository’s font policy refuses",
+        "its GSAP motion requirement, which the MotionContract and the no-dependency-by-default rule both refuse",
         "loading a large taste skill into every frontend agent"
       ],
-      "pinnedRef": null,
-      "license": null,
-      "allowedRoles": [],
+      "pinnedRef": "ccbc15639c97057cbfcf32ecebc38ef716e4bb37",
+      "license": "MIT",
+      "allowedRoles": [
+        "art-direction"
+      ],
       "contextTokensEstimate": null,
-      "securityReview": "not-required",
+      "securityReview": "passed",
       "updatePolicy": "none",
-      "evaluationStatus": "not-evaluated",
+      "evaluationStatus": "evaluated",
       "instructionAuthority": "none",
-      "notes": "Informs the machine-readable ArtDirectionPlan dimensions rather than prompt adjectives."
+      "notes": "Adopted 2026-08-31 as art-direction prior art. MIT. Pinned at upstream HEAD when checked. Its three dials were already borrowed as layoutVariance, motionIntensity and informationDensity; what is newly adopted is the pre-flight discipline and two specific hard rules. Its central method is explicitly rejected: it randomises to avoid looking templated, and this factory may not, because a candidate set has to be reproducible from a frozen input. Independently of impeccable, it bans numbered meta-labels in the same terms, which is why that finding is treated as evidence rather than as one project’s taste. Security review: scanned for instruction-injection shapes and credentials; none found."
     },
     "pbakaus-impeccable": {
       "id": "pbakaus-impeccable",
       "repository": "pbakaus/impeccable",
       "url": "https://github.com/pbakaus/impeccable",
-      "adoption": "reference-only",
+      "adoption": "adopted-pinned",
       "rating": 9.5,
       "useFor": [
-        "DesignLint rules and bounded visual critique"
+        "deterministic anti-pattern detection prior art for DesignLint"
       ],
       "borrowedIdeas": [
-        "catalogue of common AI-design failure patterns",
-        "deterministic detectors before AI critique"
+        "a named catalogue of AI-design tells separated from ordinary quality defects",
+        "slop vs quality as the two categories a rule can belong to",
+        "deterministic detectors run before a paid critic, so judgement is not spent on what a rule could catch",
+        "numbered section labels and eyebrow kickers classified as AI tells rather than as decoration"
       ],
-      "doNotAdopt": [],
-      "pinnedRef": null,
-      "license": null,
-      "allowedRoles": [],
+      "doNotAdopt": [
+        "its own Neo Kinpaku design system, which is that project’s house style and not a rule set",
+        "its CLI, browser-extension and overlay architecture",
+        "its rules as executable code — the catalogue is read as prior art and re-expressed against this repository’s own token contract"
+      ],
+      "pinnedRef": "e92bf2b774fc5d28175e35273677929228a50787",
+      "license": "Apache-2.0",
+      "allowedRoles": [
+        "design-system"
+      ],
       "contextTokensEstimate": null,
-      "securityReview": "not-required",
+      "securityReview": "passed",
       "updatePolicy": "none",
-      "evaluationStatus": "not-evaluated",
+      "evaluationStatus": "evaluated",
       "instructionAuthority": "none",
-      "notes": "Primary prior art for the DesignLint rule set in docs/DESIGN_INTELLIGENCE.md."
+      "notes": "Adopted 2026-08-31 as prior art for DesignLint. Apache-2.0, Paul Bakaus. Pinned at upstream HEAD when checked. The valuable artefact is cli/engine/registry/antipatterns.mjs: 60 rules split into `slop` (AI tells) and `quality` (design and accessibility defects). It is read, not vendored or executed — nothing from it reaches a generated application, and the rules this repository adopts are re-expressed against its own compiled DesignSystemSpec so a detector cannot assert a value the token contract does not carry. Security review, scoped to a design role reading the catalogue: every fetched file scanned for instruction-injection shapes and credentials. One match, in CLAUDE.md, is prose describing that project’s own eval harness inlining its skill into a system prompt; it addresses no reader and asks for nothing. No credentials. Evaluation: three of its rules — numbered-section-labels, kicker-above-heading and oversized-h1 — fire on this factory’s own output, and the first two describe the `figure-index` distinctive moment that independent review has scored 4.2–4.7."
     },
     "vercel-labs-agent-skills": {
       "id": "vercel-labs-agent-skills",

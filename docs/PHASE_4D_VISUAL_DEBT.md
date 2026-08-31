@@ -151,6 +151,66 @@ repository edit. Whether a direction should be the sole determinant of vocabular
 is likewise an architecture decision, and deterministic composition is a
 protected guarantee.
 
+## 2b. The direction was the whole answer, and now it is not
+
+**Still not passed.** The gate is unchanged at 8.5 mean and a 6.5 floor. The best
+mean recorded here is now **6.70**, which is the highest in this document and
+still 1.8 short.
+
+§2a left the architectural question open: two unrelated businesses that chose the
+same direction differed in 1 of 16 signals and compiled the same accent. That is
+now answered, and the answer was not the brand colour.
+
+**`deriveBusinessVisualProfile` read seven signals off the approved intake,
+`scoreDirectionAgainstProfile` used them to rank the registry, and then the
+profile was discarded.** `compileVisualDirection` was never given it. So the
+business decided *which* theme and had no say in what that theme rendered, and a
+direction was a complete prebuilt theme rather than a strategy. nbm and MGB Decor
+disagree on three of seven readings — focused against broad service breadth,
+information-led against work-led showcase intent, relaxed against compact content
+density — and still received the same website.
+
+A direction now declares which axes it will let a business move and to which
+values (`adapts` in `config/visual-directions.json`). Bounded three ways: only
+axes it names, only values it names, and every result validated on the scale the
+registry already uses, so an adaptation cannot express anything a direction could
+not have declared itself. The only input is the derived signal set, so a broad
+service list moves a grid and an industry never does. What moved is recorded on
+the compiled plan as `businessAdjustments`, with the signal that moved it.
+
+| | before | after |
+| --- | --- | --- |
+| same direction, two businesses | 1 of 16 signals | **4 of 16** |
+| nbm `editorial-authority` | 6.31 mean, 3.5 floor | **6.70 mean, 4.7 floor** |
+| nbm `structured-practice` | 5.94 mean, 3.5 floor | **6.58 mean, 4.2 floor** |
+| nbm `service-forward` | 6.26 mean, 4.5 floor | 6.10 mean, 4.6 floor |
+| `distinctiveness` | 4.8 / 4.5 / 4.8 | 5.4 / 4.8 / 4.8 |
+| `responsive-quality` | 7.4 / 6.1 / 5.9 | 7.3 / 7.5 / 5.9 |
+
+`distinctiveness` moved for the first time since v2 — it had read 4.3–4.8 through
+a content fix, a moment contract, an axis-rendering fix, an entirely new
+direction, and the whole of §2a. It is still the weakest criterion and still the
+reason the gate is unpaid, but it is no longer flat, and it moved in the round the
+architectural assumption changed rather than in any of the rounds that adjusted
+styling.
+
+Two things the rendering caught that no test could. `.cta-section` hands its
+actions inverse ink and the correction for the light closing compositions had
+never listed `action-block`; the first business whose conversion emphasis moved
+`editorial-authority` to a block ask got a closing call to action in near-white on
+off-white. And the disclosed navigation panel stopped after its last destination,
+so a slice of the page showed beneath it — two review rounds called that clipping
+and collision before it was read correctly as a panel that should cover the screen
+it was opened over.
+
+**What is left is mostly not a design problem.** Every candidate in every round of
+this session was told to add credentials, representative work, sectors, outcomes
+or client proof. nbm's approved intake carries one description — the Companies
+House record — an empty `trustSignals` array, and no client-facing proposition.
+Writing any of it would be inventing business claims, so the remaining
+distinctiveness and credibility headroom needs owner-supplied truth rather than
+another visual intervention.
+
 ## 3. The finding that matters
 
 Interventions targeted at named criteria moved those criteria. The gate did not move, because one

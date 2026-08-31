@@ -182,3 +182,62 @@ test('a design choice compiles into the build, survives a rebuild and is recover
     fs.rmSync(dirs.root, { recursive: true, force: true });
   }
 });
+
+/**
+ * A display step chosen for the direction, not for the words it has to set.
+ *
+ * "nbm Construction Cost Consultants" at 67px set over **four lines** in
+ * `structured-practice` at both 1440 and 390, and over four on a phone in
+ * `service-forward`. Both adopted design catalogues call that a defect rather
+ * than a long name: pbakaus/impeccable classifies it `oversized-h1`, and
+ * leonxlnx/taste-skill states it as strongly as it states anything — a display
+ * headline of four or more lines is a failure, and the answer is a smaller step
+ * rather than a shorter company. The seventh independent review arrived at the
+ * same place from the other end and asked for oversized headings to be
+ * rebalanced. After fitting, both set in two lines.
+ *
+ * A ratio rather than a breakpoint, so a name that is barely long is barely
+ * reduced and the rule has no cliff in it.
+ */
+test('the display step is fitted to the name it has to set', async () => {
+  const { displayFit, compileDesignTokens } = await import('./lib/design-choices.mjs');
+
+  // A name that fits is untouched. This is most projects, and they must render
+  // exactly what they rendered before the fit existed.
+  assert.equal(displayFit('MGB Decor'), 1);
+  assert.equal(displayFit('Fenwick & Hale'), 1);
+  assert.equal(displayFit(''), 1, 'a project with no name must not compile a shrunken headline');
+  assert.equal(displayFit(null), 1);
+
+  // A long one is reduced, and monotonically: longer is never larger.
+  const long = displayFit('nbm Construction Cost Consultants');
+  assert.ok(long < 1, 'a name that sets over four lines must not keep the full display step');
+  assert.ok(displayFit('A'.repeat(80)) <= long, 'the fit must not grow as the name grows');
+
+  // Floored, because past a point the answer is a shorter name rather than
+  // six-point type. A headline that stopped being a headline is not a fix.
+  assert.ok(displayFit('A'.repeat(400)) >= 0.7, 'the fit must bottom out rather than shrink without limit');
+
+  // An unbreakable word is its own pressure: `Consultants` decides the
+  // narrowest column the line can sit in, whatever the total length.
+  assert.ok(
+    displayFit('Aa Bb Cc Dd Ee Ff') > displayFit('Aa Bb Extraordinarily Cc'),
+    'a long single word must reduce the step even when the whole name is short',
+  );
+
+  // And it reaches the stylesheet, or none of the above renders.
+  const tokens = compileDesignTokens({ density: 'comfortable', maxWidth: '72rem', radius: '0rem', displayName: 'nbm Construction Cost Consultants' });
+  assert.equal(tokens['--display-fit'], String(long));
+  assert.equal(compileDesignTokens({ density: 'comfortable', maxWidth: '72rem', radius: '0rem' })['--display-fit'], '1');
+});
+
+test('the headline actually multiplies by the fit', () => {
+  const css = fs.readFileSync(new URL('../templates/shared/presentation/styles.css', import.meta.url), 'utf8');
+  assert.match(
+    css,
+    /h1 \{ font-size: calc\(var\(--text-4xl\) \* var\(--display-fit\)\)/,
+    'the display step must consume the fit, or the token is a number nothing reads',
+  );
+  const tokens = fs.readFileSync(new URL('../templates/shared/presentation/tokens.css', import.meta.url), 'utf8');
+  assert.match(tokens, /--display-fit:\s*1;/, 'a project compiled before this existed must default to the full step');
+});

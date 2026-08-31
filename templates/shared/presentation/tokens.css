@@ -88,6 +88,14 @@
   --section-alt-ground: var(--color-accent-soft);
   --hero-scale: 1.3;
   --display-measure: 16ch;
+  /* How much of the display step this project's name can carry. Compiled from
+     the name itself; 1 unless the name is long enough to wrap past three lines,
+     and never below the point where a headline stops reading as one. */
+  --display-fit: 1;
+  /* The ground behind an open disclosure panel. Dark enough that the page reads
+     as behind the menu rather than as part of it, light enough that the reader
+     can still see where they were. */
+  --color-scrim: rgb(16 18 22 / 58%);
 
   /* Motion. Every transition below reads these, so a build that asked for less
      movement gets less movement rather than the same .18s everywhere. */

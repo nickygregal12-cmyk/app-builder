@@ -29,7 +29,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { assessIndependence, executorsFromVerdictSet } from './lib/reviewer-independence.mjs';
+import { assessIndependence, executorsFromVerdict, executorsFromVerdictSet } from './lib/reviewer-independence.mjs';
 
 const ROOT = 'examples/genuine-business';
 const requires = (process.argv.includes('--requires') ? process.argv[process.argv.indexOf('--requires') + 1] : null) ?? 'different-vendor';
@@ -47,7 +47,14 @@ for (const file of files) {
   const verdictSet = JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
   console.log(`  ${file}`);
   for (const review of verdictSet.reviews ?? []) {
-    const { author, reviewer } = executorsFromVerdictSet(verdictSet, review);
+    // Which shape this record is in is decided here rather than guessed by a
+    // reader that falls back. A reader that tried both would return "no author
+    // recorded" for a verdict whose fields had simply been renamed — the same
+    // answer it gives for the honest case, which is the one answer it must not
+    // blur.
+    const { author, reviewer } = review.reviewerExecutor || review.authorExecutor
+      ? executorsFromVerdict(review)
+      : executorsFromVerdictSet(verdictSet, review);
     const result = assessIndependence({ author, reviewer, requires });
     assessed += 1;
     if (result.independent) establishable += 1;
@@ -70,9 +77,13 @@ if (establishable < assessed) {
   console.log('  config/factory-status.json records that they were, in prose. It is a statement');
   console.log('  that the evidence does not carry it, so no gate can read it and no later');
   console.log('  auditor can confirm it without already knowing the answer.');
-  console.log('\n  Closing it needs an author executor recorded alongside the reviewer at the');
-  console.log('  point a verdict is created. That is a change to the verdict contract and to');
-  console.log('  whatever mints one, and it is deliberately not made here.');
+  console.log('\n  schemas/review-verdict.schema.json now permits an authorExecutor and a');
+  console.log('  reviewerExecutor, and attestVerdict refuses to mint a verdict that claims an');
+  console.log('  independence it does not have. Both fields are optional, because a required');
+  console.log(`  one would have invalidated these ${assessed} committed verdicts to record something`);
+  console.log('  nobody captured at the time. What remains is for the reviewers that produce');
+  console.log('  verdicts to supply both sides — which needs the producing executor to be');
+  console.log('  known at review time, and for artifacts no provider call produced it is not.');
 }
 
 // Reporting a gap is this command's job. Exiting non-zero would make it a gate,

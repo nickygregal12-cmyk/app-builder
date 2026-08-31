@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 
 import { assertReviewIndependence } from '@app-builder/control-plane/roles';
-import { INDEPENDENCE_RELATIONS, assessIndependence, describeExecutor, executorsFromVerdictSet } from './lib/reviewer-independence.mjs';
+import { INDEPENDENCE_RELATIONS, assessIndependence, attestVerdict, describeExecutor, executorsFromVerdictSet } from './lib/reviewer-independence.mjs';
 
 const anthropic = (role) => describeExecutor({ vendor: 'anthropic', model: 'claude-haiku-4-5-20251001', role, attestedBy: 'runtime' });
 const openai = (role) => describeExecutor({ vendor: 'openai', model: 'GPT-5', role, attestedBy: 'runtime' });
@@ -137,4 +137,87 @@ test('an executor identity carries what a later auditor needs, and nulls what no
 
 test('an attestation outside the vocabulary is not carried through as if it were valid', () => {
   assert.equal(describeExecutor({ attestedBy: 'trust-me' }).attestedBy, null);
+});
+
+// --- Minting a verdict that carries who made the thing it judges --------------------
+
+test('a verdict minted with two distant executors carries both', () => {
+  const attested = attestVerdict({
+    verdict: { id: 'verdict-1', verdict: 'rework-required' },
+    author: anthropic('art-direction'),
+    reviewer: openai('design-critic'),
+  });
+
+  assert.equal(attested.authorExecutor.vendor, 'anthropic');
+  assert.equal(attested.reviewerExecutor.vendor, 'openai');
+  assert.equal(attested.verdict, 'rework-required');
+});
+
+test('minting refuses when the two executors are the same model', () => {
+  assert.throws(
+    () => attestVerdict({
+      verdict: { id: 'verdict-2', verdict: 'pass' },
+      author: anthropic('art-direction'),
+      reviewer: anthropic('design-critic'),
+    }),
+    /Refusing to record this verdict as independent/,
+  );
+});
+
+test('minting with one side absent claims nothing rather than refusing', () => {
+  // The state every verdict in this repository is in. Refusing here would make
+  // the field unusable for exactly the artifacts that need it most.
+  const attested = attestVerdict({
+    verdict: { id: 'verdict-3', verdict: 'pass' },
+    reviewer: openai('design-critic'),
+  });
+
+  assert.equal(attested.authorExecutor, null);
+  assert.equal(attested.reviewerExecutor.vendor, 'openai');
+});
+
+test('a caller-attested reviewer cannot be minted as independent even across vendors', () => {
+  assert.throws(
+    () => attestVerdict({
+      verdict: { id: 'verdict-4', verdict: 'pass' },
+      author: anthropic('art-direction'),
+      reviewer: describeExecutor({ vendor: 'openai', model: 'GPT-5', role: 'design-critic', attestedBy: 'caller' }),
+    }),
+    /self-report/,
+  );
+});
+
+test('attestation strength is reported for both sides rather than collapsed', () => {
+  const result = assessIndependence({
+    author: describeExecutor({ vendor: 'anthropic', model: 'claude', role: 'art-direction', attestedBy: 'caller' }),
+    reviewer: openai('design-critic'),
+  });
+
+  // A caller-declared author is weaker evidence, not a refusal: somebody naming
+  // what produced an artifact is ordinary bookkeeping, and refusing it would
+  // leave nothing recordable for artifacts no provider call produced.
+  assert.equal(result.independent, true);
+  assert.deepEqual(result.attestation, { author: 'caller', reviewer: 'runtime' });
+});
+
+// --- The contract permits what the module records ------------------------------------
+
+test('the verdict schema accepts an attested verdict and rejects a half-identified one', async () => {
+  const { default: Ajv } = await import('ajv/dist/2020.js');
+  const schema = JSON.parse(fs.readFileSync('schemas/review-verdict.schema.json', 'utf8'));
+  const validate = new Ajv({ strict: false }).compile(schema);
+
+  const base = {
+    schemaVersion: 1, id: 'verdict-5', projectId: 'p', stageId: 's', artifactKind: 'visual-candidate',
+    reviewerRole: 'design-critic', authorRoles: ['art-direction'], verdict: 'pass', createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  // Every verdict already committed stays valid: the fields are optional
+  // because a required one would have invalidated ten of them to record
+  // something nobody captured at the time.
+  assert.equal(validate(base), true);
+
+  assert.equal(validate(attestVerdict({ verdict: base, author: anthropic('art-direction'), reviewer: openai('design-critic') })), true);
+  assert.equal(validate({ ...base, reviewerExecutor: { model: 'GPT-5', attestedBy: 'runtime' } }), false, 'an executor with no vendor was accepted');
+  assert.equal(validate({ ...base, reviewerExecutor: { vendor: 'openai', model: 'GPT-5', attestedBy: 'trust-me' } }), false, 'an unknown attestation was accepted');
 });

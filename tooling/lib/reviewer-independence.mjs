@@ -142,8 +142,79 @@ export function assessIndependence({ author, reviewer, requires = 'different-ven
     relation,
     independent: refusals.length === 0 && relation !== 'unknown',
     refusals,
+    /**
+     * How each side's identity was established.
+     *
+     * A caller-attested *reviewer* is refused above, because the side being
+     * reviewed chose what its judge says it is. A caller-declared *author* is
+     * weaker evidence rather than a refusal — somebody naming what produced an
+     * artifact is ordinary bookkeeping, and refusing it would leave nothing
+     * recordable at all for artifacts no provider call produced. It is reported
+     * so a reader can weigh the claim rather than take it.
+     */
+    attestation: { author: author?.attestedBy ?? null, reviewer: reviewer?.attestedBy ?? null },
     author: author ?? null,
     reviewer: reviewer ?? null,
+  };
+}
+
+/**
+ * Attach executor identities to a verdict, refusing to mint one that claims an
+ * independence it does not have.
+ *
+ * Both sides present and too close together throws: a verdict is a record, and
+ * a record that says a model judged its own work is worse than no record,
+ * because it will be counted later as an independent review.
+ *
+ * Either side absent attaches what there is and claims nothing. That is the
+ * honest state for every verdict this repository already holds, and it is why
+ * `schemas/review-verdict.schema.json` makes both fields optional: a required
+ * field would have invalidated ten committed verdicts to record something
+ * nobody captured at the time.
+ */
+/**
+ * The executor as the verdict contract carries it.
+ *
+ * `describeExecutor` keeps an `artifact` alongside the identity, which is
+ * useful when reasoning about a single attempt in isolation. On a verdict it
+ * would be a second place to record something `artifactId` and `artifactKind`
+ * already say, and two fields that can disagree about the same fact are worse
+ * than one. So it is projected out here rather than widening the contract.
+ */
+function contractExecutor(executor) {
+  if (!executor) return null;
+  const { artifact: _artifact, ...identity } = executor;
+  return identity;
+}
+
+export function attestVerdict({ verdict, author = null, reviewer = null, requires = 'different-vendor' }) {
+  const assessment = assessIndependence({ author, reviewer, requires });
+  const established = Boolean(author && reviewer);
+
+  if (established && !assessment.independent) {
+    throw new Error(`Refusing to record this verdict as independent: ${assessment.refusals.join(' ')}`);
+  }
+
+  return {
+    ...verdict,
+    authorExecutor: contractExecutor(author),
+    reviewerExecutor: contractExecutor(reviewer),
+  };
+}
+
+/**
+ * Read the executors out of a verdict that carries them.
+ *
+ * Separate from `executorsFromVerdictSet`, which reads the older visual-review
+ * shape. Two readers rather than one that guesses, because a reader that fell
+ * back between shapes would silently return nothing on a verdict whose fields
+ * had been renamed, and report it as "no author recorded" — the same answer it
+ * gives for the honest case.
+ */
+export function executorsFromVerdict(verdict) {
+  return {
+    author: verdict?.authorExecutor ? describeExecutor(verdict.authorExecutor) : null,
+    reviewer: verdict?.reviewerExecutor ? describeExecutor(verdict.reviewerExecutor) : null,
   };
 }
 

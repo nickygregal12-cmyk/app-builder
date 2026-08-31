@@ -12,9 +12,10 @@
  * `config/factory-status.json`: brownfield mutation is deferred until "an
  * exact-revision baseline includes observed passing tests and rendered
  * behavioural evidence sufficient to protect known-good behaviour". A
- * Preservation Contract is that sentence made executable. It takes three
- * things — a baseline, a declaration of what must be preserved, and
- * observations of the product actually running — and answers one question:
+ * Preservation Contract is that sentence made executable. It takes a baseline,
+ * a declaration of what must be preserved, observations of the product actually
+ * running and — separately, because it answers a different question — an
+ * `ActionAuthorization`, and reports on one thing:
  *
  *   May this repository be changed yet?
  *
@@ -49,6 +50,8 @@
  * failure has changed the product outside its scope, and the only way to notice
  * is to have written the failure down first.
  */
+
+import { AuthorizationError, assertActionAuthorizationUsable } from '@app-builder/control-plane/action-authorization';
 
 /** The kinds of evidence a Preservation Contract will admit, and nothing else. */
 export const OBSERVATION_KINDS = Object.freeze(['executed-check', 'rendered-journey', 'data-boundary']);
@@ -102,9 +105,13 @@ function list(value) {
  * @param {object}   input.baseline       a `deriveBaseline` record for the subject repository
  * @param {object}   input.declaration    what the owner or corpus states must be preserved
  * @param {object[]} input.observations   things that were run, with recorded outcomes
- * @param {object}   [input.authorisation] an authorisation record, if the repository has one to give
+ * @param {object}   [input.authorisation] an ActionAuthorization, if one has been granted
+ * @param {object}   [input.authorisationContext] what that grant is checked against — projectId,
+ *                   operation, expectedHash, environment. The base digest is not taken from here:
+ *                   it is the baseline's own profile hash, so a caller cannot quietly authorise
+ *                   against a state other than the one the evidence describes.
  */
-export function derivePreservationContract({ baseline, declaration = {}, observations = [], authorisation = null }) {
+export function derivePreservationContract({ baseline, declaration = {}, observations = [], authorisation = null, authorisationContext = {} }) {
   const revision = baseline?.revision ?? null;
   const refusals = [];
 
@@ -224,16 +231,48 @@ export function derivePreservationContract({ baseline, declaration = {}, observa
   // --- Authorisation ------------------------------------------------------------------
   //
   // Evidence answers "would we notice a regression?". It never answers "may
-  // this be changed?" — that is a separate grant, made by whatever
-  // authorisation contract this repository ends up with, and deliberately not
-  // implemented here. A module that decided its own authority would be the
-  // bypass it is supposed to make impossible.
-  const authorised = Boolean(authorisation?.granted);
-  if (!authorised) {
-    refusals.push('No authorisation record grants mutation of this repository. Adequate evidence means a regression would be noticed; it is not permission, and this contract does not issue permission.');
+  // this be changed?" — that is a separate grant, and it is `ActionAuthorization`
+  // rather than anything invented here. This module checks a grant and cannot
+  // issue one; a module that decided its own authority would be the bypass it
+  // exists to make impossible.
+  //
+  // The binding that matters is the base. An authorisation names the exact
+  // thing it was granted against, and `assertActionAuthorizationUsable` refuses
+  // with `base-drifted` when that thing has moved. Here the base is the
+  // baseline's `profileHash` — the hash of the read this contract's evidence
+  // was gathered from — so permission granted after looking at one state of a
+  // repository does not survive the repository changing underneath it. That is
+  // the same refusal, in the same shape, as evidence gathered against another
+  // revision.
+  let authorised = false;
+  let authorisationRefusal = null;
+  const authorisationRefusals = [];
+  const refuseAuthorisation = (reason) => { authorisationRefusals.push(reason); refusals.push(reason); };
+  if (!authorisation) {
+    refuseAuthorisation('No ActionAuthorization was supplied, so nothing grants mutation of this repository. Adequate evidence means a regression would be noticed; it is not permission, and this contract does not issue permission.');
+  } else if (!baseline?.profileHash) {
+    refuseAuthorisation('The baseline records no profile hash, so an authorisation cannot be bound to the state this evidence describes.');
+  } else {
+    try {
+      assertActionAuthorizationUsable(authorisation, { ...authorisationContext, currentBaseDigest: baseline.profileHash });
+      authorised = true;
+    } catch (error) {
+      if (!(error instanceof AuthorizationError)) throw error;
+      authorisationRefusal = error.refusal;
+      refuseAuthorisation(`The authorisation was refused as ${error.refusal}: ${error.message}`);
+    }
   }
 
-  const evidenceAdequate = !refusals.some((reason) => !reason.startsWith('No authorisation record'));
+  // Evidence adequacy is judged on the evidence refusals alone. An authorisation
+  // problem is somebody else's to fix and must not read as a missing test.
+  //
+  // The two lists are kept apart as they are built rather than separated
+  // afterwards by matching on how a sentence begins. A consumer that had to
+  // recognise a refusal by its prefix would break the first time one was
+  // reworded, silently and in the direction of showing an owner an engineering
+  // problem.
+  const evidenceRefusals = refusals.filter((reason) => !authorisationRefusals.includes(reason));
+  const evidenceAdequate = evidenceRefusals.length === 0;
 
   return {
     schemaVersion: 1,
@@ -282,7 +321,15 @@ export function derivePreservationContract({ baseline, declaration = {}, observa
       enabled: evidenceAdequate && authorised,
       evidenceAdequate,
       authorised,
+      // The named refusal from the authorisation contract, where there was one.
+      // `base-drifted` and `expired` are different problems with different
+      // answers, and flattening them to "not authorised" loses which.
+      authorisationRefusal,
+      authorizationId: authorisation?.authorizationId ?? null,
       refusals,
+      // The same refusals, split by who has to do something about them.
+      evidenceRefusals,
+      authorisationRefusals,
     },
   };
 }

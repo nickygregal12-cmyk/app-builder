@@ -13,6 +13,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { mintActionAuthorization } from '@app-builder/control-plane/action-authorization';
 import { derivePreservationContract, mutationPermitted } from './lib/preservation-contract.mjs';
 import { validateImprovementContract } from './lib/improvement-contract.mjs';
 import { buildProposal, measureRetrieval } from './lib/brownfield-proposal.mjs';
@@ -21,6 +22,8 @@ import { referenceImprovement } from './lib/b1-reference.mjs';
 
 const REVISION = 'a'.repeat(40);
 const OTHER_REVISION = 'b'.repeat(40);
+/** The baseline's profile hash. An authorisation is granted against this, not against a name. */
+const PROFILE = 'c'.repeat(64);
 
 function baseline(overrides = {}) {
   return {
@@ -29,7 +32,7 @@ function baseline(overrides = {}) {
     subject: { name: 'subject', path: '/tmp/subject', remote: null },
     revision: REVISION,
     workingTreeClean: true,
-    profileHash: 'hash',
+    profileHash: PROFILE,
     shape: {},
     protects: ['The repository is identified by an exact revision.'],
     doesNotProtect: ['Behaviour. Nothing was executed.'],
@@ -58,7 +61,38 @@ const passing = [
   { kind: 'rendered-journey', name: 'checkout', outcome: 'passed', revision: REVISION },
 ];
 
-const GRANTED = { granted: true, by: 'test' };
+/**
+ * A real ActionAuthorization, minted the way the control plane mints them.
+ *
+ * The placeholder this replaced was `{ granted: true }`, which was honest about
+ * being a stand-in and would have been quietly wrong the moment the real
+ * contract landed. It has landed, so the contract checks a real grant — and the
+ * property worth having is the base: permission is granted against the profile
+ * hash of the read this evidence came from, so it does not survive the
+ * repository moving underneath it.
+ */
+function granted(overrides = {}) {
+  return mintActionAuthorization({
+    projectId: 'project-subject',
+    operation: 'brownfield.mutate',
+    base: { kind: 'project-state', digest: PROFILE },
+    scope: { files: ['src/**'], environment: 'workspace', risk: 'medium' },
+    budget: { maxCostGbp: 0, maxTokens: 1000, maxRuntimeMs: 60000, maxIterations: 1 },
+    proposedBy: 'brownfield-implementation',
+    approval: { mode: 'explicit-local-operator', approvalId: 'approval-owner-1', approvedBy: 'owner' },
+    idempotencyKey: 'idem-b1-1',
+    expiresAt: '2099-01-01T00:00:00.000Z',
+    ...overrides,
+  });
+}
+
+const GRANTED = granted();
+const CONTEXT = {
+  projectId: 'project-subject',
+  operation: 'brownfield.mutate',
+  expectedHash: GRANTED.authorizationHash,
+  environment: 'workspace',
+};
 
 // --- Evidence admission -------------------------------------------------------------
 
@@ -67,7 +101,7 @@ test('evidence from another revision is rejected, and says which revision it cam
     baseline: baseline(),
     declaration: declaration(),
     observations: passing.map((entry) => ({ ...entry, revision: OTHER_REVISION })),
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.equal(contract.evidence.admitted.length, 0);
@@ -82,7 +116,7 @@ test('a declared check that never ran is not evidence', () => {
     declaration: declaration(),
     // The shape a plan takes when it is mistaken for a result.
     observations: [{ kind: 'executed-check', name: 'npm test', outcome: null, revision: REVISION }],
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.equal(contract.evidence.admitted.length, 0);
@@ -96,7 +130,7 @@ test('a journey nobody watched disables mutation and names the journey', () => {
     baseline: baseline(),
     declaration: declaration(),
     observations: [passing[0]],
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.equal(contract.mutation.evidenceAdequate, false);
@@ -106,7 +140,7 @@ test('a journey nobody watched disables mutation and names the journey', () => {
 });
 
 test('adequate evidence plus authorisation is the only combination that enables mutation', () => {
-  const enabled = derivePreservationContract({ baseline: baseline(), declaration: declaration(), observations: passing, authorisation: GRANTED });
+  const enabled = derivePreservationContract({ baseline: baseline(), declaration: declaration(), observations: passing, authorisation: GRANTED, authorisationContext: CONTEXT });
   assert.equal(enabled.mutation.enabled, true);
   assert.equal(mutationPermitted(enabled), true);
 
@@ -123,7 +157,7 @@ test('an unusable baseline stops the contract before any evidence is weighed', (
     baseline: baseline({ usable: false, refusals: ['The working tree had uncommitted changes when it was profiled.'] }),
     declaration: declaration(),
     observations: passing,
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.equal(contract.mutation.enabled, false);
@@ -137,7 +171,7 @@ test('a protected journey observed failing means there is no known-good behaviou
     baseline: baseline(),
     declaration: declaration(),
     observations: [passing[0], { ...passing[1], outcome: 'failed' }],
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.equal(contract.mutation.enabled, false);
@@ -149,7 +183,7 @@ test('the same failure, declared, is classified debt that must stay failing', ()
     baseline: baseline(),
     declaration: declaration({ knownFailures: [{ name: 'checkout', reason: 'Broken since the payment provider migration; accepted.' }] }),
     observations: [passing[0], { ...passing[1], outcome: 'failed' }],
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   const covered = contract.coverage.find((entry) => entry.name === 'checkout');
@@ -166,7 +200,7 @@ test('a declared unknown survives into what the contract says it does not protec
     baseline: baseline(),
     declaration: declaration({ mustRemainUnknown: [{ subject: 'Whether the deployed schema matches these migrations', reason: 'No database was reached.' }] }),
     observations: passing,
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.ok(contract.doesNotProtect.some((sentence) => sentence.includes('Whether the deployed schema matches these migrations')));
@@ -177,7 +211,7 @@ test('a contract with no allowed scope and no churn ceiling refuses on both', ()
   const contract = derivePreservationContract({
     baseline: baseline(),
     declaration: { journeys: [], testCommands: [], dataBoundaries: [] },
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   assert.ok(contract.mutation.refusals.some((reason) => reason.includes('names no allowed scope')));
@@ -188,7 +222,7 @@ test('a contract with no allowed scope and no churn ceiling refuses on both', ()
 // --- Improvement Contract ---------------------------------------------------------------
 
 function preservationForImprovement() {
-  return derivePreservationContract({ baseline: baseline(), declaration: declaration(), observations: passing, authorisation: GRANTED });
+  return derivePreservationContract({ baseline: baseline(), declaration: declaration(), observations: passing, authorisation: GRANTED, authorisationContext: CONTEXT });
 }
 
 function improvement(overrides = {}) {
@@ -239,7 +273,7 @@ test('scope matching is by path segment, so a sibling directory is not covered b
     baseline: baseline(),
     declaration: declaration({ allowedScope: ['src/cart'] }),
     observations: passing,
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
   // `src/cartography` starts with `src/cart` as a string and is a different directory.
   const result = validateImprovementContract(improvement({ changeScope: ['src/cartography'] }), contract);
@@ -259,7 +293,7 @@ test('accepted debt cannot be repaired without saying that it is being reclassif
     baseline: baseline(),
     declaration: declaration({ knownFailures: [{ name: 'checkout', reason: 'Accepted.' }] }),
     observations: [passing[0], { ...passing[1], outcome: 'failed' }],
-    authorisation: GRANTED,
+    authorisation: GRANTED, authorisationContext: CONTEXT,
   });
 
   const quiet = validateImprovementContract(improvement({ mustNotRegress: ['checkout'] }), preservation);
@@ -416,10 +450,80 @@ test('every corpus task yields a structurally sound reference improvement', () =
         ...(task.declaration.journeys ?? []).map((name) => ({ kind: 'rendered-journey', name, outcome: 'passed', revision: task.revision })),
         ...(task.declaration.dataBoundaries ?? []).map((name) => ({ kind: 'data-boundary', name, outcome: 'passed', revision: task.revision })),
       ],
-      authorisation: GRANTED,
+      authorisation: GRANTED, authorisationContext: CONTEXT,
     });
 
     const result = validateImprovementContract(referenceImprovement(task, task.revision), preservation);
     assert.equal(result.executable, true, `${task.id}: ${result.refusals.join(' | ')}`);
   }
+});
+
+// --- Authorisation is a real grant, bound to the state the evidence describes ---------
+
+test('permission does not survive the repository moving underneath it', () => {
+  // The authorisation was granted after looking at one profile of this
+  // repository. The baseline now describes a different one. This is the same
+  // failure as evidence gathered at another revision, and it is refused by the
+  // authorisation contract rather than by anything invented here.
+  const contract = derivePreservationContract({
+    baseline: baseline({ profileHash: 'd'.repeat(64) }),
+    declaration: declaration(),
+    observations: passing,
+    authorisation: GRANTED,
+    authorisationContext: CONTEXT,
+  });
+
+  assert.equal(contract.mutation.enabled, false);
+  assert.equal(contract.mutation.authorisationRefusal, 'base-drifted');
+  // The evidence was never the problem, and the contract says so rather than
+  // sending somebody to write another test.
+  assert.equal(contract.mutation.evidenceAdequate, true);
+});
+
+test('an expired grant is refused, and named as expired rather than as missing', () => {
+  const expired = granted({ expiresAt: '2020-01-01T00:00:00.000Z', approval: { mode: 'explicit-local-operator', approvalId: 'approval-owner-2', approvedBy: 'owner', approvedAt: '2019-01-01T00:00:00.000Z' } });
+  const contract = derivePreservationContract({
+    baseline: baseline(),
+    declaration: declaration(),
+    observations: passing,
+    authorisation: expired,
+    authorisationContext: { ...CONTEXT, expectedHash: expired.authorizationHash },
+  });
+
+  assert.equal(contract.mutation.enabled, false);
+  assert.equal(contract.mutation.authorisationRefusal, 'expired');
+});
+
+test('a grant for another operation does not authorise this one', () => {
+  const contract = derivePreservationContract({
+    baseline: baseline(),
+    declaration: declaration(),
+    observations: passing,
+    authorisation: GRANTED,
+    authorisationContext: { ...CONTEXT, operation: 'project.generate' },
+  });
+
+  assert.equal(contract.mutation.enabled, false);
+  assert.equal(contract.mutation.authorisationRefusal, 'wrong-operation');
+});
+
+test('a baseline with no profile hash cannot have an authorisation bound to it', () => {
+  const contract = derivePreservationContract({
+    baseline: baseline({ profileHash: null }),
+    declaration: declaration(),
+    observations: passing,
+    authorisation: GRANTED,
+    authorisationContext: CONTEXT,
+  });
+
+  assert.equal(contract.mutation.enabled, false);
+  assert.ok(contract.mutation.refusals.some((reason) => reason.includes('records no profile hash')));
+});
+
+test('the contract reports which authorisation it checked, so a refusal can be traced', () => {
+  const contract = derivePreservationContract({
+    baseline: baseline(), declaration: declaration(), observations: passing, authorisation: GRANTED, authorisationContext: CONTEXT,
+  });
+  assert.equal(contract.mutation.authorizationId, GRANTED.authorizationId);
+  assert.equal(contract.mutation.authorisationRefusal, null);
 });

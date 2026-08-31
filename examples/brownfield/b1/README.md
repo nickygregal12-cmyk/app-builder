@@ -111,12 +111,21 @@ what it genuinely observed.
 ### Mutation is enabled for none of them
 
 Adequate evidence is not permission. Every task ends with mutation disabled
-because nothing has authorised mutation of anything, and no authorisation
-contract exists in this repository yet. The benchmark checks that the three
-tasks with adequate evidence report exactly one blocker — `not-authorised` —
-and that the other nine report two. Those are different problems with different
-owners, and collapsing them into one boolean would make a missing owner decision
-look like a missing test.
+because nothing has authorised mutation of anything: the benchmark supplies no
+`ActionAuthorization`, and without one there is nothing to check.
+
+The contract does check a real one. `derivePreservationContract` takes an
+`ActionAuthorization` and runs it through `assertActionAuthorizationUsable`,
+binding it to the baseline's own profile hash — so a grant made after looking
+at one state of a repository is refused as `base-drifted` once that repository
+moves, which is the same refusal, in the same shape, as evidence gathered at
+another revision. Wrong operation, wrong environment, expired and already-spent
+grants are refused by name rather than flattened into "not authorised".
+
+The benchmark checks that the three tasks with adequate evidence report exactly
+one blocker — `not-authorised` — and that the other nine report two. Those are
+different problems with different owners, and collapsing them into one boolean
+would make a missing owner decision look like a missing test.
 
 ### Retrieval is instrumented and unmeasured
 

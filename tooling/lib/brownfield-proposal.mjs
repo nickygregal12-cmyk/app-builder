@@ -97,7 +97,7 @@ export function buildProposal({ baseline, preservation, improvement = null, diag
     blockers.push({
       kind: 'insufficient-preservation-evidence',
       detail: 'The Preservation Contract cannot state with evidence what must be preserved, so a regression introduced by this change would not be noticed.',
-      refusals: list(preservation?.mutation?.refusals).filter((reason) => !reason.startsWith('No authorisation record')),
+      refusals: list(preservation?.mutation?.evidenceRefusals),
       owner: 'engineering',
     });
   }

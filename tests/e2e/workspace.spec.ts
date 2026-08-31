@@ -94,7 +94,13 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(sourcePanel.getByText(/Rights are locked after knowledge ingestion or generation/)).toBeVisible();
 
   await page.getByRole('button', { name: 'Verify build' }).click();
-  await expect(page.locator('.state-pill')).toHaveText('verified', { timeout: 60_000 });
+  // Verification resolves a dependency graph, installs it from the lockfile,
+  // runs the generated project's own checks and builds it for production. The
+  // old 60s budget was sized for a single warm `npm install`; it is now two npm
+  // invocations and a build, and on a loaded machine that is genuinely more
+  // than a minute. A budget that fails under load is a flaky test, not a fast
+  // one.
+  await expect(page.locator('.state-pill')).toHaveText('verified', { timeout: 180_000 });
   await expect(page.getByText('quality · build · succeeded')).toBeVisible();
   // Verification says which of the two things it did. `npm install` resolves
   // and installs at once and proves neither; installing from a lockfile it
@@ -257,6 +263,11 @@ test('Builder Console drives governed sources, generation, verification and prev
   // presentation, one design choice, and the start and completion of one
   // evidence capture. Verification contributes two of the thirteen that it did
   // not before: the lockfile it resolved, and the build identity it recorded.
-  await expect(page.getByLabel('Project metrics').getByText('21', { exact: true })).toBeVisible();
+  //
+  // Plus one decision for each of the eleven mutating operations that journey
+  // performs. Every one of them was decided before it ran, and the count is
+  // exact because a decision that stops being recorded is as much a defect as
+  // an operation that stops being decided.
+  await expect(page.getByLabel('Project metrics').getByText('32', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

@@ -20,6 +20,7 @@ function applyDecision(source, decision) {
 }
 
 export async function updateProjectSourceGovernance(service, projectId, sourceId, decision) {
+  await service.decideMutation('project.source.governance.update', projectId);
   const project = service.requireProject(projectId);
   if (project.state !== 'ready') throw new Error('Source governance can only be changed before project generation.');
   if (project.knowledgePack) throw new Error('Source governance must be resolved before knowledge ingestion is attached to the project.');

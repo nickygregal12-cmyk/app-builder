@@ -65,7 +65,7 @@ test('service persists approved user-supplied source governance and records dura
 
     const persisted = context.service.getManifest('project-governed').inputs.sources.find((source) => source.id === 'logo-upload');
     assert.equal(persisted.publishUseAllowed, true);
-    assert.deepEqual(context.service.listEvents('project-governed').map((event) => event.type), ['source.governance.updated']);
+    assert.deepEqual(context.service.listEvents('project-governed').map((event) => event.type), ['mutation.decided', 'source.governance.updated']);
   } finally {
     await cleanup(context);
   }
@@ -80,7 +80,12 @@ test('service refuses public URL republication and post-generation source mutati
     const project = context.store.getProject('project-governed');
     context.store.upsertProject({ ...project, state: 'generated', updatedAt: new Date().toISOString() });
     await assert.rejects(() => updateProjectSourceGovernance(context.service, 'project-governed', 'logo-upload', 'reference-only'), /only be changed before project generation/);
-    assert.equal(context.service.listEvents('project-governed').length, 0);
+    // The refusals left no governance record, which is what this asserts. The
+    // decision to attempt each one is recorded, because a decision taken is a
+    // fact whether or not the operation that followed it succeeded.
+    const events = context.service.listEvents('project-governed');
+    assert.deepEqual(events.filter((event) => event.type === 'source.governance.updated'), []);
+    assert.deepEqual(events.map((event) => event.type), ['mutation.decided', 'mutation.decided']);
   } finally {
     await cleanup(context);
   }

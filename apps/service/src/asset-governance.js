@@ -76,6 +76,7 @@ export function assetInventory(service, projectId) {
 }
 
 export async function decideProjectAsset(service, projectId, assetId, request) {
+  await service.decideMutation('project.assets.decide', projectId);
   const pack = service.getKnowledgePack(projectId);
   if (!pack) throw new Error('Asset decisions need an ingested knowledge pack; there are no assets to decide about yet.');
   const asset = (pack.assets ?? []).find((entry) => entry.id === assetId);
@@ -121,6 +122,7 @@ export async function decideProjectAsset(service, projectId, assetId, request) {
  * judgements.
  */
 export async function recropProjectAsset(service, projectId, assetId, focalPoint) {
+  await service.decideMutation('project.assets.recrop', projectId);
   const pack = service.getKnowledgePack(projectId);
   if (!pack) throw new Error('Asset decisions need an ingested knowledge pack; there are no assets to decide about yet.');
   const asset = (pack.assets ?? []).find((entry) => entry.id === assetId);
@@ -210,6 +212,7 @@ export async function reapplyAssetFocalPoints(service, projectId) {
  * act, rather than being carried over from the last one.
  */
 export async function replaceProjectAsset(service, projectId, assetId, request) {
+  await service.decideMutation('project.assets.replace', projectId);
   const pack = service.getKnowledgePack(projectId);
   if (!pack) throw new Error('Asset decisions need an ingested knowledge pack; there are no assets to decide about yet.');
   const retiring = (pack.assets ?? []).find((entry) => entry.id === assetId);

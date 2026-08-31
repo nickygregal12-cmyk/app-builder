@@ -122,7 +122,7 @@ function copyApprovedAssetSource(service, projectId, expectedHash) {
   return { root, directory: target };
 }
 
-function frozenGenerationService(service, projectId, snapshot, assetSourceDirectory, originalState) {
+function frozenGenerationService(service, projectId, snapshot, assetSourceDirectory, originalState, planId) {
   const frozenProject = clone({
     ...snapshot.project,
     state: originalState.state,
@@ -150,6 +150,18 @@ function frozenGenerationService(service, projectId, snapshot, assetSourceDirect
       if (property === 'readDesignChoices') return (id) => id === projectId ? { schemaVersion: 1, projectId, choices: clone(frozen.designChoices) } : target.readDesignChoices(id);
       if (property === 'designReferenceInfluence') return (id) => id === projectId ? clone(frozen.referenceInfluence) : target.designReferenceInfluence(id);
       if (property === 'readBespokePresentations') return (id) => id === projectId ? { schemaVersion: 1, projectId, presentations: clone(frozen.bespokePresentations) } : target.readBespokePresentations(id);
+      // `project.generate` is refused on every route once a contract is approved.
+      // This is the one path that may take it, and it says so with the plan that
+      // authorised it rather than by skipping the decision.
+      if (property === 'decideMutation') {
+        return (operationId, id, options = {}) => target.decideMutation(
+          operationId,
+          id,
+          operationId === 'project.generate' && id === projectId
+            ? { ...options, satisfiedBy: 'approved-build-plan', authorizationId: planId }
+            : options,
+        );
+      }
       if (property === 'ingestion') return frozenIngestion;
       return Reflect.get(target, property, receiver);
     },
@@ -180,6 +192,7 @@ export async function approveProjectBuildPlan(service, projectId, { approvalId, 
   const existing = getApprovedBuildPlanByApprovalId(service.store, projectId, approvalId);
   if (existing) return existing;
 
+  await service.decideMutation('project.approved-build-plan.approve', projectId);
   const snapshot = currentApprovedBuildSnapshot(service, projectId);
   const plan = mintApprovedBuildPlan({ projectId, approvalId, source: snapshot.evidence, approvedAt, ...(planId ? { planId } : {}) });
   recordApprovedBuildPlan(service.store, plan);
@@ -236,6 +249,12 @@ export async function executeApprovedProjectBuildPlan(service, projectId, { plan
   const claimed = claimApprovedBuildPlanExecution(service.store, { planId: checked.planId, projectId, requestId, claimedAt });
   if (!claimed.claimed) throw alreadyClaimed(planId, claimed.claim, requestId);
 
+  // Decided after the plan is verified and claimed, so the record is about a
+  // plan that genuinely authorised this attempt rather than one that was merely
+  // named. The plan is what satisfies the requirement; it is still a second
+  // document, and migrating it onto ActionAuthorization is named work.
+  await service.decideMutation('project.approved-build-plan.execute', projectId, { satisfiedBy: 'approved-build-plan', authorizationId: checked.planId });
+
   const originalProject = lockProjectForApprovedGeneration(service, projectId);
   let assetSnapshot = null;
   let generationStarted = false;
@@ -258,7 +277,7 @@ export async function executeApprovedProjectBuildPlan(service, projectId, { plan
     // source, and point this one generation at the copy. A recrop or replacement
     // that happens later can only affect a later build.
     assetSnapshot = copyApprovedAssetSource(service, projectId, checked.source.assetSourceHash);
-    const generationService = frozenGenerationService(service, projectId, executionSnapshot, assetSnapshot.directory, originalProject);
+    const generationService = frozenGenerationService(service, projectId, executionSnapshot, assetSnapshot.directory, originalProject, checked.planId);
     generationStarted = true;
     const result = await Reflect.apply(service.generateProject, generationService, [projectId]);
 

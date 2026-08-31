@@ -272,11 +272,38 @@ approver (principle 17), scope may be narrowed by a caller and never widened, an
 
 This generalises `ApprovedBuildPlan`, which held exactly these guarantees for
 `project.generate` while the same effect stayed reachable through the HTTP service, the
-MCP adapter, the agent broker and internal callers, none of which asked for one. **The
-contract existing does not close that.** Route parity is a separate, unfinished piece
-of work: until every equivalent mutating route is proved — adversarially — to reach the
-same decision, the guarantee is one route's guarantee. `tooling/action-authorization.test.mjs`
-holds the contract; the parity tests do not exist yet.
+MCP adapter, the agent broker and internal callers, none of which asked for one.
+
+### One decision, every route
+
+`config/mutating-operations.json` enumerates every operation that changes durable state,
+and `apps/service/src/mutation-decision.js` is the one place a decision is taken about
+any of them. Three facts do the work:
+
+- **There are three ways in, not five.** An HTTP request, a broker socket message, and an
+  in-process call. The Builder Console and the MCP adapter are clients of the first two
+  and have no private door, so a decision taken inside the service is taken for all of
+  them. Putting the decision in a router would have needed it in three routers; putting
+  it in the service needed it once.
+- **The surface is observed, not claimed.** It comes from the entry point, held in
+  async-local storage for the life of the call. A caller that could name its own surface
+  could name a more privileged one. Untagged is `internal`, the least privileged reading.
+- **Deny by default.** An operation with no registry entry is refused, so the next
+  mutating route somebody adds either registers itself or fails the suite.
+
+`project.generate` is `required-after-contract-approval`: before an owner approves a
+contract a workspace build is the operator's own scratch, and after approval the approved
+plan is the only way to build that project. That is the closure of the original bypass —
+freezing an owner's approved inputs means something only when nothing can build around
+them. `tooling/mutation-route-parity.test.mjs` proves it against the real HTTP server, the
+real broker dispatch map and a direct in-process call, and asserts all three refusals are
+recorded with the surface that asked.
+
+**Still outstanding.** `project.approved-build-plan.execute` is satisfied by the plan
+rather than by an ActionAuthorization, so two documents can still authorise one operation;
+migrating the plan onto the authorization is named work. And every other mutating
+operation is `recorded` rather than `required` — the registry states, per operation, what
+would escalate it, and the release lane is what escalates most of them.
 
 ## Environment boundary
 

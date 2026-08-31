@@ -127,8 +127,8 @@
       "schema": "approved-intake-bundle.schema.json",
       "typeName": "AppBuilderApprovedIntakeBundle",
       "boundary": "Durable approved-intake persistence and the service replay/import path.",
-      "typesHash": "d4688fddfd6d6da2f6b4e9b4df9d0bd95fe35ca33a7e33c926a5f247ffe17617",
-      "schemaHash": "43410f0bb6480ac471026f749df7f481d71b294b866caac7454cfff814e8ebfe"
+      "typesHash": "ebace261f21c38d7fad8d41f9c80da3eba1952a3bd5347655ae9bb0406ba1c7c",
+      "schemaHash": "ee829633e2eb4ec8a66527d1aecde44c16c982dd927f426dfa9ba1f425507704"
     },
     {
       "id": "approved-build-plan",

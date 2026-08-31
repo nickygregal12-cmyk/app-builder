@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createServer } from 'node:http';
 import { spawnSync } from 'node:child_process';
+import { buildPortabilityRecord } from '../../../tooling/lib/candidate-portability.mjs';
 
 /**
  * Candidate workspaces — Phase 4D.
@@ -46,7 +47,7 @@ function run(command, args, cwd) {
  * dependencies it never declared, and this refuses instead.
  */
 export function installSharedDependencies(workspaces) {
-  if (!workspaces.length) return;
+  if (!workspaces.length) return new Map();
   const [first, ...rest] = workspaces;
   const reference = fs.readFileSync(path.join(first, 'package.json'), 'utf8');
   for (const workspace of rest) {
@@ -58,13 +59,46 @@ export function installSharedDependencies(workspaces) {
   run('npm', ['install', '--no-audit', '--no-fund'], first);
   const source = path.join(first, 'node_modules');
   for (const workspace of rest) fs.cpSync(source, path.join(workspace, 'node_modules'), { recursive: true });
+  // Which workspace resolved the tree, so a candidate's record can say whether
+  // it installed or inherited rather than implying it did the stronger thing.
+  const provenance = new Map([[first, { mode: 'clean', installedFrom: null }]]);
+  for (const workspace of rest) provenance.set(workspace, { mode: 'shared-from-sibling', installedFrom: path.basename(first) });
+  return provenance;
 }
 
-/** Verify and build a candidate the way its own repository would be verified. */
-export function verifyCandidate(workspace) {
-  run('npm', ['run', 'check'], workspace);
-  run('npm', ['run', 'build'], workspace);
-  return path.join(workspace, 'dist');
+/**
+ * Verify and build a candidate the way its own repository would be verified,
+ * and record what that proved.
+ *
+ * This used to return a path and throw on failure, which meant a candidate that
+ * passed carried no evidence that anything had been checked. A reviewer had to
+ * take portability on faith, and the factory-dependency check did not run until
+ * promotion — after the review it was supposed to inform.
+ *
+ * Check and build still throw, because a candidate that cannot build cannot be
+ * photographed and there is nothing useful to do with it. What changed is that
+ * success now produces a record, and the independence, artifact and renderer
+ * questions are answered here rather than after the decision.
+ */
+export function verifyCandidatePortability(workspace, { candidateId = null, install = null, renderer = null, expectedRenderer = null } = {}) {
+  const steps = [];
+  for (const script of ['check', 'build']) {
+    const startedAt = Date.now();
+    run('npm', ['run', script], workspace);
+    steps.push({ command: `npm run ${script}`, ok: true, durationMs: Date.now() - startedAt });
+  }
+  return {
+    dist: path.join(workspace, 'dist'),
+    portability: buildPortabilityRecord({
+      candidateId,
+      workspace,
+      installMode: install?.mode ?? 'clean',
+      installedFrom: install?.installedFrom ?? null,
+      steps,
+      renderer,
+      expectedRenderer,
+    }),
+  };
 }
 
 /**

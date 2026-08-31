@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { summarisePortability } from './candidate-portability.mjs';
 
 export function captureInventory(evidence) {
   return (evidence?.captures ?? []).map((capture) => ({
@@ -61,6 +62,24 @@ function definition(entries) {
  * has to do is open from a file:// URL on a machine that has never heard of this
  * repository.
  */
+/**
+ * The one line a reviewer needs about the repository behind the pictures.
+ *
+ * Deliberately terse and deliberately present. A reviewer is here to judge the
+ * composition, not to audit a build — but "this candidate is a real repository
+ * that builds and ships without the factory" is a precondition of their
+ * judgement being worth anything, and leaving it out means they assume it.
+ */
+function renderPortability(portability) {
+  if (!portability) return '<p class="portability unknown">Portability: not recorded for this candidate.</p>';
+  if (!portability.portable) {
+    return `<p class="portability broken"><strong>Not portable.</strong> ${escapeHtml(portability.shortfalls.join(' '))}</p>`;
+  }
+  const artifact = portability.artifact;
+  const kb = Math.round(artifact.totalBytes / 1024);
+  return `<p class="portability ok">Portable: installed (${escapeHtml(portability.install.mode)}), <code>npm run check</code> and <code>npm run build</code> passed, shipped ${artifact.fileCount} file(s) / ${artifact.documentCount} document(s) / ${kb} kB, no factory dependency.</p>`;
+}
+
 function renderIndex(packet) {
   const candidates = packet.candidates.map((candidate) => `
     <article>
@@ -70,6 +89,7 @@ function renderIndex(packet) {
       ${definition(Object.entries(candidate.axes).map(([axis, value]) => [axis, value ?? '—']))}
       ${candidate.review ? `<p class="verdict"><strong>${escapeHtml(candidate.review.verdict)}</strong> by ${escapeHtml(candidate.review.reviewedBy)}${typeof candidate.review.overallScore === 'number' ? ` · ${candidate.review.overallScore}/10` : ''}${candidate.review.rationale ? ` — ${escapeHtml(candidate.review.rationale)}` : ''}</p>` : '<p class="verdict pending">No verdict yet.</p>'}
       ${candidate.designLint.length ? `<ul class="lint">${candidate.designLint.map((finding) => `<li><em>${escapeHtml(finding.severity)}</em> ${escapeHtml(finding.rule)} — ${escapeHtml(finding.detail)}</li>`).join('')}</ul>` : '<p class="lint-clean">DesignLint: nothing to report.</p>'}
+      ${renderPortability(candidate.portability)}
       ${candidate.captures.length ? '<p class="crop-note">Thumbnails show the top of each page so the set stays comparable. Select one to open that capture whole — a page is judged by all of it, not by its first screenful.</p>' : ''}
       <div class="shots">${candidate.captures.map((capture) => `
         <figure>
@@ -101,6 +121,10 @@ function renderIndex(packet) {
   .gate-clear { background: #dff0e3; }
   .gate-review-required { background: #f6ecd2; }
   .gate-blocked { background: #f4dcd8; }
+  .portability { font-size: 0.82rem; margin: 8px 0 0; color: #555; }
+  .portability code { font: 12px/1.4 ui-monospace, monospace; }
+  .portability.broken { color: #8a2b20; }
+  .portability.unknown { color: #777; font-style: italic; }
   .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px; }
   figure { margin: 0; }
   figure a { display: block; border-radius: 8px; }
@@ -186,6 +210,10 @@ export function writeVisualReviewPacket({ outputDir, business, set, criteria, qu
       compositionHash: candidate.compositionHash,
       gate: candidate.gate,
       designLint: list(candidate.designLint?.findings),
+      // Whether the repository behind these pictures stands up on its own. A
+      // reviewer judging composition should not also have to wonder whether the
+      // thing they are judging could be shipped.
+      portability: candidate.portability ?? null,
       review: candidate.review ?? null,
       captures,
     };
@@ -208,6 +236,7 @@ export function writeVisualReviewPacket({ outputDir, business, set, criteria, qu
     criteria: list(criteria),
     designReferences: list(designReferences),
     candidates,
+    portability: summarisePortability(candidates.map((candidate) => candidate.portability).filter(Boolean)),
     promotedCandidateId: set.promotedCandidateId ?? null,
   };
 

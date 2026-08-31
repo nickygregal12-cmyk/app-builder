@@ -23,7 +23,8 @@
           "description": "Null is a fact rather than a gap: a project replayed from an approved intake bundle has an approved manifest and no ingested material. `knowledgeSource` says which case this is, so a reviewer never has to guess whether a hash went missing."
         },
         "knowledgeSource": {"enum": ["ingested-knowledge-pack", "approved-manifest-only"]},
-        "baselineCompositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        "baselineCompositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "renderer": {"type": ["string", "null"], "description": "The renderer every candidate in this set was built through, agreed across the set rather than declared for it. A direction changes presentation and never capability, so a set whose candidates disagree here is refused at generation."}
       },
       "additionalProperties": false
     },
@@ -223,6 +224,81 @@
         "compositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "designSystemSpecHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
         "workspace": {"type": ["string", "null"], "description": "Where this candidate was built while it was being compared. Temporary by design: a rejected candidate's workspace is removed and only its evidence survives."},
+        "renderer": {"type": ["string", "null"], "description": "The renderer that produced this candidate, recorded per candidate so the set-level agreement is checkable rather than assumed."},
+        "portability": {
+          "type": "object",
+          "description": "Proof, gathered before the review rather than at promotion, that this candidate is a repository somebody could be handed: it checked, it built, it emitted a servable artifact, and it declares no dependency on the factory that made it. A reviewer is about to be asked to judge the composition, and a screenshot says nothing about whether the thing behind it stands up. Recorded rather than merely performed, because a check nobody can see is indistinguishable from a check nobody ran.",
+          "required": ["schemaVersion", "candidateId", "install", "steps", "factoryIndependence", "artifact", "renderer", "portable", "shortfalls"],
+          "properties": {
+            "schemaVersion": {"const": 1},
+            "candidateId": {"type": ["string", "null"]},
+            "install": {
+              "type": "object",
+              "description": "How this workspace got its dependency tree. A set installs once and shares it across byte-identical package.json files, so `clean` and `shared-from-sibling` are different claims and only the first was proven directly here.",
+              "required": ["mode", "installedFrom", "detail"],
+              "properties": {
+                "mode": {"enum": ["clean", "shared-from-sibling"]},
+                "installedFrom": {"type": ["string", "null"]},
+                "detail": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            },
+            "steps": {
+              "type": "array",
+              "description": "The repository's own verification scripts, run the way its own CI would run them.",
+              "items": {
+                "type": "object",
+                "required": ["command", "ok"],
+                "properties": {
+                  "command": {"type": "string", "minLength": 1},
+                  "ok": {"type": "boolean"},
+                  "durationMs": {"type": "integer", "minimum": 0}
+                },
+                "additionalProperties": false
+              }
+            },
+            "factoryIndependence": {
+              "type": "object",
+              "description": "Whether the generated repository can live outside the factory. A factory-scoped package or a filesystem-local specifier installs here and nowhere else.",
+              "required": ["ok", "offenders", "detail"],
+              "properties": {
+                "ok": {"type": "boolean"},
+                "offenders": {"type": "array", "items": {"type": "string"}},
+                "detail": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            },
+            "artifact": {
+              "type": "object",
+              "description": "What the production build emitted. A zero exit code is not the same as having shipped something, and a build that succeeds and writes nothing would otherwise be photographed as a blank page with nothing saying why.",
+              "required": ["ok", "artifactDir", "fileCount", "documentCount", "totalBytes", "hasShell", "shortfalls"],
+              "properties": {
+                "ok": {"type": "boolean"},
+                "artifactDir": {"type": "string", "minLength": 1},
+                "fileCount": {"type": "integer", "minimum": 0},
+                "documentCount": {"type": "integer", "minimum": 0},
+                "totalBytes": {"type": "integer", "minimum": 0},
+                "hasShell": {"type": "boolean"},
+                "shortfalls": {"type": "array", "items": {"type": "string"}}
+              },
+              "additionalProperties": false
+            },
+            "renderer": {
+              "type": "object",
+              "required": ["ok", "actual", "expected", "detail"],
+              "properties": {
+                "ok": {"type": "boolean"},
+                "actual": {"type": ["string", "null"]},
+                "expected": {"type": ["string", "null"]},
+                "detail": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            },
+            "portable": {"type": "boolean"},
+            "shortfalls": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
         "assetStrategy": {"enum": ["imagery-viable", "imagery-supporting", "typography-led"]},
         "referenceAnalysisIds": {"type": "array", "items": {"type": "string"}},
         "evidenceId": {"type": ["string", "null"]},

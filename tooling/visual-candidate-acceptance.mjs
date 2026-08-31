@@ -52,6 +52,7 @@ import { FactoryService } from '../apps/service/src/factory-service.js';
 import { designReferenceSummary } from '../apps/service/src/visual-references.js';
 import { captureInventory, writeVisualReviewPacket } from './lib/visual-review-report.mjs';
 import { classifyCandidateTruthReadiness } from './lib/candidate-truth-readiness.mjs';
+import { assertPortableForReview, buildPortabilityRecord, summarisePortability } from './lib/candidate-portability.mjs';
 
 // The default business, kept so the existing acceptance command means what it
 // has always meant.
@@ -166,7 +167,16 @@ try {
   for (const candidate of captured.candidates) {
     const evidence = service.getRenderedEvidence(project.id, candidate.evidenceId);
     console.log(`  ${candidate.candidateId}: ${evidence.captures.length} captures, gate ${candidate.gate.status}${candidate.gate.mustAddress.length ? ` (must address ${candidate.gate.mustAddress.join(', ')})` : ''}`);
+    const portability = candidate.portability;
+    if (portability) {
+      console.log(`    portable: ${portability.portable} — install ${portability.install.mode}, ${portability.artifact.fileCount} file(s), ${portability.artifact.documentCount} document(s), ${portability.artifact.totalBytes} byte(s), renderer ${portability.renderer.actual ?? 'undeclared'}`);
+    }
   }
+
+  // Said out loud before a reviewer is asked for anything. A set that reached
+  // this line is one whose candidates are all real repositories.
+  const setPortability = summarisePortability(captured.candidates.map((candidate) => candidate.portability).filter(Boolean));
+  console.log(`Candidate portability: ${setPortability.portable}/${setPortability.total} portable (${setPortability.cleanInstalls} clean install(s), ${setPortability.totalArtifactBytes} byte(s) shipped).`);
 
   const packets = captured.candidates.map((candidate) => service.visualReviewPacket(project.id, candidate.candidateId));
   fs.writeFileSync(path.join(root, 'review-packets.json'), `${JSON.stringify(packets, null, 2)}\n`);
@@ -195,6 +205,7 @@ try {
   const verdictFile = argument('--verdicts');
   let decided = captured;
   let promotion = null;
+  let promotedPortability = null;
   if (verdictFile) {
     const verdicts = JSON.parse(fs.readFileSync(verdictFile, 'utf8'));
     for (const verdict of verdicts.reviews ?? []) decided = await service.recordVisualCandidateReview(project.id, verdict.candidateId, verdict);
@@ -203,16 +214,25 @@ try {
       promotion = verdicts.promote;
       // The promoted direction is a durable design choice, so the project's own
       // next build renders it. This is where the promotion becomes the product.
+      //
+      // The same portability questions are asked of the promoted repository as
+      // were asked of every candidate before the review, through the same module
+      // rather than a second inline copy of the rules. The copy here was the
+      // only place the factory-dependency check ran, which is why it used to run
+      // after the decision it should have informed.
       const rebuilt = await service.generateProject(project.id);
       run('npm', ['install', '--no-audit', '--no-fund'], rebuilt.workspace);
       run('npm', ['run', 'check'], rebuilt.workspace);
       run('npm', ['run', 'build'], rebuilt.workspace);
-      const packageJson = JSON.parse(fs.readFileSync(path.join(rebuilt.workspace, 'package.json'), 'utf8'));
-      const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
-      if (Object.keys(dependencies).some((name) => name.startsWith('@app-builder/'))) {
-        throw new Error('The promoted repository depends on the factory. A generated project must stay an ordinary repository.');
-      }
+      promotedPortability = buildPortabilityRecord({
+        candidateId: verdicts.promote.candidateId,
+        workspace: rebuilt.workspace,
+        installMode: 'clean',
+        steps: [{ command: 'npm run check', ok: true }, { command: 'npm run build', ok: true }],
+      });
+      assertPortableForReview([promotedPortability]);
       console.log(`Promoted ${verdicts.promote.candidateId}; rebuilt and verified at ${rebuilt.workspace}`);
+      console.log(`  ${promotedPortability.artifact.fileCount} file(s), ${promotedPortability.artifact.documentCount} document(s), ${promotedPortability.artifact.totalBytes} byte(s); ${promotedPortability.factoryIndependence.detail}`);
     }
   }
 
@@ -262,10 +282,20 @@ try {
         captures: evidence?.captures.length ?? 0,
         captureInventory: captureInventory(evidence),
         designLint: candidate.designLint?.counts ?? null,
+        // What a reviewer would otherwise have to take on faith: that the
+        // repository behind this screenshot installs, checks, builds, ships
+        // something, and does not need the factory to run.
+        portability: candidate.portability ?? null,
         review: candidate.review,
         outcome: candidate.outcome,
       };
     }),
+    // The set-level answer, so the first thing a reviewer reads is whether the
+    // set is worth reviewing at all.
+    portability: {
+      ...summarisePortability(decided.candidates.map((candidate) => candidate.portability).filter(Boolean)),
+      promoted: promotedPortability,
+    },
     promotedCandidateId: decided.promotedCandidateId,
     setOutcome: decided.setOutcome ?? 'undecided',
     qualityGate: service.visualQualityGate(),

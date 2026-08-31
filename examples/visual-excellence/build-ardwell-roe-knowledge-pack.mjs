@@ -37,6 +37,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { assertKnowledgePack } from '@app-builder/content-intelligence';
 import { composeProject } from '@app-builder/composition';
+import { ingestBenchmarkAssets } from '../../tooling/lib/benchmark-asset-ingestion.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const BUNDLE = path.join(here, 'ardwell-roe-approved-intake.v1.json');
@@ -278,6 +279,27 @@ const chunks = SOURCE_DOCUMENTS.map(([sourceId, , text]) => ({
 const documentText = new Map(SOURCE_DOCUMENTS.map(([sourceId, , text]) => [sourceId, text]));
 const bundle = JSON.parse(fs.readFileSync(BUNDLE, 'utf8'));
 
+// Bytes, if any have been supplied. The plan is the specification and the
+// filename stem is the binding, so producing the images is the only step that
+// happens outside this repository.
+const assetDirIndex = process.argv.indexOf('--assets');
+const assetDir = assetDirIndex === -1 ? null : process.argv[assetDirIndex + 1];
+const plan = JSON.parse(fs.readFileSync(path.join(here, 'ardwell-roe-asset-plan.v1.json'), 'utf8'));
+const ingestion = ingestBenchmarkAssets({
+  plan,
+  assetDir,
+  sourceIdFor: (asset) => (asset.role === 'brand' ? 'ardwell-roe-wordmark' : 'ardwell-roe-photography'),
+});
+if (ingestion.problems.length) {
+  for (const problem of ingestion.problems) console.error(`  ${problem}`);
+  console.error(`${ingestion.problems.length} supplied asset(s) do not match the plan. Nothing was written.`);
+  process.exit(1);
+}
+if (ingestion.unplanned.length) {
+  console.error(`Supplied but not in the plan: ${ingestion.unplanned.join(', ')}. Add them to the plan or remove them; an unplanned image on a page leaves the plan describing something the site is not.`);
+  process.exit(1);
+}
+
 const base = {
   schemaVersion: 1,
   intelligenceVersion: '0.1.0',
@@ -306,7 +328,11 @@ const base = {
   },
   // Empty until real bytes are ingested against the asset plan. A right is not
   // an asset, and the schema requires a contentHash that cannot be invented.
-  assets: [],
+  //
+  // `--assets <dir>` is the whole ingestion protocol: name each file after the
+  // asset ID it was produced for and point this at the directory. Which governed
+  // source made them is an owner decision and deliberately leaves no trace here.
+  assets: ingestion.assets,
   content,
   chunks,
   references: [],

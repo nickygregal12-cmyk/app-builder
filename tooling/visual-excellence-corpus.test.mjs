@@ -18,6 +18,7 @@
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
@@ -25,6 +26,9 @@ import { createHash } from 'node:crypto';
 import { assessBenchmarkAssetReadiness } from './lib/benchmark-asset-readiness.mjs';
 import { classifyCandidateTruthReadiness } from './lib/candidate-truth-readiness.mjs';
 import { validateContract } from '../packages/contracts/src/index.js';
+import { writeVisualReviewPacket } from './lib/visual-review-report.mjs';
+import { FactoryStore } from '../apps/service/src/store.js';
+import { FactoryService } from '../apps/service/src/factory-service.js';
 
 const ROOT = 'examples/visual-excellence';
 const read = (file) => JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
@@ -181,4 +185,104 @@ test('the gate passes once the floor is met, and only then', () => {
 test('the gate is generic, and knows nothing about this business', () => {
   const source = fs.readFileSync('tooling/lib/benchmark-asset-readiness.mjs', 'utf8');
   assert.doesNotMatch(source, /ardwell|roe|nbm|mgb/i, 'the readiness gate must not know a case by name');
+});
+
+test('a reviewer opening this benchmark is told the business does not exist', () => {
+  // The end of the chain the declaration exists for. It is no use having the
+  // bundle say `fictional` if the surface a reviewer actually opens does not,
+  // so the real bundle is carried through to a real packet here rather than a
+  // fixture that could drift from it.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-excellence-packet-'));
+  try {
+    const packet = writeVisualReviewPacket({
+      outputDir: path.join(root, 'packet'),
+      business: BUNDLE.projectManifest.project.name,
+      truthBasis: BUNDLE.provenance.benchmark,
+      set: {
+        setId: 'candidates-0123456789abcdef',
+        projectId: 'project-benchmark',
+        createdAt: '2026-08-31T00:00:00.000Z',
+        frozenTruth: { projectType: 'marketing-site', manifestVersion: 1, knowledgePackHash: PACK.packHash, baselineCompositionHash: 'a'.repeat(64) },
+        assetReadiness: { strategy: 'typography-led', supportsImageryLed: false, strategyReason: 'No bytes have been ingested yet.' },
+        diversity: { distinct: true },
+        candidates: [],
+        promotedCandidateId: null,
+      },
+      criteria: [],
+      readEvidence: () => null,
+      readCapture: () => null,
+    });
+    const html = fs.readFileSync(path.join(packet.root, 'index.html'), 'utf8');
+    assert.match(html, /Fictional benchmark business/i);
+    assert.match(html, /may be published as a real business/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/**
+ * What the factory does with ideal input, measured before the photographs exist.
+ *
+ * This is not the visual ceiling and must not be read as it — that measurement
+ * needs the imagery and is deliberately not frozen yet. But composition happens
+ * long before a browser does, and the gaps it exposes are real now: an approved
+ * surface that composes to nothing is missing capability, not missing pictures,
+ * and no photograph would fill it.
+ *
+ * The numbers are asserted rather than printed so that closing a gap is a
+ * deliberate act with a visible diff, and so that losing one cannot happen
+ * quietly.
+ */
+test('the benchmark composes, and what it cannot yet fill is recorded rather than discovered later', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'visual-excellence-compose-'));
+  try {
+    const store = new FactoryStore({ stateRoot: path.join(root, 'state') });
+    const service = new FactoryService({ store, workspacesRoot: path.join(root, 'workspaces'), factoryRoot: process.cwd() });
+    const { project } = await service.replayIntakeBundle(BUNDLE, { knowledgePack: PACK });
+    const full = service.requireProject(project.id);
+    const { composition } = service.frozenProductTruth(project.id);
+
+    // Every approved surface reaches the composition as a page. A surface the
+    // owner approved and the factory silently dropped would be the worse
+    // failure, because nothing downstream would ever mention it.
+    assert.equal(full.manifest.majorSurfaces.length, 7);
+    assert.ok(composition.pages.length >= full.manifest.majorSurfaces.length,
+      `${composition.pages.length} page(s) for ${full.manifest.majorSurfaces.length} approved surface(s)`);
+
+    // The rich truth survives into the composition rather than being ingested
+    // and then dropped between the pack and the page.
+    const composed = JSON.stringify(composition);
+    assert.ok(composed.includes(PACK.companyProfile.projects[0].name), 'a project name did not survive composition');
+    assert.ok(composed.includes(PACK.companyProfile.people[0].name), 'a person did not survive composition');
+    assert.ok(composed.includes(PACK.companyProfile.accreditations[0].name), 'an award did not survive composition');
+
+    // The honest gaps, named. Two are the asset gap and will close when the
+    // bytes arrive. Three are capability: Studio, Expertise and Approach are
+    // approved surfaces the composer has no vocabulary to fill, and it says so
+    // rather than emitting a heading over nothing and calling it a page.
+    const warnings = composition.warnings.map(String).sort();
+    assert.deepEqual(warnings, [
+      'declared-proof-missing:project photos',
+      'empty-declared-surface:Approach',
+      'empty-declared-surface:Expertise',
+      'empty-declared-surface:Studio',
+      'no-publishable-imagery',
+    ], 'the benchmark\'s known gaps changed; close one deliberately or explain the new one');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('every planned asset ID is usable as a filename, because the filename is the binding', () => {
+  // The ingestion protocol is "name the file after the asset ID". That is the
+  // whole contract with whoever produces the bytes, and it quietly breaks for an
+  // ID containing a path separator, a space or a character a filesystem treats
+  // specially — at which point a supplied file silently fails to bind and the
+  // gate reports it as never delivered.
+  for (const asset of PLAN.assets) {
+    assert.match(asset.assetId, /^[a-z0-9][a-z0-9-]*[a-z0-9]$/,
+      `asset ID ${asset.assetId} cannot be used as a filename stem`);
+  }
+  assert.equal(new Set(PLAN.assets.map((asset) => asset.assetId)).size, PLAN.assets.length,
+    'two planned assets share an ID, so one file would bind to both');
 });

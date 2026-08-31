@@ -250,3 +250,49 @@ test('a capture the packet cannot copy is not named by it', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('a fictional benchmark says so before it says anything else', () => {
+  // The material in a benchmark packet — testimonials, awards, projects, named
+  // people — is indistinguishable from a real practice's once it is in a
+  // screenshot. A reviewer handed it unlabelled has every reason to read it as
+  // claims about a real company, and might check an award or weigh a
+  // testimonial that was invented to fill a slot.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-packet-benchmark-'));
+  try {
+    const result = writePacket(root, {
+      business: 'Ardwell & Roe',
+      truthBasis: {
+        businessReality: 'fictional',
+        truthPurpose: 'visual-excellence-benchmark',
+        publicationAllowed: 'benchmark-only',
+        externalVerification: 'not-applicable',
+        corpus: 'visual-excellence',
+      },
+    });
+
+    const packet = JSON.parse(fs.readFileSync(path.join(result.root, 'review.json'), 'utf8'));
+    assert.equal(packet.truthBasis.businessReality, 'fictional');
+
+    const html = fs.readFileSync(path.join(result.root, 'index.html'), 'utf8');
+    assert.match(html, /Fictional benchmark business/i);
+    assert.match(html, /ideal-input visual-ceiling test/i);
+    assert.match(html, /None of it is a claim about a real company/i);
+    // Before the business name, not somewhere further down a long page.
+    assert.ok(html.indexOf('truth-basis') < html.indexOf('<h1>'), 'the label must precede the business it qualifies');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a real business carries no such banner, which is what makes the banner mean something', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-packet-genuine-'));
+  try {
+    const result = writePacket(root);
+    const packet = JSON.parse(fs.readFileSync(path.join(result.root, 'review.json'), 'utf8'));
+    assert.equal(packet.truthBasis, null, 'absence is the ordinary case rather than a missing field');
+    const html = fs.readFileSync(path.join(result.root, 'index.html'), 'utf8');
+    assert.doesNotMatch(html, /Fictional benchmark business/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

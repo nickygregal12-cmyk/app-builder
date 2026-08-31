@@ -177,6 +177,14 @@
       "boundary": "Permission for one exact operation against one exact base, once. Minted by the service on explicit operator approval and required by every mutating route.",
       "schemaHash": "708cf2f8598c4fffee861b3e7e58eb2e0f669e5c0ef6c1a2766a68b59a4df1d4",
       "typesHash": "9f7a7ba2c3619c075c45142b98659a554470676c1b9dd6e6c890efce469495f5"
+    },
+    {
+      "id": "project-summary",
+      "schema": "project-summary.schema.json",
+      "typeName": "AppBuilderProjectSummary",
+      "boundary": "What the service says about a project over its own boundary. Written by the service and read by the Console, which used to carry a hand-written copy of it.",
+      "schemaHash": "5840c31ab2185050fccdae8af441eecf266d783e3ffdb93fac010779cb639d97",
+      "typesHash": "d66fe9b70d77fa2b503039480e07f58c78ba64dbdaa51553c0c4a23bcf681497"
     }
   ],
   "pending": [

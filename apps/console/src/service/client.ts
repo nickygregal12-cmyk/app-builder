@@ -1,4 +1,4 @@
-import type { AppBuilderApprovedIntakeBundle, AppBuilderProjectManifest } from '@app-builder/contracts';
+import type { AppBuilderApprovedIntakeBundle, AppBuilderProjectManifest, AppBuilderProjectSummary } from '@app-builder/contracts';
 import type { SourceReference } from '@app-builder/factory-core';
 
 export type { SourceReference };
@@ -6,33 +6,13 @@ export type { SourceReference };
 // Service transport projections remain local until their contract families are
 // migrated to schema-derived packages/contracts. Do not treat these as a
 // second authority for the Project Manifest itself.
-export type ProjectSummary = {
-  id: string;
-  name: string;
-  type: string;
-  slug: string;
-  /** Legacy build progress. `verified` means a build once ran, not that this artifact is reproducible or accepted. */
-  state: string;
-  /** The canonical lifecycle claim, or null when the project carries no exact artifact identity for one to be about. */
-  lifecycle: { lifecycleState: string | null; basis: string; missing: string[]; legacyState: string | null };
-  /** What the last verification installed from, ran under and built. Null until one recorded it. */
-  buildIdentity: {
-    sourceDigest: string;
-    lockDigest: string;
-    toolchain: { node: string; npm: string | null };
-    outputDigest: string;
-    outputFiles: number;
-    reproducible: boolean;
-    toolchainSummary: string;
-    recordedAt: string;
-  } | null;
-  workspacePath: string | null;
-  manifestVersion: number;
-  knowledgePackHash: string | null;
-  approvedIntakeBundleId: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+//
+// `ProjectSummary` is migrated. It was the shape that proved why: the lifecycle
+// claim and the build identity were added to the service and then typed a
+// second time here by hand, with nothing checking that the two spellings
+// agreed — and a Console reading `lifecycleState` from a service that had
+// renamed it would compile perfectly and display nothing.
+export type ProjectSummary = AppBuilderProjectSummary;
 
 export type ControlTask = {
   id: string;

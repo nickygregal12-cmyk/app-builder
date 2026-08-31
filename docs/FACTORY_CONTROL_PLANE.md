@@ -305,6 +305,25 @@ migrating the plan onto the authorization is named work. And every other mutatin
 operation is `recorded` rather than `required` — the registry states, per operation, what
 would escalate it, and the release lane is what escalates most of them.
 
+### The boundary describes itself once
+
+`apps/console/src/service/client.ts` carried a hand-written `ProjectSummary`, and the service
+built the object it was supposed to describe with nothing comparing them. That is survivable while a
+shape is stable and stops being survivable the moment one changes — and two changes landed in quick
+succession, the lifecycle claim and the build identity, each typed twice by hand. A Console reading
+`lifecycleState` from a service that had renamed it would compile on both sides and render nothing.
+No test would fail and nobody would be told.
+
+`schemas/project-summary.schema.json` is now the family. The Console imports the generated type
+rather than restating it, and the service asserts the contract on the way out. Two of the three ways
+this can drift are impossible rather than merely tested: the Console cannot disagree with a type it
+does not write, and the service cannot emit a shape its own boundary refuses. What is left to test is
+that nobody has gone back to hand-writing it, which `tooling/service-transport-parity.test.mjs` does.
+
+This is deliberately one family and not a repository-wide migration. The other transport projections
+in that file are stable and have not cost anything; the two that had just changed are the two that
+proved the cost. A family earns generation by drifting, or by being about to.
+
 ## Environment boundary
 
 Before the Console/runtime exposes powerful database/deploy operations, `development`, `preview` and `production` must be explicit identities.

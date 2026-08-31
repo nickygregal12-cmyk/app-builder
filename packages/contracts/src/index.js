@@ -66,7 +66,11 @@ export function formatContractError(error, subject = 'value') {
     return `${location ? `${location}.` : ''}${missing} is required`;
   }
   if (error.keyword === 'pattern' && location.endsWith('slug')) return `${location} must be kebab-case`;
-  if (error.keyword === 'pattern' && /hash/i.test(location)) return `${location} must be a SHA-256 hex digest`;
+  // `digest` as well as `hash`: the identity work named its fields
+  // `sourceDigest`, `lockDigest` and `outputDigest`, and without this a
+  // truncated digest was reported as "must contain non-whitespace text" — which
+  // is not merely unhelpful but false, since the value it rejected was text.
+  if (error.keyword === 'pattern' && /hash|digest/i.test(location)) return `${location} must be a SHA-256 hex digest`;
   if (error.keyword === 'pattern') return `${location || 'value'} must contain non-whitespace text`;
   if (error.keyword === 'enum' || error.keyword === 'const') return `${location || 'value'} is unsupported`;
   if (error.keyword === 'type') return `${location || 'value'} must be ${String(error.params?.type ?? 'the expected type')}`;

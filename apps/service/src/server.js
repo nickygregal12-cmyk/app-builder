@@ -21,7 +21,10 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('APP_BU
 
 const store = new FactoryStore({ stateRoot });
 const service = new FactoryService({ store, workspacesRoot, stateRoot });
-const server = createFactoryHttpServer({ service, servicePort: port });
+// Set by a launcher that started this process and will verify it reached the
+// service it started rather than one that already owned the port.
+const instance = process.env.APP_BUILDER_SERVICE_INSTANCE ?? null;
+const server = createFactoryHttpServer({ service, servicePort: port, instance });
 
 // The agent capability broker is the only Factory surface an untrusted task
 // may reach (issue #55). It is off unless the operator supplies both a socket

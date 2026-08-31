@@ -39,12 +39,33 @@ function refusePreviewFrameRequests() {
   };
 }
 
+/**
+ * Which factory this Console talks to.
+ *
+ * One machine can hold more than one — a service running under systemd on the
+ * default port, and a stack started from a checkout on another. A hard-coded
+ * target meant the Console always reached whichever factory owned 4310, so a
+ * second stack could not be run and, when one was, its Console silently drove
+ * the wrong factory's projects.
+ */
+function factoryTarget(): string {
+  const host = process.env.APP_BUILDER_SERVICE_HOST ?? '127.0.0.1';
+  const raw = process.env.APP_BUILDER_SERVICE_PORT ?? '4310';
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`APP_BUILDER_SERVICE_PORT must be a valid TCP port; received "${raw}".`);
+  }
+  return `http://${host}:${port}`;
+}
+
+const target = factoryTarget();
+
 export default defineConfig({
   plugins: [react(), refusePreviewFrameRequests()],
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4310',
+        target,
         changeOrigin: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -53,7 +74,7 @@ export default defineConfig({
       // app emits resolves without a host-loopback address. No rewrite: the
       // path must match on both sides or the generated app's own base breaks.
       '/preview': {
-        target: 'http://127.0.0.1:4310',
+        target,
         changeOrigin: false,
         ws: true,
       },

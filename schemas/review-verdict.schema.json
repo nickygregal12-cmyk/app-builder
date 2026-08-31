@@ -21,6 +21,40 @@
       "items": {"type": "string", "minLength": 1},
       "description": "Roles that created or materially changed the artifact. The reviewer must not appear here."
     },
+    "authorExecutor": {
+      "type": ["object", "null"],
+      "description": "What produced or materially changed the artifact, as distinct from the role it held. Principle 17 is enforced by role, and one model can hold two roles: asked to build and then to judge it agrees with itself while every role check passes. Optional, because most verdicts predate this field and a required one would invalidate them; absent means executor independence cannot be established, which is a finding rather than a pass.",
+      "required": ["vendor", "model", "attestedBy"],
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "adapterId": {"type": ["string", "null"]},
+        "runtime": {"type": ["string", "null"]},
+        "role": {"type": ["string", "null"]},
+        "dataClass": {"type": ["string", "null"]},
+        "attemptId": {"type": ["string", "null"]},
+        "costGbp": {"type": ["number", "null"], "minimum": 0},
+        "attestedBy": {"enum": ["runtime", "caller"], "description": "runtime means the executor stamped its own identity from what it is. caller means somebody supplied it, and a reviewer identity supplied by the side being reviewed is a self-report."}
+      }
+    },
+    "reviewerExecutor": {
+      "type": ["object", "null"],
+      "description": "What issued this verdict. Optional for the same reason.",
+      "required": ["vendor", "model", "attestedBy"],
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "adapterId": {"type": ["string", "null"]},
+        "runtime": {"type": ["string", "null"]},
+        "role": {"type": ["string", "null"]},
+        "dataClass": {"type": ["string", "null"]},
+        "attemptId": {"type": ["string", "null"]},
+        "costGbp": {"type": ["number", "null"], "minimum": 0},
+        "attestedBy": {"enum": ["runtime", "caller"], "description": "runtime means the executor stamped its own identity from what it is. caller means somebody supplied it, and a reviewer identity supplied by the side being reviewed is a self-report."}
+      }
+    },
     "verdict": {"enum": ["pass", "pass-with-observations", "rework-required", "blocked"]},
     "severity": {"enum": ["none", "observation", "minor", "major", "blocker"]},
     "failingCriteria": {

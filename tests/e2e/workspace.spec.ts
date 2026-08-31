@@ -238,15 +238,20 @@ test('Builder Console drives governed sources, generation, verification and prev
   const evidencePanel = page.getByLabel('Rendered evidence');
   await evidencePanel.getByRole('button', { name: 'Capture evidence' }).click();
   await expect(page.getByText('evidence · captured')).toBeVisible({ timeout: 90_000 });
-  // Three routes plus the not-found route, at three viewports.
-  await expect(evidencePanel.getByText('12 captures')).toBeVisible();
+  // Three routes plus the not-found route, at three viewports, plus the
+  // disclosed navigation panel on each of those routes. The panel only exists
+  // below the disclosure width, so it is a mobile capture and nothing else:
+  // 4 x 3 + 4.
+  await expect(evidencePanel.getByText('16 captures')).toBeVisible();
   await expect(evidencePanel.getByRole('img').first()).toBeVisible();
 
   // Every viewport is captured, and the panel says what these pictures are not
-  // evidence of rather than implying full coverage.
-  for (const viewportName of ['desktop', 'tablet', 'mobile']) {
+  // evidence of rather than implying full coverage. Mobile carries twice as
+  // many because it is the viewport where the header becomes a disclosure, and
+  // the state a phone visitor navigates by had never been photographed.
+  for (const [viewportName, expected] of [['desktop', 4], ['tablet', 4], ['mobile', 8]] as const) {
     await evidencePanel.getByRole('group', { name: 'Evidence viewport' }).getByRole('button', { name: viewportName }).click();
-    await expect(evidencePanel.getByRole('img')).toHaveCount(4);
+    await expect(evidencePanel.getByRole('img')).toHaveCount(expected);
   }
   await expect(evidencePanel.getByText(/state\(s\) these captures do not claim/)).toBeVisible();
 

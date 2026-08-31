@@ -38,6 +38,19 @@
       },
       "additionalProperties": false
     },
+    "truthReadiness": {
+      "type": ["object", "null"],
+      "description": "What this set's product truth is actually made of. A manifest declaring sources is not the same as a run having read them, and the difference decides whether candidates may be generated at all: material content left unread starves the truth and is refused, while a research location nobody read and an approved asset whose bytes never arrived are recorded gaps rather than defects. Present so a reviewer judging these candidates knows whether they are looking at ingested source-backed truth or owner-approved intake with gaps, and never reads the second as the first.",
+      "required": ["status", "material", "referenceOnlyResearch", "assetRightsWithoutBytes", "notes"],
+      "properties": {
+        "status": {"enum": ["no-declared-sources", "approved-intake-truth-with-source-gaps", "ingested-knowledge-pack", "material-source-unread"]},
+        "material": {"type": "array", "items": {"type": "string"}},
+        "referenceOnlyResearch": {"type": "array", "items": {"type": "string"}},
+        "assetRightsWithoutBytes": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
     "diversity": {
       "type": "object",
       "description": "The deterministic proof that this set is a choice rather than one build in several colours. Token values are deliberately absent from the signature the check reads.",

@@ -16,6 +16,7 @@ import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, desig
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
 import { compileDesignLintReport, templateTokenDefaults } from '../../../tooling/lib/design-lint.mjs';
 import { compileAssetReadiness } from '../../../tooling/lib/asset-readiness.mjs';
+import { classifyCandidateTruthReadiness } from '../../../tooling/lib/candidate-truth-readiness.mjs';
 import { applyVisualDirection, compileVisualDirection, loadVisualDirections, selectVisualDirections, structuralSignature } from '../../../tooling/lib/visual-direction.mjs';
 import { validateBespokePresentation, writeBespokePresentation } from '../../../tooling/lib/bespoke-presentation.mjs';
 import { buildCandidateSet, decideCandidateSet, loadVisualQualityGate, promoteCandidate, recordCandidateEvidence, recordReview, reviewCriteriaFor, summariseCandidateSet } from '../../../tooling/lib/visual-candidates.mjs';
@@ -155,22 +156,34 @@ function hashOf(value) {
  * approved sources, unread. A score against that build measures the lane, not
  * the factory.
  *
- * The trigger is the manifest declaring real source material. A business that
+ * The trigger is the manifest declaring real source *material*. A business that
  * says "here are my documents and my website" and then composes from bare
  * manifest values is the defect; a synthetic fixture that declares no sources
  * legitimately has no pack and is left alone.
+ *
+ * "Material" is the whole of the difficulty, and counting declared sources is
+ * not a way of answering it. A business can declare six sources of which none
+ * is content anyone could have read: social profiles supplied as places to look,
+ * and assets whose rights were granted but whose bytes never arrived. Refusing
+ * that run does not protect a reviewer from anything, and the only way past the
+ * count predicate is to freeze an empty knowledge pack — which satisfies the
+ * shape of the check while adding no truth at all. So the predicate is semantic,
+ * and it lives beside asset readiness because it answers the same class of
+ * question about the same governed fields.
  */
 function assertCandidateTruthIsSourceBacked(project, composition, frozenTruth) {
-  const declared = project.manifest?.inputs?.sources ?? [];
-  if (!declared.length) return;
-  if (frozenTruth.knowledgeSource !== 'approved-manifest-only') return;
+  const readiness = classifyCandidateTruthReadiness({
+    sources: project.manifest?.inputs?.sources ?? [],
+    knowledgePack: project.knowledgePack,
+  });
+  if (readiness.readyForCandidates) return readiness;
   const warning = composition.warnings.includes('knowledge-pack-not-provided')
     ? 'knowledge-pack-not-provided'
-    : 'approved-manifest-only';
+    : frozenTruth.knowledgeSource;
   throw new Error(
-    `Refusing to generate visual candidates for ${project.name}: its manifest declares ${declared.length} approved source(s) `
-    + `but the composition is ${warning}, so a reviewer would be judging an incomplete product truth. `
-    + 'Replay the intake bundle with its frozen knowledge pack, or ingest the declared sources, before generating candidates.',
+    `Refusing to generate visual candidates for ${project.name}: its manifest declares ${readiness.material.length} approved source(s) `
+    + `carrying product truth but the composition is ${warning}, so a reviewer would be judging an incomplete product truth. `
+    + readiness.refusal,
   );
 }
 
@@ -1336,7 +1349,7 @@ export class FactoryService {
       throw new Error(`Project ${projectId} already has an undecided candidate set (${existing.setId}). Promote or abandon it before generating another.`);
     }
     const { composition, frozenTruth } = this.frozenProductTruth(projectId);
-    assertCandidateTruthIsSourceBacked(project, composition, frozenTruth);
+    const truthReadiness = assertCandidateTruthIsSourceBacked(project, composition, frozenTruth);
     const assetDecisions = this.readAssetDecisions(projectId).decisions;
     const assetReadiness = compileAssetReadiness({ knowledgePack: project.knowledgePack, assetDecisions });
     const registry = loadVisualDirections(this.factoryRoot);
@@ -1377,6 +1390,7 @@ export class FactoryService {
       createdAt: now,
       frozenTruth,
       assetReadiness,
+      truthReadiness,
       refusedDirections: refused,
       createdBy,
       candidates: eligible.map((direction) => this.draftCandidate(direction, composition, layoutPatternId)),

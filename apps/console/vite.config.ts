@@ -60,7 +60,23 @@ function factoryTarget(): string {
 
 const target = factoryTarget();
 
+/**
+ * Which factory the Console was started against.
+ *
+ * Pointing the proxy at the right target is not the same as arriving there. A
+ * dev server restart re-reads this file, and during that window the Console was
+ * observed serving another factory's projects — a real one, on the same host,
+ * with real businesses in it. Nothing said so: a project list is a project list.
+ *
+ * So the launcher's instance token is compiled in, and the Console checks the
+ * factory that answers against the one it was started for. Empty when nobody
+ * declared an expectation — `npm run console` against a resident factory — and
+ * in that case the Console has nothing to verify and does not pretend to.
+ */
+const expectedInstance = process.env.APP_BUILDER_SERVICE_INSTANCE ?? '';
+
 export default defineConfig({
+  define: { __APP_BUILDER_EXPECTED_INSTANCE__: JSON.stringify(expectedInstance) },
   plugins: [react(), refusePreviewFrameRequests()],
   server: {
     proxy: {

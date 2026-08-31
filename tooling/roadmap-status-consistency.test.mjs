@@ -17,6 +17,7 @@ test('every machine-readable active outcome is represented in the sequencing aut
     'second-genuine-business-proof': 'Outcome B — second genuine-business proof',
     'bounded-serious-application-benchmark': 'Outcome C — bounded serious-application benchmark',
     'accepted-build-release-lifecycle': 'Outcome D — accepted build to release',
+    'usable-website-builder-v01': 'Outcome E — a website builder the owner can use',
   };
   for (const outcome of status.activeWork) {
     assert.ok(expectedHeadings[outcome], `active outcome ${outcome} has no deterministic roadmap mapping`);

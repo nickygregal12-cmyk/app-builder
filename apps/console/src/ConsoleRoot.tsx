@@ -196,13 +196,54 @@ function ProjectsHome({ onOpen }: { onOpen: (projectId: string) => void }) {
   </main>;
 }
 
+declare const __APP_BUILDER_EXPECTED_INSTANCE__: string;
+
+/**
+ * Refuse a factory this Console was not started against.
+ *
+ * A Console is only meaningful next to the factory that holds its projects, and
+ * the proxy that connects them is configuration that can change under a running
+ * server. When it did, this Console listed another factory's businesses and
+ * looked entirely normal doing it — the failure has no symptom, which is what
+ * makes it worth a check rather than a convention.
+ *
+ * `unknown` means no expectation was declared, which is the ordinary case for a
+ * Console started against a factory somebody else is running. There is nothing
+ * to verify then, and inventing a complaint would be worse than staying quiet.
+ */
+function useFactoryIdentity(): 'checking' | 'ok' | 'unknown' | 'mismatch' {
+  const expected = typeof __APP_BUILDER_EXPECTED_INSTANCE__ === 'string' ? __APP_BUILDER_EXPECTED_INSTANCE__ : '';
+  const [state, setState] = useState<'checking' | 'ok' | 'unknown' | 'mismatch'>(expected ? 'checking' : 'unknown');
+  useEffect(() => {
+    if (!expected) return;
+    let live = true;
+    (async () => {
+      try {
+        const response = await fetch('/api/health');
+        const payload = await response.json() as { instance?: string };
+        if (live) setState(payload?.instance === expected ? 'ok' : 'mismatch');
+      } catch {
+        // A factory that cannot be reached is a different problem, and the
+        // surfaces below already report their own failures.
+        if (live) setState('ok');
+      }
+    })();
+    return () => { live = false; };
+  }, [expected]);
+  return state;
+}
+
 export default function ConsoleRoot() {
   const [route, setRoute] = useState<Route>(() => routeFromLocation());
+  const identity = useFactoryIdentity();
   useEffect(() => {
     const update = () => setRoute(routeFromLocation());
     window.addEventListener('popstate', update);
     return () => window.removeEventListener('popstate', update);
   }, []);
+
+  if (identity === 'mismatch') return <main className="console-shell"><section className="projects-hero"><span className="eyebrow">Wrong factory</span><h1>This Console is connected to a factory it was not started against.</h1><p className="lede">The projects it would show belong to somebody else's factory, so it is showing nothing instead. This usually means another factory owns the port this Console proxies to. Restart the stack, or point it at the right one with <code>--service-port</code>.</p></section></main>;
+  if (identity === 'checking') return <main className="console-shell"><section className="projects-hero"><p className="lede">Checking which factory this Console is connected to…</p></section></main>;
 
   if (route.view === 'workspace') return <BuilderWorkspace projectId={route.projectId} onExit={() => navigate('/builder')} />;
   if (route.view === 'projects') return <ProjectsHome onOpen={(projectId) => navigate(`/builder/${encodeURIComponent(projectId)}`)} />;

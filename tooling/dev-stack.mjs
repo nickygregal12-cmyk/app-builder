@@ -187,6 +187,9 @@ try {
   const consoleProcess = child('npm', ['--workspace', '@app-builder/console', 'run', 'dev', '--', '--host', '127.0.0.1', '--port', String(consolePort), '--strictPort'], {
     APP_BUILDER_SERVICE_HOST: serviceHost,
     APP_BUILDER_SERVICE_PORT: String(servicePort),
+    // The Console checks this against the factory that answers it, so a proxy
+    // pointing somewhere else is refused rather than rendered.
+    APP_BUILDER_SERVICE_INSTANCE: serviceInstance,
   });
   supervise(consoleProcess);
   console.log(`App Builder stack: Console http://127.0.0.1:${consolePort} · Service http://${serviceHost}:${servicePort}`);

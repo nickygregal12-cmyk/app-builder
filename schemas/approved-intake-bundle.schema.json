@@ -25,7 +25,20 @@
           },
           "additionalProperties":false
         },
-        "replayedFromBundleId":{"type":"string"}
+        "replayedFromBundleId":{"type":"string"},
+        "benchmark":{
+          "type":"object",
+          "description":"Set only when the business this bundle describes does not exist. A benchmark input carries testimonials, awards, projects and people invented on purpose, and the one thing that must never happen is for that material to be read as a claim about a real company. Recording it here rather than beside the file means the declaration travels with the artifact: a bundle replayed somewhere else still says what it is. A real business does not carry this object at all, so its absence is not a claim and its presence is unambiguous.",
+          "required":["businessReality","truthPurpose","publicationAllowed","externalVerification","corpus"],
+          "properties":{
+            "businessReality":{"const":"fictional"},
+            "truthPurpose":{"enum":["visual-excellence-benchmark"],"description":"What the invented truth exists to measure. Widen when a second kind of benchmark earns it."},
+            "publicationAllowed":{"const":"benchmark-only","description":"Output may be reviewed and photographed as benchmark evidence. It may never be published as a company's website."},
+            "externalVerification":{"const":"not-applicable","description":"There is no register, no site and no third party to check against. `unverified` would imply someone could have checked."},
+            "corpus":{"type":"string","minLength":1,"description":"The corpus class this case belongs to, so genuine-business and benchmark metrics cannot be summed by accident."}
+          },
+          "additionalProperties":false
+        }
       },
       "additionalProperties":false
     },

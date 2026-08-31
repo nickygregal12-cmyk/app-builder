@@ -1,0 +1,73 @@
+# Visual-excellence benchmark corpus
+
+**Every business in this directory is fictional.** The companies, people,
+projects, clients, testimonials, awards and imagery here were invented to
+measure the factory. None of it is evidence about a real company, and none of it
+may ever be published as one.
+
+This corpus is deliberately a different thing from `examples/genuine-business/`,
+and the two must never be summed:
+
+| Corpus | Truth | Question it answers |
+| --- | --- | --- |
+| `examples/genuine-business/` | real companies, owner-approved, source-backed where ingestion happened | **Real-world retention** — what the factory builds from the sparse, awkward material a real small business actually has |
+| `examples/visual-excellence/` | invented, rich by construction | **Visual ceiling** — what the factory builds when input quality is not the limiter |
+| fixtures under `tooling/` and `tests/` | synthetic, minimal | unit behaviour |
+
+A genuine business with no photographs tells you something real about the world.
+It tells you nothing about whether the factory *could* have done better with a
+proper portfolio. That is the confound this corpus removes, and removing it is
+the only reason to invent anything.
+
+## How the fiction is made mechanical
+
+Prose is not a guarantee. Four things make it checkable:
+
+1. **The bundle says so.** `provenance.benchmark` carries
+   `businessReality: fictional`, `truthPurpose: visual-excellence-benchmark`,
+   `publicationAllowed: benchmark-only` and `externalVerification: not-applicable`.
+   A real business's bundle has no such object, so presence is unambiguous and
+   the declaration travels with the artifact rather than living beside it.
+2. **Every source is `provenance: generated`.** No source claims to be a crawl,
+   an upload or a register lookup, because none of them is.
+3. **Unresolvable contact details.** The domain uses the `.invalid` TLD, which
+   [RFC 2606](https://www.rfc-editor.org/rfc/rfc2606) reserves so that it can
+   never resolve. The telephone numbers are drawn from the range Ofcom reserves
+   for drama and never allocates. A generated site can be photographed; it
+   cannot reach anybody.
+4. **A test enforces all of it.** `tooling/visual-excellence-corpus.test.mjs`
+   fails if a benchmark bundle loses its declaration, if a source claims
+   non-generated provenance, if a contact detail becomes reachable, or if
+   genuine-business tooling reads this directory.
+
+## Ardwell & Roe — flagship case
+
+A premium architecture and interior-architecture studio. Chosen because the
+category is unforgiving: portfolio-led, imagery-heavy, evidence-rich, and
+judged by exactly the qualities this benchmark exists to measure. A weak
+composition cannot hide behind sparse content here.
+
+- `build-ardwell-roe-intake-bundle.mjs` → `ardwell-roe-approved-intake.v1.json`
+- `build-ardwell-roe-knowledge-pack.mjs` → `ardwell-roe-approved-knowledge.v1.json`
+- `ardwell-roe-asset-plan.v1.json` — the asset specification
+- `ardwell-roe-asset-recipes.v1.md` — provider-neutral generation briefs
+
+Both builders regenerate their artifact byte-for-byte, and a test asserts it.
+
+## Asset bytes are a separate, later step
+
+The source truth is complete. **The image bytes are not, and the baseline is
+deliberately not frozen without them.**
+
+An ideal-input benchmark photographed with no photographs measures nothing but
+the asset gap, and would burn the experiment: you cannot ask "what is the
+ceiling when input is rich?" of a run whose input was poor. So
+`tooling/lib/benchmark-asset-readiness.mjs` refuses to call a run an
+ideal-input baseline until the asset floor in the plan is met, and says exactly
+which assets are missing.
+
+The plan and the recipes exist so that generating the bytes is a mechanical
+step for whichever governed image source the owner authorises. **No provider is
+named anywhere in this repository**, and nothing here should ever name one: the
+factory's requirement is *governed synthetic bytes with explicit provenance and
+publication permission*, and where they come from is not its business.

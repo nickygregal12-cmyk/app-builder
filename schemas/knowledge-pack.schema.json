@@ -61,7 +61,9 @@
           "sourceRole": {"enum": ["primary-brand", "brand-supporting", "content", "requirement", "research"]},
           "sourceChannel": {"enum": ["upload", "website", "facebook", "instagram", "linkedin", "other-public"]},
           "instructionAuthority": {"const": "none"},
-          "publishUseAllowed": {"type": "boolean"}
+          "publishUseAllowed": {"type": "boolean"},
+          "width": {"type": ["integer", "null"], "minimum": 1, "description": "Pixel width read from the file header at ingestion, so a slot's shape can be checked against what was actually supplied rather than against what a filename claims. Null for a format with no intrinsic pixel size, which is the honest answer for a vector wordmark."},
+          "height": {"type": ["integer", "null"], "minimum": 1, "description": "Pixel height, read the same way and null under the same conditions."}
         }
       }
     },

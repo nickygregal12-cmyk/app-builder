@@ -272,3 +272,17 @@ test('the benchmark composes, and what it cannot yet fill is recorded rather tha
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('every planned asset ID is usable as a filename, because the filename is the binding', () => {
+  // The ingestion protocol is "name the file after the asset ID". That is the
+  // whole contract with whoever produces the bytes, and it quietly breaks for an
+  // ID containing a path separator, a space or a character a filesystem treats
+  // specially — at which point a supplied file silently fails to bind and the
+  // gate reports it as never delivered.
+  for (const asset of PLAN.assets) {
+    assert.match(asset.assetId, /^[a-z0-9][a-z0-9-]*[a-z0-9]$/,
+      `asset ID ${asset.assetId} cannot be used as a filename stem`);
+  }
+  assert.equal(new Set(PLAN.assets.map((asset) => asset.assetId)).size, PLAN.assets.length,
+    'two planned assets share an ID, so one file would bind to both');
+});

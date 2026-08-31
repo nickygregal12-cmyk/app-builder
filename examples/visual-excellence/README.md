@@ -71,3 +71,28 @@ step for whichever governed image source the owner authorises. **No provider is
 named anywhere in this repository**, and nothing here should ever name one: the
 factory's requirement is *governed synthetic bytes with explicit provenance and
 publication permission*, and where they come from is not its business.
+
+### The ingestion protocol
+
+Name each file after the asset ID it was produced for, put them all in one
+directory, and rebuild:
+
+```
+node examples/visual-excellence/build-ardwell-roe-knowledge-pack.mjs --assets <dir>
+```
+
+That is the entire contract with whoever produces the bytes. The filename stem
+is the binding, so nothing has to be embedded in the image and no side-file has
+to stay in step with it. Switching to a different governed source changes what
+is in the directory and changes nothing in this repository.
+
+Ingestion refuses rather than guesses. A file whose name matches no planned
+asset is named and never used — an unplanned image on a page would leave the
+plan describing a site that is not the one built. A file it cannot decode is
+rejected, because `contentHash` is required and the hash of a truncated download
+is still a perfectly good hash. An image whose orientation contradicts its slot
+is rejected as the wrong picture rather than accepted as a cropping problem,
+which is far cheaper than discovering it from a screenshot.
+
+What it does not do is judge photographs. Whether an image is any good is a
+question for the independent reviewer, and the floor is a floor.

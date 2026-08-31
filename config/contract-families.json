@@ -31,8 +31,8 @@
       "schema": "knowledge-pack.schema.json",
       "typeName": "AppBuilderKnowledgePack",
       "boundary": "Content-intelligence output, service ingestion and composition input.",
-      "typesHash": "aba82cecea07208e912f216c70495b7f9d611eede4d55e5c3e590e10aedfd0dc",
-      "schemaHash": "5243d0150873895afcdea1b6216d561edea863b1b5c8e3679f609343bf237d7f"
+      "typesHash": "e51d5c73d69a8a175e1de93e799e19888d3d943ec9d551264a3b3bb5a1c1d2de",
+      "schemaHash": "f8092c92c81b49098a92b60714e6ac34bc865e98e8c732bad2ba4f8b450024ac"
     },
     {
       "id": "composition",

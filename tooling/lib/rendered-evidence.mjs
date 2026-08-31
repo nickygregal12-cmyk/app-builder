@@ -62,6 +62,39 @@ export const INTERACTIONS = Object.freeze({
       failRequest: '**/__forms.html',
     }),
   }),
+  /**
+   * The navigation, open.
+   *
+   * Every capture in every set photographed the header closed, so the panel a
+   * phone visitor actually navigates by had never been seen by a reviewer. The
+   * seventh independent review asked for it in those words: "provide visual
+   * evidence of the opened mobile navigation state before treating responsive
+   * navigation as complete." It was a fair objection — the disclosure is where
+   * four navigation families each have to keep their own character, and the
+   * only proof of that was the stylesheet.
+   *
+   * `requiresSectionType` is null because the header is not a section: it is on
+   * every route, so this is the first interaction that qualifies by viewport
+   * rather than by content. Mobile only, because above the disclosure width
+   * there is no panel to open and a picture of a bar that never collapsed
+   * would be evidence of nothing.
+   */
+  'navigation-disclosed': Object.freeze({
+    requiresSectionType: null,
+    viewports: Object.freeze(['mobile']),
+    axis: 'navigation',
+    state: 'open',
+    risk: 'high',
+    proves: 'What the disclosed navigation panel looks like open, in the family this direction chose. It is not evidence that any destination in it resolves.',
+    outcome: Object.freeze({
+      control: '.site-header .nav-toggle',
+      panel: '#primary-navigation',
+      // The panel must report itself open before the picture counts, for the
+      // same reason the enquiry capture checks its live region: a screenshot
+      // taken after a click that did nothing asserts a state it never reached.
+      reached: 'true',
+    }),
+  }),
 });
 
 const VIEWPORT_NAMES = new Set(VIEWPORTS.map((viewport) => viewport.name));
@@ -144,8 +177,13 @@ export function deriveEvidencePlan({ composition, stateMatrix, viewports = VIEWP
     }
 
     for (const [name, interaction] of Object.entries(INTERACTIONS)) {
-      if (!sections.some((section) => section.type === interaction.requiresSectionType)) continue;
-      for (const viewport of viewports) {
+      // A null requirement means the surface is on every route rather than in
+      // a section — the header is the first of those.
+      if (interaction.requiresSectionType && !sections.some((section) => section.type === interaction.requiresSectionType)) continue;
+      const scoped = interaction.viewports
+        ? viewports.filter((viewport) => interaction.viewports.includes(viewport.name))
+        : viewports;
+      for (const viewport of scoped) {
         captures.push({
           id: captureId({ pageId: page.id, viewport: viewport.name, axis: interaction.axis, state: interaction.state }),
           pageId: page.id,

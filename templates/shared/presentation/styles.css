@@ -892,7 +892,14 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   .mobile-order-conversion-first .section-item-grid { order: 1 }
   .mobile-order-conversion-first .contact-section,
   .mobile-order-conversion-first .section-enquiry-form { order: 2 }
-  .mobile-order-conversion-first.cta-mid-page .cta-section { order: 2 }
+  /* A mid-page ask needs a middle to be in.
+     This hoisted on every page, and an About page is a hero, an explanation
+     and a closing ask — so the ask landed above the only content it was asking
+     about, and the seventh independent review found "the About CTA appearing
+     before the company explanation". The declaration is still honoured where
+     the page has an offering for the ask to follow; where it has none, the ask
+     keeps its place in the document rather than jumping to the front of it. */
+  .mobile-order-conversion-first.cta-mid-page .app-shell:has(.section-item-grid) .cta-section { order: 2 }
 
   /* Hero composition. The picture goes first, last, or not at all. */
   .mobile-hero-image-first .hero-section.has-image { display: flex; flex-direction: column-reverse }

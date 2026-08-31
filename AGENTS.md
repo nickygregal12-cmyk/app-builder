@@ -136,6 +136,7 @@ these. Everything else references rather than restates.
 | State/journey/release completeness | `docs/PRODUCTION_COMPLETENESS.md` | the surface being completed, plus its tests |
 | A future capability not yet sequenced | `docs/PLATFORM_PARITY_PROGRAMME.md` | specification only, until the roadmap sequences it |
 | Whether a tool or library should be adopted at all | `docs/BEST_IN_CLASS_CAPABILITIES.md` | `config/external-sources.json` |
+| A non-LLM execution capability the factory might buy — image, vector, media editing, video, web extraction, product behaviour evidence | `config/capability-providers.json` | the owning authority each capability names; nothing there is adopted or ready |
 | Credit and context economics | `docs/CREDIT-EFFICIENCY.md` | `config/agent-routing.json` |
 | Complex-application north star | `docs/GOLD_STANDARD_COMPLEX_APP_BENCHMARK.md` | — |
 | Historical evidence | `docs/PHASE_3_8E_ACCEPTANCE_RECORD.md`, `docs/TRIAL_FINDINGS.md` | — |

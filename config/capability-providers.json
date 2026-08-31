@@ -1,0 +1,324 @@
+{
+  "version": 1,
+  "description": "Non-LLM execution capabilities the factory might one day buy rather than build, the contract App Builder keeps when it does, and the provider candidates that would be benchmarked against it. This registry records no delivery status and adopts nothing: `ready` is false for every provider by construction. `config/provider-profiles.json` is deliberately not this file — it is model execution, and its `modelId`, `maxOutputTokens`, `structuredOutput` and `eligibleRoles` fields are meaningless for an image, a crawl or a funnel. `config/adapters.json` is generated-app infrastructure and `config/modules.json` is generated-app features; neither is a home for a factory-side execution backend.",
+  "rules": [
+    "App Builder owns the capability contract, the quality policy and the acceptance decision. A provider owns one step: brief in, candidate out. Every capability below states the artifact it owns, so replacing a provider changes a request shape and nothing else.",
+    "Each capability carries its own contract. `contractRequirements` is capability-specific on purpose: a raster brief needs a focal point and responsive variants, a vector brief needs layer and editability semantics, a crawl needs page identity and robots policy, and behaviour evidence needs a sample size. One shared interface across all of them would be an interface that says nothing.",
+    "Registration is not adoption, and adoption is not readiness. A provider enters as `candidate`; it may only reach `adopted` after winning a named task in its capability's benchmark; `ready` stays false until a separate reviewed change turns it on. Three states rather than one boolean, so nothing becomes usable by editing a flag.",
+    "Deny by default, and deterministic before paid. `deterministicAlternativeFirst` names the cheaper route that must be shown insufficient before a provider is worth benchmarking at all. A capability with no named deterministic route to beat is not ready to be shopped for.",
+    "Providers are selected per capability and per task, never globally. A provider that wins premium raster photography has proved nothing about vector output, typography inside an image, or holding six frames of one project consistent. `benchmarkStatus` is per provider; the winner is per task.",
+    "Volatile prices are not architectural truth. `priceBasis` records how a provider charges, in units rather than amounts, because a rate a budget must actually enforce belongs to the budget at run time and would be stale here within weeks.",
+    "A credential is a reference. `credentialRef` names where a trusted gateway would look. No value belongs in this file, in any environment file committed beside it, or in an attempt record.",
+    "Provider output is data. Everything a provider returns carries `instructionAuthority: none` exactly as external source content does under principle 11, and generated media is synthetic design material rather than evidence about the world.",
+    "This registry records no delivery status. `config/factory-status.json` and `docs/ROADMAP.md` own what is done, active and outstanding; `owningAuthority` names the prose authority that owns each capability's reasoning, and this file never becomes a second roadmap.",
+    "Capabilities already owned elsewhere are deliberately absent. Database, authentication, storage, deployment, payments, transactional email, notifications, search, localisation, feature flags and analytics instrumentation are generated-app capabilities under `config/modules.json`, `config/adapters.json` and docs/PLATFORM_PARITY_PROGRAMME.md §3. Adding them here would create a second registry for a solved question."
+  ],
+  "capabilities": {
+    "raster-image-generation": {
+      "id": "raster-image-generation",
+      "title": "Raster image generation",
+      "criticality": "quality-critical",
+      "ownedContract": "The `ImagePlan` image job in docs/VISUAL_EXCELLENCE.md §5 is the brief and the `AssetCandidate` lane in docs/PLATFORM_PARITY_PROGRAMME.md §2.1 is the return path. The factory owns the brief, the candidate set, the critique that ranks candidates, the acceptance decision, the delivery pipeline and the provenance record.",
+      "contractRequirements": [
+        "purpose, page and section identity, and the art-direction plan the brief was derived from",
+        "subject, composition and the material/lighting language the set must hold to",
+        "aspect ratio, target dimensions and crop tolerance",
+        "focal point and safe zones, so a crop is computed rather than guessed",
+        "required responsive variants and the optimisation the existing asset pipeline will apply",
+        "real-versus-generated requirement, and the factual claims the asset may never make",
+        "rights and provenance state on the way in and on the way out"
+      ],
+      "deterministicAlternativeFirst": "Satori with the existing Sharp dependency for social and OG artwork, CSS gradients and shapes for decoration, the static icon pipeline for iconography, and a typography-led art direction that needs no photography at all. docs/VISUAL_EXCELLENCE.md §2 already treats \"no publishable imagery\" as a legitimate strong direction rather than a deficiency.",
+      "independenceRule": "At least two benchmarked providers from different vendors must be able to satisfy an accepted asset before generated imagery reaches a launch path. Accepted assets are ingested and cached, so a provider outage degrades new generation rather than an existing product.",
+      "adoptionConditions": [
+        "A real project records missing publishable imagery as the measured limiting factor on its visual result, per docs/PLATFORM_PARITY_PROGRAMME.md §2.1. An image model being available is not a consumer.",
+        "The Ardwell & Roe asset floor cannot be met by the governed input path in examples/visual-excellence/README.md. That path exists and works, so the benchmark is not currently a consumer for building a second one.",
+        "The Phase 4D component-vocabulary finding is separately resolved or separately falsified. Generated imagery must never be adopted as an answer to a composition, information-architecture or component-vocabulary defect.",
+        "Output rights permit commercial publication of an accepted asset by the business the product belongs to."
+      ],
+      "benchmark": "docs/PLATFORM_PARITY_PROGRAMME.md §2.1 — scored per task class against the Ardwell & Roe asset plan, not against a leaderboard.",
+      "owningAuthority": "docs/VISUAL_EXCELLENCE.md §5, with the provider and pipeline design in docs/PLATFORM_PARITY_PROGRAMME.md §2.1"
+    },
+    "vector-image-generation": {
+      "id": "vector-image-generation",
+      "title": "Vector and SVG asset generation",
+      "criticality": "quality-critical",
+      "ownedContract": "The same `ImagePlan` brief with a vector output requirement. A vector asset is not a raster asset in a different container: the factory accepts it only if the geometry it returns is the geometry a designer could edit.",
+      "contractRequirements": [
+        "everything the raster brief carries, minus focal point and responsive raster variants",
+        "output format and whether the result must remain editable geometry rather than an embedded bitmap",
+        "layer, group and path structure, because a single flattened path is not an editable asset",
+        "palette constraint to the approved BrandSpec tokens rather than provider-chosen colour",
+        "transparency requirement and how the asset behaves at icon sizes",
+        "text handling — whether glyphs must remain live text or become outlines, and which font licence permits it"
+      ],
+      "deterministicAlternativeFirst": "The static icon pipeline in docs/BEST_IN_CLASS_CAPABILITIES.md §3.5 for iconography, and hand-authored or Satori-composed marks for the small number of brand devices a project actually needs. A wordmark set in a licensed typeface is typography, not generation.",
+      "independenceRule": "Vector output is where hosted providers differ most, so a single winner is expected here for longer than it is for raster. That makes the deterministic fallback more important rather than less: an unavailable vector provider must degrade to a typographic or icon-pipeline solution, never to a rasterised approximation presented as a vector.",
+      "adoptionConditions": [
+        "A real project needs an editable vector asset that the icon pipeline and typographic routes genuinely cannot supply.",
+        "A candidate provider returns geometry that survives being opened and edited, proved on the `ar-brand-wordmark` class of task rather than claimed."
+      ],
+      "benchmark": "docs/PLATFORM_PARITY_PROGRAMME.md §2.1, vector task class, measured on editability as well as appearance.",
+      "owningAuthority": "docs/VISUAL_EXCELLENCE.md §5"
+    },
+    "image-editing": {
+      "id": "image-editing",
+      "title": "Image editing, extension and background treatment",
+      "criticality": "quality-supporting",
+      "ownedContract": "An edit job over an asset the project already holds and has the rights to change. This is the capability with the sharpest factual boundary in the registry: editing an owner-supplied photograph of real work can silently turn evidence into a claim, so an edit that changes what the picture asserts is refused rather than reviewed.",
+      "contractRequirements": [
+        "the source asset identity and the rights declaration that permits altering it",
+        "the operation — extend or recrop for a new aspect, remove or replace a background, upscale, or a bounded local correction",
+        "the region the edit may touch, and the assertion the picture makes that it may not change",
+        "whether the result supersedes the original or joins it as a derivative, with the original always retained",
+        "output provenance recording that the published asset is an edit and what was edited"
+      ],
+      "deterministicAlternativeFirst": "The existing Sharp-based optimiser already produces responsive widths, WebP and AVIF encodings and 16:9, 4:3 and square crop candidates around a recorded focal point, and marks every crop `reviewBeforePublish`. Most of what looks like an editing need is a crop the pipeline already computes.",
+      "independenceRule": "Not launch-critical. An unavailable editor degrades to the deterministic crop candidates, which is a worse picture rather than a missing one.",
+      "adoptionConditions": [
+        "A real project needs an aspect ratio the deterministic crop candidates cannot serve without losing the subject.",
+        "The refusal rule above is executable — an edit that would alter a factual assertion in a real photograph is blocked by tooling, not by prose."
+      ],
+      "benchmark": "docs/PLATFORM_PARITY_PROGRAMME.md §2.1, reference-image editing and responsive-extension task classes.",
+      "owningAuthority": "docs/VISUAL_EXCELLENCE.md §2 for asset policy, docs/CONTENT_INTELLIGENCE.md for the optimiser it extends"
+    },
+    "motion-video-generation": {
+      "id": "motion-video-generation",
+      "title": "Short generated motion and video",
+      "criticality": "optional",
+      "ownedContract": "Not designed, and deliberately so. Recorded here as a media type the architecture must not accidentally exclude, with the web-delivery controls that would be non-negotiable if it were ever pulled. No provider family is registered against it, because evaluating providers for a capability with no consumer is provider shopping.",
+      "contractRequirements": [
+        "an approved ArtDirectionPlan that explicitly pulls motion, with MotionContract governing it as it governs every other moving thing",
+        "compression and transcode targets, and the performance budget the result must fit inside",
+        "a poster image that carries the meaning on its own",
+        "a mobile fallback and a lazy-loading rule, so a phone on a slow connection is not asked to fetch it",
+        "a reduced-motion fallback honouring the user's stated preference",
+        "no critical information carried exclusively in the video — every claim it makes must also exist as text",
+        "provenance identical to a generated image, and the same prohibition on depicting work that was never done"
+      ],
+      "deterministicAlternativeFirst": "CSS transitions, scroll-driven animation and view transitions, which docs/BEST_IN_CLASS_CAPABILITIES.md §8.6.5 already requires a MotionContract to exhaust before even a motion library is justified. A generated video is several steps past that line.",
+      "independenceRule": "Not applicable while unadopted.",
+      "adoptionConditions": [
+        "An approved ArtDirectionPlan requires a moving image that the Web Platform motion route cannot express, on a real project.",
+        "Every web-delivery control above is enforceable before the first video is generated, not after."
+      ],
+      "benchmark": "None defined. Defining one before a consumer exists would be the feature-list expansion this capability is recorded to prevent.",
+      "owningAuthority": "docs/VISUAL_EXCELLENCE.md §3 (MotionContract) and docs/PLATFORM_PARITY_PROGRAMME.md §2.1"
+    },
+    "web-source-extraction": {
+      "id": "web-source-extraction",
+      "title": "Existing-website understanding and extraction",
+      "criticality": "quality-supporting",
+      "ownedContract": "The durable concept is already the factory's and does not move: `normalizeWebsite` produces normalized sources and a KnowledgePack whose facts, brand signals, assets and chunks carry provenance, rights and `instructionAuthority: none`. Only the execution of fetching and extracting is in question here. A provider returns pages; it never returns a KnowledgePack.",
+      "contractRequirements": [
+        "page identity, canonical URL, fetch time and the redirect chain that resolved it",
+        "the extracted text, headings and structured markup, separated from the provider's own commentary about them",
+        "which pages were reached, which were refused, and why — a crawl that quietly stopped is worse than one that failed",
+        "robots and rate policy actually observed, not merely configured",
+        "the SSRF and private-address guard applied on the provider's side or ours, explicitly one or the other",
+        "what left the network boundary, because sending an owner's URL to a third party is a data-policy decision"
+      ],
+      "deterministicAlternativeFirst": "The existing crawler in packages/content-intelligence: same-origin breadth-first, bounded to 25 pages, with the application-level SSRF guard, byte-hash caching and deterministic extractors for HTML, PDF, DOCX, XLSX and images. It already handles the ordinary small-business website, which is the material the corpus is actually made of.",
+      "independenceRule": "The deterministic crawler must remain a complete route on its own. A hosted extractor may only ever be an accelerator for material the deterministic path cannot reach; it may never become the only way to ingest a website.",
+      "adoptionConditions": [
+        "A real project's ingestion measurably fails on the existing crawler — a client-rendered site that returns an empty document, a PDF linked from a page rather than supplied, or a structure the deterministic extractors cannot recover.",
+        "The candidate materially beats the browser tooling already present. The factory already drives real browsers, and rendering a page is not a capability it lacks.",
+        "Sending owner URLs and returned content to a third party is a reviewed data-policy decision with the same seriousness as a model provider profile."
+      ],
+      "benchmark": "docs/CONTENT_INTELLIGENCE.md — measured on real corpus sites against the incumbent crawler, not on crawl volume.",
+      "owningAuthority": "docs/CONTENT_INTELLIGENCE.md"
+    },
+    "product-behaviour-evidence": {
+      "id": "product-behaviour-evidence",
+      "title": "Real-user product behaviour evidence",
+      "criticality": "quality-supporting",
+      "ownedContract": "`ProductBehaviourEvidence` — a bounded, summarised, provider-neutral record of how real users moved through a released product, diagnosed against the approved journeys, information architecture and composition. This is the return path the factory does not have: it can build and release a product and has no way to learn from what happened next. The analytics module already emits provider-neutrally; what is missing is the direction of travel back.",
+      "contractRequirements": [
+        "the released revision, environment and date range the evidence describes — evidence about an unnamed build is not evidence",
+        "the approved journey or IA node each signal is diagnosed against, so a finding lands on a decision the factory actually made",
+        "journey paths, funnel and drop-off, navigation backtracking, repeated failed interactions, form abandonment and dead or rage clicks, each as a bounded count",
+        "device and viewport distribution, and Core Web Vitals field data where the product collects it",
+        "sample size, observation frequency and a confidence statement, all three required — an insufficient sample must remain insufficient and must never be summarised into a confident sentence",
+        "an explicit correlation-not-causation marker on every finding; behaviour evidence is a reason to investigate, never a proof of cause",
+        "the ProductSpec, business goal or approved journey the evidence bears on, and the fact that it may not amend any of them"
+      ],
+      "deterministicAlternativeFirst": "The existing deterministic gates answer most of what this looks like it would answer: accessibility, performance budgets, journey specs and rendered evidence. Behaviour evidence is for what those cannot see — what real users did, on a real release, that nobody predicted.",
+      "independenceRule": "The evidence contract must survive the provider being removed. A finding that can only be expressed in one vendor's event vocabulary is a finding the factory does not own.",
+      "adoptionConditions": [
+        "A real product is released and running, with a named accepted revision. Outcome D in docs/ROADMAP.md has to close first; there is currently no released product for anything to be evidence about.",
+        "The improvement loop in docs/PLATFORM_PARITY_PROGRAMME.md §11 can consume a finding — a behaviour signal with no path to a reviewed change is a dashboard.",
+        "Analytics may never silently redefine the ProductSpec or the business goal. A finding proposes a candidate change through the ordinary review path or it does nothing."
+      ],
+      "benchmark": "docs/PLATFORM_PARITY_PROGRAMME.md §11.1 — an adapter is evaluated on whether it can produce every field of the evidence contract above, on whether masking and sampling hold without operator vigilance, and on whether a finding survives being expressed without the vendor's own event vocabulary. The outcome measurement — whether evidence produced a change that measurably improved a real product — cannot be defined until a product is released, and is deliberately not claimed here.",
+      "owningAuthority": "docs/PLATFORM_PARITY_PROGRAMME.md §11"
+    },
+    "session-replay-evidence": {
+      "id": "session-replay-evidence",
+      "title": "Session replay reduced to structured friction signals",
+      "criticality": "optional",
+      "ownedContract": "A separate capability from behaviour evidence, and separate precisely because its privacy contract is different in kind. An aggregate funnel count is a number about many people; a replay is a recording of one person using the product. The factory's contract is that a replay is reduced to a bounded friction signal with a reference, and the recording itself never becomes model context.",
+      "contractRequirements": [
+        "masking on by default and failing closed — an unmasked field is a defect, not a configuration choice",
+        "form inputs, credentials, payment details and personal data excluded at capture rather than filtered at read",
+        "raw replay never sent to a model in bulk; a replay is summarised into a bounded signal with a sample count and a reference, and the reference is what a person opens",
+        "a retention window, and the fact that a reference outliving its recording is a dead link rather than an error",
+        "the same sample-size, confidence and correlation-not-causation requirements the behaviour-evidence contract carries",
+        "the released revision the session ran against, because a replay of a superseded build diagnoses nothing"
+      ],
+      "deterministicAlternativeFirst": "The behaviour-evidence capability above. Dead clicks, rage clicks and form abandonment are countable without recording anybody, and counting is both cheaper and safer than replaying.",
+      "independenceRule": "Not applicable while unadopted.",
+      "adoptionConditions": [
+        "Behaviour evidence has been adopted, has produced findings, and a specific finding is genuinely undiagnosable without seeing a session.",
+        "Every masking requirement above is enforced by the capture configuration rather than by an operator remembering."
+      ],
+      "benchmark": "None defined.",
+      "owningAuthority": "docs/PLATFORM_PARITY_PROGRAMME.md §11"
+    }
+  },
+  "providers": {
+    "openai-image": {
+      "id": "openai-image",
+      "capability": "raster-image-generation",
+      "vendor": "OpenAI",
+      "product": "GPT Image family",
+      "hosting": "hosted-only",
+      "adoption": "candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "per generated image, varying by resolution and quality tier",
+      "credentialRef": null,
+      "outputRights": "Unresolved. Must be confirmed at the pin, before any accepted asset reaches a published page.",
+      "dataRetention": "Unresolved. Governs whether an owner's supplied reference photograph may be sent at all.",
+      "fallback": ["google-gemini-image", "flux-black-forest-labs"],
+      "switchingCost": "Low. The brief is App Builder's ImagePlan job and the output is a bitmap; only the request shape changes.",
+      "candidateFor": ["premium-hero-raster", "reference-image-editing", "brand-motif-icon-diagram"],
+      "notes": "A benchmark candidate for the hardest raster and reference-editing tasks. No model identifier is pinned: exact names move faster than this file is reviewed, and pinning one would make the architecture stale rather than specific."
+    },
+    "google-gemini-image": {
+      "id": "google-gemini-image",
+      "capability": "raster-image-generation",
+      "vendor": "Google",
+      "product": "Gemini image-generation family",
+      "hosting": "hosted-only",
+      "adoption": "candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "per generated image, with free and paid tiers that differ in data policy",
+      "credentialRef": null,
+      "outputRights": "Unresolved at the pin.",
+      "dataRetention": "The existing Gemini model profile in config/provider-profiles.json is already restricted to public, synthetic and sanitised material because free-tier input may be used to improve Google's products. The same question must be answered separately for images; a policy reviewed for text is not a policy reviewed for an owner's photographs.",
+      "fallback": ["openai-image", "flux-black-forest-labs"],
+      "switchingCost": "Low.",
+      "candidateFor": ["premium-hero-raster", "reference-image-editing", "coherent-project-set"],
+      "notes": "Strongest existing candidate for multi-image consistency and reference-conditioned editing. Its data policy, not its output, is the thing to settle first."
+    },
+    "recraft": {
+      "id": "recraft",
+      "capability": "vector-image-generation",
+      "vendor": "Recraft",
+      "product": "design and vector generation",
+      "hosting": "hosted-only",
+      "adoption": "candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "credit-based, per generation",
+      "credentialRef": null,
+      "outputRights": "Unresolved at the pin, and more consequential here than for raster: a brand mark is used everywhere the business is.",
+      "dataRetention": "Unresolved.",
+      "fallback": [],
+      "switchingCost": "Low as an API. High as a dependency, because there is no second obvious vector candidate — which is why the deterministic typographic and icon-pipeline route has to stay complete.",
+      "candidateFor": ["vector-illustration", "brand-motif-icon-diagram", "transparent-asset"],
+      "notes": "Registered specifically for the vector task class, which is the one where the raster candidates are weakest. Editability of the returned geometry is the measurement that matters, not appearance."
+    },
+    "flux-black-forest-labs": {
+      "id": "flux-black-forest-labs",
+      "capability": "raster-image-generation",
+      "vendor": "Black Forest Labs",
+      "product": "FLUX",
+      "hosting": "hosted-or-self-hosted",
+      "adoption": "candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "per generated image when hosted; compute cost when self-hosted",
+      "credentialRef": null,
+      "outputRights": "Model-dependent and licence-dependent. Some weights are non-commercial, which would disqualify the route for a published business asset regardless of quality.",
+      "dataRetention": "None when self-hosted, which is the reason to keep this candidate. Owner reference material never leaving the boundary is a policy answer the hosted candidates cannot give.",
+      "fallback": ["openai-image", "google-gemini-image"],
+      "switchingCost": "Low as an API. Self-hosting is an operational commitment this host cannot currently make — 4 vCPU and 8 GB of RAM is not an image-generation machine.",
+      "candidateFor": ["premium-hero-raster", "coherent-project-set", "transparent-asset"],
+      "notes": "The cost and data-boundary route. Registered because a self-hostable candidate changes what data policy can permit, not because it is expected to win on quality."
+    },
+    "ideogram": {
+      "id": "ideogram",
+      "capability": "raster-image-generation",
+      "vendor": "Ideogram",
+      "product": "text-in-image generation",
+      "hosting": "hosted-only",
+      "adoption": "conditional-candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "per generated image",
+      "credentialRef": null,
+      "outputRights": "Unresolved at the pin.",
+      "dataRetention": "Unresolved.",
+      "fallback": ["openai-image"],
+      "switchingCost": "Low.",
+      "candidateFor": ["typography-in-image"],
+      "notes": "Deliberately conditional. It enters the benchmark only if typography-inside-an-image is demonstrated to be a real need, and the corpus currently argues the opposite: examples/visual-excellence/ardwell-roe-asset-recipes.v1.md forbids legible text, signage and branding inside every photograph, and a wordmark is a vector and typography problem rather than a raster one. A specialist with no demonstrated speciality is not a candidate."
+    },
+    "app-builder-crawler": {
+      "id": "app-builder-crawler",
+      "capability": "web-source-extraction",
+      "vendor": "App Builder",
+      "product": "packages/content-intelligence normalizeWebsite",
+      "hosting": "in-repository",
+      "adoption": "incumbent",
+      "benchmarkStatus": "incumbent-baseline",
+      "ready": true,
+      "priceBasis": "none beyond host bandwidth",
+      "credentialRef": null,
+      "outputRights": "Governed by the existing rights model: a crawled public page stays reference-only and do-not-use until an operator declares otherwise.",
+      "dataRetention": "Nothing leaves the host.",
+      "fallback": [],
+      "switchingCost": "Not applicable; it is the thing others must beat.",
+      "candidateFor": ["static-site-extraction", "same-origin-crawl", "supplied-document-extraction"],
+      "notes": "Recorded as the baseline rather than as a candidate, so a benchmark has an incumbent to beat. `ready: true` here is a statement that this route works today, not an adoption of an external provider. Its known limits are the benchmark: client-rendered pages, PDFs linked rather than supplied, and structure the deterministic extractors cannot recover."
+    },
+    "firecrawl": {
+      "id": "firecrawl",
+      "capability": "web-source-extraction",
+      "vendor": "Firecrawl",
+      "product": "hosted crawl and structured extraction, also self-hostable",
+      "hosting": "hosted-or-self-hosted",
+      "adoption": "candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "per page crawled, with a separate rate for extraction",
+      "credentialRef": null,
+      "outputRights": "The crawled material's rights are unchanged by who fetched it. Passing a page through a third party grants no republication permission it did not already have.",
+      "dataRetention": "Unresolved, and the deciding question: an owner's URL and their site's content would leave the boundary.",
+      "fallback": ["app-builder-crawler"],
+      "switchingCost": "Low if it stays an execution backend behind normalizeWebsite. High if its output shape is allowed to become the ingestion contract, which is the specific thing to refuse.",
+      "candidateFor": ["client-rendered-page-extraction", "linked-pdf-extraction", "structured-field-extraction"],
+      "notes": "Registered as a candidate, not an authority. It is evaluated on crawl completeness, dynamic pages, structured extraction, PDFs, provenance fidelity, cost, rate control, privacy and operational complexity — and specifically on whether it beats the browser tooling the factory already drives. The self-hostable route is the one that could answer the data-boundary question."
+    },
+    "posthog": {
+      "id": "posthog",
+      "capability": "product-behaviour-evidence",
+      "vendor": "PostHog",
+      "product": "product analytics, session replay, experiments",
+      "hosting": "hosted-or-self-hosted",
+      "adoption": "candidate",
+      "benchmarkStatus": "not-benchmarked",
+      "ready": false,
+      "priceBasis": "per event and per recorded session, metered separately",
+      "credentialRef": null,
+      "outputRights": "Not applicable. What matters instead is that the generated application owns its own analytics account, exactly as it owns its own payment provider account.",
+      "dataRetention": "The central question. Behaviour data is about a product's users, not about the owner's business, and a retention window is a commitment made to people who never chose the vendor.",
+      "fallback": [],
+      "switchingCost": "Low if `ProductBehaviourEvidence` stays the contract and this is one adapter behind it. High if its event vocabulary is allowed to become the contract, which is the specific thing to refuse.",
+      "candidateFor": ["funnel-and-drop-off", "dead-and-rage-clicks", "form-abandonment", "session-replay-reference"],
+      "notes": "An implementation adapter under evaluation, never the product contract. It is registered against behaviour evidence rather than against session replay because replay is a separate capability with a stricter contract, and adopting one must not quietly enable the other."
+    }
+  }
+}

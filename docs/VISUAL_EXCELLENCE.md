@@ -194,6 +194,15 @@ Capture:
 - reduced-motion behavior;
 - explicit no-motion zones.
 
+**Generated video is not a MotionContract feature and is not planned work.** It is recorded as an optional media
+capability in `config/capability-providers.json` so the architecture does not accidentally exclude it, with no
+provider family registered. Two conditions would have to hold before it is even discussed: an approved
+ArtDirectionPlan must explicitly pull a moving image the Web Platform motion route above cannot express, and the
+web-delivery controls must be enforceable first — compression and transcode targets, a poster image that carries the
+meaning alone, a performance budget, a mobile fallback, lazy loading, a reduced-motion fallback, and no critical
+information existing only inside the video. Adding video to widen the media list is the specific thing that rule
+prevents.
+
 ## 4. Controlled bespoke-presentation lane
 
 The Presentation Registry must be the default path for solved visual problems, but it must not become a ceiling that forces every project through the same finite catalogue.
@@ -231,6 +240,21 @@ Each image job should specify:
 - generation/edit history and model/tool cost where AI is used.
 
 An image-generation adapter belongs on the **factory side**, not in generated app runtime. It may use one or more image providers later without making any provider part of the stable project contract.
+
+The brief is only half a contract. What a provider returns is an `AssetCandidate` — provider identity, the exact
+brief sent, the resulting bytes and hash, cost and retries for that candidate alone, provenance, and the critique
+that ranked it — and exactly one candidate is accepted, after which it becomes an ordinary ingested asset governed by
+the existing optimiser, `schemas/asset-decision.schema.json` and the publication rules. That shape is deliberately
+the one `schemas/visual-candidate-set.schema.json` already uses for whole visual directions, one level down. The lane
+end to end, the refusals that keep generated media out of the factual record, the provider benchmark and its
+activation condition are in `docs/PLATFORM_PARITY_PROGRAMME.md` §2.1.1–2.1.4; the capability contracts and the
+registered provider candidates are in `config/capability-providers.json`. None of it is implemented, and §9's
+completeness table below still records ImagePlan as deferred.
+
+Vector output is a **separate capability**, not a format option. A vector asset the factory accepts is editable
+geometry with layer structure and a brand-token palette; a rasterised approximation inside an SVG wrapper is a raster
+asset that has learned to lie about itself. The deterministic icon pipeline and a wordmark set in a licensed typeface
+come first, and usually finish the job.
 
 Generated image workflows should support:
 

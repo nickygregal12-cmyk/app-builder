@@ -40,6 +40,42 @@ URL intake uses a bounded breadth-first crawl:
 
 This is an application-level SSRF guard. A future hosted multi-tenant service should also enforce network-level egress policy.
 
+### What this crawler cannot reach
+
+The bounds above are policy, and they stay. These are different — they are the material the deterministic path
+genuinely cannot recover, and they are the only reason to consider an execution provider at all:
+
+- **client-rendered pages.** The crawler fetches and parses a document; a site whose content arrives through
+  JavaScript returns an empty shell, and the pack records a site with no content rather than a fetch that failed.
+- **documents linked rather than supplied.** PDF, DOCX and XLSX extractors exist and work well, but the crawl skips
+  binary and media links, so a business whose services or prices live in a PDF on its own site loses them unless
+  somebody uploads that file by hand.
+- **structure the extractors cannot recover.** Text, headings and JSON-LD are extracted; a repeated field pattern
+  across many pages — a product grid, a staff list, a project index — is not.
+
+None of this is a gap in the *concept*. `source -> safety/size gate -> byte hash -> deterministic extractor ->
+content cache -> normalized source -> knowledge pack` is unchanged, and provenance, rights and
+`instructionAuthority: none` are unchanged. Only the fetch-and-extract step is in question, and a provider would
+return pages — never a KnowledgePack.
+
+Candidates are recorded in `config/capability-providers.json` under `web-source-extraction`: this crawler as the
+incumbent baseline, and Firecrawl as one candidate that has to beat it. **Firecrawl is not an architectural
+authority.** If its output shape were allowed to become the ingestion contract the switching cost would go from low
+to high overnight, which is the specific thing to refuse.
+
+Evaluate a candidate on crawl completeness, dynamic pages, structured extraction, PDFs, provenance fidelity, cost,
+rate control, privacy and operational complexity — and on one question that outranks the rest: **does it materially
+beat the browser tooling already present?** The factory drives real browsers in several lanes and holds
+`microsoft/playwright-mcp` and `ChromeDevTools/chrome-devtools-mcp` as registered candidates. Rendering a page is not
+a capability it lacks, so a hosted crawler that only renders pages is buying something already owned.
+
+The data-policy question is the one to settle first: an owner's URL and their site's content leaving the network
+boundary is a decision of the same seriousness as a model provider profile, and it is not made by adopting a
+convenience.
+
+**Activation condition.** A real project's ingestion measurably fails on this crawler. Nothing in the current corpus
+has.
+
 ## Supported sources
 
 Text, Markdown, JSON, HTML, CSV, PDF, DOCX, XLSX and common image formats are supported. Unknown binary files are inventoried but fail closed to a `binary` extraction rather than inventing content.

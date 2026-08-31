@@ -1245,6 +1245,58 @@
       "evaluationStatus": "not-evaluated",
       "instructionAuthority": "none",
       "notes": "Evaluation candidate only, and explicitly a comparison rather than an addition: the browser lane ends with at most two tools."
+    },
+    "firecrawl": {
+      "id": "firecrawl",
+      "repository": "firecrawl/firecrawl",
+      "url": "https://github.com/firecrawl/firecrawl",
+      "adoption": "candidate",
+      "rating": 6.5,
+      "useFor": [
+        "one execution backend candidate for the web-source-extraction capability, judged against the existing normalizeWebsite crawler and the browser tooling already registered"
+      ],
+      "borrowedIdeas": [
+        "treating 'which pages were refused, and why' as part of a crawl result rather than as a log line"
+      ],
+      "doNotAdopt": [
+        "its output shape as the ingestion contract; the KnowledgePack stays App Builder's, and a provider returns pages",
+        "its hosted service as the default route, which would send an owner's URL and site content outside the boundary as a side effect of convenience"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Registered because it is a self-hostable repository and therefore governable under these rules; the hosted API it also offers is a separate question recorded in config/capability-providers.json. Unpinned and unlicensed here on purpose: pinning a source nobody has scheduled to evaluate would claim a review that has not happened. The activation condition is in docs/CONTENT_INTELLIGENCE.md."
+    },
+    "posthog": {
+      "id": "posthog",
+      "repository": "PostHog/posthog",
+      "url": "https://github.com/PostHog/posthog",
+      "adoption": "candidate",
+      "rating": 7.0,
+      "useFor": [
+        "one implementation-adapter candidate for the ProductBehaviourEvidence contract in docs/PLATFORM_PARITY_PROGRAMME.md 11.1"
+      ],
+      "borrowedIdeas": [
+        "dead clicks, rage clicks and navigation backtracking as named, countable friction signals rather than as impressions from watching recordings"
+      ],
+      "doNotAdopt": [
+        "its event vocabulary as the product-behaviour contract; a finding expressible only in one vendor's terms is a finding the factory does not own",
+        "session replay enabled as a side effect of adopting analytics; replay is a separate capability with a stricter privacy contract"
+      ],
+      "pinnedRef": null,
+      "license": null,
+      "allowedRoles": [],
+      "contextTokensEstimate": null,
+      "securityReview": "pending",
+      "updatePolicy": "none",
+      "evaluationStatus": "not-evaluated",
+      "instructionAuthority": "none",
+      "notes": "Prior art for the friction-signal vocabulary, and a candidate adapter behind the evidence contract. Not evaluated and not scheduled: it activates only after a real product is released, which Outcome D has to deliver first."
     }
   }
 }

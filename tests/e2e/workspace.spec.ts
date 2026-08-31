@@ -96,7 +96,12 @@ test('Builder Console drives governed sources, generation, verification and prev
   await page.getByRole('button', { name: 'Verify build' }).click();
   await expect(page.locator('.state-pill')).toHaveText('verified', { timeout: 60_000 });
   await expect(page.getByText('quality · build · succeeded')).toBeVisible();
-  await expect(page.getByText('Dependencies installed')).toBeVisible();
+  // Verification says which of the two things it did. `npm install` resolves
+  // and installs at once and proves neither; installing from a lockfile it
+  // resolved separately is the claim the ledger now carries.
+  await expect(page.getByText('Dependency graph resolved')).toBeVisible();
+  await expect(page.getByText('Installed from the lockfile')).toBeVisible();
+  await expect(page.getByText(/Build identity [0-9a-f]{12} across \d+ file\(s\)/)).toBeVisible();
 
   // Every request the preview makes, and what came back, is recorded so the
   // boundary can be proved rather than assumed: a remote operator only ever
@@ -247,10 +252,11 @@ test('Builder Console drives governed sources, generation, verification and prev
 
   await page.getByRole('button', { name: 'Stop preview' }).click();
   await expect(page.getByText('preview · stopped')).toBeVisible();
-  // 11 build/quality/preview events, one source governance decision, the save
+  // 13 build/quality/preview events, one source governance decision, the save
   // and revert of one content edit, the choice and clearing of one section
   // presentation, one design choice, and the start and completion of one
-  // evidence capture.
-  await expect(page.getByLabel('Project metrics').getByText('19', { exact: true })).toBeVisible();
+  // evidence capture. Verification contributes two of the thirteen that it did
+  // not before: the lockfile it resolved, and the build identity it recorded.
+  await expect(page.getByLabel('Project metrics').getByText('21', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

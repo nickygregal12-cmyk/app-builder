@@ -5,6 +5,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { scoreBenchmark } from '../packages/control-plane/src/index.js';
 import { lintScopeIsReal, testsWereExecuted } from './lib/generated-gate-vacuity.mjs';
+import { assertLockUnmoved, buildOutputManifest, resolveLockfile, sourceDigest } from './lib/build-identity.mjs';
+import { describeToolchain } from './lib/toolchain.mjs';
 
 const config = JSON.parse(fs.readFileSync('config/factory-benchmarks.json', 'utf8'));
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -34,6 +36,10 @@ const report = {
   generatedAt: new Date().toISOString(),
   aiCostGbp: 0,
   interventions: 0,
+  // Recorded so a second runner's report is comparable to this one. Two runs
+  // that agree on source and lock and disagree on output are the finding this
+  // benchmark previously could not have made.
+  toolchain: describeToolchain(),
   cases: [],
 };
 
@@ -54,6 +60,10 @@ for (const definition of canonical) {
     lintScope: false,
   };
   let durationMs = 0;
+  // Declared with the case, not with the install, because the report is written
+  // outside the `generate` branch: a case that never generated still reports,
+  // and it reports a null identity rather than crashing the benchmark.
+  let identity = null;
 
   if (gates.generate) {
     const packagePath = path.join(directory, 'package.json');
@@ -66,9 +76,25 @@ for (const definition of canonical) {
       gates.upgradeInventory = Array.isArray(inventory.installed) && Array.isArray(inventory.unresolved) && inventory.unresolved.length === 0;
     }
 
-    const install = runNpm(directory, ['install', '--no-audit', '--no-fund']);
-    durationMs += install.durationMs;
-    gates.install = install.ok;
+    // Resolve the graph, then install *from* it, then confirm it did not move.
+    // `npm install` did all three implicitly and proved none of them: it
+    // re-resolves from ranges every time, so a green benchmark said the
+    // generated project installs, never that it installs the same thing twice.
+    let install = { ok: false, durationMs: 0 };
+    try {
+      const lock = resolveLockfile(directory);
+      durationMs += lock.durationMs;
+      install = runNpm(directory, ['ci', '--no-audit', '--no-fund']);
+      durationMs += install.durationMs;
+      if (install.ok) {
+        assertLockUnmoved(directory, lock.digest);
+        identity = { sourceDigest: sourceDigest(directory), lockDigest: lock.digest };
+      }
+    } catch (error) {
+      install = { ...install, ok: false };
+      console.log(`  install: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    gates.install = install.ok && identity !== null;
     const lintScope = lintScopeIsReal(directory, pkg.scripts?.lint);
     gates.lintScope = lintScope.ok;
     if (!lintScope.ok) console.log(`  lint scope: ${lintScope.reason}`);
@@ -90,11 +116,23 @@ for (const definition of canonical) {
       const build = runNpm(directory, ['run', 'build']);
       durationMs += build.durationMs;
       gates.build = build.ok;
+
+      // The digest of what was built, not the exit code of the thing that built
+      // it. A second runner comparing reports can tell whether one source tree
+      // and one lockfile produced one artifact.
+      if (build.ok && identity) {
+        try {
+          identity.outputDigest = buildOutputManifest(path.join(directory, 'dist')).digest;
+        } catch (error) {
+          console.log(`  output: ${error instanceof Error ? error.message : String(error)}`);
+          gates.build = false;
+        }
+      }
     }
   }
 
   const result = scoreBenchmark({ gates, costGbp: 0, durationMs, interventions: 0 }, weights);
-  report.cases.push({ id: definition.id, projectType: definition.projectType, gates, ...result });
+  report.cases.push({ id: definition.id, projectType: definition.projectType, gates, identity, ...result });
   if (!result.passed) failed = true;
   console.log(`${definition.id}: ${result.score}%${result.passed ? ' PASS' : ` FAIL (${result.failedGates.join(', ')})`}`);
 }

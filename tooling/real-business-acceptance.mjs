@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { assertKnowledgePack, buildKnowledgePack, normalizeSource, normalizeWebsite } from '../packages/content-intelligence/src/index.js';
 import { FactoryStore } from '../apps/service/src/store.js';
 import { FactoryService } from '../apps/service/src/factory-service.js';
+import { assertLockUnmoved, resolveLockfile } from './lib/build-identity.mjs';
 
 const PDF_FIXTURE = Buffer.from('JVBERi0xLjMKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3VyY2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhIC9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nIC9OYW1lIC9GMSAvU3VidHlwZSAvVHlwZTEgL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDcgMCBSIC9NZWRpYUJveCBbIDAgMCA1OTUuMjc1NiA4NDEuODg5OCBdIC9QYXJlbnQgNiAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovUGFnZU1vZGUgL1VzZU5vbmUgL1BhZ2VzIDYgMCBSIC9UeXBlIC9DYXRhbG9nCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9BdXRob3IgKGFub255bW91cykgL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDgyNTEwNDgzMyswMCcwMCcpIC9DcmVhdG9yIChhbm9ueW1vdXMpIC9LZXl3b3JkcyAoKSAvTW9kRGF0ZSAoRDoyMDI2MDgyNTEwNDgzMyswMCcwMCcpIC9Qcm9kdWNlciAoUmVwb3J0TGFiIFBERiBMaWJyYXJ5IC0gXChvcGVuc291cmNlXCkpIAogIC9TdWJqZWN0ICh1bnNwZWNpZmllZCkgL1RpdGxlICh1bnRpdGxlZCkgL1RyYXBwZWQgL0ZhbHNlCj4+CmVuZG9iago2IDAgb2JqCjw8Ci9Db3VudCAxIC9LaWRzIFsgMyAwIFIgXSAvVHlwZSAvUGFnZXMKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZpbHRlciBbIC9BU0NJSTg1RGVjb2RlIC9GbGF0ZURlY29kZSBdIC9MZW5ndGggMTcwCj4+CnN0cmVhbQpHYXJWRTBiMiZTJkRSJ2hPMitTNDw/YklXIlZWakxKTEVRSWQlcyRCNXMxYkYoYDg+ZGJIYnB0OUVpKmUsYlNlTyVnOzE1Qjk2c15wa1YnbDI1YkE4ZG9APCpfST09RUAqJUBiUVs+KjAqY1tBNkxkQG1hcF4xQCtSQDtIRG4+XDBRJC1wKHIkbT9FWG5rakI9ZVwoU0pdVG9CajJqTCFzMWJWOE8vYTN+PmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDgKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDYxIDAwMDAwIG4gCjAwMDAwMDAwOTIgMDAwMDAgbiAKMDAwMDAwMDE5OSAwMDAwMCBuIAowMDAwMDAwNDAyIDAwMDAwIG4gCjAwMDAwMDA0NzAgMDAwMDAgbiAKMDAwMDAwMDczMSAwMDAwMCBuIAowMDAwMDAwNzkwIDAwMDAwIG4gCnRyYWlsZXIKPDwKL0lEIApbPDkyZmM3YzBhNGJjM2MxNGRhYWYyZWNhNDI4NjU2MTc1Pjw5MmZjN2MwYTRiYzNjMTRkYWFmMmVjYTQyODY1NjE3NT5dCiUgUmVwb3J0TGFiIGdlbmVyYXRlZCBQREYgZG9jdW1lbnQgLS0gZGlnZXN0IChvcGVuc291cmNlKQoKL0luZm8gNSAwIFIKL1Jvb3QgNCAwIFIKL1NpemUgOAo+PgpzdGFydHhyZWYKMTA1MAolJUVPRgo=', 'base64');
 
@@ -123,7 +124,13 @@ const contact = findSection(composition, 'contact-panel');
 if (findBinding(contact, 'email')?.value !== 'hello@acme.example' || findBinding(contact, 'phone')?.value !== '0141 555 0101') throw new Error('Approved contact facts are missing from composition.');
 for (const section of composition.sections) for (const item of section.bindings) if (item.origin.startsWith('knowledge-') && item.generated) throw new Error(`Source-backed binding ${section.id}/${item.key} was incorrectly marked generated.`);
 
-const installDuration = run('npm', ['install', '--no-audit', '--no-fund'], appDir);
+// Resolve the graph once, then install from it, the same way verification does.
+// A lane that installed with `npm install` would be proving this regression app
+// builds under some dependency graph rather than under its own.
+const lock = resolveLockfile(appDir);
+await service.recordOperationalEvent(project.id, 'quality.lock.resolved', { workspace: appDir, lockDigest: lock.digest, alreadyPresent: !lock.resolved }, { durationMs: lock.durationMs });
+const installDuration = run('npm', ['ci', '--no-audit', '--no-fund'], appDir);
+assertLockUnmoved(appDir, lock.digest);
 await service.recordOperationalEvent(project.id, 'quality.install.succeeded', { workspace: appDir }, { durationMs: installDuration });
 const checkDuration = run('npm', ['run', 'check'], appDir);
 await service.recordOperationalEvent(project.id, 'quality.check.succeeded', { workspace: appDir }, { durationMs: checkDuration });

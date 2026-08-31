@@ -30,6 +30,8 @@ import { captureEvidence } from '../../../tooling/lib/rendered-evidence-capture.
 import { describeBuiltArtifact, describeDevServer } from '../../../tooling/lib/rendering-source.mjs';
 import { validateManifest } from '../../../tooling/lib/manifest.mjs';
 import { recordRecipeInstallations } from '../../../tooling/lib/recipe-upgrades.mjs';
+import { assertLockUnmoved, buildOutputManifest, resolveLockfile, sourceDigest } from '../../../tooling/lib/build-identity.mjs';
+import { declaredToolchain, describeToolchain, runningToolchain } from '../../../tooling/lib/toolchain.mjs';
 
 function safeChild(root, name) {
   const base = path.resolve(root);
@@ -62,7 +64,10 @@ function summary(project) {
     // an artifact identity, so there is nothing exact for a lifecycle to be
     // about. `basis` says which of the two it is.
     state: project.state,
-    lifecycle: projectLegacyProjectState(project),
+    lifecycle: projectLegacyProjectState(project, { declaredToolchain: declaredToolchain() }),
+    // What the last verification actually installed, ran under and built. Null
+    // until a verification recorded one; never inferred from `state`.
+    buildIdentity: project.buildIdentity ?? null,
     workspacePath: project.workspacePath,
     manifestVersion: project.manifest.schemaVersion ?? 1,
     knowledgePackHash: project.knowledgePack?.packHash ?? null,
@@ -1246,7 +1251,7 @@ export class FactoryService {
     let task = createTask({
       projectId,
       objective: `Verify generated project ${project.name}`,
-      acceptanceCriteria: ['Dependencies install independently', 'Generated project checks pass', 'Production build succeeds'],
+      acceptanceCriteria: ['Dependencies resolve to a recorded lockfile', 'Dependencies install from that lockfile without moving it', 'Generated project checks pass', 'Production build succeeds and its output is recorded'],
       policyId: 'verification',
       budget: { maxIterations: 1, maxRuntimeMs: 15 * 60 * 1000, maxCostGbp: 0, maxTokens: 0, maxNoProgressAttempts: 1 },
     });
@@ -1257,28 +1262,72 @@ export class FactoryService {
     await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'quality.started', actor: 'factory-service', payload: { workspace } }));
 
     try {
+      // The source is hashed before anything runs, because installing and
+      // building both write into the workspace and a digest taken afterwards
+      // would describe the tree the build left rather than the tree it read.
+      const source = sourceDigest(workspace);
+
+      // Resolve the graph once, then install *from* it. `npm install` was doing
+      // both at once, which is why two verifications of one source tree could
+      // install two different dependency graphs and both report success.
+      const lock = resolveLockfile(workspace);
+      await this.store.recordEvent(createEvent({
+        projectId, taskId: task.id, type: 'quality.lock.resolved', actor: 'factory-service',
+        payload: { workspace, lockDigest: lock.digest, alreadyPresent: !lock.resolved },
+        usage: { durationMs: lock.durationMs },
+      }));
+
       for (const step of [
-        { type: 'quality.install.succeeded', command: 'npm', args: ['install', '--no-audit', '--no-fund'] },
+        { type: 'quality.install.succeeded', command: 'npm', args: ['ci', '--no-audit', '--no-fund'] },
         { type: 'quality.check.succeeded', command: 'npm', args: ['run', 'check'] },
         { type: 'quality.build.succeeded', command: 'npm', args: ['run', 'build'] },
       ]) {
         const usage = runCommand(step.command, step.args, workspace);
+        // A lock that moved during `npm ci` means the installed graph is not the
+        // graph the digest describes, and everything downstream would be
+        // identified against a resolution that no longer exists.
+        if (step.command === 'npm' && step.args[0] === 'ci') assertLockUnmoved(workspace, lock.digest);
         await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: step.type, actor: 'factory-service', payload: { workspace }, usage }));
       }
+
+      const output = buildOutputManifest(path.join(workspace, 'dist'));
+      fs.mkdirSync(path.join(workspace, '.app-builder'), { recursive: true });
+      fs.writeFileSync(path.join(workspace, '.app-builder/output-manifest.json'), `${JSON.stringify(output, null, 2)}\n`);
+
+      // Recorded unconditionally; claimed only where it is true. A host that is
+      // not running the declared pair still gets a complete, honest record — it
+      // simply cannot state that this artifact is reproducible.
+      const toolchain = runningToolchain();
+      const position = describeToolchain(toolchain);
+      const buildIdentity = {
+        sourceDigest: source,
+        lockDigest: lock.digest,
+        toolchain,
+        outputDigest: output.digest,
+        outputFiles: output.files.length,
+        reproducible: position.supported,
+        toolchainSummary: position.summary,
+        recordedAt: new Date().toISOString(),
+      };
+      await this.store.recordEvent(createEvent({
+        projectId, taskId: task.id, type: 'quality.identity.recorded', actor: 'factory-service',
+        payload: { workspace, ...buildIdentity },
+      }));
+
       const checkpoint = createCheckpoint({
         projectId,
         taskId: task.id,
         repoRef: workspace,
-        summary: `Verified independent install, checks and production build for ${project.name}.`,
+        summary: `Installed ${project.name} from its own lockfile, ran its checks and built it: source ${source.slice(0, 12)}, lock ${lock.digest.slice(0, 12)}, output ${output.digest.slice(0, 12)} across ${output.files.length} file(s). ${position.summary}`,
         filesChanged: [],
         failures: [],
-        artifacts: ['dist'],
+        artifacts: ['dist', '.app-builder/output-manifest.json'],
         nextAction: 'Start a service-managed preview for product review.',
       });
       this.store.recordCheckpoint(checkpoint);
       task = transitionTask(task, 'succeeded', { latestCheckpointId: checkpoint.id });
       this.store.upsertTask(task);
-      project = this.store.upsertProject({ ...project, state: 'verified', updatedAt: new Date().toISOString() });
+      project = this.store.upsertProject({ ...project, state: 'verified', buildIdentity, updatedAt: new Date().toISOString() });
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'quality.succeeded', actor: 'factory-service', payload: { checkpointId: checkpoint.id }, usage: { durationMs: Date.now() - started } }));
       return { project: summary(project), task, checkpoint };
     } catch (error) {

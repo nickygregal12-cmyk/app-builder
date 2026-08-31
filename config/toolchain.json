@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "The exact Node and npm pair a reproducible build is claimed against. `buildable` asserts that an exact source tree, with an exact lockfile, under an exact toolchain, produces an exact output — and the third of those was the one nothing declared. `engines` in package.json is a different question (will this run at all) and stays a floor; this file is the identity a build records and is measured against.",
+  "rules": [
+    "One pair, named exactly. A range cannot be recorded in an artifact identity, because two builds inside the same range are two different builds and only one of them produced the output that was reviewed.",
+    "npm's resolution behaviour changes across majors and has changed within them. Declaring Node without declaring the npm it shipped with leaves the half that actually resolves the dependency graph undeclared.",
+    "Recording is unconditional; claiming is not. Every build records the toolchain it actually ran under. A build that ran under anything other than the declared pair records that honestly and cannot claim `buildable`.",
+    "A host that does not have the declared pair is not broken. It can intake, generate, verify, preview, edit and export. It cannot state a reproducible build identity, and saying so is the honest report rather than a failure to work around."
+  ],
+  "declared": {
+    "node": "22.23.2",
+    "npm": "10.9.8"
+  },
+  "why": "Node 22.23.2 is the current Jod LTS release and 10.9.8 is the npm it ships with, so the pair is what a clean `actions/setup-node` on the declared version produces without a second install step. CI reads it through .nvmrc; nothing hard-codes a version in a workflow.",
+  "consumers": [
+    ".nvmrc — the version file every workflow and version manager resolves",
+    "package.json packageManager — the manager declaration a brownfield profile and a clean checkout both read",
+    "tooling/lib/toolchain.mjs — the reader, the comparison and the refusal",
+    "tooling/doctor.mjs — reports where the running host stands against the declaration"
+  ]
+}

@@ -376,7 +376,7 @@ export function forkArtifactRevision(revision, details = {}, now = new Date().to
  * it would have to record to go further. That is the honest report, and it is
  * also the migration instruction.
  */
-export function projectLegacyProjectState(legacy = {}) {
+export function projectLegacyProjectState(legacy = {}, { declaredToolchain = null } = {}) {
   const state = String(legacy.state ?? '').trim();
   const known = ['draft', 'ready', 'generating', 'generated', 'verified', 'failed'];
   if (!known.includes(state)) {
@@ -407,6 +407,43 @@ export function projectLegacyProjectState(legacy = {}) {
         ? 'An approved build plan and its contract digest are recorded, which is exactly what contract-approved asserts.'
         : 'A project exists and its contract has not been approved with a recorded digest, so no revision has begun.',
       missing: approved ? ['sourceDigest'] : ['approvedBuildPlanId', 'contractDigest'],
+      legacyState: state,
+    };
+  }
+
+  // A verification that recorded a full build identity is not legacy data: it
+  // recorded the lockfile it installed from, the toolchain it ran under and a
+  // digest of what it built, which is exactly what `buildable` asserts. The
+  // toolchain still has to be the declared one — a real record of a build under
+  // an undeclared toolchain is an honest record of an unreproducible build.
+  const identity = legacy.buildIdentity ?? null;
+  if (state === 'verified' && identity) {
+    const recorded = ['sourceDigest', 'lockDigest', 'outputDigest'].filter((component) => !isDigest(identity[component]));
+    const toolchain = identity.toolchain ?? null;
+    if (!toolchain?.node || !toolchain?.npm) recorded.push('toolchain');
+    if (recorded.length === 0) {
+      const supported = declaredToolchain ? toolchain.node === declaredToolchain.node && toolchain.npm === declaredToolchain.npm : null;
+      if (supported === true) {
+        return {
+          lifecycleState: 'buildable',
+          basis: `Installed from lockfile ${identity.lockDigest.slice(0, 12)} under node ${toolchain.node} / npm ${toolchain.npm}, and built output ${identity.outputDigest.slice(0, 12)}.`,
+          missing: [],
+          legacyState: state,
+        };
+      }
+      return {
+        lifecycleState: 'materialized',
+        basis: supported === null
+          ? 'A full build identity was recorded, but no declared toolchain was supplied to compare it against, so reproducibility is unasserted rather than proven.'
+          : `The build ran under node ${toolchain.node} / npm ${toolchain.npm} rather than the declared node ${declaredToolchain.node} / npm ${declaredToolchain.npm}, so what it produced is recorded and not reproducible.`,
+        missing: ['toolchain'],
+        legacyState: state,
+      };
+    }
+    return {
+      lifecycleState: 'materialized',
+      basis: `A build identity was recorded without ${recorded.join(', ')}, so it does not assert what buildable asserts.`,
+      missing: recorded,
       legacyState: state,
     };
   }

@@ -198,6 +198,40 @@ test('legacy `verified` does not become `buildable`', () => {
   assert.deepEqual(projected.missing, ['lockDigest', 'toolchain', 'outputDigest']);
 });
 
+test('a verification that recorded a full identity under the declared toolchain earns buildable', () => {
+  const declaredToolchain = { node: '22.23.2', npm: '10.9.8' };
+  const buildIdentity = { sourceDigest: SOURCE, lockDigest: LOCK, outputDigest: OUTPUT, toolchain: declaredToolchain };
+
+  const earned = projectLegacyProjectState({ state: 'verified', buildIdentity }, { declaredToolchain });
+  assert.equal(earned.lifecycleState, 'buildable');
+  assert.deepEqual(earned.missing, []);
+
+  // A real record of a build under an undeclared toolchain is an honest record
+  // of an unreproducible build, which is not the same claim.
+  const elsewhere = projectLegacyProjectState(
+    { state: 'verified', buildIdentity: { ...buildIdentity, toolchain: { node: '22.22.2', npm: '10.9.7' } } },
+    { declaredToolchain },
+  );
+  assert.equal(elsewhere.lifecycleState, 'materialized');
+  assert.deepEqual(elsewhere.missing, ['toolchain']);
+  assert.match(elsewhere.basis, /recorded and not reproducible/);
+
+  // No declaration to compare against is unasserted, never assumed-good.
+  assert.equal(projectLegacyProjectState({ state: 'verified', buildIdentity }).lifecycleState, 'materialized');
+
+  for (const absent of ['sourceDigest', 'lockDigest', 'outputDigest', 'toolchain']) {
+    const partial = projectLegacyProjectState(
+      { state: 'verified', buildIdentity: { ...buildIdentity, [absent]: null } },
+      { declaredToolchain },
+    );
+    assert.equal(partial.lifecycleState, 'materialized', `a build identity missing ${absent} must not reach buildable`);
+    assert.deepEqual(partial.missing, [absent]);
+  }
+
+  // A build identity is not a substitute for having been verified at all.
+  assert.equal(projectLegacyProjectState({ state: 'generated', buildIdentity }, { declaredToolchain }).lifecycleState, null);
+});
+
 test('legacy fixtures project honestly and never above their evidence', () => {
   const cases = [
     [{ state: 'draft' }, null],

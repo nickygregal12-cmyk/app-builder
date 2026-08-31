@@ -1009,7 +1009,9 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
   color: var(--color-text);
   border: 1px solid currentColor;
   border-radius: var(--radius-sm);
-  min-height: 42px;
+  /* Smaller than solid's 48px and no smaller than the 44px touch target, so a
+     quieter ask is a smaller one and still not a harder one to hit. */
+  min-height: 44px;
   padding: 0 18px;
   font-weight: 600;
   box-shadow: none;

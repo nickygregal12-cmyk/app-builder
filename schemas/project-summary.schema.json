@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/project-summary.schema.json",
+  "title": "App Builder Project Summary",
+  "description": "What the service says about a project over its own boundary. It is a projection, not the project: the manifest, knowledge pack and intake bundle are large artifacts with their own contracts and are referenced by identity here rather than inlined. This is a contract family because the Console was carrying a hand-written copy of it, and the two most recent additions — the lifecycle claim and the build identity — were typed twice by hand with nothing checking that the two spellings agreed.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "type",
+    "slug",
+    "state",
+    "lifecycle",
+    "buildIdentity",
+    "workspacePath",
+    "manifestVersion",
+    "knowledgePackHash",
+    "approvedIntakeBundleId",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "type": {"type": "string", "minLength": 1},
+    "slug": {"type": "string", "minLength": 1},
+    "state": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Legacy build progress. `generated` means a directory exists and `verified` means a build once succeeded under a resolution nobody recorded; neither is a readiness verdict. `lifecycle` is the canonical claim."
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lifecycleState", "basis", "missing", "legacyState"],
+      "description": "Where this project stands on the one readiness ladder, and why. Null for a project carrying no exact artifact identity for a lifecycle to be about — which is most of them, and is the honest answer rather than a gap.",
+      "properties": {
+        "lifecycleState": {
+          "anyOf": [
+            {"enum": ["contract-approved", "materialized", "buildable", "behavior-verified", "quality-accepted", "release-candidate", "released", "production-verified", "superseded", "withdrawn", "rejected"]},
+            {"type": "null"}
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One sentence a person can check against the evidence. A projection that states a position without saying why is one nobody can dispute."
+        },
+        "missing": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "description": "What this project would have to record to go further."
+        },
+        "legacyState": {"type": ["string", "null"]}
+      }
+    },
+    "buildIdentity": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sourceDigest", "lockDigest", "toolchain", "outputDigest", "outputFiles", "reproducible", "toolchainSummary", "recordedAt"],
+          "description": "What the last verification installed from, ran under and built. Recording is unconditional; claiming is not, which is what `reproducible` separates.",
+          "properties": {
+            "sourceDigest": {"$ref": "#/$defs/sha256"},
+            "lockDigest": {"$ref": "#/$defs/sha256"},
+            "toolchain": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["node", "npm"],
+              "properties": {
+                "node": {"type": "string", "minLength": 1},
+                "npm": {
+                  "type": ["string", "null"],
+                  "description": "Null when npm could not be asked. An npm nobody could read is unknown, never assumed to be the declared one."
+                }
+              }
+            },
+            "outputDigest": {"$ref": "#/$defs/sha256"},
+            "outputFiles": {"type": "integer", "minimum": 0},
+            "reproducible": {
+              "type": "boolean",
+              "description": "False when the build ran under anything other than the declared toolchain. The record is still complete; it simply is not a reproducibility claim."
+            },
+            "toolchainSummary": {"type": "string", "minLength": 1},
+            "recordedAt": {"type": "string", "minLength": 1}
+          }
+        },
+        {"type": "null"}
+      ]
+    },
+    "workspacePath": {"type": ["string", "null"]},
+    "manifestVersion": {"type": "integer", "minimum": 1},
+    "knowledgePackHash": {"type": ["string", "null"]},
+    "approvedIntakeBundleId": {
+      "type": ["string", "null"],
+      "description": "That this project can be rerun without re-keying the questionnaire. The bundle itself is a large artifact and is fetched separately."
+    },
+    "createdAt": {"type": "string", "minLength": 1},
+    "updatedAt": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

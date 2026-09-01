@@ -1,0 +1,112 @@
+---
+/**
+ * The sheet, its masthead, and its title block.
+ *
+ * The title block is the device the whole art direction hangs on. Every engineering drawing
+ * carries one in its lower corner: what this is, which revision, drawn against what, checked
+ * by whom, on what date. It exists because a drawing that circulates without its provenance
+ * is dangerous — you cannot tell whether the copy in your hand is the one the work was
+ * planned against.
+ *
+ * Putting it on a website is not a decorative borrowing. This company's entire argument is
+ * that a safety document is only as good as the model version it was proved against, so the
+ * site states its own version, its model, and its date in the same block, in the same form,
+ * on every page. It is the footer, and it is the thesis.
+ */
+import '../styles/tokens.css';
+import '../styles/site.css';
+import { SITE } from '../data/network';
+import { JOB } from '../data/schedule';
+
+interface Props {
+  title: string;
+  description: string;
+  /** What this page is, in the title block's own terms. */
+  sheet: string;
+  sheetNo: string;
+}
+const { title, description, sheet, sheetNo } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+/* One word each. The longer labels wrapped into two uneven rows at 390px, which reads as a
+   layout that ran out of room rather than one that was arranged. */
+const ROUTES = [
+  { href: '/', label: 'Overview' },
+  { href: '/schedule', label: 'Schedule' },
+  { href: '/proving', label: 'Proving' },
+  { href: '/model', label: 'Network' },
+  { href: '/pilot', label: 'Pilot' },
+];
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <link rel="preload" href="/fonts/IBMPlexSans-var.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/IBMPlexSansCondensed-600.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <div class="sheet masthead__in">
+        <a href="/" class="mark" aria-label="Interlock, home">
+          Interlock
+          <span>Switching proof</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          {ROUTES.map((route) => (
+            <a href={route.href} aria-current={path === route.href ? 'page' : undefined}>{route.label}</a>
+          ))}
+        </nav>
+        {/* The ask, carried as a stamp in the corner of the sheet rather than as a slab at the
+            foot of every page. A drawing carries its status in the corner; a dark closing
+            rectangle is a different category's habit, and this one has a specific thing to
+            ask for rather than a generic one. */}
+        <a class="ask-stamp" href="/pilot">Send us a schedule</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="titleblock">
+      <div class="sheet">
+        <div class="tb">
+          <div class="tb__cell">
+            <p class="tb__k">Sheet</p>
+            <p class="tb__v">{sheet}</p>
+          </div>
+          <div class="tb__cell">
+            <p class="tb__k">Drawing no.</p>
+            <p class="tb__v tb__v--mono">{sheetNo}</p>
+          </div>
+          <div class="tb__cell">
+            <p class="tb__k">Worked example</p>
+            <p class="tb__v tb__v--mono">{JOB.reference}</p>
+            <p class="tb__v" style="color: var(--ink-3)">{SITE.designation}</p>
+          </div>
+          <div class="tb__cell">
+            <p class="tb__k">Network model</p>
+            <p class="tb__v tb__v--mono">{SITE.modelVersion}</p>
+            <p class="tb__v" style="color: var(--ink-3)">as at {SITE.modelDate}</p>
+          </div>
+        </div>
+        <div class="tb__foot">
+          <span>Interlock Systems Ltd · Sheffield</span>
+          <span>0114 400 2270</span>
+          <span><a class="u" href="mailto:proving@interlock.example">proving@interlock.example</a></span>
+          <span style="margin-left: auto">
+            Prototype. The company, its people and every substation named here are fictional; the
+            regulatory framework and the switching practice are not.
+          </span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

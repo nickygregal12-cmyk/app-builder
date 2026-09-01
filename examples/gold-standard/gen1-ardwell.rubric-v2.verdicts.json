@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-01T11:57:01.389Z",
+  "reviews": [
+    {
+      "verdict": "pass",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "This is clearly authored, business-specific work with an assured editorial grid, excellent architectural photography and unusually disciplined content editing. It is strong professional output rather than benchmark-class: the mobile layouts mostly collapse the desktop system into one column, interaction states are not evidenced, and several long pages repeat the same project and footer rhythms.",
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 8.5,
+          "note": "The restrained palette, alternating editorial grid, oversized imagery, fine rules and contrasting sans/serif system form a coherent thesis rooted in architectural conservation and material honesty.",
+          "whyNotHigher": "The visual thesis is sophisticated but familiar within high-end architecture portfolios, and repeated project modules make the authorship less surprising over a full scroll.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 9,
+          "note": "Project outcomes, planning constraints, material schedules, problem-and-response narratives, staff responsibilities and the free diagnostic conversation all shape the structure rather than merely filling generic sections.",
+          "whyNotHigher": "The underlying portfolio grammar could still serve another serious architecture practice, even though it would be actively unsuitable for most other sectors.",
+          "positiveEvidence": [
+            "Each project is framed through a concrete architectural constraint and measurable result such as first-submission consent, reduced glazing, airtightness or acoustic performance.",
+            "Project pages pair the problem, intervention, materials and client evidence in a structure specific to architectural practice.",
+            "The enquiry guidance asks for planning history, site timing and budget rather than using a generic lead form."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 8.5,
+          "note": "The small route set is intelligible: Home establishes the proposition and selected evidence, Work provides the index, project routes provide technical depth, Studio establishes accountability, and Enquiries converts interest.",
+          "whyNotHigher": "Home and Work substantially repeat the same four projects, while the long project-index and studio pages offer limited secondary navigation or cross-linking beyond the next-project prompt.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 8.5,
+          "note": "Every page establishes a decisive first read, then moves cleanly through proposition, image, evidence and action. Project titles, outcomes and photographs change emphasis appropriately across index and detail contexts.",
+          "whyNotHigher": "The repeated metadata-title-description-rule-result construction becomes predictable, and some wide-screen supporting copy is very small relative to the dominant images.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 8.5,
+          "note": "Type is used compositionally: large sans-serif propositions establish modern directness, serif project titles and outcomes add editorial authority, and tracked metadata creates a disciplined technical register.",
+          "whyNotHigher": "At wide widths, metadata, captions and footer copy become excessively diminutive, and the type system does not reach the exceptional precision or expressive range of the reference.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 8.5,
+          "note": "The desktop and wide pages use alternating image/text placement, deliberate overlaps, large releases of space and occasional dark tonal interruption to compose a convincing long-form sequence.",
+          "whyNotHigher": "The project index settles into a repeated alternation, while mobile loses most of the lateral tension and becomes a lengthy sequence of similarly spaced blocks.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 9,
+          "note": "Photography is the correct material and is treated as evidence: exterior form, interior organisation, construction character and before-or-secondary views are given enough scale to substantiate the written claims.",
+          "whyNotHigher": "Some mobile hero crops sacrifice architectural completeness, and the detail pages rely on only two principal images rather than building a richer visual argument through drawings, plans or construction details.",
+          "positiveEvidence": [
+            "Full-width project heroes make the building itself the dominant proof rather than surrounding it with decorative interface.",
+            "Secondary images directly support the stated intervention, such as the retained barn structure, shaded rear bay and adaptable restaurant joinery.",
+            "Crops remain coherent and subject-aware across desktop, tablet and phone."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 6.5,
+          "note": "Navigation, underlined active states, links and large CTAs appear consistent and usable, but the screenshots provide no evidence of hover, focus, transition, image interaction or other dynamic behaviour.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 7.5,
+          "note": "The layouts remain highly legible at every width, image crops are reconsidered, desktop side-by-side structures stack in sensible reading order, and mobile CTAs become full-width.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 9,
+          "note": "The combination of material-led photography, sober typography, conservation-minded copy and quiet technical evidence feels specifically right for a serious Bristol architecture practice concerned with repair and restraint.",
+          "whyNotHigher": "The language is highly appropriate but still belongs to a recognisable contemporary architecture-studio idiom rather than becoming completely proprietary.",
+          "positiveEvidence": [
+            "The visual restraint echoes the firm's stated preference for repairing and extending what exists.",
+            "Muted colours and material-rich images communicate seriousness without luxury clichés.",
+            "Planning history, technical outcomes and named practitioners create an unusually credible professional tone."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 8.5,
+          "note": "The practice, location, project type, differentiator and next action are explicit. Repeated contextual CTAs and the enquiry page explain what the first conversation is for and what information helps.",
+          "whyNotHigher": "The invalid email address visibly prevents real conversion in this prototype, and project cards do not visibly signal their clickability in static evidence.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 9,
+          "note": "The site avoids gradients, rounded-card systems, icon triplets, fake logo walls, decorative blobs and vague innovation copy. Its components are justified by projects, evidence, people and architectural material.",
+          "whyNotHigher": "The oversized minimalist headline, KPI-style facts and dark testimonial band are familiar contemporary patterns, even though they are substantially better justified here than in generic generated work.",
+          "positiveEvidence": [
+            "Metrics are project-specific outcomes with explanatory captions rather than invented vanity statistics.",
+            "Editorial asymmetry and image placement replace generic card grids.",
+            "Copy consistently names buildings, constraints, materials, locations and decisions."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 8.5,
+          "note": "The memorable experience is the alternating project index in which each building photograph is paired with one terse, evidential outcome such as “First submission,” “Less glass” or “1.9 m³/h·m².”",
+          "whyNotHigher": "The signature is memorable within the category but not unique enough to be unmistakable among leading editorial architecture portfolios.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "holisticTier": "strong-professional",
+      "observations": {
+        "templateDerived": false,
+        "interchangeableBusiness": false,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": false,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": "The alternating project index pairs monumental architectural photographs with terse proof statements—“First submission,” “Less glass,” “3 weeks early” and “1.9 m³/h·m²”—turning the portfolio into an argument about decisions and outcomes.",
+      "pairwiseComparison": {
+        "referenceId": "vb-kononenko",
+        "comparisons": [
+          {
+            "dimension": "art-direction",
+            "outcome": "reference-stronger",
+            "note": "The candidate has a clear editorial thesis, but the reference sustains greater compositional confidence and achieves more distinctive restraint with fewer repeated devices."
+          },
+          {
+            "dimension": "typography",
+            "outcome": "reference-stronger",
+            "note": "The candidate's sans/serif contrast and metadata are carefully designed, but the reference is more precise in small type, scale relationships and typographic quietness."
+          },
+          {
+            "dimension": "composition",
+            "outcome": "reference-stronger",
+            "note": "The candidate composes desktop pages well, yet its repeated alternating modules and stacked mobile sequence are less spatially inventive than the reference."
+          },
+          {
+            "dimension": "information-architecture",
+            "outcome": "roughly-comparable",
+            "note": "The candidate has an exceptionally clear route model and strong progression from proposition to index, detail, people and enquiry, although Home duplicates much of Work."
+          },
+          {
+            "dimension": "responsive-design",
+            "outcome": "reference-stronger",
+            "note": "The candidate remains polished and readable but largely stacks its desktop material on mobile rather than developing a substantially new narrow-screen composition."
+          },
+          {
+            "dimension": "craft",
+            "outcome": "reference-stronger",
+            "note": "Visible layout and image craft are strong, but the reference demonstrates finer typographic and compositional resolution; interaction craft cannot be compared confidently from still screenshots."
+          },
+          {
+            "dimension": "memorability",
+            "outcome": "reference-stronger",
+            "note": "The evidence-led outcome captions give the candidate a memorable idea, but the reference's overall compositional identity is more unmistakable."
+          },
+          {
+            "dimension": "business-specificity",
+            "outcome": "candidate-stronger",
+            "note": "The candidate structurally integrates planning histories, technical performance, materials, staff accountability and consultation guidance, making the business proposition unusually explicit."
+          }
+        ]
+      },
+      "benchmarkGap": "LARGE",
+      "benchmarkGapDetail": "Nowhere near benchmark class. The reference is stronger on most dimensions and by a wide margin.",
+      "benchmarkComparisonCounts": {
+        "candidate-stronger": 1,
+        "roughly-comparable": 1,
+        "reference-stronger": 6,
+        "reference-substantially-stronger": 0
+      },
+      "dimensionsNotCompared": [],
+      "evidenceCeiling": {
+        "cap": 10,
+        "tier": "site-level",
+        "routes": 55,
+        "artifactRoutes": null,
+        "coversWholeArtifact": null,
+        "viewports": 4,
+        "detail": "Evidence covers 55 route(s) at 4 viewport(s): a benchmark claim about a website needs the website: several routes, at more than one width. This caps any overall claim at 10."
+      },
+      "failingCriteria": [],
+      "blockingConcerns": [],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": null,
+        "compositionHash": null,
+        "captureCount": 62,
+        "captureDigest": "9648990441dc94a9f9776b0218478dd0087b7f93d928e327128365eaf3231f31"
+      }
+    }
+  ],
+  "skipped": []
+}

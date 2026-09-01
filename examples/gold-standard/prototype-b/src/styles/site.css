@@ -1,0 +1,325 @@
+/*
+ * INTERLOCK — the sheet, and what sits on it.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; }
+p { margin: 0; }
+ol, ul { margin: 0; padding: 0; list-style: none; }
+
+a { color: var(--link); text-decoration: none; }
+
+/* Underline offset and thickness set explicitly: a link inside dense technical prose that
+   uses the default underline collides with descenders and reads as a strikethrough. */
+.prose a, a.u {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--link) 40%, transparent);
+  transition: text-decoration-color 140ms ease, color 140ms ease;
+}
+.prose a:hover, a.u:hover { color: var(--link-hover); text-decoration-color: currentColor; }
+
+.skip {
+  position: absolute; left: var(--s4); top: calc(-1 * var(--s9)); z-index: 50;
+  background: var(--ink); color: var(--sheet);
+  padding: var(--s3) var(--s4); font-size: var(--t-small); font-weight: 500;
+  transition: top 160ms ease;
+}
+.skip:focus-visible { top: var(--s4); }
+
+/* --- the sheet ------------------------------------------------------------- */
+
+.sheet { max-width: var(--sheet-max); margin: 0 auto; padding-inline: var(--pad); }
+.sheet--narrow { max-width: 76ch; }
+
+.rule { height: 0; border: 0; border-top: var(--w-hair) solid var(--hair); margin: 0; }
+.rule--heavy { border-top: var(--w-rule) solid var(--ink); }
+
+/* --- masthead -------------------------------------------------------------- */
+
+.masthead { border-bottom: var(--w-rule) solid var(--ink); background: var(--paper); }
+.masthead__in { display: flex; align-items: baseline; gap: var(--s6); padding-block: var(--s4); }
+
+.mark { font-family: var(--cond); font-weight: 600; font-size: 1.25rem; letter-spacing: 0.02em; color: var(--ink); }
+.mark span { display: block; font-family: var(--sans); font-weight: 500; font-size: var(--t-label);
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-top: 3px; }
+
+.nav { margin-left: auto; display: flex; gap: var(--s5); }
+.ask-stamp {
+  margin-left: var(--s5);
+  font-family: var(--cond); font-size: var(--t-small); font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink); border: var(--w-rule) solid var(--ink);
+  padding: 7px var(--s4); white-space: nowrap;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.ask-stamp:hover { background: var(--ink); color: var(--sheet); }
+.nav a {
+  font-size: var(--t-small); font-weight: 500; color: var(--ink-2);
+  padding-bottom: 3px; border-bottom: 1.5px solid transparent;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+.nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+.nav a[aria-current='page'] { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* --- headings and prose ---------------------------------------------------- */
+
+.label {
+  font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3);
+}
+.display { font-size: var(--t-display); line-height: 1.04; letter-spacing: -0.028em; max-width: 17ch; }
+.head { font-size: var(--t-head); max-width: 22ch; }
+.sub { font-size: var(--t-sub); line-height: 1.45; color: var(--ink-2); max-width: 46ch; font-weight: 400; letter-spacing: -0.005em; }
+.prose { max-width: min(var(--measure), 100%); }
+.prose p + p { margin-top: var(--s4); }
+.prose--tight { max-width: 52ch; }
+.small { font-size: var(--t-small); color: var(--ink-2); }
+.mono { font-family: var(--mono); font-size: 0.9em; letter-spacing: -0.01em; }
+
+/* State words in running text carry the legend's colour, so the drawing and the prose agree. */
+.st-live { color: var(--live); font-weight: 500; }
+.st-earth { color: var(--earth); font-weight: 500; }
+.st-dead { color: var(--ink-2); font-weight: 500; }
+
+/* Capped. `7vw` kept growing the gaps on a 1920 screen, so the widest rendering had the
+   most air and the least density — the opposite of what more room should buy. */
+section { padding-block: clamp(var(--s7), 4.4vw, 84px); }
+section + section { border-top: var(--w-hair) solid var(--hair); }
+
+/* --- the sequence ---------------------------------------------------------- */
+
+.seq { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(var(--s6), 3vw, var(--s8)); align-items: start; }
+/* Past the desktop frame the extra width goes to the drawing rather than being shared out
+   evenly. The schedule is a fixed-width list of short lines; the diagram is the thing that
+   benefits from being larger, and it is the thing the page is for. */
+@media (min-width: 1500px) { .seq { grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr); } }
+.seq__sticky { position: sticky; top: var(--s5); }
+.seq__drawing { background: var(--sheet); border: var(--w-hair) solid var(--hair); padding: var(--s5) var(--s5) var(--s4); }
+
+.seq__readout { display: grid; grid-template-columns: repeat(4, auto); gap: var(--s5); padding-bottom: var(--s4);
+  margin-bottom: var(--s4); border-bottom: var(--w-hair) solid var(--hair); }
+.ro { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ro__k { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.ro__v { font-size: 1.0625rem; font-weight: 600; line-height: 1.2; }
+.ro__v--num {
+  /* Not mono. A mono comma sits centred in a full character cell, so "8,940" reads as
+     "8 , 940" — the separator gets the same width as a digit. Tabular lining figures in the
+     sans give the column alignment a readout needs without inventing the gap. */
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+  font-size: 1.125rem;
+}
+.ro__v[data-tone='live'] { color: var(--live); }
+.ro__v[data-tone='earth'] { color: var(--earth); }
+.ro__v[data-tone='dead'] { color: var(--ink-2); }
+.ro__v[data-tone='risk'] { color: var(--risk); }
+.ro__u { font-size: var(--t-micro); color: var(--ink-3); letter-spacing: 0.01em; }
+
+.seq__legend { display: flex; gap: var(--s4); margin-top: var(--s4); padding-top: var(--s3);
+  border-top: var(--w-hair) solid var(--hair); }
+.lg { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 6px; color: var(--ink-3); }
+.lg::before { content: ''; width: 14px; height: 0; border-top-style: solid; }
+.lg--live::before { border-top: 2.4px solid var(--live); }
+.lg--dead::before { border-top: 1.6px solid var(--dead); }
+.lg--earth::before { border-top: 2.4px solid var(--earth); }
+.seq__caption { margin-top: var(--s4); font-size: var(--t-small); color: var(--ink-2); max-width: 52ch; }
+
+.profile { margin: var(--s5) 0 0; padding-top: var(--s4); border-top: var(--w-hair) solid var(--hair); }
+.profile__k { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3); }
+.profile__svg { display: block; width: 100%; height: 64px; margin-top: var(--s3); }
+.profile__bar { fill: var(--risk); opacity: 0.24; transition: opacity 180ms ease, fill 180ms ease; }
+.profile__bar[data-now] { opacity: 1; }
+.profile__ax { display: flex; justify-content: space-between; margin-top: 6px;
+  font-size: var(--t-micro); color: var(--ink-3); letter-spacing: 0.04em; }
+.profile__peak { color: var(--risk); font-weight: 600; }
+
+/* --- the steps ------------------------------------------------------------- */
+
+/* Phase headings. Four rounds of review called the step lists visually uniform, and they were —
+   but a schedule is not uniform to the person writing it. Check, transfer, isolate, prove and
+   earth, issue: the structure was already in the document and was simply not drawn. */
+.phase { display: flex; align-items: center; gap: var(--s3); padding: var(--s5) 0 var(--s2); }
+.phase::after { content: ''; flex: 1; height: 0; border-top: var(--w-hair) solid var(--hair); }
+.phase__t { font-family: var(--cond); font-size: var(--t-label); font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.steps > li:first-child .phase { padding-top: var(--s3); }
+
+.steps { border-top: var(--w-hair) solid var(--hair); }
+.steps:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+
+.step {
+  display: grid; grid-template-columns: 2.75rem 1fr; gap: var(--s4);
+  width: 100%; text-align: left; background: none; border: 0;
+  border-bottom: var(--w-hair) solid var(--hair);
+  padding: var(--s4) var(--s3) var(--s4) var(--s2);
+  font: inherit; color: inherit; cursor: pointer;
+  position: relative;
+  transition: background-color 140ms ease;
+}
+/* The selected step is marked by a rule in the margin rather than a fill, so the row's own
+   typography is never sitting on a tint. A tinted row at this density loses its metadata. */
+.step::before {
+  content: ''; position: absolute; inset-block: 0; left: 0; width: 3px;
+  background: var(--ink); transform: scaleX(0); transform-origin: left;
+  transition: transform 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.step:hover { background: color-mix(in srgb, var(--ink) 3.5%, transparent); }
+.step[aria-selected='true'] { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.step[aria-selected='true']::before { transform: scaleX(1); }
+
+.step__n { font-family: var(--mono); font-size: var(--t-small); font-weight: 500; color: var(--ink-3); padding-top: 1px; }
+.step[aria-selected='true'] .step__n { color: var(--ink); }
+.step__body { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.step__head { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; }
+.step__op { font-family: var(--cond); font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.step__op[data-op='APPLY EARTH'], .step__op[data-op='REMOVE EARTH'] { color: var(--earth); }
+.step__op[data-op='PROVE DEAD'] { color: var(--ink-2); }
+.step__op[data-op='ISSUE'], .step__op[data-op='CANCEL'] { color: var(--link); }
+.step__plant { font-family: var(--mono); font-size: var(--t-small); font-weight: 500; color: var(--ink); }
+.step__detail { font-size: var(--t-small); color: var(--ink-2); line-height: 1.45; }
+.step__meta { display: flex; gap: var(--s3); flex-wrap: wrap; align-items: center;
+  font-size: var(--t-micro); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.step__flag { color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+.step__flag--e { color: var(--earth); border-bottom-color: var(--earth); }
+.step__flag--p { color: var(--link); border-bottom-color: var(--link); }
+
+.step[data-after] { opacity: 0.42; }
+.step[data-refused] { background: var(--live-soft); }
+.step[data-refused]::before { background: var(--live); transform: scaleX(1); }
+
+.refusal { border-left: 3px solid var(--live); background: var(--live-soft); padding: var(--s5); margin-bottom: var(--s4); }
+.refusal__code { font-family: var(--mono); font-size: var(--t-micro); font-weight: 500; letter-spacing: 0.1em; color: var(--live); }
+.refusal__title { font-size: 1.0625rem; margin-top: var(--s2); max-width: 30ch; }
+.refusal__finding { margin-top: var(--s3); font-size: var(--t-small); color: var(--ink); }
+.refusal__cause { margin-top: var(--s3); font-size: var(--t-small); color: var(--ink); }
+.refusal__cause strong { font-weight: 600; }
+.refusal__path { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid color-mix(in srgb, var(--live) 25%, transparent); }
+.refusal__path-k { display: block; font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--live); }
+.refusal__path-v { display: block; margin-top: 4px; font-family: var(--mono); font-size: var(--t-small); color: var(--ink); word-spacing: 0.1em; }
+
+.seq__halt { margin-top: var(--s4); font-size: var(--t-small); color: var(--ink-2); max-width: 48ch; }
+
+/*
+ * One statement at scale.
+ *
+ * Every section on the site was a label, a heading and a column of prose, and an independent
+ * review called that pattern predictable across routes — correctly. This is the one place the
+ * page changes register: a single sentence set large across a wide measure, with the
+ * qualification beneath it at body size. It is used once per site, not once per page.
+ */
+.statement { padding-block: clamp(var(--s8), 6vw, 112px); }
+.statement__t { font-size: clamp(1.625rem, 1rem + 1.9vw, 2.875rem); line-height: 1.14;
+  letter-spacing: -0.022em; font-weight: 400; max-width: 26ch; }
+.statement__t b { font-weight: 600; }
+.statement__q { margin-top: var(--s6); padding-top: var(--s4);
+  border-top: var(--w-hair) solid var(--hair); max-width: 52ch;
+  font-size: var(--t-small); color: var(--ink-2); }
+
+/* --- sheet contents, for the long reference routes ------------------------- */
+
+.contents { display: flex; gap: var(--s5); flex-wrap: wrap; align-items: baseline;
+  padding: var(--s3) 0; border-block: var(--w-hair) solid var(--hair); margin-bottom: var(--s7); }
+.contents__k { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3); }
+.contents a { font-size: var(--t-small); font-weight: 500; color: var(--ink-2);
+  border-bottom: 1.5px solid transparent; padding-bottom: 2px; transition: color 140ms ease, border-color 140ms ease; }
+.contents a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* --- title block ----------------------------------------------------------- */
+
+.titleblock { border-top: var(--w-rule) solid var(--ink); margin-top: var(--s9); }
+.tb { display: grid; grid-template-columns: repeat(4, 1fr); }
+.tb__cell { padding: var(--s5) var(--s4); border-right: var(--w-hair) solid var(--hair); }
+.tb__cell:last-child { border-right: 0; }
+.tb__k { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.tb__v { margin-top: 6px; font-size: var(--t-small); color: var(--ink); }
+.tb__v--mono { font-family: var(--mono); }
+.tb__foot { border-top: var(--w-hair) solid var(--hair); padding: var(--s4) 0 var(--s8);
+  display: flex; gap: var(--s5); flex-wrap: wrap; font-size: var(--t-micro); color: var(--ink-3);
+  letter-spacing: 0.04em; }
+
+/* --- mobile: the drawing is not shrunk, it is given room to be read --------- */
+
+@media (max-width: 900px) {
+  /* `minmax(0, 1fr)`, not `1fr`. A grid item's default minimum is its content, so the
+     drawing's 560px legible width pushed the column — and with it the whole page — out to
+     614px, producing horizontal overflow on a 390px phone. The pan container can only pan if
+     its track is allowed to be narrower than what it holds. */
+  .seq { grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+  .seq__drawing, .seq__sticky, .seq__steps { min-width: 0; }
+
+  /*
+   * The recomposition that matters.
+   *
+   * On a phone the two-column arrangement is impossible and the obvious answer — scale the
+   * SVG to 390px — produces a drawing whose plant designations render at four pixels. That is
+   * not a smaller version of the artefact, it is a picture of one.
+   *
+   * So the drawing keeps its legible size and is allowed to pan horizontally, while the part
+   * that must never leave the screen — the state readout — detaches from it and pins to the
+   * top. Scrolling the schedule on a phone therefore keeps the four numbers in view and lets
+   * the drawing be consulted, which is the same division of labour the desktop layout gets
+   * from having two columns.
+   */
+  .seq__drawing { padding: 0; border: 0; background: none; }
+  .seq__sticky { position: static; }
+
+  .seq__readout {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--sheet);
+    border: var(--w-hair) solid var(--hair);
+    border-bottom-width: var(--w-rule); border-bottom-color: var(--ink);
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--s2);
+    padding: var(--s3) var(--s4);
+    margin-bottom: 0;
+  }
+  .ro__v { font-size: 0.9375rem; }
+  .ro__u { display: none; }
+
+  .seq__scroll {
+    overflow-x: auto; overscroll-behavior-x: contain;
+    background: var(--sheet); border: var(--w-hair) solid var(--hair); border-top: 0;
+    padding: var(--s4) var(--s4) var(--s2);
+    scrollbar-width: thin;
+  }
+  .seq__scroll .sld { min-width: 560px; }
+  .seq__legend { padding-inline: var(--s4); }
+  .seq__caption { padding-inline: var(--s4); }
+
+  .step { grid-template-columns: 2.25rem 1fr; gap: var(--s3); padding-block: var(--s4); }
+}
+
+@media (max-width: 640px) {
+  .masthead__in { flex-wrap: wrap; gap: var(--s3) var(--s5); padding-block: var(--s3); }
+  /* A designed row rather than a wrap. Five items at their short labels fit one line at
+     390px; the previous long labels wrapped into two uneven rows, which reads as a layout
+     that ran out of room rather than one that was arranged. */
+  .nav { margin-left: 0; width: 100%; order: 3; gap: 0;
+    display: flex; justify-content: space-between;
+    border-top: var(--w-hair) solid var(--hair); padding-top: var(--s3); }
+  .ask-stamp { margin-left: 0; order: 2; padding: 6px var(--s3); font-size: var(--t-label); }
+  .tb { grid-template-columns: repeat(2, 1fr); }
+  .tb__cell { border-bottom: var(--w-hair) solid var(--hair); }
+  .tb__cell:nth-child(2n) { border-right: 0; }
+  .seq__readout { grid-template-columns: repeat(2, 1fr); gap: var(--s3) var(--s4); }
+}

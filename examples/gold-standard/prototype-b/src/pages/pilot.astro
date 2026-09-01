@@ -1,0 +1,165 @@
+---
+/**
+ * Pilot.
+ *
+ * The conversion, and it is deliberately not a signup. This buyer cannot self-serve a safety
+ * tool and a free-trial button would be the clearest possible signal that we do not know who
+ * they are. The ask is the same shape as the product: you give us a schedule, we prove it.
+ *
+ * Pricing sits on this route rather than its own because for this product the two questions
+ * are one question — what it costs is inseparable from what the engagement is.
+ */
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="Pilot — Interlock"
+  description="Send us a switching schedule you have already written and approved. We model the site, prove the schedule, and tell you what we find."
+  sheet="Pilot and pricing"
+  sheetNo="IL-400"
+>
+  <section class="open open--tight">
+    <div class="sheet">
+      <p class="label">Sheet IL-400</p>
+      <h1 class="display display--sm">Send us a schedule you have already approved.</h1>
+      <p class="sub">
+        We model the site and prove the schedule, and we tell you what we find — including nothing,
+        which is the result about half the time and is worth knowing.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="cols">
+        <div>
+          <p class="label">What we need</p>
+          <ol class="need">
+            <li><span class="need__n mono">01</span><div><h3>One switching schedule</h3><p>Written, checked and approved by your own people. Preferably a routine one; the interesting failures are in routine work.</p></div></li>
+            <li><span class="need__n mono">02</span><div><h3>A single-line diagram of the site</h3><p>Whatever you have. A marked-up print is fine and is often more current than the file.</p></div></li>
+            <li><span class="need__n mono">03</span><div><h3>Normal running arrangement</h3><p>Which points are normally open. Ten minutes on a call, not a document.</p></div></li>
+            <li><span class="need__n mono">04</span><div><h3>Two hours of a district SAP</h3><p>To walk the site with us and correct the drawing. This is the part that cannot be skipped and the part that always finds something.</p></div></li>
+          </ol>
+        </div>
+        <div>
+          <p class="label">What you get back</p>
+          <ol class="need">
+            <li><span class="need__n mono">01</span><div><h3>The model</h3><p>Yours, in an open format, whether or not you go ahead. It is a record of your own network and we will not hold it hostage.</p></div></li>
+            <li><span class="need__n mono">02</span><div><h3>The proof, step by step</h3><p>Every step's network state, the customers-at-risk profile through the window, and any refusal with the operation that caused it.</p></div></li>
+            <li><span class="need__n mono">03</span><div><h3>A written finding</h3><p>Including &ldquo;we found nothing&rdquo;. We will not manufacture a defect to justify the engagement, and about half the time there is not one.</p></div></li>
+            <li><span class="need__n mono">04</span><div><h3>The list of what we could not model</h3><p>And who holds the drawing that would close each gap.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="secthead">
+        <div>
+          <p class="label">What it costs</p>
+          <h2 class="head">Priced per network, because that is what the work is.</h2>
+          <p class="small secthead__note">
+            Not per seat. The people who write schedules at a distribution network operator number in
+            the tens, and charging by the head would price the tool away from the second checker —
+            who is the person it helps most.
+          </p>
+        </div>
+        <dl class="docket">
+          <div><dt>Pilot</dt><dd><strong>£6,000</strong>, four weeks, credited in full against the first year</dd></div>
+          <div><dt>Primary substation</dt><dd><strong>£1,900</strong> per site per year, modelled and maintained</dd></div>
+          <div><dt>Private HV network</dt><dd><strong>£14,000</strong> per year, one site, unlimited schedules</dd></div>
+          <div><dt>Model changes</dt><dd>Included. Re-proving affected schedules is the point, not an extra.</dd></div>
+          <div><dt>Minimum term</dt><dd>One year. Cancel at renewal; the model stays yours.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="secthead">
+        <div>
+          <p class="label">Before procurement asks</p>
+          <h2 class="head">The answers your assurance team will want, in advance.</h2>
+          <p class="small secthead__note">
+            We do not publish a customer logo wall. Our customers' outage practice is their business
+            and not our marketing material, and a wall of names answers none of the questions below.
+          </p>
+        </div>
+        <dl class="docket">
+          <div><dt>Who builds it</dt><dd>Fourteen people. Six hold or have held HV authorisations; two wrote switching schedules professionally for a combined nineteen years.</dd></div>
+          <div><dt>Framework</dt><dd>Written against the Electricity at Work Regulations 1989 and HSE guidance HSG85. We work to your safety rules, not ours &mdash; the rule set is configured per network.</dd></div>
+          <div><dt>Connectivity</dt><dd>None. No telemetry, no control path, no integration with your NMS or SCADA. It cannot operate anything, which is the shortest answer to most of the security questionnaire.</dd></div>
+          <div><dt>Where it runs</dt><dd>Your tenancy or ours, UK region. On-premises for networks whose rules require it.</dd></div>
+          <div><dt>Your data</dt><dd>The network model is yours in an open format, exportable at any time, including after cancellation.</dd></div>
+          <div><dt>Insurance</dt><dd>Professional indemnity to &pound;5m. We will send the certificate before the pilot starts rather than when asked.</dd></div>
+          <div><dt>If we are wrong</dt><dd>Interlock is a check, not an authority. A Senior Authorised Person signs, and nothing in the product changes where that responsibility sits.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="ask">
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label">Starting</p>
+          <h2 class="head">A call with somebody who has written one of these.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Six of the fourteen people here hold or have held HV authorisations. You will not be handed
+            to someone who needs the acronyms explained.
+          </p>
+          <p class="contact">
+            <a class="u" href="mailto:proving@interlock.example">proving@interlock.example</a><br />
+            <span class="mono">0114 400 2270</span><br />
+            <span class="small">Interlock Systems Ltd · Sheffield S1 · Mon–Thu 08:00–17:30, Fri to 16:00</span>
+          </p>
+          <p class="small">
+            We sell to eleven networks. We will tell you which of them, on a call, and not on a website —
+            our customers' outage practice is their business and not our marketing material.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .open--tight { padding-block: clamp(var(--s7), 6vw, var(--s9)) clamp(var(--s7), 5vw, var(--s8)); }
+  .display--sm { font-size: clamp(1.875rem, 1.1rem + 2.4vw, 3.25rem); max-width: 20ch; }
+  .display + .sub { margin-top: var(--s5); }
+  .split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr); gap: var(--s8); align-items: start; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s8); align-items: start; }
+  .label + .head { margin-top: var(--s3); }
+
+  .secthead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: var(--s8); align-items: start; }
+  .secthead .head { margin-top: var(--s3); }
+  .secthead__note { margin-top: var(--s4); max-width: 48ch; }
+
+  .need { margin-top: var(--s5); border-top: var(--w-rule) solid var(--ink); }
+  .need > li { display: grid; grid-template-columns: 2.5rem 1fr; gap: var(--s4);
+    padding-block: var(--s4); border-bottom: var(--w-hair) solid var(--hair); }
+  .need__n { font-size: var(--t-small); color: var(--ink-3); padding-top: 2px; }
+  .need h3 { font-size: var(--t-body); }
+  .need p { margin-top: 4px; font-size: var(--t-small); color: var(--ink-2); }
+
+  .docket { margin: 0; border-top: var(--w-rule) solid var(--ink); }
+  .docket > div { display: grid; grid-template-columns: 10.5rem 1fr; gap: var(--s4);
+    padding-block: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .docket dt { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-3); padding-top: 3px; }
+  .docket dd { margin: 0; font-size: var(--t-small); color: var(--ink); }
+  .docket dd strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .ask { background: var(--sheet); border-top: var(--w-rule) solid var(--ink); }
+  .contact { line-height: 1.8; }
+
+  @media (max-width: 900px) {
+    .split, .cols, .secthead { grid-template-columns: 1fr; gap: var(--s5); }
+    .docket > div { grid-template-columns: 8.5rem 1fr; gap: var(--s3); }
+    .cols > div + div { margin-top: var(--s6); }
+  }
+</style>

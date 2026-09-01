@@ -1,0 +1,71 @@
+---
+/**
+ * One photograph, at one of three permitted ratios.
+ *
+ * The ratio is a prop with three legal values and no default escape hatch, because the site's
+ * discipline is that variety comes from *sequencing* three fixed crops rather than from
+ * choosing a new one per image. A frame that could be any shape produces a page where nothing
+ * rhymes.
+ *
+ * `ratioMobile` is a separate authored crop rather than a scaled one: a 1.62 landscape at
+ * 390px is a 240px strip, which is what a "responsive" hero usually is — the desktop crop,
+ * reduced until it stops being a photograph.
+ *
+ * Every frame carries its photographer through to the page. The buildings are real works by
+ * other architects; the bureau and its projects are not.
+ */
+import images from '../assets/images.json';
+
+interface Props {
+  slug: string;
+  alt: string;
+  ratio?: '1.62' | '1' | '0.76';
+  ratioMobile?: '1.62' | '1' | '0.76';
+  priority?: boolean;
+  sizes?: string;
+  class?: string;
+  /** Full-bleed frames set their own height and ignore the ratio entirely. */
+  bleed?: boolean;
+  /** The container decides the height — used by the register, where height carries the data. */
+  fill?: boolean;
+  credit?: boolean;
+}
+
+const {
+  slug, alt, ratio = '1.62', ratioMobile, priority = false,
+  sizes = '100vw', class: className = '', bleed = false, credit = false, fill = false,
+} = Astro.props;
+
+type Entry = { slug: string; intrinsic: { width: number; height: number }; lqip: string; credit: string; licence: string };
+const image = (images as Entry[]).find((entry) => entry.slug === slug);
+if (!image) throw new Error(`Frame: no image "${slug}" in src/assets/images.json`);
+---
+
+<figure class={`frame ${className}`} data-ratio={bleed || fill ? undefined : ratio} data-ratio-m={fill ? undefined : ratioMobile} style={`background-image:url("${image.lqip}");background-size:cover;background-position:center`}>
+  <picture>
+    <source media="(max-width: 760px)" srcset={`/img/${slug}@sm.avif`} type="image/avif" />
+    <source media="(max-width: 760px)" srcset={`/img/${slug}@sm.jpg`} type="image/jpeg" />
+    <source srcset={`/img/${slug}.avif`} type="image/avif" sizes={sizes} />
+    <img
+      src={`/img/${slug}.jpg`}
+      alt={alt}
+      width={image.intrinsic.width}
+      height={image.intrinsic.height}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      sizes={sizes}
+    />
+  </picture>
+  {credit && <figcaption class="credit">Photograph {image.credit} · {image.licence}</figcaption>}
+</figure>
+
+<style>
+  /* The mobile crop has to beat the desktop one, and a data attribute is the cheapest way to
+     say so without a second class per ratio. */
+  @media (max-width: 760px) {
+    .frame[data-ratio-m='1.62'] { aspect-ratio: 1.62; }
+    .frame[data-ratio-m='1'] { aspect-ratio: 1; }
+    .frame[data-ratio-m='0.76'] { aspect-ratio: 0.76; }
+  }
+</style>

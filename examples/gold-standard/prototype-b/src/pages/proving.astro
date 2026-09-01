@@ -1,0 +1,191 @@
+---
+/**
+ * What we prove.
+ *
+ * The credibility route. A buyer who has understood the refusal immediately asks what else it
+ * catches, and the honest answer has two halves: eight classes, of which this prototype
+ * implements two against a real model. Saying so is not a weakness on the page — it is the
+ * same disposition the product has about unmodelled plant, applied to itself.
+ */
+import Base from '../layouts/Base.astro';
+import { RULES } from '../data/rules';
+
+const live = RULES.filter((r) => r.implemented);
+const spec = RULES.filter((r) => !r.implemented);
+
+const built = RULES.filter((rule) => rule.implemented).length;
+---
+<Base
+  title="What we prove — Interlock"
+  description="The eight classes of unsafe switching sequence Interlock checks at every step, with an example of each and what the refusal names."
+  sheet="The rule set"
+  sheetNo="IL-200"
+>
+  <section class="open open--tight">
+    <div class="sheet">
+      <p class="label">Sheet IL-200</p>
+      <h1 class="display display--sm">Eight ways a schedule that reads correctly can still be wrong.</h1>
+      <p class="sub">
+        Each is checked at every step against the network as it stands at that step, not against the
+        sequence as a whole. A sequence is only meaningful up to its first unsafe operation.
+      </p>
+      <p class="small open__note">
+        {built} of the eight are implemented against a live model in this build. The rest are specified
+        and not yet built, and are marked as such below — a rule set that claimed eight and shipped two
+        would be making exactly the kind of undeclared assumption the product refuses to make.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <nav class="contents" aria-label="On this sheet">
+        <span class="contents__k">On this sheet</span>
+        <a href="#rules">The eight classes</a>
+        <a href="#not">What it does not do</a>
+      </nav>
+      <ol class="rules" id="rules">
+        {live.map((rule, index) => (
+          <li class="rule-row">
+            <div class="rule-row__n">
+              <span class="mono">{String(index + 1).padStart(2, '0')}</span>
+              <span class:list={['chip', rule.implemented ? 'chip--on' : 'chip--off']}>
+                {rule.implemented ? 'implemented' : 'specified'}
+              </span>
+            </div>
+            <div class="rule-row__b">
+              <p class="rule-row__code mono">{rule.code}</p>
+              <h2 class="rule-row__t">{rule.title}</h2>
+              <p class="rule-row__w">{rule.what}</p>
+            </div>
+            <div class="rule-row__e">
+              <dl class="rule-row__d">
+                <div><dt>Example</dt><dd>{rule.example}</dd></div>
+                <div><dt>The refusal names</dt><dd>{rule.names}</dd></div>
+              </dl>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div class="spec">
+        <div class="spec__head">
+          <p class="label">Specified, not yet built</p>
+          <h2 class="head spec__h">Six more, written down before they were written.</h2>
+          <p class="small spec__note">
+            Each has a defined refusal and a worked case; none is running against a live model in this
+            build. They are set tighter than the two above because that is what they are &mdash; a
+            register of intent, not a claim.
+          </p>
+        </div>
+        <ol class="spec__list">
+          {spec.map((rule, index) => (
+            <li class="spec__row">
+              <span class="spec__n mono">{String(index + 3).padStart(2, '0')}</span>
+              <span class="spec__b">
+                <span class="spec__code mono">{rule.code}</span>
+                <span class="spec__t">{rule.title}</span>
+                <span class="spec__ex">{rule.example}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label" id="not">What it does not do</p>
+          <h2 class="head">Interlock is not a power system analysis tool.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Load flow, fault level, protection grading and arc flash energy are other people's tools and
+            they are good ones. Interlock takes their outputs as constraints where you give them to us —
+            a rating, a limit, a maximum parallel time — and checks the sequence against them.
+          </p>
+          <p>
+            It does not simulate the electrical behaviour of your network. It answers one question, at
+            every step, exhaustively: what is connected to what, and therefore what is live.
+          </p>
+          <p>
+            That narrowness is deliberate. A tool that claimed to model everything would have to be
+            trusted about everything, and the first thing a Senior Authorised Person will do is look for
+            the edge of what it knows.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .open--tight { padding-block: clamp(var(--s7), 6vw, var(--s9)) clamp(var(--s7), 5vw, var(--s8)); }
+  .display--sm { font-size: clamp(1.875rem, 1.1rem + 2.4vw, 3.25rem); max-width: 20ch; }
+  .display + .sub { margin-top: var(--s5); }
+  .open__note { margin-top: var(--s6); max-width: 52ch; padding-top: var(--s4);
+    border-top: var(--w-hair) solid var(--hair); }
+  .split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr); gap: var(--s8); align-items: start; }
+  .label + .head { margin-top: var(--s3); }
+
+  /* A ruled register, not eight cards. The rules are one list with a shared shape; boxing each
+     one would say they are eight separate things a reader may take or leave. */
+  .rules { border-top: var(--w-rule) solid var(--ink); }
+  /* Three columns: the index, the rule, and what demonstrates it. Two columns left the right
+     third of every row empty, which over eight rows reads as a margin nobody chose. */
+  .rule-row { display: grid; grid-template-columns: 7rem minmax(0, 1fr) minmax(0, 0.95fr);
+    gap: var(--s6); padding-block: var(--s6); border-bottom: var(--w-hair) solid var(--hair); }
+  .rule-row__n { display: flex; flex-direction: column; gap: var(--s3); align-items: flex-start; }
+  .rule-row__n .mono { font-size: 1.25rem; font-weight: 500; color: var(--ink-3); }
+
+  .chip { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 7px; border: 1px solid currentColor; }
+  .chip--on { color: var(--earth); }
+  .chip--off { color: var(--ink-3); }
+
+  .rule-row__code { font-size: var(--t-micro); font-weight: 500; letter-spacing: 0.1em; color: var(--ink-3); }
+  .rule-row__t { margin-top: var(--s2); font-size: 1.3125rem; max-width: 30ch; }
+  .rule-row__w { margin-top: var(--s3); font-size: var(--t-small); color: var(--ink-2); max-width: 62ch; }
+  .rule-row__d { margin: 0; border-top: var(--w-hair) solid var(--hair); }
+  .rule-row__d > div { display: grid; grid-template-columns: 1fr; gap: 4px;
+    padding-block: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .rule-row__d > div:last-child { border-bottom: 0; }
+  .rule-row__d dt { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+  .rule-row__d dd { margin: 0; font-size: var(--t-small); color: var(--ink); max-width: 48ch; }
+  .rule-row__e { padding-top: 22px; }
+
+  .spec { margin-top: clamp(var(--s8), 5vw, 96px); }
+  .spec__head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: var(--s8); align-items: end; padding-bottom: var(--s5); }
+  .spec__h { margin-top: var(--s3); }
+  .spec__note { max-width: 54ch; }
+  .spec__list { border-top: var(--w-rule) solid var(--ink); }
+  /* Three columns and a tighter row: the register reads at a glance rather than as six more
+     essays, and the change of density is what breaks the page's rhythm. */
+  .spec__row { display: grid; grid-template-columns: 3rem minmax(0, 1fr);
+    gap: var(--s4); padding-block: var(--s4); border-bottom: var(--w-hair) solid var(--hair); }
+  .spec__n { font-size: var(--t-small); color: var(--ink-3); padding-top: 2px; }
+  .spec__b { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: var(--s3) var(--s5); align-items: baseline; }
+  .spec__code { grid-column: 1; font-size: var(--t-micro); font-weight: 500; letter-spacing: 0.08em; color: var(--ink-3); }
+  .spec__t { grid-column: 2; font-size: var(--t-body); font-weight: 600; letter-spacing: -0.01em; }
+  .spec__ex { grid-column: 2; font-size: var(--t-small); color: var(--ink-2); max-width: 68ch; }
+
+  @media (max-width: 1100px) {
+    .spec__b { grid-template-columns: 1fr; gap: 4px; }
+    .spec__code, .spec__t, .spec__ex { grid-column: 1; }
+  }
+
+  @media (max-width: 900px) {
+    .spec__head { grid-template-columns: 1fr; gap: var(--s4); }
+    .spec__row { grid-template-columns: 2.25rem 1fr; gap: var(--s3); }
+    .split { grid-template-columns: 1fr; gap: var(--s5); }
+    .rule-row { grid-template-columns: 1fr; gap: var(--s4); padding-block: var(--s5); }
+    .rule-row__e { padding-top: 0; }
+    .rule-row__n { flex-direction: row; align-items: center; gap: var(--s4); }
+    .rule-row__d > div { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>

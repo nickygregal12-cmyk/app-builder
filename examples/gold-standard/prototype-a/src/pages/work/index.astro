@@ -1,0 +1,135 @@
+---
+/**
+ * The register.
+ *
+ * The signature composition of this site, and the answer to "not a card grid" that the first
+ * version did not give. Every frame is drawn in proportion to the floor area of the building
+ * it shows — 18,600 m² against 334 m² is a 55× range, and square root maps that to a legible
+ * 4.3× difference in height while keeping the relationship true.
+ *
+ * Three consequences, and all three are the point:
+ *
+ *  - The area figure stops being a caption and becomes the thing that decides the layout.
+ *  - The index states the range instead of mentioning it: you see that this bureau works
+ *    across two orders of magnitude before you read a word.
+ *  - No business without a wide size range could use this page. That is the test the previous
+ *    corpus failed — it authored a distinctive artefact and then laid it out generically.
+ *
+ * The mapping is declared at the head of the register, because a figure drawn to a scale the
+ * reader cannot check is decoration wearing the costume of data.
+ */
+import Base from '../../layouts/Base.astro';
+import Frame from '../../components/Frame.astro';
+import { bureau } from '../../data/bureau';
+import { shownProjects as projects, declaredCount } from '../../lib/frames';
+import { heightForArea, mobileHeightForArea } from '../../lib/scale';
+
+const areas = projects.map((project) => project.area);
+const largest = projects.reduce((a, b) => (a.area > b.area ? a : b));
+const smallest = projects.reduce((a, b) => (a.area < b.area ? a : b));
+
+/* Ordered largest first, so the register opens at full height and closes small. That is the
+   page's pacing decision: it descends, and the reader feels the range as a diminishing. */
+const ordered = [...projects].sort((a, b) => b.area - a.area);
+---
+
+<Base title="The register — Nørreværk" description="Every building the bureau has converted, drawn to scale.">
+  <section class="grid" style="padding-top: 170rem; padding-bottom: var(--band-quiet);">
+    <h1 class="t1" style="grid-column: 1 / span 9;">The register</h1>
+    <p class="lede" style="grid-column: 11 / span 5; align-self: end;">
+      {declaredCount} buildings, drawn to scale. Each frame is sized by the floor area of the
+      building it shows, so this page is the range as much as it is the list.
+    </p>
+  </section>
+
+  {/* The scale, declared. */}
+  <section class="grid" style="padding-bottom: var(--band-quiet);">
+    <div class="rule" style="grid-column: 1 / -1;"></div>
+    <div style="grid-column: 1 / span 4;">
+      <span class="figure">{smallest.area.toLocaleString('en-GB')}</span>
+      <span class="figure-unit">m² · {smallest.left.toLowerCase()}</span>
+    </div>
+    <p class="small" style="grid-column: 6 / span 5; align-self: end; color: var(--grey-1);">
+      Frames are drawn in proportion to floor area, by square root — so the heights relate as
+      the buildings' plans would rather than as their volumes do.
+    </p>
+    <div style="grid-column: 12 / span 4; text-align: right;">
+      <span class="figure">{largest.area.toLocaleString('en-GB')}</span>
+      <span class="figure-unit">m² · {largest.left.toLowerCase()}</span>
+    </div>
+
+    {/* The desktop register lets you compare all five proportions at once by looking down the
+        page. A phone cannot hold two frames in view together, so the comparison the register
+        exists to make is the thing the small screen loses. This strip restores it: the same
+        square-root mapping, all five at once, in the space of one line. It is drawn on both
+        widths — on desktop it is a key to the composition below, on mobile it *is* the
+        comparison. */}
+    <ol class="scale-strip" style={`grid-column: 1 / -1; --n:${ordered.length}`}>
+      {ordered.map((project) => (
+        <li style={`--bar:${Math.round((Math.sqrt(project.area) / Math.sqrt(largest.area)) * 100)}%`}>
+          <a href={`/work/${project.slug}`}>
+            <span class="scale-bar"></span>
+            <span class="scale-figure">{project.area.toLocaleString('en-GB')}</span>
+            <span class="scale-name">{project.left}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="register">
+    {ordered.map((project, i) => (
+      <>
+      {project.index.span > 4 && (
+        <p
+          class="reg-aside"
+          style={`--aside-start:${project.index.start > 6 ? 1 : project.index.start + project.index.span + 1};--aside-span:${project.index.start > 6 ? Math.max(3, project.index.start - 2) : Math.max(3, 16 - (project.index.start + project.index.span))}`}
+        >{project.line}</p>
+      )}
+      <article
+        class="reg-entry"
+        data-narrow={project.index.span <= 4 ? '' : undefined}
+        style={`--start:${project.index.start};--span:${project.index.span};--h:${heightForArea(project.area, areas)}rem;--mh:${mobileHeightForArea(project.area, areas)}rem`}
+      >
+        <a href={`/work/${project.slug}`}>
+          <div class="reg-frame">
+            <Frame
+              slug={(project.frames[1] ?? project.frames[0]).slug}
+              alt={(project.frames[1] ?? project.frames[0]).alt}
+              sizes="(max-width: 760px) 100vw, 45vw"
+              fill
+            />
+          </div>
+          <div class="reg-meta">
+            {/* The area is set at display scale because it is what placed the frame. */}
+            <span class="reg-area">{project.area.toLocaleString('en-GB')}<i>m²</i></span>
+            <h2 class="reg-name">{project.left}</h2>
+            <p class="reg-was">{project.found}, {project.built} — left {project.completed}</p>
+          </div>
+        </a>
+      </article>
+      </>
+    ))}
+  </section>
+
+  <section class="grid" style="padding-block: var(--band) var(--band-quiet);">
+    <h2 class="t2" style="grid-column: 1 / span 8;">Every one of these was somebody else's problem first.</h2>
+    <div style="grid-column: 10 / span 5; align-self: end;">
+      <p class="small measure">{bureau.survey.send}</p>
+      <p style="margin-top: 18rem;">
+        <a class="action" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building</a>
+      </p>
+      <p class="small" style="margin-top: 8rem; color: var(--grey-1);">
+        {bureau.contact.copenhagen.email} · {bureau.survey.price} · {bureau.survey.duration}
+      </p>
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band-quiet);">
+    <p class="micro" style="grid-column: 1 / span 8; border-top: 1px solid var(--hair); padding-top: 12rem;">
+      Photographs are of existing buildings by other architects, used under CC BY 2.0 and
+      credited on each project. Nørreværk is a fictional bureau built as a design prototype;
+      the interventions described here are invented.
+    </p>
+  </section>
+</Base>

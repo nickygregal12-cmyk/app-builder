@@ -1,0 +1,150 @@
+---
+/**
+ * A project.
+ *
+ * This is where photography is allowed to dominate: the page opens on a full-viewport frame
+ * with nothing over it, and the name arrives underneath. The reference class in the
+ * hospitality reading calls this label delay — you are made to look before you are told.
+ *
+ * The signature is the pair. A bureau that only works on existing buildings can show the half
+ * of the story every other portfolio omits, so "as found" and "as left" are set as two
+ * columns at different heights rather than as a before/after slider, which is a gadget.
+ *
+ * The page ends on the next project rather than on a call to action or a return link, because
+ * somebody reading a project page wants another project.
+ */
+import Base from '../../layouts/Base.astro';
+import Frame from '../../components/Frame.astro';
+import { bureau } from '../../data/bureau';
+import { shownProjects as projects } from '../../lib/frames';
+
+export function getStaticPaths() {
+  return projects.map((project, i) => ({
+    params: { slug: project.slug },
+    props: { project, next: projects[(i + 1) % projects.length] },
+  }));
+}
+
+const { project, next } = Astro.props;
+const [lead, ...rest] = project.frames;
+/* The overlap needs two photographs. A project with one — Nyborg has a single frame — was
+   rendering the composition anyway, so 86vh and 46vh of empty box consumed most of a mobile
+   panel and the reviewer read it, correctly, as discontinuity rather than as restraint. A
+   composition that cannot be made is not made. */
+const hasPair = rest.length >= 2;
+---
+
+<Base title={`${project.left} — Nørreværk`} description={project.line}>
+  {/* Nothing over the photograph. */}
+  <section class="grid" style="padding-top: 0;">
+    <div class="bleed">
+      <Frame slug={lead.slug} alt={lead.alt} priority bleed sizes="100vw" />
+    </div>
+  </section>
+
+  <section class="grid" style="padding-top: 80rem; padding-bottom: var(--band);">
+    <p class="label" style="grid-column: 1 / span 4;">{project.place} · completed {project.completed}</p>
+    <h1 class="t1" style="grid-column: 1 / span 10; margin-top: 20rem;">{project.left}</h1>
+    <p class="t3" style="grid-column: 1 / span 7; margin-top: 30rem; color: var(--grey-2);">
+      was {project.found}, {project.built}
+    </p>
+
+    <dl style="grid-column: 12 / span 4; margin-top: 30rem; display: grid; gap: 18rem;">
+      <div style="border-top: 1px solid var(--hair); padding-top: 10rem;">
+        <dt class="label">Area</dt>
+        <dd class="t4" style="margin-top: 4rem;">{project.area.toLocaleString('en-GB')} m²</dd>
+      </div>
+      <div style="border-top: 1px solid var(--hair); padding-top: 10rem;">
+        <dt class="label">{project.measure.caption}</dt>
+        <dd class="t4" style="margin-top: 4rem;">{project.measure.figure}</dd>
+      </div>
+    </dl>
+  </section>
+
+  {/* The pair, as one composition rather than two columns.
+      A bureau that only works on existing buildings can show the half of the story every
+      other portfolio omits. The first version rendered that as prose beside prose, which is
+      the most ordinary thing on the page — so the one idea nobody else could use looked like
+      a section. Here the two states overlap: the building as left runs full width, the
+      building as found sits inset over its lower corner, and the two years are set between
+      them at display scale so the interval is the thing you read first. */}
+  {hasPair ? (
+    <section class="pair-moment">
+      <div class="pair-left-frame">
+        <Frame slug={rest[1].slug} alt={rest[1].alt} fill sizes="100vw" />
+      </div>
+      <div class="pair-found-frame">
+        <Frame slug={rest[0].slug} alt={rest[0].alt} fill sizes="34vw" />
+        <p class="micro pair-tag">As found</p>
+      </div>
+      <div class="pair-years">
+        <span class="pair-year">{project.built}</span>
+        <span class="pair-arrow">to</span>
+        <span class="pair-year">{project.completed}</span>
+      </div>
+    </section>
+  ) : (
+    <section class="grid pair-interval">
+      {rest[0] && (
+        <div class="pair-single" style="grid-column: 1 / -1;">
+          <Frame slug={rest[0].slug} alt={rest[0].alt} fill sizes="60vw" />
+        </div>
+      )}
+      <div class="pair-years pair-years--static" style="grid-column: 1 / span 9;">
+        <span class="pair-year">{project.built}</span>
+        <span class="pair-arrow">to</span>
+        <span class="pair-year">{project.completed}</span>
+      </div>
+    </section>
+  )}
+
+  <section class="grid" style="padding-block: var(--band-quiet) var(--band);">
+    <div style="grid-column: 1 / span 5;">
+      <h2 class="micro" style="margin-bottom: 12rem;">As found</h2>
+      <p class="body">{project.asFound}</p>
+    </div>
+    <div style="grid-column: 8 / span 6;">
+      <h2 class="micro" style="margin-bottom: 12rem;">What we did</h2>
+      <p class="body">{project.decision}</p>
+    </div>
+  </section>
+
+  {rest[2] && (
+    <section class="grid" style="padding-bottom: var(--band);">
+      <div class="bleed">
+        <Frame slug={rest[2].slug} alt={rest[2].alt} bleed sizes="100vw" />
+      </div>
+    </section>
+  )}
+
+  {/* The action sits where the intent forms — at the end of the project that caused it —
+      and it says what this particular project arrived as. A reviewer scored conversion 6
+      because a generic Contact link in the header was carrying all of this on its own. */}
+  <section class="grid" style="padding-bottom: var(--band-half);">
+    <div style="grid-column: 1 / span 6; border-top: 1px solid var(--hair); padding-top: 16rem;">
+      <p class="label">This one arrived as</p>
+      <p class="t3" style="margin-top: 10rem;">an address and a photograph.</p>
+    </div>
+    <div style="grid-column: 8 / span 5; border-top: 1px solid var(--hair); padding-top: 16rem;">
+      <p class="small measure">{bureau.survey.caveat}</p>
+      <p style="margin-top: 16rem;">
+        <a class="action" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building</a>
+      </p>
+      <p class="small" style="margin-top: 8rem;">
+        {bureau.contact.copenhagen.email} · {bureau.survey.price} · {bureau.survey.duration}
+      </p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="next" style="grid-column: 1 / -1;">
+      <a href={`/work/${next.slug}`}>
+        <span class="next-label label">Next</span>
+        <span class="next-name">{next.left}</span>
+        <span class="next-frame">
+          <Frame slug={next.frames[0].slug} alt="" ratio="1" sizes="20vw" />
+        </span>
+      </a>
+    </div>
+  </section>
+</Base>

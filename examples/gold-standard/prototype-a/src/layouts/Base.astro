@@ -1,0 +1,69 @@
+---
+import '../styles/tokens.css';
+import '../styles/site.css';
+import { bureau } from '../data/bureau';
+
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const nav = [
+  { href: '/work', label: 'Work' },
+  { href: '/bureau', label: 'Bureau' },
+  { href: '/survey', label: 'Survey' },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23F4F3F0'/><path d='M3 13V3h10' stroke='%230B0B0B' stroke-width='1.6' fill='none'/></svg>" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    {/* No bar, no background. The mark inverts against whatever scrolls beneath it, so it
+        reads on paper and on a full-bleed photograph without a scrim or a second scheme. */}
+    <header class="nav">
+      <a class="nav-mark" href="/">{bureau.name}</a>
+      <nav class="nav-set" aria-label="Primary">
+        {nav.map((item) => (
+          <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
+        ))}
+      </nav>
+    </header>
+
+    <main id="main"><slot /></main>
+
+    <footer class="foot grid">
+      <div style="grid-column: 1 / span 4;">
+        <dl>
+          <dt>{bureau.contact.copenhagen.city}</dt>
+          <dd>{bureau.contact.copenhagen.line}</dd>
+          <dd><a href={`mailto:${bureau.contact.copenhagen.email}`}>{bureau.contact.copenhagen.email}</a></dd>
+        </dl>
+      </div>
+      <div style="grid-column: 6 / span 4;">
+        <dl>
+          <dt>{bureau.contact.malmo.city}</dt>
+          <dd>{bureau.contact.malmo.line}</dd>
+          <dd><a href={`mailto:${bureau.contact.malmo.email}`}>{bureau.contact.malmo.email}</a></dd>
+        </dl>
+      </div>
+      <div style="grid-column: 11 / span 5;">
+        <dl>
+          <dt>{bureau.legalName}</dt>
+          <dd class="measure-narrow">{bureau.refusal}</dd>
+        </dl>
+      </div>
+
+      <p class="foot-note" style="grid-column: 1 / -1;">
+        <span>Fictional bureau. Gold Standard prototype — hand-built, not produced by App Builder.</span>
+        <span>Photographs of existing buildings by other architects, CC BY 2.0. See /assets.</span>
+      </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,238 @@
+{
+ "candidateId": "interlock-drawing-sheet",
+ "verdict": "pass",
+ "reviewedBy": {
+  "role": "design-critic",
+  "vendor": "openai",
+  "model": "GPT-5"
+ },
+ "rationale": "This is exceptional, deeply business-specific work: the drawing-sheet system, live network diagram, numbered operating sequence and refusal state turn the product itself into the visual argument. Its main weakness is over-restraint at wide widths, where small content islands and very generous whitespace reduce immediacy and legibility, but the overall authorship, responsive care and commercial precision remain unusually strong.",
+ "criterionScores": [
+  {
+   "criterion": "art-direction",
+   "score": 9,
+   "note": "The site sustains a clear thesis—an engineering drawing sheet whose diagram is the product—across navigation, metadata, borders, typography, interaction states and page structure.",
+   "whyNotHigher": "At wide widths the thesis becomes overly austere: content is sometimes rendered too small inside large empty fields, weakening presence rather than sharpening it.",
+   "positiveEvidence": [
+    "Every route is treated as a numbered technical sheet with drawing references and revision metadata.",
+    "The restrained red, green, black and paper palette derives from network state rather than decoration.",
+    "The active diagram and operating schedule form a coherent visual language unique to the proposition."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "business-specificity",
+   "score": 9.5,
+   "note": "The structure depends on switching schedules, network topology, proof states, isolation points, permits, restoration order and the purchasing concerns of HV operators. Re-skinning it for an unrelated business would make the entire experience nonsensical.",
+   "whyNotHigher": "Some outer-page conventions—top navigation, introductory headline blocks and two-column explanatory sections—remain conventional website structures.",
+   "positiveEvidence": [
+    "The central interaction steps through an actual switching sequence and redraws the network state.",
+    "The refusal identifies back-energisation and traces the live path through named plant.",
+    "The commercial route requests a schedule, single-line diagram, normal running arrangement and district SAP time.",
+    "Permit and restoration documents are generated visibly from the proven sequence."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "information-architecture",
+   "score": 8.5,
+   "note": "Overview, proved schedule, rule set, network model and pilot each receive a distinct route with sensible cross-previews. The architecture separates evidence, mechanics and procurement rather than forcing everything into a generic sales page.",
+   "whyNotHigher": "The schedule and overview pages are exceptionally long, and the repeated full procedural sequences could benefit from stronger progressive disclosure or sectional wayfinding.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "visual-hierarchy",
+   "score": 8.5,
+   "note": "Every page establishes a clear proposition, then moves into evidence, technical detail and sheet metadata. Refusal, permit and selected-step states are given appropriately stronger treatments without resorting to promotional spectacle.",
+   "whyNotHigher": "The wide layouts reduce important material to a small central band, and some long procedural lists maintain nearly uniform weight for too many screens.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "typography",
+   "score": 8.5,
+   "note": "Display text, body copy, monospaced identifiers, tracked metadata, numbered operations and compact captions form a disciplined technical hierarchy. Small text performs real compositional and semantic work.",
+   "whyNotHigher": "Several captions and metadata lines become extremely small on desktop and wide captures, while long mobile passages occasionally feel dense.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "composition-pacing",
+   "score": 8,
+   "note": "The experience alternates large claims, dense evidence, diagrams, procedural lists and quiet explanatory sections. Key moments such as the refusal and permit interrupt the rhythm effectively.",
+   "whyNotHigher": "Large screens contain stretches of underused space, while mobile schedule pages become prolonged sequences of similarly formatted rows with limited release.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "visual-material",
+   "score": 9.5,
+   "note": "The network diagram is precisely the right material and does more than illustrate: it exposes connectivity, state, risk and the reason for refusal. The permit, sequence and restoration artifacts make abstract claims inspectable.",
+   "whyNotHigher": "The mobile diagram requires horizontal panning to see the complete network, so the strongest visual argument cannot be apprehended in one view at that width.",
+   "positiveEvidence": [
+    "The diagram changes with the selected operating step rather than serving as a static hero illustration.",
+    "Energised, dead and earthed states are encoded consistently and explained by a legend.",
+    "The refused earth is shown closed onto a still-red conductor.",
+    "The generated permit visibly inherits isolation and earthing points from numbered operations."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "interaction-craft",
+   "score": 9,
+   "note": "The evidence shows separate hover, focus, selection and refusal states; keyboard-driven stepping; a focusable pannable diagram; a pinned mobile readout; a skip link; and a reduced-motion path arriving at the identical state.",
+   "whyNotHigher": "The captures do not demonstrate the full navigation behavior, screen-reader output, touch affordance discoverability or interaction under error and loading conditions.",
+   "positiveEvidence": [
+    "Hover fill, keyboard focus bracket and selected-step rule remain visually distinct even when simultaneously present.",
+    "Arrow-key selection updates both the network drawing and state readout.",
+    "Reduced motion suppresses transitions without changing the resulting state.",
+    "The phone preserves diagram legibility through a keyboard-focusable pannable region and pinned readout."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "responsive-recomposition",
+   "score": 8.5,
+   "note": "Mobile is not merely a squeezed desktop: paired sections are resequenced, metadata becomes compact two-column sheets, state readouts are pinned, dense rule comparisons become linear records and the diagram receives a dedicated panning strategy.",
+   "whyNotHigher": "The persistent horizontal navigation is crowded, and diagram panning solves legibility at the cost of losing the whole-network overview.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "brand-fit",
+   "score": 9.5,
+   "note": "The sober drawing-office language, evidential tone, restrained state colour and refusal-first storytelling feel exceptionally right for safety-critical HV work and an expert audience.",
+   "whyNotHigher": "The severe restraint occasionally suppresses warmth and human accessibility enough that unfamiliar procurement readers may initially perceive the company as more document than service.",
+   "positiveEvidence": [
+    "The visual language signals engineering accountability rather than generic software modernity.",
+    "Red and green carry operational meaning instead of acting as arbitrary brand accents.",
+    "Revision numbers, sheet titles, permits and signed-responsibility language reinforce traceability.",
+    "The site explicitly refuses authority theatre and states where human responsibility remains."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "commercial-clarity",
+   "score": 9,
+   "note": "The proposition, audience, limitation, pilot inputs, deliverables, timeline, pricing, ownership, deployment, insurance and next action are unusually explicit. The visitor can understand both what is being bought and what the product refuses to claim.",
+   "whyNotHigher": "The overview delays detailed purchasing information until late in a long page, and the repeated 'Send us a schedule' action does not visibly offer a lower-commitment route for readers who are not yet ready.",
+   "positiveEvidence": [
+    "The opening states what is proved, how it is proved and what unsafe outcome is prevented.",
+    "The pilot page names a four-week £6,000 engagement and how it is credited.",
+    "Inputs and outputs are paired directly.",
+    "Security, data ownership, insurance and human accountability are answered before procurement asks."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "ai-slop-resistance",
+   "score": 10,
+   "note": "The work avoids generic generated-site motifs and replaces them with a visual and structural system traceable to switching practice, engineering records and the product's actual proof model.",
+   "whyNotHigher": "",
+   "positiveEvidence": [
+    "There are no decorative gradients, rounded-card feature grids, fake customer walls, glowing effects or generic dashboard mockups.",
+    "Whitespace, rules, metadata and colour all follow the drawing-sheet concept.",
+    "The primary visual is a functional network representation with meaningful state changes.",
+    "Commercial copy uses concrete inputs, prices, limitations and responsibilities rather than aspirational software language."
+   ],
+   "whyBenchmark": "Its resistance is not merely stylistic cleanliness: virtually every component and interaction can be explained through this specific business, while the usual generated-site fallback patterns are absent."
+  },
+  {
+   "criterion": "memorability",
+   "score": 9.5,
+   "note": "The memorable moment is selecting step 07 and watching an earth close onto a conductor that remains red, while the refusal explains the live route and the omitted operation.",
+   "whyNotHigher": "The surrounding editorial pages are more restrained and repeatable than that central interaction, so not every route sustains the same singular impact.",
+   "positiveEvidence": [
+    "The failure is made visible in the network rather than described through a generic alert.",
+    "The selected procedural line, state readout and diagram agree at the same instant.",
+    "The drawing-sheet identity persists into permits, restoration and footer metadata."
+   ],
+   "whyBenchmark": null
+  }
+ ],
+ "holisticTier": "exceptional",
+ "observations": {
+  "templateDerived": false,
+  "interchangeableBusiness": false,
+  "mobileIsStackedDesktop": false,
+  "noSignatureMoment": false,
+  "typographyMerelyCompetent": false,
+  "genericDesignLanguage": false
+ },
+ "signatureMoment": "Selecting step 07: the earth switch closes onto the T2 connections while the conductor remains visibly energised red, and the adjacent refusal traces the live path back through the network.",
+ "pairwiseComparison": {
+  "referenceId": "vb-linear",
+  "comparisons": [
+   {
+    "dimension": "art-direction",
+    "outcome": "roughly-comparable",
+    "note": "Both derive their aesthetic from the product's core claim. Interlock's drawing-sheet thesis is at least as specific, though Linear sustains greater polish and dimensional range."
+   },
+   {
+    "dimension": "typography",
+    "outcome": "reference-stronger",
+    "note": "Interlock's technical hierarchy is carefully authored, but Linear has tighter large-screen scaling, more consistently controlled density and fewer instances of excessively small text."
+   },
+   {
+    "dimension": "composition",
+    "outcome": "reference-stronger",
+    "note": "Interlock has strong evidence-led sequences, but its wide layouts sometimes become sparse and its longest procedural pages flatten rhythm. Linear controls scale and transition across the full scroll more consistently."
+   },
+   {
+    "dimension": "information-architecture",
+    "outcome": "roughly-comparable",
+    "note": "Interlock's five routes cleanly separate proposition, proof, rules, model and purchase, with unusually good editing for a technical product. Linear handles a broader product surface with stronger progressive disclosure."
+   },
+   {
+    "dimension": "responsive-design",
+    "outcome": "roughly-comparable",
+    "note": "Interlock shows genuine phone-specific decisions including reordered content, pinned state and pannable technical material. Linear is more fluid overall, but Interlock solves a harder fixed-diagram problem thoughtfully."
+   },
+   {
+    "dimension": "craft",
+    "outcome": "reference-stronger",
+    "note": "Interlock demonstrates excellent hover, focus, selection, keyboard and reduced-motion behavior. Linear still exhibits a broader and more continuously polished interaction system across more interface types."
+   },
+   {
+    "dimension": "memorability",
+    "outcome": "roughly-comparable",
+    "note": "Linear is memorable for speed and precision across many product scenes; Interlock has one exceptionally specific signature scene—the refused earth closing onto a visibly live path."
+   },
+   {
+    "dimension": "business-specificity",
+    "outcome": "candidate-stronger",
+    "note": "Almost every visible Interlock structure depends on HV switching practice, whereas portions of Linear's broader visual system could plausibly travel to adjacent high-end software products."
+   }
+  ]
+ },
+ "benchmarkGap": "MATERIAL",
+ "benchmarkGapDetail": "Clearly good, and clearly below benchmark quality. The reference is meaningfully stronger on several dimensions.",
+ "benchmarkComparisonCounts": {
+  "candidate-stronger": 1,
+  "roughly-comparable": 4,
+  "reference-stronger": 3,
+  "reference-substantially-stronger": 0
+ },
+ "dimensionsNotCompared": [],
+ "evidenceCeiling": {
+  "cap": 10,
+  "tier": "site-level",
+  "routes": 38,
+  "artifactRoutes": 5,
+  "coversWholeArtifact": true,
+  "viewports": 4,
+  "detail": "Evidence covers all 5 route(s) of this artifact at 4 viewport(s). Nothing is unphotographed, so evidence caps the claim at 10."
+ },
+ "failingCriteria": [],
+ "blockingConcerns": [],
+ "addressedRules": [],
+ "addressedRuleNotes": [],
+ "unprovenCriteria": [],
+ "evidence": {
+  "candidateId": "interlock-drawing-sheet",
+  "compositionHash": null,
+  "captureCount": 56,
+  "captureDigest": "9058f74c15f7308ec237114e6b2cbb03263f17fdbbb7bdf395f5412d306057b3"
+ }
+}

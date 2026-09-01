@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "$comment": "Machine-readable current state only. docs/ROADMAP.md owns sequence; specialist authorities own reasoning and evidence.",
   "currentPhase": "4.4",
-  "currentStage": "Phase 4.4 — usable website builder v0.1: join the existing subsystems into a path an operator can walk from a browser",
+  "currentStage": "Phase 4.4 \u2014 usable website builder v0.1: join the existing subsystems into a path an operator can walk from a browser",
   "status": "active",
   "blockedBy": "No engineering blocker and no owner blocker for prototype work. MGB Decor supplied approved facts, prototype intent and asset-level rights for a logo and two project photographs, so the second genuine-business case is unblocked as a governed prototype/product-proof run. Promoting that run to a public launch still needs production contact details, review evidence, asset bytes, domain ownership and deployment/legal decisions.",
-  "nextStage": "Carry one marketing/business website from intake to a usable generated repository without leaving the Builder Console, fixing only what that path blocks on. The serious-application benchmark ran and its remaining criterion is an independent verdict blocked by two owner actions and one reviewer adapter, so it is waiting rather than executable; the synthetic visual ceiling is waiting for external image bytes. Neither is the thing stopping the owner using App Builder today.",
+  "nextStage": "Carry one marketing/business website from intake to a usable generated repository without leaving the Builder Console, fixing only what that path blocks on. The serious-application benchmark ran and its remaining criterion is an independent verdict blocked by two owner actions and one reviewer adapter, so it is waiting rather than executable; the synthetic visual ceiling has been measured with imagery present since #254, so it is no longer waiting on bytes. Neither is the thing stopping the owner using App Builder today.",
   "activeWork": [
     "usable-website-builder-v01",
     "quality-truth-closure",
@@ -13,34 +13,176 @@
     "accepted-build-release-lifecycle"
   ],
   "waitingWork": [
-    "bounded-serious-application-benchmark: every executable criterion is closed; the independent verdict needs the host model-execution switch enabled, a different-vendor reviewer CLI installed, and a journey-packet adapter.",
-    "synthetic-visual-ceiling: the flagship corpus and its review labelling are merged; the rich asset bytes are an external input that has not arrived."
+    "bounded-serious-application-benchmark: every executable criterion is closed; the independent verdict needs the host model-execution switch enabled and a journey-packet adapter. The different-vendor reviewer CLI is installed and executing; that half is closed.",
+    "synthetic-visual-ceiling: the flagship corpus and its review labelling are merged, and the rich asset bytes HAVE arrived and been exercised \u2014 #254 ingested them and the resulting run scored imagery-suitability 6.4, 7.1 and 7.5 across three candidates. The bytes remain uncommitted by design, because they are third-party; what is recorded here is that imagery is no longer the limiting factor."
   ],
   "outstandingProductGates": [
     "quality-truth-closure: derived requirement coverage remains open.",
-    "second-genuine-business-proof: the MGB Decor approved intake is frozen and replayable at examples/genuine-business/mgb-approved-intake.v1.json, and the prototype has been generated and reviewed. Outstanding: independent visual/product review, and — for launch rather than proof — production contact details, approved review evidence, asset bytes, project histories and domain ownership.",
-    "bounded-serious-application-benchmark: both halves of the first Predictor-class vertical slice now run. The database half runs against real PostgreSQL through the scheduled-decisions recipe and tooling/application-journey-benchmark-acceptance.sql, with the scoring rule left to the product; the browser half runs through the generated application's own interface against the same stack (tests/generated-app/scheduled-decisions.spec.ts), and the generated project installs, typechecks and builds independently. The frozen rerun is done: the first pass cost two reusable factory corrections in recipes/scheduled-decisions, both invisible to SQL, and the rerun against the unedited contract cost none, which is a first data point about one slice rather than a trend — and one measured by a harness that had no console, runtime or network classification, so it is a statement about the assertions that ran rather than about a clean browser. The browser lane now photographs every journey rather than only failures, classifies uncaught exceptions, console errors, failed requests and responses at 400 or worse, refuses a journey that took one it did not declare, and publishes a portable review packet through npm run evidence:generated-app. The packet declares serverMode development and depictsShippingArtifact false, because the lane serves the generated project's Vite dev server: it is local-browser product evidence and not evidence about a deployed artifact. Outstanding: the independent verdict over that packet, blocked by three separate things and not only by cost. The host model-execution switch at /etc/app-builder/model-execution.json reads enabled false (owner action); the only different-vendor reviewer executes the Codex CLI, which is not installed on this host, and Anthropic cannot substitute because the producer of this evidence is Claude (owner action); and the reviewer currently consumes a visual-candidate packet rather than a journey packet, so an adapter is engineering work that authorisation alone would not remove.",
-    "accepted-build-release-lifecycle: no real generated product has proved explicit promotion of an identified accepted revision/artifact through production smoke verification, release record and rollback target. The ladder those states belong to now exists mechanically: schemas/artifact-revision.schema.json and packages/control-plane/src/artifact-lifecycle.js define contract-approved -> materialized -> buildable -> behavior-verified -> quality-accepted -> release-candidate -> released -> production-verified with append-only identity, and tooling/artifact-lifecycle.test.mjs holds the refusals. The ladder's third rung is now reachable: verification resolves the generated lockfile, installs from it with npm ci, refuses a lock that moved during installation, and records source, lock, toolchain and built-output digests, against one exact declared pair in config/toolchain.json read from .nvmrc. Projects verified before that still project to materialized, because they recorded none of it. What is not proved: no real product has travelled past buildable, and this host runs node 22.22.2 / npm 10.9.7 rather than the declared 22.23.2 / 10.9.8, so a reproducible identity is currently earnable in CI and not locally. Canonical authorization has a contract and a front door. schemas/action-authorization.schema.json and packages/control-plane/src/action-authorization.js generalise the ApprovedBuildPlan guarantees to any operation; config/mutating-operations.json enumerates all 31 mutating operations; apps/service/src/mutation-decision.js is the one place any of them is decided, inside the service where the three real entry points (HTTP, broker socket, in-process call) already meet — the Console and the MCP adapter are clients of those and have no private door. Once a contract is approved, project.generate is refused on every route and permitted only through the approved plan, proved in tooling/mutation-route-parity.test.mjs against the real HTTP server, the real broker dispatch map and a direct call, with every refusal recorded and attributed to the surface that asked; an unregistered operation is refused. Still open: project.approved-build-plan.execute is satisfied by the plan rather than by an ActionAuthorization, so two documents can authorise one operation, and every other operation is recorded rather than required — the registry names per operation what would escalate it. Evidence is now bound to one immutable ArtifactRevision. A governed build opens a revision when its contract is approved and climbs it — materialized at generation, buildable at verification — recording source, lock, toolchain and output digests; packages/control-plane/src/artifact-evidence.js holds the binding and its five refusals, revisions are a projection of the ledger rather than a table, and tooling/artifact-evidence.test.mjs traces a real governed build by digest and rebuilds it identically from the raw event file. An ungoverned workspace build opens no revision, which is why it cannot be released. Not yet done: the eight registered gate producers still record compositionHash and are read as before, so their resolutions report boundToArtifact false — a producer that records the revision it measured gets the stronger check immediately, and the migration is per producer. The three unregistered checks (browser E2E, serious/critical axe, executed RLS acceptance) were not unregistered for want of a producer: gates:evidence builds the NBM project and measures it while the accessibility and browser lanes measure the generated acceptance application, so a registered check resolved evidence-for-another-build every run and integrity took the verify job down with it. A check now belongs to the lane that produces its artifact, declared per producer, and integrity asks only about the lane that ran, naming the rest in deferredToOtherLanes. Registering them is now possible and remains outstanding. The harder half is untouched: for a release candidate every required gate must be satisfied by evidence about one artifact, and the lanes still each build their own.",
-    "visual-maturity: unpaid and deferred; best independent mean 6.55 and floor 4.8 against required 8.5/6.5. It must pass before any best-in-class visual or proven-website claim."
+    "second-genuine-business-proof: the MGB Decor approved intake is frozen and replayable at examples/genuine-business/mgb-approved-intake.v1.json, and the prototype has been generated and reviewed. Outstanding: independent visual/product review, and \u2014 for launch rather than proof \u2014 production contact details, approved review evidence, asset bytes, project histories and domain ownership.",
+    "bounded-serious-application-benchmark: both halves of the first Predictor-class vertical slice now run. The database half runs against real PostgreSQL through the scheduled-decisions recipe and tooling/application-journey-benchmark-acceptance.sql, with the scoring rule left to the product; the browser half runs through the generated application's own interface against the same stack (tests/generated-app/scheduled-decisions.spec.ts), and the generated project installs, typechecks and builds independently. The frozen rerun is done: the first pass cost two reusable factory corrections in recipes/scheduled-decisions, both invisible to SQL, and the rerun against the unedited contract cost none, which is a first data point about one slice rather than a trend \u2014 and one measured by a harness that had no console, runtime or network classification, so it is a statement about the assertions that ran rather than about a clean browser. The browser lane now photographs every journey rather than only failures, classifies uncaught exceptions, console errors, failed requests and responses at 400 or worse, refuses a journey that took one it did not declare, and publishes a portable review packet through npm run evidence:generated-app. The packet declares serverMode development and depictsShippingArtifact false, because the lane serves the generated project's Vite dev server: it is local-browser product evidence and not evidence about a deployed artifact. Outstanding: the independent verdict over that packet, blocked by three separate things and not only by cost. The host model-execution switch at /etc/app-builder/model-execution.json reads enabled false (owner action); the different-vendor reviewer executes the Codex CLI, which IS installed on this host (codex-cli 0.150.1) and has now been run repeatedly \u2014 by #258 over the CC2 calibration corpus and by the Gold Standard prototype programme \u2014 so reviewer availability is no longer a blocker; Anthropic still cannot substitute, because the producer of this evidence is Claude; and the reviewer currently consumes a visual-candidate packet rather than a journey packet, so an adapter is engineering work that authorisation alone would not remove.",
+    "accepted-build-release-lifecycle: no real generated product has proved explicit promotion of an identified accepted revision/artifact through production smoke verification, release record and rollback target. The ladder those states belong to now exists mechanically: schemas/artifact-revision.schema.json and packages/control-plane/src/artifact-lifecycle.js define contract-approved -> materialized -> buildable -> behavior-verified -> quality-accepted -> release-candidate -> released -> production-verified with append-only identity, and tooling/artifact-lifecycle.test.mjs holds the refusals. The ladder's third rung is now reachable: verification resolves the generated lockfile, installs from it with npm ci, refuses a lock that moved during installation, and records source, lock, toolchain and built-output digests, against one exact declared pair in config/toolchain.json read from .nvmrc. Projects verified before that still project to materialized, because they recorded none of it. What is not proved: no real product has travelled past buildable, and this host runs node 22.22.2 / npm 10.9.7 rather than the declared 22.23.2 / 10.9.8, so a reproducible identity is currently earnable in CI and not locally. Canonical authorization has a contract and a front door. schemas/action-authorization.schema.json and packages/control-plane/src/action-authorization.js generalise the ApprovedBuildPlan guarantees to any operation; config/mutating-operations.json enumerates all 31 mutating operations; apps/service/src/mutation-decision.js is the one place any of them is decided, inside the service where the three real entry points (HTTP, broker socket, in-process call) already meet \u2014 the Console and the MCP adapter are clients of those and have no private door. Once a contract is approved, project.generate is refused on every route and permitted only through the approved plan, proved in tooling/mutation-route-parity.test.mjs against the real HTTP server, the real broker dispatch map and a direct call, with every refusal recorded and attributed to the surface that asked; an unregistered operation is refused. Still open: project.approved-build-plan.execute is satisfied by the plan rather than by an ActionAuthorization, so two documents can authorise one operation, and every other operation is recorded rather than required \u2014 the registry names per operation what would escalate it. Evidence is now bound to one immutable ArtifactRevision. A governed build opens a revision when its contract is approved and climbs it \u2014 materialized at generation, buildable at verification \u2014 recording source, lock, toolchain and output digests; packages/control-plane/src/artifact-evidence.js holds the binding and its five refusals, revisions are a projection of the ledger rather than a table, and tooling/artifact-evidence.test.mjs traces a real governed build by digest and rebuilds it identically from the raw event file. An ungoverned workspace build opens no revision, which is why it cannot be released. Not yet done: the eight registered gate producers still record compositionHash and are read as before, so their resolutions report boundToArtifact false \u2014 a producer that records the revision it measured gets the stronger check immediately, and the migration is per producer. The three unregistered checks (browser E2E, serious/critical axe, executed RLS acceptance) were not unregistered for want of a producer: gates:evidence builds the NBM project and measures it while the accessibility and browser lanes measure the generated acceptance application, so a registered check resolved evidence-for-another-build every run and integrity took the verify job down with it. A check now belongs to the lane that produces its artifact, declared per producer, and integrity asks only about the lane that ran, naming the rest in deferredToOtherLanes. Registering them is now possible and remains outstanding. The harder half is untouched: for a release candidate every required gate must be satisfied by evidence about one artifact, and the lanes still each build their own.",
+    "visual-maturity: unpaid and deferred. Every recorded factory score \u2014 6.55/4.8, 6.70/4.7, 6.64/5.8 and the 5.38/2.0 static-renderer figure \u2014 is OLD SCALE / NON-CONVERTIBLE: it was produced against nine criteria with no defined meaning for any number, by a prompt that disclosed the 8.5 bar to the reviewer (tooling/lib/codex-visual-reviewer.mjs, pre-#257). The v2 rubric asks thirteen criteria, anchors every point on the scale and withholds the bar. NO FACTORY BUILD HAS YET BEEN SCORED UNDER v2, so there is currently no valid factory number at all \u2014 not a low one. It must pass before any best-in-class visual or proven-website claim."
   ],
   "completedStages": [
-    "3.5A", "3.5B", "3.6A", "3.6B", "3.7", "3.8A", "3.8B", "3.8C", "3.8D", "3.8E", "3.8F", "3.8G", "3.8H", "3.8I", "3.8J", "3.8K", "4A", "4B.1", "4B.2", "4B.3a", "4B.3b", "4B.3c", "4B.4", "4B.5", "4B.6", "4C", "4C.1", "4C.2", "4C.3", "4C.4", "4C.5", "4D.1", "4D.2", "4D.4", "4D.5", "4D.6", "4D.7"
+    "3.5A",
+    "3.5B",
+    "3.6A",
+    "3.6B",
+    "3.7",
+    "3.8A",
+    "3.8B",
+    "3.8C",
+    "3.8D",
+    "3.8E",
+    "3.8F",
+    "3.8G",
+    "3.8H",
+    "3.8I",
+    "3.8J",
+    "3.8K",
+    "4A",
+    "4B.1",
+    "4B.2",
+    "4B.3a",
+    "4B.3b",
+    "4B.3c",
+    "4B.4",
+    "4B.5",
+    "4B.6",
+    "4C",
+    "4C.1",
+    "4C.2",
+    "4C.3",
+    "4C.4",
+    "4C.5",
+    "4D.1",
+    "4D.2",
+    "4D.4",
+    "4D.5",
+    "4D.6",
+    "4D.7"
   ],
-  "completedPhases": ["0", "1", "2", "3"],
+  "completedPhases": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
   "deferredCapabilities": [
-    {"stage":"4D","title":"Professional visual quality","reason":"Measured and failed; one business is insufficient to generalise the fixed component-vocabulary hypothesis.","revivesWhen":"Several materially different projects show a cross-project ceiling; a real consumer needs direction-selectable component implementations; before any visual-maturity claim; or materially new evidence appears.","unpaidGate":{"gate":"visual","threshold":8.5,"criterionFloor":6.5,"bestMean":6.7,"bestCriterionFloor":4.7,"finding":"The Presentation Registry changes tokens and presentations but not component vocabulary, constraining distinctiveness.","evidence":["examples/genuine-business/nbm-visual-review-v1.verdicts.json","examples/genuine-business/nbm-visual-review-v2.verdicts.json","examples/genuine-business/nbm-visual-review-v3.verdicts.json","examples/genuine-business/nbm-visual-review-v4.verdicts.json"],"record":"docs/PHASE_4D_VISUAL_DEBT.md"}},
-    {"stage":"4.2A","title":"Static-renderer visual parity","reason":"Measured at mean 5.38 and floor 2.0 while carrying the default shell; engineering correctness is proven, visual parity is not.","revivesWhen":"A visual direction is promoted and the static renderer can be reviewed carrying it.","unpaidGate":{"gate":"visual","threshold":8.5,"criterionFloor":6.5,"bestMean":5.38,"bestCriterionFloor":2.0,"finding":"The static renderer was reviewed carrying the default shell because no visual direction had been promoted.","evidence":["examples/genuine-business/nbm-static-renderer-review.v1.verdicts.json"],"record":"docs/PHASE_4D_VISUAL_DEBT.md"}},
-    {"stage":"4C.6","title":"Deterministic design-intelligence catalogue","reason":"No current consumer asks a question requiring it.","revivesWhen":"A real design consumer cannot answer a project, industry or intent pattern question from existing deterministic configuration."},
-    {"stage":"4D.3","title":"MessagingPlan","reason":"Composition already carries current narrative, CTA, audience, proof-gap and provenance decisions.","revivesWhen":"A real composition or art-direction decision needs information current composition cannot express."},
-    {"stage":"4D-canvas","title":"Visual comparison canvas","reason":"The Console comparison surface handles the current task.","revivesWhen":"A concrete review needs spatial arrangement or annotation the Console cannot provide."},
-    {"stage":"4.2B-4.2E","title":"Additional static-renderer capabilities","reason":"Semantic icons, Pagefind, richer typed data and deterministic OG imagery have no current consumer.","revivesWhen":"A corpus project records the absence as a real defect."},
-    {"stage":"4.3-cms","title":"CMS and content collections","reason":"Genuinely unbuilt; no current project needs owner-edited post-handover content.","revivesWhen":"A real project needs editorial content its owner will change after handover."},
-    {"stage":"4.3-localisation","title":"Localisation","reason":"Genuinely unbuilt; the existing NFR field has no renderer or composition consumer.","revivesWhen":"A real project publishes in a second language."},
-    {"stage":"4.3-figma-import","title":"Design/Figma import","reason":"Genuinely unbuilt and not a solution to the fixed component-vocabulary finding.","revivesWhen":"A real project supplies a design file as authority or design-system assimilation needs it."},
-    {"stage":"4.3-brownfield-mutation","title":"Brownfield diagnosis and mutation","reason":"Only read-only profiling is proven; it grants no mutation authority.","revivesWhen":"An exact-revision baseline includes observed passing tests and rendered behavioural evidence sufficient to protect known-good behaviour."},
-    {"stage":"4.3-generated-media","title":"Generated media capability — raster, vector and image editing","reason":"Contract, benchmark and provider candidates are placed in config/capability-providers.json and docs/PLATFORM_PARITY_PROGRAMME.md 2.1.1-2.1.4; nothing is implemented, adopted or ready. The Ardwell & Roe benchmark is not a consumer: PR #233 made arriving bytes an input operation, so it already has a working governed path to its 27 assets, and a benchmark that can be run does not earn a second way to run it.","revivesWhen":"A real project records missing publishable imagery as the measured limiting factor on its visual result, or the governed input path cannot meet the Ardwell & Roe asset floor. Generated imagery is never an answer to the Phase 4D component-vocabulary finding."},
-    {"stage":"4.3-generated-video","title":"Generated video","reason":"Recorded as an optional media type with its web-delivery controls so the architecture does not exclude it. No provider family is registered, because evaluating providers for a capability with no consumer is provider shopping.","revivesWhen":"An approved ArtDirectionPlan on a real project requires a moving image the Web Platform motion route cannot express, and every delivery control — poster, performance budget, mobile fallback, reduced-motion fallback, no critical information carried only in video — is enforceable first."},
-    {"stage":"4.3-web-extraction-provider","title":"Governed structured web extraction adapter","reason":"The concept, provenance and rights model already belong to content intelligence; only the fetch-and-extract execution is in question. The existing crawler handles the corpus material, and the factory already drives real browsers.","revivesWhen":"A real project's ingestion measurably fails on the existing crawler — a client-rendered site, a PDF linked rather than supplied, or structure the deterministic extractors cannot recover — and a candidate beats the browser tooling already registered."},
-    {"stage":"7-product-behaviour-evidence","title":"ProductBehaviourEvidence and session replay","reason":"The build direction is instrumented and the return direction does not exist, but there is no released product for anything to be evidence about. Contract placed at docs/PLATFORM_PARITY_PROGRAMME.md 11.1.","revivesWhen":"Outcome D closes and a real product is released against a named accepted revision. Session replay stays separately deferred until behaviour evidence has produced a finding it cannot diagnose without one."}
+    {
+      "stage": "4D",
+      "title": "Professional visual quality",
+      "reason": "Measured and failed; one business is insufficient to generalise the fixed component-vocabulary hypothesis.",
+      "revivesWhen": "Several materially different projects show a cross-project ceiling; a real consumer needs direction-selectable component implementations; before any visual-maturity claim; or materially new evidence appears.",
+      "unpaidGate": {
+        "gate": "visual",
+        "threshold": 8.5,
+        "criterionFloor": 6.5,
+        "bestMean": 6.7,
+        "bestCriterionFloor": 4.7,
+        "finding": "The Presentation Registry changes tokens and presentations but not component vocabulary, constraining distinctiveness.",
+        "evidence": [
+          "examples/genuine-business/nbm-visual-review-v1.verdicts.json",
+          "examples/genuine-business/nbm-visual-review-v2.verdicts.json",
+          "examples/genuine-business/nbm-visual-review-v3.verdicts.json",
+          "examples/genuine-business/nbm-visual-review-v4.verdicts.json"
+        ],
+        "record": "docs/PHASE_4D_VISUAL_DEBT.md",
+        "scaleVersion": "v1 \u2014 OLD SCALE / NON-CONVERTIBLE",
+        "note": "These figures predate #257. They were scored on nine criteria with no defined meaning for any point on the scale, by a prompt that told the reviewer the bar was 8.5. They cannot be compared with a v2 score and must not be used as the left-hand side of a before/after arrow. Re-scoring requires a fresh render."
+      }
+    },
+    {
+      "stage": "4.2A",
+      "title": "Static-renderer visual parity",
+      "reason": "Measured at mean 5.38 and floor 2.0 while carrying the default shell; engineering correctness is proven, visual parity is not.",
+      "revivesWhen": "A visual direction is promoted and the static renderer can be reviewed carrying it.",
+      "unpaidGate": {
+        "gate": "visual",
+        "threshold": 8.5,
+        "criterionFloor": 6.5,
+        "bestMean": 5.38,
+        "bestCriterionFloor": 2.0,
+        "finding": "The static renderer was reviewed carrying the default shell because no visual direction had been promoted.",
+        "evidence": [
+          "examples/genuine-business/nbm-static-renderer-review.v1.verdicts.json"
+        ],
+        "record": "docs/PHASE_4D_VISUAL_DEBT.md",
+        "scaleVersion": "v1 \u2014 OLD SCALE / NON-CONVERTIBLE",
+        "note": "These figures predate #257. They were scored on nine criteria with no defined meaning for any point on the scale, by a prompt that told the reviewer the bar was 8.5. They cannot be compared with a v2 score and must not be used as the left-hand side of a before/after arrow. Re-scoring requires a fresh render."
+      }
+    },
+    {
+      "stage": "4C.6",
+      "title": "Deterministic design-intelligence catalogue",
+      "reason": "No current consumer asks a question requiring it.",
+      "revivesWhen": "A real design consumer cannot answer a project, industry or intent pattern question from existing deterministic configuration."
+    },
+    {
+      "stage": "4D.3",
+      "title": "MessagingPlan",
+      "reason": "Composition already carries current narrative, CTA, audience, proof-gap and provenance decisions.",
+      "revivesWhen": "A real composition or art-direction decision needs information current composition cannot express."
+    },
+    {
+      "stage": "4D-canvas",
+      "title": "Visual comparison canvas",
+      "reason": "The Console comparison surface handles the current task.",
+      "revivesWhen": "A concrete review needs spatial arrangement or annotation the Console cannot provide."
+    },
+    {
+      "stage": "4.2B-4.2E",
+      "title": "Additional static-renderer capabilities",
+      "reason": "Semantic icons, Pagefind, richer typed data and deterministic OG imagery have no current consumer.",
+      "revivesWhen": "A corpus project records the absence as a real defect."
+    },
+    {
+      "stage": "4.3-cms",
+      "title": "CMS and content collections",
+      "reason": "Genuinely unbuilt; no current project needs owner-edited post-handover content.",
+      "revivesWhen": "A real project needs editorial content its owner will change after handover."
+    },
+    {
+      "stage": "4.3-localisation",
+      "title": "Localisation",
+      "reason": "Genuinely unbuilt; the existing NFR field has no renderer or composition consumer.",
+      "revivesWhen": "A real project publishes in a second language."
+    },
+    {
+      "stage": "4.3-figma-import",
+      "title": "Design/Figma import",
+      "reason": "Genuinely unbuilt and not a solution to the fixed component-vocabulary finding.",
+      "revivesWhen": "A real project supplies a design file as authority or design-system assimilation needs it."
+    },
+    {
+      "stage": "4.3-brownfield-mutation",
+      "title": "Brownfield diagnosis and mutation",
+      "reason": "Only read-only profiling is proven; it grants no mutation authority.",
+      "revivesWhen": "An exact-revision baseline includes observed passing tests and rendered behavioural evidence sufficient to protect known-good behaviour."
+    },
+    {
+      "stage": "4.3-generated-media",
+      "title": "Generated media capability \u2014 raster, vector and image editing",
+      "reason": "Contract, benchmark and provider candidates are placed in config/capability-providers.json and docs/PLATFORM_PARITY_PROGRAMME.md 2.1.1-2.1.4; nothing is implemented, adopted or ready. The Ardwell & Roe benchmark is not a consumer: PR #233 made arriving bytes an input operation, so it already has a working governed path to its 27 assets, and a benchmark that can be run does not earn a second way to run it.",
+      "revivesWhen": "A real project records missing publishable imagery as the measured limiting factor on its visual result, or the governed input path cannot meet the Ardwell & Roe asset floor. Generated imagery is never an answer to the Phase 4D component-vocabulary finding."
+    },
+    {
+      "stage": "4.3-generated-video",
+      "title": "Generated video",
+      "reason": "Recorded as an optional media type with its web-delivery controls so the architecture does not exclude it. No provider family is registered, because evaluating providers for a capability with no consumer is provider shopping.",
+      "revivesWhen": "An approved ArtDirectionPlan on a real project requires a moving image the Web Platform motion route cannot express, and every delivery control \u2014 poster, performance budget, mobile fallback, reduced-motion fallback, no critical information carried only in video \u2014 is enforceable first."
+    },
+    {
+      "stage": "4.3-web-extraction-provider",
+      "title": "Governed structured web extraction adapter",
+      "reason": "The concept, provenance and rights model already belong to content intelligence; only the fetch-and-extract execution is in question. The existing crawler handles the corpus material, and the factory already drives real browsers.",
+      "revivesWhen": "A real project's ingestion measurably fails on the existing crawler \u2014 a client-rendered site, a PDF linked rather than supplied, or structure the deterministic extractors cannot recover \u2014 and a candidate beats the browser tooling already registered."
+    },
+    {
+      "stage": "7-product-behaviour-evidence",
+      "title": "ProductBehaviourEvidence and session replay",
+      "reason": "The build direction is instrumented and the return direction does not exist, but there is no released product for anything to be evidence about. Contract placed at docs/PLATFORM_PARITY_PROGRAMME.md 11.1.",
+      "revivesWhen": "Outcome D closes and a real product is released against a named accepted revision. Session replay stays separately deferred until behaviour evidence has produced a finding it cannot diagnose without one."
+    }
   ]
 }

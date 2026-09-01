@@ -1,0 +1,149 @@
+---
+/**
+ * Home.
+ *
+ * Rebuilt after a brutal read of the first version, which opened on a 200px tagline above a
+ * six-cell fact grid. Both are on the anti-slop list — a vague giant hero statement and a KPI
+ * row — and both were defaults rather than decisions.
+ *
+ * What replaces them:
+ *
+ *  - The page opens on the practice and its refusal at reading size, beside a building at
+ *    full height. Work appears in the first screen, which for a bureau whose argument is
+ *    buildings is the only defensible order.
+ *  - The credentials are one running line of prose, not six bordered cells. The same
+ *    information without pretending to be a dashboard, and the last item is the one that
+ *    matters.
+ *  - Rhythm varies deliberately — loud around the statement, quiet through the credentials,
+ *    tight through the survey. One band value everywhere is what caps composition regardless
+ *    of how good the sections are.
+ */
+import Base from '../layouts/Base.astro';
+import Frame from '../components/Frame.astro';
+import { bureau, recognition, publications } from '../data/bureau';
+import { shownProjects as projects, declaredCount } from '../lib/frames';
+
+/* Two frames carry the page and neither belongs to a project shown below it — the same
+   photograph twice in one scroll reads as a shortage of work. */
+const bleeds = ['frihavn-interior', 'sanktanna-vault'];
+const shown = projects.filter((p) => !p.frames.some((f) => bleeds.includes(f.slug))).slice(0, 2);
+const largest = projects.reduce((a, b) => (a.area > b.area ? a : b));
+---
+
+<Base title="Nørreværk — a bureau for buildings that already exist" description={bureau.positioning}>
+  <section class="opening">
+    <div class="opening-frame">
+      <Frame
+        slug="frihavn-interior"
+        alt="The interior of a converted grain silo, the slip-formed concrete wall rising past an inserted floor."
+        priority
+        fill
+        sizes="62vw"
+      />
+    </div>
+    <div class="opening-text">
+      <p class="t3">Nørreværk is a bureau in Copenhagen and Malmö<br />for buildings that already exist.</p>
+      <p class="opening-refusal">{bureau.refusal}</p>
+      <p class="credentials">
+        Founded {bureau.founded} · {bureau.people} people · {declaredCount} conversions here ·
+        <b>no building on an empty site, ever</b>
+      </p>
+    </div>
+    <p class="opening-caption micro">
+      {largest.found}, {largest.built}. {largest.area.toLocaleString('en-GB')} m², none of it demolished.
+    </p>
+  </section>
+
+  <section class="grid" style="padding-block: var(--band) var(--band-quiet);">
+    {shown.map((project, i) => (
+      <article class="home-entry" style={`--start:${i === 0 ? 1 : 9};--span:${i === 0 ? 7 : 6};--h:${i === 0 ? 620 : 380}rem`}>
+        <a href={`/work/${project.slug}`}>
+          <div class="reg-frame"><Frame slug={project.frames[0].slug} alt={project.frames[0].alt} fill sizes="(max-width:760px) 100vw, 48vw" /></div>
+          <div class="reg-meta">
+            <span class="reg-area">{project.area.toLocaleString('en-GB')}<i>m²</i></span>
+            <h2 class="reg-name">{project.left}</h2>
+            <p class="reg-was">{project.found}, {project.built}</p>
+          </div>
+        </a>
+      </article>
+    ))}
+    <p class="reg-aside" style="--aside-start:9;--aside-span:6;margin-bottom:0;align-self:start;">{shown[0]?.line}</p>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band-loud);">
+    <a href="/work" class="route" style="grid-column: 1 / span 10;">
+      <span class="t2">The register — all {declaredCount}, drawn to scale</span>
+    </a>
+    <p class="small" style="grid-column: 12 / span 4; align-self: end; color: var(--grey-1);">
+      334 m² to 18,600 m². Each frame sized by the building it shows.
+    </p>
+  </section>
+
+  <section class="grid statement">
+    <h2 class="t1" style="grid-column: 1 / span 12;">
+      Demolition is a design decision, and it is usually the one nobody defends.
+    </h2>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <div class="measure" style="grid-column: 6 / span 6; display: grid; gap: 22rem;">
+      <p class="body">
+        A demolished building takes its embodied carbon with it and replaces it with more. That
+        argument is well made and largely accepted, and it is not the reason this bureau exists.
+      </p>
+      <p class="body">
+        The reason is narrower. An existing building has already answered questions a new one
+        has to guess at — how it sits, what it is made of, what the light does to it in
+        February. Those answers took decades to arrive and cost nothing to keep.
+      </p>
+      <p class="body">The work is deciding which to keep, and being able to say why.</p>
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <div class="bleed">
+      <Frame slug="sanktanna-vault" alt="The ribbed stone vault of a former chapel, seen from the floor after the seating was removed." bleed sizes="100vw" />
+    </div>
+    <p class="micro" style="grid-column: 1 / span 6; margin-top: 14rem;">
+      Sankt Anna, 1962. The acoustic was not corrected; the seating was removed.
+    </p>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band-quiet);">
+    <h2 class="t1" style="grid-column: 1 / span 9;">Send us a building.</h2>
+    <p class="lede" style="grid-column: 11 / span 5; align-self: end;">{bureau.survey.send}</p>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <ol class="steps" style="grid-column: 1 / span 11;">
+      {bureau.survey.steps.map((step) => (
+        <li>
+          <span class="step-n">{step.n}</span>
+          <h3 class="t3">{step.title}</h3>
+          <p class="small measure">{step.detail}</p>
+        </li>
+      ))}
+    </ol>
+    <div style="grid-column: 13 / span 3;">
+      <span class="figure">{bureau.survey.price.replace('DKK ', '')}</span>
+      <span class="figure-unit">DKK · {bureau.survey.duration}</span>
+      <p class="small" style="margin-top: 20rem; color: var(--grey-2);">{bureau.survey.caveat}</p>
+      <p style="margin-top: 18rem;">
+        <a class="action" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band-quiet);">
+    <ul style="grid-column: 1 / span 6; display: grid; gap: 10rem;">
+      {recognition.map((entry) => (
+        <li class="line-item"><span>{entry.award}</span><span class="micro">{entry.project} · {entry.year}</span></li>
+      ))}
+    </ul>
+    <ul style="grid-column: 9 / span 5; display: grid; gap: 10rem;">
+      {publications.map((entry) => (
+        <li class="line-item"><span>{entry.title}</span><span class="micro">{entry.issue} · {entry.subject}</span></li>
+      ))}
+    </ul>
+  </section>
+</Base>

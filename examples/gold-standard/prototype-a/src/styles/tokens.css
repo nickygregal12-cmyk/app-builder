@@ -1,0 +1,131 @@
+/*
+ * NØRREVÆRK — measurement system.
+ *
+ * `font-size` on the root is set in `vw`, so 1rem is exactly one pixel at a 1600 design frame
+ * and one pixel at a 390 frame. Layout is authored in absolute design-frame units and the
+ * whole page scales fluidly between them: one breakpoint, no max-width container, no
+ * intermediate sizes to maintain.
+ *
+ * Real typefaces, self-hosted, no external request. The first version of this prototype set
+ * its display face in `Times New Roman` with a system-serif fallback, which is not a
+ * typographic decision — it is the absence of one, and it caps the typography criterion on
+ * its own.
+ */
+
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/InterVariable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /*
+   * Clamped, and this is the one real fault in the fluid-root idea. `0.0625vw` alone means
+   * every size scales linearly with the viewport, so at 834px the root is 0.52px and the
+   * smallest metadata computes to 6.5px — unreadable, and measured rather than guessed. The
+   * floor holds legibility between the mobile breakpoint and the design frame; the ceiling
+   * stops a 2560px display setting body copy at 26px.
+   */
+  font-size: clamp(0.84px, 0.0625vw, 1.18px);
+
+  /*
+   * Six tokens and no accent. The ground is a cool paper rather than a warm one — this is a
+   * bureau working on concrete and brick in Scandinavian light, and a cream page would make
+   * every photograph look as though it were taken somewhere else.
+   */
+  --ink: #101010;
+  --paper: #EFEFED;
+  --paper-2: #E2E2DF;
+  --grey-1: #6C6C68;
+  --grey-2: #4A4A46;
+  --hair: #C9C9C4;
+
+  --display: 'Instrument Serif', 'Liberation Serif', Georgia, serif;
+  --text: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  /*
+   * Instrument Serif is a high-contrast display face that wants to be large, and the scale is
+   * built around that: the top three steps belong to it, the bottom four to Inter, and there
+   * is deliberately nothing in between. A middle step would invite a heading that is neither
+   * display nor metadata, which is where ordinary typography comes from.
+   */
+  --t-colossal: 300rem;
+  --t-display: 176rem;
+  --t-1: 108rem;
+  --t-2: 60rem;
+  --t-3: 34rem;
+  --t-body: 20rem;
+  --t-small: 18.5rem;
+  --t-micro: 16rem;
+
+  --lh-display: 0.86;
+  --lh-tight: 1.02;
+  --lh-body: 1.5;
+
+  --track-display: -0.028em;
+  --track-body: -0.011em;
+  --track-micro: 0.1em;
+
+  /*
+   * Four band heights, not one. A single vertical rhythm applied everywhere is the specific
+   * thing the rubric names as capping composition at 5 or 6, and it is what the first version
+   * of this page did. These are used deliberately: `--band-loud` around the moments that
+   * should dominate, `--band-quiet` where the page should close up and read faster.
+   */
+  --band-loud: 240rem;
+  --band: 150rem;
+  --band-quiet: 76rem;
+  --band-tight: 34rem;
+
+  --gutter: 34rem;
+  --col-gap: 22rem;
+
+  --ease: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --dur: 0.9s;
+}
+
+@media (max-width: 760px) {
+  :root {
+    font-size: 0.2564vw;
+
+    /*
+     * The display face halves; everything below it falls by three to four times. One voice
+     * stays enormous and the rest gets out of its way, so the phone still has a hierarchy
+     * rather than a sequence of similar-sized blocks.
+     */
+    --t-colossal: 116rem;
+    --t-display: 74rem;
+    --t-1: 46rem;
+    --t-2: 30rem;
+    --t-3: 21rem;
+    --t-body: 16.5rem;
+    --t-small: 15rem;
+    --t-micro: 13rem;
+
+    --lh-display: 0.9;
+
+    --band-loud: 84rem;
+    --band: 56rem;
+    --band-quiet: 34rem;
+    --band-tight: 20rem;
+
+    --gutter: 18rem;
+    --col-gap: 12rem;
+  }
+}

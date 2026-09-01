@@ -1,0 +1,28 @@
+NØRREVÆRK — a fictional architecture bureau, invented for this corpus.
+
+WHAT IT DOES
+Conversion, extension and repair of existing buildings in Denmark and southern Sweden.
+Sixteen people, offices in Copenhagen and Malmö, founded 2011. It has never designed a
+building on an empty site and says so as its positioning.
+
+WHO IT IS FOR
+Owners of difficult existing buildings — municipalities, institutions and developers holding
+a structure that is expensive to keep and politically hard to demolish. The decision to
+appoint is made slowly, by a committee, on the evidence of previous work.
+
+THE COMMERCIAL GOAL
+Not a form submission. The bureau wants to be sent a building. Its first step is a paid
+two-week condition survey written by a partner, and roughly a third of those end with the
+bureau advising against the project.
+
+WHAT MAKES THE DESIGN PROBLEM HARD
+The projects are wildly unequal — 334 m² to 18,600 m², a 55× range — and a portfolio that
+renders them at equal size is a portfolio that has declined to have an opinion. The site has
+to say which work matters by how much room it gives it.
+
+A CONSTRAINT ON THE IMAGERY, STATED PLAINLY
+The bureau is fictional, so it has no photographs. Every frame is an openly-licensed
+photograph (CC BY 2.0) of an existing building designed by another architect, credited on the
+page and recorded in ASSETS.md. The buildings are real; the bureau, the projects and the
+interventions described are invented. Nothing on the site is claimed as the bureau's own
+photography or as its authorship of the original buildings.

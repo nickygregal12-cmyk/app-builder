@@ -1,0 +1,233 @@
+---
+/**
+ * The single-line diagram, drawn from the model.
+ *
+ * Geometry comes from `network.ts` and nothing here invents a connection: every conductor is
+ * a plant item's own from/to pair, resolved to coordinates. That is not purity for its own
+ * sake — it is what makes the drawing evidence. If the diagram were hand-drawn it could
+ * disagree with the solver, and the one thing this site claims is that the two are the same
+ * object seen twice.
+ *
+ * Symbols follow IEC single-line convention rather than being invented: a circuit breaker is
+ * a square that fills when closed, a disconnector is a knife that swings clear, an earth
+ * switch is a knife into the three-bar earth symbol, a transformer is two interlinked
+ * circles. A Senior Authorised Person reads these without a legend, which is the whole
+ * argument for using them; a set of prettier custom glyphs would have to be learnt and would
+ * be learnt only here.
+ *
+ * State is applied as classes rather than baked in, so one rendered SVG can be moved through
+ * every step of a schedule without re-rendering. The step data travels as JSON and a small
+ * script sets `data-state` on each plant group and conductor.
+ */
+import { NODES, PLANT, nodeById, type Plant } from '../data/network';
+
+interface Props {
+  /** Which plant is closed at the moment being drawn. */
+  closed: Record<string, boolean>;
+  /** Points connected to a source. */
+  energised: string[];
+  /** Points connected to earth. */
+  earthed: string[];
+  /** Drawn with a heavier outline: the plant this job is about. */
+  highlight?: string[];
+  /** Plant to draw a fault marker against. */
+  fault?: string | null;
+  compact?: boolean;
+  labelled?: boolean;
+}
+const { closed, energised, earthed, highlight = [], fault = null, compact = false, labelled = true } = Astro.props;
+
+const live = new Set(energised);
+const earth = new Set(earthed);
+
+/** Where a conductor meets a node. Busbars are met at the plant's own x, not at their origin. */
+function point(nodeId: string, item: Plant) {
+  const node = nodeById.get(nodeId)!;
+  if (node.runTo !== undefined) {
+    const [lo, hi] = [Math.min(node.x, node.runTo), Math.max(node.x, node.runTo)];
+    return { x: Math.min(hi, Math.max(lo, item.x)), y: node.y };
+  }
+  return { x: node.x, y: node.y };
+}
+const stateOf = (nodeId: string) => (live.has(nodeId) ? 'live' : earth.has(nodeId) ? 'earthed' : 'dead');
+
+const busbars = NODES.filter((node) => node.runTo !== undefined);
+/* Feeders and earth devices draw their own conductor, because both terminate somewhere that
+   is not a busbar node — an outgoing circuit leaves the drawing, and an earth ends at the
+   earth symbol. Putting them through the generic pass asks `point()` for a node that does not
+   exist, which is how this rendered nothing the first time. */
+const conductors = PLANT.filter((item) => item.kind !== 'busbar' && item.kind !== 'feeder' && item.to !== 'EARTH');
+---
+
+<svg
+  class:list={['sld', compact && 'sld--compact']}
+  viewBox="62 14 566 566"
+  role="img"
+  aria-label="Single-line diagram of Attercliffe 33/11kV primary substation, showing which parts of the network are energised, dead and earthed at this step."
+>
+  <!-- Conductors first, so symbols sit on top of them. -->
+  {conductors.map((item) => {
+    const a = point(item.from, item);
+    const b = point(item.to, item);
+    return (
+      <g class="cond" data-plant={item.id}>
+        <line class="wire" data-node={item.from} data-state={stateOf(item.from)} x1={a.x} y1={a.y} x2={item.x} y2={item.y} />
+        <line class="wire" data-node={item.to} data-state={stateOf(item.to)} x1={item.x} y1={item.y} x2={b.x} y2={b.y} />
+      </g>
+    );
+  })}
+
+  <!-- Busbars, heavier, as they are drawn on a real sheet. -->
+  {busbars.map((bar) => (
+    <g class="bus">
+      <line class="bar" data-node={bar.id} data-state={stateOf(bar.id)} x1={bar.x} y1={bar.y} x2={bar.runTo} y2={bar.y} />
+      {labelled && (
+        <text class="bus-label" x={bar.x} y={bar.y - 13}>{bar.label}</text>
+      )}
+    </g>
+  ))}
+
+  {PLANT.map((item) => {
+    const isClosed = closed[item.id];
+    const marked = highlight.includes(item.id);
+    const faulted = fault === item.id;
+    const nodeState = stateOf(item.from);
+
+    if (item.kind === 'transformer') {
+      return (
+        <g class="sym sym--tx" data-plant={item.id} data-marked={marked ? '' : null}>
+          <circle cx={item.x} cy={item.y - 13} r={19} />
+          <circle cx={item.x} cy={item.y + 13} r={19} />
+          {labelled && <text class="tag" x={item.x + 28} y={item.y - 4}>{item.label}</text>}
+          {labelled && <text class="tag tag--sub" x={item.x + 28} y={item.y + 10}>{item.rating}</text>}
+        </g>
+      );
+    }
+
+    if (item.kind === 'earth') {
+      const tap = point(item.from, item);
+      return (
+        <g class="sym sym--earth" data-plant={item.id} data-closed={isClosed ? '' : null} data-marked={marked ? '' : null} data-fault={faulted ? '' : null}>
+          <line class="wire" data-node={item.from} data-state={nodeState} x1={tap.x} y1={tap.y} x2={item.x - 22} y2={item.y} />
+          {/* The knife: in line when closed, swung clear when open. */}
+          <line class="blade" x1={item.x - 22} y1={item.y} x2={isClosed ? item.x : item.x - 4} y2={isClosed ? item.y : item.y - 15} />
+          <circle class="pivot" cx={item.x - 22} cy={item.y} r={2.5} />
+          <line class="stem" x1={item.x} y1={item.y} x2={item.x} y2={item.y + 16} />
+          <line class="e1" x1={item.x - 10} y1={item.y + 16} x2={item.x + 10} y2={item.y + 16} />
+          <line class="e2" x1={item.x - 6.5} y1={item.y + 20} x2={item.x + 6.5} y2={item.y + 20} />
+          <line class="e3" x1={item.x - 3} y1={item.y + 24} x2={item.x + 3} y2={item.y + 24} />
+          {labelled && <text class="tag tag--e" x={item.x + 16} y={item.y + 4}>{item.label}</text>}
+        </g>
+      );
+    }
+
+    if (item.kind === 'feeder') {
+      return (
+        <g class="sym sym--feeder" data-plant={item.id} data-closed={isClosed ? '' : null}>
+          <line class="wire" data-node={item.from} data-state={nodeState} x1={item.x} y1={item.y - 40} x2={item.x} y2={item.y + 6} />
+          <path class="arrow" d={`M ${item.x - 4.5} ${item.y + 6} L ${item.x + 4.5} ${item.y + 6} L ${item.x} ${item.y + 15} Z`} />
+          {labelled && <text class="feeder-label" transform={`translate(${item.x + 3.5} ${item.y + 22}) rotate(90)`}>{item.label}</text>}
+        </g>
+      );
+    }
+
+    if (item.kind === 'disconnector') {
+      return (
+        <g class="sym sym--ds" data-plant={item.id} data-closed={isClosed ? '' : null} data-marked={marked ? '' : null}>
+          <line class="blade" x1={item.x} y1={item.y + 15} x2={isClosed ? item.x : item.x + 14} y2={isClosed ? item.y - 15 : item.y - 8} />
+          <circle class="pivot" cx={item.x} cy={item.y + 15} r={2.5} />
+          <circle class="pivot pivot--top" cx={item.x} cy={item.y - 15} r={2.5} />
+          {labelled && <text class="tag" x={item.x + 22} y={item.y + 4}>{item.label}</text>}
+        </g>
+      );
+    }
+
+    // Breaker, including the bus section, which is drawn on the horizontal.
+    const horizontal = item.id.startsWith('BS-');
+    return (
+      <g class="sym sym--cb" data-plant={item.id} data-closed={isClosed ? '' : null} data-marked={marked ? '' : null}>
+        <rect
+          class="box"
+          x={item.x - (horizontal ? 9 : 9)}
+          y={item.y - 9}
+          width={18}
+          height={18}
+          rx={0.5}
+        />
+        {labelled && (
+          <text class={horizontal ? 'tag tag--bs' : 'tag'} x={horizontal ? item.x : item.x + 22} y={horizontal ? item.y - 16 : item.y + 4} text-anchor={horizontal ? 'middle' : 'start'}>{item.label}</text>
+        )}
+      </g>
+    );
+  })}
+
+  <!-- Source labels, set condensed like drawing annotation. -->
+  {labelled && NODES.filter((n) => n.id.startsWith('GRID')).map((node) => (
+    <text class="src" x={node.x} y={node.y - 8} text-anchor="middle">{node.label}</text>
+  ))}
+</svg>
+
+<style>
+  .sld { width: 100%; height: auto; display: block; overflow: visible; }
+
+  /*
+   * Line weight is the primary carrier here, ahead of colour. A drawing read in poor light,
+   * or by somebody who cannot distinguish red from green — which in this trade is a
+   * meaningful proportion of the audience — still has to be legible. Energised conductors are
+   * heavier and continuous; dead ones are lighter; earthed ones are heavier again and carry
+   * the earth symbol at their end. Colour agrees with weight rather than replacing it.
+   */
+  .wire, .bar { stroke-linecap: square; }
+  .wire { stroke: var(--dead); stroke-width: 1.6; transition: stroke 220ms ease, stroke-width 220ms ease; }
+  .wire[data-state='live'] { stroke: var(--live); stroke-width: 2.4; }
+  .wire[data-state='earthed'] { stroke: var(--earth); stroke-width: 2.4; }
+
+  .bar { stroke: var(--dead); stroke-width: 5; transition: stroke 220ms ease; }
+  .bar[data-state='live'] { stroke: var(--live); }
+  .bar[data-state='earthed'] { stroke: var(--earth); }
+
+  .box { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.6; transition: fill 220ms ease; }
+  .sym--cb[data-closed] .box { fill: var(--ink); }
+
+  .blade { stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; transition: all 260ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .pivot { fill: var(--ink); }
+  .stem, .e1, .e2, .e3 { stroke: var(--ink); stroke-width: 1.6; }
+  .sym--earth[data-closed] .stem,
+  .sym--earth[data-closed] .e1,
+  .sym--earth[data-closed] .e2,
+  .sym--earth[data-closed] .e3,
+  .sym--earth[data-closed] .blade { stroke: var(--earth); }
+
+  .sym--tx circle { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+  .arrow { fill: var(--ink); }
+
+  /* The plant this job is about, outlined the way a drawing clouds a revision. */
+  .sym[data-marked] .box,
+  .sym[data-marked] circle { stroke-width: 2.6; }
+
+  /*
+   * The fault marker. Drawn rather than coloured, because the thing it marks is already red:
+   * an earth closing onto a live point is a red device on a red conductor, and a second red
+   * would say nothing. A struck circle is unambiguous at any size.
+   */
+  .sym--earth[data-fault] .blade,
+  .sym--earth[data-fault] .stem { stroke: var(--live); }
+
+  text {
+    font-family: var(--cond); font-weight: 600; fill: var(--ink);
+    paint-order: stroke fill;
+    stroke: var(--sheet); stroke-width: 3.5px; stroke-linejoin: round;
+  }
+  .tag { font-size: 11px; letter-spacing: 0.02em; }
+  .tag--sub { font-size: 9.5px; font-weight: 500; fill: var(--ink-3); }
+  .tag--e { font-size: 10px; }
+  .tag--bs { font-size: 11px; }
+  .bus-label,
+  .src { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink-3); }
+  .feeder-label { font-size: 9.5px; font-weight: 500; fill: var(--ink-2); letter-spacing: 0.01em; }
+
+  .sld--compact .tag--sub,
+  .sld--compact .feeder-label,
+  .sld--compact .bus-label,
+  .sld--compact .src { display: none; }
+</style>

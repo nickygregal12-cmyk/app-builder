@@ -1,0 +1,61 @@
+---
+import Base from '../layouts/Base.astro';
+import Frame from '../components/Frame.astro';
+import { bureau, people, facts, recognition } from '../data/bureau';
+---
+<Base title="Bureau — Nørreværk" description="Sixteen people in Copenhagen and Malmö, working only on buildings that already exist.">
+  <section class="grid" style="padding-top: 200rem; padding-bottom: var(--band);">
+    <h1 class="t1" style="grid-column: 1 / span 10;">We are asked, often, whether we would take a new building.</h1>
+    <div class="measure" style="grid-column: 6 / span 6; margin-top: 70rem; display: grid; gap: 22rem;">
+      <p class="body">The answer has been no since 2011, and it is not a principle so much as a working method. A bureau that does both ends up doing the new work well and the existing work quickly, because the two need different people and a different first fortnight.</p>
+      <p class="body">Ours begins with a condition survey written by a partner. It takes two weeks, it is the only thing we charge for before a contract, and roughly a third of the time it ends with us advising against the project.</p>
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <div class="bleed">
+      <Frame slug="kalvebod-corridor" alt="The circulation route between an original concrete shell and an inserted archive box." bleed sizes="100vw" />
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <p class="label" style="grid-column: 1 / span 3;">People</p>
+    <ul style="grid-column: 4 / span 11; display: grid; gap: 40rem;">
+      {people.map((person) => (
+        <li style="border-top: 1px solid var(--hair); padding-top: 20rem; display: grid; grid-template-columns: 4fr 7fr; gap: var(--col-gap);">
+          <div>
+            <h2 class="t3">{person.name}</h2>
+            <p class="label" style="margin-top: 8rem;">{person.role}</p>
+          </div>
+          <p class="body measure">{person.note}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <div style="grid-column: 1 / span 6;">
+      <p class="label">The bureau</p>
+      <dl style="margin-top: 26rem; display: grid; grid-template-columns: 1fr 1fr; gap: 22rem;">
+        {facts.map((fact) => (
+          <div style="border-top: 1px solid var(--hair); padding-top: 10rem;">
+            <dt class="label">{fact.term}</dt>
+            <dd class="t4" style="margin-top: 6rem;">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+    <div style="grid-column: 9 / span 4;">
+      <p class="label">What we do</p>
+      <ul style="margin-top: 26rem; display: grid; gap: 10rem;">
+        {bureau.services.map((service) => <li class="small" style="border-top: 1px solid var(--hair); padding-top: 8rem; color: var(--ink);">{service}</li>)}
+      </ul>
+    </div>
+    <div style="grid-column: 14 / span 2;">
+      <p class="label">Awards</p>
+      <ul style="margin-top: 26rem; display: grid; gap: 10rem;">
+        {recognition.map((entry) => <li class="label" style="border-top: 1px solid var(--hair); padding-top: 8rem;">{entry.project} · {entry.year}</li>)}
+      </ul>
+    </div>
+  </section>
+</Base>

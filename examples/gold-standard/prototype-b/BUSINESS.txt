@@ -1,0 +1,181 @@
+INTERLOCK — prototype B, Gold Standard programme.
+
+FICTIONAL. The company, its people, its customers and every substation named here are
+invented. The regulatory framework and the switching practice are real, and are described
+accurately, because a product in this category that got them wrong would not be credible to
+the people it is for.
+
+--------------------------------------------------------------------------------------
+THE PRODUCT
+--------------------------------------------------------------------------------------
+
+Interlock proves high-voltage switching schedules against a network model before anybody
+opens a switch.
+
+Before electrical work can start on a high-voltage network, somebody has to write a switching
+schedule: a numbered sequence of operations — open this breaker, open that disconnector,
+prove dead, apply these earths, issue the permit — that makes the work area safe without
+cutting supply to customers who are not part of the job, and that can be reversed afterwards.
+
+In the UK this is governed by the Electricity at Work Regulations 1989, and by each network
+operator's own safety rules. Regulation 13 requires that equipment made dead is not
+inadvertently re-energised while people are working on it. HSE guidance HSG85 sets out the
+safe working practice the industry writes its rules against. The schedule is the document
+that discharges that duty.
+
+Today the schedule is written in Word, against a single-line diagram in Visio, checked by a
+second Senior Authorised Person reading it line by line, and the customers-at-risk figure is
+worked out in a spreadsheet. The three artefacts are not connected to each other. When the
+network model changes, the schedules written against it do not.
+
+Interlock connects them. It holds the network model, it simulates the schedule step by step,
+and it refuses to produce a schedule that is unsafe.
+
+--------------------------------------------------------------------------------------
+1. WHAT PROBLEM IT SOLVES
+--------------------------------------------------------------------------------------
+
+A switching schedule can be wrong in ways that reading it does not reveal.
+
+The dangerous errors are not typos. They are order errors and connectivity errors: an earth
+applied to a point that is still connected to a live busbar through a disconnector nobody
+opened; a permit issued naming points of isolation that do not actually isolate; a
+restoration sequence that removes an earth before the permit is cancelled. Each of those
+reads perfectly well on paper. Each requires you to hold the whole network in your head at
+that exact step to catch.
+
+That is what a second checker is for, and it is why the second checker is expensive, slow,
+and human.
+
+--------------------------------------------------------------------------------------
+2. WHO USES IT
+--------------------------------------------------------------------------------------
+
+Senior Authorised Persons who write and check schedules, at:
+
+  - distribution network operators (the 33kV and 11kV networks under the grid supply points);
+  - large private HV networks — data centres, hospitals, ports, steelworks, universities —
+    which run their own 11kV systems and hold their own safety rules.
+
+Also outage planners, who need to know the customers-at-risk exposure of a proposed window
+before they book it, and control engineers, who receive the schedule and issue the
+instructions on the day.
+
+Not electricians. Not facilities managers. The user holds a written authorisation to operate
+HV apparatus, and has been assessed for it.
+
+--------------------------------------------------------------------------------------
+3. WHAT IT REPLACES
+--------------------------------------------------------------------------------------
+
+  - the Word template the schedule is typed into;
+  - the Visio single-line diagram it is written against, which is a picture rather than a
+    model and therefore cannot be asked a question;
+  - the second SAP's line-by-line check, which it does not remove but does change: the
+    checker stops looking for connectivity errors and starts looking at whether the job is
+    the right job;
+  - the customers-at-risk spreadsheet;
+  - the separate restoration schedule, typed out again by hand and reversed by eye.
+
+--------------------------------------------------------------------------------------
+4. THE BEHAVIOUR THAT DIFFERENTIATES IT
+--------------------------------------------------------------------------------------
+
+It refuses.
+
+Interlock will not emit a schedule it cannot prove. When a step would leave the work area
+connected to an energised part of the network, or would strand a customer the outage plan
+said would stay on, or would apply an earth to a point that is not dead, it stops at that
+step and says which earlier step is responsible.
+
+The refusal names the cause, not the symptom. "Step 9 applies an earth to a point still
+connected to Section 2" is useless on its own; "step 6 left T2-BD closed" is the sentence
+that fixes it.
+
+Everything else in the product follows from that. The step-by-step network state exists
+because the refusal needs somewhere to point. The restoration sequence is generated because
+the reverse of a proved sequence is provable and the reverse of a typed one is not.
+
+--------------------------------------------------------------------------------------
+5. WHAT IS IMPRESSIVE SHOWN RATHER THAN DESCRIBED
+--------------------------------------------------------------------------------------
+
+The schedule moving.
+
+A switching schedule is a list of instructions, and a list of instructions is the least
+interesting possible representation of what is actually happening: a network being taken
+apart in a specific order, an island of dead equipment growing until it contains the work
+area, and a number — how many customers would be off if one more thing failed right now —
+rising and then falling back to zero.
+
+Select a step and the diagram is at that step. That is the product. It is also the single
+thing that cannot be conveyed by a paragraph, a feature card, or a screenshot.
+
+The second thing is the refusal, because it is the only part of the product that argues with
+its user, and because it is the reason to buy it.
+
+--------------------------------------------------------------------------------------
+6. OBJECTIONS THE SITE MUST ANSWER
+--------------------------------------------------------------------------------------
+
+"Our network model is not good enough."
+  It almost certainly is not, and that is addressed rather than denied. Interlock records
+  what it was told, marks plant it has no model for, and refuses to prove a schedule that
+  touches unmodelled plant rather than quietly assuming it is open.
+
+"We are not permitting software to write safety documents."
+  It does not sign anything. A Senior Authorised Person signs, as now. Interlock records who
+  signed, against which model version, and what it proved at the time.
+
+"We cannot connect anything to our control system."
+  It does not connect to one. It works on the recorded network state and the planned
+  operations. No telemetry, no control path, no route by which it could operate anything.
+
+"How do we defend this to the regulator or in an investigation?"
+  Every schedule is stored with the model version it was proved against and the full step
+  state. A schedule proved eight months ago can be re-opened and shown in the network as it
+  was understood that day.
+
+"What happens when we disagree with it?"
+  You override, in writing, with a reason, and the override is on the document. Interlock has
+  no authority to stop a job. It has authority to make the disagreement explicit.
+
+--------------------------------------------------------------------------------------
+7. EVIDENCE AVAILABLE HONESTLY FROM THE MODEL
+--------------------------------------------------------------------------------------
+
+Because the fictional product domain is fully specified, the site can show:
+
+  - a complete worked schedule for a real class of job, with every step's network state;
+  - refusals by category, with the step that caused each;
+  - single-contingency exposure through the sequence, in customers and in minutes;
+  - the restoration sequence generated from the forward one;
+  - the permit, with its actual points of isolation and points of earthing;
+  - the model version, and what is unmodelled in it.
+
+No invented adoption statistics. No customer logos. No "trusted by" wall. The evidence is the
+product working on one job, in full.
+
+--------------------------------------------------------------------------------------
+8. THE CONVERSION
+--------------------------------------------------------------------------------------
+
+Not a free trial. This buyer cannot self-serve a safety tool, and a signup form would be the
+clearest possible signal that we do not know who they are.
+
+The conversion is: send us a switching schedule you have already written and approved, and a
+single-line diagram of the site it runs on. We model it and prove it, and we tell you what we
+find, including nothing. Four weeks. £6,000, credited against the first year if you go ahead.
+
+It is deliberately the same shape as the product: you give us a schedule, we prove it.
+
+--------------------------------------------------------------------------------------
+THE COMPANY
+--------------------------------------------------------------------------------------
+
+Interlock. Sheffield. Founded 2021 by two Senior Authorised Persons who had spent their
+careers writing these documents, and a control systems engineer who had spent hers modelling
+the networks they were written against. Fourteen people. Six of them hold or have held HV
+authorisations.
+
+They sell to eleven networks. They will say which, on a call, and not on a website.

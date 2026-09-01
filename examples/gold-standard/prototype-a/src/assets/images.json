@@ -1,0 +1,244 @@
+[
+ {
+  "slug": "kalvebod-hall",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2779
+  },
+  "ratio": 0.8636,
+  "lqip": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAACQBQCdASoUABcAPu1sq08ppiOiMBgIATAdiWcAwcwPBP4Vd+bRjik2JRWqz7VRSCq6SFTYAAD4olf3Ksp9ExFCUgdwpiYLiCHg/Mxb7WWKUqzw31IsP02CY/wC+8vfFM5AXRshRnKhhfRqN/zzGAnoOvw6cwKKFMTNEWQ1JASRFZJ0YAA=",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "kalvebod-vault",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2896
+  },
+  "ratio": 0.8287,
+  "lqip": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4IIIAAAAQBQCdASoUABgAPu1kpk4ppaMiMBgMATAdiWUAwzQ0b5kLgcnVQz+143I2XIJviXcAAP7vynGENe4lcg299dI9uDlyC/YPGBVuGhhzAAYthOZAeJwMTC0Ii0NZ9ihj+wMVxX26q+0oM4fqnMH1PAAXW8gHRPLiw8oEaWv8a13uN4AA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "kalvebod-corridor",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2930
+  },
+  "ratio": 0.8191,
+  "lqip": "data:image/webp;base64,UklGRoYAAABXRUJQVlA4IHoAAACwBACdASoUABgAPu1qrFEppaQiqAqpMB2JZQAAKdKPyGpaCAR9JV3kcI1cfsKAAP4GajtYCEqGIzx9W5svcFZfHM82vNgdRoN7k6LY9kK3ZlVIyFVawByiXyhTpQ4NbiGkYHzCQWYJmRW8KJNhv6t36EZwsjgSwbAAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "frihavn-interior",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1601
+  },
+  "ratio": 1.4991,
+  "lqip": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAACQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZQDGfCGvcNIyP+JAAP7pTnxE20FjhRc76fMs73Ifa/W140aj2gyh3McCPtL7NQzdjsY3c+O7mKtis1bgQcVNqht8j9gA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "frihavn-stair",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3585
+  },
+  "ratio": 0.6695,
+  "lqip": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4IIIAAAAwBQCdASoUAB4APu1sqlEppaOiqAqpMB2JaQAAj8D5KqzAvd1JGpGAvY6rTN5GHPzroAD+9KKHk2Gl9of52XoKJFvE9gdMYTSao0oYY//K8Y5Zb6Wq7+1gXcgWy1OWBOiIgsx7Mdw1eGnu6+FAqpsteXchYuc9xtMWX56L999YAAAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "frihavn-exterior",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1665
+  },
+  "ratio": 1.4414,
+  "lqip": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAAAwBACdASoUAA4APu1iqU2ppaOiMAgBMB2JYwC/OCG+cWwkD5eEuFy1NwAA/myNH5RrPWlYvZsSCwhgROp6A6PSr14QZNJZLGVf7lMyMIy2W+ZcapZd6oELmMkNA9psIy8yUzeCCXKkc8JtGSPxH17iKDJQJT1M+qIeRczfXEgAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "frihavn-chamber",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3585
+  },
+  "ratio": 0.6695,
+  "lqip": "data:image/webp;base64,UklGRowAAABXRUJQVlA4IIAAAAAwBQCdASoUAB4APuVepk2pJSOiN/VYASAciWkAALpH95gGK4RqupU1xPr3h55/01DtwAD+9b2JY2t9NXfI9NHZSoh06zjI8zRSk75le53TBqfqZ/0j80xZo0OzqwzcWoND7LhVfeqVtyiEJZVIFVzVjEEz0ePqUvSTdABfiAr4AA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "bispebjerg-vault",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2937
+  },
+  "ratio": 0.8172,
+  "lqip": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAADQBACdASoUABgAPu1or1AppaSiqAqpMB2JZQDMWDVbyqioGpbiBBCxhwZQrfQrIAD+6NJkAR5W/QIIubnw/oBCdbWyumAF5djntp09lShB2AlT8upk1xspH5TunnnSl3DNu16nNl2Aey5Ktue2XxsB8qm2S2bH1LA357SU0my5uwJlOgh4AAAA",
+  "credit": "Architecture by Sigurd Lewerentz. Photo by Seier + Seier.",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "bispebjerg-dark",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2732
+  },
+  "ratio": 0.8785,
+  "lqip": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAABwBACdASoUABcAPu1mqk2ppaQiMAgBMB2JaQAAW+n1En1KdV2u//vCrMW7gAD+9BvizhtK85DhFd8zQ4cjO/qEEs+vU1xgVNbsQwX9fq0+XrIwQuNx2fLHMy0snCWGWCbwyYDf16uYOIpfeAzFlmAAAAA=",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "bispebjerg-brick",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1306
+  },
+  "ratio": 1.8377,
+  "lqip": "data:image/webp;base64,UklGRnYAAABXRUJQVlA4IGoAAAAwBACdASoUAAsAPu1iqU2ppaQiMAgBMB2JZQCsAYrm2xalgeMUMt2bQAAA/b+ChXREEXDUL3kKhWEUO18zHkzuDDUiZaSd2wj5Zr0j/KC4pUo7K/mgL2NDzG4NkRzKlxjtKXUp3FMspAAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "sanktanna-vault",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1571
+  },
+  "ratio": 1.5277,
+  "lqip": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAADwAwCdASoUAA0APu1iqk2ppaQiMAgBMB2JZQCdMoADTrD1sQPqbZ7AAPJhEhy6tNtGkV31SDSUx3i/ulZ/ea6tzsY4iVmzIiIMXppDfa0OCbpAA6MIJMySv6hnPvVdwAA=",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "sanktanna-nave",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1974
+  },
+  "ratio": 1.2158,
+  "lqip": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAAAwBACdASoUABAAPu1iqU2ppaOiMAgBMB2JZQC7ACLDUncAaEvvvHaifjAA+nMKs5WNrMVeXqIqAqfqnDhr3eDt02YC/YJ9dVWB4NHvKYXxtUdk/4hiQ4okvo9+x4P5zEFxniAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "sanktanna-dome",
+  "intrinsic": {
+   "width": 2200,
+   "height": 3214
+  },
+  "ratio": 0.6845,
+  "lqip": "data:image/webp;base64,UklGRsQAAABXRUJQVlA4ILgAAABQBQCdASoUAB0APu1kqk2ppaQiMAgBMB2JQBUk5GX/wFtCcQURsWjx+5nZVLAjd6jHY4AA+5PiVM5eknXaaWe9zXayE+h1qW+0oLG8E6rldz5RAsDNLiyJZAPND5LEw2bdterDFHFKL+cCX39+50JjtN0QZPTAuXB+rVBLr4mZCvJDyutNwIXg0GMHMbIXUDHtQuCIEVh/P1gUMRsJb29hfCGD2+HMy80preZrXAhVYVsB9gRG+tAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "nyborg-stair",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1518
+  },
+  "ratio": 1.581,
+  "lqip": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAAAwAwCdASoUAA0APu1kqU2ppaOiMAgBMB2JZQAASEfcO8nwAP7cifp1aN3orGnf5oZ+R7YugKjm6uVPrxGktbclfGYv+Xlg6u0Ie7ECTTkK6AAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "nyborg-aperture",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3098
+  },
+  "ratio": 0.7747,
+  "lqip": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAACQBACdASoUABoAPu1oqU+ppiOiKA1RMB2JZQDN/EXftkTJZfc8EKHIN1JPadwA/vrnP7nqpupi63w+ceApbaK2SH+jbw/fXrKDcBlWjVmvZoOfedBeewlBrjGPjgAlEs/vn0AfKNfzJFOagpCiNcU9rzyRJb6/xeY5xOkyxEXpLsk+pkOovu/fs4FXc3DSPgAAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "nyborg-wall",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3585
+  },
+  "ratio": 0.6695,
+  "lqip": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAACwBACdASoUAB4APu1irU4ppaSiKA1RMB2JZWHgVkCjLoiwKSHbfchVwTqCjGIAAP7hb6J57C6b0UTeJb3pZYEhN2HPgIuqdScSqQoSWgUmHZUN8H1WNVef1xoGAIckWYoSOMjDfFst03lplvOp7ZLyAAAAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "rodehus-hall",
+  "intrinsic": {
+   "width": 2272,
+   "height": 3224
+  },
+  "ratio": 0.7047,
+  "lqip": "data:image/webp;base64,UklGRrwAAABXRUJQVlA4ILAAAABQBQCdASoUABwAPu1iqU2ppaQiMBgMATAdiWoAnQAutZYGylIyQYjAI1SUpPQXgO5XSOwA5kGT7dAJapI9ktlFacfY1+65wMVOl1/YKU/iDyDIgf2xyr1fCF6iRM2WmonYb5kIcQLTVBSTTjrSDooxXBlxImsE4cttCE/DSKY83hW6zj7uSz6SOweRZ9lxLHShBj697GNxEv0JrCa0HUCyGnNMIbxYu2OBtuoXM5vgAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "rodehus-reading",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2679
+  },
+  "ratio": 0.8959,
+  "lqip": "data:image/webp;base64,UklGRrIAAABXRUJQVlA4IKYAAADwBACdASoUABYAPu1wsFIppiSiqAgBMB2JZQCsBagAmp/XSvDyt2Jt0j9TYbVmmrAA/s3ETsqPIpRVQ/tDDaAAf+KrScQ6EaCwqVpcOW15NJ9FRGv0HSbKoPyT1vJh+kDrZJg+HdnM28L6NDs6Pamw99ziNthkQIdGoIzqNGcrVG6sFacYNy2DA7yn4i/rozPWl24hudy6uGWqUQmjfD1nKH+7MAAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "rodehus-light",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3380
+  },
+  "ratio": 0.7101,
+  "lqip": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAABwBACdASoUABwAPu1kqU2ppaOiMAgBMB2JZACdMoR86Ckxr3QXxU/2knMTwAD+6o3uz5eTTMelGOC//Nf8cfAzZiDXU+OLE4v5OpzpZ1oFknFn1clanfRVQCD60GcSF+Otp3JoVGFwzMe5rM29PoAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "index-spiral",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1589
+  },
+  "ratio": 1.5104,
+  "lqip": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAABwAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JaQAAP+JYdKe/mcAA/nHKXXL0C8B6o71M8aT3lsDullNfVxTbyCA1scQf+5OaAHMPHjs5OwJOnBWEfQNAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "index-stair",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3585
+  },
+  "ratio": 0.6695,
+  "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBQCdASoUAB4APu1mrE+ppSQiMBgIATAdiWMAAJCpyjT+QhCPdG2nT/wwXil53hmhdiAA/vNI0POW9iarECzQmaWO1h14Y5lpYxepZu3en5GJ5VenmTYau+WhTT/VjegsVXVgDNXbMUpqbqrIsNJug5A3xLrm83QgMxI/8+Y40L3BLnQyHM5rueuylMAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "studio-detail",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3457
+  },
+  "ratio": 0.6942,
+  "lqip": "data:image/webp;base64,UklGRuQAAABXRUJQVlA4INgAAACwBQCdASoUAB0APu1sqlEppaOiqAqpMB2JaQAG0o4QI2W/L104Q0uylk11djgHzmA1HGkjmyAA/uol3ibrkvrL6AA5fN2elJzdIMQxz5AmCSMh5jVSfInTISUD+MD+foPufMeNSiqQXB6QQmMIxRQorHwNH7nrAYwwmt5dmxqdXtHkH3kEhlYuzikVdzOu9b/rz/RAzD2OQi0c5wIdygWDM8qmTp0cB4/P+Om4y6vi/u4hGyv7oSkoRIfWtsYvrWGPmbHvdoWVazwNRnejxxiiRkop7LwAAAA=",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ }
+]

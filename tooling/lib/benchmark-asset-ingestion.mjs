@@ -162,11 +162,33 @@ export function ingestBenchmarkAssets({ plan, assetDir, sourceId, sourceIdFor = 
       rightsStatus: 'approved-for-use',
       assetStatus: 'approved',
       sourceRole: asset.role === 'brand' ? 'primary-brand' : 'content',
+      // What the plan produced this frame for. Composition reads it to keep a
+      // wordmark out of the opening and a founder's face out of the portfolio.
+      role: asset.role,
       sourceChannel: 'upload',
       instructionAuthority: 'none',
       publishUseAllowed: true,
       width: dimensions.width,
       height: dimensions.height,
+      // The file this record is about, declared as a variant.
+      //
+      // Without it an ingested asset is a hash and a size that no consumer can
+      // resolve to bytes: `materializeAssets` copies `variant.uri` and skips an
+      // asset with no variants, so the Ardwell & Roe benchmark composed a hero
+      // and a sixteen-frame gallery and published a page with no `<img>` on it
+      // at all. The reviewer scored imagery-suitability 0 three times and asked
+      // for photography that had in fact been supplied.
+      //
+      // `original` rather than a crop: nothing has been derived yet, and the
+      // optimiser's variants are additions to this list rather than
+      // replacements for it.
+      variants: [{
+        role: 'original',
+        format: dimensions.format ?? path.extname(entry.file).replace('.', '').toLowerCase(),
+        width: dimensions.width,
+        height: dimensions.height,
+        uri: path.basename(entry.file),
+      }],
     });
     ingested.push(asset.assetId);
   }

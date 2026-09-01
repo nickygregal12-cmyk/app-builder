@@ -41,9 +41,23 @@ function decided(assets, assetDecisions) {
   });
 }
 
+/**
+ * Wide enough to open a page.
+ *
+ * This asked only about variants, which are produced by the optimiser. An asset
+ * that has been ingested and not yet optimised has none, so a genuinely wide
+ * photograph was invisible here: the Ardwell & Roe benchmark supplied a 2048x1152
+ * hero frame and readiness still reported "0 wide enough to open a page", which
+ * refused the imagery-led direction on a portfolio practice that had just been
+ * given a portfolio. The asset's own dimensions answer the same question when
+ * nothing has been derived from it yet, and a variant still wins when one exists
+ * — an optimiser crop is a better answer than the original frame, not a
+ * different one.
+ */
 function hasWideCrop(asset) {
-  return list(asset.variants).some((variant) => variant.role === 'hero-16x9')
-    || list(asset.variants).some((variant) => (variant.width ?? 0) >= (variant.height ?? 0) * 1.4);
+  if (list(asset.variants).some((variant) => variant.role === 'hero-16x9')) return true;
+  if (list(asset.variants).some((variant) => (variant.width ?? 0) >= (variant.height ?? 0) * 1.4)) return true;
+  return (asset.width ?? 0) >= (asset.height ?? 0) * 1.4;
 }
 
 /**

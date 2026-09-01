@@ -2,46 +2,246 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "App Builder Knowledge Pack",
   "type": "object",
-  "required": ["schemaVersion", "intelligenceVersion", "project", "sources", "facts", "companyProfile", "brand", "assets", "content", "chunks", "references", "requirements", "research", "generatedCopy", "packHash"],
+  "required": [
+    "schemaVersion",
+    "intelligenceVersion",
+    "project",
+    "sources",
+    "facts",
+    "companyProfile",
+    "brand",
+    "assets",
+    "content",
+    "chunks",
+    "references",
+    "requirements",
+    "research",
+    "generatedCopy",
+    "packHash"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "intelligenceVersion": {"type": "string", "minLength": 1},
-    "project": {"type": ["object", "null"]},
+    "schemaVersion": {
+      "const": 1
+    },
+    "intelligenceVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
     "sources": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "kind", "label", "provenance", "rightsStatus", "assetStatus", "sourceRole", "sourceChannel", "instructionAuthority", "publishUseAllowed", "contentHash"],
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "provenance",
+          "rightsStatus",
+          "assetStatus",
+          "sourceRole",
+          "sourceChannel",
+          "instructionAuthority",
+          "publishUseAllowed",
+          "contentHash"
+        ],
         "properties": {
-          "id": {"type": "string", "minLength": 1},
-          "kind": {"type": "string", "minLength": 1},
-          "label": {"type": "string", "minLength": 1},
-          "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]},
-          "rightsStatus": {"enum": ["approved-for-use", "reference-only", "unknown", "restricted"]},
-          "assetStatus": {"enum": ["approved", "suggested", "generated", "rejected", "do-not-use"]},
-          "sourceRole": {"enum": ["primary-brand", "brand-supporting", "content", "requirement", "research"]},
-          "sourceChannel": {"enum": ["upload", "website", "facebook", "instagram", "linkedin", "other-public"]},
-          "instructionAuthority": {"const": "none"},
-          "publishUseAllowed": {"type": "boolean"},
-          "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "provenance": {
+            "enum": [
+              "user-supplied",
+              "existing-site",
+              "external-research",
+              "generated"
+            ]
+          },
+          "rightsStatus": {
+            "enum": [
+              "approved-for-use",
+              "reference-only",
+              "unknown",
+              "restricted"
+            ]
+          },
+          "assetStatus": {
+            "enum": [
+              "approved",
+              "suggested",
+              "generated",
+              "rejected",
+              "do-not-use"
+            ]
+          },
+          "sourceRole": {
+            "enum": [
+              "primary-brand",
+              "brand-supporting",
+              "content",
+              "requirement",
+              "research"
+            ]
+          },
+          "sourceChannel": {
+            "enum": [
+              "upload",
+              "website",
+              "facebook",
+              "instagram",
+              "linkedin",
+              "other-public"
+            ]
+          },
+          "instructionAuthority": {
+            "const": "none"
+          },
+          "publishUseAllowed": {
+            "type": "boolean"
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
         }
       }
     },
-    "facts": {"type": "array", "items": {"type": "object", "required": ["id", "path", "value", "sourceId", "provenance", "confidence", "verification", "evidence"], "properties": {"id": {"type": "string"}, "path": {"type": "string"}, "value": {}, "sourceId": {"type": "string"}, "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}, "verification": {"enum": ["user-provided", "candidate", "verified", "rejected"]}, "evidence": {"type": "array", "items": {"type": "object"}}}, "additionalProperties": false}},
-    "companyProfile": {"$ref": "company-profile.schema.json"},
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path",
+          "value",
+          "sourceId",
+          "provenance",
+          "confidence",
+          "verification",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "value": {},
+          "sourceId": {
+            "type": "string"
+          },
+          "provenance": {
+            "enum": [
+              "user-supplied",
+              "existing-site",
+              "external-research",
+              "generated"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "verification": {
+            "enum": [
+              "user-provided",
+              "candidate",
+              "verified",
+              "rejected"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "companyProfile": {
+      "$ref": "company-profile.schema.json"
+    },
     "brand": {
       "type": "object",
-      "required": ["colors", "fontFamilies", "titles", "sourceCandidates", "logoCandidates", "screenshotCandidates", "publishableAssetIds", "referenceOnlyAssetIds", "generatedBrandClaims"],
+      "required": [
+        "colors",
+        "fontFamilies",
+        "titles",
+        "sourceCandidates",
+        "logoCandidates",
+        "screenshotCandidates",
+        "publishableAssetIds",
+        "referenceOnlyAssetIds",
+        "generatedBrandClaims"
+      ],
       "properties": {
-        "colors": {"type": "array"},
-        "fontFamilies": {"type": "array"},
-        "titles": {"type": "array"},
-        "sourceCandidates": {"type": "array", "items": {"type": "object", "required": ["sourceId", "role", "channel", "rightsStatus", "publishUseAllowed"]}},
-        "logoCandidates": {"type": "array", "items": {"type": "string"}},
-        "screenshotCandidates": {"type": "array", "items": {"type": "string"}},
-        "publishableAssetIds": {"type": "array", "items": {"type": "string"}},
-        "referenceOnlyAssetIds": {"type": "array", "items": {"type": "string"}},
-        "generatedBrandClaims": {"type": "array"}
+        "colors": {
+          "type": "array"
+        },
+        "fontFamilies": {
+          "type": "array"
+        },
+        "titles": {
+          "type": "array"
+        },
+        "sourceCandidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "sourceId",
+              "role",
+              "channel",
+              "rightsStatus",
+              "publishUseAllowed"
+            ]
+          }
+        },
+        "logoCandidates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "screenshotCandidates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "publishableAssetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "referenceOnlyAssetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generatedBrandClaims": {
+          "type": "array"
+        }
       },
       "additionalProperties": false
     },
@@ -49,31 +249,222 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "sourceId", "kind", "contentHash", "provenance", "rightsStatus", "assetStatus", "sourceRole", "sourceChannel", "instructionAuthority", "publishUseAllowed"],
+        "required": [
+          "id",
+          "sourceId",
+          "kind",
+          "contentHash",
+          "provenance",
+          "rightsStatus",
+          "assetStatus",
+          "sourceRole",
+          "sourceChannel",
+          "instructionAuthority",
+          "publishUseAllowed"
+        ],
         "properties": {
-          "id": {"type": "string", "minLength": 1},
-          "sourceId": {"type": "string", "minLength": 1},
-          "kind": {"type": "string", "minLength": 1},
-          "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-          "provenance": {"enum": ["user-supplied", "existing-site", "external-research", "generated"]},
-          "rightsStatus": {"enum": ["approved-for-use", "reference-only", "unknown", "restricted"]},
-          "assetStatus": {"enum": ["approved", "suggested", "generated", "rejected", "do-not-use"]},
-          "sourceRole": {"enum": ["primary-brand", "brand-supporting", "content", "requirement", "research"]},
-          "sourceChannel": {"enum": ["upload", "website", "facebook", "instagram", "linkedin", "other-public"]},
-          "instructionAuthority": {"const": "none"},
-          "publishUseAllowed": {"type": "boolean"},
-          "width": {"type": ["integer", "null"], "minimum": 1, "description": "Pixel width read from the file header at ingestion, so a slot's shape can be checked against what was actually supplied rather than against what a filename claims. Null for a format with no intrinsic pixel size, which is the honest answer for a vector wordmark."},
-          "height": {"type": ["integer", "null"], "minimum": 1, "description": "Pixel height, read the same way and null under the same conditions."}
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "provenance": {
+            "enum": [
+              "user-supplied",
+              "existing-site",
+              "external-research",
+              "generated"
+            ]
+          },
+          "rightsStatus": {
+            "enum": [
+              "approved-for-use",
+              "reference-only",
+              "unknown",
+              "restricted"
+            ]
+          },
+          "assetStatus": {
+            "enum": [
+              "approved",
+              "suggested",
+              "generated",
+              "rejected",
+              "do-not-use"
+            ]
+          },
+          "sourceRole": {
+            "enum": [
+              "primary-brand",
+              "brand-supporting",
+              "content",
+              "requirement",
+              "research"
+            ]
+          },
+          "sourceChannel": {
+            "enum": [
+              "upload",
+              "website",
+              "facebook",
+              "instagram",
+              "linkedin",
+              "other-public"
+            ]
+          },
+          "instructionAuthority": {
+            "const": "none"
+          },
+          "publishUseAllowed": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "description": "Pixel width read from the file header at ingestion, so a slot's shape can be checked against what was actually supplied rather than against what a filename claims. Null for a format with no intrinsic pixel size, which is the honest answer for a vector wordmark."
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "description": "Pixel height, read the same way and null under the same conditions."
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the asset was produced for — a lead frame, a project view, a portrait, a share card, a brand mark. Optional: a company that uploaded a folder of photographs has declared nothing, and composition falls back to placing whatever is publishable. Where it is declared, composition uses it to keep a wordmark out of the opening and a face out of the portfolio."
+          },
+          "variants": {
+            "type": "array",
+            "description": "Renditions of the asset that exist as files. An ingested original declares itself here so a consumer can resolve the record to bytes; the optimiser adds crops alongside it.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "format": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "height": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "uri": {
+                  "type": "string"
+                },
+                "reviewBeforePublish": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "role",
+                "uri"
+              ]
+            }
+          }
         }
       }
     },
-    "content": {"type": "array", "items": {"type": "object"}},
-    "chunks": {"type": "array", "items": {"type": "object", "required": ["id", "contentHash", "text", "sourceIds", "provenance", "approxTokens"], "properties": {"id": {"type": "string"}, "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "text": {"type": "string"}, "sourceIds": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "provenance": {"type": "string"}, "approxTokens": {"type": "integer", "minimum": 0}}, "additionalProperties": false}},
-    "references": {"type": "array", "items": {"type": "object"}},
-    "requirements": {"type": "array", "items": {"type": "object"}},
-    "research": {"type": "array", "items": {"type": "object"}},
-    "generatedCopy": {"type": "array", "items": {"type": "object"}},
-    "packHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+    "content": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "chunks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "contentHash",
+          "text",
+          "sourceIds",
+          "provenance",
+          "approxTokens"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "text": {
+            "type": "string"
+          },
+          "sourceIds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "provenance": {
+            "type": "string"
+          },
+          "approxTokens": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "research": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "generatedCopy": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "packHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
   },
   "additionalProperties": false
 }

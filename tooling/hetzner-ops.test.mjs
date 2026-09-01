@@ -19,6 +19,7 @@ const scripts = [
   'ops/hetzner/install-model-canary-unit.sh',
   'ops/hetzner/authorise-model-canary.sh',
   'ops/hetzner/run-model-canary.sh',
+  'ops/hetzner/verify-model-canary-runtime.sh',
 ];
 
 const readOnlyMutationPatterns = [
@@ -448,4 +449,74 @@ test('the preflight points at the trusted authorise wrapper, not a bare --author
   assert.match(source, /sudo bash ops\/hetzner\/authorise-model-canary\.sh/);
   // Groq has no hosted path at all, so it must not be given a command either.
   assert.match(source, /hosted Groq path is deferred/);
+});
+
+test('the canary unit keeps ProtectHome and opens only the two paths rootless Podman needs', () => {
+  const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+
+  // ProtectHome is why the host process cannot wander through home directories.
+  // The rootless-Podman failure was a reason to make a narrow exception, not a
+  // reason to drop it, and dropping it must not become the quiet fix later.
+  assert.match(source, /^ProtectHome=read-only$/m);
+  assert.equal(/ProtectHome=(false|no|off)/.test(source), false, 'ProtectHome must not be disabled to make Podman work');
+
+  // Exactly the two trees Podman writes, derived from the account rather than
+  // hardcoded, so a host with a different runtime user or uid stays correct.
+  assert.match(source, /^ReadWritePaths=\$\{PODMAN_GRAPH_ROOT\}$/m);
+  assert.match(source, /^ReadWritePaths=\$\{PODMAN_RUNTIME_ROOT\}$/m);
+  assert.match(source, /PODMAN_GRAPH_ROOT="\$\{RUNTIME_HOME\}\/\.local\/share\/containers"/);
+  assert.match(source, /PODMAN_RUNTIME_ROOT="\/run\/user\/\$\{RUNTIME_UID\}"/);
+  assert.match(source, /RUNTIME_UID="\$\(id -u/);
+  assert.match(source, /RUNTIME_HOME="\$\(getent passwd/);
+
+  // Widening to any of these would restore write access far beyond Podman's
+  // state and would not be noticed by any other check here.
+  for (const broad of ['ReadWritePaths=/home', 'ReadWritePaths=/run', 'ReadWritePaths=/run/user']) {
+    assert.equal(
+      new RegExp(`^${broad.replace(/[/]/g, '\\/')}$`, 'm').test(source), false,
+      `${broad} is broader than the proved requirement`,
+    );
+  }
+
+  // Rootless Podman needs the runtime directory to exist rather than to have
+  // been left behind by a login that may not happen next boot.
+  assert.match(source, /Requires=user-runtime-dir@\$\{RUNTIME_UID\}\.service/);
+  assert.match(source, /After=.*user-runtime-dir@\$\{RUNTIME_UID\}\.service/);
+
+  // The credential and lifecycle contract this fix must not disturb.
+  assert.match(source, /^Type=oneshot$/m);
+  assert.match(source, /^Restart=no$/m);
+  assert.match(source, /LoadCredentialEncrypted=ANTHROPIC_API_KEY:/);
+  assert.match(source, /LoadCredentialEncrypted=APP_BUILDER_MODEL_DECISION_SECRET:/);
+  assert.match(source, /LoadCredential=model-enable-decision:\$\{CLAIM\}/);
+  assert.match(source, /EnvironmentFile=\$\{BROKER_ENV\}/);
+  assert.equal(/^\s*systemctl\s+(?:--\S+\s+)*(?:start|enable)\b/m.test(source), false, 'the installer must not start or enable the canary');
+});
+
+test('the runtime verifier proves a sandbox starts, not that a unit file mentions a directive', () => {
+  const source = readFileSync('ops/hetzner/verify-model-canary-runtime.sh', 'utf8');
+
+  // The failure this guards against passed every source assertion, so the
+  // verifier has to actually launch something.
+  assert.match(source, /podman run --rm --pull=never --network=none/);
+  assert.match(source, /podman image inspect/);
+  // The digest is read from the manifest, so a host running a different build
+  // of the same tag fails rather than passing on the tag alone.
+  assert.match(source, /EXPECTED_DIGEST=/);
+  assert.match(source, /config\/task-images\.json|\$\{MANIFEST\}/);
+
+  // It must carry the production hardening, including the exceptions.
+  assert.match(source, /--property=ProtectHome=read-only/);
+  assert.match(source, /--property=ReadWritePaths="\$\{PODMAN_GRAPH_ROOT\}"/);
+  assert.match(source, /--property=ReadWritePaths="\$\{PODMAN_RUNTIME_ROOT\}"/);
+
+  // No provider credential, and no runtime reset: a verifier that migrates
+  // Podman first is measuring its own reset.
+  assert.equal(/ANTHROPIC_API_KEY|LoadCredentialEncrypted/.test(source), false, 'the runtime check must load no provider credential');
+  // Anchored to a command: the file explains in prose why it does not migrate,
+  // and that sentence is not a command.
+  assert.equal(
+    /^\s*(?:sudo\s+)?[^#\n]*podman system migrate/m.test(source), false,
+    'a production verifier must not reset the container runtime',
+  );
 });

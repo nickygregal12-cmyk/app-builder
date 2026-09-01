@@ -1,0 +1,108 @@
+{
+  "strataScores": [
+    {
+      "stratum": "T1-broken-amateur",
+      "rank": 1,
+      "items": 3,
+      "meanScore": 3.564
+    },
+    {
+      "stratum": "T2-generic-template",
+      "rank": 2,
+      "items": 12,
+      "meanScore": 4.881
+    },
+    {
+      "stratum": "T3-competent-commercial",
+      "rank": 3,
+      "items": 1,
+      "meanScore": 5.423
+    },
+    {
+      "stratum": "T4-strong-professional",
+      "rank": 4,
+      "items": 2,
+      "meanScore": 6.846
+    },
+    {
+      "stratum": "T5-exceptional-agency",
+      "rank": 5,
+      "items": 0,
+      "meanScore": null
+    },
+    {
+      "stratum": "T6-benchmark-class",
+      "rank": 6,
+      "items": 0,
+      "meanScore": null
+    }
+  ],
+  "strataInversions": [],
+  "ranksStrataCorrectly": true,
+  "orderingFailures": [],
+  "honoursOrderingAssertions": true,
+  "topEndAwards": [],
+  "unearnedTopEnd": [],
+  "inflatesTopEnd": false,
+  "scoreSpread": 5.346,
+  "schemaVersion": 1,
+  "authority": "critic-calibration-measurement",
+  "corpus": "CC2",
+  "bar": {
+    "$comment": "Copied from config/agent-pipelines.json gates.visual, and asserted against it by tooling/critic-calibration.test.mjs. If the gate moves, the test fails rather than this file silently disagreeing with the bar it claims to measure.",
+    "minimumScore": 8.5,
+    "minimumCriterionScore": 6.5
+  },
+  "itemsConsidered": 28,
+  "itemsScored": 18,
+  "itemsMissing": [
+    "cc-a01",
+    "cc-a02",
+    "cc-a03",
+    "cc-a04",
+    "cc-a05",
+    "cc-a06",
+    "cc-a07",
+    "cc-a08",
+    "cc-a09",
+    "cc-a10"
+  ],
+  "falsePasses": [],
+  "falsePassRate": 0,
+  "misdiagnosed": [
+    {
+      "itemId": "cc-08",
+      "expected": [
+        "commercial-clarity"
+      ],
+      "named": [
+        "art-direction",
+        "business-specificity",
+        "information-architecture",
+        "composition-pacing",
+        "visual-material",
+        "memorability"
+      ]
+    },
+    {
+      "itemId": "cc-09",
+      "expected": [
+        "commercial-clarity"
+      ],
+      "named": [
+        "art-direction",
+        "business-specificity",
+        "visual-material",
+        "responsive-recomposition",
+        "ai-slop-resistance",
+        "memorability"
+      ]
+    }
+  ],
+  "separation": 1.754,
+  "damagedMean": 4.618,
+  "undamagedMean": 6.372,
+  "discriminates": true,
+  "humanAgreement": null,
+  "humanAgreementUnavailable": "No adjudicated human scores exist. A qualified, blinded review panel is an owner action, and a calibration that invented reference scores would measure the Critic against this tool's opinion."
+}

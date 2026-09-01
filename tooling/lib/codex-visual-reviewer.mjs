@@ -172,7 +172,7 @@ function sha256(value) {
  * Computed from the capture inventory, never from the reviewer's own account of
  * what it examined.
  */
-export function criterionCoverage(criteria, captures) {
+export function criterionCoverage(criteria, captures, { artifactRouteCount = null } = {}) {
   const viewports = new Set(list(captures).map((capture) => capture?.viewport).filter(Boolean));
   const routes = new Set(list(captures).map((capture) => capture?.route).filter(Boolean));
   const present = [...viewports].sort();
@@ -182,7 +182,20 @@ export function criterionCoverage(criteria, captures) {
     const required = list(rule.requiredViewports);
     const missing = required.filter((name) => !viewports.has(name));
     const minimum = rule.minViewports ?? 1;
-    const minimumRoutes = rule.minRoutes ?? 1;
+    // A route minimum cannot exceed the routes the artifact has.
+    //
+    // `minRoutes` exists to stop a home page standing in for pages that exist
+    // and nobody looked at. Where no other pages exist there is nothing being
+    // stood in for, and holding a single-page artifact to a three-route
+    // minimum marks it unproven for evidence it could not possibly produce —
+    // which fails closed for a reason nobody could act on.
+    //
+    // The count comes from what the ARTIFACT declares, never from what the
+    // capture run happened to photograph. Deriving it from the captures would
+    // make a lazy capture self-justifying: photograph one page, declare one
+    // page, satisfy every minimum.
+    const declared = Number.isInteger(artifactRouteCount) && artifactRouteCount > 0 ? artifactRouteCount : null;
+    const minimumRoutes = declared === null ? (rule.minRoutes ?? 1) : Math.min(rule.minRoutes ?? 1, declared);
     const routesShort = routes.size < minimumRoutes;
     const covered = missing.length === 0 && viewports.size >= minimum && !routesShort;
 
@@ -233,17 +246,30 @@ export const EVIDENCE_TIERS = Object.freeze([
   Object.freeze({ maxScore: 7, minRoutes: 1, minViewports: 1, label: 'thin', reason: 'a single page at a single width supports a professional reading and no more' }),
 ]);
 
-export function evidenceCeiling(captures) {
+export function evidenceCeiling(captures, { artifactRouteCount = null } = {}) {
   const routes = new Set(list(captures).map((capture) => capture?.route).filter(Boolean));
   const viewports = new Set(list(captures).map((capture) => capture?.viewport).filter(Boolean));
-  const tier = EVIDENCE_TIERS.find((entry) => routes.size >= entry.minRoutes && viewports.size >= entry.minViewports)
+  // Same reasoning as the coverage rule, and the same guard: the ceiling asks
+  // whether the review saw the ARTIFACT, not whether the artifact was large. A
+  // one-page site fully photographed is complete evidence for a one-page site,
+  // and capping it at 7 would say a single-page site cannot be excellent —
+  // which is a claim about page count rather than about quality. Where the
+  // artifact has more routes than were captured, the tier still bites.
+  const declared = Number.isInteger(artifactRouteCount) && artifactRouteCount > 0 ? artifactRouteCount : null;
+  const tier = EVIDENCE_TIERS.find((entry) => routes.size >= (declared === null ? entry.minRoutes : Math.min(entry.minRoutes, declared))
+    && viewports.size >= entry.minViewports)
     ?? { maxScore: 6, label: 'insufficient', reason: 'there is not enough here to describe the site at all' };
+  const covered = declared === null ? null : routes.size >= declared;
   return {
     cap: tier.maxScore,
     tier: tier.label,
     routes: routes.size,
+    artifactRoutes: declared,
+    coversWholeArtifact: covered,
     viewports: viewports.size,
-    detail: `Evidence covers ${routes.size} route(s) at ${viewports.size} viewport(s): ${tier.reason}. This caps any overall claim at ${tier.maxScore}.`,
+    detail: declared !== null && covered
+      ? `Evidence covers all ${declared} route(s) of this artifact at ${viewports.size} viewport(s). Nothing is unphotographed, so evidence caps the claim at ${tier.maxScore}.`
+      : `Evidence covers ${routes.size} route(s) at ${viewports.size} viewport(s): ${tier.reason}. This caps any overall claim at ${tier.maxScore}.`,
   };
 }
 
@@ -557,7 +583,7 @@ export function normaliseVerdict(raw, { candidate, coverage, model }) {
   if (comparison) assertComparisonRecorded(comparison);
   const benchmark = deriveBenchmarkGap(comparison?.comparisons ?? []);
 
-  const evidenceCap = evidenceCeiling(candidate.captures);
+  const evidenceCap = evidenceCeiling(candidate.captures, { artifactRouteCount: candidate.artifactRouteCount ?? null });
 
   return {
     candidateId: candidate.candidateId,
@@ -624,7 +650,10 @@ export function reviewCandidate({ packet, packetDir, candidateId, authorised = f
     throw new Error(`Candidate ${candidateId} is blocked by ${list(candidate.gate.blocking).map((entry) => entry.rule).join(', ')}. A deterministic violation is not a matter for review.`);
   }
 
-  const coverage = criterionCoverage(packet.criteria, candidate.captures);
+  // Declared by the packet, not derived from the captures. A packet that says
+  // nothing keeps the conservative multi-route minimums.
+  const artifactRouteCount = Number.isInteger(packet.artifactRouteCount) ? packet.artifactRouteCount : null;
+  const coverage = criterionCoverage(packet.criteria, candidate.captures, { artifactRouteCount });
   const images = list(candidate.captures).map((capture) => path.resolve(packetDir, capture.file));
   const absent = images.filter((file) => !fs.existsSync(file));
   if (absent.length) throw new Error(`The packet references ${absent.length} capture(s) it does not contain, starting with ${absent[0]}. A review of missing pictures is not a review.`);

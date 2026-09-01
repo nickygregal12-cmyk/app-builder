@@ -20,48 +20,51 @@ determines who fixes it and how much it costs:
 
 ---
 
-## 0 · Reconcile the recorded best score — **class F, ten minutes**
+## 0 · Reconcile the recorded best score — **class F, done**
 
-`config/factory-status.json` records `bestMean: 6.55, bestCriterionFloor: 4.8` for the visual
-gate. `docs/PHASE_4D_VISUAL_DEBT.md:157` records **6.70 / 4.7** from the later §2b round, and
-`docs/ROADMAP.md:176` also still carries 6.55. `PHASE_4D_VISUAL_DEBT.md:7-8` declares the
-status file authoritative on disagreement, so the authoritative record is currently the stale
-one.
-
-Neither number changes any conclusion — both are far short of 8.5 — which is exactly why this
-is worth ten minutes now rather than an argument later. The §2b round also has no committed
-verdict JSON; v1–v4 and the static-renderer review do. Committing the §2b verdicts would make
-the number checkable rather than quoted.
+`config/factory-status.json` recorded `bestMean: 6.55, bestCriterionFloor: 4.8`; the later
+round in `docs/PHASE_4D_VISUAL_DEBT.md` recorded 6.70 / 4.7, and `docs/ROADMAP.md` also carried
+6.55. Both are corrected, and the rich-truth round is recorded in §2c with its verdicts
+committed at `examples/visual-excellence/ardwell-roe-visual-review.v1.verdicts.json`.
 
 ---
 
-## 1 · Run the factory against the Ardwell & Roe intake — **decision-blocking; unclassifiable until run**
+## 1 · Run the factory against Ardwell & Roe — **done, in #254 and #256**
 
-**Do this before anything else in this document.**
+This item said *"do this before anything else in this document"* and predicted, in advance,
+what each outcome would mean. It has been run, and the prediction resolved cleanly.
 
-Every factory score on record is against nbm or MGB Decor, and nbm's approved intake carries
-one Companies House description, an empty `trustSignals` array and no client-facing
-proposition. So every recorded score confounds "the vocabulary is fixed" with "the truth is
-thin", and `docs/PHASE_4D_VISUAL_DEBT.md` §2b says so explicitly.
+> *If the factory scores near 6.7 on rich truth, the vocabulary is the whole constraint.*
+> *If it scores materially higher, thin intake was doing the damage.*
 
-`examples/visual-excellence/` already holds the Ardwell & Roe approved intake bundle, asset
-plan and knowledge pack — 17 facts, 6 projects, 5 testimonials. Nothing needs to be authored.
-Generate, render, and score with an independent critic against the unchanged gate.
+**It scored 6.64 / 5.8 — level with 6.70 on thin truth.** Thin intake was not the damage. But
+the first branch needs one correction, because the route to that number contradicts the word
+*whole*:
 
-**What it settles.** The empty cell in `FACTORY-GAP.md`. If the score sits near 6.7, §3's
-finding is proven and the whole budget belongs on the vocabulary. If it rises materially,
-intake is doing more damage than assumed and the questionnaire is the leverage.
+| run | best mean | what changed |
+|---|---|---|
+| rich truth, no imagery | 5.82 | asset bytes had never been produced |
+| rich truth, imagery ingested | 4.81 | *worse* — seven latent defects, one of which published no `<img>` at all |
+| after those seven fixes | 5.57 | imagery-suitability 0 → 7.0 |
+| after an information-architecture correction | 6.41 | 31 sections → 26, 12,207px → 6,898px |
+| after section-order adaptation | **6.64** | imagery-suitability 3.5 → 7.1 on a direction that buried the work |
 
-**Cost.** One generation round plus one review. No new architecture.
+**The vocabulary is not the whole constraint. Composition is at least as large a one.** The
+single biggest gain came from teaching the composer that *belonging on the site* and
+*belonging on the home page* are different questions — not from adding a component. A thin
+business hides a composition that cannot edit; a rich one exposes it, and the reviewer's
+language moved from "sparse" to "reduce the copy density" and "effectively duplicate pages".
 
-**Falsified by.** A score materially above 6.7 that the reviewer attributes to composition
-rather than to content richness.
+**What this re-ranks below.** §2 and §3 of this plan assume the component vocabulary is the
+binding constraint. It is *a* constraint, and the evidence now says information architecture
+should be worked first because it moved the number furthest for the least surface area. The
+remaining items stand; their order does not.
 
-**Which renderer.** Run it on `astro-static-content`, not the React template.
-`config/renderers.json` gives marketing sites both, these prototypes are Astro static output,
-and the static renderer's only independent review — 5.38 mean, 2.0 floor — carried the default
-shell because no direction has ever been promoted to it. Running the React one instead answers
-a question nobody asked.
+**What it did not settle.** 6.64 against a comparable 8.663 leaves 2.0 points unexplained by
+either input richness or the IA correction. `distinctiveness` reached 6.1 and
+`distinctive-moment` 5.9, both still under the prototypes' 8.8 and 9 — so §2 (what the business
+hands its customer) remains the strongest hypothesis for the next intervention, on evidence
+rather than on preference.
 
 ---
 

@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "setId": "candidates-b3c73cc8b45beab5",
+  "projectId": "project-3be068be-a1ce-40a1-9e40-d619d47e1eb2",
+  "reviewedAt": "2026-09-01T07:10:18.586Z",
+  "reviews": [
+    {
+      "candidateId": "candidate-service-forward",
+      "verdict": "reject",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The restrained typography, muted palette, and architectural photography establish a plausible studio voice, but the result remains visibly template-driven and breaks down at narrower widths. Empty image tiles, clipped email addresses, repetitive card stacks, an underdeveloped Approach page, and the conspicuous .invalid contact details prevent this from reaching professional credibility.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.5,
+          "note": "The sober type, blue-grey accent, and material-focused photography suit a small architecture practice, but the generic card system lacks the refinement implied by the work."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.2,
+          "note": "Large headings and numbered cards are legible, but oversized titles, repeated enquiry prompts, and long undifferentiated stacks weaken prioritisation; the sparse Approach page feels unfinished."
+        },
+        {
+          "criterion": "coherence",
+          "score": 6,
+          "note": "The palette and typography are consistent, yet the photographic grids, asymmetric cards, contact layouts, and nearly empty Approach page do not resolve into one confident compositional system."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.8,
+          "note": "Beyond the photographs and restrained accent colour, this reads as a conventional generated portfolio template with numbered cards and standard promotional blocks."
+        },
+        {
+          "criterion": "credibility",
+          "score": 5.2,
+          "note": "Project photography and detailed proof content help, but visible blank gallery cells, clipped text, an implausibly thin Approach page, and repeated .invalid addresses substantially undermine trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 6.8,
+          "note": "Enquiry links and contact routes are prominent throughout, and the failed-submit message is clear, but the mobile CTA panels clip the email address and several pages over-repeat the same action."
+        },
+        {
+          "criterion": "imagery-suitability",
+          "score": 6.4,
+          "note": "The photographs are highly appropriate and often framed well, but multiple gallery positions render as empty placeholders on home and tablet Work views, making the presentation look broken."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 4.5,
+          "note": "Mobile largely collapses desktop cards into long stacks; text overflows the dark CTA panels, contact details wrap awkwardly, and tablet galleries contain conspicuous empty cells."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 3.5,
+          "note": "No memorable service-forward moment lands; the numbered cards and asymmetric desktop columns are modest layout treatments rather than a distinctive expression of the practice."
+        }
+      ],
+      "failingCriteria": [
+        "visual-hierarchy",
+        "coherence",
+        "distinctiveness",
+        "credibility",
+        "imagery-suitability",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Remove the blank gallery cells and ensure every published image renders consistently at all widths.",
+        "Fix mobile overflow in the dark enquiry panels and prevent email and URL strings from clipping or producing awkward forced breaks.",
+        "Replace the visibly placeholder .invalid contact details before release.",
+        "Redesign mobile and tablet compositions as intentional layouts instead of long single-column card stacks.",
+        "Give the Approach page substantive, business-specific content and a credible visual structure.",
+        "Establish a genuinely distinctive service-forward moment tied to Ardwell & Roe's architectural practice."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-service-forward",
+        "compositionHash": "56a11649c539e8641356a09c0fae391d88a6babcd7686bef002e09016b2e89c2",
+        "captureCount": 31,
+        "captureDigest": "a7105f37143592689346a7635f7f72c07cc195cbb688ed4c795ad6428887f9c5"
+      }
+    },
+    {
+      "candidateId": "candidate-immersive-lead",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The photography and restrained architectural palette provide a credible foundation, but the result still reads as a generic card-based template rather than an immersive, authored studio site. Mobile email clipping, conspicuous empty gallery cells, weak page-specific composition, repetitive cards, and an almost contentless Approach page prevent professional release.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 6.5,
+          "note": "The sober palette, strong sans-serif type and architectural photography broadly fit the practice, but the heavy rounded cards and generic styling lack the refinement expected of a design studio."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "Headings and lead cards establish clear entry points, but oversized headings, sparse desktop pages and long undifferentiated mobile stacks create uneven emphasis."
+        },
+        {
+          "criterion": "coherence",
+          "score": 6,
+          "note": "Typography and colours remain consistent, yet the photographic grids, card directories, oversized contact bands and nearly empty Approach page feel like separate layout systems."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 4.5,
+          "note": "Beyond the project photographs, the site relies on familiar rounded cards, pale section bands and standard responsive stacking with little studio-specific art direction."
+        },
+        {
+          "criterion": "credibility",
+          "score": 5.5,
+          "note": "Detailed projects, testimonials and awards help, but visibly invalid email and website addresses, awkward wrapping and unfinished-looking gallery gaps substantially undermine trust."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 6.5,
+          "note": "The enquiry action is repeated and the contact form is obvious, though several calls to action look like plain text and long pages offer few contextual conversion points."
+        },
+        {
+          "criterion": "imagery-suitability",
+          "score": 7.5,
+          "note": "The photographs are relevant, varied and generally framed well, but tablet and home layouts contain large blank grid cells that make the portfolio presentation look incomplete."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 4.5,
+          "note": "Navigation disclosure is clear, but mobile is mostly a compressed single-column version, the contact email clips horizontally, text becomes cramped, and gallery behavior leaves conspicuous empty space."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 3.5,
+          "note": "The declared immersive lead does not land: the home hero is a modest inset card, while most other pages open with conventional headings and card stacks."
+        }
+      ],
+      "failingCriteria": [
+        "coherence",
+        "distinctiveness",
+        "credibility",
+        "responsive-quality",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "Fix clipped and awkwardly wrapped email and URL text at mobile widths.",
+        "Remove the empty portfolio grid cells and redesign image composition for each breakpoint.",
+        "Replace invalid public-facing contact details before release.",
+        "Give the Approach page substantive content and a composed visual narrative.",
+        "Create an actually immersive, business-specific opening moment instead of an inset hero card.",
+        "Reduce repetitive card treatment and establish stronger page-specific layouts and editorial rhythm."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-immersive-lead",
+        "compositionHash": "56a11649c539e8641356a09c0fae391d88a6babcd7686bef002e09016b2e89c2",
+        "captureCount": 31,
+        "captureDigest": "d6f0e6234dd560fc467cef7c86a608243e98ae5310f23f14795756d2bef619b4"
+      }
+    },
+    {
+      "candidateId": "candidate-schedule-register",
+      "verdict": "reject",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The register-inspired typography, numbering and restrained architectural palette form a coherent base, but the result is not professionally complete. The nearly empty Approach page, conspicuous blank portfolio tiles, repetitive list construction and visibly invalid contact details materially undermine distinctiveness, credibility and conversion.",
+      "criterionScores": [
+        {
+          "criterion": "brand-fit",
+          "score": 7.2,
+          "note": "The sober typography, blue-grey accent, measured numbering and architectural photography suit a serious architecture practice, though the execution feels more generic editorial than uniquely Ardwell & Roe."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7,
+          "note": "Large headings and numbered sections establish clear scanning, but oversized page titles, dense mobile lists and the nearly contentless Approach page produce weak or disproportionate emphasis."
+        },
+        {
+          "criterion": "coherence",
+          "score": 7.3,
+          "note": "The register motif, rules, palette and typography remain consistent across pages and states, but the image-led work surfaces and sparse utility pages do not feel equally resolved."
+        },
+        {
+          "criterion": "distinctiveness",
+          "score": 6.1,
+          "note": "Numbered register styling adds character, but nearly every content type collapses into the same ruled list pattern, making the site feel like a competent system template rather than a bespoke studio identity."
+        },
+        {
+          "criterion": "credibility",
+          "score": 5.8,
+          "note": "Relevant projects, testimonials, awards and staff information help, but empty image cells, an effectively empty Approach page and prominent .invalid contact details make the site visibly unfinished."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "score": 6.4,
+          "note": "Enquiry links recur and the contact form is clear, including a useful failure message, but the calls to action are repetitive, visually modest and attached to invalid contact destinations."
+        },
+        {
+          "criterion": "imagery-suitability",
+          "score": 7.1,
+          "note": "The photography is highly appropriate and generally framed well, especially on desktop and mobile work grids, but blank numbered tiles and missing home imagery at tablet width are unacceptable."
+        },
+        {
+          "criterion": "responsive-quality",
+          "score": 7,
+          "note": "Layouts reflow legibly and the disclosed navigation is clear, but mobile mostly reduces columns and stacks the same structures; dense text, awkward heading wraps and blank tablet tiles reveal insufficient responsive art direction."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "score": 5.9,
+          "note": "The schedule-register numbering is visible and appropriate to an architectural practice, but it never develops into a memorable composition or interaction and becomes repetitive rather than distinctive."
+        }
+      ],
+      "failingCriteria": [
+        "distinctiveness",
+        "credibility",
+        "conversion-clarity",
+        "distinctive-moment"
+      ],
+      "blockingConcerns": [
+        "The Approach page contains no substantive approach content and cannot ship as a nominal page consisting mainly of repeated enquiry treatment and empty space.",
+        "Remove or populate every blank numbered portfolio tile, including the conspicuous gaps on home tablet and work desktop/tablet.",
+        "Replace the visibly invalid email address and website with credible production contact details before release.",
+        "Develop the register concept beyond repeated numbering and ruled rows so the site has a genuinely ownable studio-specific moment.",
+        "Improve mobile editorial composition and hierarchy, especially dense proof, project and service lists and awkward multi-line section headings."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-schedule-register",
+        "compositionHash": "56a11649c539e8641356a09c0fae391d88a6babcd7686bef002e09016b2e89c2",
+        "captureCount": 31,
+        "captureDigest": "f68f8cd9a778cb7f40668a38be59e32b045c3ce7b8bebf1e2745b26f9055eb42"
+      }
+    }
+  ],
+  "skipped": []
+}

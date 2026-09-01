@@ -8,9 +8,16 @@ question the factory cannot answer about itself:
 
 A factory that scores 6.70 against an 8.5 bar has two possible explanations, and they call
 for opposite responses. If the model cannot do better, more architecture is wasted effort.
-If the model can do considerably better given a freer hand, then the constraint is the
-component vocabulary and the architecture is exactly where the work belongs. Measuring the
-factory against itself cannot separate those. A reference built without the constraint can.
+If the model can do considerably better given a freer hand, then the constraint is the factory
+and the architecture is exactly where the work belongs. Measuring the factory against itself
+cannot separate those. A reference built without the constraint can.
+
+**Answered, and then sharpened.** These three clear the gate; the factory has not. And since
+this corpus was built, the factory has been run on the same rich Ardwell & Roe truth and
+scored 6.64 — level with its 6.70 on thin truth, so input richness is not the explanation
+either. What that run added is that the constraint is not only the component vocabulary:
+the largest single gain came from an information-architecture correction, not from a
+component. `FACTORY-GAP.md` carries the numbers.
 
 ## The rule that keeps this honest
 

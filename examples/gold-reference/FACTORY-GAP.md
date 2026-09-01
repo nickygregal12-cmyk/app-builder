@@ -14,6 +14,7 @@ criteria**, and the section below adjusts for that before drawing any conclusion
 | Factory, `nbm structured-practice` | 6.58 | 4.2 | 4.8 | same |
 | Factory, `nbm service-forward` | 6.10 | 4.6 | 4.8 | same |
 | Factory, **static renderer** (`astro-static-content`) | **5.38** | **2.0** | **3.0** | `examples/genuine-business/nbm-static-renderer-review.v1.verdicts.json` |
+| Factory, **rich truth** (`Ardwell & Roe`, `schedule-register`) | **6.64** | **5.8** | **6.1** | run in #254/#256; see the experiment section below |
 | **Ardwell & Roe** (prototype) | 8.711 | 7.7 | 8.8 | `ardwell-roe/evidence/verdicts/v5.json` |
 | **Marram** (prototype) | 8.556 | 8.0 | 9 | `marram/evidence/verdicts/v18.json` |
 | **Plumbline** (prototype) | 8.667 | 8.0 | 9 | `plumbline/evidence/verdicts/v6.json` |
@@ -45,16 +46,17 @@ documentation is careful about and so should this: it was rendering the default 
 no visual direction has ever been promoted to the static renderer
 (`docs/PHASE_4D_VISUAL_DEBT.md` §4). It is a floor, not a like-for-like build.
 
-### A live inconsistency in the record
+### The record, reconciled
 
-`config/factory-status.json` — which `docs/PHASE_4D_VISUAL_DEBT.md:7-8` declares authoritative
-on disagreement — still records `bestMean: 6.55, bestCriterionFloor: 4.8`, the v4
-`schedule-register` result. The document itself records **6.70 / 4.7** from the later §2b round,
-and `docs/ROADMAP.md:176` also still carries 6.55. The status file was not updated after §2b.
+`config/factory-status.json` recorded `bestMean: 6.55, bestCriterionFloor: 4.8` — the v4
+`schedule-register` result — while `docs/PHASE_4D_VISUAL_DEBT.md` recorded 6.70 / 4.7 from the
+later §2b round and `docs/ROADMAP.md` also carried 6.55. Since the status file is the
+authoritative record on disagreement, the authoritative number was the stale one.
 
-This does not change any conclusion here — 6.55 and 6.70 are both far short of 8.5 — but the
-authoritative machine-readable record disagreeing with the human one is worth fixing before
-anyone quotes either. It is item 0 in `INTEGRATION-PLAN.md`.
+Both are corrected here, and the rich-truth round is now recorded in
+`docs/PHASE_4D_VISUAL_DEBT.md` §2c with its verdicts committed at
+`examples/visual-excellence/ardwell-roe-visual-review.v1.verdicts.json`, so every number this
+document quotes is checkable rather than quoted.
 
 ## The question the corpus was built to answer
 
@@ -103,31 +105,51 @@ approved knowledge pack: 17 facts, 6 projects, 5 testimonials, 10 services, 5 pe
 `user-provided` at confidence 1. That is the opposite of nbm's intake. Given that truth and a
 free hand, the score is **8.711 with distinctiveness at 8.8**.
 
-## The experiment that has not been run, and should be first
+## The experiment that had not been run — now run, in #254 and #256
 
-The corpus establishes the ceiling for rich truth *without* the vocabulary. It does not
-establish what the factory does with rich truth *within* it, because **the factory has never
-been run against the Ardwell & Roe intake.** Every candidate in `PHASE_4D_VISUAL_DEBT.md` is
-nbm or MGB Decor.
-
-That leaves exactly one cell of the table empty, and it is the decisive one:
+This section previously said the decisive cell was empty and had to be filled before anything
+else in `INTEGRATION-PLAN.md`. It has been filled. The prediction it made was well-formed and
+the answer is unambiguous.
 
 | | thin truth (nbm) | rich truth (Ardwell & Roe) |
 |---|---|---|
-| **factory vocabulary** | 6.70 / 4.7, distinctiveness 5.4 | **never run** |
+| **factory vocabulary** | 6.70 / 4.7, distinctiveness 5.4 | **6.64 / 5.8, distinctiveness 6.1** |
 | **free hand** | not built | 8.711 / 7.7, distinctiveness 8.8 |
 
-Filling that cell is cheap — the intake bundle, the asset plan and the knowledge pack all
-already exist in `examples/visual-excellence/` — and it decides how the remaining work should
-be spent:
+The factory scores **the same on rich truth as on thin truth**, within the noise of the
+instrument. That is the first branch of the prediction this section wrote, so the conclusion it
+committed to in advance is the one that holds: *thin intake was not doing the damage, and the
+budget belongs on what the factory does with truth rather than on getting more of it.*
 
-- If the factory scores near 6.7 on rich truth, the vocabulary is the whole constraint and
-  §3's finding is proven. Spend the budget on the component vocabulary.
-- If it scores materially higher, thin intake was doing more of the damage than assumed, and
-  the intake questionnaire is where the leverage is.
+**The route to that number matters as much as the number.** The rich run did not start near
+6.7 and it did not arrive there by better styling:
 
-**No amount of further prototyping answers this. Only running the factory does.** It is the
-first recommendation in `INTEGRATION-PLAN.md` for that reason.
+| run | best mean | what changed |
+|---|---|---|
+| rich truth, no imagery | 5.82 | the asset bytes had never been produced |
+| rich truth, imagery ingested | 4.81 | *worse* — seven latent defects, including a build that published no `<img>` at all |
+| after those seven fixes | 5.57 | imagery-suitability 0 → 7.0 |
+| after the information-architecture correction | 6.41 | 31 sections → 26, 12,207px → 6,898px |
+| after section-order adaptation (#256) | **6.64** | imagery-suitability 3.5 → 7.1 on the direction that had buried the work |
+
+Two findings fall out of that sequence, and neither was visible before the cell was filled.
+
+**Rich truth made the site worse before it made it better.** A thin business hides a
+composition that cannot edit; a rich one exposes it. The factory composed every section it
+could and every item in each — 31 sections over 9,217px — and the reviewer's language changed
+from "sparse" to "reduce the copy density", "excessive empty space", "effectively duplicate
+pages". The constraint the corpus was built to isolate is real, but it is not only the
+component vocabulary: **it is also that the factory has no information architecture.** It knows
+what a business has and not what a *page* is for.
+
+**Seven of the defects were invisible without imagery.** Asset sources that could not be
+registered once bytes existed; a wide-crop test that read only optimiser variants; ingested
+assets that declared no file, so `materializeAssets` copied nothing; no path for bytes to reach
+a replayed bundle; role-blind placement that opened the page with the wordmark and put the
+founders' portraits under "Recent work"; nine-field records rendered whole; a token declared
+twice that broke the hero scrim. Every one is in `#254`. The prototypes could not have found
+them, because a hand-built site never exercises that path — which is an argument for keeping
+both corpora rather than either.
 
 ## Where the gap actually is, criterion by criterion
 
@@ -185,8 +207,13 @@ Stated because the value of this exercise depends on not overclaiming.
 
 - **It does not show the factory can reach 8.5.** It shows the model can, unconstrained. Those
   are different claims, and the gap between them is exactly the integration work.
-- **It does not isolate the vocabulary as the sole cause.** Ardwell & Roe had rich truth *and*
-  a free hand. The empty cell above is what isolates it.
+- **It does not isolate the vocabulary as the sole cause**, and running the factory on the same
+  rich truth showed why: the factory reached 6.64 there, level with its 6.70 on thin truth, and
+  the largest single gain in that run came from an information-architecture correction rather
+  than from any component. Vocabulary is a constraint; composition is at least as large a one.
+- **It did not predict the seven imagery defects.** A hand-built site never exercises asset
+  ingestion, materialisation or role-aware placement, so the corpus could not have found them
+  and did not. That is an argument for keeping both corpora rather than choosing between them.
 - **No prototype passed a factory gate.** Gates measure generated output. These were scored
   against the same criteria and thresholds by the same class of reviewer, which is a
   comparison, not a gate result.

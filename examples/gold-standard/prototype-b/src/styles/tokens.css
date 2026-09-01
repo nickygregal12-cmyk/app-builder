@@ -1,0 +1,161 @@
+/*
+ * INTERLOCK — the drawing sheet.
+ *
+ * The thesis, stated once here because every other decision in the file follows from it: this
+ * company's subject is the safety document, and the safety document is drawn. Not designed,
+ * not branded — drawn, on a sheet, to conventions that exist because somebody has to be able
+ * to read it at two in the morning in a substation and not misread it.
+ *
+ * So the site is a drawing sheet. It has a ground the colour of paper rather than a screen, it
+ * is ruled rather than boxed, it has line weights that mean things, and it carries a title
+ * block. The product demonstrations sit on it the way a detail sits on a general arrangement.
+ *
+ * ## Colour is a legend, not a palette
+ *
+ * The three state colours are the only saturated colour on the site and they are never used
+ * for anything else. Red is energised. Green is earthed. Grey is dead. That is a real
+ * convention, a viewer learns it in one glance at the diagram, and it then holds everywhere —
+ * including in running text, where "energised" is set in the same red it is drawn in.
+ *
+ * The consequence is a discipline that is easy to state and hard to keep: links cannot be red
+ * or green, warnings cannot borrow the red, and nothing decorative may use any of the three.
+ * Interactive elements get their own blue, which appears nowhere in the diagram. A site that
+ * used its danger colour for a call-to-action would be teaching the viewer to unlearn the
+ * legend on the way to the contact form.
+ *
+ * ## Why this is not a dark interface
+ *
+ * The obvious move for technical software is a dark ground, and it would be wrong here. This
+ * product's artefact is a document that gets printed, signed, carried into a substation and
+ * filed; its ancestors are drawing sheets and permit pads, which are paper. A dark theme would
+ * be borrowed from a different category — developer tooling — and borrowed atmosphere is the
+ * thing the anti-slop criterion is looking for. Warm paper is also, practically, the ground
+ * these state colours were chosen against.
+ */
+
+@font-face {
+  font-family: 'Plex';
+  src: url('/fonts/IBMPlexSans-var.woff2') format('woff2-variations');
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plex Condensed';
+  src: url('/fonts/IBMPlexSansCondensed-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plex Condensed';
+  src: url('/fonts/IBMPlexSansCondensed-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plex Mono';
+  src: url('/fonts/IBMPlexMono-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plex Mono';
+  src: url('/fonts/IBMPlexMono-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* --- ground and ink ------------------------------------------------- */
+  --paper: #f2efe9;
+  --sheet: #f9f7f3;      /* the drawing area, a shade lighter than the desk it sits on */
+  --ink: #15171a;
+  --ink-2: #4e545c;      /* secondary prose and captions */
+  --ink-3: #7d838b;      /* metadata, units, disabled */
+
+  /* --- line weights, which is what a drawing is ------------------------ */
+  --hair: #cdc7bc;       /* grid and separators */
+  --rule: #b3aca0;       /* section rules */
+  --w-hair: 1px;
+  --w-rule: 1.5px;
+  --w-heavy: 3px;        /* busbars only */
+
+  /* --- the legend. These three appear nowhere except as state. --------- */
+  --live: #b3342a;
+  --live-soft: #f0dcd9;
+  --dead: #8a9098;
+  --dead-soft: #e6e4e0;
+  --earth: #2b6b45;
+  --earth-soft: #d9e6dd;
+
+  /* --- risk. Amber, deliberately not the danger red. ------------------- */
+  --risk: #8a5a10;
+  --risk-soft: #f0e6d2;
+
+  /* --- interactive. Appears in no diagram, so it can never be misread. -- */
+  --link: #1d3f66;
+  --link-hover: #10263f;
+  --focus: #1d3f66;
+
+  /* --- type ------------------------------------------------------------ */
+  --sans: 'Plex', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --cond: 'Plex Condensed', 'Plex', system-ui, sans-serif;
+  --mono: 'Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /*
+   * A 4px baseline. Drawing sheets are gridded and so is this: every vertical measurement in
+   * the site is a multiple of 4, which is why rules line up across columns that know nothing
+   * about each other.
+   */
+  --u: 4px;
+  --s1: 4px;  --s2: 8px;   --s3: 12px;  --s4: 16px;  --s5: 24px;
+  --s6: 32px; --s7: 48px;  --s8: 64px;  --s9: 96px;  --s10: 128px;
+
+  /* Display sizes are fluid; everything below body size is fixed, because a 10px label that
+     scales becomes a 7px label on a phone and small text is where craft is judged. */
+  --t-display: clamp(2.25rem, 1.1rem + 3.4vw, 4.25rem);
+  --t-head: clamp(1.5rem, 1.05rem + 1.4vw, 2.125rem);
+  --t-sub: clamp(1.125rem, 1rem + 0.4vw, 1.3125rem);
+  --t-body: clamp(1.0625rem, 1rem + 0.16vw, 1.1875rem);
+  --t-small: clamp(0.9375rem, 0.89rem + 0.12vw, 1.03125rem);
+  /*
+   * Small text scales, within bounds.
+   *
+   * These were fixed at 11px and 10px on the reasoning that a label which scales becomes
+   * illegible on a phone. That is true downward and wrong upward: at 1920 a 10px unit mark
+   * sits in a great deal of space and stops carrying any authority, and an independent
+   * review marked typography and hierarchy down for exactly that. Clamping gives the phone
+   * its floor and the wide screen a label that holds its own.
+   */
+  --t-label: clamp(0.6875rem, 0.62rem + 0.14vw, 0.8125rem);
+  --t-micro: clamp(0.6875rem, 0.63rem + 0.12vw, 0.78125rem);
+
+  --measure: clamp(30rem, 26rem + 8vw, 38rem);  /* ~66–72 characters across the range */
+  --sheet-max: 1680px;
+  --pad: clamp(20px, 4vw, 64px);
+}
+
+/*
+ * Focus is a drawing convention too: a bracket, not a glow.
+ *
+ * Two pixels of the interactive blue with a paper-coloured gap, so it reads on both the sheet
+ * and the darker desk without ever being mistaken for a state colour.
+ */
+:where(a, button, [tabindex], summary, input, select):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,13 @@
+IBM Plex Sans, IBM Plex Sans Condensed, IBM Plex Mono
+  SIL Open Font Licence 1.1
+  Copyright 2017 IBM Corp. https://github.com/IBM/plex
+
+  Chosen rather than defaulted to. Plex was drawn for engineering and enterprise contexts,
+  its condensed cut is the right register for drawing labels, and its mono is a working
+  typeface rather than a decorative one — all three matter for a product whose subject is
+  switchgear designations and safety documents. It is also, deliberately, not Inter: the
+  default grotesque of generated SaaS is itself a signal, and a technical product that reaches
+  for it has made no typographic decision at all.
+
+  Self-hosted, latin subset, no external request at runtime. Sans is the variable file
+  (weight 100–700); Condensed and Mono are static instances at the weights actually used.

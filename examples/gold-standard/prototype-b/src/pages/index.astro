@@ -1,0 +1,266 @@
+---
+/**
+ * Overview.
+ *
+ * The opening states what the product does in the vocabulary of the people who buy it, and
+ * then immediately shows the thing rather than describing it. There is no hero statement
+ * about shipping faster or moving at the speed of anything: the audience is fourteen hundred
+ * Senior Authorised Persons in the United Kingdom, and a slogan is how you tell them you have
+ * never met one.
+ *
+ * The page is ordered as the argument actually runs. What the document is. What goes wrong
+ * with it. The refusal, in full, on a real sequence. What that is worth. What it costs to
+ * find out.
+ */
+import Base from '../layouts/Base.astro';
+import Sequence from '../components/Sequence.astro';
+import { DRAFT } from '../data/schedule';
+import { prove } from '../lib/prove';
+import Diagram from '../components/Diagram.astro';
+import { initialState, solve } from '../lib/energise';
+import { SITE } from '../data/network';
+import { JOB } from '../data/schedule';
+
+const draft = prove(DRAFT);
+const normal = solve(initialState());
+---
+<Base
+  title="Interlock — switching schedules, proved against the network"
+  description="Interlock proves high-voltage switching schedules against a network model before anybody opens a switch. It refuses sequences that leave the work area live."
+  sheet="Overview"
+  sheetNo="IL-000"
+>
+  <section class="open">
+    <div class="sheet open__grid">
+      <div>
+        <p class="label">Interlock</p>
+        <h1 class="display">Every switching schedule is a claim that the work area will be dead.</h1>
+        <p class="sub">
+          We prove it. Interlock holds your network as a model, walks a proposed sequence through it one
+          operation at a time, and refuses to issue a schedule that leaves the work area connected to
+          anything live.
+        </p>
+        <p class="small open__note">
+          For Senior Authorised Persons on 33kV and 11kV networks. Not a control system: Interlock has no
+          telemetry, no control path, and no means of operating anything.
+        </p>
+      </div>
+      {/* The opening carries the model rather than a picture of one, which is both the argument
+          and the answer to a wide screen: at 1920 the single-column version left half the sheet
+          empty and an independent review read that, correctly, as restraint turning into
+          under-occupation. It is withheld below tablet width — the same drawing appears in full
+          and interactive a screen further down, and a decorative duplicate would lengthen an
+          already long phone page for nothing. */}
+      <figure class="open__draw">
+        <Diagram closed={normal.closed} energised={[...normal.energised]} earthed={[...normal.earthed]} />
+        <figcaption>
+          {SITE.designation}, normal running: both transformers in service, each feeding its own 11kV
+          section, bus section open. Every drawing on this site is rendered from this model.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label">The document</p>
+          <h2 class="head">A schedule reads correctly line by line and can still be wrong.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The dangerous errors are not typos. They are order errors and connectivity errors: an earth
+            applied to a point still connected to a live busbar through a disconnector nobody opened; a
+            permit naming points of isolation that do not isolate; a restoration that removes an earth
+            before the permit is cancelled.
+          </p>
+          <p>
+            Each of those reads perfectly well. Catching one requires you to hold the whole network in
+            your head at that exact step, which is what a second Senior Authorised Person is for, and
+            why the second check is slow, expensive and human.
+          </p>
+          <p>
+            Below is a real one. It was written by a competent SAP, it is not a straw man, and every
+            operation in it is correct. It contains one omission.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="refusal" class="fault">
+    <div class="sheet">
+      {/* The head is two columns because the job has a docket. Filling the right side with the
+          schedule's own provenance is both better composition than a dead column and the
+          thing the product is actually about: a document is only meaningful against a stated
+          model version, and saying so here rather than in small print is the argument. */}
+      <div class="secthead">
+        <div>
+          <p class="label">Worked example · as written</p>
+          <h2 class="head">{SITE.designation} — replacing the tap changer on T2.</h2>
+          <p class="small secthead__note">
+            Select a step, or use the arrow keys. The drawing is the network at that step, computed
+            from the model rather than illustrated.
+          </p>
+        </div>
+        <dl class="docket">
+          <div><dt>Reference</dt><dd class="mono">{JOB.reference}</dd></div>
+          <div><dt>Written by</dt><dd>{JOB.writtenBy}</dd></div>
+          <div><dt>Window</dt><dd>{JOB.window}</dd></div>
+          <div><dt>Proved against</dt><dd class="mono">{JOB.modelVersion}</dd></div>
+          <div><dt>Customers interrupted</dt><dd>None. The transfer is made before the break.</dd></div>
+          <div><dt>Result</dt><dd class="docket__bad">Refused at step 07</dd></div>
+        </dl>
+      </div>
+      <Sequence
+        id="draft"
+        steps={draft.steps}
+        refusedAt={draft.refusedAt}
+        highlight={['T2', 'T2-33-CB', 'T2-33-DS', 'T2-11-CB', 'T2-33-ES', 'T2-11-ET']}
+        initial={7}
+        caption="Step 7 as written. The transformer is drawn energised because it is: the model reaches it from the 11kV busbar, through T2's own circuit breaker, which no step in this schedule opens."
+      />
+    </div>
+  </section>
+
+  <section class="statement">
+    <div class="sheet">
+      <p class="label">What that is worth</p>
+      <p class="statement__t">
+        Step 6 proves dead, and it would have failed. Proving dead is the last line of defence and it
+        usually holds &mdash; <b>by putting a person in front of 33kV connections that the paperwork
+        says are dead.</b>
+      </p>
+      <p class="statement__q">
+        That is the moment the whole document exists to prevent, and a schedule that relies on it has
+        already failed at the thing it was for. This one would have been used twice: the first version
+        was written for the same job on T1 eighteen months earlier, and the error was copied forward
+        with the designations changed.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <p class="label">Where the rest of it is</p>
+      <h2 class="head secthead__lead">Four sheets. Each answers the question the last one raises.</h2>
+      <div class="claims">
+        <div class="claim">
+          <h3 class="claim__h">It holds the network, not a picture of it.</h3>
+          <p class="claim__p">
+            A single-line diagram in Visio cannot be asked a question. A model can: which points are
+            connected to a source right now, and by what route. Every drawing on this site is rendered
+            from the same model the proof runs on.
+          </p>
+          <p class="claim__l"><a class="u" href="/model">How the model gets built, and what happens when it is wrong →</a></p>
+        </div>
+        <div class="claim">
+          <h3 class="claim__h">It refuses, and it names the cause.</h3>
+          <p class="claim__p">
+            Eight classes of unsafe sequence, checked at every step. The refusal points at the earlier
+            operation responsible, because <span class="mono">step 7 earths a live point</span> is a
+            symptom and <span class="mono">nothing opens T2-11-CB</span> is the sentence that fixes the
+            document.
+          </p>
+          <p class="claim__l"><a class="u" href="/proving">The eight classes, with an example of each →</a></p>
+        </div>
+        <div class="claim">
+          <h3 class="claim__h">It signs nothing.</h3>
+          <p class="claim__p">
+            A Senior Authorised Person signs, as now. Interlock records who signed, which model version
+            they signed against, and what was proved at the time. You can re-open a schedule from eight
+            months ago and see the network as it was understood that day.
+          </p>
+          <p class="claim__l"><a class="u" href="/schedule">The proved sequence, the permit and the restoration →</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ask">
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label">Finding out</p>
+          <h2 class="head">Send us a schedule you have already approved.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            We model the site and prove the schedule, and we tell you what we find — including nothing,
+            which is the result about half the time and is worth knowing.
+          </p>
+          <p>
+            Four weeks. £6,000, credited against the first year. It is deliberately the same shape as
+            the product: you give us a schedule, we prove it.
+          </p>
+          <p><a class="u" href="/pilot">What we need from you, and what you get back →</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .open { padding-block: clamp(var(--s8), 6vw, 116px) clamp(var(--s8), 5vw, var(--s9)); }
+  .open__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+    gap: var(--s8); align-items: center; }
+  .open__draw { margin: 0; background: var(--sheet); border: var(--w-hair) solid var(--hair);
+    padding: var(--s5); }
+  .open__draw figcaption { margin-top: var(--s4); padding-top: var(--s4);
+    border-top: var(--w-hair) solid var(--hair); font-size: var(--t-small); color: var(--ink-2); }
+  .open__note { margin-top: var(--s6); max-width: 44ch; padding-top: var(--s4);
+    border-top: var(--w-hair) solid var(--hair); }
+  .display + .sub { margin-top: var(--s5); }
+
+  .split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr); gap: var(--s8); align-items: start; }
+  .secthead { margin-bottom: var(--s7); display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr); gap: var(--s8); align-items: start; }
+  .secthead .head { margin-top: var(--s3); }
+
+  /* The docket. Ruled rows on the 4px grid, keys condensed and small, values allowed to be
+     ordinary sentences where the answer is a sentence — a definition list forced into
+     single words would have to abbreviate "none, the transfer is made before the break"
+     into something less true. */
+  .docket { margin: 0; border-top: var(--w-rule) solid var(--ink); }
+  .docket > div { display: grid; grid-template-columns: 10.5rem 1fr; gap: var(--s4);
+    padding-block: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .docket dt { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-3); padding-top: 3px; }
+  .docket dd { margin: 0; font-size: var(--t-small); color: var(--ink); }
+  .docket dd.docket__bad { color: var(--live); font-weight: 600; }
+  .secthead__note { margin-top: var(--s4); max-width: 52ch; }
+  .label + .head { margin-top: var(--s3); }
+
+  .secthead__lead { margin-top: var(--s3); max-width: 26ch; }
+  .claims { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: var(--s6);
+    border-top: var(--w-rule) solid var(--ink); }
+  /* Ruled columns rather than cards. A card is a container for something that could sit
+     anywhere; these three are one argument in three parts and the rules keep them one thing. */
+  .claim { padding: var(--s5) var(--s5) var(--s6) 0; border-right: var(--w-hair) solid var(--hair); }
+  .claim + .claim { padding-left: var(--s5); }
+  .claim:last-child { border-right: 0; }
+  .claim__h { font-size: 1.0625rem; max-width: 24ch; }
+  .claim__p { margin-top: var(--s3); font-size: var(--t-small); color: var(--ink-2); }
+  .claim__l { margin-top: var(--s4); font-size: var(--t-small); }
+
+  .ask { background: var(--sheet); border-top: var(--w-rule) solid var(--ink); }
+
+  /* The one change of ground on the page, at the one moment that earns it. The sheet turns
+     to the desk it sits on and the section is bounded by heavy rules top and bottom — the
+     convention a drawing uses to mark a detail that has been revised. */
+  .fault { background: var(--sheet); border-block: var(--w-rule) solid var(--ink); }
+  .fault + section { border-top: 0; }
+
+  @media (max-width: 820px) { .open__draw { display: none; } }
+
+  @media (max-width: 900px) {
+    .open__grid { grid-template-columns: 1fr; gap: var(--s6); }
+    .split, .secthead { grid-template-columns: 1fr; gap: var(--s5); }
+    .docket > div { grid-template-columns: 8.5rem 1fr; gap: var(--s3); }
+    .claims { grid-template-columns: 1fr; }
+    .claim { border-right: 0; border-bottom: var(--w-hair) solid var(--hair); padding: var(--s5) 0; }
+    .claim + .claim { padding-left: 0; }
+    .claim:last-child { border-bottom: 0; }
+  }
+</style>

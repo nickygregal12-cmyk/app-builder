@@ -1,0 +1,244 @@
+---
+/**
+ * A schedule, in full.
+ *
+ * The overview shows the refusal. This route shows the whole document that comes out the other
+ * side: the corrected sequence, the permit it produces, and the restoration generated from it.
+ *
+ * It exists as its own route because the overview cannot hold it without becoming a mega-page,
+ * and because this is what a buyer asks for second. The first question is "what does it
+ * catch"; the second is "what do I actually get".
+ */
+import Base from '../layouts/Base.astro';
+import Sequence from '../components/Sequence.astro';
+import { PROVED, RESTORATION, JOB, permitPoints } from '../data/schedule';
+import { prove, endState, window as exposureWindow } from '../lib/prove';
+import { SITE, plantById } from '../data/network';
+
+const proved = prove(PROVED);
+const restoration = prove(RESTORATION, endState(proved.steps));
+const w = exposureWindow(proved.steps);
+const points = permitPoints(PROVED);
+
+const hhmm = (minutes: number) => `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`;
+---
+<Base
+  title="A proved schedule — Interlock"
+  description="The corrected switching schedule for the Attercliffe T2 tap changer replacement, the permit it produces, and the restoration sequence generated from it."
+  sheet="A schedule, proved"
+  sheetNo="IL-100"
+>
+  <section class="open open--tight">
+    <div class="sheet">
+      <p class="label">Sheet IL-100</p>
+      <h1 class="display display--sm">The same job, after the refusal was answered.</h1>
+      <p class="sub">
+        Two operations inserted, none reordered. The draft opened T2's 33kV breaker to de-energise the
+        transformer; what it never did was open T2 on the eleven kilovolt side, where the busbar it is
+        bolted to was being backfed.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <nav class="contents" aria-label="On this sheet">
+        <span class="contents__k">On this sheet</span>
+        <a href="#forward">Forward sequence</a>
+        <a href="#permit">The permit</a>
+        <a href="#restore-sec">Restoration</a>
+      </nav>
+      <div class="secthead">
+        <div>
+          <p class="label" id="forward">Forward sequence · proved</p>
+          <h2 class="head">Thirteen operations, no customer interrupted.</h2>
+          <p class="small secthead__note">
+            The two inserted steps are 05 and 11. Step 05 racks the breaker out, which is what turns an
+            open breaker into a point of isolation; step 11 proves the 11kV side dead before it is
+            earthed.
+          </p>
+        </div>
+        <dl class="docket">
+          <div><dt>Reference</dt><dd class="mono">{JOB.reference}</dd></div>
+          <div><dt>Proved at</dt><dd class="mono">{JOB.provedAt}</dd></div>
+          <div><dt>Against model</dt><dd class="mono">{JOB.modelVersion}</dd></div>
+          <div><dt>Customers interrupted</dt><dd>{w.customersInterrupted === 0 ? 'None' : w.customersInterrupted.toLocaleString('en-GB')}</dd></div>
+          <div><dt>Peak at risk</dt><dd>{w.peakExposure.toLocaleString('en-GB')} for {hhmm(w.switchingMinutes)} of switching</dd></div>
+          <div><dt>Result</dt><dd class="docket__ok">Proved to step 13</dd></div>
+        </dl>
+      </div>
+      <Sequence
+        id="proved"
+        steps={proved.steps}
+        highlight={['T2', 'T2-33-CB', 'T2-33-DS', 'T2-11-CB', 'T2-33-ES', 'T2-11-ET']}
+        initial={13}
+        caption="Step 13, the permit. The transformer is dead and earthed on both sides, the rest of the substation is running, and Section 2 is carried by T1 through the bus section."
+      />
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label" id="permit">The permit</p>
+          <h2 class="head">Its points of isolation are read from the sequence, not typed.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            A permit that names points of isolation the schedule did not establish is the
+            second-most-dangerous document in this process, and it is produced by copying last month's.
+            Interlock writes the permit from the steps that actually established each point.
+          </p>
+        </div>
+      </div>
+
+      <div class="permit">
+        <div class="permit__head">
+          <div>
+            <p class="permit__k">Permit to Work</p>
+            <p class="permit__no mono">{JOB.permit}</p>
+          </div>
+          <div>
+            <p class="permit__k">Issued at step</p>
+            <p class="permit__no mono">{String(points.issuedAt?.n ?? 0).padStart(2, '0')}</p>
+          </div>
+          <div>
+            <p class="permit__k">Work</p>
+            <p class="permit__v">{JOB.title}</p>
+          </div>
+          <div>
+            <p class="permit__k">Location</p>
+            <p class="permit__v">{SITE.designation}</p>
+          </div>
+        </div>
+        <div class="permit__cols">
+          <div class="permit__col">
+            <h3 class="permit__h">Points of isolation</h3>
+            <ol class="pts">
+              {points.isolation.map((step) => (
+                <li class="pt">
+                  <span class="pt__n mono">{String(step.n).padStart(2, '0')}</span>
+                  <span class="pt__b">
+                    <span class="pt__plant mono">{step.plant}</span>
+                    <span class="pt__d">{plantById.get(step.plant!)?.note ?? step.detail}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="permit__col">
+            <h3 class="permit__h permit__h--e">Points of earthing</h3>
+            <ol class="pts">
+              {points.earthing.map((step) => (
+                <li class="pt">
+                  <span class="pt__n mono">{String(step.n).padStart(2, '0')}</span>
+                  <span class="pt__b">
+                    <span class="pt__plant mono">{step.plant}</span>
+                    <span class="pt__d">{plantById.get(step.plant!)?.note ?? step.detail}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+        <p class="permit__foot">
+          Signed by a Senior Authorised Person. Interlock signs nothing; it records who signed, against
+          which model version, and what was proved at the time.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="secthead">
+        <div>
+          <p class="label" id="restore-sec">Restoration · generated</p>
+          <h2 class="head">The reverse of a proved sequence is provable.</h2>
+          <p class="small secthead__note">
+            The reverse of a typed one is a second document with its own errors, written at the end of a
+            long day by somebody who wants to go home. Two rules shape it: nothing is de-earthed until
+            the permit is cancelled, and the transformer is re-energised from the 33kV side on no load
+            before it is paralleled.
+          </p>
+        </div>
+        <dl class="docket">
+          <div><dt>Starts from</dt><dd>The network as the forward sequence left it</dd></div>
+          <div><dt>Operations</dt><dd>{RESTORATION.length}</dd></div>
+          <div><dt>Risk ends at</dt><dd>Step 09, when T2 picks its section back up</dd></div>
+          <div><dt>Result</dt><dd class="docket__ok">Proved to step 10</dd></div>
+        </dl>
+      </div>
+      <Sequence
+        id="restore"
+        steps={restoration.steps}
+        highlight={['T2', 'T2-33-CB', 'T2-33-DS', 'T2-11-CB', 'T2-33-ES', 'T2-11-ET']}
+        initial={9}
+        caption="Step 09. T2 is back in parallel and the at-risk figure returns to zero one operation before the bus section is opened — which is the order that keeps it at zero."
+      />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .open--tight { padding-block: clamp(var(--s7), 6vw, var(--s9)) clamp(var(--s7), 5vw, var(--s8)); }
+  .display--sm { font-size: clamp(1.875rem, 1.1rem + 2.4vw, 3.25rem); max-width: 20ch; }
+  .display + .sub { margin-top: var(--s5); }
+
+  .split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr); gap: var(--s8); align-items: start; }
+  .secthead { margin-bottom: var(--s7); display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr); gap: var(--s8); align-items: start; }
+  .secthead .head { margin-top: var(--s3); }
+  .secthead__note { margin-top: var(--s4); max-width: 52ch; }
+
+  .docket { margin: 0; border-top: var(--w-rule) solid var(--ink); }
+  .docket > div { display: grid; grid-template-columns: 10.5rem 1fr; gap: var(--s4);
+    padding-block: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .docket dt { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-3); padding-top: 3px; }
+  .docket dd { margin: 0; font-size: var(--t-small); color: var(--ink); }
+  .docket dd.docket__ok { color: var(--earth); font-weight: 600; }
+
+  /* The permit is drawn as the document it is: a ruled form with a header band, two columns of
+     numbered points, and a footer. It is the one place on the site where a box is correct,
+     because the thing being represented is a box on a pad. */
+  .permit { margin-top: var(--s7); border: var(--w-rule) solid var(--ink); background: var(--sheet); }
+  .permit__head { display: grid; grid-template-columns: repeat(4, 1fr);
+    border-bottom: var(--w-rule) solid var(--ink); }
+  .permit__head > div { padding: var(--s4) var(--s5); border-right: var(--w-hair) solid var(--hair); }
+  .permit__head > div:last-child { border-right: 0; }
+  .permit__k { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); }
+  .permit__no { margin-top: 4px; font-size: 1.0625rem; font-weight: 500; }
+  .permit__v { margin-top: 4px; font-size: var(--t-small); }
+
+  .permit__cols { display: grid; grid-template-columns: 1fr 1fr; }
+  .permit__col { padding: var(--s5); border-right: var(--w-hair) solid var(--hair); }
+  .permit__col:last-child { border-right: 0; }
+  .permit__h { font-size: var(--t-label); font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding-bottom: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .permit__h--e { color: var(--earth); }
+
+  .pts { margin-top: var(--s3); }
+  .pt { display: grid; grid-template-columns: 2.25rem 1fr; gap: var(--s3);
+    padding-block: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .pt:last-child { border-bottom: 0; }
+  .pt__n { font-size: var(--t-small); color: var(--ink-3); }
+  .pt__b { display: flex; flex-direction: column; gap: 2px; }
+  .pt__plant { font-size: var(--t-small); font-weight: 500; }
+  .pt__d { font-size: var(--t-small); color: var(--ink-2); }
+
+  .permit__foot { padding: var(--s4) var(--s5); border-top: var(--w-hair) solid var(--hair);
+    font-size: var(--t-small); color: var(--ink-2); }
+
+  @media (max-width: 900px) {
+    .split, .secthead { grid-template-columns: 1fr; gap: var(--s5); }
+    .docket > div { grid-template-columns: 8.5rem 1fr; gap: var(--s3); }
+    .permit__head { grid-template-columns: 1fr 1fr; }
+    .permit__head > div { border-bottom: var(--w-hair) solid var(--hair); }
+    .permit__head > div:nth-child(2n) { border-right: 0; }
+    .permit__cols { grid-template-columns: 1fr; }
+    .permit__col { border-right: 0; border-bottom: var(--w-hair) solid var(--hair); }
+  }
+</style>

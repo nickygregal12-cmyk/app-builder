@@ -65,14 +65,34 @@ const STATE_ROUTES = {
   'scale-strip-hover': ['/work', { hover: 'proportional scale strip, bar under the cursor' }],
 };
 
+/**
+ * State descriptions come from the capture run where it wrote them down.
+ *
+ * The map above is prototype A's, hard-coded here before there was a second prototype. A tool
+ * that has to be edited to describe another site's interactions is a tool that will silently
+ * drop them instead — an unlisted state is skipped, and the reviewer then scores
+ * interaction-craft on evidence it was never shown. So a states directory carrying its own
+ * `index.json` is believed, and the map is the fallback for the run that predates it.
+ */
 const stateCaptures = [];
 if (statesDir && fs.existsSync(statesDir)) {
+  const indexPath = path.join(statesDir, 'index.json');
+  const declared = fs.existsSync(indexPath)
+    ? new Map(JSON.parse(fs.readFileSync(indexPath, 'utf8')).map((entry) => [entry.file.replace(/\.(png|jpg)$/, ''), entry]))
+    : null;
+
   for (const file of fs.readdirSync(statesDir).filter((n) => n.endsWith('.jpg')).sort()) {
-    const key = file.replace(/--[a-z]+\.jpg$/, '');
-    const entry = STATE_ROUTES[key];
+    const key = file.replace(/--[a-z]+\.jpg$/, '').replace(/\.jpg$/, '');
+    const own = declared?.get(key);
+    const entry = own ? [own.route, { state: own.state }] : STATE_ROUTES[key];
     if (!entry) continue;
     fs.copyFileSync(path.join(statesDir, file), path.join(outDir, file));
-    stateCaptures.push({ file, route: entry[0], viewport: file.includes('touch') ? 'mobile' : 'desktop', state: entry[1] });
+    stateCaptures.push({
+      file,
+      route: entry[0],
+      viewport: own?.viewport ?? (file.includes('touch') ? 'mobile' : 'desktop'),
+      state: entry[1],
+    });
   }
 }
 
@@ -82,9 +102,16 @@ const packet = {
   businessKind: meta.businessKind,
   benchmarkAnchors: meta.benchmarkAnchors,
   criteria: criteriaFor({ projectType: meta.projectType }),
+  /* The artifact's own route count, declared rather than counted from the captures — the
+     evidence ceiling uses it to tell a thin capture of a large site from a complete capture of
+     a small one, and deriving it from what was photographed would make a thin run
+     self-justifying. */
+  artifactRouteCount: meta.routeCount ?? null,
   candidates: [
     {
       id: meta.candidateId,
+      candidateId: meta.candidateId,
+      artifactRouteCount: meta.routeCount ?? null,
       directionId: meta.candidateId,
       directionLabel: meta.directionLabel,
       captures: [...files.map(describe), ...stateCaptures],

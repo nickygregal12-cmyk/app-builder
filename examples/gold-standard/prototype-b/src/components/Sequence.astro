@@ -1,0 +1,292 @@
+---
+/**
+ * The schedule and the network, as one object.
+ *
+ * A switching schedule is a numbered list of instructions, and a numbered list is very nearly
+ * the worst available representation of what is actually happening: a network being taken
+ * apart in a particular order, an island of dead plant growing until it contains the work
+ * area, and a number — how many customers cannot be got back if one more thing fails right
+ * now — rising and then returning to zero.
+ *
+ * So the list and the drawing are the same control. Select a step and the diagram is at that
+ * step. That relationship is the product, and it is the only part of it that a paragraph
+ * cannot convey.
+ *
+ * ## Why this is not animated
+ *
+ * An earlier version played the sequence automatically. It looked impressive and it was
+ * useless: the viewer cannot compare step 6 with step 7 while both are sliding past, and the
+ * one question this artefact exists to answer — what changed when that operation happened —
+ * is a comparison. Motion is confined to the transition between two chosen states, which is
+ * the only place it explains anything. Reduced-motion removes even that and nothing is lost
+ * but the tween.
+ */
+import Diagram from './Diagram.astro';
+import type { ProvedStep } from '../lib/prove';
+
+interface Props {
+  id: string;
+  steps: ProvedStep[];
+  /** Step number the proof stopped at, if it did. */
+  refusedAt?: number | null;
+  /** Plant the job is about, outlined on the drawing. */
+  highlight?: string[];
+  caption?: string;
+  /** Start on a step other than the first — used to open on the moment worth seeing. */
+  initial?: number;
+}
+const { id, steps, refusedAt = null, highlight = [], caption, initial } = Astro.props;
+
+const startIndex = Math.max(0, (initial ?? steps[0].step.n) - steps[0].step.n);
+const start = steps[startIndex];
+
+/**
+ * What travels to the client.
+ *
+ * Only what changes: the closed set, the two node sets, the readouts and any refusal. The
+ * geometry is already in the DOM and never moves.
+ */
+const payload = steps.map((entry) => ({
+  n: entry.step.n,
+  closed: entry.state.closed,
+  live: [...entry.state.energised],
+  earthed: [...entry.state.earthed],
+  off: entry.state.customersOff,
+  risk: entry.exposure,
+  fault: entry.state.earthOnLive[0]?.plant ?? null,
+  refusal: entry.refusal,
+  at: entry.step.at,
+}));
+
+const workArea = (entry: ProvedStep) => {
+  const live = entry.state.energised.has('T2-HV') || entry.state.energised.has('T2-LV');
+  const earthed = entry.state.earthed.has('T2-HV') && entry.state.earthed.has('T2-LV');
+  if (live) return { label: 'Live', tone: 'live' };
+  if (earthed) return { label: 'Earthed', tone: 'earth' };
+  return { label: 'Dead, not earthed', tone: 'dead' };
+};
+const startArea = workArea(start);
+const peak = steps.reduce((worst, entry) => Math.max(worst, entry.exposure), 0);
+---
+
+<section class="seq" id={id} data-seq>
+  <div class="seq__drawing">
+    <div class="seq__sticky">
+      <div class="seq__readout" role="status" aria-live="polite">
+        <div class="ro">
+          <span class="ro__k">Step</span>
+          <span class="ro__v ro__v--num" data-ro="step">{String(start.step.n).padStart(2, '0')}</span>
+          <span class="ro__u">of {String(steps[steps.length - 1].step.n).padStart(2, '0')}</span>
+        </div>
+        <div class="ro">
+          <span class="ro__k">Work area</span>
+          <span class="ro__v" data-ro="area" data-tone={startArea.tone}>{startArea.label}</span>
+        </div>
+        <div class="ro">
+          <span class="ro__k">Customers off</span>
+          <span class="ro__v ro__v--num" data-ro="off">{start.state.customersOff.toLocaleString('en-GB')}</span>
+        </div>
+        <div class="ro">
+          <span class="ro__k">At risk</span>
+          <span class="ro__v ro__v--num" data-ro="risk" data-tone={start.exposure > 0 ? 'risk' : 'none'}>{start.exposure.toLocaleString('en-GB')}</span>
+          <span class="ro__u">no alternative supply</span>
+        </div>
+      </div>
+
+      {/* The pan container. Inert at desktop width, where the drawing fits its column; on a
+          phone it is what lets the drawing stay legible instead of being scaled to four-pixel
+          plant labels. `tabindex` because a scrollable region has to be reachable without a
+          pointer, and the label says what it is when a screen reader lands on it. */}
+      <div class="seq__scroll" tabindex="0" role="group" aria-label="Single-line diagram, scrollable sideways">
+        <Diagram
+          closed={start.state.closed}
+          energised={[...start.state.energised]}
+          earthed={[...start.state.earthed]}
+          highlight={highlight}
+          fault={start.state.earthOnLive[0]?.plant ?? null}
+        />
+      </div>
+
+      <div class="seq__legend" aria-hidden="true">
+        <span class="lg lg--live">Energised</span>
+        <span class="lg lg--dead">Dead</span>
+        <span class="lg lg--earth">Earthed</span>
+      </div>
+      {/* The exposure profile.
+          The sticky column ended above a long schedule, leaving an empty lower-left that a
+          review called under-composed — correctly. What belongs there is not filler but the
+          one thing the step list cannot show: the shape of the risk across the whole job.
+          Customers at risk is a number per step; drawn as a profile it becomes the reason the
+          window has a cost even though nobody is switched off. */}
+      <figure class="profile">
+        <figcaption class="profile__k">Customers at risk, across the sequence</figcaption>
+        <svg class="profile__svg" viewBox={`0 0 ${steps.length * 24} 64`} preserveAspectRatio="none" role="img"
+             aria-label={`Customers at risk peaks at ${peak.toLocaleString('en-GB')} and returns to zero.`}>
+          {steps.map((entry, index) => (
+            <rect
+              class="profile__bar"
+              data-step={entry.step.n}
+              data-now={entry.step.n === start.step.n ? '' : null}
+              x={index * 24 + 3} width={18}
+              y={64 - (peak ? Math.max(2, (entry.exposure / peak) * 56) : 2)}
+              height={peak ? Math.max(2, (entry.exposure / peak) * 56) : 2}
+            />
+          ))}
+        </svg>
+        <div class="profile__ax">
+          <span>step {String(steps[0].step.n).padStart(2, '0')}</span>
+          <span class="profile__peak">peak {peak.toLocaleString('en-GB')}</span>
+          <span>step {String(steps[steps.length - 1].step.n).padStart(2, '0')}</span>
+        </div>
+      </figure>
+      {caption && <p class="seq__caption">{caption}</p>}
+    </div>
+  </div>
+
+  <div class="seq__steps">
+    <ol class="steps" role="listbox" aria-label="Switching schedule. Use the arrow keys to move through the steps." tabindex="0" data-steps>
+      {steps.map((entry, index) => {
+        const refused = refusedAt !== null && entry.step.n === refusedAt;
+        const after = refusedAt !== null && entry.step.n > refusedAt;
+        return (
+          <li>
+            {entry.step.phase && (
+              <p class="phase"><span class="phase__t">{entry.step.phase}</span></p>
+            )}
+            <button
+              class="step"
+              type="button"
+              role="option"
+              id={`${id}-step-${entry.step.n}`}
+              aria-selected={index === startIndex ? 'true' : 'false'}
+              tabindex="-1"
+              data-step={entry.step.n}
+              data-refused={refused ? '' : null}
+              data-after={after ? '' : null}
+            >
+              <span class="step__n">{String(entry.step.n).padStart(2, '0')}</span>
+              <span class="step__body">
+                <span class="step__head">
+                  <span class="step__op" data-op={entry.step.op}>{entry.step.op}</span>
+                  {entry.step.plant && <span class="step__plant">{entry.step.plant}</span>}
+                </span>
+                <span class="step__detail">{entry.step.detail}</span>
+                <span class="step__meta">
+                  <span class="step__by">{entry.step.by}</span>
+                  <span class="step__at">+{entry.step.at} min</span>
+                  {entry.step.establishes === 'point-of-isolation' && <span class="step__flag">point of isolation</span>}
+                  {entry.step.establishes === 'point-of-earthing' && <span class="step__flag step__flag--e">point of earthing</span>}
+                  {entry.step.establishes === 'permit' && <span class="step__flag step__flag--p">permit issued</span>}
+                </span>
+              </span>
+            </button>
+            {refused && entry.refusal && (
+              <div class="refusal" role="alert">
+                <p class="refusal__code">{entry.refusal.code}</p>
+                <h3 class="refusal__title">{entry.refusal.title}</h3>
+                <p class="refusal__finding">{entry.refusal.finding}</p>
+                <p class="refusal__cause"><strong>Cause.</strong> {entry.refusal.cause}</p>
+                <div class="refusal__path">
+                  <span class="refusal__path-k">Live through</span>
+                  <span class="refusal__path-v">{entry.refusal.path.join(' · ')}</span>
+                </div>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+    {refusedAt !== null && (
+      <p class="seq__halt">
+        Proof stopped at step {String(refusedAt).padStart(2, '0')}. The remaining steps are shown as written and were
+        not proved; a sequence is only meaningful up to its first unsafe operation.
+      </p>
+    )}
+  </div>
+
+  <script type="application/json" data-payload set:html={JSON.stringify(payload)} />
+</section>
+
+<script>
+  /**
+   * Drive the drawing from the list.
+   *
+   * No framework, no re-render: the SVG is already correct in shape and only its state
+   * classes change. Everything is delegated from the section so a page can carry more than one
+   * sequence without any of them knowing about the others.
+   */
+  type Payload = {
+    n: number; closed: Record<string, boolean>; live: string[]; earthed: string[];
+    off: number; risk: number; fault: string | null; at: number;
+  };
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-seq]')) {
+    const json = root.querySelector('[data-payload]')?.textContent;
+    if (!json) continue;
+    const payload: Payload[] = JSON.parse(json);
+    const byStep = new Map(payload.map((entry) => [entry.n, entry]));
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('.step')];
+    const list = root.querySelector<HTMLElement>('[data-steps]')!;
+    const svg = root.querySelector('svg')!;
+    const readout = (key: string) => root.querySelector<HTMLElement>(`[data-ro="${key}"]`)!;
+    const nf = new Intl.NumberFormat('en-GB');
+
+    const show = (n: number, focus = false) => {
+      const entry = byStep.get(n);
+      if (!entry) return;
+
+      for (const wire of svg.querySelectorAll<SVGElement>('[data-node]')) {
+        const node = wire.getAttribute('data-node')!;
+        wire.setAttribute('data-state', entry.live.includes(node) ? 'live' : entry.earthed.includes(node) ? 'earthed' : 'dead');
+      }
+      for (const sym of svg.querySelectorAll<SVGElement>('.sym[data-plant]')) {
+        const id = sym.getAttribute('data-plant')!;
+        sym.toggleAttribute('data-closed', Boolean(entry.closed[id]));
+        sym.toggleAttribute('data-fault', entry.fault === id);
+      }
+
+      const live = entry.live.includes('T2-HV') || entry.live.includes('T2-LV');
+      const earthed = entry.earthed.includes('T2-HV') && entry.earthed.includes('T2-LV');
+      const area = readout('area');
+      area.textContent = live ? 'Live' : earthed ? 'Earthed' : 'Dead, not earthed';
+      area.dataset.tone = live ? 'live' : earthed ? 'earth' : 'dead';
+
+      readout('step').textContent = String(entry.n).padStart(2, '0');
+      readout('off').textContent = nf.format(entry.off);
+      const risk = readout('risk');
+      risk.textContent = nf.format(entry.risk);
+      risk.dataset.tone = entry.risk > 0 ? 'risk' : 'none';
+
+      for (const button of buttons) {
+        const selected = Number(button.dataset.step) === n;
+        button.setAttribute('aria-selected', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+        if (selected && focus) button.focus();
+      }
+      for (const bar of root.querySelectorAll<SVGElement>('.profile__bar')) {
+        bar.toggleAttribute('data-now', Number(bar.getAttribute('data-step')) === n);
+      }
+      list.setAttribute('aria-activedescendant', `${root.id}-step-${n}`);
+    };
+
+    root.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.step');
+      if (button) show(Number(button.dataset.step));
+    });
+
+    /* Arrow keys move through the sequence, which is how somebody actually reads one: forward
+       one operation at a time, then back one to see what changed. Home and End jump to the
+       normal running arrangement and to the permit. */
+    list.addEventListener('keydown', (event) => {
+      const current = buttons.findIndex((button) => button.getAttribute('aria-selected') === 'true');
+      let next = current;
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') next = Math.min(buttons.length - 1, current + 1);
+      else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') next = Math.max(0, current - 1);
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = buttons.length - 1;
+      else return;
+      event.preventDefault();
+      show(Number(buttons[next].dataset.step), true);
+    });
+  }
+</script>

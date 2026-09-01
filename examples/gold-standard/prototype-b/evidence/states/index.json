@@ -1,0 +1,80 @@
+[
+ {
+  "file": "skip-link-focus.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the skip link, revealed by the first Tab press"
+ },
+ {
+  "file": "nav-link-hover.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a primary navigation link under the cursor, its rule drawn in"
+ },
+ {
+  "file": "nav-focus-keyboard.png",
+  "route": "/proving",
+  "viewport": "desktop",
+  "state": "the navigation reached by keyboard — focus bracket, not the hover state"
+ },
+ {
+  "file": "step-hover.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a schedule step under the cursor, before selection"
+ },
+ {
+  "file": "step-selected-04.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "step 04 selected — the network before the isolation begins, drawing and readout both moved"
+ },
+ {
+  "file": "step-selected-07-refused.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "step 07 selected — the refusal, with the earth drawn closed onto a conductor still red"
+ },
+ {
+  "file": "step-keyboard-focus.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the schedule driven by the arrow keys. Two distinct states are visible at once and that is deliberate: step 03 carries the hover fill because the pointer was left there, while step 05 carries the focus bracket and the selection rule. Hover and selection are different things and are drawn differently."
+ },
+ {
+  "file": "prose-link-hover.png",
+  "route": "/model",
+  "viewport": "desktop",
+  "state": "an inline link in running text under the cursor, underline resolving to solid"
+ },
+ {
+  "file": "mobile-readout-pinned.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the state readout pinned while the schedule scrolls beneath it"
+ },
+ {
+  "file": "mobile-diagram-panned.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the drawing panned to the T2 bay at full legible size, readout still pinned"
+ },
+ {
+  "file": "transition-mid-flight.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a frame taken 90ms into the 220ms state change between step 04 and step 07 — conductors partway between dead grey and energised red, caught mid-transition rather than settled"
+ },
+ {
+  "file": "reduced-motion-same-step.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "prefers-reduced-motion: reduce — the same step 07 selection, arriving at the identical state with every transition suppressed"
+ },
+ {
+  "file": "diagram-pan-focus.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the pannable drawing region reached by keyboard, showing it is a focusable scroll area and not a pointer-only affordance"
+ }
+]

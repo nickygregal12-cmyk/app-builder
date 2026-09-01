@@ -1,0 +1,184 @@
+---
+/**
+ * Your network.
+ *
+ * The objection route. Every buyer's first real doubt is not "does it work" but "our model is
+ * not good enough for this", and they are right. The page answers by agreeing, and then
+ * showing what the product does about it — which is refuse, and say what it does not know.
+ */
+import Base from '../layouts/Base.astro';
+import Diagram from '../components/Diagram.astro';
+import { SITE, PLANT } from '../data/network';
+import { initialState, solve } from '../lib/energise';
+
+const normal = solve(initialState());
+const counts = {
+  breakers: PLANT.filter((p) => p.kind === 'breaker').length,
+  disconnectors: PLANT.filter((p) => p.kind === 'disconnector').length,
+  earths: PLANT.filter((p) => p.kind === 'earth').length,
+  transformers: PLANT.filter((p) => p.kind === 'transformer').length,
+  feeders: PLANT.filter((p) => p.kind === 'feeder').length,
+};
+---
+<Base
+  title="Your network model — Interlock"
+  description="How Interlock builds a network model from what you already have, what it does when the model is wrong, and how a schedule stays tied to the version it was proved against."
+  sheet="The network model"
+  sheetNo="IL-300"
+>
+  <section class="open open--tight">
+    <div class="sheet">
+      <p class="label">Sheet IL-300</p>
+      <h1 class="display display--sm">Your model is not good enough. That is the normal case.</h1>
+      <p class="sub">
+        Every network we have modelled had drawings that disagreed with each other, plant that had been
+        replaced without the record changing, and at least one asset nobody could name. Interlock is
+        built for that rather than around it.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="modelgrid">
+        <div class="modelgrid__draw">
+          <Diagram
+            closed={normal.closed}
+            energised={[...normal.energised]}
+            earthed={[...normal.earthed]}
+          />
+          <p class="small modelgrid__cap">
+            {SITE.designation} in its normal running arrangement: both transformers in service, each
+            feeding its own 11kV section, bus section open. This is the drawing every step of every
+            schedule on this site is rendered from.
+          </p>
+        </div>
+        <div>
+          <p class="label">What a model is</p>
+          <h2 class="head">Connectivity and state. Not geometry, not ratings, not protection.</h2>
+          <div class="prose prose--tight">
+            <p>
+              A single-line diagram in Visio is a picture: it looks like the network and cannot be
+              asked a question. What Interlock needs is smaller than a full asset register and larger
+              than a drawing — every switching device, what it sits between, and whether it is normally
+              open or closed.
+            </p>
+            <p>
+              For Attercliffe that is {PLANT.length} items. It took two days to build from an existing
+              drawing and a walk round the site with the district SAP, and one afternoon to correct
+              afterwards.
+            </p>
+          </div>
+          <dl class="counts">
+            <div><dt>Circuit breakers</dt><dd class="mono">{counts.breakers}</dd></div>
+            <div><dt>Disconnectors</dt><dd class="mono">{counts.disconnectors}</dd></div>
+            <div><dt>Earth devices</dt><dd class="mono">{counts.earths}</dd></div>
+            <div><dt>Transformers</dt><dd class="mono">{counts.transformers}</dd></div>
+            <div><dt>Outgoing circuits</dt><dd class="mono">{counts.feeders}</dd></div>
+            <div><dt>Customers</dt><dd class="mono">{SITE.customersTotal.toLocaleString('en-GB')}</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label">Being wrong</p>
+          <h2 class="head">Where the model stops, Interlock stops.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The dangerous failure for a tool like this is not saying "I do not know". It is quietly
+            assuming a point is open because nothing in the record says otherwise, and then proving a
+            schedule against that assumption. An assumption and a proof are indistinguishable in the
+            output right up until they are not.
+          </p>
+          <p>
+            So unmodelled plant is recorded, and a sequence that reaches into it is refused rather than
+            proved. The refusal names who holds the drawing that would close the gap, because that is
+            the action it implies.
+          </p>
+        </div>
+      </div>
+
+      <div class="unmodelled">
+        <p class="unmodelled__k">Recorded as unmodelled · {SITE.modelVersion}</p>
+        {SITE.unmodelled.map((entry) => (
+          <div class="unmodelled__row">
+            <p class="unmodelled__p">{entry.plant}</p>
+            <p class="unmodelled__r">{entry.reason}</p>
+          </div>
+        ))}
+        <p class="unmodelled__f">
+          One item, on a network of {PLANT.length}. It is on the page rather than in a log because it is
+          the sort of thing that decides whether a schedule can be proved next month.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheet">
+      <div class="split">
+        <div>
+          <p class="label">Versions</p>
+          <h2 class="head">A schedule is only meaningful against the model it was proved on.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The model changes: plant is replaced, a feeder is transferred, a normally-open point moves.
+            Every schedule records the version it was proved against, and every version records what
+            changed and who changed it.
+          </p>
+          <p>
+            When a model changes, Interlock re-proves the schedules that touch the plant that moved and
+            tells you which of them no longer hold. That is the check nobody currently does, because
+            doing it by hand means re-reading every schedule in the drawer.
+          </p>
+          <p>
+            A schedule proved eight months ago can be opened and shown in the network as it was
+            understood that day — which is the form the question takes in an investigation.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .open--tight { padding-block: clamp(var(--s7), 6vw, var(--s9)) clamp(var(--s7), 5vw, var(--s8)); }
+  .display--sm { font-size: clamp(1.875rem, 1.1rem + 2.4vw, 3.25rem); max-width: 21ch; }
+  .display + .sub { margin-top: var(--s5); }
+  .split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr); gap: var(--s8); align-items: start; }
+  .label + .head { margin-top: var(--s3); }
+
+  .modelgrid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--s8); align-items: start; }
+  .modelgrid__draw { background: var(--sheet); border: var(--w-hair) solid var(--hair); padding: var(--s5); }
+  .modelgrid__cap { margin-top: var(--s4); padding-top: var(--s4); border-top: var(--w-hair) solid var(--hair); }
+  .prose--tight { margin-top: var(--s4); }
+
+  .counts { margin: var(--s6) 0 0; border-top: var(--w-rule) solid var(--ink); }
+  .counts > div { display: grid; grid-template-columns: 1fr auto; gap: var(--s4);
+    padding-block: var(--s3); border-bottom: var(--w-hair) solid var(--hair); }
+  .counts dt { font-size: var(--t-small); color: var(--ink-2); }
+  .counts dd { margin: 0; font-size: var(--t-small); font-weight: 500; }
+
+  .unmodelled { margin-top: var(--s7); border-left: 3px solid var(--risk); background: var(--risk-soft); padding: var(--s5); }
+  .unmodelled__k { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--risk); }
+  .unmodelled__row { margin-top: var(--s4); padding-top: var(--s4);
+    border-top: 1px solid color-mix(in srgb, var(--risk) 25%, transparent); }
+  .unmodelled__p { font-size: var(--t-body); font-weight: 500; }
+  .unmodelled__r { margin-top: 4px; font-size: var(--t-small); color: var(--ink-2); }
+  .unmodelled__f { margin-top: var(--s5); font-size: var(--t-small); color: var(--ink-2); max-width: 56ch; }
+
+  @media (max-width: 900px) {
+    .split, .modelgrid { grid-template-columns: 1fr; gap: var(--s5); }
+    .modelgrid__draw { overflow-x: auto; }
+    .modelgrid__draw :global(.sld) { min-width: 560px; }
+    .modelgrid__cap { min-width: 0; }
+  }
+</style>

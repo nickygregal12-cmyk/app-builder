@@ -43,13 +43,16 @@ import {
   assertExecutionDriver,
 } from '@app-builder/control-plane/execution-adapter';
 
-import { evaluateRuntimeReadiness, unearnedRuntimeReadyRoles } from '@app-builder/control-plane/runtime-readiness';
+import { evaluateRuntimeReadiness, parseEvidenceReference, unearnedRuntimeReadyRoles } from '@app-builder/control-plane/runtime-readiness';
+import { createRuntimeReadinessEvidenceResolver } from './lib/runtime-readiness-evidence.mjs';
 import { createLocalExecutionDriver, detectNetworkIsolation } from './lib/execution-driver-local.mjs';
 
 import { runRuntimeCanary } from './runtime-canary.mjs';
 
 const GATE = JSON.parse(fs.readFileSync(new URL('../config/runtime-readiness.json', import.meta.url), 'utf8'));
 const ROLES = JSON.parse(fs.readFileSync(new URL('../config/agent-roles.json', import.meta.url), 'utf8')).roles;
+
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 const SECRET = 'lifecycle-test-signing-key-that-is-long-enough';
 const IMAGE = { id: 'test', reference: 'localhost/app-builder-task', digest: `sha256:${'b'.repeat(64)}` };
@@ -395,32 +398,131 @@ test('no specialist role is runtime-ready, and none becomes one by the sandbox w
 
 test('the readiness gate is deny-by-default and names every requirement a role has not met', () => {
   const role = ROLES['frontend-implementation'];
-  const empty = evaluateRuntimeReadiness({ role, gate: GATE, evidence: {} });
+  // A resolver that says yes to everything, so this test measures the gate's
+  // own arithmetic rather than the filesystem's.
+  const permissive = () => ({ resolved: true, detail: 'stub' });
+
+  const empty = evaluateRuntimeReadiness({ role, gate: GATE, evidence: {}, resolve: permissive });
   assert.equal(empty.ready, false);
   assert.equal(empty.missing.length, GATE.requirements.length);
+  assert.ok(empty.missing.every((entry) => entry.reason === 'absent'));
 
   // Infrastructure evidence alone must not promote: the model-attempt
   // requirement is the one that cannot be satisfied without a real attempt,
   // and it is deliberately the last to fall.
   const infrastructureOnly = Object.fromEntries(
-    GATE.requirements.filter((entry) => entry.id !== 'model-attempt-evidence').map((entry) => [entry.id, 'tooling/runtime-lifecycle.test.mjs']),
+    GATE.requirements
+      .filter((entry) => entry.id !== 'model-attempt-evidence')
+      .map((entry) => [entry.id, 'test:tooling/runtime-lifecycle.test.mjs#the deterministic runtime canary proves the whole attempt lifecycle']),
   );
-  const partial = evaluateRuntimeReadiness({ role, gate: GATE, evidence: infrastructureOnly });
+  const partial = evaluateRuntimeReadiness({ role, gate: GATE, evidence: infrastructureOnly, resolve: permissive });
   assert.equal(partial.ready, false);
   assert.deepEqual(partial.missing.map((entry) => entry.id), ['model-attempt-evidence']);
 
   // An empty reference is not evidence.
-  const blank = evaluateRuntimeReadiness({ role, gate: GATE, evidence: { ...infrastructureOnly, 'model-attempt-evidence': '   ' } });
+  const blank = evaluateRuntimeReadiness({
+    role, gate: GATE, resolve: permissive,
+    evidence: { ...infrastructureOnly, 'model-attempt-evidence': '   ' },
+  });
   assert.equal(blank.ready, false);
 
-  const complete = evaluateRuntimeReadiness({ role, gate: GATE, evidence: { ...infrastructureOnly, 'model-attempt-evidence': 'acceptance/first-model-canary' } });
+  const complete = evaluateRuntimeReadiness({
+    role, gate: GATE, resolve: permissive,
+    evidence: { ...infrastructureOnly, 'model-attempt-evidence': 'record:tooling/runtime-lifecycle.test.mjs' },
+  });
   assert.equal(complete.ready, true);
 });
 
-test('the recorded evidence map is empty, so the gate refuses every role today', () => {
-  assert.deepEqual(GATE.evidence, {}, 'no role has recorded promotion evidence yet');
+test('prose is not evidence, and neither is a reference nobody resolved', () => {
+  const role = ROLES['frontend-implementation'];
+  const permissive = () => ({ resolved: true, detail: 'stub' });
+  const everything = (value) => Object.fromEntries(GATE.requirements.map((entry) => [entry.id, value]));
+
+  // The failure this gate exists to prevent: eight confident strings promoting
+  // a role that has never run.
+  for (const claim of ['yes', 'verified during review', 'done', 'acceptance/first-model-canary']) {
+    const decision = evaluateRuntimeReadiness({ role, gate: GATE, evidence: everything(claim), resolve: permissive });
+    assert.equal(decision.ready, false, `"${claim}" must not promote a role`);
+    assert.ok(decision.missing.every((entry) => entry.reason === 'malformed'), `"${claim}" is malformed, not merely unresolved`);
+  }
+
+  // A well-formed reference that does not resolve is refused with its reason.
+  const refusing = () => ({ resolved: false, detail: 'the named test no longer exists' });
+  const stale = evaluateRuntimeReadiness({
+    role, gate: GATE, resolve: refusing,
+    evidence: everything('test:tooling/runtime-lifecycle.test.mjs#a test that was renamed away'),
+  });
+  assert.equal(stale.ready, false);
+  assert.ok(stale.missing.every((entry) => entry.reason === 'unresolved'));
+
+  // No resolver means nothing was checked, which is not the same as satisfied.
+  const unchecked = evaluateRuntimeReadiness({
+    role, gate: GATE,
+    evidence: everything('test:tooling/runtime-lifecycle.test.mjs#the deterministic runtime canary proves the whole attempt lifecycle'),
+  });
+  assert.equal(unchecked.ready, false);
+  assert.ok(unchecked.missing.every((entry) => entry.reason === 'unverified'));
+});
+
+test('every recorded evidence reference resolves against the repository it names', () => {
+  const resolve = createRuntimeReadinessEvidenceResolver({ repositoryRoot: ROOT });
+  for (const [roleId, recorded] of Object.entries(GATE.evidence ?? {})) {
+    assert.ok(ROLES[roleId], `evidence recorded for unknown role ${roleId}`);
+    for (const [requirementId, reference] of Object.entries(recorded)) {
+      // The host attestation is genuinely absent in CI, and that is the correct
+      // answer there rather than a broken reference. Its *shape* is still checked.
+      const parsed = parseEvidenceReference(reference);
+      if (parsed.scheme === 'attestation') continue;
+      const outcome = resolve(parsed);
+      assert.equal(outcome.resolved, true, `${roleId}/${requirementId} cites "${reference}": ${outcome.detail}`);
+    }
+  }
+});
+
+test('a hosted proof that is absent is unproven here; one that is present and wrong is a fault', () => {
+  const reference = parseEvidenceReference('attestation:/etc/app-builder/agent-boundary.json');
+  const build = (readHostFile) => createRuntimeReadinessEvidenceResolver({ repositoryRoot: ROOT, readHostFile, now: new Date('2026-09-01T00:00:00Z') });
+
+  // A checkout with no hosted state — CI, or a laptop. Unproven, not broken:
+  // a repository that could fail this could also pass it.
+  const absent = build(() => null)(reference);
+  assert.equal(absent.resolved, false);
+  assert.equal(absent.hostState, 'absent');
+
+  // A proof that exists and says the wrong thing is a hard failure, and must
+  // never be excused by the same allowance.
+  const failed = build(() => JSON.stringify({ result: 'failed', verifiedAt: '2026-08-30T00:00:00Z', maxAgeDays: 30 }))(reference);
+  assert.equal(failed.resolved, false);
+  assert.equal(failed.hostState ?? null, null);
+
+  const expired = build(() => JSON.stringify({ result: 'passed', verifiedAt: '2026-01-01T00:00:00Z', maxAgeDays: 30 }))(reference);
+  assert.equal(expired.resolved, false);
+  assert.equal(expired.hostState ?? null, null);
+  assert.match(expired.detail, /expired/);
+
+  const passing = build(() => JSON.stringify({ result: 'passed', verifiedAt: '2026-08-30T00:00:00Z', maxAgeDays: 30, imageDigest: 'sha256:abc' }))(reference);
+  assert.equal(passing.resolved, true);
+
+  // The attestation must name the image the runtime would actually run.
+  const wrongImage = createRuntimeReadinessEvidenceResolver({
+    repositoryRoot: ROOT,
+    now: new Date('2026-09-01T00:00:00Z'),
+    readHostFile: () => JSON.stringify({ result: 'passed', verifiedAt: '2026-08-30T00:00:00Z', maxAgeDays: 30, imageDigest: 'sha256:some-other-image' }),
+  })(parseEvidenceReference('attestation:/etc/app-builder/agent-boundary.json#/images/task-baseline/digest'));
+  assert.equal(wrongImage.resolved, false);
+  assert.match(wrongImage.detail, /attests sha256:some-other-image/);
+});
+
+test('no role carries the model-attempt evidence that only a real attempt can produce', () => {
+  for (const [roleId, recorded] of Object.entries(GATE.evidence ?? {})) {
+    assert.equal(
+      recorded['model-attempt-evidence'] ?? null, null,
+      `${roleId} claims model-attempt evidence, but no real model attempt has been authorised`,
+    );
+  }
+  const resolve = createRuntimeReadinessEvidenceResolver({ repositoryRoot: ROOT });
   for (const role of Object.values(ROLES)) {
-    assert.equal(evaluateRuntimeReadiness({ role, gate: GATE }).ready, false, role.id);
+    assert.equal(evaluateRuntimeReadiness({ role, gate: GATE, resolve }).ready, false, role.id);
   }
 });
 

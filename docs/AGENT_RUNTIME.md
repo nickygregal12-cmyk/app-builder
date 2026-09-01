@@ -283,10 +283,13 @@ the command an attempt runs is the adapter's to supply. Its base is pinned by a 
 digest recorded in the manifest, and a doctor checks the two agree.
 
 Recording a built digest is a reviewed change on purpose: repointing a tag underneath a proven boundary
-is what the pin exists to prevent. **The manifest's digest is `null` today**, so every attempt naming
-`task-baseline` fails closed with the build command — the correct state, not an omission.
-`ops/hetzner/build-task-image.sh` builds the image, runs the image-boundary checks against it, and
-prints the digest with the exact edit to make.
+is what the pin exists to prevent. `task-baseline` **is** pinned, at
+`sha256:f2a9ffbc5649512666378b59ebf1012d33a8183dd7c6ff969ca8e4ce55445321`, and the hosted boundary
+attestation at `/etc/app-builder/agent-boundary.json` names that same digest — a proof of another image
+would not count. A digest of `null` remains the fail-closed state for any image that has not been built
+and attested, and every attempt naming one fails with the build command rather than running something
+unknown. `ops/hetzner/build-task-image.sh` builds the image, runs the image-boundary checks against it,
+and prints the digest with the exact edit to make.
 
 ### The public-egress network profile
 

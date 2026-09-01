@@ -1,0 +1,99 @@
+---
+/**
+ * The report, and its running apparatus.
+ *
+ * Two columns everywhere: a reading measure and a margin. The margin carries what a printed
+ * report puts there — figure references, definitions, source notes, cross-references — and it is
+ * the reason the page has a persistent asymmetry without anything being decorated.
+ *
+ * The masthead carries the report's own provenance on every route, because the single most
+ * likely thing to happen to a document like this is that one chart from it is screenshotted and
+ * circulated. If that happens, the words "simulated data" should be somewhere near it.
+ */
+import '../styles/tokens.css';
+import '../styles/site.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Chapter number, where the route is one. */
+  chapter?: string;
+  chapterTitle?: string;
+}
+const { title, description, chapter, chapterTitle } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+const ROUTES = [
+  { href: '/', label: 'Report' },
+  { href: '/findings', label: 'Findings' },
+  { href: '/catchments', label: 'Catchments' },
+  { href: '/method', label: 'Method' },
+  { href: '/data', label: 'Data' },
+];
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <link rel="preload" href="/fonts/Newsreader-var.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/BarlowSemiCondensed-600.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="head">
+      <div class="page head__in">
+        <a class="head__mark" href="/">
+          <span class="head__title">The Monitoring Gap</span>
+          <span class="head__sub">2026 · Stell</span>
+        </a>
+        <nav class="head__nav" aria-label="Report contents">
+          {ROUTES.map((route) => (
+            <a href={route.href} aria-current={path === route.href || (route.href !== '/' && path.startsWith(route.href)) ? 'page' : undefined}>{route.label}</a>
+          ))}
+        </nav>
+        <a class="head__act" href="/data#use">Download &amp; cite</a>
+        <p class="head__warn">Simulated data</p>
+      </div>
+    </header>
+
+    {chapter && (
+      <div class="runhead">
+        <div class="page runhead__in">
+          <span class="runhead__n">{chapter}</span>
+          <span class="runhead__t">{chapterTitle}</span>
+        </div>
+      </div>
+    )}
+
+    <main id="main"><slot /></main>
+
+    <footer class="foot">
+      <div class="page foot__in">
+        <div class="foot__c">
+          <p class="foot__k">The Monitoring Gap 2026</p>
+          <p class="foot__v">Stell, an independent freshwater data unit. Six people and two part-time statisticians.</p>
+        </div>
+        <div class="foot__c">
+          <p class="foot__k">Funding</p>
+          <p class="foot__v">A research council grant and two foundations, named on the method page. No operator money.</p>
+        </div>
+        <div class="foot__c">
+          <p class="foot__k">Reuse</p>
+          <p class="foot__v">Figures and dataset under CC BY 4.0. Cite as <span class="foot__cite">Stell (2026), The Monitoring Gap, fig. n</span>.</p>
+        </div>
+        <div class="foot__c foot__c--warn">
+          <p class="foot__k">This is a prototype</p>
+          <p class="foot__v">
+            Every catchment and every figure here is simulated. The catchments are invented and do
+            not correspond to real ones. The regulatory machinery is real; nothing else is.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

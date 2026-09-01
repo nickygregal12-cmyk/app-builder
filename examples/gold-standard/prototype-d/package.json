@@ -1,0 +1,21 @@
+{
+  "name": "tidewater-gold-standard",
+  "private": true,
+  "type": "module",
+  "description": "Gold Standard prototype D. Hand-built, not produced by App Builder.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check --minimumSeverity error"
+  },
+  "dependencies": {
+    "astro": "7.2.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "playwright": "^1.62.1",
+    "sharp": "^0.35.4",
+    "typescript": "5.9.3"
+  }
+}

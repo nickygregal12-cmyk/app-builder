@@ -1,0 +1,240 @@
+---
+/**
+ * The data.
+ *
+ * Every catchment-month in the study, as a table, with a filter by catchment. This is the chapter
+ * that gives the report away, and it exists because a document that argues its figures should be
+ * checkable is obliged to be checkable itself.
+ *
+ * Every row is rendered. Without JavaScript, or in find-in-page, the whole dataset is there —
+ * which is what a chapter whose purpose is checkability owes a reader.
+ *
+ * With JavaScript it opens on one catchment. The first version opened on all 720 rows and the
+ * capture run measured the result: 94,256 pixels of table on a phone, roughly two minutes of
+ * scrolling to reach the footer. Pagination would have been an interface protecting itself; a
+ * default view of sixty rows with the other 660 one click away is an editorial decision about
+ * what a reader arrived for, which is usually one river.
+ */
+import Base from '../layouts/Base.astro';
+import { SERIES, OVERALL, MONTH_LABELS, num, pct } from '../lib/stats';
+import { MONTHS } from '../lib/generate';
+
+const rows = SERIES.flatMap((series) =>
+  series.points.map((point) => ({
+    slug: series.catchment.slug,
+    name: series.catchment.name,
+    when: `${point.year}-${String(point.month).padStart(2, '0')}`,
+    label: `${MONTH_LABELS[point.month - 1]} ${point.year}`,
+    coverage: point.coverage,
+    reported: point.reported,
+    latent: point.latent,
+  })));
+---
+<Base
+  title="Data — The Monitoring Gap 2026"
+  description="Every catchment-month in the study: coverage, reported spills and the simulated underlying count."
+  chapter="Chapter 04"
+  chapterTitle="Data"
+>
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">Chapter 04</p>
+        <h1 class="chapter">The data</h1>
+        <p class="stand">
+          All {num(rows.length)} catchment-months. Coverage, what would have been reported, and the
+          simulated underlying count that no real dataset contains.
+        </p>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Rows</p><span class="margin__n">{num(rows.length)}</span>
+          <p class="margin__v">{OVERALL.catchments} catchments × {MONTHS} months</p>
+        </div>
+        <div>
+          <p class="margin__k">Reuse</p>
+          <p class="margin__v">CC BY 4.0. Cite as Stell (2026), <em>The Monitoring Gap</em>.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {/* The report had no visible way to be used. For a research publication the actions are
+      download, cite and ask — and all three were buried in the footer, which is where a reader
+      looks last and a reviewer noticed first. */}
+  <section id="use">
+    <div class="page doc">
+      <div class="col">
+        <h2 class="head2">Using this report</h2>
+        <ul class="use">
+          <li class="use__row">
+            <span class="use__k">Dataset</span>
+            <div>
+              <a class="use__a" href="/data#table">All {num(rows.length)} rows, in the table below</a>
+              <p class="use__d">Catchment, month, coverage, reported count and the simulated underlying count. The last of those is a column no real dataset has.</p>
+            </div>
+          </li>
+          <li class="use__row">
+            <span class="use__k">Citation</span>
+            <div>
+              <p class="use__cite">Stell (2026). <em>The Monitoring Gap</em>. Findings 1–5; figures 1–3.</p>
+              <p class="use__d">Findings are numbered and stable across revisions. Cite the finding rather than the paragraph.</p>
+            </div>
+          </li>
+          <li class="use__row">
+            <span class="use__k">Licence</span>
+            <div>
+              <p class="use__cite">CC BY 4.0</p>
+              <p class="use__d">Figures and dataset. Reuse freely, including commercially, with attribution — and please carry the word simulated with them.</p>
+            </div>
+          </li>
+          <li class="use__row">
+            <span class="use__k">Corrections</span>
+            <div>
+              <a class="use__a" href="mailto:record@stell.example">record@stell.example</a>
+              <p class="use__d">If a figure here is wrong we would rather hear it from you than read it somewhere else. Corrections are published with the date and what changed.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Not for attribution</p>
+          <p class="margin__v">
+            These catchments are invented. Quoting a figure from this report as a measurement of a
+            real river would be a fabrication, whoever did it.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="table">
+    <div class="page doc doc--wide">
+      <div class="col">
+        <div class="filter" role="group" aria-label="Filter by catchment">
+          <span class="filter__k">Catchment</span>
+          <button class="fchip" type="button" aria-pressed="false" data-f="all">All {num(rows.length)}</button>
+          {SERIES.map((series, i) => (
+            <button class="fchip" type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-f={series.catchment.slug}>{series.catchment.name}</button>
+          ))}
+          <span class="filter__n" role="status" aria-live="polite" data-count>{num(rows.length)} rows</span>
+        </div>
+
+        <table class="tbl data">
+          <caption class="vh">Coverage, reported spills and simulated underlying count, by catchment and month.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Catchment</th><th scope="col">Month</th>
+              <th scope="col" class="n">Coverage</th><th scope="col" class="n">Reported</th>
+              <th scope="col" class="n">Simulated</th><th scope="col" class="n">Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr data-row={row.slug}>
+                <th scope="row"><a href={`/catchments/${row.slug}`}>{row.name}</a></th>
+                <td class="data__when">{row.label}</td>
+                <td class="n" data-k="coverage">{pct(row.coverage)}</td>
+                <td class="n" data-k="reported">{row.reported}</td>
+                <td class="n data__sim" data-k="simulated">{row.latent}</td>
+                <td class="n data__gap" data-k="difference">{row.latent - row.reported}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Simulated column</p>
+          <p class="margin__v">
+            The underlying count. No real dataset has this column, and its presence here is the
+            whole difference between a simulation and a measurement.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .filter { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3);
+    padding-bottom: var(--s4); margin-bottom: var(--s4); border-bottom: 1.5px solid var(--ink); }
+  .filter__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-right: var(--s2); }
+  .filter__n { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-3);
+    font-variant-numeric: tabular-nums; margin-left: auto; }
+  .fchip { font-family: var(--sans); font-size: var(--t-note); font-weight: 500; background: none;
+    border: 1px solid var(--rule-2); color: inherit; padding: 4px var(--s3); cursor: pointer;
+    transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease; }
+  .fchip:hover { border-color: var(--ink); }
+  .fchip[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
+
+  .data { font-variant-numeric: tabular-nums lining-nums; }
+  .data th[scope='row'] { font-weight: 500; }
+  .data__when { color: var(--ink-3); white-space: nowrap; }
+  .data__sim { color: var(--spot); }
+  .data__gap { color: var(--ink-3); }
+  .data tr[hidden] { display: none; }
+
+  .use { border-top: 1.5px solid var(--ink); margin-top: var(--s5); }
+  .use__row { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s4); border-bottom: 1px solid var(--rule); }
+  .use__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); padding-top: 4px; }
+  .use__a { font-size: var(--t-stand); font-weight: 600; text-decoration: underline;
+    text-decoration-thickness: 1px; text-underline-offset: 0.16em;
+    text-decoration-color: color-mix(in srgb, var(--spot) 55%, transparent); }
+  .use__a:hover { color: var(--spot); text-decoration-color: currentColor; }
+  .use__cite { font-size: var(--t-stand); }
+  .use__d { margin-top: 4px; font-family: var(--sans); font-size: var(--t-note); line-height: 1.55;
+    color: var(--ink-2); max-width: 56ch; }
+
+  @media (max-width: 760px) {
+    /*
+     * Six columns of figures cannot be made to fit a phone, and shrinking them to the point where
+     * they do makes a data table nobody can read — which on the chapter whose whole purpose is
+     * checkability would be the worst place on the site to do it. Each catchment-month becomes a
+     * record: who and when on the first line, the four figures on the second.
+     */
+    .data, .data tbody, .data tr, .data td, .data th { display: block; width: 100%; }
+    .data thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .data tr { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--s3);
+      padding-block: var(--s3); border-bottom: 1px solid var(--rule); align-items: baseline; }
+    .data th, .data td { border: 0; padding: 0; }
+    .data th[scope='row'] { font-size: var(--t-small); font-weight: 600; }
+    .data__when { text-align: right; font-size: var(--t-note); }
+    .data td.n { grid-column: 1 / -1; display: inline-block; text-align: left; width: auto;
+      margin-right: var(--s4); font-size: var(--t-label); }
+    .data td.n::before { content: attr(data-k) ' '; color: var(--ink-3); }
+    .data tr > td.n:nth-of-type(2) { grid-column: auto; }
+    .filter__n { margin-left: 0; width: 100%; }
+    .use__row { grid-template-columns: 1fr; gap: var(--s2); }
+  }
+</style>
+
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-f]')];
+  const rows = [...document.querySelectorAll<HTMLElement>('[data-row]')];
+  const count = document.querySelector<HTMLElement>('[data-count]');
+  const nf = new Intl.NumberFormat('en-GB');
+
+  const apply = (want: string) => {
+    let shown = 0;
+    for (const row of rows) {
+      const ok = want === 'all' || row.dataset.row === want;
+      row.hidden = !ok;
+      if (ok) shown += 1;
+    }
+    for (const other of buttons) other.setAttribute('aria-pressed', String(other.dataset.f === want));
+    if (count) count.textContent = want === 'all'
+      ? `${nf.format(shown)} rows, all catchments`
+      : `${nf.format(shown)} of ${nf.format(rows.length)} rows`;
+  };
+
+  for (const button of buttons) button.addEventListener('click', () => apply(button.dataset.f!));
+
+  /* Collapse on load, not in the markup: no-JS gets the whole dataset. */
+  const first = buttons.find((b) => b.getAttribute('aria-pressed') === 'true');
+  if (first) apply(first.dataset.f!);
+</script>

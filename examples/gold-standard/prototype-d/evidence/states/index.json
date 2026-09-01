@@ -1,0 +1,74 @@
+[
+ {
+  "file": "skip-link-focus.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the skip link, revealed by the first Tab press"
+ },
+ {
+  "file": "nav-hover.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a contents link under the cursor. The current chapter is marked with the spot colour; hover uses ink, so the two states are not confusable"
+ },
+ {
+  "file": "nav-focus-keyboard.png",
+  "route": "/findings",
+  "viewport": "desktop",
+  "state": "the contents reached by keyboard: a bracket in the spot colour, which appears nowhere else as an interface element"
+ },
+ {
+  "file": "grid-cell-hover.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a cell of the coverage grid under the cursor — Elverley in a month where 21% of its estate was reporting — with the readout showing coverage, what would be published and what the simulation says happened"
+ },
+ {
+  "file": "grid-cell-keyboard.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the same grid reached by keyboard: every cell is a button, so the 720-cell figure is traversable rather than pointer-only, and the readout follows focus as well as hover"
+ },
+ {
+  "file": "data-filter.png",
+  "route": "/data",
+  "viewport": "desktop",
+  "state": "the data chapter filtered to one catchment: 720 rows to 60, with the count announced"
+ },
+ {
+  "file": "table-row-hover.png",
+  "route": "/catchments",
+  "viewport": "desktop",
+  "state": "a row of the catchment table under the cursor, and the sparkline that runs in its last column"
+ },
+ {
+  "file": "figure-link-hover.png",
+  "route": "/findings",
+  "viewport": "desktop",
+  "state": "a cross-reference in the margin under the cursor: findings point back at the figure they rest on"
+ },
+ {
+  "file": "mobile-grid-annual.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the coverage figure becomes five annual columns with the percentage printed in each, not sixty monthly ones scaled down or panned. A different aggregation, chosen because the comparison is the point and a reader must be able to see two catchments at once"
+ },
+ {
+  "file": "mobile-margin-folded.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the margin folds under the reading column as an endnote block rather than narrowing to a strip of two-word lines"
+ },
+ {
+  "file": "mobile-catchment-records.png",
+  "route": "/catchments",
+  "viewport": "mobile",
+  "state": "phone: the seven-column catchment table becomes twelve records, each keeping its sparkline full width"
+ },
+ {
+  "file": "reduced-motion.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "prefers-reduced-motion: reduce — the same grid hover, arriving at the identical state with the outline transition suppressed"
+ }
+]

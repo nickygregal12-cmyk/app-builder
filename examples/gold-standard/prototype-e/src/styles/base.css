@@ -1,0 +1,162 @@
+/*
+ * The shared furniture: page frame, prose, tables, labels.
+ *
+ * The layout instrument on this site is a single wide measure with a persistent left rail for
+ * labels and apparatus, and a full-bleed escape for ribbons and photographs. Three widths, used
+ * consistently, so that a ribbon breaking out to full width reads as an event rather than as a
+ * different page.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: 1.62;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4, p, ol, ul, figure, dl, dd { margin: 0; }
+ol, ul { padding: 0; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; }
+
+/* ---- frame ---------------------------------------------------------------------------- */
+
+.page { max-width: var(--page-max); margin-inline: auto; padding-inline: var(--pad); }
+.col { max-width: var(--measure); }
+
+/*
+ * The rail. Labels, figure numbers and apparatus live to the left of the reading column at wide
+ * widths and above it below 900px. It is what stops a page of prose from sitting alone in the
+ * middle of a 1900px screen, which was flagged on all four previous prototypes in this
+ * programme and is the failure mode I am worst at seeing.
+ */
+.doc { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: var(--s5) var(--s7); align-items: start; }
+.doc--wide { grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); }
+
+/*
+ * Prose-only sections centre their own block instead of hugging the left of a 1360px sheet.
+ *
+ * The wide-screen composition has been flagged on all four previous prototypes in this
+ * programme and it is the failure mode I am least able to see. Prototype D tried to fix it by
+ * widening the sheet and the measure together and lost 0.31 of a point: at 40rem the reading
+ * column gives about fifty characters a line, not sixty-six, and the whole legibility of the
+ * page rests on that measure.
+ *
+ * So the measure does not move. What moves is the block: rail plus gap plus measure is about
+ * 800px, and on a 1920 screen that block now sits in the middle of the sheet rather than
+ * leaving four hundred pixels of nothing down one side. Sections carrying a ribbon or a
+ * photograph keep the full width, because they have something to put in it.
+ */
+.doc--text { max-width: 62rem; margin-inline: auto; }
+
+/*
+ * A band: no rail, no reading column, the heading sitting directly over an object that takes the
+ * whole sheet.
+ *
+ * The review found the rail-plus-column construction "becomes predictable", and it was right —
+ * every section on every route was the same two-column record. This is the counter-shape, used
+ * where the content genuinely wants the width, and it is what the wide viewport gets to hold
+ * instead of margin.
+ */
+.band { display: grid; gap: var(--s6); }
+.band__h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: var(--s3) var(--s6); border-bottom: 1.5px solid var(--ink); padding-bottom: var(--s4); }
+.band__t { max-width: 26ch; }
+.band__n { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-2);
+  max-width: 44ch; line-height: 1.5; }
+.doc > .col { grid-column: 2; }
+.doc > .rail { grid-column: 1; grid-row: 1; }
+.doc > .full { grid-column: 1 / -1; }
+
+@media (max-width: 900px) {
+  .doc, .doc--wide { grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+  .doc > .col, .doc > .rail, .doc > .full { grid-column: 1; }
+  .doc > .rail { grid-row: auto; }
+}
+
+section { padding-block: clamp(var(--s7), 6vw, var(--s10)); }
+section + section { border-top: 1px solid var(--rule); }
+
+/* ---- type ----------------------------------------------------------------------------- */
+
+.label {
+  font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: var(--s4);
+}
+
+/*
+ * Display is set in the grotesque, not a serif. See tokens.css — a high-contrast display serif
+ * is the single loudest signal of the luxury-letting category, which is the category this site
+ * is trying not to be mistaken for.
+ */
+.display {
+  font-family: var(--sans); font-size: var(--t-display); font-weight: 600;
+  line-height: 0.98; letter-spacing: -0.028em; text-wrap: balance;
+  max-width: 15ch;
+}
+.head {
+  font-family: var(--sans); font-size: var(--t-head); font-weight: 600;
+  line-height: 1.12; letter-spacing: -0.018em; text-wrap: balance; max-width: 22ch;
+}
+.head3 {
+  font-family: var(--sans); font-size: var(--t-stand); font-weight: 600;
+  line-height: 1.25; letter-spacing: -0.01em;
+}
+.stand {
+  font-size: var(--t-stand); line-height: 1.45; font-weight: 300;
+  max-width: 34ch; margin-top: var(--s5);
+}
+.prose { margin-top: var(--s5); max-width: var(--measure); }
+.prose > p + p { margin-top: var(--s4); }
+.prose strong { font-weight: 600; }
+
+.u { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+  text-decoration-color: var(--rule-2); }
+.u:hover { text-decoration-color: currentColor; }
+
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---- rail ----------------------------------------------------------------------------- */
+
+.rail { display: grid; gap: var(--s5); }
+.rail__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.rail__n { font-family: var(--sans); font-size: var(--t-time); font-weight: 600;
+  letter-spacing: -0.015em; display: block; margin-top: 2px;
+  font-variant-numeric: tabular-nums lining-nums; }
+.rail__v { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-2);
+  line-height: 1.45; margin-top: 3px; }
+
+@media (max-width: 900px) {
+  .rail { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--s4) var(--s5);
+    padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+}
+
+/* ---- tables --------------------------------------------------------------------------- */
+
+/*
+ * The tables are the product, so they are set larger than the prose. On a normal letting site
+ * the crossing times would be small print under a photograph; here the photograph is the small
+ * print. Tabular figures throughout — see tokens.css.
+ */
+.tbl { width: 100%; border-collapse: collapse; font-family: var(--sans); }
+.tbl caption { text-align: left; font-size: var(--t-note); color: var(--ink-3); padding-bottom: var(--s3); }
+.tbl th, .tbl td { text-align: left; padding: var(--s3) var(--s4) var(--s3) 0; border-bottom: 1px solid var(--rule); }
+.tbl thead th { font-size: var(--t-label); font-weight: 600; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-3); border-bottom: 1.5px solid var(--ink); }
+.tbl tbody th { font-weight: 500; font-size: var(--t-small); }
+.tbl .t { font-size: var(--t-time); font-weight: 600; letter-spacing: -0.015em; }
+.tbl .n { text-align: right; font-variant-numeric: tabular-nums lining-nums; }
+.tbl__wrap { overflow-x: auto; }
+
+/* The one meaning the ochre carries. */
+.shut { color: var(--shut-ink); }
+.chip { display: inline-block; font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 7px; border: 1px solid var(--rule-2); }
+.chip--shut { background: var(--shut-wash); border-color: var(--shut); color: var(--shut-ink); }

@@ -1,0 +1,125 @@
+/*
+ * THE MONITORING GAP — a report with its apparatus showing.
+ *
+ * The thesis: this is a document, not a page about a document. It has numbered findings that can
+ * be cited, numbered figures with sources, a method section written to be read rather than
+ * skipped, and — the device the whole layout hangs on — a **margin**.
+ *
+ * ## The margin is the instrument
+ *
+ * Every route on this site is a two-column measure: a reading column and a narrower margin
+ * carrying figure numbers, source notes, definitions and cross-references. That is how research
+ * publishing actually works, and it does three things at once. It keeps the apparatus off the
+ * reading line, so a paragraph is not interrupted by a parenthesis about where a number came
+ * from. It gives the page a persistent asymmetry. And it is a pacing instrument: a figure that
+ * breaks out of the measure into the margin reads as larger than one that does not, without
+ * anything actually changing size.
+ *
+ * That last point is the reason this prototype exists. The three before it found their pacing
+ * elsewhere — imagery scale, a change of ground, a painted field — and the two that had only
+ * vertical space to work with scored worst on it. Here there is no photography and no
+ * colour-as-product. If pacing survives, it survives on measure, density and typographic scale.
+ *
+ * ## Colour
+ *
+ * One ink, one spot, and a neutral ramp for data. The spot is an oxide red and it is used for
+ * exactly two things: the thread of the argument through the prose, and the absence of data in a
+ * chart. Those are the same idea — the report is about what is missing — so they are the same
+ * colour, and nothing else on the site is allowed to have it.
+ *
+ * This is closer to the palette of the first two prototypes in this programme than to the third,
+ * and that is worth saying plainly rather than dressing up: a data report is not a paint
+ * catalogue, and restraint here is the correct answer rather than a habit. Whether it is *also*
+ * a habit is a question for the findings document, not for this file.
+ */
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/Newsreader-var.woff2') format('woff2-variations');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow SC';
+  src: url('/fonts/BarlowSemiCondensed-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow SC';
+  src: url('/fonts/BarlowSemiCondensed-500.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow SC';
+  src: url('/fonts/BarlowSemiCondensed-600.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+:root {
+  --paper: #faf8f4;
+  --paper-2: #f2efe8;    /* tables and figure grounds, a shade down from the sheet */
+  --ink: #171719;
+  --ink-2: #4a4a4e;      /* secondary prose */
+  --ink-3: #7c7c82;      /* apparatus, axis labels, sources */
+  --rule: #d5d1c8;
+  --rule-2: #b8b3a8;
+
+  /* The spot. The argument, and the absence of data. Nothing else. */
+  --spot: #9c3316;
+  --spot-soft: #f0e0d9;
+
+  /* The data ramp: coverage from dark (watched) to paper (dark estate). Deliberately a value
+     ramp rather than a hue scale, because the quantity is "how much of this was seen" and value
+     is the variable that reads as more-or-less without a legend. */
+  --d-0: #f0ece4;
+  --d-1: #d3ccbe;
+  --d-2: #a9a294;
+  --d-3: #7a7466;
+  --d-4: #4b4740;
+  --d-5: #232320;
+
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --sans: 'Barlow SC', 'Helvetica Neue', Arial, sans-serif;
+
+  --s1: 4px;  --s2: 8px;   --s3: 12px;  --s4: 16px;  --s5: 24px;
+  --s6: 32px; --s7: 48px;  --s8: 64px;  --s9: 96px;  --s10: 128px;
+
+  /*
+   * Type.
+   *
+   * Newsreader carries an optical-size axis and this document uses the whole of it: a chapter
+   * opening at 72 and a figure source note at 11 are not the same shape of letter, and setting
+   * both from one cut is the difference between a report and a web page about one.
+   */
+  --t-chapter: clamp(2.5rem, 1.1rem + 4.4vw, 4.75rem);
+  --t-head: clamp(1.5rem, 1.15rem + 1.3vw, 2.125rem);
+  --t-stand: clamp(1.1875rem, 1.08rem + 0.5vw, 1.5rem);
+  --t-body: clamp(1.0625rem, 1.01rem + 0.2vw, 1.1875rem);
+  --t-small: clamp(0.9375rem, 0.9rem + 0.16vw, 1.03125rem);
+  --t-note: clamp(0.8125rem, 0.78rem + 0.13vw, 0.9375rem);
+  --t-label: clamp(0.6875rem, 0.645rem + 0.14vw, 0.8125rem);
+
+  /* The measure and the margin. The reading column is held near 66 characters at every width;
+     everything the page gains beyond that goes to the margin and then to the outer rule. */
+  --measure: 34rem;
+  --margin-col: clamp(11rem, 15vw, 16rem);
+  --page-max: 1500px;
+  --pad: clamp(20px, 4vw, 56px);
+}
+
+/* Focus: a bracket in the spot colour, which appears nowhere else as an interface element. */
+:where(a, button, [tabindex], summary, input, select):focus-visible {
+  outline: 2px solid var(--spot);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

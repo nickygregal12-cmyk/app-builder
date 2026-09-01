@@ -1,0 +1,263 @@
+---
+/**
+ * How a booking actually happens.
+ *
+ * The v2 review's one substantive commercial finding: everything about the proposition, the
+ * prices and the constraints was clear before payment, and there was no visible control that
+ * completed the path. It was right — the site described a letting nobody could ask for.
+ *
+ * This is the control, and it is deliberately a *process* page rather than a form that submits.
+ * The estate takes enquiries by telephone and email and holds a week for forty-eight hours
+ * unpaid; that is a real thing single-property lettings do and it is more honest here than a
+ * fake checkout. The form below is inert and says so at the top of itself rather than in a
+ * footnote, because a prototype that appeared to accept a name and an email address would be
+ * collecting nothing while looking exactly like something that collects.
+ */
+import Base from '../layouts/Base.astro';
+import { SEASON, hoursLabel, money, span, toneName } from '../lib/season';
+import { availabilityOf } from '../data/availability';
+import { clock } from '../lib/tide';
+
+const free = SEASON.filter((week) => availabilityOf(week.slug) === 'free');
+const held = SEASON.filter((week) => availabilityOf(week.slug) === 'held');
+const taken = SEASON.filter((week) => availabilityOf(week.slug) === 'taken');
+
+const STEPS = [
+  {
+    n: '01',
+    head: 'You tell us the week',
+    body: 'By telephone or email. Not a form — for one house and thirty weeks a person answers, and it means we can tell you things about your particular week that a booking engine would not.',
+  },
+  {
+    n: '02',
+    head: 'We hold it for 48 hours, unpaid',
+    body: 'No card, no deposit, no account. The week comes off the list while you check it against the rest of your life, and if you do not come back it goes on again.',
+  },
+  {
+    n: '03',
+    head: 'We send you your two crossings in writing',
+    body: 'Before any money moves: the window you can drive on in, and the crossing you must be off on. Computed for your week and quoted to ten minutes. If either is impossible for you, this is where you find out.',
+  },
+  {
+    n: '04',
+    head: 'A third now, the rest six weeks before',
+    body: 'By transfer. There is a cancellation policy and it is one page long. Nothing about it is unusual and nothing about it is buried.',
+  },
+  {
+    n: '05',
+    head: 'Your provisioning order, four days out',
+    body: 'A list of what the house will have in it when you arrive. It comes over on the last open crossing before your arrival window, because after that nothing can.',
+  },
+];
+---
+<Base
+  title="Enquire — Hallowsand"
+  description="How to book Hallowsand: telephone or email, a 48-hour unpaid hold, and both of your crossings in writing before any money moves. 2026 availability listed."
+  section="Enquire"
+>
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Free, 2026</p>
+          <span class="rail__n">{free.length} weeks</span>
+          <p class="rail__v">of {SEASON.length}. {held.length} on hold, {taken.length} gone</p>
+        </div>
+        <div>
+          <p class="rail__k">Telephone</p>
+          <span class="rail__n">01668 000000</span>
+          <p class="rail__v">Weekdays, and Saturday mornings in season</p>
+        </div>
+        <div>
+          <p class="rail__k">Email</p>
+          <p class="rail__v">estate@hallowsand.example — a fictional address, on a fictional island</p>
+        </div>
+      </div>
+      <div class="col">
+        <p class="label">Enquire</p>
+        <h1 class="display">A person answers, and the week is held while you think.</h1>
+        <p class="stand">
+          One house, thirty weeks and a road that disappears. That is a conversation, not a
+          checkout.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Five steps</p>
+          <p class="rail__v">Nothing is taken from you until step four, and both of your crossings are in writing before it.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">What happens after you get in touch.</h2>
+      </div>
+      <div class="full">
+        <ol class="steps">
+          {STEPS.map((step) => (
+            <li class="step">
+              <span class="step__n num">{step.n}</span>
+              <div>
+                <h3 class="head3">{step.head}</h3>
+                <p class="step__b">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page band">
+      <div class="band__h">
+        <h2 class="head band__t">The {free.length} weeks still open.</h2>
+        <p class="band__n">
+          Live for 2026. Weeks on hold are shown because a hold lapses about one time in four,
+          and the estate keeps a list for them.
+        </p>
+      </div>
+      <div class="tbl__wrap">
+        <table class="tbl av">
+          <caption>2026 availability. Prices are the whole house for seven nights.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Week</th>
+              <th scope="col">Tide</th>
+              <th scope="col">Drive on</th>
+              <th scope="col">Off by</th>
+              <th scope="col" class="n">Cut off</th>
+              <th scope="col" class="n">Price</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SEASON.map((week) => {
+              const state = availabilityOf(week.slug);
+              return (
+                <tr class={state === 'taken' ? 'av--gone' : undefined}>
+                  <th scope="row"><a class="u" href={`/weeks/${week.slug}`}>{week.label}</a></th>
+                  <td data-l="Tide">{toneName(week.tone)}</td>
+                  <td class="t" data-l="Drive on">{span(week.arrival!)}</td>
+                  <td class="t" data-l="Off by">{clock(week.departure!.to)}</td>
+                  <td class="n" data-l="Cut off">{hoursLabel(week.shutHours)}</td>
+                  <td class="n" data-l="Price">{money(week.price)}</td>
+                  <td>
+                    <span class={`chip${state === 'free' ? ' chip--free' : state === 'held' ? ' chip--held' : ''}`}>
+                      {state === 'free' ? 'Open' : state === 'held' ? 'On hold' : 'Taken'}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">This form does nothing</p>
+          <p class="rail__v">It is here so the shape of the enquiry is visible. It has no action and submits nowhere.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">What we would ask you.</h2>
+        <p class="warnbox">
+          <strong>This prototype does not accept enquiries.</strong> Hallowsand is invented, the
+          telephone number and address above are not real, and the fields below are inert — there
+          is no form action, no script and nothing on the other end. It is shown because the
+          questions are part of the product: the third one is the one that matters.
+        </p>
+
+        <div class="fields" aria-hidden="true">
+          <div class="field"><span class="field__l">Which week</span><span class="field__i">Choose from the {free.length} open above</span></div>
+          <div class="field"><span class="field__l">How many of you</span><span class="field__i">The house sleeps nine</span></div>
+          <div class="field field--wide">
+            <span class="field__l">Is anybody in the party for whom a two-hour delay to an ambulance would be a problem?</span>
+            <span class="field__i">We ask this of everyone, and we would rather have the answer now</span>
+          </div>
+          <div class="field"><span class="field__l">Your name</span><span class="field__i" /></div>
+          <div class="field"><span class="field__l">Telephone</span><span class="field__i" /></div>
+        </div>
+
+        <div class="prose">
+          <p>
+            Before you get in touch, please read
+            {' '}<a class="u" href="/before-you-book">before you book</a>. It is the list of
+            people this house is a bad idea for and it is the reason our cancellation rate is
+            low.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .steps { list-style: none; margin-top: var(--s6); }
+  .step { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s5); border-bottom: 1px solid var(--rule); align-items: start; }
+  .step:first-child { border-top: 1.5px solid var(--ink); }
+  .step__n { font-family: var(--sans); font-size: var(--t-time); font-weight: 600;
+    color: var(--ink-3); letter-spacing: -0.02em; }
+  .step__b { margin-top: var(--s3); font-size: var(--t-small); color: var(--ink-2);
+    line-height: 1.6; max-width: 62ch; }
+
+  .av tbody th { font-weight: 600; }
+
+  /*
+   * The inventory recomposes below 780px rather than scrolling.
+   *
+   * As a seven-column table in an overflow container it fitted a phone by putting price and
+   * status — the two columns somebody scanning availability is actually looking for — off the
+   * right-hand edge. A horizontally scrolling table is not responsive design, it is a desktop
+   * table in a smaller box, and the reviewer found it immediately.
+   *
+   * So each row becomes a labelled block: the week and its status on one line, the four figures
+   * as a small grid under it. Table semantics are kept — this is still a table with headers, so
+   * it is still navigable as one — and only the presentation changes.
+   */
+  @media (max-width: 780px) {
+    .av, .av thead, .av tbody, .av tr, .av th, .av td { display: block; }
+    .av thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .av tbody tr { border-bottom: 1px solid var(--rule); padding-block: var(--s4);
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2) var(--s4); }
+    .av tbody th { border: 0; padding: 0; font-size: var(--t-stand); }
+    .av tbody td { border: 0; padding: 0; font-size: var(--t-small); }
+    /* Status keeps the top line beside the date; the four figures sit under both. */
+    .av tbody td:last-child { grid-column: 2; grid-row: 1; text-align: right; }
+    .av tbody td:not(:last-child) { grid-column: 1 / -1; display: flex; gap: var(--s2);
+      justify-content: space-between; max-width: 22rem; }
+    .av tbody td:not(:last-child)::before {
+      content: attr(data-l); font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3);
+    }
+  }
+  .av--gone { color: var(--ink-3); }
+  .av--gone .t { font-weight: 500; }
+  .chip--free { background: var(--paper-2); border-color: var(--rule-2); color: var(--ink); }
+  .chip--held { background: var(--shut-wash); border-color: var(--shut); color: var(--shut-ink); }
+
+  .warnbox { margin-top: var(--s5); border-left: 3px solid var(--ink); padding: var(--s2) 0 var(--s2) var(--s5);
+    font-family: var(--sans); font-size: var(--t-small); line-height: 1.55; color: var(--ink-2); }
+  .warnbox strong { display: block; color: var(--ink); font-size: var(--t-stand); font-weight: 600;
+    letter-spacing: -0.01em; margin-bottom: var(--s2); }
+
+  /* Not inputs. Ruled lines with their labels, so the shape of the enquiry reads without
+     anything on the page behaving like a control that works. */
+  .fields { margin-top: var(--s6); display: grid; gap: var(--s4);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+  .field { display: grid; gap: var(--s2); }
+  .field--wide { grid-column: 1 / -1; }
+  .field__l { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+  .field__i { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-3);
+    border-bottom: 1.5px solid var(--rule-2); padding-bottom: var(--s3); min-height: 1.6em; }
+</style>

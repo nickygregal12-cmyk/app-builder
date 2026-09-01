@@ -1,0 +1,19 @@
+{
+  "business": "Marlpit \u2014 a nineteen-person mineral-paint maker at a mill in Wiltshire, selling limewash, silicate, clay distemper and lime-casein paints in thirty-six colours to owners of solid-wall and historic buildings, to conservation officers specifying for listed work, and to the builders who apply it. Its argument is that a solid wall manages moisture by letting it move, and that modern vinyl emulsion is a film formulated not to let water vapour through. Its commercial first step is four sample pots for \u00a322, sold on the explicit basis that no screen and no printed card is good enough to choose a colour from.",
+  "businessKind": "retail and commerce with a large catalogue",
+  "benchmarkAnchors": [
+    "commerce",
+    "editorial-curation",
+    "restraint",
+    "large-information-architecture"
+  ],
+  "projectType": "marketing-site",
+  "candidateId": "marlpit-painted",
+  "directionLabel": "Painted \u2014 the site is made of the product",
+  "routeCount": 8,
+  "businessFacets": [
+    "retail-commerce",
+    "large-catalogue"
+  ],
+  "businessFacetsNote": "Sells goods with a fulfilment promise, across thirty-six colours in four paint systems \u2014 enough that finding one is a design problem. brand-voice-led is deliberately NOT claimed: it may be true, but the packet does not establish it. Declared for FUTURE re-evaluation only: every verdict already stored beside this packet was produced before #266 on the legacy prose path, and none of them has been recomputed. Historical scores stand as recorded."
+}

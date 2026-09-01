@@ -1,0 +1,331 @@
+---
+/**
+ * Every week of the season, with the figures that decide which one you want.
+ *
+ * The interesting decision here is that this is a *table*, set larger than the prose anywhere
+ * else on the site, and that the ribbon appears in every row. A letting site would normally show
+ * thirty photographs of the same house with a price under each. There is one house; showing it
+ * thirty times says nothing. What differs between rows is the tide, so the tide is what is drawn.
+ *
+ * The sort control is real: it re-orders the same rows without a request, and it defaults to
+ * date. Nothing is hidden behind it — all thirty weeks are in the document at all times, so it
+ * works with find-in-page and without JavaScript.
+ */
+import Base from '../../layouts/Base.astro';
+import Ribbon from '../../components/Ribbon.astro';
+import { SEASON, SEASON_FACTS, BAND_LABEL, hoursLabel, money, span, toneName } from '../../lib/season';
+import { clock } from '../../lib/tide';
+import { availabilityOf, AVAILABILITY_LABEL } from '../../data/availability';
+
+const SORTS = [
+  { key: 'date', label: 'By date' },
+  { key: 'price', label: 'Cheapest first' },
+  { key: 'shut', label: 'Least cut off' },
+  { key: 'arrive', label: 'Earliest arrival' },
+];
+/*
+ * Month anchors.
+ *
+ * The review's one specific complaint about this page: thirty rows with four sort orders and no
+ * way to reach a particular month except scrolling or find-in-page. A guest arrives knowing they
+ * want August, so August should be one click away.
+ *
+ * Anchors rather than a filter, because filtering would hide rows and the whole argument for this
+ * page is that all thirty are always in the document.
+ */
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+interface MonthAnchor { key: number; name: string; slug: string; first: string; count: number }
+const months: MonthAnchor[] = [];
+for (const week of SEASON) {
+  const key = week.start.getUTCMonth();
+  if (!months.some((m) => m.key === key)) {
+    months.push({ key, name: MONTH_NAMES[key], slug: MONTH_NAMES[key].toLowerCase(), first: week.slug, count: 0 });
+  }
+  months.find((m) => m.key === key)!.count += 1;
+}
+const monthAt = (week: (typeof SEASON)[number]) => months.find((m) => m.first === week.slug);
+
+const rows = SEASON.map((week) => ({
+  week,
+  sortDate: week.index,
+  sortPrice: week.price,
+  sortShut: Math.round(week.shutHours * 60),
+  sortArrive: Math.round(week.arrival!.from - week.days[0].origin),
+}));
+---
+<Base
+  title="Weeks and prices — Hallowsand"
+  description="All 30 lettable weeks of the 2026 season, each with its own computed crossing windows, hours cut off and price. Spring weeks cost less because the crossings are shorter."
+  section="Weeks & prices"
+>
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Season</p>
+          <span class="rail__n">{SEASON_FACTS.weeks} weeks</span>
+          <p class="rail__v">{SEASON[0].label} to {SEASON.at(-1)!.label}, 2026</p>
+        </div>
+        <div>
+          <p class="rail__k">From</p>
+          <span class="rail__n">{money(SEASON_FACTS.cheapest.price)}</span>
+          <p class="rail__v">{SEASON_FACTS.cheapest.label}, a {toneName(SEASON_FACTS.cheapest.tone)} week</p>
+        </div>
+        <div>
+          <p class="rail__k">Whole house</p>
+          <p class="rail__v">Sleeps nine. Friday to Friday. No short breaks — the changeover is a crossing, and two of them a week is all the road allows.</p>
+        </div>
+      </div>
+      <div class="col">
+        <p class="label">Weeks &amp; prices</p>
+        <h1 class="display">Every week, with its own tide.</h1>
+        <p class="stand">
+          One house, thirty weeks, thirty different crossings. The ribbon in each row is that
+          week's causeway; ochre is water over the road.
+        </p>
+        <div class="prose">
+          <p>
+            Prices are the whole house for seven nights, Friday to Friday, including the
+            provisioning order brought over on the last open crossing before you arrive. Weeks
+            around spring tides are eight per cent less, because the crossings are shorter — that
+            is the discount, it is shown in the row, and it is the only variation from the season
+            rate.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page">
+      <div class="sortbar">
+        <span class="sortbar__k" id="sortlabel">Order</span>
+        <div class="sortbar__b" role="group" aria-labelledby="sortlabel">
+          {SORTS.map((sort, index) => (
+            <button
+              class={`sortbar__x${index === 0 ? ' sortbar__x--on' : ''}`}
+              type="button"
+              data-sort={sort.key}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+            >{sort.label}</button>
+          ))}
+        </div>
+        <!--
+          Visible, not only announced. The feedback started life in a visually-hidden live region,
+          which meant the one person who could confirm the sort had happened was using a screen
+          reader — and the review could not verify it at all from a screenshot. A status line that
+          everybody can see is the better answer to both.
+        -->
+        <p class="sortbar__n" role="status" aria-live="polite" id="sortsaid">
+          All {SEASON.length} weeks, in date order. Nothing is loaded or hidden — ordering happens here.
+        </p>
+      </div>
+
+      <nav class="months" aria-label="Jump to a month">
+        <span class="months__k">Jump to</span>
+        <ul class="months__l">
+          {months.map((month) => (
+            <li>
+              <a class="months__a" href={`#${month.slug}`}>
+                {month.name}<span class="months__c num">{month.count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <ol class="wk" id="weeks">
+        {rows.map((row) => (
+          <li
+            class="wk__r"
+            data-date={row.sortDate}
+            data-price={row.sortPrice}
+            data-shut={row.sortShut}
+            data-arrive={row.sortArrive}
+            data-month={monthAt(row.week)?.name}
+            data-anchor={monthAt(row.week)?.slug}
+            id={monthAt(row.week)?.slug}
+          >
+            {monthAt(row.week) && (
+              <p class="wk__m" data-monthhead>
+                <span class="wk__mn">{monthAt(row.week)!.name}</span>
+                <span class="wk__mc num">{monthAt(row.week)!.count} weeks</span>
+              </p>
+            )}
+            <a class="wk__a" href={`/weeks/${row.week.slug}`}>
+              <div class="wk__when">
+                <span class="wk__date">{row.week.label}</span>
+                <span class="wk__band">{BAND_LABEL[row.week.band]} · {toneName(row.week.tone)}</span>
+                <span class={`wk__av wk__av--${availabilityOf(row.week.slug)}`}>{AVAILABILITY_LABEL[availabilityOf(row.week.slug)]}</span>
+              </div>
+
+              <div class="wk__rib">
+                <Ribbon days={row.week.days} scale="week" axis={false} labels={false} />
+              </div>
+
+              <dl class="wk__f num">
+                <div><dt>Arrive</dt><dd class="t">{span(row.week.arrival!)}</dd></div>
+                <div><dt>Off by</dt><dd class="t">{clock(row.week.departure!.to)}</dd></div>
+                <div><dt>Cut off</dt><dd>{hoursLabel(row.week.shutHours)}</dd></div>
+                <div><dt>Longest</dt><dd>{hoursLabel(row.week.longestShut)}</dd></div>
+              </dl>
+
+              <p class="wk__p">
+                <span class="wk__price">{money(row.week.price)}</span>
+                <span class="wk__pn">
+                  {row.week.tone > 0.34
+                    ? `${Math.round(row.week.tone * 8)}% off the ${BAND_LABEL[row.week.band].toLowerCase()} rate`
+                    : `${BAND_LABEL[row.week.band]} rate`}
+                </span>
+              </p>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <script>
+    /*
+     * Sorting, on rows that are already in the document. No fetch, no template, no hidden state —
+     * the button reorders the list and the URL hash records the choice so it survives a reload.
+     */
+    const list = document.getElementById('weeks');
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-sort]'));
+    if (list && buttons.length) {
+      const said = document.getElementById('sortsaid');
+      const apply = (key: string) => {
+        const rows = Array.from(list.children) as HTMLElement[];
+        rows.sort((a, b) => Number(a.dataset[key]) - Number(b.dataset[key]));
+        for (const row of rows) list.append(row);
+        for (const button of buttons) {
+          const on = button.dataset.sort === key;
+          button.classList.toggle('sortbar__x--on', on);
+          button.setAttribute('aria-pressed', String(on));
+        }
+        // The month headings mark runs of the date order. In any other order they would be
+        // labelling rows that are no longer theirs, so they go, and the jump bar goes with them.
+        list.classList.toggle('wk--nomonths', key !== 'date');
+        document.querySelector('.months')?.classList.toggle('months--off', key !== 'date');
+        if (said) {
+          const label = {
+            date: 'in date order',
+            price: 'cheapest first',
+            shut: 'least cut off first',
+            arrive: 'earliest arrival first',
+          }[key] ?? key;
+          said.textContent = `All ${rows.length} weeks, ${label}.` +
+            (key === 'date'
+              ? ' Nothing is loaded or hidden — ordering happens here.'
+              : ' Month headings are hidden in this order.');
+        }
+      };
+      for (const button of buttons) {
+        button.addEventListener('click', () => {
+          const key = button.dataset.sort!;
+          apply(key);
+          history.replaceState(null, '', key === 'date' ? location.pathname : `#${key}`);
+        });
+      }
+      const initial = location.hash.slice(1);
+      if (buttons.some((b) => b.dataset.sort === initial)) apply(initial);
+    }
+  </script>
+</Base>
+
+<style>
+  /* Month anchors. A row that is the first of its month carries the id, so the jump lands on a
+     real row rather than on a heading that would have to be invented. */
+  .months--off { display: none; }
+  .wk--nomonths .wk__m { display: none; }
+
+  /* A month heading spanning the row grid. Thirty identical rows read as one texture — the
+     review called the middle of this page flat and it was — and these are where the eye is
+     allowed to stop. */
+  .wk__m { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--s4); border-bottom: 1.5px solid var(--ink); padding: var(--s7) 0 var(--s3); }
+  .wk__r:first-child .wk__m { padding-top: var(--s5); }
+  .wk__mn { font-family: var(--sans); font-size: var(--t-head); font-weight: 600;
+    letter-spacing: -0.02em; }
+  .wk__mc { font-family: var(--sans); font-size: var(--t-label); font-weight: 500;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); }
+
+  .wk__av { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; }
+  .wk__av--free { color: var(--ink-2); }
+  .wk__av--held { color: var(--shut-ink); }
+  .wk__av--taken { color: var(--ink-3); text-decoration: line-through; }
+
+  .months { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s3) var(--s4);
+    padding-block: var(--s3); border-bottom: 1px solid var(--rule); }
+  .months__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .months__l { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); margin: 0; }
+  .months__a { font-family: var(--sans); font-size: var(--t-small); font-weight: 500;
+    text-decoration: none; color: var(--ink-2); display: inline-flex; align-items: baseline; gap: 5px;
+    border-bottom: 1px solid transparent; transition: color 120ms ease, border-color 120ms ease; }
+  .months__a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  .months__c { font-size: var(--t-label); color: var(--ink-3); }
+
+  /* A jump target sitting under the sticky-free header still wants a little air above it. */
+  .wk__r[id] { scroll-margin-top: var(--s6); }
+
+  .sortbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s3) var(--s5);
+    border-bottom: 1.5px solid var(--ink); padding-bottom: var(--s3); }
+  .sortbar__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .sortbar__b { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .sortbar__x { font-family: var(--sans); font-size: var(--t-small); font-weight: 500;
+    background: transparent; border: 1px solid var(--rule); color: var(--ink-2);
+    padding: 4px var(--s3); cursor: pointer; transition: all 120ms ease; }
+  .sortbar__x:hover { border-color: var(--rule-2); color: var(--ink); }
+  .sortbar__x--on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .sortbar__n { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-3);
+    margin-left: auto; }
+
+  .wk { list-style: none; }
+  .wk__r { border-bottom: 1px solid var(--rule); }
+  .wk__a {
+    display: grid; align-items: center; gap: var(--s3) var(--s5); text-decoration: none;
+    grid-template-columns: 12.5rem minmax(8rem, 1fr) minmax(0, 21rem) 8.5rem;
+    padding-block: var(--s4);
+    transition: background-color 130ms ease;
+  }
+  .wk__a:hover { background: var(--paper-2); }
+
+  .wk__when { display: grid; gap: 2px; }
+  .wk__date { font-family: var(--sans); font-size: var(--t-time); font-weight: 600;
+    letter-spacing: -0.015em; font-variant-numeric: tabular-nums lining-nums; }
+  .wk__band { font-family: var(--sans); font-size: var(--t-label); font-weight: 500;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); }
+
+  .wk__f { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3);
+    font-family: var(--sans); }
+  .wk__f dt { font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); }
+  .wk__f dd { margin: 0; font-size: var(--t-small); font-weight: 500; }
+  .wk__f dd.t { font-size: var(--t-small); font-weight: 600; }
+
+  .wk__p { text-align: right; display: grid; gap: 1px; }
+  .wk__price { font-family: var(--sans); font-size: var(--t-time); font-weight: 600;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums lining-nums; }
+  .wk__pn { font-family: var(--sans); font-size: var(--t-label); color: var(--ink-3);
+    letter-spacing: 0.04em; }
+
+  /*
+   * The row recomposes rather than shrinking. Below 1100px the ribbon moves under the dates and
+   * takes the full width — it is the most information-dense thing in the row and squeezing it to
+   * 8rem would make it a texture rather than a chart.
+   */
+  @media (max-width: 1100px) {
+    .wk__a { grid-template-columns: minmax(0, 1fr) 8rem; gap: var(--s3) var(--s4); }
+    .wk__when { grid-column: 1; }
+    .wk__p { grid-column: 2; grid-row: 1; }
+    .wk__rib { grid-column: 1 / -1; grid-row: 2; }
+    .wk__f { grid-column: 1 / -1; grid-row: 3; }
+  }
+  @media (max-width: 560px) {
+    .wk__f { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3) var(--s4); }
+    .sortbar__n { margin-left: 0; width: 100%; }
+  }
+</style>

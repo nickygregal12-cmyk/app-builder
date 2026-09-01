@@ -1,0 +1,110 @@
+[
+ {
+  "file": "status-open.png",
+  "route": "/",
+  "state": "the header strip with the road open: the water is back over it at the stated time, counted down live. The state marker is empty because nothing is over the road",
+  "viewport": "desktop"
+ },
+ {
+  "file": "status-shut.png",
+  "route": "/",
+  "state": "the same strip with the causeway shut — the depth over the road, when it opens, and how long that is. The marker takes the ochre, which is the only thing on this site that colour ever means",
+  "viewport": "desktop"
+ },
+ {
+  "file": "skip-link-focus.png",
+  "route": "/",
+  "state": "the skip link, revealed by the first Tab press",
+  "viewport": "desktop"
+ },
+ {
+  "file": "nav-hover.png",
+  "route": "/weeks",
+  "state": "a navigation item under the cursor. The current section is underscored in ink and hover raises a lighter rule, so the two are not confusable",
+  "viewport": "desktop"
+ },
+ {
+  "file": "nav-focus-keyboard.png",
+  "route": "/crossing",
+  "state": "navigation reached by keyboard: a two-pixel ink bracket, offset, on the same element hover only underlines",
+  "viewport": "desktop"
+ },
+ {
+  "file": "ribbon-crossing-tooltip.png",
+  "route": "/crossing",
+  "state": "a single crossing of the day ribbon under the cursor. Every bar carries its own times and duration, so the chart can be interrogated rather than only read",
+  "viewport": "desktop"
+ },
+ {
+  "file": "week-card-hover.png",
+  "route": "/",
+  "state": "one of the three week cards under the cursor: the ground shifts a step and the label goes to full ink",
+  "viewport": "desktop"
+ },
+ {
+  "file": "week-row-hover.png",
+  "route": "/weeks",
+  "state": "a row of the season list under the cursor, showing that the whole row is the target and not just the date",
+  "viewport": "desktop"
+ },
+ {
+  "file": "sort-default.png",
+  "route": "/weeks",
+  "state": "the season list in its default order, by date. Thirty weeks, thirty different tides, and the ribbon is what differs between the rows",
+  "viewport": "desktop"
+ },
+ {
+  "file": "sort-least-cut-off.png",
+  "route": "/weeks",
+  "state": "the same thirty rows re-ordered by hours cut off. Nothing was fetched and nothing is hidden — the rows were already in the document, which is why it also works with find-in-page",
+  "viewport": "desktop"
+ },
+ {
+  "file": "sort-focus-keyboard.png",
+  "route": "/weeks",
+  "state": "the sort control reached by keyboard, with the pressed button carrying aria-pressed and the ink fill rather than colour alone",
+  "viewport": "desktop"
+ },
+ {
+  "file": "prose-link-hover.png",
+  "route": "/before-you-book",
+  "state": "a link in prose under the cursor: the underline goes from rule to ink. Links are never given the ochre, because the ochre means water over the road and nothing else",
+  "viewport": "desktop"
+ },
+ {
+  "file": "pager-hover.png",
+  "route": "/weeks/2026-08-21",
+  "state": "the next-week link under the cursor, showing its price and tide before the click",
+  "viewport": "desktop"
+ },
+ {
+  "file": "sort-feedback.png",
+  "route": "/weeks",
+  "state": "the status line after a sort. It is a live region and it is also just visible text, so the feedback reaches everybody rather than only a screen reader — and it says what happened to the month headings",
+  "viewport": "desktop"
+ },
+ {
+  "file": "recompose-inventory-mobile.png",
+  "route": "/enquire",
+  "state": "the availability inventory on a phone. As a seven-column table in a scrolling box it put price and status — the two columns anybody scanning availability wants — off the right-hand edge; each row is now a labelled block with the status beside the date",
+  "viewport": "mobile"
+ },
+ {
+  "file": "enquire-action-hover.png",
+  "route": "/weeks/2026-04-03",
+  "state": "the enquiry action on a week that is open, under the cursor. A week that has gone gets a quieter outlined control asking about cancellations instead, because offering the same button either way makes the reader fill in a form to discover the answer",
+  "viewport": "desktop"
+ },
+ {
+  "file": "recompose-week-row-mobile.png",
+  "route": "/weeks",
+  "state": "the season row recomposed for a phone. The ribbon does not shrink into the row — it takes the full width underneath it, because it is the densest thing in the row and at 8rem it would be a texture rather than a chart",
+  "viewport": "mobile"
+ },
+ {
+  "file": "recompose-crossing-mobile.png",
+  "route": "/crossing",
+  "state": "the day ribbon at 390px. The label column narrows and the hour axis stays, because a timeline without its hours is a decoration",
+  "viewport": "mobile"
+ }
+]

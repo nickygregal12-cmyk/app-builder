@@ -1,0 +1,18 @@
+Archivo — SIL Open Font Licence 1.1
+  Copyright Omnibus-Type. https://github.com/Omnibus-Type/Archivo
+  Variable: weight and width axes.
+
+Source Serif 4 — SIL Open Font Licence 1.1
+  Copyright 2014-2023 Adobe. https://github.com/adobe-fonts/source-serif
+  Variable: optical size and weight axes.
+
+Chosen against the previous two prototypes as much as for this one. Nørreværk set Instrument
+Serif over Inter; Interlock set IBM Plex throughout. Both are austere, and a third austere
+pairing would have been an author's habit rather than a decision about a paint company.
+
+Archivo is a grotesque with weight and a width axis, closer to signwriting and to the lettering
+on a paint tin than to an interface typeface. Source Serif carries optical sizing, which matters
+on a site whose body copy runs over painted grounds of very different value. Warmth and
+sturdiness rather than restraint.
+
+Self-hosted, latin subset, no external request at runtime.

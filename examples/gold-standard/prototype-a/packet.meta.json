@@ -1,8 +1,19 @@
 {
-  "business": "Nørreværk — an architecture bureau in Copenhagen and Malmö that works only on conversion, extension and repair of buildings that already exist. Sixteen people, founded 2011. Its commercial first step is a paid two-week condition survey written by a partner, and about a third of those end with the bureau advising against the project.",
+  "business": "N\u00f8rrev\u00e6rk \u2014 an architecture bureau in Copenhagen and Malm\u00f6 that works only on conversion, extension and repair of buildings that already exist. Sixteen people, founded 2011. Its commercial first step is a paid two-week condition survey written by a partner, and about a third of those end with the bureau advising against the project.",
   "businessKind": "architecture practice",
-  "benchmarkAnchors": ["portfolio", "editorial-composition", "imagery", "architectural-restraint"],
+  "benchmarkAnchors": [
+    "portfolio",
+    "editorial-composition",
+    "imagery",
+    "architectural-restraint"
+  ],
   "projectType": "marketing-site",
   "candidateId": "norrevaerk-register",
-  "directionLabel": "Register — frames drawn in proportion to floor area"
+  "directionLabel": "Register \u2014 frames drawn in proportion to floor area",
+  "businessFacets": [
+    "architecture-practice",
+    "design-portfolio",
+    "physical-craft"
+  ],
+  "businessFacetsNote": "Same three facts: a bureau designing for clients, selling on completed conversions, whose product is physical fabric. Declared for FUTURE re-evaluation only: every verdict already stored beside this packet was produced before #266 on the legacy prose path, and none of them has been recomputed. Historical scores stand as recorded."
 }

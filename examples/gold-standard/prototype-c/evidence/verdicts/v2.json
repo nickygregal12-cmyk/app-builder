@@ -1,0 +1,265 @@
+{
+ "candidateId": "marlpit-painted",
+ "verdict": "pass",
+ "reviewedBy": {
+  "role": "design-critic",
+  "vendor": "openai",
+  "model": "GPT-5"
+ },
+ "rationale": "This is exceptional, highly authored work whose visual system, catalogue structures, technical comparisons and interactions arise directly from mineral paint rather than from a reusable commerce theme. It makes a difficult product unusually understandable and memorable across widths, though some long mobile passages and dense tables demand more effort than the strongest benchmark commerce experiences.",
+ "criterionScores": [
+  {
+   "criterion": "art-direction",
+   "score": 9.5,
+   "note": "The thesis that the site is made of the product governs whole-page grounds, colour-family fields, light studies, ink selection, rules and interaction states. Restraint and expressive colour are deployed with unusual confidence.",
+   "whyNotHigher": "The visual language is exceptionally coherent but not entirely without weakness: several long pale or dark passages become austere, and the repeated masthead-plus-editorial-grid construction is less surprising on secondary pages.",
+   "positiveEvidence": [
+    "Colour pages turn each paint into the literal ground of the interface.",
+    "The home-page light study, pigment families and full-range grid form one coherent visual argument.",
+    "Oxblood and Straw retain the same system while producing materially different atmospheres."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "business-specificity",
+   "score": 10,
+   "note": "The experience is structurally inseparable from mineral paint: light-dependent colour simulation, pigment families, LRV filtering, binder compatibility, substrate verdicts, vapour-resistance comparisons and sample-pot limits all determine the design.",
+   "whyNotHigher": "This reaches the top of the supplied scale because its principal structures would be actively wrong for almost any other business.",
+   "positiveEvidence": [
+    "The catalogue is organised simultaneously by pigment family and light reflectance rather than generic merchandising categories.",
+    "Individual colours show four computed lighting conditions and binder availability.",
+    "The wall matrix exposes paint-by-substrate suitability and preparation requirements.",
+    "The commercial workflow insists on four physical samples because the core product claim is that screen colour is insufficient."
+   ],
+   "whyBenchmark": "The site's identity does not depend on branding applied to generic commerce components; the product's chemistry, optical behaviour, limitations and purchasing method generate the interface itself."
+  },
+  {
+   "criterion": "information-architecture",
+   "score": 9,
+   "note": "Home establishes the moisture and light arguments, then routes distinct decisions into Colours, Paints, Your wall, Why lime and Samples. Deep technical content appears where its audience would seek it, while colour and product routes cross-reference the same evidence.",
+   "whyNotHigher": "The catalogue remains large and the mobile colour index is exceptionally long; stronger progressive navigation within long routes could reduce effort without hiding information.",
+   "positiveEvidence": [
+    "Product choice, substrate suitability, material explanation and ordering each have dedicated routes.",
+    "Home previews the complete argument without merely duplicating every destination.",
+    "The two-axis colour filtering directly answers pigment-family and room-light questions.",
+    "The sample route combines the real first purchase with a coverage calculator and specification alternative."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "visual-hierarchy",
+   "score": 9,
+   "note": "Every route announces a clear proposition, then shifts hierarchy according to purpose: large colour names on product pages, comparison bars on Why lime, specification records on Paints and a decision matrix on Your wall.",
+   "whyNotHigher": "Some mobile technical sequences flatten into many similarly weighted records, and the repeated small uppercase eyebrows occasionally add distance rather than useful hierarchy.",
+   "positiveEvidence": [
+    "Hero statements dominate without obscuring the supporting argument.",
+    "Large fields of product colour create decisive visual chapters.",
+    "Technical metadata remains subordinate but consistently discoverable.",
+    "Dark and coloured transitions clearly signal changes in subject and intent."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "typography",
+   "score": 9,
+   "note": "The robust display sans, literary serif body, compact uppercase metadata and tabular labels perform distinct compositional roles. Measures, weights, rules and responsive scaling remain controlled across editorial, catalogue and technical material.",
+   "whyNotHigher": "The smallest captions and metadata approach the edge of comfortable legibility in several wide screenshots, while some long mobile serif passages could use slightly more breathing room.",
+   "positiveEvidence": [
+    "Large headlines are shaped as deliberate blocks rather than generic oversized slogans.",
+    "Serif prose gives technical explanations authority without making the interface ornamental.",
+    "Captions, chemical codes, LRV values, statuses and table headings form a disciplined small-type system.",
+    "Names embedded inside colour fields turn typography into part of the product display."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "composition-pacing",
+   "score": 9,
+   "note": "The experience alternates argument, evidence, colour immersion, dense reference material and commercial action. Scale and density change meaningfully between routes and within long pages.",
+   "whyNotHigher": "Several mobile routes remain very long, and the repeated dark footer after already substantial dark sections sometimes weakens the final cadence.",
+   "positiveEvidence": [
+    "Home moves from an airy opening through a muted light laboratory into dense pigment darkness, the full colour field, specifications and a red close.",
+    "Colour-detail pages balance immersive colour, comparative swatches, technical pricing and family navigation.",
+    "The Why lime and Your wall routes alternate data-heavy light sections with photographic dark or ochre chapters."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "visual-material",
+   "score": 9,
+   "note": "Colour fields, computed lighting variants, pigment-family matrices, technical tables, vapour-resistance bars and documentary photographs are all chosen to make the product argument rather than decorate it.",
+   "whyNotHigher": "The limited photographic set is reused across routes, and the evidence does not show physical tins, finishes or painted interiors that might add tactile proof without undermining the concept.",
+   "positiveEvidence": [
+    "Four-light comparisons demonstrate why cards and screens cannot settle a colour choice.",
+    "The full-range grid makes neighbouring hues directly comparable.",
+    "Chalk, kiln and building photography connects chemistry to material origin and application.",
+    "Compatibility matrices and resistance bars turn difficult specification information into visible evidence."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "interaction-craft",
+   "score": 9.5,
+   "note": "The captured states show unusually thoughtful implementation: coordinated light-box repainting, keyboard radiogroups, reduced-motion parity, computed contrast, live sample-box feedback, two-axis filtering and persistent state.",
+   "whyNotHigher": "The 420ms repaint is conceptually apt but the captured midpoint appears muddy enough that it may momentarily reduce clarity; direct timing and usability evidence beyond screenshots is unavailable.",
+   "positiveEvidence": [
+    "The light comparison repaints all four panels through one coherent transform.",
+    "Arrow-key operation uses roving tabindex and a visible focus ring.",
+    "Reduced-motion mode reaches the identical final state without animation.",
+    "Hover and focus marks compute against each swatch or painted ground.",
+    "A full sample box disables unavailable additions and explains the reason through a live region.",
+    "Filter combinations withdraw irrelevant families and update the result count."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "responsive-recomposition",
+   "score": 9,
+   "note": "Phone layouts are not merely stacked: comparison swatches remain two-by-two, the catalogue becomes a three-column square field, matrices become substrate records, tables become readable product blocks and family strips reflow spatially.",
+   "whyNotHigher": "Some conversions trade scanability for length, especially the eight substrate records and thirty-six-colour index; the mobile masthead also consumes substantial early-page space.",
+   "positiveEvidence": [
+    "The phone light box preserves simultaneous comparison in a two-by-two arrangement.",
+    "The substrate matrix changes from columns to complete records.",
+    "The catalogue deliberately holds three neighbouring colours across.",
+    "Product specifications and coverage results become labelled vertical records rather than squeezed tables."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "brand-fit",
+   "score": 9.5,
+   "note": "The restrained, materially coloured, technically candid language feels precisely suited to a small Wiltshire maker serving historic buildings, specifiers and informed owners. It feels handmade and authoritative without becoming nostalgic.",
+   "whyNotHigher": "The near-total absence of workshop, maker or application imagery leaves the nineteen-person manufacturing character less tangible than the product chemistry.",
+   "positiveEvidence": [
+    "Earth, chalk, oxide and soot colours determine the site atmosphere.",
+    "Technical limitations and drawbacks are presented as brand virtues rather than hidden.",
+    "Typography bridges practical trade information and conservation-minded editorial authority.",
+    "The refusal to simulate certainty about colour supports the company's stated ethics."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "commercial-clarity",
+   "score": 9,
+   "note": "The proposition, differentiation and first purchase are explicit: breathable paints for solid walls, honest substrate restrictions, four physical samples for £22 and free specification advice when the building matters more than a checkout.",
+   "whyNotHigher": "The route to an actual completed order is not shown, and the repeated warning-led language may slow less technical domestic buyers who want a faster recommendation.",
+   "positiveEvidence": [
+    "The sample-box count remains visible and updates from elsewhere on the page.",
+    "Coverage inputs recompute litres, tins, cost and cost per square metre.",
+    "Each paint exposes its drawback, price, coverage and substrate range before purchase.",
+    "The site clearly redirects unsuitable customers rather than implying universal compatibility."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "ai-slop-resistance",
+   "score": 10,
+   "note": "No visible decision relies on generic generated-site motifs. The design uses product-derived grounds, editorial typography, scientific comparisons, square swatches, plain rules and candid business language instead of interchangeable cards, gradients or conversion clichés.",
+   "whyNotHigher": "This reaches the top of the criterion because the visible language is consistently justified by the business and avoids the identified generic patterns.",
+   "positiveEvidence": [
+    "There are no decorative gradient headlines, rounded-card collections, fake logos, glowing effects or generic feature triplets.",
+    "Whitespace supports technical reading and colour comparison rather than manufacturing a premium appearance.",
+    "Dark sections correspond to pigment families, material argument or commercial contrast rather than a generic closing slab.",
+    "Components are shaped by colour chemistry, light, substrates and sample ordering."
+   ],
+   "whyBenchmark": "The design offers a coherent alternative visual grammar generated from the company's actual material, constraints and evidence; it is not merely free of obvious AI motifs."
+  },
+  {
+   "criterion": "memorability",
+   "score": 9.5,
+   "note": "The signature experience is unmistakable: a mineral-paint site that repaints itself as a product demonstration, compares one colour under four lights and then refuses to let that simulation substitute for four physical samples.",
+   "whyNotHigher": "The central idea is exceptionally memorable, but several secondary editorial pages use a quieter shared system that would be less instantly recognisable in isolation.",
+   "positiveEvidence": [
+    "Whole product pages adopt the selected paint as their ground.",
+    "The four-light laboratory makes colour instability the main interactive artefact.",
+    "The complete thirty-six-colour field becomes a large navigable composition.",
+    "The site's strongest message and purchase mechanic resolve into the same claim: put it on the wall."
+   ],
+   "whyBenchmark": ""
+  }
+ ],
+ "holisticTier": "exceptional",
+ "observations": {
+  "templateDerived": false,
+  "interchangeableBusiness": false,
+  "mobileIsStackedDesktop": false,
+  "noSignatureMoment": false,
+  "typographyMerelyCompetent": false,
+  "genericDesignLanguage": false
+ },
+ "signatureMoment": "The interface becomes the paint: selecting a colour repaints a four-light comparison and individual colour pages use that pigment as their ground, while the copy insists the screen is still not good enough and directs the buyer to four real sample pots.",
+ "pairwiseComparison": {
+  "referenceId": "vb-aesop",
+  "comparisons": [
+   {
+    "dimension": "art-direction",
+    "outcome": "roughly-comparable",
+    "note": "Both sustain a restrained material thesis across commerce and editorial content; Marlpit is more chromatically demonstrative, while Aesop has the advantage of a mature global image system."
+   },
+   {
+    "dimension": "typography",
+    "outcome": "reference-stronger",
+    "note": "Marlpit's typography is highly crafted, but Aesop's type and language system remains more consistently polished across a much larger content and commerce surface."
+   },
+   {
+    "dimension": "composition",
+    "outcome": "roughly-comparable",
+    "note": "Marlpit composes long pages with substantial shifts in colour, density and evidence; Aesop is marginally calmer, but the candidate's pacing is comparably intentional for this smaller problem."
+   },
+   {
+    "dimension": "information-architecture",
+    "outcome": "reference-stronger",
+    "note": "Marlpit edits its technical story extremely well, but Aesop resolves a vastly larger catalogue, editorial library and store network while preserving findability."
+   },
+   {
+    "dimension": "responsive-design",
+    "outcome": "roughly-comparable",
+    "note": "The candidate demonstrates genuine mobile redesign through matrix records, three-across colour fields and retained two-by-two comparison rather than simple stacking."
+   },
+   {
+    "dimension": "craft",
+    "outcome": "roughly-comparable",
+    "note": "Computed ink, keyboard operation, live feedback, persistent sample state and reduced-motion parity demonstrate practitioner-level care comparable to benchmark commerce craft, within a smaller scope."
+   },
+   {
+    "dimension": "memorability",
+    "outcome": "candidate-stronger",
+    "note": "The site literally becoming the selected paint and arguing against its own screen simulation is a more singular remembered interaction than Aesop's deliberately quieter system."
+   },
+   {
+    "dimension": "business-specificity",
+    "outcome": "candidate-stronger",
+    "note": "Aesop is unmistakably itself, but Marlpit's principal components are unusually inseparable from mineral-paint chemistry, historic substrates, changing light and the four-pot buying method."
+   }
+  ]
+ },
+ "benchmarkGap": "SMALL",
+ "benchmarkGapDetail": "The reference retains a modest advantage in refinement or craft. Close, not equal.",
+ "benchmarkComparisonCounts": {
+  "candidate-stronger": 2,
+  "roughly-comparable": 4,
+  "reference-stronger": 2,
+  "reference-substantially-stronger": 0
+ },
+ "dimensionsNotCompared": [],
+ "evidenceCeiling": {
+  "cap": 10,
+  "tier": "site-level",
+  "routes": 63,
+  "artifactRoutes": 8,
+  "coversWholeArtifact": true,
+  "viewports": 4,
+  "detail": "Evidence covers all 8 route(s) of this artifact at 4 viewport(s). Nothing is unphotographed, so evidence caps the claim at 10."
+ },
+ "failingCriteria": [],
+ "blockingConcerns": [],
+ "addressedRules": [],
+ "addressedRuleNotes": [],
+ "unprovenCriteria": [],
+ "evidence": {
+  "candidateId": "marlpit-painted",
+  "compositionHash": null,
+  "captureCount": 90,
+  "captureDigest": "8a9de62dc28bf1d18c30991960c01dbbfe661741673fa259285ce194412aedb2"
+ }
+}

@@ -1,0 +1,145 @@
+/*
+ * HALLOWSAND — a letting site built out of a tide table.
+ *
+ * ## The thesis
+ *
+ * The product is not a house. It is the fact that for about ten hours of every day nobody can
+ * reach the house and nobody in it can leave. A house photographs like every other coastal house;
+ * the tide does not exist on any competitor's website. So the tide is the visual material, and
+ * the recurring object across every route is the DAY RIBBON — one horizontal bar per day, ochre
+ * where the water is over the road, paper where it is not, drawn from src/lib/tide.ts.
+ *
+ * Stack fourteen of them and the fifty-minute daily drift appears as a diagonal running down the
+ * page. That diagonal is the single most important fact about staying here and it is not
+ * illustrated, it is plotted. It is also the reason this site cannot be lifted onto another
+ * property: the shape is a function of the model.
+ *
+ * ## What this must not become
+ *
+ * The benchmark reference for this class carries a warning that Aman's language minus Aman's
+ * imagery is the minimal-luxury-slop fixture, and that fixture exists in this repository's own
+ * calibration corpus: warm grey, large serif display, vast whitespace, a wide dim photograph, and
+ * nothing in it that could only be said about one place. Building the obvious version of this
+ * brief means building the test case.
+ *
+ * So three deliberate refusals, each of which costs something:
+ *
+ *   NOT WARM. The ground is haar — the cold grey-green sea fog off this coast — not the beige
+ *   every luxury letting site shares. It is less immediately appetising and it is the colour of
+ *   the actual weather.
+ *
+ *   THE DISPLAY FACE IS NOT A SERIF. Instrument Sans sets the headlines, tight and large.
+ *   A fashionable high-contrast serif at 88px is the single strongest signal of the category, and
+ *   the category is what is being avoided. The serif is Literata and it is confined to prose,
+ *   where reading actually happens.
+ *
+ *   THE TABLES ARE BIGGER THAN THE PROSE. On a normal letting site the times are small print
+ *   under a photograph. Here the crossing times are set larger than the body copy, because they
+ *   are what is being sold. That inversion is the layout equivalent of the thesis.
+ *
+ * ## Colour, which is a system and not a palette
+ *
+ * One ink, one ground, one signal. The signal is a wet ochre and it means exactly one thing
+ * everywhere on this site: THE WATER IS OVER THE ROAD. It is in the ribbons, in the crossing
+ * tables, in the status line and in the week cards. It is not on links, not on buttons, not on
+ * headings, not on hover. A colour that means one thing throughout a site is a system; the same
+ * colour used for emphasis as well is a decoration, and the reader stops trusting it.
+ *
+ * Three of the four prototypes before this one settled on monochrome-plus-one-accent. So does
+ * this one, and the finding document should say so plainly rather than claim the habit was
+ * broken. What is different here is that the accent is not an accent — it is a state.
+ */
+
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/fonts/InstrumentSans-var.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('/fonts/Literata-var.woff2') format('woff2-variations');
+  font-weight: 300 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Haar. Cold, grey, faintly green — the fog, not the sand. */
+  --paper: #e9ebe7;
+  --paper-2: #dfe2dd;   /* table grounds, and the open state inside a ribbon */
+  --paper-3: #d3d7d1;   /* rules that need to read as a fold rather than a line */
+
+  --ink: #12171b;       /* blue-black. Not warm, not pure black */
+  --ink-2: #3f4a51;
+  --ink-3: #69747b;
+
+  --rule: #c2c8c1;
+  --rule-2: #a8b0a7;
+
+  /*
+   * The signal. Water over the road, and nothing else, anywhere.
+   * Two values: the fill used in ribbons and tables, and a darker one that clears 4.5:1 on the
+   * ground for the few places the word "shut" is set in it.
+   */
+  --shut: #a4691d;
+  --shut-ink: #6f4610;
+  --shut-wash: #e8dcc6;
+
+  --sans: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --serif: 'Literata', Georgia, 'Times New Roman', serif;
+
+  --s1: 4px;  --s2: 8px;   --s3: 12px;  --s4: 16px;  --s5: 24px;
+  --s6: 32px; --s7: 48px;  --s8: 64px;  --s9: 96px;  --s10: 140px;
+
+  /*
+   * Type.
+   *
+   * --t-time is the crossing times, and it sits *above* --t-body on purpose. Everything else
+   * hangs off that decision.
+   */
+  /*
+   * Two reviews running found the smallest labels and captions "very small at wide desktop
+   * scale". Only the top of each clamp has moved; the floors and the reading measure are
+   * untouched, because the previous prototype answered a note about width by widening a measure
+   * and lost a third of a point for it.
+   */
+  --t-display: clamp(2.75rem, 1.2rem + 5.2vw, 5.5rem);
+  --t-head: clamp(1.625rem, 1.25rem + 1.5vw, 2.375rem);
+  --t-stand: clamp(1.1875rem, 1.09rem + 0.45vw, 1.4375rem);
+  --t-time: clamp(1.25rem, 1.11rem + 0.62vw, 1.625rem);
+  --t-body: clamp(1.0625rem, 1.02rem + 0.2vw, 1.15rem);
+  --t-small: clamp(0.96875rem, 0.93rem + 0.22vw, 1.125rem);
+  --t-note: clamp(0.875rem, 0.845rem + 0.18vw, 1rem);
+  --t-label: clamp(0.75rem, 0.725rem + 0.16vw, 0.875rem);
+
+  --measure: 36rem;
+  --page-max: 1360px;
+  --pad: clamp(20px, 4vw, 60px);
+}
+
+/*
+ * Every number on this site is a time, a duration or a price, and they are all read in columns.
+ * Tabular figures are not a refinement here, they are the difference between a table and a list.
+ */
+.num, table, .time, time {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+:where(a, button, [tabindex], summary, input, select):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

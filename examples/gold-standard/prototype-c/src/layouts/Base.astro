@@ -1,0 +1,155 @@
+---
+/**
+ * The masthead, and the tin.
+ *
+ * The header is painted in the colour of whatever the page is about, which is the smallest
+ * possible statement of the thesis: you cannot look at this company without looking at paint.
+ * On the colour pages that is the colour itself, so the masthead is a different colour on every
+ * one of thirty-six routes — which is the sort of thing that is either a system or a mess, and
+ * is a system here only because the ink is computed rather than picked.
+ */
+import '../styles/tokens.css';
+import '../styles/site.css';
+import Painted from '../components/Painted.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** The colour this page is painted in. */
+  hex: string;
+  /** Named on the masthead, where the page has one. */
+  chapter?: string;
+}
+const { title, description, hex, chapter } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+const ROUTES = [
+  { href: '/colours', label: 'Colours' },
+  { href: '/paints', label: 'Paints' },
+  { href: '/walls', label: 'Your wall' },
+  { href: '/lime', label: 'Why lime' },
+  { href: '/samples', label: 'Samples' },
+];
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content={hex} />
+    <link rel="preload" href="/fonts/Archivo-var.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/SourceSerif4-var.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <p class="live" role="status" aria-live="polite" data-box-live></p>
+
+    <Painted hex={hex} as="header" band class="masthead">
+      <div class="page masthead__in">
+        <a href="/" class="mark" aria-label="Marlpit, home">
+          Marlpit
+          <span>Mineral paint · Wiltshire</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          {ROUTES.map((route) => (
+            <a href={route.href} aria-current={path.startsWith(route.href) ? 'page' : undefined}>{route.label}</a>
+          ))}
+        </nav>
+        {/* The only transactional control on the site, and it is a box of four sample pots
+            rather than a basket. A "buy 20 litres" button would contradict the page it sits on. */}
+        <a class="box-link" href="/samples" data-box-link>
+          Sample box
+          <span class="box-link__n" data-box-count>0</span>
+          <span class="box-link__of">of 4</span>
+        </a>
+        {chapter && <p class="masthead__chapter">{chapter}</p>}
+      </div>
+    </Painted>
+
+    <main id="main"><slot /></main>
+
+    <Painted hex="#2f2820" as="footer" class="foot">
+      <div class="page foot__in">
+        <div class="foot__col">
+          <p class="foot__k">Marlpit</p>
+          <p class="foot__v">Nadder Mill, Wiltshire SP3<br />01722 400 118<br /><a class="u" href="mailto:mill@marlpit.example">mill@marlpit.example</a></p>
+        </div>
+        <div class="foot__col">
+          <p class="foot__k">Trade</p>
+          <p class="foot__v">Specification and substrate advice<br />Nineteen people. We make everything we sell.</p>
+        </div>
+        <div class="foot__col">
+          <p class="foot__k">Ordering</p>
+          <p class="foot__v">Four sample pots, £22 delivered<br />Full range in four paints and thirty-six colours</p>
+        </div>
+        <div class="foot__col foot__col--note">
+          <p class="foot__v">
+            Prototype. The company, its mill and its people are fictional; the pigments, the paint
+            chemistry and the building science are not. Photographs are other people's work, credited
+            where they appear.
+          </p>
+        </div>
+      </div>
+    </Painted>
+    <script>
+      import { BOX_EVENT, BOX_SIZE, readBox } from '../lib/box';
+      /* One listener for the header, wherever the change came from. */
+      const paint = (slugs: string[]) => {
+        for (const node of document.querySelectorAll<HTMLElement>('[data-box-count]')) node.textContent = String(slugs.length);
+        for (const link of document.querySelectorAll<HTMLElement>('[data-box-link]')) link.toggleAttribute('data-full', slugs.length >= BOX_SIZE);
+      };
+      paint(readBox());
+      window.addEventListener(BOX_EVENT, (event) => paint((event as CustomEvent<string[]>).detail));
+      window.addEventListener('storage', () => paint(readBox()));
+    </script>
+
+    <script>
+      import { BOX_EVENT, BOX_SIZE, readBox, toggle } from '../lib/box';
+
+      /**
+       * Every add control on the page, wherever it is.
+       *
+       * The same button both adds and removes, because a chosen swatch and an unchosen one are
+       * one object in two states. The live region announces the result: a count changing in the
+       * masthead is invisible to a screen reader, and "added, three of four" is the whole
+       * feedback for somebody not looking at the corner.
+       */
+      const live = document.querySelector<HTMLElement>('[data-box-live]');
+      const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-add]')];
+
+      const sync = (slugs: string[]) => {
+        const full = slugs.length >= BOX_SIZE;
+        for (const button of buttons) {
+          const chosen = slugs.includes(button.dataset.add!);
+          button.setAttribute('aria-pressed', String(chosen));
+          button.toggleAttribute('data-blocked', full && !chosen);
+          const mark = button.querySelector<HTMLElement>('.add__mark');
+          if (mark) mark.textContent = chosen ? '\u2713' : '+';
+          const label = button.querySelector<HTMLElement>('[data-add-label]');
+          if (label) label.textContent = chosen ? 'In the box' : (label.dataset.idle ?? label.textContent);
+        }
+      };
+
+      for (const button of buttons) {
+        const label = button.querySelector<HTMLElement>('[data-add-label]');
+        if (label) label.dataset.idle = label.textContent ?? '';
+        button.addEventListener('click', () => {
+          const result = toggle(button.dataset.add!);
+          if (live) {
+            live.textContent = result.added
+              ? `Added. ${result.slugs.length} of ${BOX_SIZE} in the sample box.`
+              : result.full
+                ? `The sample box already holds ${BOX_SIZE}. Remove one first.`
+                : `Removed. ${result.slugs.length} of ${BOX_SIZE} in the sample box.`;
+          }
+          sync(result.slugs);
+        });
+      }
+      sync(readBox());
+      window.addEventListener(BOX_EVENT, (event) => sync((event as CustomEvent<string[]>).detail));
+    </script>
+  </body>
+</html>

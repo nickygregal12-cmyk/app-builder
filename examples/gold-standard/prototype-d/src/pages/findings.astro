@@ -1,0 +1,126 @@
+---
+/**
+ * The findings.
+ *
+ * Numbered so they can be cited, each carrying the figure it rests on and — the part most
+ * reports leave out — what it does not support. A finding without its limit is a quotation
+ * waiting to be taken out of context, and this document's whole subject is figures read without
+ * their qualification.
+ */
+import Base from '../layouts/Base.astro';
+import { SERIES, R, OVERALL, INVERSIONS, HEADLINE_INVERSION, byCoverage, byLatent, num, pct } from '../lib/stats';
+
+const h = HEADLINE_INVERSION;
+const worst = byCoverage.slice(0, 4);
+const improved = [...SERIES].sort((a, b) =>
+  (b.catchment.coverageEnd - b.catchment.coverageStart) - (a.catchment.coverageEnd - a.catchment.coverageStart))[0];
+const rise = (improved.catchment.coverageEnd - improved.catchment.coverageStart);
+
+const FINDINGS = [
+  {
+    id: 'f1',
+    n: 1,
+    claim: `Mean monitor coverage across the study was ${pct(OVERALL.meanCoverage, 1)}. In four of twelve catchments it was below 60%.`,
+    body: `Coverage is not a rounding error on the spill counts; it is a large fraction of them. The four worst — ${worst.map((s) => s.catchment.name).join(', ')} — averaged between ${pct(worst[0].totals.coverage)} and ${pct(worst[3].totals.coverage)} of their estate reporting over five years.`,
+    limit: 'This says nothing about why. Monitors fail, are installed late, lose power and lose signal, and the dataset does not distinguish between those.',
+    figure: 'Figure 1',
+    href: '/#figure-1',
+  },
+  {
+    id: 'f2',
+    n: 2,
+    claim: `Reported spills per overflow correlate with coverage at r = ${R.reportedVsCoverage.toFixed(2)}. The underlying rate does not, at r = ${R.latentVsCoverage.toFixed(2)}.`,
+    body: 'The published figure is substantially a measurement of the instrument. The control matters as much as the finding: the two inputs to the simulation were drawn independently, so a slope in the second would mean the result had been built into the data rather than observed in it.',
+    limit: 'Twelve points. A correlation on twelve points is an illustration of a mechanism, not an estimate of its size, and no confidence interval is quoted here because one would imply a population this study does not have.',
+    figure: 'Figure 2',
+    href: '/#figure-2',
+  },
+  {
+    id: 'f3',
+    n: 3,
+    claim: `${INVERSIONS.length} pairs of catchments invert: the one with the higher underlying rate reports fewer spills per overflow. The widest is ${h.dirtier.catchment.name} against ${h.cleaner.catchment.name}.`,
+    body: `${h.dirtier.catchment.name} discharges ${h.dirtier.totals.latentPerOverflow.toFixed(1)} times per overflow per year against ${h.cleaner.catchment.name}'s ${h.cleaner.totals.latentPerOverflow.toFixed(1)}, and reports ${h.dirtier.totals.perOverflow.toFixed(1)} against ${h.cleaner.totals.perOverflow.toFixed(1)}. The difference is ${pct(h.coverageGap)} of monitoring.`,
+    limit: 'Inversions are counted over the whole period. A pair that inverts across five years may not invert in any single one of them, and this report does not claim it does.',
+    figure: 'Figure 2',
+    href: '/#figure-2',
+  },
+  {
+    id: 'f4',
+    n: 4,
+    claim: `Where coverage improved, reported spills rose. ${improved.catchment.name} gained ${pct(rise)} of coverage over the period and its reported figures rose with it.`,
+    body: 'A rise in a catchment’s published spill count is at least as likely to be a rise in monitoring as a deterioration in the river. Read as a trend without its coverage, an improving estate looks like a worsening one.',
+    limit: 'This is the weakest finding here. Sixty months is not long enough to separate a coverage effect from a genuine change, and the simulation holds the underlying rate flat by construction — so the direction is real and the magnitude is an artefact.',
+    figure: 'Figure 1',
+    href: '/#figure-1',
+  },
+  {
+    id: 'f5',
+    n: 5,
+    claim: 'The two datasets a reader needs are published separately and in different shapes.',
+    body: 'Spill counts and monitor availability are both public. They are not published together, not keyed the same way, and not aggregated to the same period, so joining them is a piece of work rather than a lookup. That is the practical reason the qualification is usually missing rather than any unwillingness to state it.',
+    limit: 'An observation about publishing practice, not a result from this dataset. It is here because it is the finding that would actually change anything, and it is the one with no figure behind it.',
+    figure: null,
+    href: null,
+  },
+];
+---
+<Base
+  title="Findings — The Monitoring Gap 2026"
+  description="Five numbered findings, each with the figure it rests on and what it does not support."
+  chapter="Chapter 01"
+  chapterTitle="Findings"
+>
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">Chapter 01</p>
+        <h1 class="chapter">Findings</h1>
+        <p class="stand">
+          Five, numbered so they can be cited. Each carries the figure it rests on and what it does
+          not support, because a finding without its limit is a sentence waiting to be quoted
+          without one.
+        </p>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Citation</p>
+          <p class="margin__v">Stell (2026), <em>The Monitoring Gap</em>, finding n. Numbers are stable across revisions of this report.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {FINDINGS.map((finding) => (
+    <section id={finding.id}>
+      <div class="page doc">
+        <div class="col">
+          <p class="f__n">Finding {finding.n}</p>
+          <h2 class="f__claim">{finding.claim}</h2>
+          <div class="prose"><p>{finding.body}</p></div>
+        </div>
+        <aside class="margin">
+          <div>
+            <p class="margin__k">Does not support</p>
+            <p class="margin__v">{finding.limit}</p>
+          </div>
+          {finding.figure && (
+            <div>
+              <p class="margin__k">Rests on</p>
+              <p class="margin__v"><a class="u" href={finding.href!}>{finding.figure}</a></p>
+            </div>
+          )}
+        </aside>
+      </div>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .f__n { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.13em; text-transform: uppercase; color: var(--spot); }
+  /* The claim is set at reading size and weight rather than as a heading. A finding is a
+     sentence somebody will paste into an email, and it should look like one. */
+  .f__claim { font-size: var(--t-stand); font-weight: 600; line-height: 1.34; max-width: 42ch;
+    letter-spacing: -0.008em; margin-top: var(--s3); }
+  .f__claim + .prose { margin-top: var(--s4); }
+</style>

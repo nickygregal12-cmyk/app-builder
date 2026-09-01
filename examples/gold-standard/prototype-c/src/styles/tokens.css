@@ -1,0 +1,113 @@
+/*
+ * MARLPIT — the site is painted.
+ *
+ * The thesis, stated once because everything else follows from it: this company sells colour,
+ * so the site is made of colour. Not colour used as accent on a white page — whole fields of
+ * it, edge to edge, with the type sitting on the paint. A paint company whose website is
+ * mostly white has quietly agreed that its product is a swatch.
+ *
+ * ## Why this is not the previous two prototypes
+ *
+ * Nørreværk and Interlock both arrived at restraint: off-white ground, hairline rules,
+ * monochrome with a single accent. Two sites by one author converging on that is a habit, and
+ * a third would have proved the habit rather than any capability. The domain here refuses it —
+ * a mineral-paint maker's material *is* the thirty-six colours, and rendering them as small
+ * squares on a white page would be the same evasion as photographing a building from across
+ * the road.
+ *
+ * So there is no page ground. There are painted sections, and each one sets `--ground` and
+ * `--ink` for everything inside it.
+ *
+ * ## Ink is computed, not chosen
+ *
+ * `inkOn()` in `src/lib/light.ts` decides dark or light ink from the colour's own light
+ * reflectance value. That has to be computed because the palette runs from a 90 LRV lime white
+ * to a 3 LRV lamp black and a human choosing per section would get it wrong somewhere in the
+ * middle — which on a site where the ground changes eleven times is a contrast failure waiting
+ * for the one colour nobody checked.
+ *
+ * The two inks are drawn from the palette rather than being pure black and white. Ink on a
+ * light ground is Soot Brown; ink on a dark ground is Chalk. Paint does not contain #000.
+ */
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/Archivo-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Source Serif';
+  src: url('/fonts/SourceSerif4-var.woff2') format('woff2-variations');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* The two inks. Both are palette colours, so nothing on the site is a value the paint
+     cannot make. */
+  --ink-dark: #2f2820;
+  --ink-light: #ede8da;
+
+  /* Set per painted section; these are the fallbacks for anything outside one. */
+  --ground: #ede8da;
+  --ink: var(--ink-dark);
+  /* A hairline that belongs to whatever ground it is on. Mixed rather than fixed, because a
+     grey rule on Marlpit Red is a grey rule on Marlpit Red. */
+  --line: color-mix(in srgb, var(--ink) 22%, transparent);
+  --line-strong: color-mix(in srgb, var(--ink) 55%, transparent);
+  --wash: color-mix(in srgb, var(--ink) 7%, transparent);
+
+  --display: 'Archivo', system-ui, -apple-system, sans-serif;
+  --body: 'Source Serif', Georgia, 'Times New Roman', serif;
+
+  /* Spacing on a 4px grid. */
+  --s1: 4px;  --s2: 8px;   --s3: 12px;  --s4: 16px;  --s5: 24px;
+  --s6: 32px; --s7: 48px;  --s8: 64px;  --s9: 96px;  --s10: 128px;
+
+  /*
+   * Type.
+   *
+   * Display is Archivo held wide and heavy — closer to the lettering stencilled on a tin than
+   * to an interface face. Body is Source Serif, which carries an optical-size axis; on a site
+   * where the same paragraph appears over a 90 LRV white and a 4 LRV black, being able to open
+   * the letterforms up at small sizes is worth more than it sounds.
+   */
+  --t-display: clamp(2.5rem, 1.1rem + 4.6vw, 5.5rem);
+  --t-head: clamp(1.625rem, 1.1rem + 1.7vw, 2.5rem);
+  --t-sub: clamp(1.1875rem, 1.05rem + 0.5vw, 1.4375rem);
+  --t-body: clamp(1.0625rem, 0.99rem + 0.22vw, 1.25rem);
+  --t-small: clamp(0.9375rem, 0.885rem + 0.18vw, 1.09375rem);
+  --t-label: clamp(0.6875rem, 0.625rem + 0.17vw, 0.875rem);
+
+  --measure: clamp(28rem, 24rem + 8vw, 36rem);
+  --page-max: 1620px;
+  --pad: clamp(20px, 4vw, 64px);
+}
+
+/*
+ * Focus has to survive thirty-six grounds.
+ *
+ * A fixed focus colour is unreadable on at least one of them, and a colour that changes with
+ * the ground is one more thing to get wrong. Two rings — the ink and its opposite — always
+ * gives contrast whichever ground it lands on, and reads as deliberate rather than as a
+ * browser default that happened to be left alone.
+ */
+:where(a, button, [tabindex], summary, input, select):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--ground);
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,241 @@
+---
+/**
+ * One colour, on its own ground.
+ *
+ * Thirty-six of these, and each is painted in the colour it is about — masthead, page and all.
+ * That is the strongest form the thesis takes: you cannot look up Oxblood without the screen
+ * being Oxblood, which is a great deal closer to the experience of choosing than a swatch on
+ * white.
+ *
+ * It is only possible because the ink is computed. A page whose ground is any of thirty-six
+ * values, seven of which cannot carry small text at all, is a contrast failure per route unless
+ * something measures it — so the prose sits on a safe band rather than on the colour itself
+ * where the colour cannot hold it, and which band that is, is decided by measurement.
+ */
+import Base from '../../layouts/Base.astro';
+import Painted from '../../components/Painted.astro';
+import LightBox from '../../components/LightBox.astro';
+import { COLOURS, colourBySlug, familyById, coloursIn } from '../../data/colours';
+import { PAINTS, paintById } from '../../data/paints';
+import { lrv, inkOn, groundSafe, inkContrast, allLights } from '../../lib/light';
+
+export function getStaticPaths() {
+  return COLOURS.map((colour) => ({ params: { slug: colour.slug }, props: { colour } }));
+}
+const { colour } = Astro.props;
+const family = familyById.get(colour.family)!;
+const siblings = coloursIn(colour.family).filter((entry) => entry.slug !== colour.slug);
+const value = lrv(colour.hex);
+const safe = groundSafe(colour.hex);
+/*
+ * The colour owns the hero. The argument sits on Chalk.
+ *
+ * Painting the prose section in the colour too was the first instinct and it was wrong twice
+ * over: on the seven low-contrast colours it fails outright, and on the other twenty-nine it
+ * leaves the light-box panels floating on a ground almost identical to themselves, with no
+ * boundary between the hero and the section under it. One neutral for every colour page gives
+ * the panels something to read against and the page a seam.
+ */
+const proseGround = colourBySlug.get('chalk')!.hex;
+const lights = allLights(colour.hex);
+const index = COLOURS.findIndex((entry) => entry.slug === colour.slug);
+const previous = COLOURS[(index - 1 + COLOURS.length) % COLOURS.length];
+const next = COLOURS[(index + 1) % COLOURS.length];
+---
+<Base
+  title={`${colour.name} ${colour.code} — Marlpit`}
+  description={`${colour.name}: ${colour.pigment}. Light reflectance ${value}, made in ${colour.finishes.length} of our four paints.`}
+  hex={colour.hex}
+  chapter={family.name}
+>
+  <Painted hex={colour.hex} class="hero">
+    <div class="page hero__in">
+      <div>
+        <p class="label">{colour.code} · {family.name}</p>
+        <h1 class="display hero__name">{colour.name}</h1>
+        <dl class="facts">
+          <div><dt>Light reflectance</dt><dd class="n">{value}</dd></div>
+          <div><dt>Pigment</dt><dd>{colour.pigment}</dd></div>
+          <div><dt>Made in</dt><dd>{colour.finishes.map((id) => paintById.get(id)!.name).join(', ')}</dd></div>
+          {colour.limit && <div><dt>Not made in</dt><dd>{colour.limit}</dd></div>}
+        </dl>
+        <button class="add colour__add" type="button" aria-pressed="false" data-add={colour.slug}>
+          <span class="add__mark" aria-hidden="true">+</span>
+          <span data-add-label>Add to sample box</span>
+        </button>
+      </div>
+      {/* The right column carried a single sentence pinned to the bottom, which left most of a
+          1440 screen empty beside the name. It now carries the four lights as a strip: the same
+          computed values the light box uses further down, at a size that says "this colour is
+          four colours" before the argument for it arrives. */}
+      <div class="hero__right">
+        <p class="hero__note">{colour.note}</p>
+        <div class="strip" aria-hidden="true">
+          {lights.map(({ illuminant, hex }) => (
+            <div class="strip__cell" style={`--c: ${hex}; --c-ink: ${inkOn(hex) === 'dark' ? 'var(--ink-dark)' : 'var(--ink-light)'}`}>
+              <span class="strip__k">{illuminant.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </Painted>
+
+  <Painted hex={proseGround}>
+    <div class="page">
+      <div class="sec">
+        <div>
+          <p class="label">Under four lights</p>
+          <h2 class="head">Computed, and still not good enough.</h2>
+        </div>
+        <p class="prose small">{family.fastness}</p>
+      </div>
+      <LightBox colour={colour} />
+      {!safe && (
+        <p class="small warn">
+          {colour.name} returns {value}% of the light that falls on it, which puts it too close in
+          value to both our inks to carry small type — {inkContrast(colour.hex).toFixed(1)}:1 against
+          the better of the two, where the guidance asks for 4.5. That is a fact about reading on a
+          screen and not about the paint. On a wall it is one of the better colours in the range.
+        </p>
+      )}
+    </div>
+  </Painted>
+
+  <Painted hex="#2f2820">
+    <div class="page">
+      <div class="sec">
+        <div>
+          <p class="label">In the four paints</p>
+          <h2 class="head">Where it is made, and what that costs.</h2>
+        </div>
+        <p class="prose small">
+          Not every colour holds in every binder. Where one is missing the reason is on the row
+          rather than left for the order confirmation to explain.
+        </p>
+      </div>
+      <table class="tbl made">
+        <thead><tr><th scope="col">Paint</th><th scope="col">s<sub>d</sub></th><th scope="col">Coverage</th><th scope="col">5 litres</th><th scope="col">This colour</th></tr></thead>
+        <tbody>
+          {PAINTS.map((paint) => {
+            const made = colour.finishes.includes(paint.id);
+            return (
+              <tr>
+                <th scope="row" class="pname"><a class="u" href={`/paints#${paint.id}`}>{paint.name}</a></th>
+                <td class="n">{paint.sd} m</td>
+                <td class="n">{paint.coverage} m²/L</td>
+                <td class="n">£{paint.price}</td>
+                <td><span class:list={['verdict', made ? 'verdict--yes' : 'verdict--no']}>{made ? 'Made' : 'Not made'}</span></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </Painted>
+
+  <section class="near" aria-label={`Other ${family.name.toLowerCase()}`}>
+    <div class="page near__head">
+      <p class="label">The rest of the family</p>
+      <h2 class="head">{family.name}</h2>
+    </div>
+    <div class="swatches">
+      {siblings.map((entry) => (
+        <a class="swatch" href={`/colours/${entry.slug}`}
+           style={`--sw: ${entry.hex}; --sw-ink: ${inkOn(entry.hex) === 'dark' ? 'var(--ink-dark)' : 'var(--ink-light)'}`}>
+          <span class="swatch__name">{entry.name}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <Painted hex="#ede8da" band>
+    <div class="page pager">
+      <a class="pager__l" href={`/colours/${previous.slug}`}>
+        <span class="pager__k">Previous</span>
+        <span class="pager__n"><span class="pager__chip" style={`--c: ${previous.hex}`}></span>{previous.name}</span>
+      </a>
+      <a class="pager__c u" href="/colours">All thirty-six</a>
+      <a class="pager__r" href={`/colours/${next.slug}`}>
+        <span class="pager__k">Next</span>
+        <span class="pager__n">{next.name}<span class="pager__chip" style={`--c: ${next.hex}`}></span></span>
+      </a>
+    </div>
+  </Painted>
+</Base>
+
+<style>
+  .hero { padding-block: clamp(var(--s8), 7vw, 136px); }
+  .hero__in { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(var(--s6), 4vw, var(--s9)); align-items: start; }
+  .hero__right { display: grid; gap: var(--s6); padding-top: var(--s7); }
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+  .strip__cell { background: var(--c); aspect-ratio: 2 / 3; display: flex; align-items: flex-end;
+    padding: var(--s3); }
+  .strip__k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.04em; color: var(--c-ink); }
+  .hero__name { font-size: clamp(3rem, 1.4rem + 5.4vw, 6.5rem); max-width: 12ch; margin-top: var(--s4); }
+  .hero__note { font-size: var(--t-sub); line-height: 1.45; max-width: 40ch;
+    padding-top: var(--s5); border-top: 1px solid var(--line-strong); margin: 0; }
+
+  .colour__add { margin-top: var(--s5); }
+  .facts { margin: var(--s7) 0 0; display: grid; gap: 0; max-width: 46ch; }
+  .facts > div { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s3); border-bottom: 1px solid var(--line); }
+  .facts dt { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 62%, transparent); padding-top: 3px; }
+  .facts dd { margin: 0; font-size: var(--t-small); }
+
+  .sec { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: start; margin-bottom: var(--s7); }
+  .sec .head { margin-top: var(--s3); }
+  .warn { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--line);
+    max-width: 60ch; }
+  .pname { font-family: var(--display); font-weight: 600; padding-right: var(--s5); }
+
+  .near { background: var(--ink-dark); color: var(--ink-light); padding-top: clamp(var(--s7), 4vw, var(--s9)); }
+  .near__head { --ink: var(--ink-light); --line: color-mix(in srgb, var(--ink-light) 22%, transparent);
+    margin-bottom: var(--s6); }
+  .near__head .head { margin-top: var(--s3); }
+
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: var(--s5); }
+  .pager__l, .pager__r { text-decoration: none; display: grid; gap: 4px; }
+  .pager__r { text-align: right; }
+  .pager__k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 58%, transparent); }
+  .pager__n { display: flex; align-items: center; gap: var(--s3); font-family: var(--display);
+    font-weight: 600; font-size: var(--t-body); }
+  .pager__r .pager__n { justify-content: flex-end; }
+  .pager__chip { width: 24px; height: 24px; background: var(--c);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .pager__l:hover .pager__chip, .pager__r:hover .pager__chip { transform: scale(1.2); }
+  .pager__c { font-family: var(--display); font-size: var(--t-small); font-weight: 500; }
+
+  @media (max-width: 900px) {
+    .hero__in, .sec { grid-template-columns: 1fr; gap: var(--s5); }
+    .hero__note { padding-top: var(--s4); }
+    .hero__right { padding-top: 0; gap: var(--s5); }
+  }
+  @media (max-width: 760px) {
+    /* Five columns of figures do not fit a phone, and the capture caught it as 31px of
+       horizontal overflow rather than as anything visible in a screenshot. Each paint becomes a
+       record with its numbers on one line under the name. */
+    .made, .made tbody, .made tr, .made td, .made th { display: block; width: 100%; }
+    .made thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .made tr { padding-block: var(--s4); border-bottom: 1px solid var(--line); }
+    .made th, .made td { border: 0; padding: 0; }
+    .made .pname { padding-right: 0; font-size: var(--t-sub); }
+    .made td.n { display: inline-block; margin-right: var(--s4); margin-top: var(--s2);
+      font-size: var(--t-small); color: color-mix(in srgb, var(--ink) 70%, transparent); }
+    .made td:last-child { margin-top: var(--s3); }
+  }
+
+  @media (max-width: 700px) {
+    .facts > div { grid-template-columns: 1fr; gap: 2px; padding-block: var(--s3); }
+    .pager { flex-wrap: wrap; gap: var(--s4); }
+    .pager__c { order: 3; width: 100%; text-align: center; }
+  }
+</style>

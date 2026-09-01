@@ -1,0 +1,339 @@
+---
+/**
+ * Samples.
+ *
+ * The conversion, and it is a sample pot rather than a basket. The whole site has been arguing
+ * that a colour on a screen is not a colour; putting a "buy 5 litres" button at the end of that
+ * would undo the argument to make the sale.
+ *
+ * The calculator uses the stored coverage figures, which are quoted for lime plaster rather
+ * than for a sealed test panel. A calculator that flatters is worse than none: the customer
+ * finds out at the second coat, on a Sunday, with the shop shut.
+ */
+import Base from '../layouts/Base.astro';
+import Painted from '../components/Painted.astro';
+import { PAINTS } from '../data/paints';
+import { COLOURS, colourBySlug } from '../data/colours';
+
+const hex = colourBySlug.get('blush-earth')!.hex;
+const perM2 = (paint: (typeof PAINTS)[number]) => paint.price / (5 * paint.coverage / paint.coats);
+---
+<Base
+  title="Samples and ordering — Marlpit"
+  description="Four sample pots for £22 delivered, a coverage calculator that uses real figures, and a specification service for trade."
+  hex={hex}
+  chapter="Ordering"
+>
+  <Painted hex={hex}>
+    <div class="page">
+      <div class="head2">
+        <div>
+          <p class="label">How to choose</p>
+          <h1 class="display display--sm">Four pots, £22, on your own wall.</h1>
+        </div>
+        <p class="prose small">
+          Enough for a square metre each. Paint them on the wall you are actually painting — not
+          on a card, not on the one wall in the room that gets the sun, and not in the hall
+          because it is easier. Leave them a week and look at them in the evening.
+        </p>
+      </div>
+    </div>
+  </Painted>
+
+  {/* The box. Server-rendered empty and filled by the client from localStorage, because a
+      prototype has no order system — what it does have is a mechanic that behaves correctly,
+      including when it is empty and when it is full. */}
+  <Painted hex="#ede8da" id="box">
+    <div class="page">
+      <div class="boxhead">
+        <div>
+          <p class="label">Your sample box</p>
+          <h2 class="head boxhead__h"><span class="n" data-box-count>0</span> of 4 chosen</h2>
+        </div>
+        <p class="small boxhead__n" data-box-empty>
+          Nothing in it yet. Add four from <a class="u" href="/colours">the range</a>, or from any
+          colour's own page.
+        </p>
+      </div>
+      <ol class="boxlist" data-box-list></ol>
+      <template data-box-template>
+        <li class="boxitem">
+          <span class="boxitem__chip"></span>
+          <span class="boxitem__b">
+            <span class="boxitem__name"></span>
+            <span class="boxitem__meta"></span>
+          </span>
+          <button class="boxitem__x" type="button">Remove</button>
+        </li>
+      </template>
+      <p class="boxtotal" data-box-total hidden>
+        <span class="boxtotal__k">Four pots, delivered</span>
+        <span class="boxtotal__v n">£22</span>
+      </p>
+    </div>
+  </Painted>
+
+  <Painted hex="#f9f7f3">
+    <div class="page calc">
+      <div>
+        <p class="label">Coverage</p>
+        <h2 class="head calc__h">How much you need, at the real figures.</h2>
+        <p class="small calc__note">
+          Coverage below is per coat, measured on lime plaster rather than on a sealed panel, and
+          it is lower than the number a tin usually carries. New or very absorbent walls take more
+          on the first coat — sometimes half as much again.
+        </p>
+
+        <form class="form" data-calc>
+          <div class="field">
+            <label for="w">Wall width, metres</label>
+            <input id="w" name="w" type="number" inputmode="decimal" min="0" step="0.1" value="4" />
+          </div>
+          <div class="field">
+            <label for="h">Wall height, metres</label>
+            <input id="h" name="h" type="number" inputmode="decimal" min="0" step="0.1" value="2.4" />
+          </div>
+          <div class="field">
+            <label for="n">How many walls</label>
+            <input id="n" name="n" type="number" inputmode="numeric" min="1" step="1" value="4" />
+          </div>
+          <div class="field">
+            <label for="o">Openings to subtract, m²</label>
+            <input id="o" name="o" type="number" inputmode="decimal" min="0" step="0.1" value="3" />
+          </div>
+        </form>
+        <p class="area">
+          <span class="area__k">Area to paint</span>
+          <span class="area__v n" data-out="area">35.4</span>
+          <span class="area__u">m²</span>
+        </p>
+      </div>
+
+      <table class="tbl res">
+        <thead>
+          <tr><th scope="col">Paint</th><th scope="col">Litres</th><th scope="col">Tins</th><th scope="col">Cost</th><th scope="col">Per m²</th></tr>
+        </thead>
+        <tbody>
+          {PAINTS.map((paint) => (
+            <tr data-paint={paint.id} data-coverage={paint.coverage} data-coats={paint.coats} data-price={paint.price}>
+              <th scope="row" class="res__n">{paint.name}<span class="res__sub">{paint.coats} coats at {paint.coverage} m²/L</span></th>
+              <td class="n" data-out="litres">—</td>
+              <td class="n" data-out="tins">—</td>
+              <td class="n" data-out="cost">—</td>
+              <td class="n" data-out="rate">£{perM2(paint).toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </Painted>
+
+  <Painted hex="#2f2820">
+    <div class="page two">
+      <div>
+        <p class="label">Sample pots</p>
+        <h2 class="head two__h">Four for £22, delivered.</h2>
+        <div class="prose">
+          <p>
+            Any four of the thirty-six, in limewash unless you ask for another. A square metre each
+            at two coats, which is enough to see a colour move and not enough to do a wall with.
+          </p>
+          <p>
+            Choose them from <a class="u" href="/colours">the range</a>, or tell us the room —
+            which way it faces, what the floor is, what the light is like at four o'clock — and we
+            will pick four and say why.
+          </p>
+        </div>
+        <p class="price"><span class="n">£22</span> <span class="price__u">four pots, delivered, UK mainland</span></p>
+      </div>
+      <div>
+        <p class="label">Trade and specification</p>
+        <h2 class="head two__h">Send us the building instead.</h2>
+        <div class="prose">
+          <p>
+            For conservation work and anything listed: photographs, the substrate as far as you
+            know it, and what has been on it before. You get back a written substrate and product
+            recommendation, with the reasoning, that you can put in a specification.
+          </p>
+          <p>
+            Free, and genuinely free — we would rather refuse a job at this stage than supply the
+            wrong paint and be part of the problem. About a third of these end with us saying the
+            wall needs something else first.
+          </p>
+        </div>
+        <p class="price"><span class="n">No charge</span> <span class="price__u">two working days, usually</span></p>
+      </div>
+    </div>
+  </Painted>
+
+  <Painted hex={colourBySlug.get('raw-umber')!.hex} band>
+    <div class="page ask2">
+      <p class="head ask2__h">Ordering</p>
+      <p class="prose small">
+        <a class="u" href="mailto:mill@marlpit.example">mill@marlpit.example</a> or 01722 400 118,
+        Monday to Thursday 8 till 5 and Friday till 1. You will get somebody who has mixed it.
+      </p>
+    </div>
+  </Painted>
+</Base>
+
+<style>
+  .display--sm { font-size: clamp(1.875rem, 1.2rem + 2.4vw, 3.25rem); max-width: 17ch; }
+  .label + .display--sm { margin-top: var(--s4); }
+  .head2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: end; }
+
+  .calc { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: clamp(var(--s6), 4vw, var(--s9)); align-items: start; }
+  .calc__h { margin-top: var(--s3); }
+  .calc__note { margin-top: var(--s4); max-width: 50ch; }
+
+  .form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4);
+    margin-top: var(--s6); }
+  .field { display: grid; gap: 6px; }
+  .field label { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  /* An input that looks like the paper it is on rather than like a browser default: a rule
+     underneath, no box, and the ink of whatever ground it lands on. */
+  .field input {
+    font-family: var(--display); font-size: 1.375rem; font-weight: 600;
+    font-variant-numeric: tabular-nums; color: var(--ink);
+    background: none; border: 0; border-bottom: 2px solid var(--line-strong);
+    padding: 4px 0; width: 100%; transition: border-color 160ms ease;
+  }
+  .field input:hover { border-bottom-color: var(--ink); }
+  .field input:focus-visible { outline: none; border-bottom-color: var(--ink); box-shadow: 0 2px 0 0 var(--ink); }
+
+  .area { display: flex; align-items: baseline; gap: var(--s3); margin-top: var(--s6);
+    padding-top: var(--s4); border-top: 1px solid var(--line-strong); }
+  .area__k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .area__v { font-size: 2.25rem; font-weight: 600; letter-spacing: -0.03em; margin-left: auto; }
+  .area__u { font-size: var(--t-small); }
+
+  .res__n { font-family: var(--display); font-weight: 600; padding-right: var(--s5); }
+  .res__sub { display: block; font-family: var(--body); font-weight: 400; font-size: var(--t-label);
+    color: color-mix(in srgb, var(--ink) 62%, transparent); margin-top: 2px; }
+
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(var(--s6), 4vw, var(--s9)); align-items: start; }
+  .two__h { margin-top: var(--s3); margin-bottom: var(--s5); }
+  .price { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; }
+  .price .n { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; }
+  .price__u { font-size: var(--t-small); color: color-mix(in srgb, var(--ink) 70%, transparent); }
+
+  .ask2 { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: baseline; }
+  .ask2__h { max-width: 12ch; }
+
+  .boxhead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: end; margin-bottom: var(--s6); }
+  .boxhead__h { margin-top: var(--s3); }
+  .boxlist { border-top: 1px solid var(--line-strong); }
+  .boxitem { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: var(--s4);
+    align-items: center; padding-block: var(--s4); border-bottom: 1px solid var(--line); }
+  .boxitem__chip { width: 56px; height: 56px; background: var(--c);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent); }
+  .boxitem__b { display: grid; gap: 2px; }
+  .boxitem__name { font-family: var(--display); font-weight: 600; font-size: var(--t-sub); }
+  .boxitem__meta { font-size: var(--t-label); color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .boxitem__x { background: none; border: 0; font-family: var(--display); font-size: var(--t-small);
+    font-weight: 600; color: inherit; cursor: pointer; padding: 6px 0;
+    border-bottom: 2px solid color-mix(in srgb, var(--ink) 40%, transparent);
+    transition: border-color 140ms ease; }
+  .boxitem__x:hover { border-bottom-color: var(--ink); }
+  .boxtotal { display: flex; align-items: baseline; gap: var(--s4); margin-top: var(--s5);
+    padding-top: var(--s4); border-top: 2px solid var(--line-strong); }
+  .boxtotal__k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .boxtotal__v { margin-left: auto; font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; }
+
+  @media (max-width: 1000px) {
+    .head2, .calc, .two, .ask2, .boxhead { grid-template-columns: 1fr; gap: var(--s5); }
+  }
+  @media (max-width: 700px) {
+    .form { grid-template-columns: 1fr 1fr; }
+    .res, .res tbody, .res tr, .res td, .res th { display: block; width: 100%; }
+    .res thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .res tr { padding-block: var(--s4); border-bottom: 1px solid var(--line); }
+    .res th, .res td { border: 0; padding: 0; }
+    .res td.n { display: inline-block; margin-right: var(--s4); margin-top: var(--s2);
+      font-size: var(--t-small); }
+    .res td[data-out='litres']::after { content: ' litres'; font-size: var(--t-label);
+      color: color-mix(in srgb, var(--ink) 62%, transparent); }
+    .res td[data-out='tins']::after { content: ' × 5L'; font-size: var(--t-label);
+      color: color-mix(in srgb, var(--ink) 62%, transparent); }
+  }
+</style>
+
+<script>
+  import { BOX_EVENT, BOX_PRICE, readBox, remove } from '../lib/box';
+  import { COLOURS } from '../data/colours';
+  import { inkOn } from '../lib/light';
+
+  /** Render the box from storage. The colour record is looked up rather than stored, so the box
+   *  never carries a stale name or price of its own. */
+  const list = document.querySelector<HTMLElement>('[data-box-list]');
+  const template = document.querySelector<HTMLTemplateElement>('[data-box-template]');
+  const empty = document.querySelector<HTMLElement>('[data-box-empty]');
+  const total = document.querySelector<HTMLElement>('[data-box-total]');
+  if (list && template) {
+    const draw = (slugs: string[]) => {
+      list.replaceChildren();
+      for (const slug of slugs) {
+        const colour = COLOURS.find((entry) => entry.slug === slug);
+        if (!colour) continue;
+        const node = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+        node.querySelector<HTMLElement>('.boxitem__chip')!.style.setProperty('--c', colour.hex);
+        node.querySelector<HTMLElement>('.boxitem__name')!.textContent = colour.name;
+        node.querySelector<HTMLElement>('.boxitem__meta')!.textContent = `${colour.code} · ${colour.pigment}`;
+        const kill = node.querySelector<HTMLButtonElement>('.boxitem__x')!;
+        kill.addEventListener('click', () => remove(slug));
+        kill.setAttribute('aria-label', `Remove ${colour.name} from the sample box`);
+        list.append(node);
+      }
+      if (empty) empty.hidden = slugs.length > 0;
+      if (total) {
+        total.hidden = slugs.length === 0;
+        total.querySelector<HTMLElement>('.boxtotal__v')!.textContent = `£${BOX_PRICE}`;
+      }
+    };
+    draw(readBox());
+    window.addEventListener(BOX_EVENT, (event) => draw((event as CustomEvent<string[]>).detail));
+  }
+
+  /**
+   * The calculator.
+   *
+   * Rounds tins up, because you cannot buy nine tenths of a tin, and rounds litres to one place
+   * because pretending to three would imply a precision the coverage figure does not have.
+   */
+  const form = document.querySelector<HTMLFormElement>('[data-calc]');
+  if (form) {
+    const read = (name: string) => Math.max(0, Number((form.elements.namedItem(name) as HTMLInputElement)?.value || 0));
+    const areaOut = document.querySelector<HTMLElement>('[data-out="area"]')!;
+    const rows = [...document.querySelectorAll<HTMLElement>('.res tbody tr')];
+
+    const recalculate = () => {
+      const area = Math.max(0, read('w') * read('h') * read('n') - read('o'));
+      areaOut.textContent = area.toFixed(1);
+      for (const row of rows) {
+        const coverage = Number(row.dataset.coverage);
+        const coats = Number(row.dataset.coats);
+        const price = Number(row.dataset.price);
+        const litres = area * coats / coverage;
+        const tins = Math.ceil(litres / 5);
+        row.querySelector<HTMLElement>('[data-out="litres"]')!.textContent = litres ? litres.toFixed(1) : '—';
+        row.querySelector<HTMLElement>('[data-out="tins"]')!.textContent = tins ? String(tins) : '—';
+        row.querySelector<HTMLElement>('[data-out="cost"]')!.textContent = tins ? `£${tins * price}` : '—';
+      }
+    };
+
+    form.addEventListener('input', recalculate);
+    recalculate();
+  }
+</script>

@@ -1,0 +1,122 @@
+---
+/**
+ * The twelve, as a table.
+ *
+ * A ranked table rather than a grid of cards: this is a reference chapter and the reader arrived
+ * with a river in mind. Sortable columns would be the obvious move and are deliberately absent —
+ * the ordering *is* an argument here, and letting a reader sort by reported spills would present
+ * the misleading ranking as neutral.
+ */
+import Base from '../../layouts/Base.astro';
+import { SERIES, byCoverage, num, pct } from '../../lib/stats';
+
+const ranked = [...SERIES].sort((a, b) => b.totals.latentPerOverflow - a.totals.latentPerOverflow);
+const spark = (series: typeof SERIES[number]) => {
+  const values = series.points.map((p) => p.coverage);
+  return values.map((v, i) => `${(i / (values.length - 1)) * 100},${(1 - v) * 100}`).join(' ');
+};
+---
+<Base
+  title="Catchments — The Monitoring Gap 2026"
+  description="All twelve catchments in the study, ranked by underlying discharge rate, with coverage and reported figures alongside."
+  chapter="Chapter 02"
+  chapterTitle="Catchments"
+>
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">Chapter 02</p>
+        <h1 class="chapter">Twelve catchments</h1>
+        <p class="stand">
+          Ranked by the underlying rate the simulation produced — worst first — rather than by what
+          would be published. The two orderings are not the same, which is the report.
+        </p>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Why not sortable</p>
+          <p class="margin__v">
+            The ordering is an argument. A column header that let a reader rank by reported spills
+            would present the misleading order as the neutral one, which is the habit this report
+            exists to interrupt.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--wide">
+      <div class="col">
+        <table class="tbl cat">
+          <caption class="vh">Twelve catchments, ranked by simulated underlying discharge rate.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Catchment</th>
+              <th scope="col">Region</th>
+              <th scope="col" class="n">Overflows</th>
+              <th scope="col" class="n">Underlying</th>
+              <th scope="col" class="n">Reported</th>
+              <th scope="col" class="n">Coverage</th>
+              <th scope="col">Coverage, 2021–25</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ranked.map((series) => (
+              <tr>
+                <th scope="row"><a href={`/catchments/${series.catchment.slug}`}>{series.catchment.name}</a></th>
+                <td>{series.catchment.region}</td>
+                <td class="n" data-k="overflows">{num(series.catchment.overflows)}</td>
+                <td class="n cat__lat" data-k="underlying">{series.totals.latentPerOverflow.toFixed(1)}</td>
+                <td class="n" data-k="reported">{series.totals.perOverflow.toFixed(1)}</td>
+                <td class="n" data-k="coverage">{pct(series.totals.coverage)}</td>
+                <td class="cat__spark">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img"
+                       aria-label={`Coverage from ${pct(series.points[0].coverage)} to ${pct(series.points[series.points.length - 1].coverage)}`}>
+                    <polyline points={spark(series)} />
+                  </svg>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="note cat__foot">
+          Underlying and reported are discharges per storm overflow per year, averaged over sixty
+          months. Coverage is the mean fraction of the estate reporting. The sparkline is that
+          catchment's coverage over the whole period, drawn on a common scale — lower is worse.
+        </p>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Worst covered</p>
+          <p class="margin__v">{byCoverage.slice(0, 3).map((s) => `${s.catchment.name} ${pct(s.totals.coverage)}`).join(' · ')}</p>
+        </div>
+        <div>
+          <p class="margin__k">Best covered</p>
+          <p class="margin__v">{[...byCoverage].reverse().slice(0, 3).map((s) => `${s.catchment.name} ${pct(s.totals.coverage)}`).join(' · ')}</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cat__lat { color: var(--spot); font-weight: 600; }
+  .cat__spark { width: 130px; padding-right: 0; }
+  .cat__spark svg { width: 130px; height: 26px; display: block; }
+  .cat__spark polyline { fill: none; stroke: var(--ink-2); stroke-width: 3; vector-effect: non-scaling-stroke; }
+  .cat__foot { margin-top: var(--s4); max-width: 72ch; }
+  @media (max-width: 900px) {
+    .cat thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .cat, .cat tbody, .cat tr, .cat td, .cat th { display: block; width: 100%; }
+    .cat tr { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--s4);
+      padding-block: var(--s4); border-bottom: 1px solid var(--rule); align-items: baseline; }
+    .cat th, .cat td { border: 0; padding: 0; }
+    .cat th[scope='row'] { font-size: var(--t-stand); font-family: var(--serif); font-weight: 600; }
+    .cat td { font-size: var(--t-note); color: var(--ink-3); }
+    .cat td.n { text-align: left; }
+    .cat td.n::before { content: attr(data-k) ' '; }
+    .cat__spark { grid-column: 1 / -1; width: 100%; margin-top: var(--s2); }
+    .cat__spark svg { width: 100%; }
+  }
+</style>

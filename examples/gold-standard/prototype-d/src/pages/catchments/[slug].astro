@@ -1,0 +1,205 @@
+---
+/**
+ * One catchment.
+ *
+ * Twelve of these, and each has to answer the question a reader arrives with: what would be
+ * published about my river, and how much of it should I believe. So the page leads with the two
+ * figures side by side — what the monitors saw, and what the simulation says happened — rather
+ * than with a headline number that would be quoted on its own.
+ *
+ * The chart here is a dual series with the gap between them shaded. That shading is the only
+ * place other than the scatter where the spot colour appears in a figure, and it means the same
+ * thing it means everywhere else in the report: what is missing.
+ */
+import Base from '../../layouts/Base.astro';
+import Figure from '../../components/Figure.astro';
+import { SERIES, byLatent, byCoverage, num, pct, MONTH_LABELS } from '../../lib/stats';
+import { MONTHS, START } from '../../lib/generate';
+
+export function getStaticPaths() {
+  return SERIES.map((series) => ({ params: { slug: series.catchment.slug }, props: { series } }));
+}
+const { series } = Astro.props;
+const c = series.catchment;
+
+const rankLatent = byLatent.findIndex((s) => s.catchment.slug === c.slug) + 1;
+const rankCoverage = byCoverage.findIndex((s) => s.catchment.slug === c.slug) + 1;
+
+const index = SERIES.findIndex((s) => s.catchment.slug === c.slug);
+const previous = SERIES[(index - 1 + SERIES.length) % SERIES.length].catchment;
+const next = SERIES[(index + 1) % SERIES.length].catchment;
+
+/* Chart geometry. Monthly counts for both series, on one scale, with the gap shaded. */
+const W = 800;
+const H = 300;
+const PAD = { l: 46, r: 14, t: 14, b: 34 };
+const yMax = Math.ceil(Math.max(...series.points.map((p) => p.latent)) / 50) * 50;
+const px = (i: number) => PAD.l + (i / (MONTHS - 1)) * (W - PAD.l - PAD.r);
+const py = (v: number) => H - PAD.b - (v / yMax) * (H - PAD.t - PAD.b);
+const line = (key: 'latent' | 'reported') => series.points.map((p, i) => `${px(i)},${py(p[key])}`).join(' ');
+const band = `${series.points.map((p, i) => `${px(i)},${py(p.latent)}`).join(' ')} ${[...series.points].reverse().map((p, i) => `${px(MONTHS - 1 - i)},${py(p.reported)}`).join(' ')}`;
+const years = Array.from({ length: MONTHS / 12 }, (_, i) => START.year + i);
+const missed = series.totals.latent - series.totals.reported;
+---
+<Base
+  title={`${c.name} — The Monitoring Gap 2026`}
+  description={`${c.name}: ${c.overflows} storm overflows, ${pct(series.totals.coverage)} mean monitor coverage, and what its published figures would and would not support.`}
+  chapter="Chapter 02"
+  chapterTitle={`Catchments · ${c.name}`}
+>
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">{c.region} · {c.operator}</p>
+        <h1 class="chapter cat__name">{c.name}</h1>
+        <p class="stand">{c.note}</p>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Storm overflows</p>
+          <span class="margin__n">{num(c.overflows)}</span>
+          <p class="margin__v">serving {num(Math.round(c.population / 1000))}k people</p>
+        </div>
+        <div>
+          <p class="margin__k">Mean coverage</p>
+          <span class="margin__n">{pct(series.totals.coverage)}</span>
+          <p class="margin__v">{rankCoverage} of {SERIES.length}, worst first</p>
+        </div>
+        <div>
+          <p class="margin__k">Underlying rate</p>
+          <span class="margin__n">{series.totals.latentPerOverflow.toFixed(1)}</span>
+          <p class="margin__v">{rankLatent} of {SERIES.length}, worst first · per overflow per year</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--wide">
+      <div class="col">
+        <Figure
+          n={3}
+          width="full"
+          title={`${c.name}: discharges the simulation produced, and discharges the working monitors would have recorded, by month.`}
+          source="Simulated. Both series from the same generator; the shaded band is their difference."
+          note={`Over the sixty months the shaded band totals ${num(missed)} discharges — the ones that happened while the monitors that would have seen them were not reporting. It is not an estimate of unrecorded pollution in any real catchment.`}
+        >
+          <svg class="ch" viewBox={`0 0 ${W} ${H}`} role="img"
+               aria-label={`Two monthly series for ${c.name}. The simulated underlying count runs consistently above the count the working monitors would have recorded; the gap between them is largest where coverage is lowest.`}>
+            {[0, 0.25, 0.5, 0.75, 1].map((f) => (
+              <g>
+                <line class="ch__grid" x1={PAD.l} y1={py(yMax * f)} x2={W - PAD.r} y2={py(yMax * f)} />
+                <text class="ch__tick" x={PAD.l - 8} y={py(yMax * f) + 4} text-anchor="end">{Math.round(yMax * f)}</text>
+              </g>
+            ))}
+            {years.map((year, i) => (
+              <text class="ch__tick" x={px(i * 12)} y={H - PAD.b + 18}>{year}</text>
+            ))}
+            <polygon class="ch__band" points={band} />
+            <polyline class="ch__latent" points={line('latent')} />
+            <polyline class="ch__reported" points={line('reported')} />
+            <line class="ch__axis" x1={PAD.l} y1={H - PAD.b} x2={W - PAD.r} y2={H - PAD.b} />
+          </svg>
+          <p class="ch__key">
+            <span class="ch__ki ch__ki--l">Simulated discharges</span>
+            <span class="ch__ki ch__ki--r">Would have been reported</span>
+            <span class="ch__ki ch__ki--b">The difference</span>
+          </p>
+        </Figure>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Would be published</p>
+          <span class="margin__n">{series.totals.perOverflow.toFixed(1)}</span>
+          <p class="margin__v">spills per overflow per year</p>
+        </div>
+        <div>
+          <p class="margin__k">Reading this</p>
+          <p class="margin__v">
+            The second series is not a correction to the first. It is what the same events look
+            like through an estate that was {pct(series.totals.coverage)} awake.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <h2 class="head2">What its figures would and would not support</h2>
+        <div class="prose">
+          <p>
+            On the published counts, {c.name} would be described as reporting
+            {' '}{series.totals.perOverflow.toFixed(1)} spills per storm overflow per year. That
+            number is defensible as a description of what was recorded and is not defensible as a
+            description of the river, because {pct(1 - series.totals.coverage)} of the estate was
+            not reporting on average.
+          </p>
+          <p>
+            {series.totals.coverage > 0.8
+              ? 'Coverage here is high enough that the two are close, which is why this catchment is one of the few in the study whose published figure can be read more or less at face value.'
+              : 'Coverage here is low enough that the published figure and the underlying rate are different quantities, and the gap between them is larger than the differences usually reported between catchments.'}
+          </p>
+        </div>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Method</p>
+          <p class="margin__v"><a class="u" href="/method">How both series are generated, and the controls</a></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--wide">
+      <nav class="pager" aria-label="Other catchments">
+        <a class="pager__a" href={`/catchments/${previous.slug}`}>
+          <span class="pager__k">Previous</span><span class="pager__t">{previous.name}</span>
+        </a>
+        <a class="u pager__c" href="/catchments">All twelve</a>
+        <a class="pager__a pager__a--r" href={`/catchments/${next.slug}`}>
+          <span class="pager__k">Next</span><span class="pager__t">{next.name}</span>
+        </a>
+      </nav>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cat__name { max-width: 12ch; }
+  .ch { width: 100%; height: auto; display: block; }
+  .ch__grid { stroke: var(--rule); stroke-width: 1; }
+  .ch__axis { stroke: var(--ink); stroke-width: 1.5; }
+  .ch__tick { font-family: var(--sans); font-size: 11.5px; fill: var(--ink-3);
+    font-variant-numeric: tabular-nums; }
+  /* The gap is the subject, so it is the only filled area and it takes the spot colour that
+     means "missing" everywhere else in the report. */
+  .ch__band { fill: var(--spot); opacity: 0.16; }
+  .ch__latent { fill: none; stroke: var(--spot); stroke-width: 1.5; }
+  .ch__reported { fill: none; stroke: var(--ink); stroke-width: 2; }
+
+  .ch__key { display: flex; gap: var(--s5); flex-wrap: wrap; margin-top: var(--s3); }
+  .ch__ki { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-2);
+    display: inline-flex; align-items: center; gap: 7px; }
+  .ch__ki::before { content: ''; width: 18px; height: 0; border-top: 2px solid currentColor; }
+  .ch__ki--l { color: var(--spot); }
+  .ch__ki--r { color: var(--ink); }
+  .ch__ki--b::before { height: 10px; border: 0; background: color-mix(in srgb, var(--spot) 16%, transparent); }
+
+  .pager { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s5);
+    border-top: 1.5px solid var(--ink); padding-top: var(--s4); }
+  .pager__a { text-decoration: none; display: grid; gap: 2px; }
+  .pager__a--r { text-align: right; }
+  .pager__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .pager__t { font-size: var(--t-stand); font-weight: 600; }
+  .pager__a:hover .pager__t { color: var(--spot); }
+  .pager__c { font-family: var(--sans); font-size: var(--t-note); }
+
+  @media (max-width: 640px) {
+    .pager { flex-wrap: wrap; gap: var(--s4); }
+    .pager__c { order: 3; width: 100%; text-align: center; }
+  }
+</style>

@@ -1,0 +1,269 @@
+---
+/**
+ * The report opening.
+ *
+ * Ordered as the argument runs rather than as a landing page: what the number is, why it cannot
+ * be read alone, the grid, the claim, the inversion, and where the rest of the document is.
+ *
+ * Pacing here has three instruments and no others, which is the point of this prototype. The
+ * measure — a figure inside the reading column, out into the margin, or across the whole sheet.
+ * Density — prose, then a 720-cell grid, then a table, then prose again. And typographic scale,
+ * from a 76px chapter opening to an 11px source note. There is no photography, no change of
+ * ground and no colour-as-subject to reach for.
+ */
+import Base from '../layouts/Base.astro';
+import Figure from '../components/Figure.astro';
+import CoverageGrid from '../components/CoverageGrid.astro';
+import Scatter from '../components/Scatter.astro';
+import { OVERALL, R, HEADLINE_INVERSION, byCoverage, num, pct } from '../lib/stats';
+import { MONTHS } from '../lib/generate';
+
+const h = HEADLINE_INVERSION;
+---
+<Base
+  title="The Monitoring Gap 2026 — Stell"
+  description="Reported storm-overflow spills track how much of the monitoring estate was working, not how much sewage reached the river. Twelve catchments, sixty months, simulated."
+>
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">Report 04 · {OVERALL.months} months · {OVERALL.catchments} catchments</p>
+        <h1 class="chapter">You cannot count what nobody was watching.</h1>
+        <p class="stand">
+          Storm overflows are fitted with monitors that record when a discharge starts and stops.
+          The counts those monitors produce are the figures everybody quotes. They are also, and
+          only, counts of what was seen.
+        </p>
+        <div class="prose prose--drop">
+          <p>
+            A monitor that is offline does not record a zero. It records nothing, and nothing is
+            indistinguishable from a quiet outfall by the time the figures are added up. Monitor
+            availability is published. It is published separately from the spill counts, in a
+            different file, and almost nobody joins the two.
+          </p>
+          <p>
+            This report joins them across {OVERALL.catchments} catchments and {OVERALL.months} months.
+            Mean coverage over the period was <span class="thread">{pct(OVERALL.meanCoverage, 1)}</span>.
+            In the worst catchment it was {pct(OVERALL.worstCoverage, 1)}; in the worst single month
+            anywhere in the study, {OVERALL.worstMonth.s.catchment.name} had
+            {pct(OVERALL.worstMonth.p.coverage)} of its estate reporting.
+          </p>
+        </div>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Simulated</p>
+          <p class="margin__v">
+            Every catchment and every figure here is generated. The catchments are invented. The
+            mechanism is real and the generator is <a class="u" href="/method">published</a>.
+          </p>
+        </div>
+        <div>
+          <p class="margin__k">Estate covered</p>
+          <span class="margin__n">{num(OVERALL.overflows)}</span>
+          <p class="margin__v">storm overflows, serving {num(Math.round(OVERALL.population / 1000))}k people</p>
+        </div>
+        <div>
+          <p class="margin__k">Mean coverage</p>
+          <span class="margin__n">{pct(OVERALL.meanCoverage, 1)}</span>
+          <p class="margin__v">of monitors reporting, across the whole period</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--wide">
+      <div class="col">
+        <p class="label">Figure</p>
+        <h2 class="head2">Sixty months of watchfulness, and where it lapsed.</h2>
+        <Figure
+          n={1}
+          width="full"
+          title="Monitor coverage by catchment and month, 2021–2025. Each cell is one catchment-month; darker is more of the estate reporting."
+          source="Simulated. Generator, seed and parameters on the method page."
+          note="Read across for a history and down for a comparison. The pale bands are not low numbers in a column — they are months in which most of a catchment's outfalls were not being watched at all."
+        >
+          <CoverageGrid />
+        </Figure>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Best covered</p>
+          <p class="margin__v">
+            {byCoverage[byCoverage.length - 1].catchment.name}, {pct(byCoverage[byCoverage.length - 1].totals.coverage, 1)}
+          </p>
+        </div>
+        <div>
+          <p class="margin__k">Worst covered</p>
+          <p class="margin__v">{byCoverage[0].catchment.name}, {pct(byCoverage[0].totals.coverage, 1)}</p>
+        </div>
+        <div>
+          <p class="margin__k">Reading the grid</p>
+          <p class="margin__v">
+            Hover or tab a cell for that month's coverage, its reported spills and — because this
+            is a simulation — the discharges that actually occurred.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--wide">
+      <div class="col">
+        <p class="label">The finding</p>
+        <h2 class="head2">Published figures track monitoring, not pollution.</h2>
+        <div class="prose">
+          <p>
+            Reported spills per overflow correlate with coverage at{' '}
+            <span class="thread">r = {R.reportedVsCoverage.toFixed(2)}</span>. The underlying rate —
+            the discharges the simulation actually produced — does not correlate with coverage at
+            all, at r = {R.latentVsCoverage.toFixed(2)}.
+          </p>
+          <p>
+            Those two numbers together are the whole report. The second is the control: the two
+            inputs were drawn independently, so if it had a slope the finding would be an artefact
+            of how the data was made rather than of how it was observed. It is plotted on the same
+            axes below, in outline, so a reader can check that rather than take our word.
+          </p>
+        </div>
+        <Figure
+          n={2}
+          width="full"
+          title="Reported spills per overflow against monitor coverage. Filled points are what would be published; outlined points are the simulated underlying rate on the same axes."
+          source="Simulated. Least-squares fit through the reported points."
+          note={`The dashed line is the fit through the reported points. The outlined cloud has no comparable slope, which is what a control is for. ${h.dirtier.catchment.name} and ${h.cleaner.catchment.name} are marked; they are the subject of finding 3.`}
+        >
+          <Scatter />
+        </Figure>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Reported ~ coverage</p>
+          <span class="margin__n">{R.reportedVsCoverage.toFixed(2)}</span>
+          <p class="margin__v">what the published counts measure</p>
+        </div>
+        <div>
+          <p class="margin__k">Underlying ~ coverage</p>
+          <span class="margin__n">{R.latentVsCoverage.toFixed(2)}</span>
+          <p class="margin__v">the control. Near zero, as it must be</p>
+        </div>
+        <div>
+          <p class="margin__k">See also</p>
+          <p class="margin__v"><a class="u" href="/method">How the dataset is generated, and what that does and does not license</a></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">The inversion</p>
+        <h2 class="head2">
+          {h.dirtier.catchment.name} discharges more than {h.cleaner.catchment.name} and reports less.
+        </h2>
+        <div class="prose">
+          <p>
+            {h.dirtier.catchment.name} has an underlying rate of
+            {h.dirtier.totals.latentPerOverflow.toFixed(1)} discharges per overflow per year.
+            {h.cleaner.catchment.name} has {h.cleaner.totals.latentPerOverflow.toFixed(1)} — a little
+            over half. On the figures that would be published,{' '}
+            <span class="thread">{h.dirtier.catchment.name} reports {h.dirtier.totals.perOverflow.toFixed(1)}{' '}
+            and {h.cleaner.catchment.name} reports {h.cleaner.totals.perOverflow.toFixed(1)}</span>.
+          </p>
+          <p>
+            The difference between them is not the rivers. It is that
+            {h.cleaner.catchment.name} had {pct(h.cleaner.totals.coverage)} of its monitors working
+            and {h.dirtier.catchment.name} had {pct(h.dirtier.totals.coverage)}.
+          </p>
+          <p>
+            This is not the only such pair.{' '}
+            <a class="u" href="/findings#f3">There are eighteen inversions in the study</a>, of which
+            this is the widest.
+          </p>
+        </div>
+
+        <table class="tbl">
+          <caption class="vh">The inversion pair compared</caption>
+          <thead>
+            <tr><th scope="col">Catchment</th><th scope="col" class="n">Underlying</th><th scope="col" class="n">Reported</th><th scope="col" class="n">Coverage</th></tr>
+          </thead>
+          <tbody>
+            {[h.dirtier, h.cleaner].map((series) => (
+              <tr>
+                <th scope="row"><a href={`/catchments/${series.catchment.slug}`}>{series.catchment.name}</a></th>
+                <td class="n">{series.totals.latentPerOverflow.toFixed(1)}</td>
+                <td class="n">{series.totals.perOverflow.toFixed(1)}</td>
+                <td class="n">{pct(series.totals.coverage)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Units</p>
+          <p class="margin__v">
+            Discharges per storm overflow per year, averaged over the {MONTHS}-month period.
+            Per-overflow rather than absolute, so a large estate is not automatically the worst.
+          </p>
+        </div>
+        <div>
+          <p class="margin__k">Both pages</p>
+          <p class="margin__v">
+            <a class="u" href={`/catchments/${h.dirtier.catchment.slug}`}>{h.dirtier.catchment.name}</a> ·
+            <a class="u" href={`/catchments/${h.cleaner.catchment.slug}`}>{h.cleaner.catchment.name}</a>
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">The rest of the report</p>
+        <h2 class="head2">Four chapters, and the data underneath them.</h2>
+        <ol class="toc">
+          <li class="toc__row">
+            <a href="/findings"><span class="toc__n">01</span><span class="toc__t">Findings</span>
+            <span class="toc__d">Five numbered findings, each with the figure it rests on. Written to be cited.</span></a>
+          </li>
+          <li class="toc__row">
+            <a href="/catchments"><span class="toc__n">02</span><span class="toc__t">Catchments</span>
+            <span class="toc__d">All twelve, with a page each: the monthly series, the coverage history, and what its published figures would and would not support.</span></a>
+          </li>
+          <li class="toc__row">
+            <a href="/method"><span class="toc__n">03</span><span class="toc__t">Method</span>
+            <span class="toc__d">The generator, the seed, the parameters, the controls, and a list of the things this report is not entitled to say.</span></a>
+          </li>
+          <li class="toc__row">
+            <a href="/data"><span class="toc__n">04</span><span class="toc__t">Data</span>
+            <span class="toc__d">Every catchment-month in the study, as a table. {num(OVERALL.catchments * OVERALL.months)} rows.</span></a>
+          </li>
+        </ol>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Citation</p>
+          <p class="margin__v">Stell (2026), <em>The Monitoring Gap</em>. Findings are numbered and stable; figures are numbered within the report.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .toc { border-top: 1.5px solid var(--ink); }
+  .toc__row { border-bottom: 1px solid var(--rule); }
+  .toc__row a { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: var(--s2) var(--s4);
+    padding-block: var(--s4); text-decoration: none; transition: background-color 140ms ease; }
+  .toc__row a:hover { background: var(--paper-2); }
+  .toc__n { font-family: var(--sans); font-variant-numeric: tabular-nums lining-nums;
+    font-size: var(--t-small); font-weight: 600; color: var(--spot); padding-top: 3px; }
+  .toc__t { font-size: var(--t-stand); font-weight: 600; }
+  .toc__d { grid-column: 2; font-family: var(--sans); font-size: var(--t-note); color: var(--ink-2);
+    max-width: 56ch; }
+</style>

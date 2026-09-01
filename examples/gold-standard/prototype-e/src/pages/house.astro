@@ -1,0 +1,177 @@
+---
+/**
+ * The house, described the way a surveyor would describe it.
+ *
+ * A letting site spends its adjectives on the rooms. This one spends measurements on them, and
+ * the reason is in BUSINESS.txt: the house is ordinary and would be ordinary anywhere, so
+ * writing about it as though it were the attraction would be the first sentence of the luxury
+ * fixture. What each room actually gets asked is answered instead — how big, which way it faces,
+ * and what it is like when the road is shut.
+ *
+ * There are no photographs of the interior. That is a deliberate cost: interiors are what people
+ * want and interiors are also where the category's visual language lives. The two exterior
+ * photographs on this page are of the fabric, and the room table is the illustration.
+ */
+import Base from '../layouts/Base.astro';
+import Photo from '../components/Photo.astro';
+import { ROOMS, FACTS } from '../data/house';
+import { SEASON_FACTS, hoursLabel } from '../lib/season';
+
+const FLOORS = ['Ground', 'First', 'Second', 'Outside'] as const;
+const beds = ROOMS.filter((room) => room.name.startsWith('Bedroom')).length;
+---
+<Base
+  title="The house — Hallowsand"
+  description="Five bedrooms, three bathrooms, a walled yard. Every room with its measurements, its orientation and what it is like when the causeway is shut."
+  section="The house"
+>
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Sleeps</p>
+          <span class="rail__n">{FACTS.sleeps}</span>
+          <p class="rail__v">{FACTS.bedrooms} bedrooms, {FACTS.bathrooms} bathrooms</p>
+        </div>
+        <div>
+          <p class="rail__k">Built</p>
+          <span class="rail__n">1849</span>
+          <p class="rail__v">for the man who ran the lime kilns. Extended 1892 and 1974</p>
+        </div>
+        <div>
+          <p class="rail__k">Let</p>
+          <p class="rail__v">Whole house only, {FACTS.changeover}. It is the only house on the island.</p>
+        </div>
+      </div>
+      <div class="col">
+        <p class="label">The house</p>
+        <h1 class="display">A plain stone house that happens to be somewhere difficult.</h1>
+        <p class="stand">
+          Five bedrooms, a range that takes an hour to heat, a bad piano and a walled yard.
+          Nothing here is remarkable. The island is.
+        </p>
+        <div class="prose">
+          <p>
+            We have not styled it, and we have not photographed the inside. Partly because rooms
+            photograph the same everywhere and you have seen these rooms; mostly because the
+            decision you are actually making is about a causeway, and a warm picture of a lamp
+            would be an argument about something else.
+          </p>
+          <p>
+            So here is the house as a list. Measurements, which way each room faces, and — the
+            thing that turns out to matter most — which rooms let you see the road.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">{ROOMS.length} rooms</p>
+          <p class="rail__v">{beds} bedrooms across two floors, plus the long room, which is where people who come here to work end up.</p>
+        </div>
+        <div>
+          <p class="rail__k">Facing</p>
+          <p class="rail__v">South-west is the causeway. North-east is open sea and the weather.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Every room.</h2>
+      </div>
+
+      <div class="full rooms">
+        {FLOORS.map((floor) => (
+          <div class="floor">
+            <h3 class="floor__h">{floor === 'Outside' ? 'Outside' : `${floor} floor`}</h3>
+            <ol class="floor__l">
+              {ROOMS.filter((room) => room.floor === floor).map((room) => (
+                <li class="room">
+                  <div class="room__h">
+                    <h4 class="head3">{room.name}</h4>
+                    <p class="room__m num">{room.size}</p>
+                  </div>
+                  <p class="room__f">{room.faces}</p>
+                  <p class="room__n">{room.note}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">While the road is shut</p>
+          <span class="rail__n">{hoursLabel(SEASON_FACTS.meanShutPerDay)}</span>
+          <p class="rail__v">a day, on average. The house has to work for all of it</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">What the house has to do that a mainland house does not.</h2>
+        <dl class="svc">
+          <div><dt>Power</dt><dd>{FACTS.power}</dd></div>
+          <div><dt>Water</dt><dd>{FACTS.water}</dd></div>
+          <div><dt>Signal</dt><dd>{FACTS.signal}</dd></div>
+          <div><dt>Internet</dt><dd>{FACTS.internet}</dd></div>
+          <div><dt>Provisioning</dt><dd>Your order is placed before you arrive and brought over on the last open crossing, into the boot-room store and the chest freezer. Not a hamper — it is a week's food, because for most of each day there is no way to get any.</dd></div>
+          <div><dt>Dogs</dt><dd>{FACTS.dogs}</dd></div>
+          <div><dt>Getting here</dt><dd>{FACTS.arriveFrom}. Nearest town {FACTS.nearestTown}.</dd></div>
+        </dl>
+      </div>
+      <div class="full">
+        <div class="pair">
+          <Photo slug="kiln" caption="The kilns the house was built to serve, twenty minutes along the north shore." />
+          <Photo slug="shore" caption="The north ledges. Slick, and cut off from above at high water in two places." />
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .rooms { margin-top: var(--s7); display: grid; gap: var(--s8); }
+  .floor__h { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3);
+    border-bottom: 1.5px solid var(--ink); padding-bottom: var(--s3); }
+  .floor__l { list-style: none; display: grid; gap: 0; }
+
+  /*
+   * A room is a three-column record — name and size, orientation, note — and it recomposes to a
+   * stack rather than compressing. The size sits with the name at every width because they are
+   * read together.
+   */
+  .room { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 11rem) minmax(0, 1fr);
+    gap: var(--s3) var(--s5); align-items: start;
+    padding-block: var(--s4); border-bottom: 1px solid var(--rule); }
+  .room__h { display: grid; gap: 2px; }
+  .room__m { font-family: var(--sans); font-size: var(--t-small); font-weight: 500; color: var(--ink-2); }
+  .room__f { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-3); }
+  .room__n { font-size: var(--t-small); color: var(--ink-2); line-height: 1.55; max-width: 54ch; }
+
+  @media (max-width: 860px) {
+    .room { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+    .room__h { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); }
+    .room__n { margin-top: var(--s2); }
+  }
+
+  .svc { margin-top: var(--s6); display: grid; }
+  .svc > div { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s4); border-bottom: 1px solid var(--rule); }
+  .svc dt { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); padding-top: 3px; }
+  .svc dd { margin: 0; font-size: var(--t-small); color: var(--ink-2); line-height: 1.55; }
+
+  @media (max-width: 620px) {
+    .svc > div { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+  }
+
+  .pair { display: grid; gap: var(--s5); margin-top: var(--s7);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+</style>

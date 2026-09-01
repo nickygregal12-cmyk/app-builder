@@ -28,11 +28,24 @@ const statesDir = process.argv[5] ? path.resolve(process.argv[5]) : null;
 
 const meta = JSON.parse(fs.readFileSync(path.join(prototypeDir, 'packet.meta.json'), 'utf8'));
 
+/*
+ * A capture run now records the route each file came from, and that manifest is believed where
+ * it exists. Reconstructing a route from a filename cannot work in general: `cleeve-brook` is a
+ * slug containing a hyphen and `catchments-elverley` is a path containing a separator, and they
+ * are the same string to a parser. It produced `/catchments/cleeve/brook` on the fourth
+ * prototype, which is a route that does not exist.
+ */
+const routeMap = (() => {
+  const file = path.join(evidenceDir, 'routes.json');
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+})();
+
 /** `home--desktop.jpg` and `work-frihavn--mobile--2of3.jpg` both carry route and viewport. */
 function describe(file) {
   const stem = file.replace(/\.jpg$/, '');
   const [routePart, viewportPart, panel] = stem.split('--');
-  const route = routePart === 'home' ? '/' : `/${routePart.replace(/-/g, '/')}`;
+  const route = routeMap?.[routePart]
+    ?? (routePart === 'home' ? '/' : `/${routePart.replace(/-/g, '/')}`);
   return {
     file,
     route: panel ? `${route} (panel ${panel.replace('of', ' of ')})` : route,

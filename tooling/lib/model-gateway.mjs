@@ -55,6 +55,7 @@ import {
 import { PROVIDER_REFUSAL_REASONS } from '@app-builder/control-plane/provider-routing';
 
 import { readModelKillSwitch } from './model-kill-switch.mjs';
+import { resolveProviderCredential } from './provider-credential.mjs';
 
 export const MODEL_ENDPOINT = '/complete';
 export const GRANT_HEADER = 'x-app-builder-grant';
@@ -115,13 +116,20 @@ export function createModelGateway({
   let spend = emptyModelSpend();
   let calls = [];
 
-  // Resolved once, held here, and returned by nothing. The closure is the
+  // Resolved per call, held here, and returned by nothing. The closure is the
   // point: there is no accessor, so no caller — including a test — can ask this
   // gateway for the key it is using.
+  //
+  // Resolution is `resolveProviderCredential`'s alone, so the hosted path (a
+  // systemd credential in the unit's private tmpfs) and the development path
+  // (an environment variable) cannot diverge from what the preflight reports.
+  // On the hosted path there is no environment variable to read, which is the
+  // point of the change: a credential that is not in the environment is not
+  // inherited by anything this process later starts.
   const readCredential = () => {
     const state = readModelKillSwitch({ root, env, hostSwitchPath, providerProfile });
     const reference = state.providerSecret?.secretRef;
-    return reference ? String(env[reference] ?? '') : '';
+    return reference ? resolveProviderCredential({ secretRef: reference, env }) : '';
   };
 
   async function journalEvent(type, projectId, taskId, payload) {

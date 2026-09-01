@@ -341,11 +341,19 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
     killSwitch.detail,
     `Set enabled: true in config/model-execution.json through a reviewed change, and write {"enabled": true} to ${config.hostSwitchPath} on the host.`,
   );
+  // Which lane answered is reported because "configured" alone cannot tell an
+  // operator whether the hosted systemd credential is actually being used or a
+  // leftover shell variable is standing in for it. The value is not read here
+  // and has nowhere to go if it were.
+  const credentialReference = killSwitch.providerSecret?.secretRef ?? 'no reference';
+  const credentialLane = killSwitch.credentialSource?.source ?? null;
   add(
     'provider-credential-configured',
     killSwitch.providerSecret?.configured ? 'pass' : 'fail',
-    `${killSwitch.providerSecret?.secretRef ?? 'no reference'} is ${killSwitch.providerSecret?.configured ? 'configured' : 'not configured'} for the trusted gateway process`,
-    `Export ${killSwitch.providerSecret?.secretRef ?? 'the provider credential'} in the gateway's own environment only. It must not reach the sandbox, the ledger or this repository.`,
+    killSwitch.providerSecret?.configured
+      ? `${credentialReference} is configured for the trusted gateway process via ${credentialLane === 'systemd-credential' ? 'an encrypted systemd credential' : 'the process environment (development fallback)'}`
+      : `${credentialReference} is not configured for the trusted gateway process`,
+    `Encrypt ${credentialReference} with systemd-creds and let the model-canary unit load it: sudo bash ops/hetzner/install-model-canary-unit.sh. It must not be exported, and must not reach the sandbox, the ledger or this repository.`,
   );
   for (const [id, reference] of [['grant-signing-secret', GRANT_SECRET_REF], ['decision-signing-secret', DECISION_SECRET_REF]]) {
     const value = env[reference];

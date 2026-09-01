@@ -1,9 +1,13 @@
-# CC1 — Critic calibration corpus
+# CC2 — Critic calibration corpus
 
-Twenty-two artifacts and one question:
+Twenty-eight artifacts and two questions:
 
 > If a model sat in the Critic's seat, would it pass a site that is beautifully
 > composed and says nothing?
+
+> And would it call a polished generic site **exceptional**?
+
+The second question is new, and CC1 could not ask it.
 
 ```bash
 npm run calibration:corpus                          # composition and gaps
@@ -25,11 +29,11 @@ measuring a Critic against this repository's opinion.
 
 So the corpus asserts only what is knowable without a panel:
 
-- **planted defect** (20 items) — built with a specific defect, or independently
-  reviewed below the bar. A Critic that passes one is wrong, and no agreement
-  about its exact score is needed to say so.
-- **no planted defect** (2 items) — nothing was planted. *Not* a claim that they
-  are excellent or should pass.
+- **planted defect** — built with a specific defect, or independently reviewed
+  below the bar. A Critic that passes one is wrong, and no agreement about its
+  exact score is needed to say so.
+- **no planted defect** — nothing was planted. *Not* a claim that they are
+  excellent or should pass.
 
 The second group exists to catch the degenerate Critic. A Critic that rejects
 everything scores a perfect zero false-pass rate and has learned nothing. The
@@ -37,6 +41,83 @@ pair gives **separation**: does it score the undamaged artifacts above the
 damaged ones? A blanket rejector separates by zero.
 
 Both degenerate Critics are held as tests.
+
+## The failure CC1 was blind to
+
+Separation is a *floor* test, and it is satisfied by a Critic that has no ceiling
+at all. A Critic that scores the generic template 8.6 and the excellent fixture
+9.9 separates by 1.3, passes CC1 handsomely, and has just called a bootstrap-era
+theme with its colours changed "strong professional work". That is the exact
+miscalibration the visual gate turned out to have, and the corpus built to detect
+miscalibration could not see it.
+
+You can reproduce this. Score every non-broken item 8.8 and every broken one 3.5:
+CC1's metrics come back `separation 0.636, discriminates: true`. CC2 fails the
+same verdicts on four ordering assertions.
+
+## The second dimension: quality strata
+
+| Stratum | Items | Meaning |
+| --- | --- | --- |
+| `T1-broken-amateur` | 3 | Something failed that any viewer would notice. |
+| `T2-generic-template` | 22 | Generic or AI slop. **May be highly polished.** |
+| `T3-competent-commercial` | 1 | Complete, plain, unremarkable — a legitimate place to be. |
+| `T4-strong-professional` | 2 | Clearly authored and refined. |
+| `T5-exceptional-agency` | **0** | Nothing here is asserted to be here. |
+| `T6-benchmark-class` | **0** | Nothing here is asserted to be here. |
+
+The top two strata are **deliberately empty**. Labelling our own fixture
+benchmark-class would make the top of the scale a measurement of our own opinion,
+which is the thing the whole exercise is trying to stop.
+`examples/visual-benchmarks/references.v1.json` anchors that end instead, as
+written analyses of external work rather than as scoreable artifacts.
+
+The strata are an **order**, not a scale. The corpus asserts rankings, never
+numbers, because nobody has adjudicated a score for anything in it.
+
+## The ordering a Critic must reproduce
+
+```
+T2-generic-template      >  T1-broken-amateur
+T3-competent-commercial  >  T2-generic-template
+T4-strong-professional   >  T3-competent-commercial
+cc-25                    >  cc-24
+cc-25                    >  cc-20
+```
+
+The last two are the diagnostic ones.
+
+**`cc-25` vs `cc-24`** is the same fictional accountancy practice, the same
+content, the same words. The only variable is composition: cc-24 wraps every
+concept in an elevated rounded rectangle so nothing can be more important than
+anything else; cc-25 has a ground plane, a published fee table, a year calendar
+and typographic craft. A Critic that cannot separate this pair cannot see
+composition, and its scores everywhere else are unreliable for the same reason.
+
+**`cc-25` vs `cc-20`** is the anti-*"fancy = good"* assertion. cc-20 has
+gradients, shadows, a product mockup and a glow; cc-25 has no motion, no
+gradients, no photography and one accent used sparingly, and it is better work. A
+Critic that prefers cc-20 has learned finish rather than quality — which is as
+broken as passing a defective site, and considerably harder to notice.
+
+## The AI-slop fixtures
+
+Five artifacts covering modern generated-design failure modes, all deliberately
+**well executed**. The test is meant to be hard: none of them is broken, and a
+Critic that rejects them for defects has got the right answer for the wrong
+reason.
+
+| Fixture | Failure mode |
+| --- | --- |
+| `cc-20-saas-slop` | Polished generic SaaS. Gradient headline, icon triplet, fake logo wall, invented KPIs, generic dashboard. |
+| `cc-21-luxury-slop` | Minimal luxury. Whitespace, serif, beige — and it never says what is sold, to whom, or at what price. |
+| `cc-22-agency-slop` | "We create meaningful experiences" at 168px with accomplished motion and no proposition. |
+| `cc-23-trade-saasified` | A two-van roofing contractor presented as a venture-backed software product. |
+| `cc-24-card-soup` | Everything in an elevated rounded rectangle. No ground plane, therefore no hierarchy. |
+
+`cc-22` honours `prefers-reduced-motion` and its motion is genuinely well made.
+That is deliberate: *"motion is not craft"* has to survive contact with good
+motion, or it is just a bias against animation.
 
 ## The bar
 
@@ -116,7 +197,7 @@ measurement; running a real Critic against it needs live model execution, which
 
 ## Still needed from a person
 
-`panel.v1.json` is committed empty, on purpose, so the shape is reviewed before
+`panel.v2.json` is committed empty, on purpose, so the shape is reviewed before
 anybody's time is spent producing scores that do not fit it. It needs:
 
 - two or more qualified reviewers who did not create these artifacts;

@@ -55,15 +55,39 @@ const CORPUS_DIRECTORY = path.resolve(HERE, '../../examples/critic-calibration')
 export const OUTCOMES = Object.freeze(['planted-defect', 'no-planted-defect']);
 
 /**
+ * The corpus CC1 could not fail on, and why CC2 exists.
+ *
+ * CC1's headline number is separation: does the Critic score undamaged
+ * artifacts above damaged ones? A Critic that scores the generic template 8.6
+ * and the excellent fixture 9.9 separates by 1.3 and passes handsomely — while
+ * calling a bootstrap-era theme with its colours changed "strong professional
+ * work". That is the exact miscalibration the visual gate suffers from, and the
+ * corpus designed to detect miscalibration could not see it.
+ *
+ * So CC2 adds ordering across quality strata and, more importantly, a
+ * measurement of what the Critic does at the TOP of the scale — how often it
+ * issues a 9 or above, and to what. A Critic whose scores cluster between 8 and
+ * 9 for everything competent has a working floor and no ceiling.
+ */
+export const CURRENT_CORPUS = 'corpus.v2.json';
+
+/** Scores at or above this are claims about exceptional work, and are counted as such. */
+const EXCEPTIONAL_CLAIM = 9;
+
+/**
  * Load the corpus, refusing anything that does not declare where it came from.
  *
  * Synthetic material that forgets to say it is synthetic is the one way this
  * corpus could cause harm — it would become "evidence" in a later report about
  * how the factory scores against real businesses.
  */
-export function loadCorpus() {
-  const corpus = JSON.parse(fs.readFileSync(path.join(CORPUS_DIRECTORY, 'corpus.v1.json'), 'utf8'));
+export function loadCorpus(file = CURRENT_CORPUS) {
+  const corpus = JSON.parse(fs.readFileSync(path.join(CORPUS_DIRECTORY, file), 'utf8'));
+  const strata = new Set((corpus.qualityStrata ?? []).map((stratum) => stratum.id));
   for (const item of corpus.items) {
+    if (strata.size && item.qualityStratum && !strata.has(item.qualityStratum)) {
+      throw new Error(`Calibration item ${item.id} declares quality stratum ${JSON.stringify(item.qualityStratum)}, which the corpus does not define.`);
+    }
     if (!['synthetic-fixture', 'genuine-business-review'].includes(item.provenance)) {
       throw new Error(`Calibration item ${item.id} declares provenance ${JSON.stringify(item.provenance)}. An item that does not say what it is can be mistaken for evidence about a real business.`);
     }
@@ -175,7 +199,105 @@ export function measureCalibration({ corpus, verdicts = [], includeHeldOut = tru
   const undamagedMean = mean(undamaged.map((entry) => entry.verdict.meanScore));
   const separation = damagedMean === null || undamagedMean === null ? null : Number((undamagedMean - damagedMean).toFixed(3));
 
+  /**
+   * How the Critic ranks the quality strata.
+   *
+   * The strata are an ORDER, not a scale, so this reports the mean score per
+   * stratum and whether the order is respected — never how far apart they
+   * "should" be, which nobody has adjudicated.
+   */
+  const strataDefinitions = corpus.qualityStrata ?? [];
+  const strataScores = strataDefinitions.map((stratum) => {
+    const members = scored.filter((entry) => entry.item.qualityStratum === stratum.id);
+    return {
+      stratum: stratum.id,
+      rank: stratum.rank,
+      items: members.length,
+      meanScore: members.length ? Number(mean(members.map((entry) => entry.verdict.meanScore)).toFixed(3)) : null,
+    };
+  });
+  const ranked = strataScores.filter((entry) => entry.meanScore !== null).sort((a, b) => a.rank - b.rank);
+  const strataInversions = [];
+  for (let index = 1; index < ranked.length; index += 1) {
+    if (ranked[index].meanScore <= ranked[index - 1].meanScore) {
+      strataInversions.push({
+        lower: ranked[index - 1].stratum,
+        higher: ranked[index].stratum,
+        detail: `${ranked[index].stratum} (${ranked[index].meanScore}) did not score above ${ranked[index - 1].stratum} (${ranked[index - 1].meanScore}), and the corpus asserts it is better work.`,
+      });
+    }
+  }
+
+  /**
+   * The named pairwise assertions, checked individually.
+   *
+   * A stratum mean can hide a specific inversion — cc-25 scoring below cc-24 is
+   * invisible in an average over ten items, and it is the single most
+   * diagnostic result in the corpus because the two differ only in composition.
+   */
+  const orderingFailures = [];
+  for (const assertion of corpus.orderingAssertions ?? []) {
+    const scoreFor = (id) => {
+      const direct = scored.find((entry) => entry.item.id === id);
+      if (direct) return direct.verdict.meanScore;
+      const members = scored.filter((entry) => entry.item.qualityStratum === id);
+      return members.length ? mean(members.map((entry) => entry.verdict.meanScore)) : null;
+    };
+    const stronger = scoreFor(assertion.stronger);
+    const weaker = scoreFor(assertion.weaker);
+    if (stronger === null || weaker === null) continue;
+    if (stronger <= weaker) {
+      orderingFailures.push({
+        assertion: assertion.id,
+        stronger: assertion.stronger,
+        strongerScore: Number(stronger.toFixed(3)),
+        weaker: assertion.weaker,
+        weakerScore: Number(weaker.toFixed(3)),
+        why: assertion.why,
+      });
+    }
+  }
+
+  /**
+   * What the Critic does at the top of the scale.
+   *
+   * The number CC1 never produced. A Critic that awards 9+ to a generic or
+   * broken artifact is inflating, and a Critic that awards 9+ to nothing at all
+   * may simply have a broken ceiling — both are reported, and neither is
+   * scored, because "how many nines is correct?" depends on the corpus.
+   */
+  const topEndAwards = scored
+    .filter((entry) => typeof entry.verdict.meanScore === 'number' && entry.verdict.meanScore >= EXCEPTIONAL_CLAIM)
+    .map((entry) => ({ itemId: entry.item.id, stratum: entry.item.qualityStratum ?? entry.item.stratum, meanScore: entry.verdict.meanScore }));
+  const unearnedTopEnd = topEndAwards.filter((entry) => ['T1-broken-amateur', 'T2-generic-template'].includes(entry.stratum));
+
+  /**
+   * Scores clustered in a narrow band is the signature of an uncalibrated
+   * scale, whatever the separation says. If every artifact in a corpus that
+   * spans broken to strong-professional lands between 7.5 and 9, the Critic is
+   * not using the scale it was given.
+   */
+  const allScores = scored.map((entry) => entry.verdict.meanScore).filter((value) => typeof value === 'number');
+  const spread = allScores.length ? Number((Math.max(...allScores) - Math.min(...allScores)).toFixed(3)) : null;
+
   return {
+    /** The strata results, and the inversions they contain. */
+    strataScores,
+    strataInversions,
+    ranksStrataCorrectly: ranked.length > 1 ? strataInversions.length === 0 : null,
+    orderingFailures,
+    honoursOrderingAssertions: (corpus.orderingAssertions ?? []).length ? orderingFailures.length === 0 : null,
+
+    topEndAwards,
+    unearnedTopEnd,
+    /**
+     * The headline upper-end failure, stated as plainly as `falsePasses` states
+     * the lower-end one. A Critic that calls a polished generic site
+     * exceptional is miscalibrated even if it rejects every broken one.
+     */
+    inflatesTopEnd: unearnedTopEnd.length > 0,
+    scoreSpread: spread,
+
     schemaVersion: 1,
     authority: 'critic-calibration-measurement',
     corpus: corpus.corpus,
@@ -206,7 +328,7 @@ export function measureCalibration({ corpus, verdicts = [], includeHeldOut = tru
      * The number this cannot produce, and why.
      *
      * Agreement with adjudicated human scores needs adjudicated human scores.
-     * `examples/critic-calibration/panel.v1.json` is the empty structure waiting
+     * `examples/critic-calibration/panel.v2.json` is the empty structure waiting
      * for them, and a reviewer panel is an owner action. Null is the honest
      * value; zero would be a claim nobody measured.
      */

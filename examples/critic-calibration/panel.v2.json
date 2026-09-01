@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "authority": "critic-calibration-panel",
+  "corpus": "CC2",
+  "rubric": "examples/critic-calibration/rubric.v2.md",
+  "scale": "tooling/lib/visual-rubric.mjs — SCORE_BANDS",
+  "$comment": "The structure adjudicated human scores will occupy, deliberately empty. It is committed empty rather than omitted so that the shape is reviewed before anybody's time is spent producing scores that do not fit it, and so the gap stays visible in the repository rather than remembered. v2 widens it for what the new scale needs: three or more reviewers rather than two, pairwise ranking alongside absolute scores, a holistic tier per reviewer, and a recorded benchmark comparison.",
+  "status": "awaiting-reviewers",
+
+  "whyThreeNotTwo": "Two reviewers who disagree produce a disagreement with no resolution except discussion between the only two people who looked. Three produce a median, and a median is the statistic this panel should report — a mean over three lets one outlier move the answer, which at the top of a scale where the whole question is whether something is a 9 or a 10 is the entire measurement.",
+
+  "blockedBy": {
+    "owner": [
+      "Three or more qualified reviewers who did not create the artifacts. Independence is the point: a panel drawn from whoever built the corpus produces one opinion recorded several times.",
+      "A commitment to the blinded order before scoring begins, and to the scale before scores are seen. Agreeing the anchors afterwards is how a failed gate becomes a passed one.",
+      "A decision about whether reviewers see the benchmark references before or after scoring. Both are defensible and they measure different things; what is not defensible is some reviewers seeing them and others not."
+    ],
+    "notBlockedBy": [
+      "Engineering. The corpus, the scale, the rubric, the blinding, the pairwise mechanism and the measurement all exist and run today; what they lack is people."
+    ]
+  },
+
+  "protocol": [
+    "1. Generate the blinded order with a recorded seed: npm run calibration:blind -- --seed <seed>. Record the seed here before anybody scores.",
+    "2. Each reviewer scores independently and does not discuss until every score is submitted. Two reviewers who confer produce one opinion recorded twice.",
+    "3. Every criterion scored 8 or above carries a whyNotHigher sentence. Every criterion scored 9 or above carries positiveEvidence. Every 10 carries whyBenchmark. A number with no sentence cannot be adjudicated later and cannot be disagreed with.",
+    "4. Each reviewer records a holisticTier independently of their own criterion scores, and is explicitly told not to reconcile the two.",
+    "5. Reviewers rank the artifacts pairwise within each stratum in addition to scoring them absolutely. Absolute scores drift; a ranking of the same set by the same person on the same day does not.",
+    "6. Adjudicate disagreements by discussing the sentences, not by averaging the numbers. Record the disagreement and its resolution, including where no resolution was reached.",
+    "7. Report the MEDIAN as the adjudicated score. The mean is recorded for diagnostics and is not the answer."
+  ],
+
+  "blindingSeed": null,
+  "reviewers": [],
+  "scores": [],
+  "pairwiseRankings": [],
+  "adjudicated": [],
+
+  "$fields": {
+    "reviewers": "{ id, role, qualification, independentOfCreation: true, sawBenchmarkReferences: boolean }",
+    "scores": "{ reviewerId, itemId, criterionScores: [{ criterion, score, note, whyNotHigher, positiveEvidence, whyBenchmark }], holisticTier, observations: { templateDerived, interchangeableBusiness, mobileIsStackedDesktop, noSignatureMoment, typographyMerelyCompetent, genericDesignLanguage }, signatureMoment, benchmarkGap, verdict }",
+    "pairwiseRankings": "{ reviewerId, stratum, orderedItemIds: [strongest first], notes }",
+    "adjudicated": "{ itemId, criterionScores: [{ criterion, median, mean, spread }], medianScore, meanScore, holisticTier, benchmarkGap, verdict, disagreements: [{ criterion, spread, positions, resolution, unresolved: boolean }] }"
+  },
+
+  "whatThePanelWouldSettle": [
+    "Whether a model Critic's scores agree with qualified human ones — the number tooling/lib/critic-calibration.mjs currently reports as null and will keep reporting as null until this file has content.",
+    "Where cc-01 and cc-25 actually sit. The corpus asserts only that they rank above the generic stratum, because that is all that can be known without a panel.",
+    "Whether the strata are ordered as the corpus claims, judged by people rather than asserted by whoever wrote them.",
+    "Whether any artifact anybody has produced is genuinely exceptional, which nothing in this repository is currently entitled to claim."
+  ]
+}

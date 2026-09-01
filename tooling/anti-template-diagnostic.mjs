@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { assessCrossBuildDiversity, crossBuildSignature, describeCrossBuildDiversity } from './lib/cross-build-diversity.mjs';
+import { buildSamenessPrompt, MINIMUM_CORPUS, planCrossBuildVisualReview } from './lib/cross-build-visual-review.mjs';
 
 /**
  * Read builds the factory has already produced and say whether unrelated
@@ -93,6 +94,35 @@ function main() {
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'report.json'), `${JSON.stringify({ ...report, signatures }, null, 2)}\n`);
   console.log(`\nEvidence: ${path.relative(ROOT, out)}/report.json`);
+
+  /**
+   * The half this file cannot do, prepared rather than pretended.
+   *
+   * Everything above reads compositions and compiled designs. Two builds can
+   * differ on every structural axis the registry names and still be instantly
+   * recognisable as one generated house style, because sameness lives in
+   * proportion, colour temperature, spacing rhythm and motif — none of which is
+   * an axis. That question needs somebody to look at the screenshots side by
+   * side, so this writes the prompt for it and stops.
+   */
+  const withCaptures = dirs
+    .map((dir) => {
+      const capturesPath = path.join(dir, '.app-builder/rendered-evidence/captures.json');
+      if (!fs.existsSync(capturesPath)) return null;
+      return { build: path.basename(dir), captures: readJson(capturesPath).captures ?? [] };
+    })
+    .filter(Boolean);
+
+  if (withCaptures.length >= MINIMUM_CORPUS) {
+    const plan = planCrossBuildVisualReview({ builds: withCaptures });
+    fs.writeFileSync(path.join(out, 'sameness-review.json'), `${JSON.stringify(plan, null, 2)}\n`);
+    fs.writeFileSync(path.join(out, 'sameness-prompt.txt'), `${buildSamenessPrompt(plan)}\n`);
+    console.log(`Screenshot-level sameness review prepared over ${plan.builds.length} builds: ${path.relative(ROOT, out)}/sameness-prompt.txt`);
+    console.log('It is not run here. Comparing rendered pages is a judgement, and this file decides nothing.');
+  } else {
+    console.log(`\nNo screenshot-level sameness review: it needs ${MINIMUM_CORPUS} builds with captured evidence and this set offers ${withCaptures.length}.`);
+    console.log('Two builds that resemble each other are an anecdote; the finding is a claim about a population.');
+  }
 
   // Deliberately always zero. This is a diagnostic; the moment it decides a
   // build it has invented a threshold the corpus has not earned.

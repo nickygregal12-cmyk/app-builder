@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wren &amp; Fell — Chartered accountants, Leeds and Harrogate</title>
+<!--
+  SYNTHETIC CALIBRATION FIXTURE cc-25 — "strong restrained design".
+  Synthetic. Not a real firm. THE COUNTEREXAMPLE. Same business and largely the
+  same content as cc-24, deliberately: no motion, no gradients, no photography,
+  no rounded cards, no exotic interaction, one accent used sparingly.
+  What it does have is typographic craft, a real ground plane and hierarchy,
+  content that only this firm could publish (the fee table, the year calendar,
+  the named error in the testimonial), and a mobile layout that is regrouped
+  rather than stacked.
+  A critic that has learned "fancy = good" will under-score this, and that
+  failure is as serious as over-scoring cc-20.
+-->
+<style>
+  :root{
+    --ink:#16191c; --body:#3b4249; --muted:#767f88; --rule:#d8dbde;
+    --page:#fbfaf8; --ground:#f2f0ec; --accent:#7a2e22;
+    --measure:64ch;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--page);color:var(--body);
+    font:17px/1.62 "Charter","Iowan Old Style",Georgia,"Times New Roman",serif;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 32px}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(122,46,34,.32);
+    padding-bottom:1px;transition:border-color .15s}
+  a:hover,a:focus-visible{border-bottom-color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+  h1,h2,h3,.label,.tabular{color:var(--ink)}
+  /* One sans face, used only for labels, metadata and figures. Type as system. */
+  .label{font-family:"Inter",system-ui,-apple-system,sans-serif;font-size:11.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .tabular{font-family:"Inter",system-ui,-apple-system,sans-serif;
+    font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+  /* ---- masthead: a rule, a name, and the two things a caller needs ---- */
+  header{border-bottom:2px solid var(--ink);padding:26px 0 18px;margin-bottom:0}
+  .masthead{display:flex;align-items:baseline;gap:28px;flex-wrap:wrap}
+  .name{font-size:23px;letter-spacing:.01em;color:var(--ink);font-weight:600}
+  .name small{display:block;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;margin-top:5px;
+    font-family:"Inter",system-ui,sans-serif}
+  nav{margin-left:auto;display:flex;gap:26px}
+  nav a{border:0;color:var(--body);font-size:15.5px}
+  nav a:hover{color:var(--accent)}
+  .tel{font-family:"Inter",system-ui,sans-serif;font-variant-numeric:tabular-nums;
+    font-size:15.5px;color:var(--ink);border:0;font-weight:600}
+
+  /* ---- opening: one idea, at size, with the qualification directly under it ---- */
+  .opening{padding:78px 0 66px;border-bottom:1px solid var(--rule)}
+  h1{font-size:clamp(31px,4.6vw,52px);line-height:1.14;letter-spacing:-.018em;font-weight:400;
+    margin:0 0 26px;max-width:20ch}
+  .standfirst{font-size:20px;line-height:1.56;max-width:52ch;margin:0 0 30px;color:var(--body)}
+  .qualify{display:flex;gap:36px;flex-wrap:wrap;padding-top:24px;border-top:1px solid var(--rule)}
+  .qualify div{max-width:26ch}
+  .qualify dt{margin-bottom:5px}
+  .qualify dd{margin:0;font-size:15.5px;line-height:1.5}
+
+  section{padding:66px 0;border-bottom:1px solid var(--rule)}
+  h2{font-size:clamp(23px,2.6vw,31px);line-height:1.24;letter-spacing:-.015em;font-weight:400;
+    margin:14px 0 0;max-width:26ch}
+  .intro{max-width:var(--measure);margin:22px 0 0;font-size:17.5px}
+
+  /* ---- the fee table: the thing most firms will not publish ---- */
+  .fees{width:100%;border-collapse:collapse;margin-top:38px;font-size:16px}
+  .fees caption{text-align:left;margin-bottom:16px;font-size:15px;color:var(--muted);max-width:58ch;line-height:1.5}
+  .fees th,.fees td{text-align:left;padding:13px 16px 13px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  .fees thead th{border-bottom:1px solid var(--ink);padding-bottom:9px;
+    font-family:"Inter",system-ui,sans-serif;font-size:11.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);font-weight:600}
+  .fees td.amt{text-align:right;padding-right:0;white-space:nowrap;
+    font-family:"Inter",system-ui,sans-serif;font-variant-numeric:tabular-nums;
+    color:var(--ink);font-weight:600}
+  .fees td small{display:block;color:var(--muted);font-size:14.5px;margin-top:4px;line-height:1.45}
+  .fees tbody tr:last-child td{border-bottom:1px solid var(--ink)}
+  .note{margin:16px 0 0;font-size:15px;color:var(--muted);max-width:56ch}
+
+  /* ---- the year: the signature moment. A calendar of what the firm does when ---- */
+  .year{background:var(--ground);margin-top:0;border-bottom:1px solid var(--rule)}
+  .months{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:40px;
+    background:var(--rule);border:1px solid var(--rule)}
+  .month{background:var(--ground);padding:20px 18px 22px;min-height:132px}
+  .month.busy{background:#e8e4dc}
+  .month h3{margin:0 0 10px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    font-family:"Inter",system-ui,sans-serif;font-weight:600;color:var(--ink)}
+  .month ul{margin:0;padding:0;list-style:none;font-size:14.5px;line-height:1.45;color:var(--body)}
+  .month li{padding-left:13px;position:relative;margin-bottom:6px}
+  .month li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:1px;background:var(--muted)}
+  .month li.key{color:var(--accent);font-weight:600}
+  .month li.key::before{background:var(--accent);height:2px;top:7px}
+
+  /* ---- proof: a specific correction, not "great service" ---- */
+  .proof{max-width:60ch}
+  .proof blockquote{margin:34px 0 0;padding-left:22px;border-left:2px solid var(--accent);
+    font-size:19.5px;line-height:1.52;color:var(--ink)}
+  .proof cite{display:block;margin-top:16px;font-style:normal;font-size:15px;color:var(--muted);
+    font-family:"Inter",system-ui,sans-serif}
+
+  /* ---- people: names and what they actually do ---- */
+  .people{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:38px}
+  .people h3{margin:0 0 3px;font-size:17.5px;font-weight:600;letter-spacing:-.005em}
+  .people .role{margin:0 0 10px;font-size:14.5px}
+  .people p{margin:0;font-size:15.5px;line-height:1.55}
+
+  /* ---- contact: two offices, plainly ---- */
+  .offices{display:grid;grid-template-columns:repeat(2,1fr);gap:44px;margin-top:36px}
+  .offices h3{margin:0 0 12px;font-size:17.5px;font-weight:600}
+  .offices address{font-style:normal;font-size:16px;line-height:1.62}
+  .offices .tabular{display:block;margin-top:10px;font-size:16px;font-weight:600}
+  footer{padding:44px 0 60px;font-size:14.5px;color:var(--muted)}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+  /* ---- mobile: regrouped, not stacked ---- */
+  @media (max-width:820px){
+    .wrap{padding:0 22px}
+    body{font-size:16.5px}
+    /* Phone number promoted out of the nav into the masthead's first line —
+       it is what a caller wants on a phone, and it stops being an afterthought. */
+    .masthead{gap:14px}
+    nav{margin-left:0;order:3;width:100%;gap:0;border-top:1px solid var(--rule);padding-top:12px;
+      display:grid;grid-template-columns:repeat(2,1fr);row-gap:9px}
+    .tel{order:2;margin-left:auto;font-size:17px}
+    .opening{padding:52px 0 46px}
+    .qualify{gap:26px}
+    /* The fee table becomes a definition list rather than a squeezed table:
+       the amount stays on the same line as the service, the caveat moves below. */
+    .fees,.fees tbody,.fees tr,.fees td{display:block;width:100%}
+    .fees thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    .fees tr{padding:15px 0;border-bottom:1px solid var(--rule)}
+    .fees td{border:0;padding:0}
+    .fees td.svc{display:flex;justify-content:space-between;gap:16px;align-items:baseline;font-weight:600;color:var(--ink)}
+    .fees td.amt{text-align:left;display:none}
+    .fees td.svc .amt-inline{font-family:"Inter",system-ui,sans-serif;font-variant-numeric:tabular-nums;
+      white-space:nowrap;font-weight:600}
+    /* The year keeps its shape as a strip of quarters rather than 12 stacked
+       boxes — the point of it is the rhythm of the year, and one column loses that. */
+    .months{grid-template-columns:repeat(2,1fr)}
+    .month{min-height:0;padding:16px 15px 18px}
+    .people,.offices{grid-template-columns:1fr;gap:30px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="masthead">
+  <span class="name">Wren &amp; Fell<small>Chartered accountants · est. 1987</small></span>
+  <a class="tel" href="tel:+441134962200">0113 496 2200</a>
+  <nav>
+    <a href="#fees">Fees</a><a href="#year">Your year</a><a href="#people">People</a><a href="#contact">Contact</a>
+  </nav>
+</div></div></header>
+
+<div class="opening"><div class="wrap">
+  <h1>We look after ninety owner-managed companies between Leeds and Harrogate.</h1>
+  <p class="standfirst">Most turn over between £500,000 and £8 million. Year-end, VAT, payroll, and the conversations in between — with a partner you can reach on the phone.</p>
+  <dl class="qualify">
+    <div><dt class="label">Who we are for</dt><dd>Limited companies with one to four directors, in trade, manufacturing and professional services.</dd></div>
+    <div><dt class="label">Who we are not for</dt><dd>Sole traders below the VAT threshold, and businesses looking only for the cheapest filing.</dd></div>
+    <div><dt class="label">Taking on</dt><dd>Around eight new companies a year, so that nobody joins a queue.</dd></div>
+  </dl>
+</div></div>
+
+<section id="fees"><div class="wrap">
+  <p class="label">Fees</p>
+  <h2>What it costs, before you ring us.</h2>
+  <p class="intro">Most accountants will not publish this. We would rather you knew, because half the calls we used to take were about whether we were in the right bracket at all.</p>
+  <table class="fees">
+    <caption>Fixed annual fees for a company with straightforward records, agreed in writing before any work starts. Quoted 2026/27.</caption>
+    <thead><tr><th scope="col">Service</th><th scope="col" class="amt">From</th></tr></thead>
+    <tbody>
+      <tr><td class="svc">Year-end accounts and corporation tax <span class="amt-inline">£1,450</span>
+          <small>Statutory accounts, CT600, and an hour going through them with a partner rather than a summary in the post.</small></td>
+        <td class="amt">£1,450</td></tr>
+      <tr><td class="svc">VAT returns, quarterly <span class="amt-inline">£720</span>
+          <small>Making Tax Digital submission from your records. Add £480 if we keep the books as well.</small></td>
+        <td class="amt">£720</td></tr>
+      <tr><td class="svc">Payroll, monthly <span class="amt-inline">£38</span>
+          <small>Per employee, per month, including auto-enrolment and year-end reporting. Minimum £95 a month.</small></td>
+        <td class="amt">£38</td></tr>
+      <tr><td class="svc">Directors' self-assessment <span class="amt-inline">£290</span>
+          <small>Each. Included at no charge where we also prepare the company accounts.</small></td>
+        <td class="amt">£290</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Company restructuring, R&amp;D claims and HMRC enquiries are quoted separately. We will tell you before the meeting whether we think a claim is worth making.</p>
+</div></section>
+
+<section id="year" class="year"><div class="wrap">
+  <p class="label">Your year</p>
+  <h2>What we are doing for you, and when.</h2>
+  <p class="intro">A 31 March year end. The two dark months are the ones where we will need something from you.</p>
+  <div class="months">
+    <div class="month"><h3>April</h3><ul><li>Year end passes</li><li>Payroll year-end filed</li></ul></div>
+    <div class="month busy"><h3>May</h3><ul><li class="key">Records due from you</li><li>Bookkeeping review</li></ul></div>
+    <div class="month"><h3>June</h3><ul><li>Draft accounts prepared</li></ul></div>
+    <div class="month busy"><h3>July</h3><ul><li class="key">Accounts meeting</li><li>Dividend planning</li></ul></div>
+    <div class="month"><h3>August</h3><ul><li>Accounts signed</li></ul></div>
+    <div class="month"><h3>September</h3><ul><li>Filed at Companies House</li></ul></div>
+    <div class="month"><h3>October</h3><ul><li>Quiet</li></ul></div>
+    <div class="month"><h3>November</h3><ul><li>Self-assessment drafts</li></ul></div>
+    <div class="month"><h3>December</h3><ul><li>Corporation tax due</li></ul></div>
+    <div class="month"><h3>January</h3><ul><li>Self-assessment deadline</li><li>Extended hours to 7pm</li></ul></div>
+    <div class="month"><h3>February</h3><ul><li>Planning meetings</li></ul></div>
+    <div class="month"><h3>March</h3><ul><li>Pre-year-end review</li></ul></div>
+  </div>
+</div></section>
+
+<section><div class="wrap"><div class="proof">
+  <p class="label">Proof</p>
+  <h2>What that is worth, in one case.</h2>
+  <blockquote>"They found we had been treating our subcontractors' materials as a VAT-inclusive cost for two years. It was a £14,000 correction and they handled the disclosure to HMRC themselves. No drama, and no invoice for the arguing."</blockquote>
+  <cite>Director, structural steel fabricator, Wetherby · client since 2019</cite>
+</div></div></section>
+
+<section id="people"><div class="wrap">
+  <p class="label">People</p>
+  <h2>Three of the eleven, and the ones you will deal with.</h2>
+  <div class="people">
+    <div><h3>Margaret Fell</h3><p class="label role">FCA · Partner</p>
+      <p>Joined in 1994 and bought the practice in 2009. Takes the year-end meetings for most of the manufacturing clients.</p></div>
+    <div><h3>Tom Ashby</h3><p class="label role">ACA · Partner</p>
+      <p>Corporate tax and restructuring. The person to ask before you buy a building or sell a share of the company.</p></div>
+    <div><h3>Priya Nair</h3><p class="label role">ACCA · Manager</p>
+      <p>Runs payroll and Making Tax Digital for every client. Answers the phone on payroll week, which is most of it.</p></div>
+  </div>
+</div></section>
+
+<section id="contact"><div class="wrap">
+  <p class="label">Contact</p>
+  <h2>Two offices, and a partner on the end of the phone.</h2>
+  <div class="offices">
+    <div><h3>Leeds</h3><address>4 Blenheim Terrace<br>Leeds LS2 9HZ</address>
+      <a class="tabular" href="tel:+441134962200">0113 496 2200</a></div>
+    <div><h3>Harrogate</h3><address>18 Victoria Avenue<br>Harrogate HG1 5RD</address>
+      <a class="tabular" href="tel:+441423558140">01423 558 140</a></div>
+  </div>
+  <p class="note">Monday to Thursday 8.30am–5.30pm, Friday to 4pm. Through January we are here until 7pm.
+    Email <a href="mailto:hello@wrenandfell.co.uk">hello@wrenandfell.co.uk</a> and you will get a person, usually the same day.</p>
+</div></section>
+
+<footer><div class="wrap">
+  <span>Wren &amp; Fell LLP · Registered in England OC318842</span>
+  <span>Regulated for a range of investment business activities by the ICAEW</span>
+</div></footer>
+</body>
+</html>

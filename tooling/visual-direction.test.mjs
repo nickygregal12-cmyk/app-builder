@@ -502,11 +502,22 @@ test('the critic is asked only what needs judgement, and only what applies', () 
     assert.equal(settled.has(criterion.id), false, `${criterion.id} is something a rule already decides`);
   }
   const publicWithImagery = reviewCriteriaFor({ projectType: 'marketing-site', publishesImagery: true }).map((entry) => entry.id);
+  const publicWithout = reviewCriteriaFor({ projectType: 'marketing-site', publishesImagery: false }).map((entry) => entry.id);
   const internalWithout = reviewCriteriaFor({ projectType: 'internal-tool', publishesImagery: false }).map((entry) => entry.id);
-  assert.ok(publicWithImagery.includes('imagery-suitability'));
-  assert.equal(internalWithout.includes('imagery-suitability'), false);
-  assert.equal(internalWithout.includes('conversion-clarity'), false);
-  assert.ok(internalWithout.includes('responsive-quality'));
+
+  // Imagery no longer adds a tenth criterion to photographic builds only. It
+  // used to, which meant a photographic build was scored over nine criteria and
+  // a typographic one over eight — never the same scale. `visual-material`
+  // replaces it and applies to everything: "is this the right material for this
+  // subject, and is it handled well?" is a question an image-free site answers
+  // rather than skips.
+  assert.deepEqual(publicWithImagery, publicWithout, 'imagery must not change the scale a build is measured on');
+  assert.ok(publicWithImagery.includes('visual-material'));
+
+  // Scoping by project type still holds.
+  assert.equal(internalWithout.includes('commercial-clarity'), false);
+  assert.ok(internalWithout.includes('responsive-recomposition'));
+  assert.ok(internalWithout.includes('ai-slop-resistance'), 'a dense internal tool can still be generated slop');
 });
 
 test('exactly one candidate is promoted, and the rest are closed rather than left open', () => {

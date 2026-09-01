@@ -1,9 +1,14 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "authority": "critic-calibration-corpus",
-  "corpus": "CC1",
-  "frozenAt": "2026-08-31",
-  "$comment": "Evaluation material for calibrating a model Critic against the visual gate in config/agent-pipelines.json. It contains no promotion authority and decides nothing: tooling/lib/critic-calibration.mjs measures a Critic's answers against these items and reports, and whether a Critic may promote anything remains the pipeline's decision.",
+  "corpus": "CC2",
+  "frozenAt": "2026-09-01",
+  "$comment": "CC2 keeps every CC1 item and adds a second dimension. CC1 measured only whether a Critic separates artifacts built with a defect from artifacts built without one — a floor test. It could not detect the failure that actually matters at the top of the scale: a Critic that scores a polished generic site 9. The quality strata are that second dimension, and the assertions made about them are ORDERING assertions rather than score assertions, because nobody has adjudicated a score for any artifact here.",
+  "whatThisCorpusDoesNotClaim": [
+    "That any item is exceptional or benchmark-class. T5 and T6 are deliberately empty. Labelling our own fixture benchmark-class would make the top of the scale a measurement of our own opinion.",
+    "That cc-01 or cc-25 deserve a specific number. They are asserted to rank ABOVE the generic stratum and BELOW nothing, which is all that can be known without a panel.",
+    "That the strata are equally spaced. They are an order, not a scale."
+  ],
   "bar": {
     "$comment": "Copied from config/agent-pipelines.json gates.visual, and asserted against it by tooling/critic-calibration.test.mjs. If the gate moves, the test fails rather than this file silently disagreeing with the bar it claims to measure.",
     "minimumScore": 8.5,
@@ -13,6 +18,70 @@
     "planted-defect": "The artifact was built with a known defect, or was independently reviewed below the bar. A Critic that scores it at or above the bar is miscalibrated, and the corpus can say so without anybody having agreed on its exact score.",
     "no-planted-defect": "Nothing was planted. This is NOT a claim that the artifact is excellent or that it should pass — nobody has adjudicated it. These items exist so a Critic that simply rejects everything can be caught: refusing every artifact scores perfectly on false passes and has learned nothing."
   },
+  "qualityStrata": [
+    {
+      "id": "T1-broken-amateur",
+      "rank": 1,
+      "meaning": "Broken or amateur. Something has failed that any viewer would notice."
+    },
+    {
+      "id": "T2-generic-template",
+      "rank": 2,
+      "meaning": "Generic template or AI slop. May be highly polished. Nothing about the design was decided by the business."
+    },
+    {
+      "id": "T3-competent-commercial",
+      "rank": 3,
+      "meaning": "Competent commercial work. Complete, plain, unremarkable, and a legitimate place to be."
+    },
+    {
+      "id": "T4-strong-professional",
+      "rank": 4,
+      "meaning": "Strong professional. Clearly authored and refined."
+    },
+    {
+      "id": "T5-exceptional-agency",
+      "rank": 5,
+      "meaning": "Exceptional agency work. NO ITEM IN THIS CORPUS IS ASSERTED TO BE HERE."
+    },
+    {
+      "id": "T6-benchmark-class",
+      "rank": 6,
+      "meaning": "Benchmark class. NO ITEM IN THIS CORPUS IS ASSERTED TO BE HERE. The external references in examples/visual-benchmarks/references.v1.json anchor this tier, and they are written analyses rather than scoreable artifacts."
+    }
+  ],
+  "orderingAssertions": [
+    {
+      "id": "broken-below-generic",
+      "stronger": "T2-generic-template",
+      "weaker": "T1-broken-amateur",
+      "why": "A polished generic site is worse work than nothing, but it is better MADE than a broken one, and the scale must reflect that or it is measuring defects rather than quality."
+    },
+    {
+      "id": "competent-above-generic",
+      "stronger": "T3-competent-commercial",
+      "weaker": "T2-generic-template",
+      "why": "The headline assertion of this corpus. A plain complete site that says what the business does outranks a beautiful one that does not. A Critic that inverts this pair is measuring production values."
+    },
+    {
+      "id": "strong-above-competent",
+      "stronger": "T4-strong-professional",
+      "weaker": "T3-competent-commercial",
+      "why": "Authorship and craft must be worth something, or the scale rewards only adequacy."
+    },
+    {
+      "id": "restrained-above-cards",
+      "stronger": "cc-25",
+      "weaker": "cc-24",
+      "why": "Same business, same content, same words. The only variable is composition and the presence of an authored point of view. A Critic that cannot separate this pair cannot see composition, and its scores on every other artifact are unreliable for the same reason."
+    },
+    {
+      "id": "restrained-above-slop",
+      "stronger": "cc-25",
+      "weaker": "cc-20",
+      "why": "The anti-\"fancy = good\" assertion. cc-20 has gradients, shadows, motion-adjacent polish and a product mockup; cc-25 has none of them and is better work. A Critic that prefers cc-20 has learned finish rather than quality."
+    }
+  ],
   "items": [
     {
       "id": "cc-01",
@@ -26,7 +95,8 @@
       "expectedOutcome": "no-planted-defect",
       "plantedDefect": null,
       "heldOut": false,
-      "notes": "Specific work, named proof, a substantiated quotation, a stated next action and a real contact route. Written as the positive end of the range."
+      "notes": "Specific work, named proof, a substantiated quotation, a stated next action and a real contact route. Written as the positive end of the range.",
+      "qualityStratum": "T4-strong-professional"
     },
     {
       "id": "cc-02",
@@ -40,7 +110,8 @@
       "expectedOutcome": "no-planted-defect",
       "plantedDefect": null,
       "heldOut": false,
-      "notes": "Plain, unremarkable and complete. It does the job without distinction, which is a different thing from doing it badly, and a Critic should place it between cc-01 and cc-03."
+      "notes": "Plain, unremarkable and complete. It does the job without distinction, which is a different thing from doing it badly, and a Critic should place it between cc-01 and cc-03.",
+      "qualityStratum": "T3-competent-commercial"
     },
     {
       "id": "cc-03",
@@ -53,14 +124,15 @@
       "subject": "Vantage Consulting — fictional consultancy",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "A bootstrap-era template with its colours changed. 'Your Success Is Our Business', three interchangeable cards with circle icons, and nothing that could not be swapped onto any other company."
       },
       "expectedFailingCriteria": [
-        "distinctiveness",
-        "brand-fit"
+        "brand-fit",
+        "business-specificity"
       ],
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-04",
@@ -73,15 +145,16 @@
       "subject": "Harrow Tile Co — fictional retailer",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "coherence",
+        "criterion": "composition-pacing",
         "description": "Unrendered {{price}} placeholders, 'undefined' in a stock column, missing images shown as filenames, an absolutely positioned promotion overlapping the heading, lorem ipsum, and a sale that ended in 2023."
       },
       "expectedFailingCriteria": [
-        "coherence",
-        "credibility"
+        "commercial-clarity",
+        "composition-pacing"
       ],
       "heldOut": false,
-      "notes": "The floor of the range. A Critic that does not fail this is not reading the artifact."
+      "notes": "The floor of the range. A Critic that does not fail this is not reading the artifact.",
+      "qualityStratum": "T1-broken-amateur"
     },
     {
       "id": "cc-05",
@@ -94,15 +167,15 @@
       "subject": "Northlight — fictional agency",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "conversion-clarity",
+        "criterion": "commercial-clarity",
         "description": "Genuinely well composed — gradient headline, confident type scale, generous rhythm — and it never says what the company does, for whom, or what it costs. No contact detail, no proof, no destination behind any link. 'Elevating potential through considered design.'"
       },
       "expectedFailingCriteria": [
-        "conversion-clarity",
-        "credibility"
+        "commercial-clarity"
       ],
       "heldOut": true,
-      "notes": "The headline case this corpus exists for. A Critic that rewards visual polish will pass this, and passing it is the specific failure the calibration is looking for."
+      "notes": "The headline case this corpus exists for. A Critic that rewards visual polish will pass this, and passing it is the specific failure the calibration is looking for.",
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-06",
@@ -115,14 +188,15 @@
       "subject": "Atelier Sonde — fictional design studio",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "conversion-clarity",
+        "criterion": "commercial-clarity",
         "description": "The same failure in the opposite visual language: restrained editorial serif, wide margins, letterspaced small caps. Beautiful and commercially inert — no service, no price, no location, and an 'Enquiries' link that goes nowhere."
       },
       "expectedFailingCriteria": [
-        "conversion-clarity"
+        "commercial-clarity"
       ],
       "heldOut": true,
-      "notes": "Paired with cc-05 deliberately. A Critic that only recognises this failure in one aesthetic has learned the aesthetic rather than the failure."
+      "notes": "Paired with cc-05 deliberately. A Critic that only recognises this failure in one aesthetic has learned the aesthetic rather than the failure.",
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-07",
@@ -135,15 +209,16 @@
       "subject": "Lumen Optometry — fictional practice",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "credibility",
+        "criterion": "commercial-clarity",
         "description": "Body text at #b8b8b8 on white, headings marked up as h5 beneath an h1, unlabelled form inputs relying on placeholders, an image with no alternative text, and a submit control that is an anchor with onclick returning false."
       },
       "expectedFailingCriteria": [
-        "credibility",
+        "commercial-clarity",
         "visual-hierarchy"
       ],
       "heldOut": false,
-      "notes": "Automated axe rules would also catch most of this, which is the point: it is here to check that the model Critic and the deterministic lane agree rather than substitute for each other."
+      "notes": "Automated axe rules would also catch most of this, which is the point: it is here to check that the model Critic and the deterministic lane agree rather than substitute for each other.",
+      "qualityStratum": "T1-broken-amateur"
     },
     {
       "id": "cc-08",
@@ -156,14 +231,15 @@
       "subject": "Sable & Finch — fictional bookkeeping practice",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "conversion-clarity",
+        "criterion": "commercial-clarity",
         "description": "Reads as a competent, specific business — and the enquiry form has no action and its submit control is an anchor to '#', so the form cannot send. Every navigation link points at a route the document does not provide."
       },
       "expectedFailingCriteria": [
-        "conversion-clarity"
+        "commercial-clarity"
       ],
       "heldOut": true,
-      "notes": "The hardest of the planted defects to see from a screenshot alone. It is held out because a Critic reviewing rendered evidence may legitimately miss it, and knowing whether it does is worth measuring."
+      "notes": "The hardest of the planted defects to see from a screenshot alone. It is held out because a Critic reviewing rendered evidence may legitimately miss it, and knowing whether it does is worth measuring.",
+      "qualityStratum": "T1-broken-amateur"
     },
     {
       "id": "cc-09",
@@ -176,14 +252,15 @@
       "subject": "Meridian Wealth Partners — fictional financial adviser",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "credibility",
+        "criterion": "commercial-clarity",
         "description": "Unsubstantiated superlatives ('the UK's leading', 'No.1 rated'), invented statistics, an anonymous testimonial, and — in a regulated sector — 'guaranteed returns' and a claim that a pension was doubled. Handsome, and the copy is the problem."
       },
       "expectedFailingCriteria": [
-        "credibility"
+        "commercial-clarity"
       ],
       "heldOut": false,
-      "notes": "Principle 7 in visual form: a Critic that scores this well is judging presentation and ignoring whether the claims could be true."
+      "notes": "Principle 7 in visual form: a Critic that scores this well is judging presentation and ignoring whether the claims could be true.",
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-10",
@@ -203,7 +280,8 @@
         "visual-hierarchy"
       ],
       "heldOut": false,
-      "notes": "Nothing here is broken and no content is missing. The information is all present and none of it is ranked."
+      "notes": "Nothing here is broken and no content is missing. The information is all present and none of it is ranked.",
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-11",
@@ -216,14 +294,15 @@
       "subject": "Calder & Rowe Solicitors — fictional firm",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "responsive-quality",
+        "criterion": "responsive-recomposition",
         "description": "No viewport meta tag, a 1180px minimum width, a fixed 1140px container and an 1100px table. Competent at desktop width and unusable on a phone."
       },
       "expectedFailingCriteria": [
-        "responsive-quality"
+        "responsive-recomposition"
       ],
       "heldOut": false,
-      "notes": "Only visible if the Critic is shown mobile evidence. An item that quietly checks whether the review packet carried a mobile capture at all."
+      "notes": "Only visible if the Critic is shown mobile evidence. An item that quietly checks whether the review packet carried a mobile capture at all.",
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-12",
@@ -236,13 +315,14 @@
       "subject": "Fold & Grain Bakery — fictional bakery",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "coherence",
+        "criterion": "composition-pacing",
         "description": "Three typefaces across three heading levels, three unrelated button treatments and three unrelated card treatments, used interchangeably for the same job. Each element is individually acceptable and together they are not one decision."
       },
       "expectedFailingCriteria": [
-        "coherence"
+        "composition-pacing"
       ],
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a01",
@@ -256,7 +336,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar by a different-vendor critic. Recorded here as a fixed point rather than as a constructed defect."
       },
       "observedIndependentReview": {
@@ -269,7 +349,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a02",
@@ -283,7 +364,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -296,7 +377,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a03",
@@ -310,7 +392,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -323,7 +405,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a04",
@@ -337,7 +420,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -350,7 +433,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a05",
@@ -364,7 +448,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -377,7 +461,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a06",
@@ -391,7 +476,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -404,7 +489,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a07",
@@ -418,7 +504,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -431,7 +517,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a08",
@@ -445,7 +532,7 @@
       "subject": "nbm — real candidate, independently reviewed",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar."
       },
       "observedIndependentReview": {
@@ -458,7 +545,8 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a09",
@@ -472,7 +560,7 @@
       "subject": "nbm — real candidate, independently reviewed. The best independent result this factory has recorded.",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: independently reviewed below the bar, and by the smallest margin of any item here."
       },
       "observedIndependentReview": {
@@ -486,7 +574,8 @@
         }
       },
       "heldOut": true,
-      "notes": "The tightest anchor in the corpus, and the one config/factory-status.json cites as the best result to date. A Critic that passes this has moved the bar rather than met it."
+      "notes": "The tightest anchor in the corpus, and the one config/factory-status.json cites as the best result to date. A Critic that passes this has moved the bar rather than met it.",
+      "qualityStratum": "T2-generic-template"
     },
     {
       "id": "cc-a10",
@@ -500,7 +589,7 @@
       "subject": "nbm static renderer — real candidate, independently reviewed while carrying the default shell",
       "expectedOutcome": "planted-defect",
       "plantedDefect": {
-        "criterion": "distinctiveness",
+        "criterion": "business-specificity",
         "description": "Not planted: reviewed below the bar. config/factory-status.json records that it was reviewed carrying the default shell because no visual direction had been promoted, which is context a reader needs before treating this as a judgement on the renderer."
       },
       "observedIndependentReview": {
@@ -513,8 +602,154 @@
           "model": "GPT-5"
         }
       },
-      "heldOut": false
+      "heldOut": false,
+      "qualityStratum": "T2-generic-template"
+    },
+    {
+      "id": "cc-20",
+      "qualityStratum": "T2-generic-template",
+      "stratum": "polished-ai-slop",
+      "provenance": "synthetic-fixture",
+      "artifact": {
+        "kind": "html-document",
+        "ref": "examples/critic-calibration/fixtures/cc-20-saas-slop.html"
+      },
+      "subject": "Nexova — fictional SaaS product",
+      "expectedOutcome": "planted-defect",
+      "plantedDefect": {
+        "criterion": "ai-slop-resistance",
+        "description": "Deliberately well-executed generic SaaS. Gradient headline, eyebrow pill, icon-in-rounded-square triplet, fake logo wall, invented KPI row, glowing blob, generic dashboard mockup, dark closing CTA slab, and identical padding on every section. Nothing about the design was decided by the product; the \"dashboard\" shows no real view and the statistics are unattributed."
+      },
+      "expectedFailingCriteria": [
+        "ai-slop-resistance",
+        "art-direction",
+        "business-specificity",
+        "memorability"
+      ],
+      "heldOut": false,
+      "notes": "Technically polished on purpose. A critic that rewards finish over authorship will over-score this, which is the specific failure the upper end of the scale exists to catch."
+    },
+    {
+      "id": "cc-21",
+      "qualityStratum": "T2-generic-template",
+      "stratum": "polished-ai-slop",
+      "provenance": "synthetic-fixture",
+      "artifact": {
+        "kind": "html-document",
+        "ref": "examples/critic-calibration/fixtures/cc-21-luxury-slop.html"
+      },
+      "subject": "Maison Élan — fictional luxury brand of unstated kind",
+      "expectedOutcome": "planted-defect",
+      "plantedDefect": {
+        "criterion": "business-specificity",
+        "description": "Minimal-luxury slop. Enormous whitespace, serif display face, beige palette, letterspaced small caps — and it never states what is sold, to whom, at what price, or from where. The restraint is unsupported: there is no material behind the space."
+      },
+      "expectedFailingCriteria": [
+        "business-specificity",
+        "commercial-clarity",
+        "memorability",
+        "visual-material"
+      ],
+      "heldOut": true,
+      "notes": "The test of whether the critic can tell restraint from absence. Aman's language minus Aman's photography."
+    },
+    {
+      "id": "cc-22",
+      "qualityStratum": "T2-generic-template",
+      "stratum": "polished-ai-slop",
+      "provenance": "synthetic-fixture",
+      "artifact": {
+        "kind": "html-document",
+        "ref": "examples/critic-calibration/fixtures/cc-22-agency-slop.html"
+      },
+      "subject": "Field — fictional design studio",
+      "expectedOutcome": "planted-defect",
+      "plantedDefect": {
+        "criterion": "commercial-clarity",
+        "description": "Agency slop. \"We create meaningful experiences\" at 168px, accomplished entrance motion, a confident work index — and no statement of what the studio does, for whom, at what scale or cost. The five named projects have no description, no outcome and no destination."
+      },
+      "expectedFailingCriteria": [
+        "business-specificity",
+        "commercial-clarity",
+        "information-architecture"
+      ],
+      "heldOut": false,
+      "notes": "Motion is honoured for reduced-motion and is genuinely well made. The point is that craft in the motion does not redeem an absent proposition, and that \"motion is not craft\" has to survive contact with good motion."
+    },
+    {
+      "id": "cc-23",
+      "qualityStratum": "T2-generic-template",
+      "stratum": "polished-ai-slop",
+      "provenance": "synthetic-fixture",
+      "artifact": {
+        "kind": "html-document",
+        "ref": "examples/critic-calibration/fixtures/cc-23-trade-saasified.html"
+      },
+      "subject": "Hallam Roofing — fictional two-van roofing contractor",
+      "expectedOutcome": "planted-defect",
+      "plantedDefect": {
+        "criterion": "brand-fit",
+        "description": "A local roofing contractor presented as a venture-backed software product: \"platform\", \"solutions\", \"talk to sales\", a three-tier pricing table with an Enterprise tier, an \"our technology\" section and a dark CTA slab. Cleanly built and entirely wrong for a homeowner with a leak."
+      },
+      "expectedFailingCriteria": [
+        "ai-slop-resistance",
+        "brand-fit",
+        "business-specificity"
+      ],
+      "heldOut": false,
+      "notes": "Tests whether the critic judges appropriateness to the business rather than production values. Everything here is competently made."
+    },
+    {
+      "id": "cc-24",
+      "qualityStratum": "T2-generic-template",
+      "stratum": "polished-ai-slop",
+      "provenance": "synthetic-fixture",
+      "artifact": {
+        "kind": "html-document",
+        "ref": "examples/critic-calibration/fixtures/cc-24-card-soup.html"
+      },
+      "subject": "Wren & Fell — fictional accountancy practice (card treatment)",
+      "expectedOutcome": "planted-defect",
+      "plantedDefect": {
+        "criterion": "composition-pacing",
+        "description": "Every concept on the page is wrapped in an elevated rounded rectangle — intro, services, figures, people, testimonial, contact, opening hours. There is no ground plane, so nothing can be more important than anything else. Spacing, contrast and type are all correct."
+      },
+      "expectedFailingCriteria": [
+        "ai-slop-resistance",
+        "art-direction",
+        "composition-pacing",
+        "visual-hierarchy"
+      ],
+      "heldOut": false,
+      "notes": "Deliberately paired with cc-25: same firm, same content, and the only difference is the composition. The pair is the cleanest available test of whether the critic can see composition at all."
+    },
+    {
+      "id": "cc-25",
+      "qualityStratum": "T4-strong-professional",
+      "stratum": "restrained-strong",
+      "provenance": "synthetic-fixture",
+      "artifact": {
+        "kind": "html-document",
+        "ref": "examples/critic-calibration/fixtures/cc-25-restrained-strong.html"
+      },
+      "subject": "Wren & Fell — fictional accountancy practice (restrained treatment)",
+      "expectedOutcome": "no-planted-defect",
+      "plantedDefect": null,
+      "heldOut": false,
+      "notes": "THE COUNTEREXAMPLE. No motion, no gradients, no photography, no cards, one accent used sparingly. It has typographic craft, a real ground plane, a published fee table and a year calendar no other firm could publish, a specific £14,000 correction as proof, and a mobile layout that regroups rather than stacks. A critic that under-scores this has learned \"fancy = good\", which is as broken as over-scoring cc-20. Its ceiling is deliberately NOT asserted: nobody has adjudicated whether this is an 8 or a 9."
     }
   ],
-  "$superseded": "Superseded by corpus.v2.json, which the tooling reads. Retained because CC1 is the corpus the visual gate was calibrated against, and because reproducing its blind spot — an inflating Critic passes CC1 on separation alone — needs the original."
+  "$criterionRemap": {
+    "note": "CC1 named its expected failures against the v1 criterion set. The rubric now asks higher-resolution questions, so those names are remapped onto the criteria that inherited them. The DEFECTS are unchanged — only the name of the question they fail.",
+    "mapping": {
+      "distinctiveness": "business-specificity",
+      "conversion-clarity": "commercial-clarity",
+      "credibility": "commercial-clarity",
+      "coherence": "composition-pacing",
+      "responsive-quality": "responsive-recomposition",
+      "imagery-suitability": "visual-material",
+      "distinctive-moment": "memorability",
+      "content-truth": "commercial-clarity"
+    }
+  }
 }

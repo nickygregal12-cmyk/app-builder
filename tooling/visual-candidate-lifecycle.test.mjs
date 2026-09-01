@@ -155,8 +155,8 @@ test('the review packet separates what a rule settled from what needs judgement'
 
     const settled = new Set(['accent-contrast', 'reduced-motion-required', 'repetitive-section-presentation', 'competing-primary-actions', 'uniform-page-rhythm']);
     for (const criterion of packet.criteria) assert.equal(settled.has(criterion.id), false, `${criterion.id} is something a rule already decides`);
-    assert.ok(packet.criteria.some((criterion) => criterion.id === 'distinctiveness'));
-    assert.ok(packet.criteria.some((criterion) => criterion.id === 'responsive-quality'));
+    assert.ok(packet.criteria.some((criterion) => criterion.id === 'business-specificity'));
+    assert.ok(packet.criteria.some((criterion) => criterion.id === 'responsive-recomposition'));
     assert.ok(Array.isArray(packet.settledByRules));
     assert.ok(Array.isArray(packet.mustAddress));
     // The other candidates are named, so a critic compares rather than scores in isolation.
@@ -196,8 +196,18 @@ test('promotion makes one candidate the project, and leaves no forks behind', as
         rationale: 'Reviewed against the scoped criteria.',
         // A verdict now carries a score against every criterion it was scoped,
         // because the professional bar has to have something to read.
-        criterionScores: criteria.map((criterion) => ({ criterion: criterion.id, score: wins ? 9 : 7 })),
-        failingCriteria: wins ? [] : ['distinctiveness'],
+        // A score of 9 now owes an account of itself: what is holding it back,
+        // and what strengths it actually demonstrates. The scale refuses a 9
+        // supported by nothing, so a fixture that wants one has to argue it.
+        criterionScores: criteria.map((criterion) => ({
+          criterion: criterion.id,
+          score: wins ? 9 : 7,
+          ...(wins ? {
+            whyNotHigher: `fixture: ${criterion.id} is strong without being benchmark-class`,
+            positiveEvidence: [`fixture: demonstrated strength on ${criterion.id}`],
+          } : {}),
+        })),
+        failingCriteria: wins ? [] : ['business-specificity'],
       });
     }
 

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wren & Fell — Chartered Accountants</title>
+<!--
+  SYNTHETIC CALIBRATION FIXTURE cc-24 — "card soup".
+  Synthetic. Not a real firm. Every single concept on the page is wrapped in an
+  elevated rounded rectangle: the intro, the services, the numbers, the people,
+  the testimonial, the contact details, the opening hours. Nothing is allowed to
+  sit on the page. Spacing, contrast and type are all fine; the composition has
+  no ground plane and therefore no hierarchy — everything is equally important,
+  which means nothing is. Deliberately paired with cc-25, which is the same firm
+  with the same content and no cards.
+-->
+<style>
+  :root{--ink:#1a1f26;--muted:#67717e;--line:#e7eaee;--page:#f4f6f8;--brand:#1f5f4b;--pad:64px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  section{padding:calc(var(--pad)/2) 0}
+  a{color:inherit}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px;
+    box-shadow:0 10px 28px -20px rgba(26,31,38,.28);margin-bottom:20px}
+  header{padding:20px 0}
+  header .card{display:flex;align-items:center;gap:24px;padding:18px 26px;margin-bottom:0}
+  .logo{font-weight:700;letter-spacing:-.02em;font-size:18px}
+  nav ul{display:flex;gap:22px;list-style:none;margin:0 0 0 auto;padding:0;font-size:14.5px;color:var(--muted)}
+  .btn{display:inline-block;padding:10px 18px;border-radius:10px;background:var(--brand);color:#fff;
+    text-decoration:none;font-weight:600;font-size:14.5px}
+  h1{font-size:clamp(30px,4vw,44px);line-height:1.12;letter-spacing:-.03em;margin:0 0 14px;max-width:18ch}
+  h2{font-size:22px;letter-spacing:-.02em;margin:0 0 12px}
+  h3{font-size:16.5px;margin:0 0 7px;letter-spacing:-.01em}
+  p{margin:0 0 12px;color:var(--muted)}
+  p:last-child{margin-bottom:0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .grid2>.card,.grid3>.card,.grid4>.card{margin-bottom:0}
+  .num{font-size:34px;font-weight:700;letter-spacing:-.035em;color:var(--brand);line-height:1}
+  .num+span{color:var(--muted);font-size:14px;display:block;margin-top:6px}
+  .who{width:52px;height:52px;border-radius:50%;background:#dfe6e3;margin-bottom:14px}
+  blockquote{margin:0;font-size:18px;line-height:1.5}
+  cite{display:block;margin-top:14px;font-style:normal;font-size:14px;color:var(--muted)}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:15px}
+  dt{color:var(--muted)}
+  footer{padding:20px 0 44px}
+  footer .card{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    color:var(--muted);font-size:14px;margin-bottom:0}
+  @media (max-width:880px){
+    .grid2,.grid3,.grid4{grid-template-columns:1fr}
+    nav ul{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="card">
+  <span class="logo">Wren &amp; Fell</span>
+  <nav><ul><li>Services</li><li>People</li><li>Insights</li><li>Contact</li></ul></nav>
+  <a class="btn" href="#">Book a call</a>
+</div></div></header>
+
+<section><div class="wrap">
+  <div class="card">
+    <h1>Chartered accountants for owner-managed businesses in Yorkshire</h1>
+    <p>We look after around ninety companies between Leeds and Harrogate, most of them turning over £500k to £8m. Year-end, VAT, payroll and the conversations in between.</p>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h3>Year-end accounts</h3><p>Statutory accounts and corporation tax, filed on time, with a meeting to go through them properly.</p></div>
+    <div class="card"><h3>VAT and bookkeeping</h3><p>Quarterly returns and Making Tax Digital, either from your records or ours.</p></div>
+    <div class="card"><h3>Payroll</h3><p>Monthly payroll, auto-enrolment and the year-end reporting that comes with it.</p></div>
+  </div>
+
+  <div class="grid4">
+    <div class="card"><span class="num">1987</span><span>Established</span></div>
+    <div class="card"><span class="num">90</span><span>Client companies</span></div>
+    <div class="card"><span class="num">11</span><span>People</span></div>
+    <div class="card"><span class="num">2</span><span>Offices</span></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><div class="who"></div><h3>Margaret Fell FCA</h3><p>Partner. Joined 1994, took over the practice in 2009.</p></div>
+    <div class="card"><div class="who"></div><h3>Tom Ashby ACA</h3><p>Partner. Corporate tax and business restructuring.</p></div>
+    <div class="card"><div class="who"></div><h3>Priya Nair ACCA</h3><p>Manager. Payroll and Making Tax Digital.</p></div>
+  </div>
+
+  <div class="card">
+    <blockquote>"They caught a VAT treatment we had been getting wrong for two years, and dealt with HMRC on our behalf without any drama."</blockquote>
+    <cite>Director, engineering firm, Wetherby</cite>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><h2>Get in touch</h2>
+      <dl><dt>Telephone</dt><dd>0113 496 2200</dd><dt>Email</dt><dd>hello@wrenandfell.co.uk</dd>
+      <dt>Leeds</dt><dd>4 Blenheim Terrace, LS2 9HZ</dd><dt>Harrogate</dt><dd>18 Victoria Avenue, HG1 5RD</dd></dl></div>
+    <div class="card"><h2>Opening hours</h2>
+      <dl><dt>Mon–Thu</dt><dd>8.30am – 5.30pm</dd><dt>Friday</dt><dd>8.30am – 4.00pm</dd>
+      <dt>January</dt><dd>Extended hours to 7.00pm</dd><dt>Weekends</dt><dd>By arrangement</dd></dl></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap"><div class="card">
+  <span>Wren &amp; Fell LLP · Registered in England OC318842</span>
+  <span>Regulated by the ICAEW</span>
+</div></div></footer>
+</body>
+</html>

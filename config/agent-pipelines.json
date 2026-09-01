@@ -91,7 +91,7 @@
     },
     "visual": {
       "id": "visual",
-      "label": "Rendered visual quality and distinctiveness. minimumScore is the professional-output bar a candidate must reach before it may be promoted; minimumCriterionScore stops a strong average hiding one badly failing criterion; reworkIterationBudget bounds how many times a failed candidate may be revised before the set is decided without it.",
+      "label": "Rendered visual quality, authorship and business specificity. minimumScore is the professional-output bar a candidate must reach before it may be promoted; minimumCriterionScore stops a strong average hiding one badly failing criterion; reworkIterationBudget bounds how many times a failed candidate may be revised before the set is decided without it.",
       "evaluatedBy": "design-critic",
       "defaultReworkRole": "art-direction",
       "deterministicChecks": [
@@ -104,7 +104,13 @@
       "minimumScore": 8.5,
       "minimumCriterionScore": 6.5,
       "reworkIterationBudget": 2,
-      "requiresIndependentReviewer": true
+      "requiresIndependentReviewer": true,
+      "scale": "tooling/lib/visual-rubric.mjs",
+      "rubric": "examples/critic-calibration/rubric.v2.md",
+      "$scaleNote": "minimumScore is DELIBERATELY UNCHANGED at 8.5 while the scale beneath it was redefined. Raising the number against an uncalibrated scale would have been the cheap fix and would have measured nothing: the reviewer had no definition of any point on 0-10 and was told the bar in its own prompt, so 8.5 meant \"whatever a model returns when asked for 8.5\". Under the v2 rubric 8.5 is a mean over thirteen anchored criteria — including resistance to generic AI design language and memorability, neither of which was previously asked — issued by a reviewer that is not told the target and must justify every score of 8 or above. It is a materially harder bar at the same number.",
+      "$topScoreNote": "A score of 10 is not reachable through this gate alone. It additionally requires a recorded pairwise benchmark comparison finding no material gap, a holistic tier of benchmark-class, and no scoped criterion below 8. See TOP_SCORE_CONTRACT in tooling/lib/visual-rubric.mjs.",
+      "$deterministicBoundary": "design-lint decides facts: contrast, reduced-motion handling, mechanically detectable repetition and competing primary actions. It was deliberately NOT extended to the AI-slop motifs (gradient headlines, rounded cards, pill overuse, centred alignment, uniform padding). Every one of those is legitimate in some context and generic in others, and a rule that banned them would encode a second template in place of the first. They are put to the critic as the ai-slop-resistance criterion, which asks whether the pattern has a reason to exist here rather than whether it exists.",
+      "$evidenceNote": "Evidence coverage now counts routes as well as viewports, and the evidence a review rests on caps what it may claim: one route at one width supports a professional reading and no more. A home page cannot prove a website."
     },
     "functionality": {
       "id": "functionality",

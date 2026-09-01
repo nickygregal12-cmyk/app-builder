@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "authority": "visual-scale-reevaluation-input",
+  "$comment": "A read-only snapshot of the three final verdicts recorded on PR #255 (branch session/gold-reference-forge), vendored so the re-evaluation is reproducible from main. NOTHING on #255 was modified to produce this. These are the verdicts exactly as that branch recorded them, under the v1 criteria and the v1 (undefined) scale.",
+  "source": {
+    "pr": 255,
+    "branch": "session/gold-reference-forge",
+    "observedAt": "2026-09-01"
+  },
+  "scaleInForce": {
+    "criteria": "v1 — nine criteria",
+    "anchors": "none. The reviewer prompt supplied no meaning for any point on the 0-10 scale.",
+    "barDisclosed": true,
+    "barDisclosedDetail": "buildPrompt told the reviewer \"The bar is an overall mean of at least 8.5, and no single criterion below 6.5\"."
+  },
+  "prototypes": [
+    {
+      "id": "ardwell-roe",
+      "label": "Ardwell & Roe — architecture practice",
+      "sourceFile": "examples/gold-reference/ardwell-roe/evidence/verdicts/v5.json",
+      "recordedVerdict": "pass",
+      "recordedScores": {
+        "brand-fit": 9.0,
+        "visual-hierarchy": 8.7,
+        "coherence": 9.0,
+        "distinctiveness": 8.8,
+        "credibility": 9.2,
+        "conversion-clarity": 7.7,
+        "imagery-suitability": 9.1,
+        "responsive-quality": 8.3,
+        "distinctive-moment": 8.6
+      },
+      "recordedMean": 8.711,
+      "recordedFloor": 7.7,
+      "recordedDefects": [
+        {
+          "criterion": "conversion-clarity",
+          "severity": "major",
+          "detail": "Enquiry action does not persist in the header through long project browsing."
+        },
+        {
+          "criterion": "responsive-quality",
+          "severity": "minor",
+          "detail": "Metadata and statistics are small and dense at mobile width."
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "severity": "minor",
+          "detail": "Project title and result statistic compete for the first read."
+        },
+        {
+          "criterion": "distinctive-moment",
+          "severity": "minor",
+          "detail": "Memorable through restraint rather than a uniquely ownable interaction."
+        }
+      ],
+      "recordedStrengths": []
+    },
+    {
+      "id": "marram",
+      "label": "Marram — coastal planting studio",
+      "sourceFile": "examples/gold-reference/marram/evidence/verdicts/v18.json",
+      "recordedVerdict": "pass",
+      "recordedScores": {
+        "brand-fit": 9,
+        "visual-hierarchy": 8,
+        "coherence": 9,
+        "distinctiveness": 9,
+        "credibility": 8,
+        "conversion-clarity": 8,
+        "imagery-suitability": 9,
+        "responsive-quality": 8,
+        "distinctive-moment": 9
+      },
+      "recordedMean": 8.556,
+      "recordedFloor": 8,
+      "recordedDefects": [
+        {
+          "criterion": "visual-hierarchy",
+          "severity": "minor",
+          "detail": "Desktop body copy, metadata and plant captions are frequently too small and low-contrast relative to the large headings, making supporting evidence harder to absorb than it should be."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "severity": "minor",
+          "detail": "Calls to action are visible, but the repeated label does not explain what happens after booking or reduce practical uncertainty about availability, geography and scheduling at the moment of decision."
+        },
+        {
+          "criterion": "responsive-quality",
+          "severity": "minor",
+          "detail": "The mobile header has an awkward two-tier order—navigation first, then brand and CTA—and consumes substantial vertical space before the page proposition appears."
+        },
+        {
+          "criterion": "coherence",
+          "severity": "minor",
+          "detail": "Some desktop sections, particularly the garden listings, carry unusually large empty areas while adjacent plant grids are dense; the rhythm occasionally shifts from editorial restraint into under-filled composition."
+        },
+        {
+          "criterion": "credibility",
+          "severity": "major",
+          "detail": "The visibly fictional email domain and explicit prototype disclaimer in the footer break the otherwise convincing commercial presentation and would materially reduce trust on a live client-facing site."
+        },
+        {
+          "criterion": "imagery-suitability",
+          "severity": "minor",
+          "detail": "The antique plates are exceptionally appropriate, but repeated specimens across the hero, register and case studies create some visual redundancy and can make different projects feel less individually memorable."
+        }
+      ],
+      "recordedStrengths": [
+        "The restrained black, parchment and ochre palette, literary serif typography and botanical plates form a highly specific identity for a serious coastal planting studio.",
+        "The plant register is more than decoration: seasonal bars, botanical names, condition labels and garden provenance turn expertise into a distinctive visual system.",
+        "The £450 first visit is consistently framed as a concrete, low-ambiguity product, with well-placed calls to action across long pages.",
+        "Mobile layouts are deliberately recomposed: featured specimens receive scale, secondary cards alternate image and copy, and project plant strips remain browsable without becoming generic stacked cards.",
+        "The gardens pages replace conventional portfolio photography with evidence—survival periods, irrigation reductions and replacement records—which credibly supports the studio's central claim."
+      ]
+    },
+    {
+      "id": "plumbline",
+      "label": "Plumbline — database tooling (SaaS)",
+      "sourceFile": "examples/gold-reference/plumbline/evidence/verdicts/v6.json",
+      "recordedVerdict": "pass",
+      "recordedScores": {
+        "brand-fit": 9,
+        "visual-hierarchy": 8,
+        "coherence": 9,
+        "distinctiveness": 9,
+        "credibility": 9,
+        "conversion-clarity": 8,
+        "imagery-suitability": 9,
+        "responsive-quality": 8,
+        "distinctive-moment": 9
+      },
+      "recordedMean": 8.667,
+      "recordedFloor": 8,
+      "recordedDefects": [
+        {
+          "criterion": "visual-hierarchy",
+          "severity": "minor",
+          "detail": "On the desktop home page, the hero claim, figure annotation, and dense migration-plan specimen compete within the first viewport; the transition from proposition to proof could be slightly more decisive."
+        },
+        {
+          "criterion": "conversion-clarity",
+          "severity": "minor",
+          "detail": "The trial action is consistently visible, but the checks and security pages contain long technical stretches without an intermediate conversion opportunity for readers convinced before reaching the closing CTA."
+        },
+        {
+          "criterion": "responsive-quality",
+          "severity": "minor",
+          "detail": "The mobile navigation is crowded into two rows with the primary CTA dominating the brand area, and the checks list remains exceptionally dense for a handheld reading session."
+        },
+        {
+          "criterion": "coherence",
+          "severity": "minor",
+          "detail": "The home-page testimonial and final CTA sections are more conventionally composed than the rigorous evidence modules above them, causing a small loss of tension late in the page."
+        }
+      ],
+      "recordedStrengths": [
+        "The severe monochrome palette, restrained red and amber status accents, technical typography, and editorial directness feel purpose-built for a skeptical engineering audience.",
+        "The migration-plan output is an unusually strong proof device: it exposes statements, refusal reasons, timings, thresholds, and suggested remedies instead of asking visitors to trust a generic safety claim.",
+        "The pages maintain a disciplined system of rules, spacing, labels, tables, and evidence-led sections without becoming visually monotonous.",
+        "Credibility is reinforced by precise product boundaries, explicit database grants, transparent pricing, restrained invented-evidence disclaimers, and the repeated statement that Plumbline reviews rather than executes.",
+        "Mobile layouts are substantially recomposed: the plan becomes a readable vertical sequence, check descriptions regroup coherently, and calls to action retain usable prominence."
+      ]
+    }
+  ]
+}

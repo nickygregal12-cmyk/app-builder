@@ -434,3 +434,18 @@ test('no hosted Groq recipe survives that exports a key or authorises outside th
   // Whitespace-tolerant: the sentence is line-wrapped in the document.
   assert.match(source.replace(/\s+/g, ' '), /the first hosted canary path is Anthropic-only/i);
 });
+
+test('the preflight points at the trusted authorise wrapper, not a bare --authorise', () => {
+  const source = readFileSync('tooling/model-canary.mjs', 'utf8');
+  // A bare `--authorise` cannot read the signing credential (it is only in the
+  // transient unit) and could not publish the result anyway (/etc/app-builder is
+  // root-owned). Naming it in a remediation sends the operator down a path that
+  // fails, having looked like the supported one.
+  assert.equal(
+    /'npm run runtime:model-canary -- --authorise'/.test(source), false,
+    'the hosted remediation must name the wrapper, not the raw flag',
+  );
+  assert.match(source, /sudo bash ops\/hetzner\/authorise-model-canary\.sh/);
+  // Groq has no hosted path at all, so it must not be given a command either.
+  assert.match(source, /hosted Groq path is deferred/);
+});

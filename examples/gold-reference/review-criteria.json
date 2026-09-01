@@ -1,0 +1,47 @@
+[
+ {
+  "id": "brand-fit",
+  "appliesTo": "all",
+  "question": "Does the build read as this business, given the accent and typographic voice its own material showed?"
+ },
+ {
+  "id": "visual-hierarchy",
+  "appliesTo": "all",
+  "question": "On each page, does the eye reach the most important thing first?"
+ },
+ {
+  "id": "coherence",
+  "appliesTo": "all",
+  "question": "Do the opening, the grid, the rhythm and the motion read as one decision rather than several?"
+ },
+ {
+  "id": "distinctiveness",
+  "appliesTo": "public",
+  "question": "Does this look like a considered site for this business, or like a template with its colours changed?"
+ },
+ {
+  "id": "credibility",
+  "appliesTo": "public",
+  "question": "Would the intended customer trust this business more after seeing this than before?"
+ },
+ {
+  "id": "conversion-clarity",
+  "appliesTo": "public",
+  "question": "Is the next action obvious at every point a visitor might be ready to take it?"
+ },
+ {
+  "id": "imagery-suitability",
+  "appliesTo": "imagery",
+  "question": "Do the published photographs suit the business, and are they framed well at every width?"
+ },
+ {
+  "id": "responsive-quality",
+  "appliesTo": "all",
+  "question": "Is the mobile rendering a designed composition, or the desktop one with fewer columns?"
+ },
+ {
+  "id": "distinctive-moment",
+  "appliesTo": "public",
+  "question": "Does the declared distinctive moment actually land, and does it suit this business rather than decorate it?"
+ }
+]

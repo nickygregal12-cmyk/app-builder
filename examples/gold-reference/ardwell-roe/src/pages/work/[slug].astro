@@ -1,0 +1,78 @@
+---
+import Base from '../../layouts/Base.astro';
+import Frame from '../../components/Frame.astro';
+import { projects, testimonials } from '../../data/studio';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+const { project } = Astro.props;
+const quote = testimonials.find((t) => t.project === project.name);
+const index = projects.findIndex((p) => p.slug === project.slug);
+const next = projects[(index + 1) % projects.length];
+---
+<Base title={`${project.name} — Ardwell & Roe`} description={project.summary}>
+  <section class="hero">
+    <Frame slug={project.primary} alt={`${project.name}, ${project.place}.`} priority ratio="16/9" ratioMobile="4/5" sizes="100vw" class="hero-frame" />
+    <div class="hero-cut">
+      <p class="label">{project.type} · {project.place} · {project.year}</p>
+      <h1 class="hero-principle" style="max-width: 16ch;">{project.name}</h1>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="c-1-7">
+      <p class="lede">{project.summary}</p>
+    </div>
+    <div class="c-9-4">
+      <div class="outcome">
+        <span class="outcome-figure">{project.outcome.figure}</span>
+        <span class="outcome-caption">{project.outcome.caption}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-5">
+      <p class="label">The problem</p>
+      <p class="prose" style="margin-top: var(--s-2);">{project.challenge}</p>
+    </div>
+    <div class="c-7-5">
+      <p class="label">What we did</p>
+      <p class="prose" style="margin-top: var(--s-2);">{project.response}</p>
+    </div>
+  </section>
+
+  {project.secondary && (
+    <section class="section-tight">
+      <Frame slug={project.secondary} alt={`${project.name}, a second view.`} ratio="16/9" sizes="100vw" />
+    </section>
+  )}
+
+  <section class="section grid rule-top">
+    <div class="c-1-4">
+      <p class="label">Materials</p>
+      <ul class="materials">{project.materials.map((m) => <li>{m}</li>)}</ul>
+    </div>
+    {quote && (
+      <div class="c-6-6">
+        <blockquote class="quote">“{quote.quote}”<span class="quote-attrib">{quote.who}</span></blockquote>
+      </div>
+    )}
+  </section>
+
+  <section class="section grid rule-top">
+    <div class="c-1-6">
+      <p class="label">Next</p>
+      <h2 class="work-name" style="margin-top: var(--s-2);"><a href={`/work/${next.slug}`}>{next.name}</a></h2>
+      <p class="work-place">{next.place} · {next.year}</p>
+    </div>
+    <div class="c-9-4 end">
+      <a class="ask-lead" href="/contact">Talk to the studio</a>
+    </div>
+  </section>
+</Base>
+<style>
+  .materials { list-style: none; margin: var(--s-2) 0 0; padding: 0; }
+  .materials li { padding: var(--s-2) 0; border-bottom: var(--rule); font-family: var(--font-serif); font-size: var(--t-lg); }
+</style>

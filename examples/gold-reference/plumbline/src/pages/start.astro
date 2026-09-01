@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import { company } from '../data/product';
+const steps = [
+  { n: '1', t: 'Add the action to one repository', d: 'One file. It runs on pull requests that touch your migrations directory.' },
+  { n: '2', t: 'Give it a read-only role', d: 'Four GRANT statements, listed in full on the security page. No write access, ever.' },
+  { n: '3', t: 'Open a pull request', d: 'The plan appears as a comment within about thirty seconds. It will not block anything until you tell it to.' },
+];
+---
+<Base title="Start a trial — Plumbline" description="Fourteen days against one database. Read-only, no card.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">Start</p>
+      <h1 class="display" style="margin-top: var(--s-3);">Fourteen days, one database, no card.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">It starts in report-only mode. Nothing you ship is blocked until you decide it should be.</p>
+    </div>
+    <div class="c-9-4 end">
+      <p class="label">Takes about</p>
+      <span class="number-figure">20 min</span>
+      <span class="number-caption">From the first file to the first plan, on a repository someone already knows.</span>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="c-full">
+      <div class="checks">
+        {steps.map((step) => (
+          <div class="check" style="grid-template-columns: 3rem 1fr 1fr;">
+            <span class="check-id">{step.n}</span>
+            <div><h2 class="check-title">{step.t}</h2></div>
+            <div class="check-method-cell"><p class="check-method">{step.d}</p></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="c-1-7">
+      <form>
+        <h2 class="h2">Send the setup instructions.</h2>
+        <div style="display: grid; gap: var(--s-3); margin-top: var(--s-4); max-width: 34rem;">
+          <div style="display: grid; gap: var(--s-1);">
+            <label for="email" style="font-size: var(--t-sm); font-weight: 550;">Work email</label>
+            <input id="email" name="email" type="email" required autocomplete="email"
+                   style="font: inherit; padding: 0.7em 0.8em; border: 1px solid var(--rule-strong); background: var(--paper-lift); color: var(--ink);" />
+            <span style="font-size: var(--t-xs); color: var(--ink-mute);">We send one email with the setup steps. Nothing else, and no sequence.</span>
+          </div>
+          <div style="display: grid; gap: var(--s-1);">
+            <label for="engine" style="font-size: var(--t-sm); font-weight: 550;">Which engine</label>
+            <select id="engine" name="engine" style="font: inherit; padding: 0.7em 0.8em; border: 1px solid var(--rule-strong); background: var(--paper-lift); color: var(--ink);">
+              <option>PostgreSQL</option><option>MySQL</option><option>SQL Server</option>
+            </select>
+          </div>
+          <div><button class="ask" type="submit" style="font: inherit; cursor: pointer;">Send the instructions</button></div>
+        </div>
+      </form>
+      <p class="actions-note" style="margin-top: var(--s-3);">Prototype form — it does not submit anywhere.</p>
+    </div>
+    <div class="c-9-4">
+      <p class="label">Rather not</p>
+      <p class="prose" style="margin-top: var(--s-2); font-size: var(--t-sm);">
+        The setup is public. If you would prefer not to give us an address, the whole thing is
+        on the checks page and {company.contact.email} reaches an engineer either way.
+      </p>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import { plans, company, proof } from '../data/product';
+const second = proof[1];
+const faq = [
+  { q: 'What counts as a database?', a: 'One logical database that Plumbline plans against. Read replicas of the same primary are not counted separately, and neither are your staging copies.' },
+  { q: 'What happens at the end of the trial?', a: 'Plans stop. Nothing is deleted, nothing starts charging, and no card was taken, so there is nothing to cancel.' },
+  { q: 'Does it need write access?', a: 'No. Plumbline connects with a read-only role and never executes a statement from your migration. The role we ask for is on the security page in full.' },
+  { q: 'Can we override a refusal?', a: 'Yes, with a flag. The override is recorded against the plan with the name of whoever set it, which turns out to be enough.' },
+];
+---
+<Base title="Pricing — Plumbline" description="Per database, per month. A 14-day trial with no card.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">Pricing</p>
+      <h1 class="display" style="margin-top: var(--s-3);">Per database. Not per migration.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">Charging per migration would price the thing you want us to encourage. Plan as often as you like.</p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="c-full">
+      <div class="tiers">
+        {plans.map((tier) => (
+          <div class="tier" data-featured={tier.featured ? '' : undefined}>
+            <h2 class="tier-name">{tier.name}</h2>
+            <span class="tier-price">{tier.price}</span>
+            <span class="tier-unit">{tier.unit}</span>
+            <p class="tier-line">{tier.line}</p>
+            <ul>{tier.includes.map((item) => <li><span>{item}</span></li>)}</ul>
+            <a class={tier.featured ? 'ask' : 'ask-quiet'} href={tier.href}>{tier.cta}</a>
+          </div>
+        ))}
+      </div>
+      <p class="label" style="margin-top: var(--s-2);">Prices exclude VAT. Annual billing takes two months off.</p>
+    </div>
+  </section>
+
+  <section class="section grid rule-top">
+    <div class="c-1-6">
+      <h2 class="h2">Questions people actually ask.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">If yours is not here, {company.contact.email} reaches an engineer.</p>
+    </div>
+    <div class="c-7-6">
+      <dl style="margin: 0; border-top: var(--hair-strong);">
+        {faq.map((item) => (
+          <div style="padding: var(--s-3) 0; border-bottom: var(--hair);">
+            <dt style="font-weight: 550;">{item.q}</dt>
+            <dd style="margin: var(--s-1) 0 0; color: var(--ink-soft); font-size: var(--t-sm); max-width: var(--measure);">{item.a}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-7">
+      <blockquote class="quote">
+        <p>“{second.quote}”</p>
+        <footer class="label">{second.who} · {second.org}</footer>
+      </blockquote>
+    </div>
+    <div class="c-9-4 end">
+      <div class="actions"><a class="ask" href="/start">Start a {company.trial.days}-day trial</a></div>
+      <p class="actions-note" style="margin-top: var(--s-2);">{company.trial.scope} · no card</p>
+    </div>
+  </section>
+</Base>

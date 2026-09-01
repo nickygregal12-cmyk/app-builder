@@ -1,0 +1,84 @@
+---
+import Base from '../layouts/Base.astro';
+import Offer from '../components/Offer.astro';
+import Plate from '../components/Plate.astro';
+import Season from '../components/Season.astro';
+import { plants, studio } from '../data/studio';
+
+/**
+ * The register, in three chapters rather than one run of twelve.
+ *
+ * An independent reviewer read the flat twelve-item grid as "catalogue inventory" and found
+ * the mobile column fatiguing — twelve near-identical cream rectangles in a row, with the
+ * paid first visit only reachable at the very bottom. Chaptering is not decoration: the
+ * studio genuinely specifies by when a plant does its work, so the divisions carry the same
+ * information the register already claimed to hold, and each one is a natural place to
+ * breathe. The conversion band sits between chapters, where a reader who has just been
+ * persuaded actually is.
+ */
+const chapters = [
+  {
+    title: 'Finished by August',
+    note: 'These do their work early and go over. They are specified for cover and for the first summer, not for the photograph.',
+    plants: plants.filter((p) => p.season[1] <= 7),
+  },
+  {
+    title: 'Through the dry months',
+    note: 'The body of the scheme. These carry the garden through the weeks with no rain and the most wind.',
+    plants: plants.filter((p) => p.season[1] === 8),
+  },
+  {
+    title: 'Still standing in winter',
+    note: 'What is left in February, in silhouette. A coastal garden is judged on this and not on July.',
+    plants: plants.filter((p) => p.season[1] >= 9),
+  },
+].filter((chapter) => chapter.plants.length > 0);
+---
+<Base title="The register — Marram" description="The plants Marram specifies for salt wind, thin soil and long dry summers.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">The register</p>
+      <h1 class="display" style="margin-top: var(--s-2);">Twelve of about forty.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">Each of these has been through at least three winters in a garden the studio made. Nothing goes on the register from a catalogue. They are set out below by how long they hold, because that is how the studio specifies them.</p>
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--s-3);">
+    {chapters.map((chapter, index) => (
+      <>
+        <div class="c-full">
+          <div class="chapter">
+            <h2 class="chapter-title">{chapter.title}</h2>
+            <p class="chapter-note">{chapter.note}</p>
+            <span class="chapter-count">{chapter.plants.length} plants</span>
+          </div>
+          <div class="register">
+            {chapter.plants.map((plant) => (
+              <article class="specimen">
+                <div class="specimen-plate"><Plate slug={plant.slug} alt={`Botanical plate of ${plant.latin}, ${plant.common.toLowerCase()}.`} /></div>
+                <h3 class="specimen-latin">{plant.latin}</h3>
+                <p class="specimen-common">{plant.common}</p>
+                <p class="specimen-role">{plant.role}</p>
+                <p class="specimen-tolerance">{plant.tolerance}</p>
+                <Season from={plant.season[0]} to={plant.season[1]} latin={plant.latin} />
+              </article>
+            ))}
+          </div>
+        </div>
+
+        {(index === 0 || index === 1) && (
+          <div class="c-full">
+            <div class="midway">
+              <p>Not sure any of this will survive where you are? That is what the first visit answers.</p>
+              <a class="ask-quiet" href="/enquire">Book a first visit · {studio.firstVisit.price}</a>
+            </div>
+          </div>
+        )}
+      </>
+    ))}
+
+    <div class="c-full" style="margin-top: var(--s-4);">
+      <Offer />
+    </div>
+  </section>
+</Base>

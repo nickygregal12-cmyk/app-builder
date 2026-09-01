@@ -173,7 +173,7 @@ If convergence recurs, the Phase 4D component-family revival is earned. If it do
 ### NBM context capsule
 
 NBM proved ingestion, KnowledgePack/provenance, deterministic composition, an ordinary generated repository, supported preview/evidence, launch audit and owner acceptance with **0 meaningful manual edits**. It did **not** prove best-in-class visual generation.
-Independent visual review reached best mean **6.55** and distinctiveness around the mid-4s. The formal gate remains **mean ≥ 8.5 and every criterion ≥ 6.5**. Therefore `0 edits` does not mean `excellent design`; optimise for resources/interventions required to reach independently accepted quality.
+Independent visual review reached best mean **6.70** on thin truth and **6.64** on the rich Ardwell & Roe benchmark, with distinctiveness in the mid-5s to low 6s. The formal gate remains **mean ≥ 8.5 and every criterion ≥ 6.5**. Therefore `0 edits` does not mean `excellent design`; optimise for resources/interventions required to reach independently accepted quality.
 Visual candidates once omitted the accepted KnowledgePack. That defect was fixed and source fidelity improved, but visual quality still failed. Do not reopen the fixed bug or begin another NBM CSS loop.
 ### Phase 4D state
 

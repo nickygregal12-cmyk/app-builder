@@ -1,0 +1,66 @@
+---
+import Base from '../../layouts/Base.astro';
+import Offer from '../../components/Offer.astro';
+import Plate from '../../components/Plate.astro';
+import Season from '../../components/Season.astro';
+import { gardens, plants, proof, studio } from '../../data/studio';
+export function getStaticPaths() { return gardens.map((garden) => ({ params: { slug: garden.slug }, props: { garden } })); }
+const { garden } = Astro.props;
+const byPlant = Object.fromEntries(plants.map((p) => [p.slug, p]));
+const quote = proof.find((p) => p.garden === garden.name);
+const used = garden.plants.map((s) => byPlant[s]);
+---
+<Base title={`${garden.name} — Marram`} description={garden.brief}>
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">{garden.place} · {garden.year}</p>
+      <h1 class="display" style="margin-top: var(--s-2);">{garden.name}</h1>
+      <p class="lede" style="margin-top: var(--s-4);">{garden.brief}</p>
+    </div>
+    <div class="c-9-4 end">
+      <div class="measure">
+        <span class="measure-figure">{garden.measure.figure}</span>
+        <span class="measure-caption">{garden.measure.caption}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight grid hair-top">
+    <div class="c-1-5"><p class="label">The condition</p><p class="prose" style="margin-top: var(--s-2);">{garden.condition}</p></div>
+    <div class="c-7-6"><p class="label">What we did</p><p class="prose" style="margin-top: var(--s-2);">{garden.approach}</p></div>
+  </section>
+
+  <section class="section-tight grid hair-top">
+    <div class="c-full"><p class="label">The planting</p></div>
+    <div class="c-full">
+      <div class="register">
+        {used.map((plant) => (
+          <article class="specimen">
+            <div class="specimen-plate"><Plate slug={plant.slug} alt={`Botanical plate of ${plant.latin}.`} /></div>
+            <h2 class="specimen-latin">{plant.latin}</h2>
+            <p class="specimen-common">{plant.common}</p>
+            <p class="specimen-role">{plant.role}</p>
+            <Season from={plant.season[0]} to={plant.season[1]} latin={plant.latin} />
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {quote && (
+    <section class="section-tight grid hair-top">
+      <div class="c-1-7">
+        <blockquote style="margin:0;">
+          <p style="font-family: var(--font-display); font-size: var(--t-xl); line-height: 1.35; margin: 0;">“{quote.quote}”</p>
+          <footer class="label" style="margin-top: var(--s-2);">{quote.who}</footer>
+        </blockquote>
+      </div>
+    </section>
+  )}
+
+  <section class="section-tight grid hair-top">
+    <div class="c-full">
+      <Offer />
+    </div>
+  </section>
+</Base>

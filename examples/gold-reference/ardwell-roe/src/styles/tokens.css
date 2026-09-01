@@ -1,0 +1,117 @@
+/*
+ * Ardwell & Roe — design tokens.
+ *
+ * The palette is not chosen, it is read. Every colour below traces to a material the project
+ * dossier already names: lime plaster, Douglas fir, reclaimed pennant stone, charred larch,
+ * unlacquered brass. `brand.colors` in the approved pack is empty, so the factory correctly
+ * falls back to a derived accent — this file instead reads the materials the studio specified
+ * in its own project text. That is a content-intelligence capability the factory does not
+ * have, and it is recorded in BRIEF.md as a finding rather than taken quietly.
+ *
+ * Type is system stacks only, deliberately. A generated repository may not carry font bytes,
+ * so beating the factory with a typeface it is not allowed to use would prove something less
+ * interesting than beating it with the same materials.
+ */
+
+:root {
+  /* ---- Ground: lime plaster, warm and slightly chalky, never white ---- */
+  --paper: #F2EFE8;
+  --paper-deep: #E8E3D8;
+  --plaster: #DCD6C8;
+
+  /* ---- Ink: charred larch. Not black; larch burns to a warm near-black ---- */
+  --ink: #17150F;
+  --ink-soft: #3D3931;
+  --ink-mute: #6B655A;
+
+  /* ---- Structure: reclaimed pennant stone, the grey-blue of Bristol kerbs ---- */
+  --stone: #4A5259;
+  --stone-light: #8A9098;
+
+  /* ---- Timber: Douglas fir ---- */
+  --fir: #B07B44;
+
+  /* ---- The single accent: unlacquered brass, left to patinate ---- */
+  --brass: #8A6A24;
+  --brass-bright: #B08A34;
+
+  /* ---- Type. Two stacks that are genuinely different shapes, which is the point:
+          the factory shipped one Inter stack as both display and body in every direction. ---- */
+  --font-grotesque: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* ---- Scale. A real ratio, and a display size that is actually display-sized.
+          clamp() so the largest type is a function of the viewport, not a breakpoint. ---- */
+  --t-display: clamp(2.75rem, 7.5vw, 7.5rem);
+  --t-xxl: clamp(2rem, 4.2vw, 3.75rem);
+  --t-xl: clamp(1.5rem, 2.4vw, 2.125rem);
+  --t-lg: clamp(1.175rem, 1.5vw, 1.4rem);
+  --t-body: clamp(1rem, 1.05vw, 1.0625rem);
+  --t-sm: 0.875rem;
+  --t-xs: 0.75rem;
+
+  --lh-display: 0.94;
+  --lh-tight: 1.12;
+  --lh-body: 1.62;
+
+  /* ---- Measure. Prose that runs the width of a 1600px screen is not prose. ---- */
+  --measure: 66ch;
+  --measure-tight: 46ch;
+
+  /* ---- Rhythm. One scale, used; not a padding applied twice and doubled. ---- */
+  --s-1: 0.5rem;
+  --s-2: 1rem;
+  --s-3: 1.5rem;
+  --s-4: 2.5rem;
+  --s-5: 4rem;
+  --s-6: 6rem;
+  --s-7: clamp(5rem, 10vw, 10rem);
+  --s-8: clamp(7rem, 14vw, 14rem);
+
+  /* ---- The grid is visible and load-bearing, not a utility ---- */
+  --gutter: clamp(1.25rem, 4vw, 4.5rem);
+  --max: 1680px;
+  --rule: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+  --rule-strong: 1px solid color-mix(in oklab, var(--ink) 38%, transparent);
+}
+
+/* Deliberately no --radius token. Nothing in this design is rounded, so a radius token
+   would be an invitation. The factory hard-coded a 999px capsule on every button until a
+   direction was finally allowed to declare its own; the lesson is that an unused token is
+   a default waiting to be applied. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-grotesque);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+::selection { background: var(--brass); color: var(--paper); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

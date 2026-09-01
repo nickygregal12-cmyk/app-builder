@@ -1,0 +1,80 @@
+---
+import Base from '../../layouts/Base.astro';
+import Offer from '../../components/Offer.astro';
+import Plate from '../../components/Plate.astro';
+import { gardens, plants, studio, record } from '../../data/studio';
+const byPlant = Object.fromEntries(plants.map((p) => [p.slug, p]));
+---
+<Base title="Gardens — Marram" description="Four coastal gardens on the Suffolk and Norfolk coast.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">Gardens</p>
+      <h1 class="display" style="margin-top: var(--s-2);">Four that have been through a winter.</h1>
+    </div>
+  </section>
+  <section class="grid">
+    {gardens.map((garden, index) => (
+      <>
+      {index === 2 && (
+        <div class="c-full">
+          <div class="midway">
+            <p>Every one of these started with the same half-day on site.</p>
+            <a class="ask-quiet" href="/enquire">Book a first visit · {studio.firstVisit.price}</a>
+          </div>
+        </div>
+      )}
+      <article class="garden">
+        <div class="garden-head">
+          <p class="label">{garden.place} · {garden.year}</p>
+          <h2 class="garden-name"><a href={`/gardens/${garden.slug}`}>{garden.name}</a></h2>
+          <div class="measure">
+            <span class="measure-figure">{garden.measure.figure}</span>
+            <span class="measure-caption">{garden.measure.caption}</span>
+          </div>
+        </div>
+        <div class="garden-body">
+          <p class="prose" style="margin:0;">{garden.brief}</p>
+          <p class="label" style="margin-top: var(--s-3);">Drawn from the register</p>
+          <div class="drawn">
+            {garden.plants.map((slug) => (
+              <a href="/planting" title={byPlant[slug].latin}>
+                <div class="specimen-plate"><Plate slug={slug} alt={`Botanical plate of ${byPlant[slug].latin}.`} sizes="68px" /></div>
+                <span>{byPlant[slug].common}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </article>
+      </>
+    ))}
+
+    <div class="c-full" style="margin-top: var(--s-3);">
+      <div class="chapter">
+        <h2 class="chapter-title">The record</h2>
+        <p class="chapter-note">What has happened to these gardens since handover. Kept by Tom Reddaway, as at {record.asAt}.</p>
+        <span class="chapter-count">{gardens.length} gardens</span>
+      </div>
+      <div class="ledger-wrap">
+      <table class="ledger">
+        <thead>
+          <tr><th scope="col">Garden</th><th scope="col">Planted</th><th scope="col">Replacement planting since</th><th scope="col">Mains water</th><th scope="col">Visits a year</th></tr>
+        </thead>
+        <tbody>
+          {record.rows.map((row) => (
+            <tr>
+              <th scope="row">{gardens.find((g) => g.slug === row.slug)?.name}</th>
+              <td>{row.planted}</td>
+              <td>{row.replacements}</td>
+              <td>{row.water}</td>
+              <td>{row.visits}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="c-full" style="margin: var(--s-4) 0 var(--s-3);">
+      <Offer />
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import Plan from '../components/Plan.astro';
+import { checks, company } from '../data/product';
+
+const blocks = checks.filter((c) => c.severity === 'block');
+const warns = checks.filter((c) => c.severity === 'warn');
+const groups = [
+  { title: 'Refused', note: 'Plumbline returns a non-zero exit code and the deploy stops. There is an override; it is logged and it names you.', items: blocks },
+  { title: 'Rewritten', note: 'The statement will work. There is a form of it that will work better, and Plumbline writes that form out for you.', items: warns },
+];
+---
+<Base title="The eight checks — Plumbline" description="What Plumbline refuses, what it rewrites, and how each one is detected.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">The checks</p>
+      <h1 class="display" style="margin-top: var(--s-3);">Eight. Not eighty.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">Every one of these has taken a production database down somewhere. A linter with two hundred rules is a linter nobody reads the output of.</p>
+    </div>
+  </section>
+
+  {groups.map((group) => (
+    <section class="section-tight grid">
+      <div class="c-full">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; border-top: var(--hair-strong); padding-top: var(--s-2);">
+          <h2 class="h2">{group.title}</h2>
+          <p class="prose" style="margin: 0; font-size: var(--t-sm); max-width: 52ch;">{group.note}</p>
+          <span class="label">{group.items.length} checks</span>
+        </div>
+        <div class="checks" style="border-top: none;">
+          {group.items.map((check) => (
+            <article class="check">
+              <div class="check-id">
+                <span>{check.id}</span>
+                <span class="check-sev" data-s={check.severity}>{check.severity}</span>
+              </div>
+              <div>
+                <h3 class="check-title">{check.title}</h3>
+                <p class="check-failure">{check.failure}</p>
+              </div>
+              <div class="check-method-cell">
+                <p class="check-method">{check.method}</p>
+                <p class="check-engines">{check.engines.join(' · ')}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <section class="section grid rule-top">
+    <div class="c-1-6">
+      <h2 class="h2">What a refusal looks like.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">
+        Not a rule name and a line number. The statement, the reason, the arithmetic that
+        produced the reason, and the rewrite where there is one. A refusal you cannot argue
+        with is a refusal you will override.
+      </p>
+    </div>
+    <div class="c-7-6">
+      <Plan only={['PL004', 'PL002']} head={false} />
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-8">
+      <h2 class="h2">Run it against one database.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">{company.trial.days} days, read-only, no card. If it refuses nothing you have lost an afternoon.</p>
+      <div class="actions" style="margin-top: var(--s-4);">
+        <a class="ask" href="/start">Start a {company.trial.days}-day trial</a>
+        <a class="ask-quiet" href="/pricing">See pricing</a>
+      </div>
+    </div>
+  </section>
+</Base>

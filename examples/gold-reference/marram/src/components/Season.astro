@@ -1,0 +1,19 @@
+---
+/**
+ * Twelve cells, one per month, filled for the months this plant does something.
+ *
+ * It is data rather than decoration: "when is anything happening" is the question a client
+ * actually asks a planting studio, and a register that could not answer it would be a gallery
+ * with latin names. Given as a real table to a screen reader, because a row of coloured divs
+ * is meaningless to one.
+ */
+interface Props { from: number; to: number; latin: string; }
+const { from, to, latin } = Astro.props;
+const MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+const NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const on = (m: number) => m >= from && m <= to;
+---
+<div class="season" role="img" aria-label={`${latin}: in season ${NAMES[from - 1]} to ${NAMES[to - 1]}`}>
+  {MONTHS.map((_, i) => <span data-on={on(i + 1) ? '' : undefined} />)}
+</div>
+<div class="season-key" aria-hidden="true">{MONTHS.map((m) => <span>{m}</span>)}</div>

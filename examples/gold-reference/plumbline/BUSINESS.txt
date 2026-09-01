@@ -1,0 +1,30 @@
+Plumbline — a fictional company, invented for this corpus.
+
+WHAT IT SELLS
+Database change management for teams that ship schema migrations continuously. Plumbline
+sits in CI, reads every migration before it runs, and refuses the ones that would take a
+lock long enough to matter, destroy data that nothing has read yet, or break the version of
+the application that is still serving traffic during a rolling deploy.
+
+It is not a migration runner. Teams keep whatever tool they already have. Plumbline is the
+review step in front of it.
+
+WHO BUYS IT
+The staff engineer or platform lead who has already had the outage. Payment is by seat and
+by database. The decision is made by an engineer and signed off by a director, so the site
+has to survive a technical read and a commercial one on the same visit.
+
+WHAT MAKES THE SALE HARD
+Nobody believes a safety claim from a vendor. The category is full of tools that promise to
+catch problems and produce noise. The site therefore has to show the actual output — a real
+plan, on a real migration, with the reasoning visible — rather than describe it.
+
+THE COMMERCIAL GOAL
+Start a free trial against one database, self-serve, no call. The secondary goal is the
+enterprise conversation, which is a different page and a different reader.
+
+CONSTRAINTS ON THE PROTOTYPE
+The company, its customers, its people and its metrics are invented. The domain is `.invalid`
+and can never resolve. No photography is used at all: every image on the site is a diagram
+drawn from data that lives in this repository, so nothing is stock, nothing is licensed, and
+nothing is claimed to be owned that is not.

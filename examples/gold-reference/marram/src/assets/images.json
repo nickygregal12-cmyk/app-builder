@@ -1,0 +1,146 @@
+[
+ {
+  "slug": "achillea",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1792
+  },
+  "aspect": 0.6138,
+  "bytes": {
+   "avif": 58462
+  },
+  "lqip": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAACwAwCdASoUACEAPwF4t1QrJyWjJWmZYCAJZQDQzA8dSjqj1B1yAAD+7XV+wQl8e639hyahgAvAEM8xOEGi9FnlqtkpDZmdAAA="
+ },
+ {
+  "slug": "armeria",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1792
+  },
+  "aspect": 0.6138,
+  "bytes": {
+   "avif": 70056
+  },
+  "lqip": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAACwAwCdASoUACEAPwF2slIrJ6SiqqgBYCAJZQC/OB2rj4GTCLcAAAD+7bk2fG0UOG2uvctFIlgztZFk2ekrxftcRUaa6aBxHfZ7MR8rsAAAAA=="
+ },
+ {
+  "slug": "crambe",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1792
+  },
+  "aspect": 0.6138,
+  "bytes": {
+   "avif": 70686
+  },
+  "lqip": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADQAwCdASoUACEAPwF0slKrJqSiqrgKAWAgCWUAyrQPBQmOcNyZW4AA/u1Ac4Kph1r0TcUBdO/9xhNJNoezzhtg+yK6ZZVkbC5O7HKK2cyyWe9FbZUuAAAA"
+ },
+ {
+  "slug": "digitalis",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1435
+  },
+  "aspect": 0.7666,
+  "bytes": {
+   "avif": 74844
+  },
+  "lqip": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADwAwCdASoUABoAPwFqq06rJiOiMAgBYCAJZwAAW+qy56lvIPqe+HaAAP7eqHTwuvQJ21zgsNKhyabyTc9xp0sPlt4Tmibz2Czgxp+SDfuGtOR/zwAAAA=="
+ },
+ {
+  "slug": "echinops",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1914
+  },
+  "aspect": 0.5747,
+  "bytes": {
+   "avif": 179639
+  },
+  "lqip": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAACQBQCdASoUACMAPv1kq06rJSOjNVgIAWAfiWMAAD6O8cTnocpzX7guOnWc3hT7Z1qf3k1XgAD+3rIQRXlQLzNlapW+vNHZRo7z/6qRritfZId9aHSBGyAaeqPW6iyaz55jnn4CGZo+cKpOMffpxTnhEJ/dS7atW4Gjq2CAAAA="
+ },
+ {
+  "slug": "eryngium",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1347
+  },
+  "aspect": 0.8166,
+  "bytes": {
+   "avif": 135258
+  },
+  "lqip": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAABQBACdASoUABgAPwF2slOrJySiqAgBYCAJZwDH5A9mxezifgOldHyxU6AAAP7Utlolv8FLsFV1QQyxyuAV4W/4eVvct1NIT0PH2DN3ICbJCDq2QgRe4AAA"
+ },
+ {
+  "slug": "glaucium",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1792
+  },
+  "aspect": 0.6138,
+  "bytes": {
+   "avif": 127075
+  },
+  "lqip": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAADwAwCdASoUACEAPwFosFCrJaSisBVaqWAgCUAZfAFXzB09XEaCHbtIAP7TXVijKxto5Xy4FGmu0goaPEOUuk+NTFkLMJdCXklMs/FnrF2yK4Y8O37yPd0cOaFbWv6wgmdLwAAA"
+ },
+ {
+  "slug": "knautia",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1792
+  },
+  "aspect": 0.6138,
+  "bytes": {
+   "avif": 92339
+  },
+  "lqip": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADQBACdASoUACEAPwF2slOrJySiqrgIAWAgCWUAyrQLNqJv4LsLP7/3jE6pTaB2gAD+3pIJxu5bWr6Bh3vctFHkXiQ8ohxWWmqTxbRNFGLV3HKuXN+jVegAAAA="
+ },
+ {
+  "slug": "papaver",
+  "intrinsic": {
+   "width": 1920,
+   "height": 2625
+  },
+  "aspect": 0.7314,
+  "bytes": {
+   "avif": 254997
+  },
+  "lqip": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAACwBACdASoUABsAPu1crE2ppKSiMBgMATAdiUAABchAx1RGr0l6C+MZLtJ37gAAAP7v0i+FHL5XHlISnUWL4TLoxG9WOhRL4mmBDm4junEFXslcjcU7t9b3caSJITWoOEwytALRMMPlZRCPUn+R38Il1zLZ1DArEJl0YFJuAAA="
+ },
+ {
+  "slug": "sedum",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1768
+  },
+  "aspect": 0.6222,
+  "bytes": {
+   "avif": 138034
+  },
+  "lqip": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAABwBACdASoUACAAPv1sq06rJiOiMBgMAWAfiWMAwcwQ7/RtNnPyGNS2sSwjgAD+6nsQG2CJbEvQhUvqeuKAHe5aKuoft9fDTIn1Vo6JKLFgxQXkOxCC2diazRJkPvAEHs+8YjNYd0wEJTtxOyJ9DVAA"
+ },
+ {
+  "slug": "silene",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1731
+  },
+  "aspect": 0.6355,
+  "bytes": {
+   "avif": 97963
+  },
+  "lqip": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADwAwCdASoUAB8APvFkq06ppaQiMAwBMB4JYwAAW+j5COwpxI5RB7MAAP7epVSB7ez/qo7HJyYYtjWepAglUqXtMAbKHjTemhIAAA=="
+ },
+ {
+  "slug": "verbascum",
+  "intrinsic": {
+   "width": 1100,
+   "height": 1370
+  },
+  "aspect": 0.8029,
+  "bytes": {
+   "avif": 129698
+  },
+  "lqip": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADQBACdASoUABkAPwF2slOrJyQiqAgBYCAJYwC3uBFAWeO+IN+VNRoonpJQXprM0AD+1J20XY6d+NnrD/EqjDYA0pRWbYsctyIP/KrBsnPs1Qk5vkT9LHB34fwAAAAA"
+ }
+]

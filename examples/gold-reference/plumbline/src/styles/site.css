@@ -1,0 +1,299 @@
+/*
+ * Plumbline — the document.
+ *
+ * The whole site is one printed artefact: a twelve-column measure, hairline rules, and a
+ * plan that appears at three scales. Nothing here is a card with a shadow.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 { font-weight: 560; letter-spacing: -0.018em; line-height: 1.1; margin: 0; }
+p { margin: 0 0 var(--s-3); }
+a { color: inherit; }
+img, svg { max-width: 100%; }
+
+.skip {
+  position: absolute; left: -9999px; top: 0; background: var(--ink); color: var(--paper);
+  padding: var(--s-2) var(--s-3); z-index: 10;
+}
+.skip:focus { left: 0; }
+
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* ------------------------------------------------------------------- grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--s-4);
+  max-width: 84rem;
+  margin-inline: auto;
+  padding-inline: var(--s-4);
+}
+
+/* Column spans as classes rather than inline styles. An inline `grid-column` cannot be
+   overridden by a media query, which is how an earlier prototype in this corpus shipped a
+   two-column layout that stayed two columns at 390px. */
+.c-full { grid-column: 1 / -1; }
+.c-1-6 { grid-column: 1 / span 6; }
+.c-1-7 { grid-column: 1 / span 7; }
+.c-1-8 { grid-column: 1 / span 8; }
+.c-7-6 { grid-column: 7 / span 6; }
+.c-8-5 { grid-column: 8 / span 5; }
+.c-9-4 { grid-column: 9 / span 4; }
+
+.section { padding-block: var(--s-6); }
+.section-tight { padding-block: var(--s-5); }
+.rule-top { border-top: var(--hair-strong); }
+
+/* --------------------------------------------------------------------- bar */
+
+.bar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  max-width: 84rem; margin-inline: auto;
+  padding: var(--s-3) var(--s-4);
+  border-bottom: var(--hair);
+}
+.bar-mark {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  text-decoration: none; font-weight: 600; letter-spacing: -0.02em; font-size: var(--t-lg);
+}
+/* The mark is a plumb line: a rule with a weight on the end. Drawn, not lettered, because a
+   wordmark set in the body face is not a mark. */
+.bar-mark svg { display: block; }
+.bar nav ul { display: flex; align-items: center; gap: var(--s-3); margin: 0; padding: 0; list-style: none; flex-wrap: wrap; justify-content: flex-end; }
+.bar nav a { text-decoration: none; font-size: var(--t-sm); color: var(--ink-soft); padding-bottom: 2px; border-bottom: 1px solid transparent; }
+.bar nav a:hover { color: var(--ink); }
+.bar nav a[aria-current='page'] { color: var(--ink); border-bottom-color: var(--ink); }
+/* `.bar nav a` is specificity (0,1,2) and `.ask` is (0,1,0), so the nav rule was repainting
+   the primary button's label in --ink-soft on an --ink ground. It rendered as a disabled
+   control and failed contrast outright. The button restates what it needs rather than the
+   nav rule being loosened, because the nav rule is correct for every other link in there. */
+.bar nav a.ask { color: var(--paper); border-bottom-color: transparent; }
+.bar nav a.ask:hover { color: var(--ink); }
+
+/* -------------------------------------------------------------------- type */
+
+.display { font-size: var(--t-display); letter-spacing: -0.035em; }
+.h2 { font-size: var(--t-xxl); letter-spacing: -0.025em; }
+.lede { font-size: var(--t-xl); line-height: 1.35; color: var(--ink-soft); max-width: 46ch; font-weight: 400; letter-spacing: -0.012em; }
+.prose { max-width: var(--measure); color: var(--ink-soft); }
+.label { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); margin: 0; }
+
+/* ------------------------------------------------------------------ action */
+
+.ask {
+  display: inline-block; text-decoration: none; font-size: var(--t-sm); font-weight: 550;
+  background: var(--ink); color: var(--paper);
+  padding: 0.7em 1.3em; border: 1px solid var(--ink);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ask:hover { background: transparent; color: var(--ink); }
+.ask-quiet {
+  display: inline-block; text-decoration: none; font-size: var(--t-sm); font-weight: 500;
+  border: 1px solid var(--rule-strong); padding: 0.7em 1.3em;
+  transition: border-color 0.15s ease;
+}
+.ask-quiet:hover { border-color: var(--ink); }
+.ask-text { font-size: var(--t-sm); text-decoration: none; border-bottom: 1px solid var(--rule-strong); padding-bottom: 1px; }
+.ask-text:hover { border-bottom-color: var(--ink); }
+
+.actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+.actions-note { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ink-mute); }
+
+/* --------------------------------------------------------------------- plan
+ *
+ * The signature. Everything the product produces is one of these, so the site shows it at
+ * three sizes — the whole plan on the home page, a single refusal beside each check, and a
+ * one-line strip in the footer of a case for it. It is HTML, not a screenshot: it reflows,
+ * it is selectable, and the arithmetic can be checked.
+ */
+
+.plan { border: var(--hair-strong); background: var(--paper-lift); }
+.plan-head {
+  display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-bottom: var(--hair);
+  font-family: var(--font-mono); font-size: var(--t-mono); color: var(--ink-mute);
+}
+.plan-head b { font-weight: 500; color: var(--ink); }
+.plan-head .plan-head-verdict { margin-left: auto; color: var(--blocked); font-weight: 600; }
+
+.plan-row { display: grid; grid-template-columns: 5rem 1fr 10rem; align-items: start; gap: var(--s-3); padding: var(--s-3); border-bottom: var(--hair); }
+.plan-row:last-child { border-bottom: none; }
+
+.plan-verdict {
+  font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 6px; text-align: center; border: 1px solid currentColor; white-space: nowrap;
+}
+.plan-verdict[data-v='blocked'] { color: var(--blocked); background: var(--blocked-field); }
+.plan-verdict[data-v='warned'] { color: var(--warned); background: var(--warned-field); }
+.plan-verdict[data-v='clear'] { color: var(--clear); background: var(--clear-field); }
+
+.plan-sql { font-family: var(--font-mono); font-size: var(--t-mono); line-height: 1.5; margin: 0; word-break: break-word; }
+.plan-note { font-size: var(--t-sm); color: var(--ink-soft); margin: var(--s-1) 0 0; }
+.plan-note b { font-family: var(--font-mono); font-size: var(--t-xs); font-weight: 500; color: var(--ink-mute); }
+
+/* The lock bar. The number is meaningless on its own — 92,000ms only means something against
+   the 200ms the team said it could afford, so the budget is drawn and the bar is drawn
+   against it. This is the one figure on the site that is a picture. */
+.lock { display: grid; gap: 4px; justify-items: end; }
+.lock-figure { font-family: var(--font-mono); font-size: var(--t-mono); font-variant-numeric: tabular-nums; }
+.lock-track { width: 100%; height: 9px; background: var(--paper-sunk); position: relative; }
+/* A safe statement still gets a mark. A bar of zero width reads as missing data rather than
+   as "two milliseconds", and the whole point of the figure is that some of these are fine. */
+.lock-fill { position: absolute; inset: 0 auto 0 0; background: var(--ink-mute); min-width: 3px; }
+/* Clamped at the end of the track, so say so. Without this a 1m 32s lock and a 2m 28s lock
+   are the same full bar, and the reader is left to assume the scale was chosen to flatter. */
+.lock-track[data-over] { border-right: 4px solid transparent; }
+.lock-track[data-over]::after {
+  content: ''; position: absolute; right: -6px; top: 0; bottom: 0; width: 6px;
+  background: repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 3px);
+}
+.lock-track[data-over][data-v='blocked']::after { color: var(--blocked); }
+.lock-track[data-over][data-v='warned']::after { color: var(--warned); }
+.lock-fill[data-v='blocked'] { background: var(--blocked); }
+.lock-fill[data-v='warned'] { background: var(--warned); }
+.lock-fill[data-v='clear'] { background: var(--clear); }
+/* The budget line. Without it the bars are decoration. */
+.lock-budget { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--ink); }
+
+/* ------------------------------------------------------------------ checks */
+
+.checks { display: grid; gap: 0; border-top: var(--hair-strong); }
+.check { display: grid; grid-template-columns: 5.5rem 1fr 1fr; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: var(--hair); align-items: start; }
+.check-id { font-family: var(--font-mono); font-size: var(--t-mono); color: var(--ink-mute); }
+.check-title { font-size: var(--t-lg); font-weight: 550; letter-spacing: -0.015em; margin: 0 0 var(--s-1); }
+.check-failure { font-size: var(--t-sm); color: var(--ink-soft); margin: 0; }
+.check-method { font-size: var(--t-sm); color: var(--ink-soft); margin: 0; }
+.check-engines { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ink-mute); margin: var(--s-1) 0 0; }
+.check-sev {
+  font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 5px; border: 1px solid currentColor; display: inline-block; margin-top: 4px;
+}
+.check-sev[data-s='block'] { color: var(--blocked); background: var(--blocked-field); }
+.check-sev[data-s='warn'] { color: var(--warned); background: var(--warned-field); }
+
+/* The caption to the figure that carries the argument. */
+.figure-lead { border-top: var(--hair-strong); padding-top: var(--s-2); }
+.figure-lead-count { font-size: var(--t-xxl); letter-spacing: -0.03em; margin: var(--s-2) 0 0; font-variant-numeric: tabular-nums; color: var(--ink-mute); }
+.figure-lead-count span { color: var(--blocked); }
+.figure-lead-text { font-size: var(--t-sm); color: var(--ink-soft); margin: var(--s-2) 0 0; }
+
+/* ----------------------------------------------------------------- figures */
+
+.numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); border-top: var(--hair-strong); padding-top: var(--s-3); }
+.number-figure { font-size: var(--t-xxl); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; display: block; }
+.number-caption { font-size: var(--t-sm); color: var(--ink-soft); max-width: 28ch; display: block; margin-top: var(--s-1); }
+
+.quote { margin: 0; }
+.quote p { font-size: var(--t-xl); line-height: 1.4; letter-spacing: -0.012em; margin: 0; }
+.quote footer { margin-top: var(--s-2); }
+
+/* ----------------------------------------------------------------- pricing */
+
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: var(--hair-strong); }
+.tier { padding: var(--s-4); border-right: var(--hair); display: flex; flex-direction: column; }
+.tier:last-child { border-right: none; }
+.tier[data-featured] { background: var(--paper-lift); }
+.tier-name { font-size: var(--t-lg); font-weight: 600; margin: 0; }
+.tier-price { font-size: var(--t-xxl); letter-spacing: -0.03em; margin: var(--s-2) 0 0; display: block; font-variant-numeric: tabular-nums; }
+.tier-unit { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ink-mute); display: block; }
+.tier-line { font-size: var(--t-sm); color: var(--ink-soft); margin: var(--s-3) 0; }
+.tier ul { list-style: none; margin: 0 0 var(--s-4); padding: 0; display: grid; gap: var(--s-2); font-size: var(--t-sm); }
+.tier li { display: grid; grid-template-columns: 1rem 1fr; gap: var(--s-2); color: var(--ink-soft); }
+.tier li::before { content: '+'; font-family: var(--font-mono); color: var(--ink-mute); }
+.tier .ask, .tier .ask-quiet { margin-top: auto; text-align: center; }
+
+/* --------------------------------------------------------------- changelog */
+
+.entries { border-top: var(--hair-strong); }
+.entry { display: grid; grid-template-columns: 8rem 1fr; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: var(--hair); }
+.entry time { font-family: var(--font-mono); font-size: var(--t-mono); color: var(--ink-mute); }
+.entry h3 { font-size: var(--t-lg); margin: 0 0 var(--s-1); }
+.entry p { margin: 0; font-size: var(--t-sm); color: var(--ink-soft); max-width: var(--measure); }
+
+/* ------------------------------------------------------------------ footer */
+
+.foot { border-top: var(--hair-strong); margin-top: var(--s-6); }
+.foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--s-4); max-width: 84rem; margin-inline: auto; padding: var(--s-5) var(--s-4) var(--s-4); }
+.foot h3 { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); font-weight: 400; margin: 0 0 var(--s-2); }
+.foot p, .foot address { margin: 0; font-style: normal; font-size: var(--t-sm); color: var(--ink-soft); }
+.foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-1); font-size: var(--t-sm); }
+.foot a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid transparent; }
+.foot a:hover { color: var(--ink); border-bottom-color: var(--rule-strong); }
+.foot-note {
+  display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap;
+  max-width: 84rem; margin-inline: auto; padding: var(--s-3) var(--s-4) var(--s-5);
+  border-top: var(--hair); font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ink-mute);
+}
+
+/* ------------------------------------------------------------- responsive */
+
+@media (max-width: 1000px) {
+  .c-1-6, .c-1-7, .c-1-8, .c-7-6, .c-8-5, .c-9-4 { grid-column: 1 / -1; }
+  .check { grid-template-columns: 4.5rem 1fr; }
+  .check-method-cell { grid-column: 2; }
+  .tiers { grid-template-columns: 1fr; }
+  .tier { border-right: none; border-bottom: var(--hair); }
+  .tier:last-child { border-bottom: none; }
+  .foot-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 620px) {
+  .grid { gap: var(--s-3); padding-inline: var(--s-3); }
+  .section { padding-block: var(--s-5); }
+
+  /*
+   * The plan is recomposed on a phone rather than squeezed. A three-column row at 390px
+   * gives the SQL about eleven characters, so the verdict and the lock move onto one line
+   * above the statement and the statement gets the full width. It is the same document,
+   * set for a narrower measure — which is what a printer would do with it.
+   */
+  .plan-row { grid-template-columns: 1fr; gap: var(--s-2); padding: var(--s-3) var(--s-2); }
+  .plan-row-meta { display: flex; align-items: center; gap: var(--s-2); }
+  .plan-verdict { flex: 0 0 auto; }
+  /* Grid places items in `order` sequence, so the track — ordered first — takes the first
+     column. That column has to be the flexible one, or the bar collapses to a stub and the
+     figure takes all the room, which is the wrong way round for the one picture on the
+     page. */
+  .lock { grid-template-columns: 1fr auto; align-items: center; gap: var(--s-2); flex: 1; justify-items: stretch; }
+  .lock-track { order: 1; }
+  .lock-figure { order: 2; text-align: right; justify-self: end; }
+
+  .check { grid-template-columns: 1fr; gap: var(--s-2); }
+  .check-id { display: flex; align-items: center; gap: var(--s-2); }
+  .check-sev { margin-top: 0; }
+
+  .numbers { grid-template-columns: 1fr; gap: var(--s-3); }
+  .entry { grid-template-columns: 1fr; gap: var(--s-1); }
+  .foot-grid { grid-template-columns: 1fr; }
+
+  /* The bar keeps one row. Nav wraps under the mark and the primary action stays on the
+     top line beside it, which is less height than the previous two-tier arrangement and
+     puts the action where a thumb already is. */
+  .bar { padding: var(--s-2) var(--s-3); flex-wrap: wrap; row-gap: var(--s-2); }
+  .bar-mark { order: 1; }
+  .bar nav { order: 3; width: 100%; }
+  .bar nav ul { justify-content: flex-start; gap: var(--s-3); }
+  .bar nav li:last-child { position: absolute; top: var(--s-2); right: var(--s-3); }
+  .bar { position: relative; }
+  .bar nav a.ask { padding: 0.55em 1em; }
+
+  /* Dead space between groups on an already long technical read. */
+  .section-tight { padding-block: var(--s-4); }
+  .checks + .checks, .section-tight + .section-tight { padding-top: var(--s-3); }
+}

@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import { studio } from '../data/studio';
+---
+<Base title="Enquiries — Ardwell & Roe" description="Talk to the studio about a building you already have.">
+  <section class="section grid">
+    <div class="c-1-7">
+      <p class="label">Enquiries</p>
+      <h1 class="display" style="margin-top: var(--s-2);">Tell us about the building.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">
+        We take a small number of projects at a time, so the first conversation is honest about
+        whether we are the right studio for yours. It costs nothing and usually takes an hour.
+      </p>
+    </div>
+    <div class="c-9-4 end">
+      <dl class="contact">
+        <div><dt>Email</dt><dd><a href={`mailto:${studio.contact.email}`}>{studio.contact.email}</a></dd></div>
+        <div><dt>Telephone</dt><dd><a href={`tel:${studio.contact.phone.replace(/\s/g,'')}`}>{studio.contact.phone}</a></dd></div>
+        <div><dt>Studio</dt><dd>{studio.contact.address}</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-4">
+      <p class="label">What helps</p>
+    </div>
+    <div class="c-6-6">
+      <ul class="helps">
+        <li>Where the building is, and what it is now.</li>
+        <li>What you want it to do that it currently does not.</li>
+        <li>Any planning history — particularly a refusal.</li>
+        <li>Roughly when you would want to start on site.</li>
+        <li>A budget range, even a rough one. It changes what we would advise.</li>
+      </ul>
+    </div>
+  </section>
+</Base>
+<style>
+  .contact { margin: 0; }
+  .contact div { padding: var(--s-2) 0; border-bottom: var(--rule); }
+  .contact dt { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); }
+  .contact dd { margin: var(--s-1) 0 0; font-family: var(--font-serif); font-size: var(--t-lg); overflow-wrap: anywhere; }
+  .helps { list-style: none; margin: 0; padding: 0; }
+  .helps li { padding: var(--s-3) 0; border-top: var(--rule); font-family: var(--font-serif); font-size: var(--t-lg); }
+</style>

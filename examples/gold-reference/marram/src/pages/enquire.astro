@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import { studio } from '../data/studio';
+---
+<Base title={`First visit — Marram`} description="A half-day on site, a soil and exposure assessment, and a written planting strategy.">
+  <section class="section-tight grid">
+    <div class="c-1-6">
+      <p class="label">First visit</p>
+      <h1 class="display" style="margin-top: var(--s-2);">{studio.firstVisit.price}, and it comes off the fee.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">{studio.firstVisit.includes}</p>
+    </div>
+    <div class="c-8-5 end">
+      <dl class="contact">
+        <div><dt>Email</dt><dd><a href={`mailto:${studio.contact.email}`}>{studio.contact.email}</a></dd></div>
+        <div><dt>Telephone</dt><dd><a href={`tel:${studio.contact.phone.replace(/\s/g,'')}`}>{studio.contact.phone}</a></dd></div>
+        <div><dt>Studio</dt><dd>{studio.contact.address}</dd></div>
+      </dl>
+    </div>
+  </section>
+  <section class="section-tight grid hair-top">
+    <div class="c-1-4"><p class="label">What we will want to know</p></div>
+    <div class="c-6-7">
+      <ul class="asks">
+        <li>Which way the garden faces, and what shelters it — if anything.</li>
+        <li>What has died there before. This is the most useful thing you can tell us.</li>
+        <li>Whether there is an existing irrigation system, and whether you would mind losing it.</li>
+        <li>How the garden is used between November and March.</li>
+        <li>A budget range. It changes what we would propose, not whether we are interested.</li>
+      </ul>
+    </div>
+  </section>
+</Base>
+<style>
+  .contact { margin: 0; }
+  .contact div { padding: var(--s-2) 0; border-bottom: var(--hair); }
+  .contact dt { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-mute); }
+  .contact dd { margin: var(--s-1) 0 0; font-family: var(--font-display); font-size: var(--t-lg); overflow-wrap: anywhere; }
+  .asks { list-style: none; margin: 0; padding: 0; }
+  .asks li { padding: var(--s-3) 0; border-top: var(--hair); font-family: var(--font-display); font-size: var(--t-lg); overflow-wrap: anywhere; }
+  .asks li:first-child { border-top: none; padding-top: 0; }
+</style>

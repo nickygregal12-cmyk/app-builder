@@ -211,6 +211,45 @@ Writing any of it would be inventing business claims, so the remaining
 distinctiveness and credibility headroom needs owner-supplied truth rather than
 another visual intervention.
 
+## 2c. Rich truth, measured — and what it changed
+
+**Still not passed.** The gate is unchanged. What changed is that the confound §2b named is
+gone: every score in this document until now was against nbm or MGB Decor, and nbm carries one
+Companies House sentence and an empty `trustSignals` array. The Ardwell & Roe benchmark —
+17 facts, 6 projects, 5 people, 5 testimonials, 4 awards and 17 governed synthetic
+photographs — has now been generated, rendered and independently reviewed.
+
+**It scores the same as thin truth.** Best candidate 6.64 mean / 5.8 floor against 6.70 / 4.7
+on nbm; verdicts at `examples/visual-excellence/ardwell-roe-visual-review.v1.verdicts.json`.
+Rich input did not raise the ceiling, which retires "the truth is thin" as the explanation.
+
+**It got worse before it got better, and that is the finding.**
+
+| run | best mean |
+|---|---|
+| rich truth, no imagery | 5.82 |
+| rich truth, imagery ingested | 4.81 |
+| after seven latent imagery defects fixed | 5.57 |
+| after the information-architecture correction | 6.41 |
+| after section-order adaptation | **6.64** |
+
+A thin business hides a composition that cannot edit; a rich one exposes it. The factory
+composed **31 sections over 9,217px** and the reviewer's language changed from "sparse" to
+"reduce the copy density", "excessive empty space" and "effectively duplicate pages". The
+largest single gain came from teaching the composer that *belonging on the site* and
+*belonging on the home page* are different questions — home previews what a dedicated page
+carries in full, a surface that composes nothing another page has not already said is not
+published twice, and a business may promote the section it leads with. 31 sections to 26,
+12,207px to 6,898px.
+
+So the constraint is not only the component vocabulary this document has recorded since v2.
+**It is also that the factory has no information architecture**: it knows what a business has
+and not what a page is for. Both are now measured rather than argued.
+
+The hand-built Gold Reference corpus at `examples/gold-reference/` scores 8.663, 8.500 and
+8.625 on the comparable eight criteria over three sectors, which sets the ceiling this gap is
+measured against. It is not factory output and never claims to be.
+
 ## 3. The finding that matters
 
 Interventions targeted at named criteria moved those criteria. The gate did not move, because one

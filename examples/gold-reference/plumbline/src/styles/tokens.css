@@ -1,0 +1,101 @@
+/*
+ * Plumbline — design tokens.
+ *
+ * Third in the corpus, and it has to share a silhouette with neither of the first two or the
+ * set proves nothing. Ardwell & Roe is warm paper and monochrome architectural photography on
+ * an editorial grid. Marram is near-black wet earth and hand-coloured botanical plates. Both
+ * sell judgement, and in both the image does much of the persuading.
+ *
+ * This one has no photographs and no illustrations. Everything on the page is either type or
+ * a diagram drawn from the data in src/data/product.ts. That is not an aesthetic preference:
+ * a staff engineer does not buy infrastructure from a picture, and a category full of tools
+ * promising to catch problems is a category where the only credible move is to show the
+ * output in full, including the parts that are inconvenient.
+ *
+ * So the system is a printed technical document. Cold paper, a single ink, and three semantic
+ * signals that mean exactly one thing each and are never used for decoration.
+ */
+
+:root {
+  /* Cold paper — a plan printed on a laser printer, not a letterpress. Marram's ground is
+     green-black and Ardwell's is warm cream; this is neither. */
+  --paper: #F2F3F1;
+  --paper-lift: #FFFFFF;
+  --paper-sunk: #E6E8E5;
+  --rule: #CFD3CE;
+  --rule-strong: #A8AEA6;
+
+  --ink: #14181A;
+  --ink-soft: #454E51;
+  --ink-mute: #6B7478;
+
+  /*
+   * Three signals, and they are load-bearing. Red means Plumbline refused the statement,
+   * amber means it will run but should be rewritten, green means it is safe. They never
+   * appear as background washes, brand accents or hover states, because a colour that means
+   * "blocked" in one place and "nice heading" in another means nothing anywhere.
+   */
+  --blocked: #B3261E;
+  --blocked-field: #FBEAE8;
+  --warned: #8A5A00;
+  --warned-field: #FBF1DF;
+  --clear: #1D6B45;
+  --clear-field: #E4F1EA;
+
+  /*
+   * Two families, no serif. A serif here would be borrowed authority; the authority is
+   * supposed to come from the plan being checkable. The grotesque carries the argument and
+   * the monospace carries every piece of machine output, and the boundary between them is
+   * never crossed — if it is set in mono, the product wrote it.
+   */
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  --t-display: clamp(2.4rem, 5.4vw, 4.75rem);
+  --t-xxl: clamp(1.75rem, 3vw, 2.6rem);
+  --t-xl: clamp(1.25rem, 1.8vw, 1.6rem);
+  --t-lg: clamp(1.05rem, 1.3vw, 1.2rem);
+  --t-body: clamp(1rem, 1vw, 1.0625rem);
+  --t-sm: 0.9375rem;
+  --t-xs: 0.8125rem;
+  --t-mono: 0.8125rem;
+
+  /* A four-step scale, not a six-step one. A technical document is regular; the interest is
+     supposed to come from the density of what is in it. */
+  --s-1: 0.375rem;
+  --s-2: 0.75rem;
+  --s-3: 1.25rem;
+  --s-4: 2rem;
+  --s-5: 3.5rem;
+  --s-6: 6rem;
+
+  --hair: 1px solid var(--rule);
+  --hair-strong: 1px solid var(--rule-strong);
+  --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  /*
+   * A tool that lives in a terminal and a CI log is read in the dark by a lot of the people
+   * who buy it. The signals keep their meaning and change only their luminance, because a
+   * refusal that is red on paper and pink in the dark is two different refusals.
+   */
+  :root {
+    --paper: #101314;
+    --paper-lift: #171B1D;
+    --paper-sunk: #0B0E0F;
+    --rule: #2A3033;
+    --rule-strong: #414A4E;
+
+    --ink: #E8ECEC;
+    --ink-soft: #AAB4B7;
+    --ink-mute: #7D878B;
+
+    --blocked: #F2837A;
+    --blocked-field: #2A1614;
+    --warned: #E0A94A;
+    --warned-field: #241B0C;
+    --clear: #5FC793;
+    --clear-field: #0F2318;
+  }
+}

@@ -1,0 +1,135 @@
+---
+import Base from '../layouts/Base.astro';
+import Frame from '../components/Frame.astro';
+import { studio, projects, testimonials, awards } from '../data/studio';
+
+const selected = projects.slice(0, 4);
+const lead = testimonials[1];
+---
+
+<Base
+  title="Ardwell & Roe — architecture and interior architecture, Bristol"
+  description={studio.positioning}
+>
+  <section class="hero">
+    <Frame
+      slug="hero-barn-wide"
+      alt="The interior of Ashcombe Barn: the original rubble stone shell and repaired roof trusses, with a new opening to the landscape beyond."
+      priority
+      ratio="16/9"
+      ratioMobile="4/5"
+      sizes="100vw"
+      class="hero-frame"
+    />
+    <div class="hero-cut">
+      <p class="label">Architecture &amp; interior architecture · Bristol · Est. {studio.founded}</p>
+      <p class="hero-principle">{studio.principle}</p>
+    </div>
+  </section>
+
+  <section class="section-statement grid">
+    <div class="prose c-1-6">
+      <p class="lede">{studio.positioning}</p>
+    </div>
+    <div class="c-8-4">
+      <dl class="facts">
+        <div><dt>Completed</dt><dd>{studio.projects} projects</dd></div>
+        <div><dt>Repeat &amp; referral</dt><dd>{studio.repeat}</dd></div>
+        <div><dt>People</dt><dd>{studio.people}</dd></div>
+        <div><dt>Working across</dt><dd>{studio.regions.slice(0, 4).join(', ')}</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section-tight grid">
+    <div class="c-full">
+      <p class="label">Selected work</p>
+    </div>
+
+    {selected.map((project, i) => (
+      <article class={`work-item${i === 0 ? ' lead' : ''}`}>
+        <Frame
+          slug={project.primary}
+          alt={`${project.name}, ${project.place}. ${project.summary}`}
+          ratio={i === 0 ? '21/9' : '4/3'}
+          ratioMobile={i === 0 ? '4/3' : '5/4'}
+          sizes={i === 0 ? '100vw' : '(max-width: 900px) 100vw, 58vw'}
+          class="work-frame"
+        />
+        <div class="work-meta">
+          <p class="label">{project.type} · {project.place} · {project.year}</p>
+          <h2 class="work-name"><a href={`/work/${project.slug}`}>{project.name}</a></h2>
+          <p class="work-summary">{project.summary}</p>
+          <div class="outcome">
+            <span class="outcome-figure">{project.outcome.figure}</span>
+            <span class="outcome-caption">{project.outcome.caption}</span>
+          </div>
+        </div>
+      </article>
+    ))}
+
+    <div class="c-full all-work">
+      <a class="ask" href="/work">All {projects.length} projects</a>
+    </div>
+
+    <div class="c-full">
+      <div class="invite">
+        <p>Have a building with a planning history? That is the conversation we are best at.</p>
+        <a class="ask-lead" href="/contact">Talk to the studio</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section ink-panel">
+    <div class="grid">
+      <div class="c-1-7">
+        <p class="label">What clients say</p>
+        <blockquote class="quote" style="margin-top: var(--s-3);">
+          “{lead.quote}”
+          <span class="quote-attrib">{lead.who} · {lead.project}</span>
+        </blockquote>
+      </div>
+      <div class="c-9-4">
+        <p class="label">Recognition</p>
+        <ul class="awards">
+          {awards.map((entry) => (
+            <li>
+              <span class="award-name">{entry.award}</span>
+              <span class="award-meta">{entry.project} · {entry.year}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="c-1-6">
+      <h2 class="display">Start with the building you already have.</h2>
+    </div>
+    <div class="c-8-4 end">
+      <p class="prose" style="margin-bottom: var(--s-3);">
+        We take a small number of projects at a time. The first conversation is about whether
+        the thing you want is the thing you need — and it is free.
+      </p>
+      <a class="ask-lead" href="/contact">Talk to the studio</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .all-work { padding-top: var(--s-4); border-top: var(--rule); }
+  .facts { margin: 0; display: grid; gap: var(--s-2); }
+  .facts div { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); align-items: baseline; padding-bottom: var(--s-2); border-bottom: var(--rule); }
+  .facts dt { font-size: var(--t-sm); color: var(--ink-mute); }
+  .facts dd { margin: 0; font-family: var(--font-serif); font-size: var(--t-lg); }
+
+  .awards { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+  .awards li { padding-bottom: var(--s-2); border-bottom: 1px solid color-mix(in oklab, var(--paper) 22%, transparent); }
+  .award-name { display: block; font-size: var(--t-sm); }
+  .award-meta { display: block; font-size: var(--t-xs); color: #9AA0A6; margin-top: 2px; }
+
+  @media (max-width: 900px) {
+    .facts { margin-top: var(--s-4); }
+  }
+</style>

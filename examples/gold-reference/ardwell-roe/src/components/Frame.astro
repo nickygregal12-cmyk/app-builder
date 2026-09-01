@@ -1,0 +1,96 @@
+---
+/**
+ * One photograph, served properly.
+ *
+ * AVIF with a JPEG fallback, an intrinsic aspect ratio so nothing reflows when it lands, a
+ * blurred placeholder behind it so the space is never empty, and lazy loading everywhere
+ * except the frame that is already on screen. An image-led page that ships one large JPEG
+ * per project is a performance failure wearing art direction, and the first thing a critic
+ * notices about it is the layout shift.
+ */
+import images from '../assets/images.json';
+
+interface Props {
+  slug: string;
+  alt: string;
+  /** The one frame above the fold. Everything else waits. */
+  priority?: boolean;
+  sizes?: string;
+  class?: string;
+  /** Crop to a deliberate shape rather than inheriting whatever the source happened to be. */
+  ratio?: string;
+  /**
+   * A different crop on a phone. 16/9 at 390px is a 219px letterbox strip, which is what a
+   * "responsive" hero usually is — the desktop crop, scaled until it stops being a picture.
+   * A portrait frame is not the same photograph shown smaller; it is the right photograph for
+   * the shape of the screen, and choosing it per frame is art direction rather than layout.
+   */
+  ratioMobile?: string;
+}
+
+const { slug, alt, priority = false, sizes = '100vw', class: className = '', ratio, ratioMobile } = Astro.props;
+const image = (images as Array<{ slug: string; intrinsic: { width: number; height: number }; lqip: string }>)
+  .find((entry) => entry.slug === slug);
+
+if (!image) throw new Error(`Frame: no image named "${slug}". Available in src/assets/images.json.`);
+
+const style = [
+  `--lqip:url("${image.lqip}")`,
+  ratio ? `--ratio:${ratio}` : `--ratio:${image.intrinsic.width}/${image.intrinsic.height}`,
+  // Set on the element because an inline custom property beats a stylesheet one, which is
+  // exactly why the first attempt at this in site.css never applied.
+  ratioMobile ? `--ratio-mobile:${ratioMobile}` : '',
+].filter(Boolean).join(';');
+---
+
+<figure class={`frame ${className}`} style={style}>
+  <picture>
+    <source srcset={`/img/${slug}.avif`} type="image/avif" sizes={sizes} />
+    <img
+      src={`/img/${slug}.jpg`}
+      alt={alt}
+      width={image.intrinsic.width}
+      height={image.intrinsic.height}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      sizes={sizes}
+    />
+  </picture>
+  <slot />
+</figure>
+
+<style>
+  .frame {
+    margin: 0;
+    position: relative;
+    aspect-ratio: var(--ratio);
+    /* A class may override this; the inline custom property only supplies the default. */
+    background-image: var(--lqip);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+  }
+
+  .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* The fade is the only motion on the page and it is 300ms. A studio this restrained
+       does not have a parallax. */
+    animation: settle 0.32s ease-out both;
+  }
+
+  @keyframes settle {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @media (max-width: 720px) {
+    .frame { aspect-ratio: var(--ratio-mobile, var(--ratio)); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .frame img { animation: none; }
+  }
+</style>

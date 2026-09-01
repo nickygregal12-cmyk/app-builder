@@ -7,6 +7,7 @@ import {
   REVIEWER_VENDOR,
   criterionCoverage,
   evidenceBinding,
+  evidenceCeiling,
   extractVerdictJson,
   normaliseVerdict,
   reviewCandidate,
@@ -24,13 +25,20 @@ import {
  */
 
 const CRITERIA = [
-  { id: 'credibility', question: 'Would the customer trust this business more?' },
-  { id: 'responsive-quality', question: 'Is the mobile rendering a designed composition?' },
+  { id: 'brand-fit', question: 'Does the visual language feel correct for this organisation?' },
+  { id: 'responsive-recomposition', question: 'Is the narrow rendering a designed composition in its own right?' },
 ];
 
-function capture(id, viewport) {
-  return { id, route: '/', viewport, state: {}, file: `captures/${id}.png`, sha256: `sha-${id}` };
+// Route matters as much as width now. Coverage used to be computed from
+// viewports alone, so two captures of the home page satisfied every criterion
+// including responsive quality — a single well-tuned page could carry a whole
+// multi-page site. The default here is two routes so the width rules stay the
+// thing under test; the route rule has its own test below.
+function capture(id, viewport, route = '/') {
+  return { id, route, viewport, state: {}, file: `captures/${id}-${route.replace(/\W/g, '') || 'home'}.png`, sha256: `sha-${id}-${route}` };
 }
+
+const bothRoutes = (viewport) => [capture(`${viewport}-home`, viewport, '/'), capture(`${viewport}-about`, viewport, '/about')];
 
 function packetWith({ viewports = ['desktop', 'mobile'], mustAddress = [], status = 'clear' } = {}) {
   return {
@@ -45,7 +53,7 @@ function packetWith({ viewports = ['desktop', 'mobile'], mustAddress = [], statu
       directionLabel: 'Structured practice',
       compositionHash: 'hash-a',
       gate: { status, blocking: status === 'blocked' ? [{ rule: 'unreadable-accent' }] : [], mustAddress },
-      captures: viewports.map((viewport, index) => capture(`cap-${index}`, viewport)),
+      captures: viewports.flatMap((viewport) => bothRoutes(viewport)),
     }],
   };
 }
@@ -65,9 +73,10 @@ const goodAnswer = (extra = {}) => () => JSON.stringify({
   verdict: 'pass',
   model: 'gpt-5.6',
   rationale: 'Reads as a professional practice.',
+  holisticTier: 'strong-professional',
   criterionScores: [
-    { criterion: 'credibility', score: 9 },
-    { criterion: 'responsive-quality', score: 9 },
+    { criterion: 'brand-fit', score: 9, whyNotHigher: 'The voice is right but not yet unmistakable.', positiveEvidence: ['The register of the type matches the practice.'] },
+    { criterion: 'responsive-recomposition', score: 9, whyNotHigher: 'The phone header still costs more height than it needs.', positiveEvidence: ['The register regroups rather than stacking.'] },
   ],
   failingCriteria: [],
   blockingConcerns: [],
@@ -123,14 +132,14 @@ test('the reviewer will not call a provider without an explicit authorisation', 
 
 test('a criterion the captures do not cover is unproven rather than scored', () => {
   const coverage = criterionCoverage(CRITERIA, [capture('a', 'desktop')]);
-  const responsive = coverage.find((entry) => entry.id === 'responsive-quality');
+  const responsive = coverage.find((entry) => entry.id === 'responsive-recomposition');
   assert.equal(responsive.covered, false);
   assert.equal(responsive.status, 'unproven');
   assert.deepEqual(responsive.missingViewports, ['mobile']);
   assert.match(responsive.detail, /needs desktop and mobile/);
 
   // And the criterion that only needs a picture is fine with one.
-  assert.equal(coverage.find((entry) => entry.id === 'credibility').status, 'evidenced');
+  assert.equal(coverage.find((entry) => entry.id === 'brand-fit').status, 'evidenced');
 });
 
 test('two widths that are not the two widths do not cover a criterion that names them', () => {
@@ -139,25 +148,53 @@ test('two widths that are not the two widths do not cover a criterion that names
   // distinct viewports and satisfy any count-based rule, while photographing no
   // phone at all — so a count would have called this criterion evidenced and
   // let a reviewer pass a mobile rendering nobody has seen.
-  const coverage = criterionCoverage(CRITERIA, [capture('a', 'desktop'), capture('b', 'tablet')]);
-  const responsive = coverage.find((entry) => entry.id === 'responsive-quality');
+  const coverage = criterionCoverage(CRITERIA, [capture('a', 'desktop', '/'), capture('b', 'tablet', '/about')]);
+  const responsive = coverage.find((entry) => entry.id === 'responsive-recomposition');
   assert.equal(responsive.covered, false, 'two non-phone widths cannot answer a question about the phone');
   assert.deepEqual(responsive.missingViewports, ['mobile']);
 
   // And the phone alone is equally not an answer: the question is comparative.
-  const phoneOnly = criterionCoverage(CRITERIA, [capture('a', 'mobile')]);
-  assert.equal(phoneOnly.find((entry) => entry.id === 'responsive-quality').covered, false);
-  assert.deepEqual(phoneOnly.find((entry) => entry.id === 'responsive-quality').missingViewports, ['desktop']);
+  const phoneOnly = criterionCoverage(CRITERIA, [capture('a', 'mobile', '/'), capture('b', 'mobile', '/about')]);
+  assert.equal(phoneOnly.find((entry) => entry.id === 'responsive-recomposition').covered, false);
+  assert.deepEqual(phoneOnly.find((entry) => entry.id === 'responsive-recomposition').missingViewports, ['desktop']);
 
   // The pair the criterion actually names does cover it.
-  const both = criterionCoverage(CRITERIA, [capture('a', 'desktop'), capture('b', 'mobile')]);
-  assert.equal(both.find((entry) => entry.id === 'responsive-quality').status, 'evidenced');
+  const both = criterionCoverage(CRITERIA, [capture('a', 'desktop', '/'), capture('b', 'mobile', '/about')]);
+  assert.equal(both.find((entry) => entry.id === 'responsive-recomposition').status, 'evidenced');
 });
 
-test('imagery suitability needs the widths it claims to judge framing at', () => {
-  const criteria = [{ id: 'imagery-suitability', question: 'Are the photographs framed well at every width?' }];
+test('visual material needs the widths it claims to judge framing at', () => {
+  const criteria = [{ id: 'visual-material', question: 'Is the material framed well at every width?' }];
   assert.equal(criterionCoverage(criteria, [capture('a', 'desktop')])[0].covered, false);
   assert.equal(criterionCoverage(criteria, [capture('a', 'desktop'), capture('b', 'mobile')])[0].covered, true);
+});
+
+test('a home page cannot prove a question about a website', () => {
+  // The hole this closes. Coverage was computed from viewports alone, so two
+  // captures of the home page — desktop and mobile — satisfied every criterion
+  // including responsive recomposition and information architecture. A single
+  // well-tuned page could carry a whole multi-page site to a top score, which
+  // is the one claim a home page cannot support.
+  const criteria = [{ id: 'information-architecture', question: 'What belongs where?' }];
+  const homeOnly = criterionCoverage(criteria, [capture('a', 'desktop', '/'), capture('b', 'mobile', '/')]);
+  assert.equal(homeOnly[0].covered, false);
+  assert.match(homeOnly[0].detail, /1 route/);
+
+  const threeRoutes = criterionCoverage(criteria, [
+    capture('a', 'desktop', '/'), capture('b', 'desktop', '/work'), capture('c', 'desktop', '/contact'),
+  ]);
+  assert.equal(threeRoutes[0].covered, true);
+});
+
+test('the evidence a review rests on caps what it may claim', () => {
+  const thin = evidenceCeiling([capture('a', 'desktop', '/')]);
+  assert.equal(thin.cap, 7, 'one page at one width supports a professional reading and no more');
+
+  const wide = evidenceCeiling([
+    capture('a', 'desktop', '/'), capture('b', 'mobile', '/'),
+    capture('c', 'desktop', '/work'), capture('d', 'desktop', '/studio'), capture('e', 'desktop', '/contact'),
+  ]);
+  assert.equal(wide.cap, 10, 'a benchmark claim needs the website, and this is the website');
 });
 
 test('a pass is refused while any scoped criterion is unproven', () => {
@@ -166,7 +203,7 @@ test('a pass is refused while any scoped criterion is unproven', () => {
   const answer = () => JSON.stringify({
     verdict: 'pass',
     rationale: 'Looks good.',
-    criterionScores: [{ criterion: 'credibility', score: 9 }],
+    criterionScores: [{ criterion: 'brand-fit', score: 9, whyNotHigher: 'right, not unmistakable', positiveEvidence: ['type register matches the practice'] }],
     addressedRules: [],
   });
   assert.throws(
@@ -180,11 +217,11 @@ test('a pass is refused while any scoped criterion is unproven', () => {
     packetDir: dir,
     authorised: true,
     candidateId: 'candidate-a',
-    runCodex: () => JSON.stringify({ verdict: 'rework', rationale: 'Needs a mobile look.', criterionScores: [{ criterion: 'credibility', score: 9 }], addressedRules: [] }),
+    runCodex: () => JSON.stringify({ verdict: 'rework', rationale: 'Needs a mobile look.', criterionScores: [{ criterion: 'brand-fit', score: 9, whyNotHigher: 'right, not unmistakable', positiveEvidence: ['type register matches the practice'] }], addressedRules: [] }),
     version: () => 'codex-cli',
   });
   assert.equal(rework.verdict, 'rework');
-  assert.deepEqual(rework.unprovenCriteria.map((entry) => entry.criterion), ['responsive-quality']);
+  assert.deepEqual(rework.unprovenCriteria.map((entry) => entry.criterion), ['responsive-recomposition']);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -194,7 +231,7 @@ test('a reviewer that scores evidence it was not given is refused', () => {
   const answer = () => JSON.stringify({
     verdict: 'rework',
     rationale: 'x',
-    criterionScores: [{ criterion: 'credibility', score: 9 }, { criterion: 'responsive-quality', score: 9 }],
+    criterionScores: [{ criterion: 'brand-fit', score: 9, whyNotHigher: 'right, not unmistakable', positiveEvidence: ['type register matches the practice'] }, { criterion: 'responsive-recomposition', score: 9, whyNotHigher: 'header height', positiveEvidence: ['regrouped'] }],
     addressedRules: [],
   });
   assert.throws(
@@ -231,7 +268,7 @@ test('a verdict is bound to the exact captures it was issued over', () => {
   const changed = packetWith();
   changed.candidates[0].captures[0].sha256 = 'sha-different';
   assert.notEqual(before.captureDigest, evidenceBinding(changed.candidates[0]).captureDigest, 'recapturing must not silently inherit an old verdict');
-  assert.equal(before.captureCount, 2);
+  assert.equal(before.captureCount, 4);
 });
 
 test('a deterministically blocked candidate is not sent for judgement', () => {
@@ -250,7 +287,7 @@ test('a deterministically blocked candidate is not sent for judgement', () => {
 test('a packet that references a capture it does not contain is refused', () => {
   const packet = packetWith();
   const dir = packetDirectory(packet);
-  fs.rmSync(path.join(dir, 'captures/cap-0.png'));
+  fs.rmSync(path.join(dir, packet.candidates[0].captures[0].file));
   assert.throws(
     () => reviewCandidate({ packet, packetDir: dir, candidateId: 'candidate-a', authorised: true, runCodex: goodAnswer() }),
     /A review of missing pictures is not a review/,
@@ -282,7 +319,7 @@ test('an out-of-range score is refused', () => {
       packetDir: dir,
       candidateId: 'candidate-a',
       authorised: true,
-      runCodex: goodAnswer({ criterionScores: [{ criterion: 'credibility', score: 11 }, { criterion: 'responsive-quality', score: 9 }] }),
+      runCodex: goodAnswer({ criterionScores: [{ criterion: 'brand-fit', score: 11 }, { criterion: 'responsive-recomposition', score: 9, whyNotHigher: 'header height', positiveEvidence: ['regrouped'] }] }),
     }),
     /a number from 0 to 10/,
   );

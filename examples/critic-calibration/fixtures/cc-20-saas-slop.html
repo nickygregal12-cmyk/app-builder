@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexova — Intelligent workflow automation for modern teams</title>
+<!--
+  SYNTHETIC CALIBRATION FIXTURE cc-20 — "polished generic SaaS".
+  Synthetic. Not a real company. Deliberately well-executed and deliberately
+  generic: gradient headline, eyebrow pill, icon-in-rounded-square triplet,
+  fake logo wall, invented KPI row, glowing blob, generic dashboard mockup,
+  dark closing CTA slab, identical section padding throughout.
+  It is meant to LOOK expensive. A critic that rewards polish will over-score it.
+-->
+<style>
+  :root{
+    --ink:#0b1020; --muted:#5a6478; --line:#e6e9f0; --page:#ffffff;
+    --brand:#5b4bf5; --brand-2:#8f6df0; --soft:#f7f8fc;
+    --pad:96px; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font:16px/1.65 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  /* Identical padding on every single section. Deliberate. */
+  section{padding:var(--pad) 0}
+  a{color:inherit}
+  header{position:sticky;top:0;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);z-index:9}
+  nav{display:flex;align-items:center;gap:32px;height:68px}
+  .logo{font-weight:700;letter-spacing:-.02em;font-size:19px}
+  nav ul{display:flex;gap:26px;list-style:none;margin:0;padding:0;margin-left:auto;font-size:14.5px;color:var(--muted)}
+  .btn{display:inline-block;padding:11px 20px;border-radius:10px;background:var(--brand);color:#fff;
+    text-decoration:none;font-weight:600;font-size:14.5px;border:0}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;
+    background:var(--soft);border:1px solid var(--line);font-size:13px;color:var(--muted);font-weight:500}
+  /* The glow. */
+  .hero{position:relative;text-align:center;overflow:hidden}
+  .hero::before{content:"";position:absolute;top:-220px;left:50%;transform:translateX(-50%);
+    width:900px;height:520px;border-radius:50%;
+    background:radial-gradient(closest-side,rgba(91,75,245,.22),transparent 70%);filter:blur(8px)}
+  .hero .wrap{position:relative}
+  h1{font-size:clamp(40px,6vw,68px);line-height:1.05;letter-spacing:-.035em;margin:22px auto 20px;max-width:15ch;
+    background:linear-gradient(92deg,var(--ink) 20%,var(--brand) 60%,var(--brand-2) 95%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:19px;color:var(--muted);max-width:56ch;margin:0 auto 32px}
+  .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  /* Generic dashboard mockup. */
+  .shot{margin-top:56px;border:1px solid var(--line);border-radius:20px;overflow:hidden;
+    box-shadow:0 30px 70px -30px rgba(11,16,32,.28);background:#fff}
+  .shot .bar{display:flex;gap:7px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--soft)}
+  .shot .bar i{width:10px;height:10px;border-radius:50%;background:#d6dae4;display:block}
+  .shot .body{display:grid;grid-template-columns:190px 1fr;min-height:330px}
+  .shot .side{border-right:1px solid var(--line);padding:20px;background:#fcfcfe}
+  .shot .side b,.shot .side span{display:block;height:9px;border-radius:5px;background:#eceef4;margin-bottom:14px}
+  .shot .side b{width:64%;background:#dcdff0}
+  .shot .main{padding:24px;display:grid;gap:16px;align-content:start}
+  .shot .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .shot .kpi div{border:1px solid var(--line);border-radius:12px;padding:16px;height:78px;background:#fff}
+  .shot .chart{border:1px solid var(--line);border-radius:12px;height:150px;
+    background:linear-gradient(180deg,rgba(91,75,245,.10),rgba(91,75,245,0));position:relative}
+  .shot .chart::after{content:"";position:absolute;inset:auto 12px 12px;height:64px;
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));clip-path:polygon(0 78%,12% 60%,26% 68%,38% 40%,52% 52%,66% 22%,80% 34%,100% 6%,100% 100%,0 100%);opacity:.55}
+  /* Fake logo wall. */
+  .logos{background:var(--soft);border-block:1px solid var(--line)}
+  .logos p{text-align:center;color:var(--muted);font-size:13px;letter-spacing:.09em;text-transform:uppercase;margin:0 0 34px}
+  .logos ul{list-style:none;margin:0;padding:0;display:flex;justify-content:space-between;gap:26px;flex-wrap:wrap}
+  .logos li{font-weight:700;font-size:20px;letter-spacing:-.02em;color:#aeb5c6}
+  /* Icon-in-rounded-square triplet. */
+  .eyebrow{text-align:center;color:var(--brand);font-weight:600;font-size:13.5px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+  h2{font-size:clamp(30px,3.6vw,42px);line-height:1.14;letter-spacing:-.028em;text-align:center;margin:0 auto 16px;max-width:20ch}
+  .lede{text-align:center;color:var(--muted);max-width:58ch;margin:0 auto 56px;font-size:17.5px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .card{border:1px solid var(--line);border-radius:var(--radius);padding:30px;background:#fff;
+    transition:box-shadow .2s ease,transform .2s ease}
+  .card:hover{box-shadow:0 18px 40px -22px rgba(11,16,32,.24);transform:translateY(-2px)}
+  .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;margin-bottom:18px;
+    background:linear-gradient(140deg,rgba(91,75,245,.14),rgba(143,109,240,.14));color:var(--brand)}
+  .ico svg{width:22px;height:22px}
+  .card h3{margin:0 0 9px;font-size:18.5px;letter-spacing:-.015em}
+  .card p{margin:0;color:var(--muted);font-size:15.5px}
+  /* Invented KPI row. */
+  .stats{background:var(--soft);border-block:1px solid var(--line)}
+  .stats ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
+  .stats strong{display:block;font-size:clamp(34px,4vw,48px);letter-spacing:-.035em;line-height:1;
+    background:linear-gradient(92deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stats span{color:var(--muted);font-size:14.5px;margin-top:8px;display:block}
+  /* Dark closing CTA slab. */
+  .final{background:#0b1020;color:#fff;text-align:center;border-radius:24px;margin:0 24px var(--pad);padding:var(--pad) 24px}
+  .final h2{color:#fff}
+  .final p{color:#9aa3b8;max-width:52ch;margin:0 auto 30px}
+  .final .btn{background:#fff;color:#0b1020}
+  footer{border-top:1px solid var(--line);padding:44px 0;color:var(--muted);font-size:14px}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  @media (max-width:900px){
+    :root{--pad:64px}
+    /* The mobile "design": stack it. Nothing is reconsidered. */
+    .grid3,.stats ul{grid-template-columns:1fr}
+    .shot .body{grid-template-columns:1fr}
+    .shot .side{display:none}
+    nav ul{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><nav>
+  <span class="logo">Nexova</span>
+  <ul><li>Product</li><li>Solutions</li><li>Pricing</li><li>Resources</li><li>Docs</li></ul>
+  <a class="btn ghost" href="#">Sign in</a>
+  <a class="btn" href="#">Start free</a>
+</nav></div></header>
+
+<section class="hero"><div class="wrap">
+  <span class="pill">✦ Introducing Nexova AI — now in general availability</span>
+  <h1>Intelligent workflow automation for modern teams</h1>
+  <p class="sub">Nexova unifies your tools, data and processes into one intelligent platform so your team can focus on the work that actually moves the business forward.</p>
+  <div class="cta-row"><a class="btn" href="#">Start free trial</a><a class="btn ghost" href="#">Book a demo</a></div>
+  <div class="shot" role="img" aria-label="Product dashboard">
+    <div class="bar"><i></i><i></i><i></i></div>
+    <div class="body">
+      <div class="side"><b></b><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="main"><div class="kpi"><div></div><div></div><div></div></div><div class="chart"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="logos"><div class="wrap">
+  <p>Trusted by forward-thinking teams worldwide</p>
+  <ul><li>Vertex</li><li>Lumina</li><li>Northwind</li><li>Cobalt</li><li>Ardent</li><li>Kestrel</li></ul>
+</div></section>
+
+<section><div class="wrap">
+  <p class="eyebrow">Why Nexova</p>
+  <h2>Everything your team needs, in one place</h2>
+  <p class="lede">Powerful features designed to help modern teams collaborate seamlessly and scale without friction.</p>
+  <div class="grid3">
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg></div>
+      <h3>Lightning fast</h3><p>Built on a modern architecture that delivers exceptional performance at any scale.</p></article>
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 4 9 9 10 5-1 9-5 9-10V6z"/></svg></div>
+      <h3>Enterprise secure</h3><p>Bank-grade encryption and compliance controls that keep your data protected end to end.</p></article>
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M15 20a5 5 0 0 1 6-4"/></svg></div>
+      <h3>Built for teams</h3><p>Real-time collaboration that keeps everyone aligned, wherever they happen to be working.</p></article>
+  </div>
+</div></section>
+
+<section class="stats"><div class="wrap"><ul>
+  <li><strong>10×</strong><span>Faster workflows</span></li>
+  <li><strong>99.99%</strong><span>Uptime SLA</span></li>
+  <li><strong>50k+</strong><span>Teams onboarded</span></li>
+  <li><strong>4.9/5</strong><span>Average rating</span></li>
+</ul></div></section>
+
+<section><div class="wrap">
+  <p class="eyebrow">Built for scale</p>
+  <h2>Designed for the way modern teams work</h2>
+  <p class="lede">From the first automation to the thousandth, Nexova grows with you.</p>
+  <div class="grid3">
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5m0 14h16M8 15V9m4 6V7m4 8v-4"/></svg></div>
+      <h3>Insightful analytics</h3><p>Understand what is happening across every process with dashboards that update in real time.</p></article>
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></div>
+      <h3>Endless integrations</h3><p>Connect the tools you already use with hundreds of native integrations and a flexible API.</p></article>
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h3>Effortless onboarding</h3><p>Get your whole team productive in minutes with guided setup and thoughtful defaults.</p></article>
+  </div>
+</div></section>
+
+<div class="final">
+  <h2>Ready to transform how your team works?</h2>
+  <p>Join thousands of teams already building the future with Nexova. No credit card required.</p>
+  <a class="btn" href="#">Start free trial</a>
+</div>
+
+<footer><div class="wrap"><span>© 2026 Nexova, Inc.</span><span>Privacy · Terms · Security · Status</span></div></footer>
+</body>
+</html>

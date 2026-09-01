@@ -333,6 +333,94 @@ review and cross-model consistency checks are valid ways to establish that the s
 gate assumes. This is not an immediate blocker on running the corpus; it becomes required when critic
 scores are used to promote a maturity claim rather than to diagnose one project.
 
+### 7a. The scale, and what its numbers mean
+
+The paragraph above was written as a future requirement. It became a present one when three hand-built
+prototypes returned means of 8.50, 8.56 and 8.71 against a bar of 8.5, and manual inspection still showed
+a clear gap to genuinely outstanding contemporary work. Investigating that produced a plainer diagnosis
+than "the critic is generous":
+
+**The scale was undefined.** The reviewer prompt said *"score each criterion from 0 to 10"* and supplied
+no meaning for any point on it. `rubric.v1.md` did contain anchors — and was never sent to the model,
+because the prompt was built from `VISUAL_REVIEW_CRITERIA` in code. There was no written definition of 10
+anywhere in the repository, and the rubric's top band collapsed 9 and 10 into one row, so there was no
+defined difference between *exceptional* and *benchmark-class* for anybody to apply.
+
+**The prompt disclosed the target.** It also said *"The bar is an overall mean of at least 8.5, and no
+single criterion below 6.5"*. We told the reviewer the number we wanted and then read what came back as
+independent evidence about quality.
+
+The fix is the scale, not the threshold. `minimumScore` stays at **8.5** deliberately: raising it against
+an uncalibrated scale would have measured nothing. What changed underneath it:
+
+- **Anchored semantics.** Every integer 0–10 has a written meaning in `tooling/lib/visual-rubric.mjs`,
+  and the reviewer is shown all of them. 5 is template-like, 6 competent, 7 professional, 8 strong
+  agency work, 9 exceptional, 10 benchmark-class.
+- **Half points only.** 9.4 rather than 9.5 claims a distinction the scale cannot defend.
+- **Thirteen criteria rather than nine**, including the ones that separate good work from exceptional
+  work and were previously not asked at all: art direction, information architecture, typography craft,
+  interaction craft, resistance to generic AI design language, and memorability.
+- **The bar is no longer disclosed.** It is applied downstream by the gate.
+- **A high score costs an argument.** 8+ must answer *what prevents this reaching the next level*; 9+
+  must name demonstrated strengths; 10 must say what makes it benchmark-class rather than merely
+  excellent. These are refusals, not encouragements.
+- **Ceilings from observation.** A site the reviewer calls template-derived cannot be 9 on authorship; a
+  mobile view it calls stacked cannot be 8 on responsive recomposition. Every ceiling reads a plain
+  answer the reviewer gave, never anything a rule detected in markup.
+- **A holistic tier** the reviewer gives independently of its own scores, with disagreement against the
+  mean recorded rather than reconciled.
+- **Route-aware evidence.** Coverage counted viewports and never routes, so a home page at two widths
+  satisfied every criterion including responsive quality. It no longer does, and the evidence a review
+  rests on caps what it may claim.
+
+### The 10/10 contract
+
+> A visual/product score of 10 means: exceptional benchmark-class digital work. The artifact demonstrates
+> unusually strong visual authorship, business specificity, information architecture, typography,
+> composition, responsive design and implementation craft. It contains no meaningful visible weakness,
+> does not rely on generic AI design language, and does not appear clearly inferior when compared pairwise
+> with appropriate leading contemporary reference work.
+
+A 10 requires **all three** of: a recorded pairwise benchmark comparison finding no material gap; a
+holistic reading of `benchmark-class`; and no scoped criterion below 8. A missing comparison records
+`UNASSESSED` rather than `NONE` — "we did not look" and "we looked and there was no gap" must not be the
+same value, because a silent default is how a top score gets issued by accident.
+
+The contract lives in `TOP_SCORE_CONTRACT` in `tooling/lib/visual-rubric.mjs`, beside the code that
+enforces it, and is asserted by `tooling/visual-rubric.test.mjs`. That suite also asserts the opposite
+property: a verdict satisfying every condition **does** reach 10. A rubric nothing can top is not a rubric.
+
+### What was deliberately not made deterministic
+
+DesignLint decides facts and was not extended. It keeps contrast, reduced-motion handling, mechanically
+detectable repetition, competing primary actions and uniform page rhythm — each a defect the composer can
+actually produce and a rule can actually settle.
+
+It was **not** given the AI-slop motifs: gradient headlines, rounded cards, icon-in-rounded-square
+triplets, pill overuse, glowing blobs, decorative grid backgrounds, dark closing CTA slabs, uniform
+section padding, centred alignment, everything-in-a-card. Every one of those is legitimate somewhere and
+generic somewhere else, and a rule banning them would encode a second template in place of the first —
+which is the failure this programme exists to escape, not a smaller version of it.
+
+They are put to the critic instead, as the `ai-slop-resistance` criterion, which asks whether each
+pattern **has a reason to exist here** rather than whether it exists. A justified pill is fine; twenty
+default pills are a house style nobody chose.
+
+### Benchmark comparison
+
+Absolute scoring inflates. `examples/visual-benchmarks/references.v1.json` records five reference sites —
+Kononenko, Linear, Aesop, the AI in Design Report and Aman — as written analyses of publicly visible
+design decisions. No third-party markup, stylesheet, font or image is copied into this repository, and the
+file states plainly that the analyses are characterisations from prior familiarity rather than dated
+captures.
+
+A reference is chosen by **the shape of the business problem**, never by visual similarity, and the
+question put to the reviewer is never *"does this look like Linear?"* but *"does this demonstrate a
+comparable level of authorship, craft, hierarchy and product thinking, for its own problem?"* A restrained
+accountancy site needs none of Aman's photography, Linear's motion or Kononenko's asymmetry to be
+excellent. Style is not quality, and a rubric that confused the two would teach the factory to produce
+Linear pastiches for plumbers.
+
 ### Cross-browser visual acceptance
 
 Agency-quality claims require more than Chromium. Keep full rendered-evidence coverage on the primary browser, then add a targeted portability smoke across at least Chromium, WebKit and Firefox for representative critical routes/states.

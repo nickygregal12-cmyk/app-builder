@@ -73,6 +73,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { VIEWPORTS as EVIDENCE_VIEWPORTS } from './rendered-evidence.mjs';
+import { auditVerdictAgainstScale, QUALITY_TIERS, SCORE_BANDS } from './visual-rubric.mjs';
+import { assertComparisonRecorded, deriveBenchmarkGap, PAIRWISE_DIMENSIONS, selectReference } from './visual-benchmarks.mjs';
 
 /**
  * Stamped, never accepted.
@@ -103,18 +105,45 @@ export const VISUAL_REVIEW_VERDICTS = ['pass', 'rework', 'reject'];
  * narrowed from.
  */
 export const CRITERION_EVIDENCE = Object.freeze({
-  'responsive-quality': Object.freeze({
+  'responsive-recomposition': Object.freeze({
     requiredViewports: Object.freeze(['desktop', 'mobile']),
-    reason: 'the question is whether the mobile rendering is designed or merely narrowed, which needs the phone and the desktop it would have been narrowed from',
+    minRoutes: 2,
+    reason: 'the question is whether the mobile rendering is designed or merely narrowed, which needs the phone and the desktop it would have been narrowed from, on more than the one page anybody would have tuned',
   }),
-  'imagery-suitability': Object.freeze({
+  'visual-material': Object.freeze({
     requiredViewports: Object.freeze(['desktop', 'mobile']),
-    reason: 'framing at every width is half the question, and a photograph framed well on a desktop can be cropped to nonsense on a phone',
+    reason: 'framing at every width is half the question, and material framed well on a desktop can be cropped to nonsense on a phone',
+  }),
+  'information-architecture': Object.freeze({
+    minRoutes: 3,
+    reason: 'the question is what belongs on Home, what deserves its own route and what is merely previewed, which cannot be answered from Home alone',
+  }),
+  'composition-pacing': Object.freeze({
+    minRoutes: 2,
+    reason: 'pacing is a relationship between successive screens and between pages, so one page cannot demonstrate it',
+  }),
+  'interaction-craft': Object.freeze({
+    minRoutes: 2,
+    reason: 'consistency of small decisions is only visible across more than one surface',
+  }),
+  'memorability': Object.freeze({
+    minRoutes: 2,
+    reason: 'a signature that exists only on the home page is a hero treatment, not a signature experience',
   }),
 });
 
+/**
+ * The default, and the hole it used to leave.
+ *
+ * `minRoutes` is new and it is the more important half. Coverage was computed
+ * from viewports alone, so two captures of the home page — desktop and mobile —
+ * satisfied every criterion including responsive quality and information
+ * architecture. A single well-tuned home page could carry a whole multi-page
+ * site to a top score, which is exactly the claim a home page cannot support.
+ */
 const DEFAULT_EVIDENCE = Object.freeze({
   minViewports: 1,
+  minRoutes: 1,
   requiredViewports: Object.freeze([]),
   reason: 'a criterion needs at least one capture to have been looked at',
 });
@@ -145,20 +174,27 @@ function sha256(value) {
  */
 export function criterionCoverage(criteria, captures) {
   const viewports = new Set(list(captures).map((capture) => capture?.viewport).filter(Boolean));
+  const routes = new Set(list(captures).map((capture) => capture?.route).filter(Boolean));
   const present = [...viewports].sort();
+  const presentRoutes = [...routes].sort();
   return list(criteria).map((criterion) => {
     const rule = { ...DEFAULT_EVIDENCE, ...CRITERION_EVIDENCE[criterion.id] };
     const required = list(rule.requiredViewports);
     const missing = required.filter((name) => !viewports.has(name));
     const minimum = rule.minViewports ?? 1;
-    const covered = missing.length === 0 && viewports.size >= minimum;
+    const minimumRoutes = rule.minRoutes ?? 1;
+    const routesShort = routes.size < minimumRoutes;
+    const covered = missing.length === 0 && viewports.size >= minimum && !routesShort;
 
-    // Two ways to be short of the evidence, and they read differently. Naming a
-    // missing width is actionable; naming a shortfall in a count is not.
+    // Three ways to be short of the evidence, and they read differently.
+    // Naming a missing width or a missing page is actionable; naming a
+    // shortfall in a count is not.
     let detail = null;
     if (missing.length) {
       detail = `${criterion.id} is unproven: ${rule.reason}. The captures cover ${present.join(', ') || 'no viewport'}, and this needs ${required.join(' and ')}.`;
-    } else if (!covered) {
+    } else if (routesShort) {
+      detail = `${criterion.id} is unproven: ${rule.reason}. The captures cover ${routes.size} route(s) (${presentRoutes.join(', ') || 'none'}) and it needs ${minimumRoutes}.`;
+    } else if (viewports.size < minimum) {
       detail = `${criterion.id} is unproven: ${rule.reason}. The captures cover ${viewports.size} viewport(s) and it needs ${minimum}.`;
     }
 
@@ -167,13 +203,48 @@ export function criterionCoverage(criteria, captures) {
       question: criterion.question ?? null,
       covered,
       viewports: present,
+      routes: presentRoutes,
       requiredViewports: required,
       minimumViewports: minimum,
+      minimumRoutes,
       missingViewports: missing,
       status: covered ? 'evidenced' : 'unproven',
       detail,
     };
   });
+}
+
+/**
+ * Whether the evidence supports the *claim* being made about the site.
+ *
+ * Criterion coverage answers "may this question be scored at all". This
+ * answers a different one: a top-of-scale claim about a multi-page website
+ * needs to have looked at the website. A spectacular home page beside generic
+ * project pages, a weak contact route or a poor mobile rendering is not a 10,
+ * and the only way to know is to have captured them.
+ *
+ * Returned as a cap rather than a refusal, so a thin evidence run still
+ * produces a usable verdict — it just cannot produce a benchmark claim.
+ */
+export const EVIDENCE_TIERS = Object.freeze([
+  Object.freeze({ maxScore: 10, minRoutes: 4, minViewports: 2, label: 'site-level', reason: 'a benchmark claim about a website needs the website: several routes, at more than one width' }),
+  Object.freeze({ maxScore: 9, minRoutes: 3, minViewports: 2, label: 'multi-route', reason: 'an exceptional claim needs the key secondary routes, not only the home page' }),
+  Object.freeze({ maxScore: 8, minRoutes: 2, minViewports: 2, label: 'two-route', reason: 'a strong-professional claim needs more than one page and more than one width' }),
+  Object.freeze({ maxScore: 7, minRoutes: 1, minViewports: 1, label: 'thin', reason: 'a single page at a single width supports a professional reading and no more' }),
+]);
+
+export function evidenceCeiling(captures) {
+  const routes = new Set(list(captures).map((capture) => capture?.route).filter(Boolean));
+  const viewports = new Set(list(captures).map((capture) => capture?.viewport).filter(Boolean));
+  const tier = EVIDENCE_TIERS.find((entry) => routes.size >= entry.minRoutes && viewports.size >= entry.minViewports)
+    ?? { maxScore: 6, label: 'insufficient', reason: 'there is not enough here to describe the site at all' };
+  return {
+    cap: tier.maxScore,
+    tier: tier.label,
+    routes: routes.size,
+    viewports: viewports.size,
+    detail: `Evidence covers ${routes.size} route(s) at ${viewports.size} viewport(s): ${tier.reason}. This caps any overall claim at ${tier.maxScore}.`,
+  };
 }
 
 /** The exact evidence a verdict is bound to. */
@@ -201,42 +272,141 @@ export function readPacket(packetDir) {
  *
  * Deliberately not a description of the business: a critic told what the site
  * is for will describe what it was told, and the evidence is the pictures. It
- * gets the scoped criteria, the bar, the DesignLint warnings it must engage
- * with, and the inventory of what each image is.
+ * gets the scoped criteria with their anchored bands, the DesignLint warnings
+ * it must engage with, and the inventory of what each image is.
+ *
+ * ## What it no longer gets, and why that is the point
+ *
+ * The previous version of this function contained the line:
+ *
+ *     The bar is an overall mean of at least 8.5, and no single criterion
+ *     below 6.5.
+ *
+ * We were telling the reviewer the number we wanted and then treating what
+ * came back as independent evidence about quality. It is not surprising that
+ * three prototypes returned 8.50, 8.63 and 8.67 against a bar of 8.5; a target
+ * given to a model is a target it hits. The gate is applied downstream by
+ * `assessProfessionalThreshold`, which is where it belongs, and the reviewer is
+ * not told what it is.
+ *
+ * Everything the reviewer needs to produce a *meaningful* number it now has —
+ * a written meaning for every point on the scale, and a per-criterion account
+ * of what separates the upper levels. Everything that would tell it what number
+ * to produce is withheld.
  */
-export function buildPrompt({ packet, candidate, coverage }) {
+export function buildPrompt({ packet, candidate, coverage, benchmark = null }) {
   const scored = coverage.filter((entry) => entry.covered);
   const unproven = coverage.filter((entry) => !entry.covered);
-  const gate = packet.qualityGate ?? {};
+  const byId = new Map(list(packet.criteria).map((criterion) => [criterion.id, criterion]));
+
   const lines = [
-    'You are reviewing rendered screenshots of a generated website. You did not design it and you are not being asked to be kind about it.',
+    'You are reviewing rendered screenshots of a website. You did not design it, you are not being asked to be kind about it, and you are not being told what score anyone hopes for.',
     '',
     `Business: ${packet.business}. Visual direction under review: ${candidate.directionLabel ?? candidate.directionId}.`,
     '',
-    'The images attached to this message are the only evidence. Judge what you can see and nothing else.',
+    'The images attached to this message are the only evidence. Judge what you can see and nothing else. Where a question needs evidence you were not given, say so instead of guessing.',
     '',
     'Images, in order:',
     ...list(candidate.captures).map((capture, index) => `  ${index + 1}. ${capture.route} at ${capture.viewport}${capture.state && Object.keys(capture.state).length ? ` (${JSON.stringify(capture.state)})` : ''}`),
     '',
-    `Score each of these criteria from 0 to 10. The bar is an overall mean of at least ${gate.minimumScore ?? '?'}, and no single criterion below ${gate.minimumCriterionScore ?? '?'}.`,
-    ...scored.map((entry) => `  - ${entry.id}: ${entry.question}`),
+    '=== THE SCALE ===',
+    '',
+    'Every point on this scale has a fixed meaning. Use it. Do not substitute your own sense of what a number out of ten usually means.',
+    '',
+    // The meaning already opens with the band's own words, so the label is not
+    // repeated here. `1 — severely broken. Severely broken. Layout...` reads
+    // like a stutter, and a prompt that reads carelessly gets read carelessly.
+    ...SCORE_BANDS.map((band) => `  ${band.score} — ${band.meaning}`),
+    '',
+    'Scores move in steps of 0.5 and no finer. A 9.4 rather than a 9.5 claims a distinction this scale cannot defend.',
+    '',
+    'Read these before you score:',
+    '',
+    '  - 10 is extraordinarily rare. Most good websites are 7. Most professional agency work is 8. If you are issuing a 9 or a 10, you are making a strong claim and you will be asked to support it.',
+    '  - Professional does not mean exceptional. "A capable designer could ship this" is a 7, and 7 is a respectable score, not a criticism.',
+    '  - The absence of defects is not a 10. A site with nothing wrong and nothing remarkable is a 7. Faultlessness caps a score; it does not maximise one.',
+    '  - Visual polish does not excuse weak communication. A beautiful site that never says what the business does has failed, and the visual criteria do not redeem that.',
+    '  - Novelty is not quality. An unusual choice with no reason behind it is worse than a conventional one with a reason.',
+    '  - Minimalism is not sophistication. Empty space is only premium when there is something behind it worth the room. Whitespace plus a serif is not restraint, it is absence.',
+    '  - Motion is not craft. An animated generic site is a generic site. Judge the consistency of small decisions, not the presence of effects.',
+    '  - Generic AI design language should be marked down: unjustified gradient headlines, icon-in-rounded-square triplets, rounded-card soup, fake logo walls, invented KPI rows, glowing blobs, dark closing CTA slabs, "innovation" copy. Context decides — one justified pill is fine, twenty default pills is a house style nobody chose.',
+    '  - Appropriate restraint should be rewarded. A quiet, plain, extremely well-edited site for a serious business can score very highly. A restrained accountancy site does not need photography, animation or asymmetry to be excellent; judge sophistication appropriate to the problem.',
+    '  - Business-specific decisions matter heavily. Ask constantly whether this design could be re-skinned for another company by changing the words and the colours.',
+    '  - Judge mobile as its own composition, not as a narrower version of the desktop one.',
+    '',
+    '=== WHAT TO SCORE ===',
+    '',
   ];
+
+  for (const entry of scored) {
+    const criterion = byId.get(entry.id) ?? {};
+    lines.push(`  ${entry.id} — ${criterion.title ?? entry.id}`);
+    lines.push(`    ${criterion.question ?? entry.question}`);
+    if (criterion.separates) lines.push(`    What separates the levels: ${criterion.separates}`);
+    lines.push('');
+  }
+
   if (unproven.length) {
     lines.push(
-      '',
       'Do NOT score these — the captures do not cover them, and they are already recorded as unproven:',
-      ...unproven.map((entry) => `  - ${entry.id}`),
+      ...unproven.map((entry) => `  - ${entry.id}: ${entry.detail}`),
+      '',
     );
   }
+
+  lines.push(
+    '=== WHAT EVERY HIGH SCORE COSTS ===',
+    '',
+    'For every criterion you score 8 or above, answer: what prevents this from reaching the next level? Put it in "whyNotHigher". If you cannot name the shortfall, you have not made the distinction your score claims, and the score is too high.',
+    '',
+    'For every criterion you score 9 or above, name the demonstrated strengths in "positiveEvidence" — specific things you can see, not the absence of problems. A 9 that rests on "nothing is wrong" is a 7.',
+    '',
+    'For any criterion you score 10, answer in "whyBenchmark": what makes this genuinely benchmark-class rather than merely excellent?',
+    '',
+  );
+
+  if (benchmark?.reference) {
+    lines.push(
+      '=== COMPARISON ===',
+      '',
+      `Compare this candidate against the following reference work. You are NOT asked whether it looks like the reference — a candidate in a completely different style may legitimately be judged comparable. You are asked whether it demonstrates a comparable level of authorship, craft, hierarchy and product/design thinking, for its own problem.`,
+      '',
+      `  Reference: ${benchmark.reference.name} (${benchmark.reference.url}), a ${benchmark.reference.qualityClass} example of ${list(benchmark.reference.anchorsFor).join(', ')}.`,
+      `  What it does well: ${benchmark.reference.analysis}`,
+      '',
+      'For each dimension below, answer one of: candidate-stronger, roughly-comparable, reference-stronger, reference-substantially-stronger. Give a reason for each.',
+      ...PAIRWISE_DIMENSIONS.map((dimension) => `  - ${dimension}`),
+      '',
+    );
+  }
+
   const mustAddress = list(candidate.gate?.mustAddress);
   if (mustAddress.length) {
     lines.push(
-      '',
       'A deterministic linter raised these warnings. You may disagree with any of them, but you must say something about each:',
       ...mustAddress.map((rule) => `  - ${rule}`),
+      '',
     );
   }
+
   lines.push(
+    '=== OBSERVATIONS ===',
+    '',
+    'Answer these plainly. They are observations, not scores, and they are used to check your scores are consistent with what you saw.',
+    '',
+    '  templateDerived — could a viewer identify this as a template or theme with its content changed?',
+    '  interchangeableBusiness — with the logo removed, could this be a different company in a different sector?',
+    '  mobileIsStackedDesktop — is the mobile view essentially the desktop layout in one column, rather than recomposed?',
+    '  noSignatureMoment — is there no specific moment, interaction or composition you could describe as belonging to this site and no other?',
+    '  typographyMerelyCompetent — is the typography correct and unremarkable rather than doing compositional work?',
+    '  genericDesignLanguage — is the visual language the one shared by generated sites generally, rather than one chosen for this business?',
+    '',
+    '=== OVERALL ===',
+    '',
+    'Separately from the individual scores, give your overall reading in "holisticTier", one of:',
+    ...QUALITY_TIERS.map((tier) => `  ${tier.id} — ${tier.meaning}`),
+    '',
+    'Answer this from your reaction to the site as a whole. Do not compute it from your scores, and do not adjust it to agree with them. If your criterion scores average high and your overall reading is lower, say the lower one — that disagreement is useful and it is recorded rather than reconciled.',
     '',
     'A "pass" means a professional studio would put its name on this. If it is competent but short of that, the answer is "rework", not a generous pass.',
     '',
@@ -245,8 +415,16 @@ export function buildPrompt({ packet, candidate, coverage }) {
     '  "verdict": "pass" | "rework" | "reject",',
     '  "model": "<the model you are, if you know it>",',
     '  "rationale": "<two or three sentences>",',
-    `  "criterionScores": [${scored.map((entry) => `{"criterion": "${entry.id}", "score": <0-10>, "note": "<why>"}`).join(', ')}],`,
-    '  "failingCriteria": ["<ids scoring below the floor>"],',
+    '  "holisticTier": "<one of the tiers above>",',
+    '  "criterionScores": [',
+    ...scored.map((entry, index) => `    {"criterion": "${entry.id}", "score": <0-10, steps of 0.5>, "note": "<why>", "whyNotHigher": "<required if 8+>", "positiveEvidence": ["<required if 9+>"], "whyBenchmark": "<required if 10>"}${index === scored.length - 1 ? '' : ','}`),
+    '  ],',
+    '  "observations": {"templateDerived": <bool>, "interchangeableBusiness": <bool>, "mobileIsStackedDesktop": <bool>, "noSignatureMoment": <bool>, "typographyMerelyCompetent": <bool>, "genericDesignLanguage": <bool>},',
+    '  "signatureMoment": "<the one thing you would remember, or null>",',
+    benchmark?.reference
+      ? `  "pairwiseComparison": {"referenceId": "${benchmark.reference.id}", "comparisons": [${PAIRWISE_DIMENSIONS.map((dimension) => `{"dimension": "${dimension}", "outcome": "<outcome>", "note": "<why>"}`).join(', ')}]},`
+      : '  "pairwiseComparison": null,',
+    '  "failingCriteria": ["<ids you consider failures>"],',
     '  "blockingConcerns": ["<anything that must change before this ships>"],',
     `  "addressedRules": [${mustAddress.map((rule) => `{"rule": "${rule}", "response": "<agree/disagree and why>"}`).join(', ')}]`,
     '}',
@@ -329,6 +507,28 @@ export function normaliseVerdict(raw, { candidate, coverage, model }) {
     }
   }
 
+  /**
+   * The obligations that come with a high score, checked here rather than
+   * downstream.
+   *
+   * `scoreVisualReview` refuses the same omissions, but by then the reviewer
+   * has been paid for and gone. Catching it at the adapter means the failure
+   * names the reviewer that produced it, and it is loud rather than silent —
+   * the alternative is quietly accepting a 9 supported by nothing and letting
+   * the record show a justified one.
+   */
+  const scaleProblems = auditVerdictAgainstScale(raw, { criteria: null });
+  if (scaleProblems.length) {
+    throw new Error(
+      `Codex's verdict does not satisfy the scale it was given:\n  - ${scaleProblems.map((problem) => problem.detail).join('\n  - ')}\n`
+      + 'Re-run the review; a score that cannot answer what is holding it back has not made the distinction it claims.',
+    );
+  }
+
+  if (raw.holisticTier && !QUALITY_TIERS.some((tier) => tier.id === raw.holisticTier)) {
+    throw new Error(`Codex returned holisticTier ${JSON.stringify(raw.holisticTier)}. It offers: ${QUALITY_TIERS.map((tier) => tier.id).join(', ')}.`);
+  }
+
   // The rule the whole coverage computation exists to enforce. An unproven
   // criterion is not a low score to be averaged away; it is a question nobody
   // has the evidence to answer, and a pass would claim otherwise.
@@ -346,6 +546,19 @@ export function normaliseVerdict(raw, { candidate, coverage, model }) {
     throw new Error(`Codex did not respond to the DesignLint warnings it was given: ${silent.join(', ')}. A reviewer may disagree with a warning; it may not be silent about one.`);
   }
 
+  /**
+   * The comparison, aggregated into a gap.
+   *
+   * A verdict with no comparison records `UNASSESSED` rather than `NONE`, and
+   * the distinction is load-bearing: a missing comparison silently reading as
+   * "no gap visible" is exactly how a top score gets issued by default.
+   */
+  const comparison = raw.pairwiseComparison ?? null;
+  if (comparison) assertComparisonRecorded(comparison);
+  const benchmark = deriveBenchmarkGap(comparison?.comparisons ?? []);
+
+  const evidenceCap = evidenceCeiling(candidate.captures);
+
   return {
     candidateId: candidate.candidateId,
     verdict: raw.verdict,
@@ -353,7 +566,26 @@ export function normaliseVerdict(raw, { candidate, coverage, model }) {
     // can influence it.
     reviewedBy: { role: REVIEWER_ROLE, vendor: REVIEWER_VENDOR, model },
     rationale: typeof raw.rationale === 'string' ? raw.rationale : '',
-    criterionScores: scores.map((entry) => ({ criterion: entry.criterion, score: Number(entry.score), note: entry.note ?? null })),
+    criterionScores: scores.map((entry) => ({
+      criterion: entry.criterion,
+      score: Number(entry.score),
+      note: entry.note ?? null,
+      whyNotHigher: entry.whyNotHigher ?? null,
+      positiveEvidence: list(entry.positiveEvidence).map(String),
+      whyBenchmark: entry.whyBenchmark ?? null,
+    })),
+    holisticTier: raw.holisticTier ?? null,
+    // The reviewer's plain answers, kept separate from its scores. The ceilings
+    // in visual-rubric.mjs read these; nothing in this repository infers them
+    // from pixels, because that would be a taste engine wearing a rule's name.
+    observations: raw.observations ?? {},
+    signatureMoment: raw.signatureMoment ?? null,
+    pairwiseComparison: comparison,
+    benchmarkGap: benchmark.gap,
+    benchmarkGapDetail: benchmark.detail,
+    benchmarkComparisonCounts: benchmark.counts,
+    dimensionsNotCompared: comparison ? benchmark.dimensionsNotCompared : PAIRWISE_DIMENSIONS,
+    evidenceCeiling: evidenceCap,
     failingCriteria: list(raw.failingCriteria).filter((id) => scorable.has(id)),
     blockingConcerns: list(raw.blockingConcerns).map(String),
     addressedRules: mustAddress,
@@ -398,7 +630,13 @@ export function reviewCandidate({ packet, packetDir, candidateId, authorised = f
   if (absent.length) throw new Error(`The packet references ${absent.length} capture(s) it does not contain, starting with ${absent[0]}. A review of missing pictures is not a review.`);
   if (!images.length) throw new Error(`Candidate ${candidateId} has no captures. There is nothing to review.`);
 
-  const prompt = buildPrompt({ packet, candidate, coverage });
+  // The reference is chosen from the shape of the business problem, never from
+  // visual similarity. A packet that declares neither is compared against
+  // nothing rather than against something arbitrary, and the verdict records
+  // `UNASSESSED`, which caps it below 10.
+  const benchmark = selectReference({ businessKind: packet.businessKind ?? null, anchors: list(packet.benchmarkAnchors) });
+
+  const prompt = buildPrompt({ packet, candidate, coverage, benchmark: benchmark.matched ? benchmark : null });
   const output = runCodex({ prompt, images, cwd: packetDir });
   const raw = extractVerdictJson(output);
   // Codex's own account of which model it is, falling back to the CLI build

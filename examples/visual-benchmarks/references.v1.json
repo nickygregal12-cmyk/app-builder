@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "authority": "visual-benchmark-references",
+  "corpus": "VB1",
+  "$comment": "External reference work used to anchor the top of the visual scale. No proprietary source, markup, image or font is copied into this repository; each entry is a written analysis of publicly visible design decisions, which is what the pairwise comparison actually needs. A reviewer is never asked 'does this look like Linear?' — it is asked whether a candidate demonstrates a comparable level of authorship, craft, hierarchy and product thinking, which is a question about quality of decision-making rather than about style.",
+  "observationBasis": {
+    "kind": "characterisation-from-prior-observation",
+    "honestly": "These analyses were written from prior familiarity with the sites, not from a capture session performed by this repository. They are good enough to anchor a comparison about kinds of decision, and they are NOT a claim about what any of these sites looked like on a specific date. Where a reviewer needs the current site, it should open the URL. An owner confirmation pass is recorded per entry as `confirmedByOwner`, and every entry currently reads false.",
+    "whyNotCaptured": "Capturing and committing screenshots of third-party commercial websites into this repository would put other people's design work in our git history to serve as our benchmark. The written analysis carries the comparison; the pixels would carry a licensing problem."
+  },
+  "qualityClasses": {
+    "benchmark-class": "Used to anchor 10. The strongest contemporary work in its category.",
+    "exceptional": "Used to anchor 9."
+  },
+  "references": [
+    {
+      "id": "vb-kononenko",
+      "name": "Kononenko ID / Kononenko Architectural Bureau",
+      "url": "https://kononenko.id/",
+      "dateObserved": "2026-09-01",
+      "confirmedByOwner": false,
+      "qualityClass": "benchmark-class",
+      "anchorsFor": ["portfolio", "editorial-composition", "imagery", "architectural-restraint"],
+      "appropriateFor": [
+        "architecture and interior practices",
+        "design studios and portfolios",
+        "any business whose product is finished physical work that photographs well"
+      ],
+      "analysis": "Composition carries the site rather than decoration. Project imagery is given real scale and cropped with intent, and the editorial grid is willing to be asymmetric and to leave large areas empty for compositional reasons rather than as a minimalism gesture. Typography is quiet and precisely set; metadata and small text are treated as designed material rather than as leftovers. The restraint is the authorship: almost nothing is added that is not the work itself, and the confidence to do that is exactly what separates it from a portfolio template that also has big pictures.",
+      "characteristics": [
+        "Photography at a scale that assumes the work is worth looking at",
+        "Asymmetric editorial grid used deliberately, not as novelty",
+        "Small-text and metadata craft consistent with the display type",
+        "Restraint that reads as decision rather than as absence",
+        "Project pages as considered as the index, not thinner versions of it"
+      ],
+      "whatItWouldScoreHighOn": ["art-direction", "composition-pacing", "visual-material", "typography", "memorability"],
+      "notAModelFor": "Businesses with no photographable work. Copying its emptiness without its imagery produces the 'minimal luxury slop' failure mode this corpus tests for."
+    },
+    {
+      "id": "vb-linear",
+      "name": "Linear",
+      "url": "https://linear.app/",
+      "dateObserved": "2026-09-01",
+      "confirmedByOwner": false,
+      "qualityClass": "benchmark-class",
+      "anchorsFor": ["product-storytelling", "interface-craft", "saas-sophistication"],
+      "appropriateFor": [
+        "software products with a real interface to show",
+        "developer and technical tooling",
+        "B2B products sold on how they feel to use"
+      ],
+      "analysis": "The product is the argument. Interface is shown at a fidelity and specificity that makes claims checkable — real views, real data shapes, real states — rather than a generic dashboard mockup standing in for 'software'. Micro-craft is unusually consistent: transitions, focus states, keyboard affordances and the behaviour of small controls all share one temperament, and that consistency is what reads as quality rather than any individual effect. Typography is tight and functional with genuine hierarchy control; motion is used to explain product behaviour rather than to signal modernity. Crucially, the aesthetic is downstream of the product's own claim about speed and precision, which is why it cannot simply be re-skinned onto a different SaaS company.",
+      "characteristics": [
+        "Product UI shown specifically, not as a decorative mockup",
+        "Motion that explains rather than motion that decorates",
+        "Micro-interaction consistency across the whole surface",
+        "Dense information handled without becoming cluttered",
+        "Visual language derived from the product's own proposition"
+      ],
+      "whatItWouldScoreHighOn": ["visual-material", "interaction-craft", "business-specificity", "commercial-clarity", "art-direction"],
+      "notAModelFor": "Businesses with no software product. The 'trade-business SaaSification' failure mode is exactly what borrowing this language without the product produces."
+    },
+    {
+      "id": "vb-aesop",
+      "name": "Aesop",
+      "url": "https://www.aesop.com/",
+      "dateObserved": "2026-09-01",
+      "confirmedByOwner": false,
+      "qualityClass": "benchmark-class",
+      "anchorsFor": ["commerce", "editorial-curation", "restraint", "large-information-architecture"],
+      "appropriateFor": [
+        "retail and commerce with a large catalogue",
+        "brands whose voice is a real asset",
+        "businesses that must stay navigable while remaining quiet"
+      ],
+      "analysis": "The hardest thing it does is stay restrained while carrying a large catalogue. Information architecture is the achievement: a substantial product range, store network and editorial library remain findable without the navigation becoming a control panel, and the taxonomy reads as edited rather than exhaustive. Typography and language do most of the expressive work — copy is treated as designed material and is unmistakably one voice. Product photography is consistent to the point of being a system. It demonstrates that commerce does not have to choose between atmosphere and usability, and it earns high commercial clarity without a single conversion cliché.",
+      "characteristics": [
+        "Large IA kept navigable without visual noise",
+        "Copy as designed material, in one consistent voice",
+        "Photographic system rather than photographic assortment",
+        "Commerce mechanics present and quiet",
+        "Restraint sustained across hundreds of pages, not just the home page"
+      ],
+      "whatItWouldScoreHighOn": ["information-architecture", "brand-fit", "typography", "commercial-clarity", "business-specificity"],
+      "notAModelFor": "Small businesses with eight pages. Its restraint is a solution to a scale problem they do not have."
+    },
+    {
+      "id": "vb-ai-in-design-report",
+      "name": "AI in Design Report 2026",
+      "url": "https://aiindesign.report/",
+      "dateObserved": "2026-09-01",
+      "confirmedByOwner": false,
+      "qualityClass": "benchmark-class",
+      "anchorsFor": ["data-storytelling", "editorial-rhythm", "dense-information-design"],
+      "appropriateFor": [
+        "research, reports and data-led publications",
+        "any business whose proposition is evidence",
+        "long-form content that must remain readable at length"
+      ],
+      "analysis": "A long, dense document that stays readable, which is a harder design problem than a short beautiful one. Pacing is the core craft: passages of dense data alternate with room to breathe, and the reader is given deliberate rest between arguments rather than an even wall of sections. Charts are designed as part of the page rather than embedded from a tool, sharing its type, palette and spacing, so the data reads as part of the argument. Typographic hierarchy carries several levels — headings, standfirsts, body, annotation, footnotes, figure labels — without any of them becoming ambiguous. Its memorability comes from the reading experience itself rather than from any single effect.",
+      "characteristics": [
+        "Density modulated deliberately across a long document",
+        "Charts designed to the page's own system",
+        "Many typographic levels, none ambiguous",
+        "Editorial rhythm with real tension and release",
+        "Signature experience is the act of reading it"
+      ],
+      "whatItWouldScoreHighOn": ["composition-pacing", "typography", "information-architecture", "visual-material", "memorability"],
+      "notAModelFor": "Short marketing sites. Its pacing is designed for length and reads as emptiness without it."
+    },
+    {
+      "id": "vb-aman",
+      "name": "Aman",
+      "url": "https://www.aman.com/",
+      "dateObserved": "2026-09-01",
+      "confirmedByOwner": false,
+      "qualityClass": "benchmark-class",
+      "anchorsFor": ["luxury", "imagery", "atmosphere", "premium-restraint"],
+      "appropriateFor": [
+        "hospitality and destination businesses",
+        "high-value considered purchases",
+        "brands where atmosphere is a substantial part of the product"
+      ],
+      "analysis": "Atmosphere is constructed rather than asserted. Photography is art-directed to one temperature and pace, given generous scale, and sequenced so that moving through the site feels like moving through the places — which is the product. The restraint is expensive-looking because it is supported: there is a great deal of high-quality material behind the empty space, and the space exists to let it work. Type is quiet and the interface recedes; navigation across a large property portfolio is handled without ever becoming a directory listing. It is the clearest demonstration in this set that premium is a function of material quality and consistency, not of beige and wide margins.",
+      "characteristics": [
+        "One photographic temperature held across a large estate",
+        "Sequencing that reproduces the experience being sold",
+        "Empty space supported by material rather than substituting for it",
+        "Interface deliberately receding",
+        "Large portfolio navigated without a directory feel"
+      ],
+      "whatItWouldScoreHighOn": ["visual-material", "art-direction", "brand-fit", "memorability", "composition-pacing"],
+      "notAModelFor": "Any business without genuinely excellent photography. Aman's language minus Aman's imagery is the 'minimal luxury slop' fixture, and it is the single most common way a generated site tries to look expensive."
+    }
+  ],
+  "howToUse": {
+    "selectReference": "Pick the reference whose PROBLEM is closest to the candidate's, not whose look is. A restrained accountancy site is compared with Aesop or the report on information architecture and typographic craft, never with Aman on photography it has no reason to have.",
+    "theQuestion": "Not 'does this look like the reference?' but 'does this demonstrate a comparable level of authorship, craft, hierarchy and product/design thinking, for its own problem?'",
+    "styleIsNotQuality": "A candidate that is stylistically nothing like its reference may legitimately be judged roughly-comparable. A candidate that imitates the reference's style without its substance should not be."
+  }
+}

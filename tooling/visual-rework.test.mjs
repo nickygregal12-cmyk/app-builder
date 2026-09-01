@@ -75,7 +75,20 @@ function set(candidates) {
 }
 
 function scores(value, overrides = {}) {
-  return criteria.map((criterion) => ({ criterion: criterion.id, score: overrides[criterion.id] ?? value }));
+  return criteria.map((criterion) => {
+    const score = overrides[criterion.id] ?? value;
+    // A score of 8 or above owes an account of what is holding it back, and 9
+    // or above owes demonstrated strengths. These fixtures supply both so that
+    // what is under test here stays the gate arithmetic; the obligation itself
+    // is tested in visual-rubric.test.mjs.
+    return {
+      criterion: criterion.id,
+      score,
+      ...(score >= 8 && score < 10 ? { whyNotHigher: `fixture: ${criterion.id} held back by construction` } : {}),
+      ...(score >= 9 ? { positiveEvidence: [`fixture: demonstrated strength on ${criterion.id}`] } : {}),
+      ...(score === 10 ? { whyBenchmark: 'fixture' } : {}),
+    };
+  });
 }
 
 test('the professional bar is read from the pipeline gate rather than declared here', () => {
@@ -96,11 +109,11 @@ test('a review must score every criterion it was given, and only those', () => {
 });
 
 test('a strong average cannot hide one badly failing criterion', () => {
-  const strongAverage = scoreVisualReview({ criterionScores: scores(9.5, { distinctiveness: 4 }) }, criteria);
+  const strongAverage = scoreVisualReview({ criterionScores: scores(9.5, { 'art-direction': 4 }) }, criteria);
   assert.ok(strongAverage.overallScore >= gate.minimumScore, 'the average clears the bar');
   const verdict = assessProfessionalThreshold(strongAverage, gate);
   assert.equal(verdict.met, false);
-  assert.match(verdict.detail, /distinctiveness scores 4/);
+  assert.match(verdict.detail, /art-direction scores 4/);
 });
 
 test('a competent-but-not-good-enough candidate cannot be passed', () => {
@@ -109,7 +122,7 @@ test('a competent-but-not-good-enough candidate cannot be passed', () => {
       verdict: 'pass',
       reviewedBy: CRITIC,
       addressedRules: [],
-      criterionScores: scores(7.2),
+      criterionScores: scores(7),
     }, { qualityGate: gate, criteria }),
     /below the 8\.5 professional bar/,
   );
@@ -127,8 +140,8 @@ test('the same candidate can be recorded as competent and returned for rework', 
     verdict: 'rework',
     reviewedBy: CRITIC,
     addressedRules: [],
-    criterionScores: scores(7.2, { distinctiveness: 5 }),
-    failingCriteria: ['distinctiveness'],
+    criterionScores: scores(7, { 'art-direction': 5 }),
+    failingCriteria: ['art-direction'],
   }, { qualityGate: gate, criteria });
   assert.equal(reviewed.review.thresholdMet, false);
   assert.equal(reviewed.review.overallScore < gate.minimumScore, true);
@@ -140,7 +153,7 @@ test('a candidate that clears the bar passes and can be promoted', () => {
     verdict: 'pass',
     reviewedBy: CRITIC,
     addressedRules: [],
-    criterionScores: scores(8.8),
+    criterionScores: scores(8.5),
   }, { qualityGate: gate, criteria });
   assert.equal(passing.review.thresholdMet, true);
   const rejected = recordReview(candidate('candidate-b'), {
@@ -148,7 +161,7 @@ test('a candidate that clears the bar passes and can be promoted', () => {
     reviewedBy: CRITIC,
     addressedRules: [],
     criterionScores: scores(7),
-    failingCriteria: ['distinctiveness'],
+    failingCriteria: ['art-direction'],
   }, { qualityGate: gate, criteria });
   const promoted = promoteCandidate(set([passing, rejected]), 'candidate-a', { promotedBy: CRITIC, decidedAt: '2026-08-26T11:00:00.000Z' });
   assert.equal(promoted.promotedCandidateId, 'candidate-a');
@@ -160,8 +173,8 @@ function reworked(id, overrides = {}) {
     verdict: 'rework',
     reviewedBy: CRITIC,
     addressedRules: [],
-    criterionScores: scores(7.5, { distinctiveness: 5, 'distinctive-moment': 5.5 }),
-    failingCriteria: ['distinctiveness'],
+    criterionScores: scores(7.5, { 'art-direction': 5, memorability: 5.5 }),
+    failingCriteria: ['art-direction'],
     ...overrides.review,
   }, { qualityGate: gate, criteria });
 }
@@ -217,16 +230,16 @@ test('whoever created the candidates cannot close the book on them either', () =
 test('a rework targets what failed and names what must survive', () => {
   const parent = reworked('candidate-a');
   const plan = planVisualRework({ set: set([parent]), candidate: parent, gate, criteria, createdAt: '2026-08-26T11:00:00.000Z' });
-  assert.deepEqual(plan.failingCriteria, ['distinctiveness']);
+  assert.deepEqual(plan.failingCriteria, ['art-direction']);
   assert.ok(plan.preservedCriteria.includes('visual-hierarchy'));
-  assert.ok(plan.preservedCriteria.includes('responsive-quality'));
-  assert.ok(!plan.preservedCriteria.includes('distinctiveness'));
+  assert.ok(plan.preservedCriteria.includes('responsive-recomposition'));
+  assert.ok(!plan.preservedCriteria.includes('art-direction'));
   assert.deepEqual(plan.targets, [{
     axis: 'visualDistinctiveness',
     from: 'balanced',
     to: 'expressive',
     because: 'A stronger opening is the change available to a build judged generic.',
-    criterion: 'distinctiveness',
+    criterion: 'art-direction',
   }]);
   assert.equal(plan.frozenTruthHash, FROZEN);
   assert.equal(plan.iteration, 1);
@@ -238,8 +251,8 @@ test('a weak mobile composition is answered by the responsive plan, not by the d
     verdict: 'rework',
     reviewedBy: CRITIC,
     addressedRules: [],
-    criterionScores: scores(7.5, { 'responsive-quality': 5 }),
-    failingCriteria: ['responsive-quality'],
+    criterionScores: scores(7.5, { 'responsive-recomposition': 5 }),
+    failingCriteria: ['responsive-recomposition'],
   }, { qualityGate: gate, criteria });
   const plan = planVisualRework({ set: set([parent]), candidate: parent, gate, criteria, createdAt: '2026-08-26T11:00:00.000Z' });
   assert.deepEqual(reworkOverrides(plan).responsive, { mobileDensity: 'tighter' });
@@ -264,8 +277,8 @@ test('a failure no registered presentation can answer classifies a bespoke requi
     verdict: 'rework',
     reviewedBy: CRITIC,
     addressedRules: [],
-    criterionScores: scores(7.5, { 'distinctive-moment': 4 }),
-    failingCriteria: ['distinctive-moment'],
+    criterionScores: scores(7.5, { memorability: 4 }),
+    failingCriteria: ['memorability'],
   }, { qualityGate: gate, criteria });
   const plan = planVisualRework({ set: set([parent]), candidate: parent, gate, criteria, createdAt: '2026-08-26T11:00:00.000Z' });
   assert.deepEqual(plan.targets, []);
@@ -284,8 +297,8 @@ test('an exhausted axis also classifies a bespoke requirement rather than repeat
     verdict: 'rework',
     reviewedBy: CRITIC,
     addressedRules: [],
-    criterionScores: scores(7.5, { distinctiveness: 5 }),
-    failingCriteria: ['distinctiveness'],
+    criterionScores: scores(7.5, { 'art-direction': 5 }),
+    failingCriteria: ['art-direction'],
   }, { qualityGate: gate, criteria });
   const plan = planVisualRework({ set: set([parent]), candidate: parent, gate, criteria, createdAt: '2026-08-26T11:00:00.000Z' });
   assert.deepEqual(plan.targets, []);
@@ -304,7 +317,7 @@ test('a revision carries lineage back to the verdict that asked for it', () => {
   assert.equal(stored.lineage.parentCandidateId, 'candidate-a');
   assert.equal(stored.lineage.planId, plan.planId);
   assert.equal(stored.lineage.frozenTruthHash, FROZEN);
-  assert.deepEqual(stored.lineage.failingCriteria, ['distinctiveness']);
+  assert.deepEqual(stored.lineage.failingCriteria, ['art-direction']);
   assert.deepEqual(stored.lineage.requestedChanges, [{ axis: 'visualDistinctiveness', from: 'balanced', to: 'expressive', because: 'A stronger opening is the change available to a build judged generic.' }]);
   assert.equal(next.reworkPlans[0].revisedCandidateId, 'candidate-a-r1');
   // A revision reopens the set: it has to be judged like anything else.

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hallam Roofing — Redefining the roofing experience</title>
+<!--
+  SYNTHETIC CALIBRATION FIXTURE cc-23 — "trade-business SaaSification".
+  Synthetic. Not a real company. A two-van roofing contractor in Derby,
+  presented as a venture-backed software product: platform language, a
+  three-tier pricing table, an "our technology" section, KPI row, gradient
+  headline, dark CTA slab. Cleanly built. The failure is brand fit and business
+  specificity — this visual language belongs to a different kind of company,
+  and a homeowner with a leak is not the audience it is speaking to.
+-->
+<style>
+  :root{--ink:#101418;--muted:#5d6874;--line:#e4e8ee;--page:#fff;--brand:#0f6fdb;--brand2:#22b8a6;--soft:#f5f8fc;--pad:88px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+  section{padding:var(--pad) 0}
+  a{color:inherit}
+  header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);z-index:9}
+  nav{display:flex;align-items:center;gap:30px;height:66px}
+  .logo{font-weight:700;letter-spacing:-.02em;font-size:18px}
+  nav ul{display:flex;gap:24px;list-style:none;margin:0 0 0 auto;padding:0;font-size:14.5px;color:var(--muted)}
+  .btn{display:inline-block;padding:11px 20px;border-radius:9px;background:var(--brand);color:#fff;
+    text-decoration:none;font-weight:600;font-size:14.5px}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .pill{display:inline-block;padding:6px 14px;border-radius:999px;background:var(--soft);
+    border:1px solid var(--line);font-size:13px;color:var(--brand);font-weight:600}
+  .hero{text-align:center}
+  h1{font-size:clamp(38px,5.6vw,62px);line-height:1.06;letter-spacing:-.035em;margin:20px auto 18px;max-width:16ch;
+    background:linear-gradient(93deg,var(--ink) 25%,var(--brand) 70%,var(--brand2) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:19px;color:var(--muted);max-width:54ch;margin:0 auto 30px}
+  .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .eyebrow{text-align:center;color:var(--brand);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+  h2{font-size:clamp(28px,3.4vw,40px);line-height:1.15;letter-spacing:-.028em;text-align:center;margin:0 auto 16px;max-width:20ch}
+  .lede{text-align:center;color:var(--muted);max-width:56ch;margin:0 auto 52px;font-size:17px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .card{border:1px solid var(--line);border-radius:14px;padding:28px;background:#fff}
+  .ico{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;margin-bottom:16px;
+    background:linear-gradient(140deg,rgba(15,111,219,.13),rgba(34,184,166,.13));color:var(--brand)}
+  .ico svg{width:21px;height:21px}
+  .card h3{margin:0 0 8px;font-size:18px;letter-spacing:-.015em}
+  .card p{margin:0;color:var(--muted);font-size:15.5px}
+  .stats{background:var(--soft);border-block:1px solid var(--line)}
+  .stats ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:center}
+  .stats strong{display:block;font-size:clamp(32px,3.8vw,44px);letter-spacing:-.035em;line-height:1;color:var(--brand)}
+  .stats span{color:var(--muted);font-size:14px;margin-top:7px;display:block}
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+  .tier{border:1px solid var(--line);border-radius:16px;padding:30px}
+  .tier.mid{border-color:var(--brand);box-shadow:0 20px 50px -30px rgba(15,111,219,.5);position:relative}
+  .tier.mid::before{content:"Most popular";position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+    background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:5px 12px;border-radius:999px}
+  .tier h3{margin:0 0 6px;font-size:17px}
+  .tier .price{font-size:38px;letter-spacing:-.035em;font-weight:700;margin:12px 0 4px}
+  .tier .price small{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0}
+  .tier ul{list-style:none;margin:20px 0 24px;padding:0;font-size:15px;color:var(--muted)}
+  .tier li{padding:7px 0 7px 24px;position:relative}
+  .tier li::before{content:"✓";position:absolute;left:0;color:var(--brand);font-weight:700}
+  .tier .btn{display:block;text-align:center}
+  .final{background:#101418;color:#fff;text-align:center;border-radius:22px;margin:0 24px var(--pad);padding:var(--pad) 24px}
+  .final h2{color:#fff}.final p{color:#98a3b1;max-width:50ch;margin:0 auto 28px}
+  .final .btn{background:#fff;color:#101418}
+  footer{border-top:1px solid var(--line);padding:40px 0;color:var(--muted);font-size:14px}
+  footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  @media (max-width:900px){:root{--pad:60px}.grid3,.stats ul,.tiers{grid-template-columns:1fr}nav ul{display:none}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><nav>
+  <span class="logo">Hallam</span>
+  <ul><li>Platform</li><li>Solutions</li><li>Pricing</li><li>Resources</li></ul>
+  <a class="btn ghost" href="#">Customer login</a>
+  <a class="btn" href="#">Get started</a>
+</nav></div></header>
+
+<section class="hero"><div class="wrap">
+  <span class="pill">Now serving the East Midlands</span>
+  <h1>Redefining the roofing experience</h1>
+  <p class="sub">Hallam is the end-to-end platform for residential roof care — combining data-driven diagnostics, transparent workflows and best-in-class delivery.</p>
+  <div class="cta-row"><a class="btn" href="#">Get started</a><a class="btn ghost" href="#">Talk to sales</a></div>
+</div></section>
+
+<section><div class="wrap">
+  <p class="eyebrow">The Hallam platform</p>
+  <h2>A smarter approach to roof care</h2>
+  <p class="lede">Purpose-built capabilities that transform how homeowners engage with roofing.</p>
+  <div class="grid3">
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+      <h3>Intelligent diagnostics</h3><p>Advanced survey methodology that identifies issues before they escalate into costly failures.</p></article>
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5m0 14h16M8 15V9m4 6V7m4 8v-4"/></svg></div>
+      <h3>Transparent workflows</h3><p>Real-time visibility into every stage of your project, from initial assessment through to completion.</p></article>
+    <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 4 9 9 10 5-1 9-5 9-10V6z"/></svg></div>
+      <h3>Guaranteed outcomes</h3><p>Industry-leading assurance backed by a comprehensive warranty framework and rigorous quality controls.</p></article>
+  </div>
+</div></section>
+
+<section class="stats"><div class="wrap"><ul>
+  <li><strong>2,400+</strong><span>Roofs serviced</span></li>
+  <li><strong>98%</strong><span>Satisfaction score</span></li>
+  <li><strong>24h</strong><span>Average response</span></li>
+  <li><strong>15yr</strong><span>Workmanship cover</span></li>
+</ul></div></section>
+
+<section><div class="wrap">
+  <p class="eyebrow">Pricing</p>
+  <h2>Simple, transparent plans</h2>
+  <p class="lede">Choose the level of cover that fits your property.</p>
+  <div class="tiers">
+    <div class="tier"><h3>Essential</h3><div class="price">£149<small>/year</small></div>
+      <ul><li>Annual roof inspection</li><li>Condition report</li><li>Priority callout</li></ul>
+      <a class="btn ghost" href="#">Choose Essential</a></div>
+    <div class="tier mid"><h3>Complete</h3><div class="price">£349<small>/year</small></div>
+      <ul><li>Everything in Essential</li><li>Biannual inspection</li><li>Gutter clearance</li><li>Minor repairs included</li></ul>
+      <a class="btn" href="#">Choose Complete</a></div>
+    <div class="tier"><h3>Enterprise</h3><div class="price">Custom</div>
+      <ul><li>Multi-property cover</li><li>Dedicated account manager</li><li>Custom SLAs</li></ul>
+      <a class="btn ghost" href="#">Contact sales</a></div>
+  </div>
+</div></section>
+
+<div class="final">
+  <h2>Ready to transform your roof care?</h2>
+  <p>Join thousands of homeowners who have already made the switch to a smarter approach.</p>
+  <a class="btn" href="#">Get started today</a>
+</div>
+
+<footer><div class="wrap"><span>© 2026 Hallam Roofing Ltd</span><span>Privacy · Terms · Careers</span></div></footer>
+</body>
+</html>

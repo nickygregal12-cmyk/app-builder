@@ -7,7 +7,7 @@
  * ones this file closes.
  *
  * **A review is not a new brief.** A candidate that passed hierarchy,
- * credibility and responsive quality and failed distinctiveness must come back
+ * credibility and responsive quality and failed art direction must come back
  * with those three intact and that one addressed. Regenerating the site would
  * throw away three passing criteria to fix one, and the next review would have
  * nothing to compare against. `planVisualRework` therefore names both halves —
@@ -62,7 +62,7 @@ function step(axis, from, direction) {
  * lane off to fix a photograph.
  */
 const REMEDIES = Object.freeze({
-  distinctiveness: {
+  'art-direction': {
     describe: 'a build that reads as a considered site for this business rather than a template',
     // Distinctiveness is carried by how much room the opening claims. There is
     // a top to that scale, and reaching it is meaningful: it means the answer
@@ -76,7 +76,7 @@ const REMEDIES = Object.freeze({
       because: 'The opening is already at the most expressive setting the plan offers, so the build is as distinctive as the registry can make it and was still judged generic.',
     },
   },
-  'distinctive-moment': {
+  memorability: {
     describe: 'a memorable idea that suits this business rather than decorating it',
     // Deliberately no axis change. A declared moment that does not land is not
     // a moment at the wrong intensity, and pretending otherwise is exactly how
@@ -98,7 +98,7 @@ const REMEDIES = Object.freeze({
       because: 'The opening is already the largest the plan offers and the hierarchy still did not read.',
     },
   },
-  coherence: {
+  'composition-pacing': {
     describe: 'an opening, grid, rhythm and motion that read as one decision',
     change: (state) => {
       const to = step('layoutVariance', state.layoutVariance, -1);
@@ -109,7 +109,7 @@ const REMEDIES = Object.freeze({
       because: 'The page already sits on one ground throughout and still did not read as one decision.',
     },
   },
-  'responsive-quality': {
+  'responsive-recomposition': {
     describe: 'a phone rendering that is a designed composition rather than the desktop one with fewer columns',
     change: (state) => (state.mobileDensity === 'tighter' && state.mobileSectionOrder === 'conversion-first'
       ? null
@@ -124,7 +124,7 @@ const REMEDIES = Object.freeze({
       because: 'The responsive plan is already tightened and reordered, which is everything it can express.',
     },
   },
-  'conversion-clarity': {
+  'commercial-clarity': {
     describe: 'a next action that is obvious wherever a visitor is ready to take it',
     change: (state) => ({
       axis: 'ctaPlacement',
@@ -145,15 +145,42 @@ const REMEDIES = Object.freeze({
     routeTo: 'brand-research',
     detail: 'The accent and typographic voice are resolved from the company\'s own material by BrandSpec. A build that does not read as the business is a brand-resolution question, and no art-direction axis answers it.',
   },
-  credibility: {
-    describe: 'a build the intended customer trusts more after seeing it',
+  'business-specificity': {
+    describe: 'a design that emerged from this business rather than one that could be re-skinned onto another',
     routeTo: 'composition',
-    detail: 'Credibility comes from what proof the page carries and in what order. That is the composer\'s decision over the knowledge pack, not a presentation setting.',
+    detail: 'Specificity comes from what proof and what work the page carries, and in what order. That is the composer\'s decision over the knowledge pack. No art-direction axis makes a general design specific — turning the opening up produces a louder general design.',
   },
-  'imagery-suitability': {
-    describe: 'published photographs that suit the business and frame well at every width',
+  'information-architecture': {
+    describe: 'a set of routes where each page holds what a reader would look for on it',
+    routeTo: 'composition',
+    detail: 'What belongs on Home, what earns its own route and what is merely previewed is the composition\'s decision over the knowledge pack. No presentation setting moves content between pages.',
+  },
+  'typography': {
+    describe: 'type that is doing compositional work rather than labelling content',
+    routeTo: 'design-system',
+    detail: 'Scale, measure, tracking and the relationship between display and body type are compiled by the design system from the brand\'s typographic voice. An art-direction axis chooses between presentations; it does not set a type scale.',
+  },
+  'interaction-craft': {
+    describe: 'small decisions that are consistent across every surface',
+    routeTo: 'design-system',
+    detail: 'Hover, focus, transition and feedback behaviour are the design system\'s, and they are shared by every presentation. Fixing them in one direction and not the others would make the inconsistency worse.',
+  },
+  'visual-material': {
+    describe: 'material that is the right kind for this subject, framed well at every width',
     routeTo: 'asset-governance',
-    detail: 'Which photographs publish, and how they are cropped, is asset governance. No art-direction axis improves an unsuitable photograph.',
+    detail: 'Which material publishes, and how it is cropped, is asset governance. No art-direction axis improves an unsuitable photograph or an uninformative product shot.',
+  },
+  'ai-slop-resistance': {
+    describe: 'visual decisions traceable to this business rather than to a house style shared by every generated site',
+    // Deliberately no axis change, for the same reason as the signature moment.
+    // A build judged generic at `balanced` and moved to `expressive` is the same
+    // generic build, louder. The registry cannot answer this; a presentation
+    // chosen for this business can.
+    change: () => null,
+    exhausted: {
+      need: 'a presentation derived from this business rather than selected from a general registry',
+      because: 'Every presentation the registry offers is available to every business, so a build judged to carry generic design language cannot be answered by choosing a different one from the same list.',
+    },
   },
 });
 
@@ -176,7 +203,7 @@ function candidateState(candidate) {
 function customPresentationSection(candidate, criterion) {
   const first = list(candidate?.signature?.sequence)[0];
   const opening = list(first?.presentation)[0] ?? null;
-  if (criterion === 'distinctive-moment' || criterion === 'distinctiveness' || criterion === 'visual-hierarchy') {
+  if (criterion === 'memorability' || criterion === 'art-direction' || criterion === 'visual-hierarchy') {
     return { sectionId: first?.pageId ? `${first.pageId}:opening` : 'opening', sectionType: opening };
   }
   return { sectionId: first?.pageId ? `${first.pageId}:page` : 'page', sectionType: opening };

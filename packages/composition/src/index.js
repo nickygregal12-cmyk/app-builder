@@ -828,6 +828,18 @@ const BINDS_TO_SECTION = Object.freeze({
   testimonials: (pageId, pack, manifest, limit) => proofSection(pageId, pack, limit),
   serviceAreas: (pageId, pack, manifest) => locationsSection(pageId, pack, manifest),
   contact: (pageId, pack, manifest) => enquiryFormSection(pageId, manifest),
+  /*
+   * Imagery. Added after the first rendered run of the planned path, which produced a build with
+   * no gallery at all: the plan had no way to ask for the work to be shown, so a practice with
+   * seventeen approved assets published none of them. Two directions were then refused as
+   * `distinctive-moment-not-renderable` because the moment they carry needs a gallery that no
+   * longer existed.
+   *
+   * That is what a rendered experiment is for. At composition level the planned path looked
+   * strictly better — fewer sections, every route reasoned — and it was quietly deleting the
+   * photography, which no count would have shown.
+   */
+  gallery: (pageId, pack, manifest, limit, assetDecisions) => gallerySection(pageId, pack, manifest, assetDecisions, limit),
 });
 
 /**
@@ -863,7 +875,7 @@ function sectionsForNarrative({ route, pageId, index, manifest, pack, heroAction
       if (job.binds !== 'identity') unrenderable.push(`${route.path}: ${job.job} binds ${job.binds}, which composition cannot render`);
       continue;
     }
-    const built = make(pageId, pack, manifest, job.covers === 'preview' ? PREVIEW_LIMIT : null);
+    const built = make(pageId, pack, manifest, job.covers === 'preview' ? PREVIEW_LIMIT : null, assetDecisions);
     if (built) output.push({ ...built, purpose: job.establishes });
   }
 

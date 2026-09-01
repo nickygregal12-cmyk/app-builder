@@ -143,8 +143,8 @@
       "schema": "visual-candidate-set.schema.json",
       "typeName": "AppBuilderVisualCandidateSet",
       "boundary": "Phase 4D candidate generation, comparison and promotion; written by the factory service and read by the Console.",
-      "schemaHash": "0ad829b993b68d1bf17aa1b6a35576a7074afabc20988480112b73a38d3f75ec",
-      "typesHash": "9e00fc06947abe422a2385d3e464a3d0401390f5badfb8195c51fd65e1c23c8a"
+      "schemaHash": "047346486ed983188d8c66da9e9840b3b4b2026f0e6d9ebccd8a80de5f522736",
+      "typesHash": "776feba35a0cdab26906133fe09d1393d4e27cbc2c2f0a13ea0190e9c4fdf1ee"
     },
     {
       "id": "visual-reference-analysis",

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, composeProject, deriveElementIdentities, stripContentOverrides, stripSectionVariants } from '../../packages/composition/src/index.js';
+import { planSite } from '../../packages/composition/src/site-plan.js';
 import { generateProject } from './generator.mjs';
 import { applyVisualDirection } from './visual-direction.mjs';
 import { deriveBusinessVisualProfile } from './business-visual-profile.mjs';
@@ -113,7 +114,21 @@ export function generateComposedProject(manifest, outputDir, { knowledgePack = n
   //
   // A supplied profile always wins: the candidate lane has asset readiness as
   // well, and must not be second-guessed by a weaker derivation here.
-  const composed = composeProject({ manifest, knowledgePack, assetDecisions });
+  /*
+   * Stage B1 rendered-validation switch. Off by default; see factory-service.frozenProductTruth.
+   *
+   * It has to be read here as well, and that is worth noticing: the composition is derived twice
+   * per build — once as the frozen product truth a candidate set is compared against, and again
+   * here for the workspace that actually gets built — and only the second one reaches a page.
+   * Passing a plan to the first alone changed nothing about what shipped, which cost this
+   * experiment a full render to discover. `planSite` is a pure function of the manifest and the
+   * pack, so both derivations produce the same plan; that they are two derivations at all is a
+   * separate thing somebody should look at.
+   */
+  const sitePlan = process.env.APP_BUILDER_EXPERIMENT_SITE_PLAN === '1'
+    ? planSite({ manifest, knowledgePack })
+    : null;
+  const composed = composeProject({ manifest, knowledgePack, assetDecisions, sitePlan });
   const profile = businessProfile ?? deriveBusinessVisualProfile({ manifest, composition: composed });
   const plan = generateProject(manifest, outputDir, { factoryRoot, designChoices, knowledgePack, referenceInfluence, reworkOverrides, businessProfile: profile, ...(catalog ? { catalog } : {}) });
   // The composition becomes a durable artifact here, so this is where its

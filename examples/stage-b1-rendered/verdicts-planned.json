@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 1,
+  "setId": "candidates-01ad5090ce15594a",
+  "projectId": "project-3e6f4534-d245-4759-bee2-21f211bd7e6f",
+  "reviewedAt": "2026-09-01T21:31:06.457Z",
+  "reviews": [
+    {
+      "candidateId": "candidate-service-forward",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is coherent and communicates the practice, but it looks like a competent content template rather than authored design for an architecture studio. Repetitive cards, unresolved desktop voids, mostly stacked mobile layouts, and visibly clipped contact details at mobile width keep it below professional-studio standard.",
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 5.5,
+          "note": "The restrained cream, blue-grey and black palette is coherent, but the visual system consists almost entirely of numbered cards, large headings and a generic dark contact slab. There is no persuasive architectural or material thesis.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 6,
+          "note": "The service, project, people and proof content is genuinely specific, and numbered project records loosely suggest a practice catalogue. The underlying layout could still serve almost any consultancy by replacing the copy.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 7,
+          "note": "Services, work, people and proof receive sensible routes, while the home page provides useful previews and a direct enquiry path. The home page is very long, and its mobile ordering places contact and enquiry before proof and people without an evident reader benefit.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6,
+          "note": "Page titles, featured cards and contact actions are identifiable, but nearly every content item uses the same card grammar. The desktop two-column arrangements create large empty regions rather than controlling attention, while the dense mobile home page flattens the sequence.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "The sans-serif typography is readable and consistent, with sensible heading contrast on the dedicated pages. It remains mechanically applied, metadata becomes very small on the home overview, and mobile contact text visibly runs beyond its container.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5,
+          "note": "Successive sections repeat the same heading-plus-card rhythm, and the asymmetric desktop grids leave conspicuous unused space beside long stacks. Mobile largely turns those stacks into one uninterrupted procession of boxes.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4,
+          "note": "For an architecture and interiors practice, no photographs, drawings, plans, material studies or other representations of the work are shown. Type and cards alone cannot substantiate the spatial and material claims being made.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 6,
+          "note": "The captured navigation disclosure is clear, indicates the active destination and dims the underlying page. The failed enquiry state preserves input and explains recovery, but hover, focus, keyboard operation, successful submission and destination resolution are not evidenced.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5,
+          "note": "The layouts remain legible and navigation changes to a disclosed menu, but most desktop structures simply become single-column stacks. Long email addresses are clipped in the mobile contact slab, and the home page's reordered sections produce an awkward commercial sequence.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 6,
+          "note": "The sober palette and plainspoken presentation are plausible for a serious architecture practice. Without imagery, material character or a more distinctive editorial system, it does not feel recognisably specific to Ardwell & Roe.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 6.5,
+          "note": "The practice description, services, evidence, email, telephone number and enquiry form are easy to locate. The invalid-looking email address undermines credibility, mobile contact details are clipped, and the screenshots provide no evidence that navigation destinations or successful enquiry submission work.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 4.5,
+          "note": "The site avoids gradients, fake metrics and decorative blobs, but relies heavily on rounded-card soup, identical section treatment and a generic dark closing CTA slab. Those patterns have little demonstrated connection to architectural practice.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 4.5,
+          "note": "The large featured testimonial is the nearest thing to a distinguishing moment, but it is still a conventional highlighted card. No visual, interaction or composition is distinctive enough to identify this site later.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "pairwiseComparison": null,
+      "benchmarkGap": "UNASSESSED",
+      "benchmarkGapDetail": "No pairwise comparison was recorded, so no gap has been measured. This is not the same as no gap.",
+      "benchmarkComparisonCounts": null,
+      "dimensionsNotCompared": [
+        "art-direction",
+        "typography",
+        "composition",
+        "information-architecture",
+        "responsive-design",
+        "craft",
+        "memorability",
+        "business-specificity"
+      ],
+      "evidenceCeiling": {
+        "cap": 10,
+        "tier": "site-level",
+        "routes": 6,
+        "artifactRoutes": null,
+        "coversWholeArtifact": null,
+        "viewports": 3,
+        "detail": "Evidence covers 6 route(s) at 3 viewport(s): a benchmark claim about a website needs the website: several routes, at more than one width. This caps any overall claim at 10."
+      },
+      "failingCriteria": [
+        "art-direction",
+        "composition-pacing",
+        "visual-material",
+        "responsive-recomposition",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "blockingConcerns": [
+        "Mobile contact details visibly overflow or clip inside the dark CTA panel.",
+        "The architecture practice's work is represented without any visual evidence such as photography, drawings or material studies.",
+        "Desktop card arrangements create large accidental voids, while mobile reduces the experience to a repetitive stack.",
+        "The invalid-looking public email address damages trust and commercial readiness.",
+        "Successful enquiry submission, link resolution, focus behaviour and keyboard navigation are not evidenced."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-service-forward",
+        "compositionHash": "cff351430f6723acd11e92760d4da4d4c765fabfd917252833efbcfd0ed24cc3",
+        "captureCount": 27,
+        "captureDigest": "eb9061c0d967106950371d04ddf034f7451fb3bae89c68fb3087ebaa2e088c3a"
+      }
+    },
+    {
+      "candidateId": "candidate-immersive-lead",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is coherent and usable-looking, but its architecture-practice content is presented through a generic system of rounded text cards with almost no visual material, authorship, or memorable composition. Mobile is largely a stacked reduction of desktop, includes visibly clipped email text, and the home-page ordering weakens the narrative by placing contact content before proof and people.",
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 5,
+          "note": "The restrained monochrome palette and blue accent are consistent, but the visual thesis amounts to large sans-serif headings, pale panels, rounded cards, and a dark contact slab. Nothing visible makes the claimed immersive direction credible.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 5,
+          "note": "The writing contains specific architectural projects, services, people, awards, and testimonials, but the design itself is a sector-neutral card-list template. Replacing the copy could convert it into a consultancy, agency, or professional-services site with little structural change.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6.5,
+          "note": "Services, work, people, and proof have sensible dedicated routes, while Home previews each category. However, the repeated page introductions add little, Home is still long, and its mobile sequence moves contact and the enquiry form ahead of proof and people without an evident informational benefit.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6,
+          "note": "Page and section headings establish a clear first read, and featured cards receive more scale. Beyond that, nearly every item uses the same card treatment, so priority becomes repetitive and the content lacks stronger visual milestones.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "The type is readable and generally consistent, with serviceable measures and weight contrast. Metadata is very small in several Home captures, the single-family treatment is unremarkable, and mobile email headings visibly clip rather than adapting.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5.5,
+          "note": "Desktop uses a recurring featured-left/list-right composition and alternates pale and white sections, but the rhythm repeats across nearly every route. Tablet and mobile become long, uniform card stacks with little density or scale variation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3.5,
+          "note": "An architecture practice is represented entirely by text, flat fills, borders, and shadows. No buildings, interiors, drawings, materials, plans, or other visible work evidence are used, leaving the central product of the business effectively unrepresented.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 6,
+          "note": "The captured navigation overlay is clear, highlights the current route, dims the underlying page, and exposes a direct close control. The failed enquiry state is also plainly reported without losing entered values, but hover, focus, transition quality, successful submission, and destination behavior are not evidenced.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5,
+          "note": "Layouts remain orderly and the menu changes appropriately, but narrow views are predominantly desktop content stacked into one column. The mobile Home changes section order, yet this does not produce a stronger composition, and prominent email text is truncated in several mobile captures.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 6,
+          "note": "The quiet, sober presentation is plausible for a serious architecture studio and avoids flashy technology aesthetics. It does not express the studio's stated interest in reuse, conservation, materials, or spatial design strongly enough to feel recognisably Ardwell & Roe.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 6.5,
+          "note": "The business offering, project evidence, team, testimonials, contact details, and enquiry action are easy to locate. Repeating an invalid email address prominently undermines credibility, the visual absence of completed work makes evaluation harder, and successful enquiry behavior is not evidenced.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 4,
+          "note": "The site avoids gradients, fake metrics, logo walls, and vague innovation copy, but relies heavily on rounded-card soup, repeated shadows, identical section mechanics, a generic dark contact slab, and template-like responsive stacking.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 4,
+          "note": "The unusually candid lead testimonial has memorable wording, but its visual presentation is just another enlarged card. There is no distinctive image, spatial composition, interaction, or graphic device likely to remain recognisable after viewing.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "pairwiseComparison": null,
+      "benchmarkGap": "UNASSESSED",
+      "benchmarkGapDetail": "No pairwise comparison was recorded, so no gap has been measured. This is not the same as no gap.",
+      "benchmarkComparisonCounts": null,
+      "dimensionsNotCompared": [
+        "art-direction",
+        "typography",
+        "composition",
+        "information-architecture",
+        "responsive-design",
+        "craft",
+        "memorability",
+        "business-specificity"
+      ],
+      "evidenceCeiling": {
+        "cap": 10,
+        "tier": "site-level",
+        "routes": 6,
+        "artifactRoutes": null,
+        "coversWholeArtifact": null,
+        "viewports": 3,
+        "detail": "Evidence covers 6 route(s) at 3 viewport(s): a benchmark claim about a website needs the website: several routes, at more than one width. This caps any overall claim at 10."
+      },
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "visual-material",
+        "responsive-recomposition",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "blockingConcerns": [
+        "Represent the architecture practice with relevant visual evidence such as project photography, drawings, plans, material studies, or another deliberately chosen architectural medium.",
+        "Replace the repeated rounded-card system with a more business-specific composition and clearer variation in emphasis and pacing.",
+        "Fix the clipped email text in mobile page introductions and verify long contact strings at all supplied widths.",
+        "Reconsider the mobile Home ordering so proof, people, and enquiry form placement support a coherent conversion narrative.",
+        "Replace the visibly invalid email address before release.",
+        "Successful form submission and navigation destination behavior are not evidenced and require separate verification."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-immersive-lead",
+        "compositionHash": "cff351430f6723acd11e92760d4da4d4c765fabfd917252833efbcfd0ed24cc3",
+        "captureCount": 27,
+        "captureDigest": "f35c23b3be86fd2df0ffc639d403755259b6e0af88eb8ca457ee37e8ed25bf8e"
+      }
+    },
+    {
+      "candidateId": "candidate-schedule-register",
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The schedule-register system is coherent, restrained and unusually appropriate to an architecture practice, but the experience relies almost entirely on repeated text rows. The absence of any visual evidence of the built work is a serious commercial weakness, while the mobile layouts mostly collapse the desktop structure rather than becoming purpose-built compositions.",
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 7.5,
+          "note": "The numbered register, ruled rows, restrained palette and administrative typography form a clear visual thesis. It is consistently executed but becomes rigid and repetitive across every route.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 7.5,
+          "note": "The drawing-register character, project metadata, service classifications, testimonials and awards suit an architecture practice particularly well. The same system could still be adapted to another serious consultancy without fundamental redesign.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6.5,
+          "note": "Services, work, people and proof have sensible dedicated routes, and the navigation is unambiguous. Home repeats substantial portions of those routes rather than acting as a strongly edited overview, and proof combines testimonials and awards without internal signposting.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7,
+          "note": "Large route titles, numbered section headings, bold item names and subdued metadata create dependable first and second reads. Repeated rows carry nearly identical weight, so attention is managed locally rather than across the full journey.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 7,
+          "note": "Type is disciplined, readable and supported by consistent numbering, rules, weights and metadata treatments. The system is somewhat blunt: dense mobile copy, frequent bold text and limited typographic variation reduce refinement.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 6.5,
+          "note": "The spacious page introductions, dense registers and dark contact bands provide some change of pace. Most content is nevertheless delivered through the same ruled-row rhythm, making long pages monotonous.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4.5,
+          "note": "Typography and the register system are handled competently, but an architecture practice is represented without a single visible building, interior, drawing, material or process image. The work page describes spatial projects instead of demonstrating them, materially weakening credibility and desire.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 7,
+          "note": "The captured navigation disclosure is clear, identifies the active route and properly subdues the page beneath it. The failed enquiry state preserves entered data and gives useful recovery guidance, but hover, focus, success, validation and destination behaviour are not evidenced.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 6.5,
+          "note": "All supplied widths remain orderly, and navigation changes appropriately to a disclosed menu. Mobile is principally the desktop register stacked into one column; content density and ordering receive little phone-specific reconsideration.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 7.5,
+          "note": "The precise, sober, documentation-like language credibly suggests a detail-conscious architecture and interiors studio. It conveys professional rigour, although the lack of visual work prevents the identity from expressing the practice's actual aesthetic.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 6.5,
+          "note": "The practice, services, locations, people, evidence and contact routes are readily understandable. The persistent email action is clear, but the invalid-looking address and absence of project imagery or project-detail pathways make the studio harder to evaluate and desire.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 8,
+          "note": "The site avoids rounded-card soup, gradients, fake metrics, icon triplets, stock imagery and vague innovation language. Its register concept and unusually concrete content feel traceable to the brief rather than a generic generated-site kit.",
+          "whyNotHigher": "The dark closing contact slab, repeated centred route heroes and mechanically repeated section pattern still resemble reusable production conventions, and the visual concept is not developed into richer business-specific material.",
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 7,
+          "note": "The blue numbered schedule-register treatment is a recognisable device and fits the architecture context. It is a modest signature rather than a compelling experience, and repetition exhausts some of its distinctiveness.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "holisticTier": "competent",
+      "observations": {
+        "templateDerived": false,
+        "interchangeableBusiness": false,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": false,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": "The entire practice is organised as a blue-numbered architectural schedule register, with ruled entries for services, projects, people and proof.",
+      "pairwiseComparison": null,
+      "benchmarkGap": "UNASSESSED",
+      "benchmarkGapDetail": "No pairwise comparison was recorded, so no gap has been measured. This is not the same as no gap.",
+      "benchmarkComparisonCounts": null,
+      "dimensionsNotCompared": [
+        "art-direction",
+        "typography",
+        "composition",
+        "information-architecture",
+        "responsive-design",
+        "craft",
+        "memorability",
+        "business-specificity"
+      ],
+      "evidenceCeiling": {
+        "cap": 10,
+        "tier": "site-level",
+        "routes": 6,
+        "artifactRoutes": null,
+        "coversWholeArtifact": null,
+        "viewports": 3,
+        "detail": "Evidence covers 6 route(s) at 3 viewport(s): a benchmark claim about a website needs the website: several routes, at more than one width. This caps any overall claim at 10."
+      },
+      "failingCriteria": [
+        "visual-material",
+        "responsive-recomposition"
+      ],
+      "blockingConcerns": [
+        "Show the practice's architecture through appropriately art-directed project imagery, drawings, details or other genuine visual evidence; text-only project registers are insufficient for this business.",
+        "Recompose the longest mobile pages rather than simply stacking every desktop register row, especially where dense descriptions create an extended undifferentiated scroll.",
+        "Edit the home page into purposeful previews that earn visits to the dedicated routes instead of reproducing large portions of them.",
+        "Use a credible production contact address; the visibly invalid email undermines trust even if it is placeholder evidence."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": "candidate-schedule-register",
+        "compositionHash": "cff351430f6723acd11e92760d4da4d4c765fabfd917252833efbcfd0ed24cc3",
+        "captureCount": 27,
+        "captureDigest": "6002d68990d7927dda01924d69f655bdcbf3d32035612af46e5bc408d5646489"
+      }
+    }
+  ],
+  "skipped": []
+}

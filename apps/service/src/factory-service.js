@@ -14,6 +14,7 @@ import { candidateRoot, installSharedDependencies, removeCandidateWorkspaces, se
 import { assertPortableForReview } from '../../../tooling/lib/candidate-portability.mjs';
 import { designReferenceInfluence } from './visual-references.js';
 import { generateComposedProject } from '../../../tooling/lib/composed-generator.mjs';
+import { planSite } from '../../../packages/composition/src/site-plan.js';
 import { DESIGN_SYSTEM_SPEC_PATH, applyDesignChoices, assertDesignChoices, designControls, writeDesignArtifacts } from '../../../tooling/lib/design-choices.mjs';
 import { applyEvidenceToStateMatrix, buildEvidenceSet, captureFile, deriveEvidencePlan } from '../../../tooling/lib/rendered-evidence.mjs';
 import { compileDesignLintReport, templateTokenDefaults } from '../../../tooling/lib/design-lint.mjs';
@@ -1466,10 +1467,27 @@ export class FactoryService {
    */
   frozenProductTruth(projectId) {
     const project = this.requireProject(projectId);
+    /*
+     * The Stage B1 rendered-validation switch, and nothing else.
+     *
+     * #270 landed SitePlan and proved it at composition level: fewer sections, routes able to name
+     * the truth that earns them, thin truth producing less. What it explicitly did not answer is
+     * whether any of that reaches the rendered page, because neither side was ever rendered.
+     *
+     * Answering it needs both sides built by the same binary with one variable between them, so
+     * the switch is an environment flag rather than a manifest field or a project setting: those
+     * would be a second thing that differs. Off by default, so the composed path is exactly what
+     * it was, and deliberately not a capability a project can request — this is an experiment with
+     * a result pending, not a feature.
+     */
+    const sitePlan = process.env.APP_BUILDER_EXPERIMENT_SITE_PLAN === '1'
+      ? planSite({ manifest: project.manifest, knowledgePack: project.knowledgePack })
+      : null;
     const composition = composeProject({
       manifest: project.manifest,
       knowledgePack: project.knowledgePack,
       assetDecisions: this.readAssetDecisions(projectId).decisions,
+      sitePlan,
     });
     return {
       composition,

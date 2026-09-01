@@ -249,8 +249,13 @@ sudo bash ops/hetzner/verify-agent-boundary.sh
 export APP_BUILDER_AGENT_GRANT_SECRET="$(head -c 48 /dev/urandom | base64)"
 export APP_BUILDER_MODEL_DECISION_SECRET="$(head -c 48 /dev/urandom | base64)"
 
-# 5. The provider credential, in the gateway's environment only.
-export ANTHROPIC_API_KEY=...
+# 5. The provider credential, as an encrypted systemd credential.
+#    Never exported, never in a file the repository can read, never in shell
+#    history. systemd-ask-password keeps the value off the command line.
+sudo systemd-ask-password -n \
+  | sudo systemd-creds encrypt --name=ANTHROPIC_API_KEY - /etc/credstore.encrypted/app-builder/ANTHROPIC_API_KEY.cred
+sudo chmod 0600 /etc/credstore.encrypted/app-builder/ANTHROPIC_API_KEY.cred
+sudo bash ops/hetzner/install-model-canary-unit.sh
 
 # 6. Both halves of the kill switch.
 #    Repository: set enabled: true in config/model-execution.json, reviewed.
@@ -260,9 +265,40 @@ echo '{"enabled": true}' | sudo tee /etc/app-builder/model-execution.json
 npm run runtime:model-canary -- --authorise --by "your name" --reason "first canary"
 ```
 
+### The provider credential
+
+The hosted path does **not** use `export ANTHROPIC_API_KEY`. An exported
+variable is inherited by every child process, and this one starts task
+sandboxes — so the credential would be one `env` call away from the untrusted
+side of the boundary the rest of this document is about.
+
+Instead `app-builder-model-canary.service` declares:
+
+```ini
+LoadCredentialEncrypted=ANTHROPIC_API_KEY:/etc/credstore.encrypted/app-builder/ANTHROPIC_API_KEY.cred
+```
+
+systemd decrypts it with `/var/lib/systemd/credential.secret` into a private
+tmpfs at `$CREDENTIALS_DIRECTORY`, readable only by the unit's own user and only
+for that invocation. `tooling/lib/provider-credential.mjs` is the single place
+that resolves it, preferring `$CREDENTIALS_DIRECTORY/ANTHROPIC_API_KEY` and
+falling back to `process.env` only for local development. `CREDENTIALS_DIRECTORY`
+is never mounted into a sandbox, and `CREDENTIAL`, `ANTHROPIC` and `OPENAI` are
+already forbidden patterns in the sandbox environment contract — so a future
+change that tried to pass any of them fails the isolation assertion rather than
+landing.
+
+`OPENAI_API_KEY` may also be encrypted on the host. It stays unloaded until the
+independent-review lane has an actual consumer.
+
 ### The run
 
 ```bash
+# Hosted: the credential is loaded by the unit, not by your shell.
+sudo systemctl start app-builder-model-canary.service
+journalctl -u app-builder-model-canary.service -n 50 --no-pager
+
+# Local development only, where a systemd unit is not available:
 npm run runtime:model-canary -- --run
 ```
 

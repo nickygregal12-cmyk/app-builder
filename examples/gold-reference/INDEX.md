@@ -22,8 +22,13 @@ generated build can be attributed to the framework.
 | **Result** | **8.71 / 7.7** | **8.556 / 8.0** | **8.667 / 8.0** |
 | Revisions to pass | 5 | 18 | 1 |
 
-Gate: mean ≥ 8.5 and every criterion ≥ 6.5, scored by an independent reviewer from a
-different vendor with no sight of the implementation.
+Gate: `config/agent-pipelines.json` `gates.visual` — mean ≥ 8.5 and every criterion ≥ 6.5,
+scored by an independent reviewer from a different vendor with no sight of the implementation.
+
+Those means are over nine criteria. Every factory verdict on record is over **eight**, because
+`imagery-suitability` only applies to a build that publishes photographs. On the comparable
+eight the prototypes are 8.663, 8.500 and 8.625 — all still passing, but `FACTORY-GAP.md`
+makes the adjustment before drawing any conclusion, and so should anyone quoting these.
 
 ## Why these three and not three of anything
 

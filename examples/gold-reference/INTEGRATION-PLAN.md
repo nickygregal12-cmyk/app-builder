@@ -20,7 +20,22 @@ determines who fixes it and how much it costs:
 
 ---
 
-## 1 · Run the factory against the Ardwell & Roe intake — **class F/decision-blocking**
+## 0 · Reconcile the recorded best score — **class F, ten minutes**
+
+`config/factory-status.json` records `bestMean: 6.55, bestCriterionFloor: 4.8` for the visual
+gate. `docs/PHASE_4D_VISUAL_DEBT.md:157` records **6.70 / 4.7** from the later §2b round, and
+`docs/ROADMAP.md:176` also still carries 6.55. `PHASE_4D_VISUAL_DEBT.md:7-8` declares the
+status file authoritative on disagreement, so the authoritative record is currently the stale
+one.
+
+Neither number changes any conclusion — both are far short of 8.5 — which is exactly why this
+is worth ten minutes now rather than an argument later. The §2b round also has no committed
+verdict JSON; v1–v4 and the static-renderer review do. Committing the §2b verdicts would make
+the number checkable rather than quoted.
+
+---
+
+## 1 · Run the factory against the Ardwell & Roe intake — **decision-blocking; unclassifiable until run**
 
 **Do this before anything else in this document.**
 
@@ -42,6 +57,12 @@ intake is doing more damage than assumed and the questionnaire is the leverage.
 **Falsified by.** A score materially above 6.7 that the reviewer attributes to composition
 rather than to content richness.
 
+**Which renderer.** Run it on `astro-static-content`, not the React template.
+`config/renderers.json` gives marketing sites both, these prototypes are Astro static output,
+and the static renderer's only independent review — 5.38 mean, 2.0 floor — carried the default
+shell because no direction has ever been promoted to it. Running the React one instead answers
+a question nobody asked.
+
 ---
 
 ## 2 · Ask what the business hands its customer — **class D, with a B component**
@@ -58,16 +79,40 @@ Two parts, and the order matters:
   size?* Ardwell & Roe's pack answers "a project, and there are six of them". This is a
   question about data the intake already carries, and nothing currently asks it.
 - **D (expensive, gated on 1).** Something for the composition layer to render when the answer
-  is yes, which by definition is not a card grid. §4's controlled bespoke-presentation lane is
-  the right route and already exists — it obeys the design contract, element identity,
-  responsive and accessibility contracts, DesignLint and independent review, and it is
-  explicitly *not* auto-promoted to the registry.
+  is yes, which by definition is not a card grid.
+
+  **The existing bespoke-presentation lane cannot deliver this, and it is important not to
+  assume it can.** §4's lane is deliberately CSS-only —
+  `docs/VISUAL_EXCELLENCE.md:458`: *"It is a stylesheet and nothing else… a presentation
+  needing new markup would need new bindings, and new bindings move the composition — so
+  CSS-only is what makes 'preserves PageSpec, SectionSpec and content provenance' true by
+  construction."* Its ChangeSet owns only `src/presentation/bespoke/`, and
+  `registryPromotion.eligible` is hard-coded `false`.
+
+  Every signature in this corpus needs new markup and new bindings. A plant register is a
+  twelve-item collection with a latin name, a common name, a role, a tolerance and a
+  twelve-cell season table per item; a plan is six statements with a verdict, a lock figure
+  and a check id. No stylesheet over the existing seventeen section types produces either.
+  So this is a **composition and binding** change, not a styling one — which is precisely
+  what `docs/PHASE_4D_VISUAL_DEBT.md` §6 already scopes as the revival work: *"Art direction
+  / DesignSystemSpec can select component implementations or component families, not merely
+  token values and section presentations."*
+
+  §6 proposes starting with the CTA block, the button and a per-direction display typeface,
+  because those are what the critic named in all four of its reviews. The corpus suggests
+  that ordering is too conservative to move `distinctiveness`: swapping a pill button for a
+  square one leaves the page made of the same things. The evidence here points at the
+  **collection primitive** — the one grammar every one of the seventeen section types
+  ultimately renders — as the axis that would have changed these scores.
 
 **Do not start with a component.** A new block type without the derivation stage produces a
-differently-shaped generic section, which is the failure mode §3 already documents.
+differently-shaped generic section, which is the failure mode §3 already documents. And note
+§11's constraint, which is correct and should hold: a one-off bespoke presentation is not
+promoted to the registry on first use. Three prototypes made by one lead is not repeated
+evidence for promoting anything.
 
-**Falsified by.** A build that derives a signature artefact, renders it through the bespoke
-lane, and still scores under 6 on distinctiveness.
+**Falsified by.** A build that derives a signature artefact, renders it through a widened
+collection primitive, and still scores under 6 on distinctiveness.
 
 ---
 
@@ -88,6 +133,14 @@ chapter, same page and same reviewer.
 **Note for the gate.** Horizontal overflow was zero in all three of those attempts. A
 responsive check that asks "does it overflow" cannot see this difference at all; the small
 viewport has to be *scored as a composition*.
+
+**One value is already known and it is the whole finding in miniature.**
+`MOBILE_SECTION_ORDER` in `tooling/lib/visual-direction.mjs:181` admits exactly two values:
+`as-desktop` and `conversion-first`. Neither is a recomposition. A direction cannot express
+"open each group with one item at full width and continue as records" because the axis has no
+value for it — so §3's specified capability *"alternate order/grouping of section content"* is
+class **B** at least here: specified in the document, and not expressible in the enum that
+implements it.
 
 **Falsified by.** An audit finding every declaration already consumed, in which case the gap
 is in the generator's willingness to declare rather than in the renderer.

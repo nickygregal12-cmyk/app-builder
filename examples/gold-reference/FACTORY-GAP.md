@@ -2,25 +2,77 @@
 
 What the corpus shows about App Builder, tied to rendered evidence rather than to opinion.
 
-Every score below was produced by the same class of independent reviewer against the same
-nine criteria and the same gate — mean ≥ 8.5, every criterion ≥ 6.5.
+Every score below was produced by an independent reviewer from a different vendor against the
+criteria in `tooling/lib/visual-candidates.mjs:82-92` and the gate in
+`config/agent-pipelines.json` `gates.visual` — `minimumScore` 8.5, `minimumCriterionScore` 6.5.
+Both sides were scored on the same scale. **They were not scored on the same number of
+criteria**, and the section below adjusts for that before drawing any conclusion.
 
 | | mean | floor | distinctiveness | source |
 |---|---|---|---|---|
 | Factory, best recorded (`nbm editorial-authority`) | 6.70 | 4.7 | 5.4 | `docs/PHASE_4D_VISUAL_DEBT.md` §2b |
 | Factory, `nbm structured-practice` | 6.58 | 4.2 | 4.8 | same |
 | Factory, `nbm service-forward` | 6.10 | 4.6 | 4.8 | same |
-| **Ardwell & Roe** (prototype) | **8.711** | **7.7** | **8.8** | `ardwell-roe/evidence/verdicts/v5.json` |
-| **Marram** (prototype) | **8.556** | **8.0** | **9** | `marram/evidence/verdicts/v18.json` |
-| **Plumbline** (prototype) | **8.667** | **8.0** | **9** | `plumbline/evidence/verdicts/v6.json` |
+| Factory, **static renderer** (`astro-static-content`) | **5.38** | **2.0** | **3.0** | `examples/genuine-business/nbm-static-renderer-review.v1.verdicts.json` |
+| **Ardwell & Roe** (prototype) | 8.711 | 7.7 | 8.8 | `ardwell-roe/evidence/verdicts/v5.json` |
+| **Marram** (prototype) | 8.556 | 8.0 | 9 | `marram/evidence/verdicts/v18.json` |
+| **Plumbline** (prototype) | 8.667 | 8.0 | 9 | `plumbline/evidence/verdicts/v6.json` |
+
+### Two adjustments before these rows may be compared
+
+**The criterion sets differ, and the difference favours the prototypes.**
+`reviewCriteriaFor` in `tooling/lib/visual-candidates.mjs:95-104` applies
+`imagery-suitability` only when the build publishes photographs, so every factory verdict on
+record is a mean over **eight** criteria. The prototypes were scored over **nine**, and
+imagery-suitability was their highest or near-highest criterion (9.1 / 9 / 9). Recomputing the
+prototype means over the same eight criteria the factory was scored on:
+
+| | 9-criterion mean (as reviewed) | **8-criterion mean (comparable)** | floor |
+|---|---|---|---|
+| Ardwell & Roe | 8.711 | **8.663** | 7.7 |
+| Marram | 8.556 | **8.500** | 8.0 |
+| Plumbline | 8.667 | **8.625** | 8.0 |
+
+All three still clear 8.5 and the 6.5 floor on the comparable basis, so the conclusion holds —
+but Marram clears it by exactly nothing, and the unadjusted figures should not be quoted
+against factory numbers without this correction.
+
+**The right comparator is the static renderer, not the React one.** These prototypes are
+Astro 7.2.7 static output, which is what `astro-static-content` emits. The factory's own static
+renderer was independently reviewed at **5.38 mean, 2.0 floor, distinctiveness 3.0** — a
+3.2-point gap on the comparable basis rather than 1.9. That row carries a caveat the
+documentation is careful about and so should this: it was rendering the default shell, because
+no visual direction has ever been promoted to the static renderer
+(`docs/PHASE_4D_VISUAL_DEBT.md` §4). It is a floor, not a like-for-like build.
+
+### A live inconsistency in the record
+
+`config/factory-status.json` — which `docs/PHASE_4D_VISUAL_DEBT.md:7-8` declares authoritative
+on disagreement — still records `bestMean: 6.55, bestCriterionFloor: 4.8`, the v4
+`schedule-register` result. The document itself records **6.70 / 4.7** from the later §2b round,
+and `docs/ROADMAP.md:176` also still carries 6.55. The status file was not updated after §2b.
+
+This does not change any conclusion here — 6.55 and 6.70 are both far short of 8.5 — but the
+authoritative machine-readable record disagreeing with the human one is worth fixing before
+anyone quotes either. It is item 0 in `INTEGRATION-PLAN.md`.
 
 ## The question the corpus was built to answer
 
 > Is the visual ceiling Claude, or is it the current factory constraints?
 
 **It is the constraints.** The same model, given the same business truth and a free hand,
-clears a gate the factory has missed in every recorded round — and clears it in three
+clears a gate the factory has missed in all seven recorded rounds — and clears it in three
 different sectors, twice on the first or near-first attempt.
+
+This is the evidence the deferral asked for. `config/factory-status.json` defers stage 4D with
+the reason *"Measured and failed; one business is insufficient to generalise the fixed
+component-vocabulary hypothesis"*, and revives on, among other conditions, *"materially new
+evidence appears"*. Three materially different businesses, independently reviewed, is that.
+
+It is **not** the other revival condition in the same field — *"several materially different
+projects show a cross-project ceiling"* — because that one asks for factory builds and this
+corpus contains none. The distinction matters and is the reason item 1 below is a generation
+run rather than another prototype.
 
 `docs/PHASE_4D_VISUAL_DEBT.md` §3 had already reached this conclusion from the inside:
 

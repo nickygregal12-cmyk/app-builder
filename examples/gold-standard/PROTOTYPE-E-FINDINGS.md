@@ -165,6 +165,18 @@ declared business kinds that also score zero on it, so this has been silently ac
 
 Testing containment in both directions selects `vb-aman` at score 3 over `vb-aesop` at 2.
 
+> **Correction, added after independent verification.** The diagnosis below — that the
+> containment "runs the wrong way" — is not right, and the probe overstated its own case.
+> Reversing the direction fixes nothing: `"hospitality lettings and places to stay"` does not
+> contain `"hospitality and destination businesses"` either, and reversal leaves
+> `"architecture practice"` and `"developer and operations software"` still matching nothing.
+> The probe appeared to show otherwise only because it silently reduced the description to its
+> head noun before comparing. The *defect* is real and materially affects scores — four of six
+> committed packets score zero on the term weighted highest — but it is exact substring matching
+> over free text in **either** direction, not a reversed relation. Verified against production
+> code and fixed in **PR #266**, which replaces prose matching with a declared facet vocabulary.
+> See `docs/STAGE_A_SYNTHESIS.md` §3.2.
+
 **The evaluator has not been changed.** The instruction is that it stays frozen unless a defect is
 demonstrated, *and* that it must not be altered because a prototype scored lower than hoped. Both
 apply here simultaneously, and the second is why this ships as a probe that prints evidence

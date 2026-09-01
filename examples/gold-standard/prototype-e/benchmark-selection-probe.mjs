@@ -1,6 +1,21 @@
 /**
  * A demonstration, not a fix.
  *
+ * SUPERSEDED, and wrong in its diagnosis. Kept as the record of how the defect was first seen.
+ *
+ * This probe concluded that the containment test "runs the wrong way". It does not. Reversing the
+ * direction fixes nothing — "hospitality lettings and places to stay" does not contain
+ * "hospitality and destination businesses" either, and reversal leaves "architecture practice"
+ * and "developer and operations software" still matching nothing. Section 3 below only appears to
+ * show a fix because it quietly reduces the candidate's description to its head noun first, which
+ * is a different change from the one it claims to be testing. That is the probe encoding its own
+ * preferred answer, and it is the reason a probe written by the artefact being measured is weak
+ * evidence.
+ *
+ * The underlying defect is real: exact substring matching over free text, in EITHER direction,
+ * which four of six committed packets score zero on. Verified independently against production
+ * code and fixed in PR #266 by matching on a declared facet vocabulary instead of on prose.
+ *
  * `selectReference` in tooling/lib/visual-benchmarks.mjs scores each benchmark reference as
  *
  *     anchorHits * 2 + kindHit * 3

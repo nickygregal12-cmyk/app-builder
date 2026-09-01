@@ -21,7 +21,7 @@
 #
 # So the claim happens here, in root's hands, before the unit starts:
 #
-#   rename(authoritative -> run-scoped claim)     <- atomic, durable, one winner
+#   rename(authoritative -> claim)                <- atomic, durable, one winner
 #   systemctl start app-builder-model-canary      <- loads the claimed copy
 #   rm claim                                      <- on every exit path
 #
@@ -33,8 +33,15 @@
 # authorisation, whereas the reverse would hand out a second call after a
 # successful one.
 #
-# The unit's LoadCredential points at the run-scoped claim, not at the
-# authoritative path. A direct `systemctl start app-builder-model-canary.service`
+# That atomicity is conditional, and an earlier version of this script quietly
+# lost it. The claim was `mv` from /etc to /run — different filesystems, ext4
+# and tmpfs — where rename(2) fails EXDEV and `mv` falls back to copy-then-
+# unlink while still reporting success. Interrupting that left the decision in
+# both places: not spent, therefore replayable. So the claim now lives beside
+# the authority on the same filesystem, and claim-model-decision.py refuses a
+# cross-device claim rather than working around it.
+#
+# The unit's LoadCredential points at the claim, not at the authoritative path. A direct `systemctl start app-builder-model-canary.service`
 # without a claim therefore fails 243/CREDENTIALS rather than quietly reusing a
 # decision.
 #
@@ -44,8 +51,12 @@ set -euo pipefail
 
 ETC_DIR=/etc/app-builder
 DECISION="${APP_BUILDER_MODEL_DECISION_FILE:-${ETC_DIR}/model-enable-decision.json}"
-CLAIM_DIR=/run/app-builder-model-canary
-CLAIM="${CLAIM_DIR}/claimed.json"
+# The claim sits beside the authoritative decision, in the same root-owned
+# directory on the same filesystem. That is not incidental: rename(2) is only
+# atomic within a filesystem, and /run is tmpfs while /etc is not. A claim in
+# /run also disappears on reboot, which would turn "spent" back into "available".
+CLAIM="${APP_BUILDER_MODEL_CLAIM_FILE:-${ETC_DIR}/model-enable-decision.claimed.json}"
+CLAIMER="$(dirname "$(readlink -f "$0")")/claim-model-decision.py"
 UNIT=app-builder-model-canary.service
 
 [[ $EUID -eq 0 ]] || { echo "Run this with sudo: the decision is root-owned." >&2; exit 1; }
@@ -55,24 +66,16 @@ UNIT=app-builder-model-canary.service
   exit 1
 }
 
-# The claim directory is root-only. The runtime user reaches the decision solely
-# through the credential systemd hands the unit, never through this path.
-install -d -m 0700 -o root -g root "$CLAIM_DIR"
-
 # Remove the claim on every exit. The authoritative decision is already gone by
 # then: this only stops a spent decision lingering where the next run could see
 # it.
 cleanup() { rm -f "$CLAIM"; }
 trap cleanup EXIT
 
-# The claim itself. `mv -n` refuses to clobber, so a leftover claim from an
-# interrupted run is reported rather than silently overwritten.
-mv -n "$DECISION" "$CLAIM"
-[[ -f "$CLAIM" && ! -e "$DECISION" ]] || {
-  echo "Refusing to run: ${CLAIM} already existed, so a previous run may not have finished." >&2
-  echo "Inspect it, remove it deliberately, and mint a fresh decision." >&2
-  exit 1
-}
+# The claim itself: one atomic rename, or nothing. Deliberately not `mv`, which
+# falls back to copy-then-unlink across a filesystem boundary and reports
+# success — leaving the decision present in both places and therefore unspent.
+python3 "${CLAIMER}" --source "$DECISION" --destination "$CLAIM"
 
 printf 'Claimed the decision. It is now spent: %s no longer exists.\n' "$DECISION"
 printf 'A second run needs a newly authorised decision, whatever happens next.\n'

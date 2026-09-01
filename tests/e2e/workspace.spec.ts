@@ -246,16 +246,25 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByText('evidence · captured')).toBeVisible({ timeout: 90_000 });
   // Three routes plus the not-found route, at three viewports, plus the
   // disclosed navigation panel on each of those routes. The panel only exists
-  // below the disclosure width, so it is a mobile capture and nothing else:
-  // 4 x 3 + 4.
-  await expect(evidencePanel.getByText('16 captures')).toBeVisible();
+  // below the disclosure width, so it is a mobile capture and nothing else.
+  //
+  // The disclosure now costs four captures per route rather than one, because
+  // it declares that its quality is not in its endpoints: the still, captured
+  // under prefers-reduced-motion, plus the three frames of its sequence. Five
+  // reviews in a row capped interaction-craft on the sentence that transition
+  // quality cannot be judged from stills, and a picture of the panel shut
+  // followed by a picture of it open is identical whether it slides or appears.
+  //
+  // 4 x 3 + 4 x 4.
+  await expect(evidencePanel.getByText('28 captures')).toBeVisible();
   await expect(evidencePanel.getByRole('img').first()).toBeVisible();
 
   // Every viewport is captured, and the panel says what these pictures are not
-  // evidence of rather than implying full coverage. Mobile carries twice as
-  // many because it is the viewport where the header becomes a disclosure, and
-  // the state a phone visitor navigates by had never been photographed.
-  for (const [viewportName, expected] of [['desktop', 4], ['tablet', 4], ['mobile', 8]] as const) {
+  // evidence of rather than implying full coverage. Mobile carries five times as
+  // many because it is the viewport where the header becomes a disclosure: one
+  // page capture, one still of the panel open, and the three frames of the
+  // sequence that shows it arriving.
+  for (const [viewportName, expected] of [['desktop', 4], ['tablet', 4], ['mobile', 20]] as const) {
     await evidencePanel.getByRole('group', { name: 'Evidence viewport' }).getByRole('button', { name: viewportName }).click();
     await expect(evidencePanel.getByRole('img')).toHaveCount(expected);
   }

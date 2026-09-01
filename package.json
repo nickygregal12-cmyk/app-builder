@@ -88,6 +88,7 @@
     "audit:independence": "node tooling/audit-reviewer-independence.mjs",
     "rubric:generate": "node tooling/generate-visual-rubric-doc.mjs",
     "rubric:check": "node tooling/generate-visual-rubric-doc.mjs --check",
+    "experiment:site-plan": "node tooling/site-plan-experiment.mjs",
     "visual:reevaluate": "node tooling/visual-scale-reevaluation.mjs",
     "calibration:run": "node tooling/critic-calibration-run.mjs"
   },

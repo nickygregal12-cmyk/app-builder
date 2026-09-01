@@ -42,17 +42,19 @@ planned   /  8   /services 3   /work 4   /people 3   /proof 3
 
 ## 3. Rendered height, desktop, full page
 
-Per candidate, because the three directions differ in density.
+Three candidates per side. The totals are reported as sets rather than paired to a named
+direction, because the measurement walks evidence directories and the mapping from directory to
+direction was not established — asserting one would be presenting a guess as a measurement.
 
-| direction | current | planned |
+| | whole-site desktop height, per candidate | mean |
 | --- | --- | --- |
-| service-forward | 19,093px | 17,035px |
-| immersive-lead | 17,532px | 16,395px |
-| schedule-register | 18,666px | 17,313px |
+| current | 19,093px · 18,666px · 17,532px | 18,430px |
+| **planned** | **17,035px · 16,704px · 15,441px** | **16,393px** |
 
-Reported per route as well as in total in `examples/stage-b1-rendered/measurements.txt`, so a
-worse individual route cannot hide inside a smaller whole-site figure. No planned route is longer
-than its current counterpart carrying the same material.
+Every planned candidate is shorter than every current one, so the comparison does not depend on
+the pairing. **−11% on the mean.** Per-route heights are in
+`examples/stage-b1-rendered/measurements.txt`, so a worse individual route cannot hide inside a
+smaller whole-site figure.
 
 ## 4. The blinded review
 

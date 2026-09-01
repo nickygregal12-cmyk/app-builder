@@ -1,0 +1,238 @@
+{
+ "candidateId": "monitoring-gap-report",
+ "verdict": "pass",
+ "reviewedBy": {
+  "role": "design-critic",
+  "vendor": "openai",
+  "model": "GPT-5"
+ },
+ "rationale": "This is exceptional editorial data design: the report's central argument shapes its typography, page architecture, charts, marginal apparatus and interactions rather than merely supplying content to a theme. The responsive work is especially convincing, with tables becoming records, monthly data becoming a purposeful annual comparison, and marginal notes folding into readable endnotes; the main limitation is that the very wide layouts sometimes leave excessive inactive space and lose some narrative pressure.",
+ "criterionScores": [
+  {
+   "criterion": "art-direction",
+   "score": 9,
+   "note": "The measure-and-margin thesis is visible throughout: disciplined reading columns, ruled annotations, restrained ink and rust, exposed methodological apparatus and charts that belong to the publication.",
+   "whyNotHigher": "At wide widths, the severe two-column discipline occasionally becomes under-composed emptiness rather than productive editorial space.",
+   "positiveEvidence": [
+    "The consistent reading-column and marginal-apparatus relationship gives the entire report a specific visual argument.",
+    "Rules, figure labels, citations, metadata and simulated-data warnings form one coherent editorial language.",
+    "The homepage, findings, method, catchments and data pages retain the thesis while changing structure to suit their content."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "business-specificity",
+   "score": 9.5,
+   "note": "The experience is inseparable from a research report about missing observations: coverage grids, reported-versus-underlying comparisons, methodological controls, citation mechanics and explicit limits all determine the design.",
+   "whyNotHigher": "The broader editorial skeleton could still support another evidence-heavy investigative report, even though it could not plausibly become an unrelated commercial site.",
+   "positiveEvidence": [
+    "The central interactive grid connects monitor coverage, published spills and simulated discharges in one readout.",
+    "Every finding is paired with what it does not support and the figure it rests on.",
+    "Catchment profiles, coverage sparklines, simulation warnings and reproducibility parameters are structural rather than decorative."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "information-architecture",
+   "score": 9,
+   "note": "The report is edited into a persuasive route structure: a thesis-led front page, citable findings, comparative catchments, reproducible method and complete data, with previews and cross-references that earn navigation.",
+   "whyNotHigher": "The data route remains extremely long on mobile, and the screenshots do not demonstrate pagination, search, download behaviour or other ways to manage all 720 rows beyond catchment filtering.",
+   "positiveEvidence": [
+    "The homepage explains the thesis, demonstrates it with two figures, introduces the key inversion and then routes into four distinct chapters.",
+    "Findings are stable, numbered and explicitly tied to supporting figures and limitations.",
+    "The method and data chapters separate reproducibility, attribution, reuse and raw records instead of overloading the narrative pages."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "visual-hierarchy",
+   "score": 8.5,
+   "note": "Headlines, standfirsts, figure titles, findings, evidence, qualifications and marginal notes have clearly different weights, and hierarchy changes appropriately between narrative, reference and tabular pages.",
+   "whyNotHigher": "Several wide and desktop pages distribute relatively small content across very large fields, reducing urgency and making some secondary blocks feel detached from the arguments they qualify.",
+   "positiveEvidence": [],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "typography",
+   "score": 9,
+   "note": "Typography performs genuine compositional work across display serif, readable narrative text, condensed apparatus labels, table typography, captions, citations and restrained spot-colour emphasis.",
+   "whyNotHigher": "Some annotation and table text becomes extremely small in the wide screenshots, and the condensed sans metadata can look faint at those scales.",
+   "positiveEvidence": [
+    "The opening headline is editorially expressive without becoming an unrelated display effect.",
+    "Dense figure labels, captions, sources, metadata and qualifications remain distinguishable through weight, case, tracking and family.",
+    "Mobile type measures and line heights are deliberately reset rather than inherited mechanically from desktop."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "composition-pacing",
+   "score": 8.5,
+   "note": "Dense evidence alternates with spacious interpretation, section rules create pauses, and the scroll moves between argument, figure, apparatus and qualification rather than repeating one generic module.",
+   "whyNotHigher": "The wide compositions sometimes over-release into large blank zones, while repeated two-column sections on findings and method settle into a predictable cadence.",
+   "positiveEvidence": [],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "visual-material",
+   "score": 9,
+   "note": "The material is exactly what this subject needs: coverage matrices, comparative scatter plots, difference bands, sparklines and transparent data tables, all styled as evidence within the report.",
+   "whyNotHigher": "The catchment sparklines are useful but visually repetitive, and the screenshots do not show richer explanatory interaction or annotation within the larger charts.",
+   "positiveEvidence": [
+    "The coverage grid makes missing observation itself visible rather than illustrating the topic indirectly.",
+    "The reported-versus-underlying scatter plot turns the control into part of the visible argument.",
+    "Catchment difference bands show how the same events look through differently functioning monitoring estates."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "interaction-craft",
+   "score": 8.5,
+   "note": "The supplied states demonstrate unusually conscientious micro-craft: distinct current and hover navigation, visible keyboard focus, a skip link, focus-driven grid readouts, row feedback and reduced-motion handling.",
+   "whyNotHigher": "The evidence covers a focused set of interactions rather than a broader interactive system, and the 720 individually focusable grid cells may still be laborious despite being keyboard-operable.",
+   "positiveEvidence": [],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "responsive-recomposition",
+   "score": 9.5,
+   "note": "Mobile is treated as its own editorial format: complex tables become records, the sixty-month grid becomes five comparable annual columns, margins become endnotes, and page statistics and figures are regrouped around reading order.",
+   "whyNotHigher": "The mobile data chapter still requires an exceptionally long traversal of sixty records, with no captured evidence of additional navigation aids.",
+   "positiveEvidence": [
+    "The seven-column catchment table becomes twelve legible records while preserving full-width sparklines.",
+    "The phone coverage figure uses annual aggregation specifically to preserve cross-catchment comparison instead of shrinking or horizontally panning sixty columns.",
+    "Marginal commentary folds beneath the relevant reading column rather than collapsing into unusable narrow text.",
+    "Chart legends, summaries, navigation and footer content are deliberately regrouped at mobile width."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "brand-fit",
+   "score": 9,
+   "note": "The restrained investigative-publication voice feels credible for a small independent data unit addressing reporters, regulators and river communities: serious, transparent and quietly adversarial.",
+   "whyNotHigher": "Its austerity sometimes makes Stell feel more like an anonymous report imprint than a fully developed organisation with a broader recognisable identity.",
+   "positiveEvidence": [
+    "The design foregrounds evidence, limits, funding, reuse and simulation status rather than institutional promotion.",
+    "The rust accent reads as editorial correction and warning rather than lifestyle branding.",
+    "The apparatus-heavy language supports the organisation's claimed independence and statistical seriousness."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "commercial-clarity",
+   "score": 8,
+   "note": "The proposition is immediate, navigation is plain, trust information is pervasive, and Download & cite provides an appropriate next action for this non-commercial publication.",
+   "whyNotHigher": "The screenshots do not reveal what Download & cite contains or whether readers can obtain machine-readable data directly, and the site's intentionally report-like voice offers little organisational context beyond the publication.",
+   "positiveEvidence": [],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "ai-slop-resistance",
+   "score": 9.5,
+   "note": "The work avoids virtually every generic generated-site reflex and replaces them with decisions traceable to investigative publishing, statistical qualification and the mechanics of missing monitoring data.",
+   "whyNotHigher": "The restrained serif-and-whitespace idiom is not unique by itself; its distinction depends on the excellent apparatus and data structures carrying it.",
+   "positiveEvidence": [
+    "There are no generic feature cards, blobs, gradients, logo walls, invented testimonials or promotional KPI slabs.",
+    "Statistics appear only where they advance or qualify the report's argument.",
+    "Whitespace, rules, captions and marginalia operate as publication machinery rather than premium styling tokens.",
+    "The responsive transformations are content-specific and could not have come from a generic landing-page system."
+   ],
+   "whyBenchmark": ""
+  },
+  {
+   "criterion": "memorability",
+   "score": 9,
+   "note": "The signature experience is the coverage grid that makes missing monitoring visible and connects each selected month to what was observed versus what the simulation says occurred; the measure-and-margin reading apparatus reinforces it across the report.",
+   "whyNotHigher": "Outside the central grid and inversion comparison, several long-form pages rely on a quieter editorial grammar that is excellent but less individually unforgettable.",
+   "positiveEvidence": [
+    "The interactive field of monitor coverage directly embodies the report's sentence: an offline monitor records nothing, not zero.",
+    "The Elverley-versus-Cleeve-Brook inversion is staged repeatedly across narrative, chart, table and catchment profiles.",
+    "The persistent pairing of claims with their limits and supporting figures creates a distinctive reading experience."
+   ],
+   "whyBenchmark": ""
+  }
+ ],
+ "holisticTier": "exceptional",
+ "observations": {
+  "templateDerived": false,
+  "interchangeableBusiness": false,
+  "mobileIsStackedDesktop": false,
+  "noSignatureMoment": false,
+  "typographyMerelyCompetent": false,
+  "genericDesignLanguage": false
+ },
+ "signatureMoment": "The monitor-coverage grid: selecting a pale month exposes, in one compact readout, the percentage of monitors reporting, the spills that would be published and the larger number the simulation says actually occurred.",
+ "pairwiseComparison": {
+  "referenceId": "vb-ai-in-design-report",
+  "comparisons": [
+   {
+    "dimension": "art-direction",
+    "outcome": "roughly-comparable",
+    "note": "Both use an authored editorial system in which typography, annotation and charts carry the argument; the candidate is more austere and apparatus-led."
+   },
+   {
+    "dimension": "typography",
+    "outcome": "reference-stronger",
+    "note": "The candidate has excellent multilevel typography, but the reference is described as sustaining a still broader hierarchy across a denser and more varied document."
+   },
+   {
+    "dimension": "composition",
+    "outcome": "reference-stronger",
+    "note": "The candidate paces density and release well, but its widest layouts occasionally become excessively empty and some chapter rhythms repeat."
+   },
+   {
+    "dimension": "information-architecture",
+    "outcome": "roughly-comparable",
+    "note": "The candidate's thesis-to-findings-to-catchments-to-method-to-data structure is exceptionally clear and its cross-references make the evidence chain inspectable."
+   },
+   {
+    "dimension": "responsive-design",
+    "outcome": "candidate-stronger",
+    "note": "The supplied evidence demonstrates unusually explicit mobile reinterpretation, including annual aggregation, record-based tables and folded marginalia."
+   },
+   {
+    "dimension": "craft",
+    "outcome": "roughly-comparable",
+    "note": "The candidate demonstrates integrated chart styling, careful small typography, keyboard states, reduced-motion behaviour and content-specific responsive decisions."
+   },
+   {
+    "dimension": "memorability",
+    "outcome": "roughly-comparable",
+    "note": "The reference is memorable through sustained editorial rhythm; the candidate through the coverage grid, inversion and persistent claim-limit-evidence apparatus."
+   },
+   {
+    "dimension": "business-specificity",
+    "outcome": "candidate-stronger",
+    "note": "Nearly every structural and interactive decision in the candidate is tied directly to monitoring coverage, simulated truth, published counts and evidentiary limits."
+   }
+  ]
+ },
+ "benchmarkGap": "SMALL",
+ "benchmarkGapDetail": "The reference retains a modest advantage in refinement or craft. Close, not equal.",
+ "benchmarkComparisonCounts": {
+  "candidate-stronger": 2,
+  "roughly-comparable": 4,
+  "reference-stronger": 2,
+  "reference-substantially-stronger": 0
+ },
+ "dimensionsNotCompared": [],
+ "evidenceCeiling": {
+  "cap": 10,
+  "tier": "site-level",
+  "routes": 40,
+  "artifactRoutes": 7,
+  "coversWholeArtifact": true,
+  "viewports": 4,
+  "detail": "Evidence covers all 7 route(s) of this artifact at 4 viewport(s). Nothing is unphotographed, so evidence caps the claim at 10."
+ },
+ "failingCriteria": [],
+ "blockingConcerns": [],
+ "addressedRules": [],
+ "addressedRuleNotes": [],
+ "unprovenCriteria": [],
+ "evidence": {
+  "candidateId": "monitoring-gap-report",
+  "compositionHash": null,
+  "captureCount": 63,
+  "captureDigest": "10cba5e23f94605ca81fc30f24c25910c4aad8b1065bdbc03688b1f34ec9601b"
+ }
+}

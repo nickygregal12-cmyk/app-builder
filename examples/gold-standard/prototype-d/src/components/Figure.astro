@@ -1,0 +1,62 @@
+---
+/**
+ * A numbered figure, with its apparatus in the margin.
+ *
+ * Every figure in this report has a number, a title, a source and — where it needs one — a note
+ * explaining what a reader should do with it. In a printed report those sit under the figure or
+ * in the margin; putting them inline would break the reading column with a parenthesis about
+ * provenance every time a chart appears.
+ *
+ * `bleed` is the pacing control. A figure held inside the measure reads as an illustration of
+ * the paragraph above it; the same figure allowed to run out across the margin reads as a
+ * section in its own right. That is the whole instrument this prototype has to work with, so it
+ * is a declared prop rather than something a page improvises with a class.
+ */
+interface Props {
+  /** Sequential within the report. Cited as "Figure 4" in the prose, so it must be stable. */
+  n: number;
+  title: string;
+  source: string;
+  /** Sits in the margin beside the figure. */
+  note?: string;
+  /** `measure` stays in the reading column; `wide` uses the margin; `full` uses the sheet. */
+  width?: 'measure' | 'wide' | 'full';
+  id?: string;
+}
+const { n, title, source, note, width = 'wide', id } = Astro.props;
+---
+<figure class:list={['fig', `fig--${width}`]} id={id ?? `figure-${n}`}>
+  <figcaption class="fig__head">
+    <span class="fig__n">Figure {n}</span>
+    <span class="fig__t">{title}</span>
+  </figcaption>
+  <div class="fig__body"><slot /></div>
+  <div class="fig__foot">
+    <p class="fig__src"><span class="fig__k">Source</span> {source}</p>
+    {note && <p class="fig__note">{note}</p>}
+  </div>
+</figure>
+
+<style>
+  .fig { margin: var(--s8) 0; }
+  .fig--measure { max-width: var(--measure); }
+  /* Out into the margin. Nothing changes size; the figure simply stops respecting the column,
+     and that alone reads as a change of register. */
+  .fig--wide { max-width: calc(var(--measure) + var(--margin-col) + var(--s7)); }
+  .fig--full { max-width: none; }
+
+  .fig__head { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap;
+    padding-bottom: var(--s3); border-bottom: 1.5px solid var(--ink); margin-bottom: var(--s5); }
+  .fig__n { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--spot); }
+  .fig__t { font-family: var(--sans); font-size: var(--t-small); font-weight: 500;
+    color: var(--ink); max-width: 60ch; }
+
+  .fig__foot { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--rule);
+    display: grid; gap: var(--s2); }
+  .fig__src, .fig__note { font-family: var(--sans); font-size: var(--t-note); line-height: 1.5;
+    color: var(--ink-3); max-width: 72ch; margin: 0; }
+  .fig__k { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: var(--t-label); margin-right: 6px; }
+  .fig__note { color: var(--ink-2); }
+</style>

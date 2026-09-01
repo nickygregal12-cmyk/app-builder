@@ -6,7 +6,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { assertContract, validateContract } from '@app-builder/contracts';
 import { applyContentOverrides, applySectionVariants, assertEditableElement, assetDecisionsHash, bindingElementKey, composeProject, elementRef, resolveElementIdentity, stripContentOverrides, stripSectionVariants } from '@app-builder/composition';
 import { createCheckpoint, createEvent, createTask, transitionTask } from '@app-builder/control-plane';
-import { projectLegacyProjectState } from '@app-builder/control-plane/artifact-lifecycle';
+import { artifactRevisionPosition, projectLegacyProjectState } from '@app-builder/control-plane/artifact-lifecycle';
 import { SourceIngestion, knowledgeSummary } from './ingestion.js';
 import { bundleForReplayedRun, mintApprovedIntakeBundle, replayApprovedIntake } from './approved-intake.js';
 import { reapplyAssetFocalPoints } from './asset-governance.js';
@@ -65,7 +65,7 @@ function nextWorkspace(root, slug, limit = 50) {
  * happened twice by hand before this family existed. Validating the projection
  * is cheap and turns that into a refusal at the boundary that produced it.
  */
-function summary(project) {
+function summary(project, revision = null) {
   return assertContract('project-summary', {
     id: project.id,
     name: project.name,
@@ -77,8 +77,15 @@ function summary(project) {
     // projects it is deliberately null: they carry a workspace path rather than
     // an artifact identity, so there is nothing exact for a lifecycle to be
     // about. `basis` says which of the two it is.
+    //
+    // A governed build has an artifact identity, and it is in the ledger rather
+    // than on the project row. Reading only the row reported `null` over a
+    // revision that had already reached `materialized` — the projection built
+    // for projects that have earned nothing, applied to one that had.
     state: project.state,
-    lifecycle: projectLegacyProjectState(project, { declaredToolchain: declaredToolchain() }),
+    lifecycle: revision
+      ? artifactRevisionPosition(revision, { legacyState: project.state })
+      : projectLegacyProjectState(project, { declaredToolchain: declaredToolchain() }),
     // What the last verification actually installed, ran under and built. Null
     // until a verification recorded one; never inferred from `state`.
     buildIdentity: project.buildIdentity ?? null,
@@ -322,12 +329,12 @@ export class FactoryService {
       createdAt: now,
       updatedAt: now,
     });
-    return summary(project);
+    return this.projectSummary(project);
   }
 
   getProject(id) {
     const project = this.store.getProject(id);
-    return project ? summary(project) : null;
+    return project ? this.projectSummary(project) : null;
   }
 
   getManifest(id) { return this.requireProject(id).manifest; }
@@ -661,7 +668,19 @@ export class FactoryService {
     fs.writeFileSync(path.join(workspace, 'src/generated/composition.ts'), `export const composition = ${JSON.stringify(next, null, 2)} as const;\n`);
     return next;
   }
-  listProjects() { return this.store.listProjects().map(summary); }
+  /**
+   * A project summary that knows about the project's revision.
+   *
+   * `summary` is a pure projection of the project row and deliberately stays
+   * that way; the revision it needs is a replay of the event stream, which only
+   * the service can do. Every caller goes through here so that no surface can
+   * accidentally report the row-only answer over a governed build again.
+   */
+  projectSummary(project) {
+    return summary(project, liveProjectArtifactRevision(this, project.id));
+  }
+
+  listProjects() { return this.store.listProjects().map((project) => this.projectSummary(project)); }
   listTasks(projectId) { this.requireProject(projectId); return this.store.listTasks(projectId); }
   listEvents(projectId, options) { this.requireProject(projectId); return this.store.listEvents(projectId, options); }
   metrics(projectId) { this.requireProject(projectId); return this.store.metrics(projectId); }
@@ -945,7 +964,7 @@ export class FactoryService {
         },
         usage: { durationMs: Date.now() - started },
       }));
-      return { project: summary(project), task, checkpoint, evidence, failures };
+      return { project: this.projectSummary(project), task, checkpoint, evidence, failures };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       task = transitionTask(task, 'failed', { stopReason: message });
@@ -1189,7 +1208,7 @@ export class FactoryService {
         },
         usage: { durationMs: Date.now() - started },
       }));
-      return { project: summary(project), task, checkpoint, knowledge: knowledgeSummary(pack), added };
+      return { project: this.projectSummary(project), task, checkpoint, knowledge: knowledgeSummary(pack), added };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       task = transitionTask(task, 'failed', { stopReason: message });
@@ -1319,7 +1338,7 @@ export class FactoryService {
       });
 
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'build.succeeded', actor: 'factory-service', payload: { checkpointId: checkpoint.id, workspace }, usage: { durationMs: Date.now() - started } }));
-      return { project: summary(project), task, checkpoint, composition, workspace };
+      return { project: this.projectSummary(project), task, checkpoint, composition, workspace };
     } catch (error) {
       if (task.state === 'running') {
         task = transitionTask(task, 'failed', { stopReason: error instanceof Error ? error.message : String(error) });
@@ -1429,7 +1448,7 @@ export class FactoryService {
 
       project = this.store.upsertProject({ ...project, state: 'verified', buildIdentity, updatedAt: new Date().toISOString() });
       await this.store.recordEvent(createEvent({ projectId, taskId: task.id, type: 'quality.succeeded', actor: 'factory-service', payload: { checkpointId: checkpoint.id }, usage: { durationMs: Date.now() - started } }));
-      return { project: summary(project), task, checkpoint };
+      return { project: this.projectSummary(project), task, checkpoint };
     } catch (error) {
       task = transitionTask(task, 'failed', { stopReason: error instanceof Error ? error.message : String(error) });
       this.store.upsertTask(task);

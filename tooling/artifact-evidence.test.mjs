@@ -268,6 +268,29 @@ test('a real governed build is traceable by digest, and rebuilds identically fro
 
     // And the digest is what a person would trace the build by.
     assert.match(artifactRevisionDigest(verified), /^[0-9a-f]{64}$/);
+
+    // What the product says about this project is what the revision says.
+    //
+    // The summary used to project the *project row*, which records a workspace
+    // path and never a source digest, so it answered `null` — "there is no
+    // exact artifact to attach a lifecycle to" — over a revision that had
+    // already recorded one. Every surface that reads a project therefore
+    // contradicted the ledger for exactly the builds the ladder exists for.
+    const governed = service.getProject('project-1');
+    assert.equal(governed.lifecycle.lifecycleState, verified.lifecycleState);
+    assert.equal(governed.lifecycle.basis, verified.history[verified.history.length - 1].basis);
+    assert.equal(governed.lifecycle.legacyState, governed.state);
+    // `missing` keeps its promise: what this artifact would have to record to
+    // climb one more rung, identity and evidence alike.
+    assert.deepEqual(governed.lifecycle.missing, supported ? ['evidence:behavior-verified'] : ['lockDigest', 'toolchain', 'outputDigest']);
+    assert.equal(service.listProjects().find((entry) => entry.id === 'project-1').lifecycle.lifecycleState, verified.lifecycleState);
+
+    // An ungoverned project still gets the honest row-only answer rather than a
+    // borrowed one.
+    service.createProject({ id: 'project-2', manifest: manifest('lineage-ungoverned') });
+    assert.equal(service.liveArtifactRevision('project-2'), null);
+    assert.equal(service.getProject('project-2').lifecycle.legacyState, 'ready');
+
     assert.deepEqual(verified.history.map((entry) => entry.to), supported
       ? ['contract-approved', 'materialized', 'buildable']
       : ['contract-approved', 'materialized']);

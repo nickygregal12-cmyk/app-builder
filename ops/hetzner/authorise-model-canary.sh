@@ -17,12 +17,21 @@
 # a decision an ordinary appbuilder process could replace is not an authority.
 #
 # So the signer writes to a private staging directory this script creates and
-# owns the lifetime of, and root promotes the result. Even inside that window a
-# substituted file is inert: the decision is HMAC-signed with a credential no
-# appbuilder process can read, so anything not minted by the unit fails
-# verification. At rest the decision is root:root 0600 — the runtime user cannot
-# create it, replace it, or read it, and reaches it only as a credential that
-# app-builder-model-canary.service declares.
+# owns the lifetime of, and root promotes the result through
+# promote-model-decision.py.
+#
+# The signature is NOT what makes that handoff safe, and an earlier version of
+# this comment claimed it was. A substituted staged file is indeed inert as
+# *authority* — it will not verify — but review found that the attacker was
+# never after model authority. `install` dereferences its source, so a symlink
+# planted in staging made root copy the target into a file the canary then
+# republished as a credential: a root file-read oracle, with
+# /var/lib/systemd/credential.secret as the obvious target.
+#
+# What makes it safe is that the promotion resolves the staged name exactly once
+# and validates the descriptor it opened. At rest the decision is root:root 0600
+# — the runtime user cannot create it, replace it, or read it, and reaches it
+# only as a credential app-builder-model-canary.service declares.
 #
 # It mints. It does not run the canary, does not touch the host switch, and
 # loads no provider credential: authorising a call and making one are separate
@@ -35,6 +44,7 @@ CREDSTORE="${APP_BUILDER_CREDSTORE:-/etc/credstore.encrypted/app-builder}"
 DECISION_CRED="${CREDSTORE}/APP_BUILDER_MODEL_DECISION_SECRET.cred"
 DECISION="${APP_BUILDER_MODEL_DECISION_FILE:-/etc/app-builder/model-enable-decision.json}"
 STAGING=/run/app-builder-model-authorise
+PROMOTE="$(dirname "$(readlink -f "$0")")/promote-model-decision.py"
 
 BY=""
 REASON=""
@@ -96,12 +106,18 @@ systemd-run \
   "/home/${RUNTIME_USER}/.local/bin/npm" run runtime:model-canary -- \
   --authorise --by "$BY" --reason "$REASON"
 
-[[ -s "${STAGING}/decision.json" ]] || { echo "The authorising unit produced no decision." >&2; exit 1; }
-
-# The promotion, and the only step that runs as root. The decision becomes
-# root:root 0600: unwritable by the runtime user, and unreadable by it except
-# through the credential the canary unit declares.
-install -m 0600 -o root -g root "${STAGING}/decision.json" "$DECISION"
+# The promotion, and the only step that runs as root.
+#
+# Deliberately not `install`, and deliberately not a `test`/`stat`/`copy`
+# sequence. Both resolve the source path more than once, and the staging
+# directory is writable by the runtime user — so a process sharing that UID can
+# swap the staged file for a symlink between any two of those steps and have
+# root publish somebody else's file. The helper resolves the name exactly once,
+# with O_NOFOLLOW, and validates the descriptor it actually opened.
+python3 "${PROMOTE}" \
+  --source "${STAGING}/decision.json" \
+  --destination "$DECISION" \
+  --signer-uid "$(id -u "$RUNTIME_USER")"
 
 printf 'Authorised. The decision is at %s (root:root 0600) and is single-use.\n' "$DECISION"
 printf 'app-builder-model-canary.service reads it as a systemd credential; no appbuilder process can replace it.\n'

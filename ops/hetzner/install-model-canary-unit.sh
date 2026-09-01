@@ -39,6 +39,7 @@ ETC_DIR=/etc/app-builder
 BROKER_ENV="${ETC_DIR}/agent-broker.env"
 DECISION_CRED="${CREDSTORE}/APP_BUILDER_MODEL_DECISION_SECRET.cred"
 DECISION="${ETC_DIR}/model-enable-decision.json"
+CLAIM=/run/app-builder-model-canary/claimed.json
 UNIT=/etc/systemd/system/app-builder-model-canary.service
 
 [[ $EUID -eq 0 ]] || { echo "Run this with sudo: it writes a systemd unit." >&2; exit 1; }
@@ -159,7 +160,7 @@ Environment=PATH=/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin
 
 # The provider credential, decrypted by systemd into \$CREDENTIALS_DIRECTORY for
 # this invocation only. The gateway reads \$CREDENTIALS_DIRECTORY/ANTHROPIC_API_KEY.
-# It is deliberately NOT in either EnvironmentFile below: an environment variable
+# It is deliberately NOT in the EnvironmentFile below: an environment variable
 # is inherited by every child, and this process starts task sandboxes.
 LoadCredentialEncrypted=ANTHROPIC_API_KEY:${CREDSTORE}/ANTHROPIC_API_KEY.cred
 
@@ -167,11 +168,14 @@ LoadCredentialEncrypted=ANTHROPIC_API_KEY:${CREDSTORE}/ANTHROPIC_API_KEY.cred
 # credential to sign; this unit loads it to verify.
 LoadCredentialEncrypted=APP_BUILDER_MODEL_DECISION_SECRET:${DECISION_CRED}
 
-# The signed decision itself, as a credential rather than a readable file. It is
-# root:root 0600 at rest, so the runtime user cannot replace it and cannot read
-# it outside this unit — possessing the token is what authorises the call, so it
-# is not something every appbuilder process should be able to copy.
-LoadCredential=model-enable-decision:${DECISION}
+# The signed decision, as a credential rather than a readable file, and read
+# from the *claimed* path rather than the authoritative one. That is what makes
+# single use survive a restart: ops/hetzner/run-model-canary.sh renames the
+# authoritative decision into this claim before starting the unit, so the
+# authorisation is spent before any provider call and a second start has nothing
+# to load. Starting this unit directly, without a claim, fails 243/CREDENTIALS
+# rather than reusing a decision.
+LoadCredential=model-enable-decision:${CLAIM}
 
 # The grant key is the one secret that must be shared rather than owned: the
 # broker inside app-builder-factory.service verifies the grants this canary

@@ -18,6 +18,7 @@ const scripts = [
   'ops/hetzner/verify-egress-profile.sh',
   'ops/hetzner/install-model-canary-unit.sh',
   'ops/hetzner/authorise-model-canary.sh',
+  'ops/hetzner/run-model-canary.sh',
 ];
 
 const readOnlyMutationPatterns = [
@@ -384,8 +385,13 @@ test('an unprivileged signer cannot write the authoritative decision, so root pr
     // The signer writes to a staging directory it owns...
     assert.match(script, /APP_BUILDER_MODEL_DECISION_FILE="\$\{STAGING\}\/decision\.json"/);
     assert.match(script, /install -d -m 0700 -o "\$RUNTIME_USER" -g "\$RUNTIME_USER" "\$STAGING"/);
-    // ...and root, not the signer, performs the promotion to root:root 0600.
-    assert.match(script, /install -m 0600 -o root -g root "\$\{STAGING\}\/decision\.json" "\$DECISION"/);
+    // ...and root promotes it through the fd-based helper, never `install`,
+    // which dereferences its source and made this a root file-read oracle.
+    assert.match(script, /python3 "\$\{PROMOTE\}"/);
+    assert.equal(
+      /install -m 0600 -o root -g root "\$\{STAGING\}/.test(script), false,
+      'install(1) follows a symlinked source; it must not return here',
+    );
     // Staging never outlives the command, on any exit path.
     assert.match(script, /trap cleanup EXIT/);
     // The unit must not be given privilege merely to reach the filesystem.
@@ -400,7 +406,9 @@ test('the decision reaches the canary as a credential, not as a file every appbu
   const installer = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
   // Possessing the token is what authorises the call, so it is not something
   // every process sharing the runtime UID should be able to copy.
-  assert.match(installer, /LoadCredential=model-enable-decision:\$\{DECISION\}/);
+  // The claimed path, not the authoritative one: that is what makes single use
+  // survive a restart. See tooling/decision-single-use.test.mjs.
+  assert.match(installer, /LoadCredential=model-enable-decision:\$\{CLAIM\}/);
 
   const canary = readFileSync('tooling/model-canary.mjs', 'utf8');
   assert.match(canary, /function decisionPathFor\(/);

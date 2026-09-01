@@ -333,6 +333,17 @@ units that need it. `sudo bash ops/hetzner/install-model-canary-unit.sh`
 generates and encrypts it in one pipe; the plaintext never becomes a shell
 variable, an argument or a file.
 
+Running is `sudo bash ops/hetzner/run-model-canary.sh`, not a bare `systemctl
+start`. It claims the decision with an atomic `rename(2)` **before** the unit
+starts, so the authorisation is spent before any provider call and a second run
+has nothing to claim. The unit's `LoadCredential` points at that claim rather
+than at the authoritative path, so starting it directly fails
+`243/CREDENTIALS` instead of quietly reusing a decision.
+
+That ordering is deliberate and fail-secure: a crash between the claim and the
+request wastes an authorisation, where the reverse would hand out a second call
+after a successful one.
+
 Authorising is `sudo bash ops/hetzner/authorise-model-canary.sh --by "..."
 --reason "..."`, which runs `app-builder-model-authorise.service` as a transient
 one-shot. It is a script only because `--by` and `--reason` differ per
@@ -350,7 +361,7 @@ refused entry to a task sandbox by name in
 ```bash
 # Hosted. Both steps load their keys from systemd, not from your shell.
 sudo bash ops/hetzner/authorise-model-canary.sh --by "your name" --reason "first canary"
-sudo systemctl start app-builder-model-canary.service
+sudo bash ops/hetzner/run-model-canary.sh
 journalctl -u app-builder-model-canary.service -n 50 --no-pager
 
 # Local development only, where a systemd unit is not available:

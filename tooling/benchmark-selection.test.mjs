@@ -147,19 +147,113 @@ test('no match stays no match, and returns no reference to use anyway', () => {
   });
   assert.equal(result.matched, false);
   assert.equal(result.reference, null, 'handing back the least-bad reference invites it to be used');
-  assert.match(result.note, /No reference in the corpus solves a problem resembling this one/);
+  // The facet path says which business it found no model for, because that is the actionable
+  // half: either the candidate's facets are wrong or the corpus is missing a reference.
+  assert.match(result.note, /No reference in the corpus is a model for a business declaring facet-gamma/);
+  assert.match(result.note, /Record that rather than forcing one/);
+
+  // The legacy prose path keeps its original wording, since nothing about it has changed.
+  const viaProse = selectReference({
+    businessKind: 'something else entirely',
+    corpus: corpusOf(reference('elsewhere', { appropriateFor: ['a different problem'] })),
+  });
+  assert.equal(viaProse.matched, false);
+  assert.equal(viaProse.reference, null);
+  assert.match(viaProse.note, /No reference in the corpus solves a problem resembling this one/);
 });
 
-test('a facet or anchor the corpus does not define is named rather than silently worth nothing', () => {
+test('a business facet the corpus does not define is refused, not noted', () => {
+  /*
+   * Business facets are a closed vocabulary and they now gate matching, so an undefined one can
+   * change which reference caps a verdict — or remove the comparison entirely — while looking
+   * like a candidate describing itself unusually. Scoring anyway and recording a caveat puts the
+   * caveat in front of somebody who already has a number.
+   *
+   * It is refused symmetrically with `loadBenchmarkReferences`, which already refuses a
+   * *reference* declaring an undefined facet. A vocabulary enforced on one side only is not
+   * closed.
+   */
+  assert.throws(
+    () => selectReference({
+      businessFacets: ['facet-alpha', 'facet-invented'],
+      corpus: corpusOf(reference('ref', { businessFacets: ['facet-alpha'] })),
+    }),
+    /facet-invented.*not defined by the benchmark corpus/s,
+  );
+
+  // Including when every other facet is valid and would have matched on its own. A typo cannot
+  // be assumed to be the unimportant one.
+  assert.throws(() => selectReference({
+    businessFacets: ['facet-invented'],
+    corpus: corpusOf(reference('ref', { businessFacets: ['facet-alpha'] })),
+  }));
+
+  // And the error says what the options were, because the failure is a vocabulary failure.
+  try {
+    selectReference({ businessFacets: ['nope'], corpus: corpusOf(reference('ref')) });
+    assert.fail('expected a refusal');
+  } catch (error) {
+    assert.match(error.message, /facet-alpha/);
+  }
+});
+
+test('an anchor no reference offers is a caveat, not a refusal — the anchor vocabulary is not closed', () => {
+  /*
+   * The distinction is the reason this is a different test rather than the same one.
+   *
+   * There is no declared anchor vocabulary anywhere in the corpus. The set of "known" anchors is
+   * derived — the union of whatever `anchorsFor` values the current references happen to carry —
+   * so "unknown" means only "no reference offers this today" and changes whenever a reference is
+   * added or edited. Refusing on it would make a candidate's validity depend on the contents of
+   * the corpus rather than on a contract, and would turn adding a reference into a breaking
+   * change for unrelated packets.
+   */
   const result = selectReference({
-    businessFacets: ['facet-alpha', 'facet-invented'],
+    businessFacets: ['facet-alpha'],
     anchors: ['anchor-invented'],
     corpus: corpusOf(reference('ref', { businessFacets: ['facet-alpha'] })),
   });
-  assert.deepEqual(result.unknownFacets, ['facet-invented']);
+  assert.equal(result.matched, true, 'an unrecognised anchor must not remove a valid business match');
   assert.deepEqual(result.unknownAnchors, ['anchor-invented']);
-  assert.match(result.note, /facet-invented/);
   assert.match(result.note, /anchor-invented/);
+});
+
+test('anchors may only order references that already share a business facet', () => {
+  // Both are business-relevant; the anchors decide between them. This is what anchors are for.
+  const ranked = selectReference({
+    businessFacets: ['facet-alpha'],
+    anchors: ['anchor-one'],
+    corpus: corpusOf(
+      reference('no-anchor', { businessFacets: ['facet-alpha'] }),
+      reference('with-anchor', { businessFacets: ['facet-alpha'], anchorsFor: ['anchor-one'] }),
+    ),
+  });
+  assert.equal(ranked.reference.id, 'with-anchor');
+});
+
+test('regression: shared anchors alone cannot supply a benchmark once facets are declared', () => {
+  /*
+   * The gate this pins. Before it, `problemFit > 0 || sharedAnchors.length > 0` let a candidate
+   * that had adopted facets, and shared none of them with any reference, still acquire a
+   * benchmark on design-anchor overlap — rebuilding the visual-similarity fallback the facet
+   * vocabulary exists to remove, and by the same route that sent a one-property letting to a
+   * global retailer.
+   */
+  const result = selectReference({
+    businessFacets: ['facet-gamma'],
+    anchors: ['anchor-one'],
+    corpus: corpusOf(reference('only', { businessFacets: ['facet-alpha'], anchorsFor: ['anchor-one'] })),
+  });
+
+  assert.equal(result.matched, false);
+  assert.equal(result.reference, null);
+  // The reference was eligible and did share the anchor. It is excluded on business relevance
+  // alone, which is the whole point.
+  const entry = result.ordered.find((row) => row.id === 'only');
+  assert.equal(entry.eligible, true);
+  assert.deepEqual(entry.sharedAnchors, ['anchor-one']);
+  assert.equal(entry.fits, false);
+  assert.match(result.note, /Design anchors alone do not qualify a reference/);
 });
 
 test('the answer depends on declared facts, not on what the candidate is called', () => {

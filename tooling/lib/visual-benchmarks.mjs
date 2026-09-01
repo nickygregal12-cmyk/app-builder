@@ -121,9 +121,11 @@ function eligibility(reference, corpus) {
  * Ranked lexicographically, most-significant first. Each step is a sentence, not a coefficient:
  *
  *   1. shared business facets, more first — the business problem, which is the thing this module
- *      exists to match on;
- *   2. shared design anchors, more first — the design problem, which is real signal and still
- *      secondary to what the business actually is;
+ *      exists to match on, and which is a GATE rather than a term: on the facet path a reference
+ *      sharing none of the candidate's facets is not ranked lower, it is not a match at all;
+ *   2. shared design anchors, more first — the design problem, which is real signal and which may
+ *      only ORDER references that have already established business relevance. Anchors never
+ *      qualify a reference on their own, because that is selection by visual similarity;
  *   3. declared breadth, narrower first — between two references that fit equally well, the one
  *      claiming to be a model for fewer kinds of business is making the more specific claim, and
  *      the more specific claim is the better-earned match;
@@ -158,9 +160,42 @@ export function selectReference({ businessKind = null, businessFacets = [], anch
 
   const wantedAnchors = new Set(list(anchors).map(lower));
   const wantedFacets = new Set(list(businessFacets).map(lower));
+
+  /*
+   * An undeclared business facet is refused, not noted.
+   *
+   * Business facets are a CLOSED vocabulary: the corpus defines every one of them, and both sides
+   * draw from that definition. A facet the corpus has never heard of is therefore not a candidate
+   * describing itself unusually — it is a typo, or a term somebody invented without adding it. It
+   * silently matches nothing, and because facets now gate matching it can change which reference
+   * caps a verdict, or remove the comparison altogether. Recording that in a caveat and scoring
+   * anyway means the caveat has to be read by somebody who already has a number in front of them.
+   *
+   * So it throws, symmetrically with `loadBenchmarkReferences`, which already refuses a
+   * *reference* declaring a facet the vocabulary does not define. A closed vocabulary that is
+   * enforced on one side and merely observed on the other is not closed.
+   *
+   * ANCHORS ARE DELIBERATELY NOT TREATED THIS WAY, and the difference is not squeamishness.
+   * There is no declared anchor vocabulary anywhere in the corpus. The set below is *derived* —
+   * the union of whatever `anchorsFor` values the current references happen to carry — so
+   * "unknown" means only "no reference offers this today", which changes whenever a reference is
+   * added or edited. Failing closed on that would make a candidate's validity depend on the
+   * contents of the corpus rather than on a contract, and would turn adding a reference into a
+   * breaking change for unrelated packets. Prototype E is the worked example: it declared
+   * `editorial-rhythm`, which one reference happens to offer, and `place-and-atmosphere`, which
+   * none does — and neither was a mistake, because nothing ever told it what the options were.
+   *
+   * Anchors therefore stay a caveat until a vocabulary is declared for them. When one is, this
+   * should become the same refusal.
+   */
   const unknownFacets = [...wantedFacets].filter((facet) => !Object.hasOwn(vocabulary, facet));
-  // A misspelt anchor is silently worth nothing, which is how a packet ends up compared against
-  // the wrong thing without anybody seeing why. Named here instead.
+  if (unknownFacets.length) {
+    const known = Object.keys(vocabulary).sort().join(', ');
+    throw new Error(
+      `Business facet(s) ${unknownFacets.map((facet) => JSON.stringify(facet)).join(', ')} are not defined by the benchmark corpus, so they match nothing and would silently change which reference caps this verdict. Declare them in the corpus vocabulary or correct the candidate. Defined facets: ${known || '(none)'}.`,
+    );
+  }
+
   const anchorVocabulary = new Set(list(loaded.references).flatMap((reference) => list(reference.anchorsFor).map(lower)));
   const unknownAnchors = [...wantedAnchors].filter((anchor) => !anchorVocabulary.has(anchor));
 
@@ -182,7 +217,24 @@ export function selectReference({ businessKind = null, businessFacets = [], anch
       sharedFacets,
       sharedAnchors,
       breadth: facets.size,
-      fits: eligible && (problemFit > 0 || sharedAnchors.length > 0),
+      /*
+       * On the facet path, business relevance is a GATE and anchors only rank.
+       *
+       * Allowing `problemFit > 0 || sharedAnchors.length > 0` here would have rebuilt the very
+       * fallback this module exists to remove: a candidate that had adopted facets, and shared
+       * none of them with any reference, could still acquire a benchmark on design-anchor overlap
+       * alone — which is selection by visual similarity wearing a different name, and it is how
+       * a one-property letting was sent to a global retailer in the first place.
+       *
+       * So once a candidate declares what kind of business it is, a reference that is a model for
+       * a different kind of business cannot be its benchmark, however much they look alike. If
+       * nothing shares a facet the honest answer is that the corpus has no comparison to offer.
+       *
+       * The legacy prose path keeps the old disjunction deliberately. It is there so callers that
+       * have not migrated do not change behaviour, and tightening it would be exactly the silent
+       * regression the legacy path exists to prevent.
+       */
+      fits: eligible && (legacy ? (problemFit > 0 || sharedAnchors.length > 0) : problemFit > 0),
     };
   });
 
@@ -206,7 +258,6 @@ export function selectReference({ businessKind = null, businessFacets = [], anch
 
   const caveats = [
     legacy ? 'The candidate declared no business facets, so this fell back to the legacy prose match and the result should be treated as weak.' : null,
-    unknownFacets.length ? `The candidate declared business facet(s) the corpus does not define and which therefore matched nothing: ${unknownFacets.join(', ')}.` : null,
     unknownAnchors.length ? `The candidate declared anchor(s) no reference offers and which therefore matched nothing: ${unknownAnchors.join(', ')}.` : null,
   ].filter(Boolean);
 
@@ -215,10 +266,14 @@ export function selectReference({ businessKind = null, businessFacets = [], anch
     note: [
       winner
         ? `Selected ${winner.reference.id}: it ${why(winner)}. Compare on quality of decision-making, never on visual similarity.`
-        : 'No reference in the corpus solves a problem resembling this one. Record that there is no comparison rather than forcing one.',
+        : legacy
+          ? 'No reference in the corpus solves a problem resembling this one. Record that there is no comparison rather than forcing one.'
+          : `No reference in the corpus is a model for a business declaring ${[...wantedFacets].join(', ') || 'no facets'}. Design anchors alone do not qualify a reference once the business is declared, so there is no comparison to offer. Record that rather than forcing one.`,
       ...caveats,
     ].join(' '),
     caveats,
+    // Always empty: an undefined business facet throws above rather than reaching a caller as
+    // data. Kept in the shape so a consumer written against the previous contract still reads.
     unknownFacets,
     unknownAnchors,
     usedLegacyBusinessKindMatch: legacy,

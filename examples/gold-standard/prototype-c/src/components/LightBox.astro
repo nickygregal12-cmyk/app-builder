@@ -1,0 +1,217 @@
+---
+/**
+ * One colour, four lights.
+ *
+ * The site's central artefact, and the thing a printed card physically cannot do. Everything a
+ * paint company writes about light is unfalsifiable prose until the four renderings are next to
+ * each other at a size where the difference cannot be argued with.
+ *
+ * ## Two rules that make it evidence rather than decoration
+ *
+ * **The renderings are computed.** `under()` applies a stated chromatic transform in linear
+ * light. Nothing here is hand-picked to look convincing, which matters because hand-picking is
+ * precisely how this would be faked.
+ *
+ * **It says it is not good enough.** The disclosure sits on the same screen as the artefact,
+ * not in a footnote, because the limitation is the argument: if a computed rendering on a
+ * decent display is not sufficient to choose from, a printed card under a shop's fluorescent
+ * light certainly is not, and the honest answer is a sample pot. The conversion follows from
+ * the admission instead of surviving it.
+ */
+import { ILLUMINANTS, allLights, inkOn, lrv } from '../lib/light';
+import type { Colour } from '../data/colours';
+
+interface Props {
+  colour: Colour;
+  /** Colours the viewer may switch between. Omit for a fixed box. */
+  choices?: Colour[];
+  /** Tighter, for use inside a colour page where the context is already established. */
+  compact?: boolean;
+}
+const { colour, choices = [], compact = false } = Astro.props;
+const panels = allLights(colour.hex);
+---
+
+<section class="lb" data-lightbox data-colour={colour.slug}>
+  <div class="lb__grid">
+    {panels.map(({ illuminant, hex }) => (
+      <figure class="lb__panel" data-light={illuminant.id} style={`--panel: ${hex}; --panel-ink: ${inkOn(hex) === 'dark' ? 'var(--ink-dark)' : 'var(--ink-light)'}`}>
+        <div class="lb__field">
+          <span class="lb__hex" data-field="hex">{hex.toUpperCase()}</span>
+        </div>
+        <figcaption class="lb__cap">
+          <span class="lb__name">{illuminant.name}</span>
+          <span class="lb__when">{illuminant.when}</span>
+          {!compact && <span class="lb__note">{illuminant.note}</span>}
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+
+  {choices.length > 0 && (
+    <div class="lb__pick">
+      <p class="lb__pick-k" id="lb-pick-label">Try another</p>
+      {/* A radio group rather than buttons: these are one choice among several, and a screen
+          reader should hear it that way. Arrow keys move between them for free. */}
+      <div class="lb__swatches" role="radiogroup" aria-labelledby="lb-pick-label">
+        {choices.map((option) => (
+          <button
+            class="sw"
+            type="button"
+            role="radio"
+            aria-checked={option.slug === colour.slug ? 'true' : 'false'}
+            tabindex={option.slug === colour.slug ? 0 : -1}
+            data-pick={option.slug}
+            data-hex={option.hex}
+            data-name={option.name}
+            data-code={option.code}
+            style={`--sw: ${option.hex}`}
+          >
+            <span class="sw__chip"></span>
+            <span class="sw__name">{option.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <p class="lb__honest">
+    <strong data-field="title">{colour.name}</strong> <span class="lb__code" data-field="code">{colour.code}</span> ·
+    LRV <span data-field="lrv">{lrv(colour.hex)}</span>{' · '}<span data-field="pigment">{colour.pigment}</span>
+  </p>
+  <p class="lb__caveat">
+    These four are computed from the base colour by a stated transform, on a screen we have not
+    calibrated, in a room we cannot see. They are close enough to show you that a colour moves and
+    not close enough to choose from. Nothing on a screen is. <a class="u" href="/samples">Order the
+    four sample pots</a> and put them on the wall you are actually painting.
+  </p>
+</section>
+
+<style>
+  .lb { display: grid; gap: var(--s5); }
+
+  /*
+   * Four across, and never one.
+   *
+   * The artefact exists to be compared, so the one recomposition it may not make is the
+   * obvious one. Stacking to a single column on a phone would leave a viewer scrolling between
+   * two colours they are meant to be judging against each other, which is the same failure as
+   * the printed card. Two-by-two keeps all four in the eye at 390px; the panels get shorter,
+   * the labels get tighter, and the comparison survives.
+   */
+  .lb__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s3); }
+  .lb__panel { margin: 0; display: flex; flex-direction: column; }
+  .lb__field {
+    background: var(--panel);
+    aspect-ratio: 3 / 4;
+    display: flex; align-items: flex-end; padding: var(--s3);
+    transition: background-color 420ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .lb__hex {
+    font-family: var(--display); font-size: var(--t-label); font-weight: 500;
+    letter-spacing: 0.06em; color: var(--panel-ink); opacity: 0.62;
+    font-variant-numeric: tabular-nums;
+  }
+  .lb__cap { padding-top: var(--s3); display: grid; gap: 2px; }
+  .lb__name { font-family: var(--display); font-size: var(--t-small); font-weight: 600;
+    font-stretch: 108%; letter-spacing: -0.005em; }
+  .lb__when { font-size: var(--t-label); color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .lb__note { margin-top: var(--s2); font-size: var(--t-small); line-height: 1.5;
+    color: color-mix(in srgb, var(--ink) 78%, transparent); }
+
+  .lb__pick { display: flex; gap: var(--s4); align-items: baseline; flex-wrap: wrap;
+    padding-top: var(--s4); border-top: 1px solid var(--line); }
+  .lb__pick-k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.13em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 62%, transparent); }
+  .lb__swatches { display: flex; gap: var(--s4); flex-wrap: wrap; }
+
+  .sw { display: flex; align-items: center; gap: var(--s2); background: none; border: 0;
+    padding: 3px 0; font: inherit; color: inherit; cursor: pointer; }
+  .sw__chip { width: 26px; height: 26px; background: var(--sw);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 40%, transparent);
+    transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 180ms ease; }
+  .sw__name { font-size: var(--t-small); color: color-mix(in srgb, var(--ink) 74%, transparent);
+    border-bottom: 1.5px solid transparent; transition: color 140ms ease, border-color 140ms ease; }
+  .sw:hover .sw__chip { transform: scale(1.14); }
+  .sw:hover .sw__name { color: var(--ink); }
+  .sw[aria-checked='true'] .sw__chip {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 40%, transparent),
+                0 0 0 2px var(--ground), 0 0 0 4px var(--ink); }
+  .sw[aria-checked='true'] .sw__name { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .lb__honest { font-size: var(--t-small); padding-top: var(--s4); border-top: 1px solid var(--line); }
+  .lb__honest strong { font-family: var(--display); font-weight: 600; font-stretch: 108%; }
+  .lb__code { font-family: var(--display); font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--ink) 58%, transparent); }
+  .lb__caveat { font-size: var(--t-small); line-height: 1.55; max-width: 62ch;
+    color: color-mix(in srgb, var(--ink) 76%, transparent); }
+
+  @media (max-width: 860px) {
+    .lb__grid { grid-template-columns: repeat(2, 1fr); gap: var(--s3) var(--s3); }
+    .lb__field { aspect-ratio: 4 / 3; }
+    .lb__note { display: none; }
+  }
+</style>
+
+<script>
+  import { ILLUMINANTS, under, inkOn, lrv } from '../lib/light';
+  import { colourBySlug } from '../data/colours';
+
+  /**
+   * Repaint on choice.
+   *
+   * The transform runs on the client for the same reason it runs on the server: so that what a
+   * viewer sees after switching colours is produced by the identical function, and cannot drift
+   * from it. Importing the module rather than re-implementing the maths is the whole point —
+   * two copies of a colour transform is one copy that is wrong.
+   */
+  for (const root of document.querySelectorAll<HTMLElement>('[data-lightbox]')) {
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('.sw')];
+    if (!buttons.length) continue;
+    const field = (name: string) => root.querySelector<HTMLElement>(`[data-field="${name}"]`);
+
+    const paint = (slug: string, focus = false) => {
+      const colour = colourBySlug.get(slug);
+      if (!colour) return;
+      for (const illuminant of ILLUMINANTS) {
+        const panel = root.querySelector<HTMLElement>(`[data-light="${illuminant.id}"]`);
+        if (!panel) continue;
+        const hex = under(colour.hex, illuminant);
+        panel.style.setProperty('--panel', hex);
+        panel.style.setProperty('--panel-ink', inkOn(hex) === 'dark' ? 'var(--ink-dark)' : 'var(--ink-light)');
+        const label = panel.querySelector<HTMLElement>('[data-field="hex"]');
+        if (label) label.textContent = hex.toUpperCase();
+      }
+      const title = field('title'); if (title) title.textContent = colour.name;
+      const code = field('code'); if (code) code.textContent = colour.code;
+      const value = field('lrv'); if (value) value.textContent = String(lrv(colour.hex));
+      const pigment = field('pigment'); if (pigment) pigment.textContent = colour.pigment;
+
+      for (const button of buttons) {
+        const chosen = button.dataset.pick === slug;
+        button.setAttribute('aria-checked', String(chosen));
+        button.tabIndex = chosen ? 0 : -1;
+        if (chosen && focus) button.focus();
+      }
+      root.dataset.colour = slug;
+    };
+
+    root.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.sw');
+      if (button?.dataset.pick) paint(button.dataset.pick);
+    });
+
+    /* Arrow keys move within the group, which is what a radiogroup owes its user. */
+    root.addEventListener('keydown', (event) => {
+      if (!(event.target as HTMLElement).closest('.sw')) return;
+      const current = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
+      let next = current;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (current + 1) % buttons.length;
+      else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (current - 1 + buttons.length) % buttons.length;
+      else return;
+      event.preventDefault();
+      paint(buttons[next].dataset.pick!, true);
+    });
+  }
+</script>

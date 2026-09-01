@@ -1,0 +1,38 @@
+---
+/**
+ * A section, painted.
+ *
+ * Sets `--ground` and `--ink` for everything inside it, so the whole site is a sequence of
+ * painted fields rather than a page with coloured boxes on it. The ink is computed from the
+ * colour's light reflectance value rather than chosen, because the palette runs from a 90 LRV
+ * lime white to a 3 LRV lamp black and the middle is exactly where a person picking by eye gets
+ * it wrong — on a site whose ground changes a dozen times, that is a contrast failure sitting
+ * on the one section nobody re-checked.
+ */
+import { inkOn } from '../lib/light';
+
+interface Props {
+  hex: string;
+  /** Rendered as an element other than `section` where the outline needs it. */
+  as?: 'section' | 'div' | 'header' | 'footer';
+  id?: string;
+  class?: string;
+  /** Less vertical room, for a band rather than a chapter. */
+  band?: boolean;
+}
+const { hex, as: Tag = 'section', id, class: extra = '', band = false } = Astro.props;
+const dark = inkOn(hex) === 'dark';
+---
+<Tag
+  id={id}
+  class:list={['painted', band && 'painted--band', extra]}
+  data-ink={dark ? 'dark' : 'light'}
+  style={`--ground: ${hex}; --ink: ${dark ? 'var(--ink-dark)' : 'var(--ink-light)'}`}
+>
+  <slot />
+</Tag>
+
+<style>
+  .painted { background: var(--ground); color: var(--ink); padding-block: clamp(var(--s8), 5.5vw, 104px); }
+  .painted--band { padding-block: clamp(var(--s6), 3vw, var(--s8)); }
+</style>

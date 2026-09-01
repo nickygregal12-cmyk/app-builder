@@ -98,6 +98,8 @@
     "fast-check": "4.4.0",
     "json-schema-to-typescript": "15.0.4",
     "oxlint": "1.80.0",
+    "playwright": "^1.62.1",
+    "sharp": "^0.35.4",
     "typescript": "7.0.2"
   }
 }

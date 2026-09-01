@@ -79,6 +79,11 @@
     color:var(--ink);font-weight:600}
   .fees td small{display:block;color:var(--muted);font-size:14.5px;margin-top:4px;line-height:1.45}
   .fees tbody tr:last-child td{border-bottom:1px solid var(--ink)}
+  /* The amount belongs in its own column at width. This span exists only for
+     the phone, where the table becomes a list and the figure has to travel
+     back onto the service line. Showing it at both widths printed every fee
+     twice. */
+  .amt-inline{display:none}
   .note{margin:16px 0 0;font-size:15px;color:var(--muted);max-width:56ch}
 
   /* ---- the year: the signature moment. A calendar of what the firm does when ---- */
@@ -130,13 +135,20 @@
     .qualify{gap:26px}
     /* The fee table becomes a definition list rather than a squeezed table:
        the amount stays on the same line as the service, the caveat moves below. */
-    .fees,.fees tbody,.fees tr,.fees td{display:block;width:100%}
+    .fees,.fees caption,.fees tbody,.fees tr,.fees td{display:block;width:100%}
+    .fees caption{max-width:none}
     .fees thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
     .fees tr{padding:15px 0;border-bottom:1px solid var(--rule)}
     .fees td{border:0;padding:0}
-    .fees td.svc{display:flex;justify-content:space-between;gap:16px;align-items:baseline;font-weight:600;color:var(--ink)}
-    .fees td.amt{text-align:left;display:none}
-    .fees td.svc .amt-inline{font-family:"Inter",system-ui,sans-serif;font-variant-numeric:tabular-nums;
+    /* The service cell holds three things and only two of them share a line:
+       the name and the figure sit together, and the caveat goes underneath.
+       Without the wrap and the full-basis on `small`, flex puts all three in a
+       row and the caveat becomes a third column of six-word lines. */
+    .fees td.svc{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 16px;
+      align-items:baseline;font-weight:600;color:var(--ink)}
+    .fees td.svc small{flex:1 0 100%;margin-top:6px;font-weight:400}
+    .fees td.amt{display:none}
+    .fees td.svc .amt-inline{display:inline;font-family:"Inter",system-ui,sans-serif;font-variant-numeric:tabular-nums;
       white-space:nowrap;font-weight:600}
     /* The year keeps its shape as a strip of quarters rather than 12 stacked
        boxes — the point of it is the rhythm of the year, and one column loses that. */

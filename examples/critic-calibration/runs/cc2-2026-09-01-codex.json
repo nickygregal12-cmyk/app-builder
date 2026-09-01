@@ -1,0 +1,2574 @@
+{
+  "schemaVersion": 1,
+  "authority": "critic-calibration-run",
+  "corpus": "CC2",
+  "seed": "cc2-autumn-1",
+  "reviewer": {
+    "vendor": "openai",
+    "runtime": "codex-cli"
+  },
+  "scoredWith": "examples/critic-calibration/rubric.v2.md",
+  "blindingMapping": [
+    {
+      "position": 1,
+      "label": "artifact-01",
+      "itemId": "cc-02",
+      "stratum": "T3-competent-commercial"
+    },
+    {
+      "position": 2,
+      "label": "artifact-02",
+      "itemId": "cc-12",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 3,
+      "label": "artifact-03",
+      "itemId": "cc-08",
+      "stratum": "T1-broken-amateur"
+    },
+    {
+      "position": 4,
+      "label": "artifact-04",
+      "itemId": "cc-04",
+      "stratum": "T1-broken-amateur"
+    },
+    {
+      "position": 5,
+      "label": "artifact-05",
+      "itemId": "cc-11",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 6,
+      "label": "artifact-06",
+      "itemId": "cc-23",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 7,
+      "label": "artifact-07",
+      "itemId": "cc-07",
+      "stratum": "T1-broken-amateur"
+    },
+    {
+      "position": 8,
+      "label": "artifact-08",
+      "itemId": "cc-22",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 9,
+      "label": "artifact-09",
+      "itemId": "cc-10",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 10,
+      "label": "artifact-10",
+      "itemId": "cc-25",
+      "stratum": "T4-strong-professional"
+    },
+    {
+      "position": 11,
+      "label": "artifact-11",
+      "itemId": "cc-01",
+      "stratum": "T4-strong-professional"
+    },
+    {
+      "position": 12,
+      "label": "artifact-12",
+      "itemId": "cc-20",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 13,
+      "label": "artifact-13",
+      "itemId": "cc-09",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 14,
+      "label": "artifact-14",
+      "itemId": "cc-21",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 15,
+      "label": "artifact-15",
+      "itemId": "cc-06",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 16,
+      "label": "artifact-16",
+      "itemId": "cc-05",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 17,
+      "label": "artifact-17",
+      "itemId": "cc-03",
+      "stratum": "T2-generic-template"
+    },
+    {
+      "position": 18,
+      "label": "artifact-18",
+      "itemId": "cc-24",
+      "stratum": "T2-generic-template"
+    }
+  ],
+  "notScored": [
+    "cc-a01",
+    "cc-a02",
+    "cc-a03",
+    "cc-a04",
+    "cc-a05",
+    "cc-a06",
+    "cc-a07",
+    "cc-a08",
+    "cc-a09",
+    "cc-a10"
+  ],
+  "notScoredReason": "Genuine-business anchors reference verdicts recorded under the v1 criteria. Re-scoring them here would mix a fresh Critic's numbers with old ones inside one stratum mean.",
+  "failures": [],
+  "verdicts": [
+    {
+      "itemId": "cc-02",
+      "meanScore": 5.423,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 4.5,
+          "note": "There is no visible visual thesis beyond a restrained white page, dark text and one green button; the treatment feels assembled from defaults.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4.5,
+          "note": "The service list and Bristol references are specific in copy, but the design itself could be reused almost unchanged by any local trade business.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6,
+          "note": "Services, coverage and contact details appear in a sensible one-page order, but the architecture is extremely shallow and provides no visible routes to service detail, credentials, proof or project examples.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "The proposition, supporting copy and phone CTA establish a clear first read, followed by plainly differentiated sections. Beyond that opening hierarchy, each section receives nearly identical treatment and weight.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "Type is readable and consistent with reasonable measures and line spacing, but appears largely default and does no meaningful compositional or brand work.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5.5,
+          "note": "The desktop layout is orderly, but the page is a succession of similarly spaced text blocks separated by rules. Mobile spacing is tidy yet somewhat inflated, producing a long scroll without meaningful changes in density or emphasis.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4,
+          "note": "The page relies entirely on ordinary typography, rules and a button. No photography, certification treatment, project evidence, service imagery or distinctive graphic system helps demonstrate the work or establish trust.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5,
+          "note": "A prominent phone button and simple navigation are visible, but screenshots provide no evidence of hover, focus, transition or feedback states; the static controls show only baseline styling.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5.5,
+          "note": "The mobile view remains readable and the two service columns stack cleanly, but it is essentially the desktop composition collapsed into one column rather than a phone-specific redesign.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "The plain, direct presentation is plausible for a local plumbing firm, but almost nothing visually identifies Ardley or conveys workmanship, reliability, locality or heating expertise.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 7,
+          "note": "The business, location, principal services, coverage and phone action are immediately understandable. It falls short of stronger commercial work because the page offers little reassurance beyond a registration number and makes no visible case through reviews, guarantees, experience or completed work.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 7,
+          "note": "It avoids most conspicuous generated-design motifs such as glowing gradients, card grids, fake metrics and decorative blobs. Its weakness is generic austerity rather than fashionable AI ornament, and the choices still do not feel traceable to this particular business.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "There is no distinctive visual, composition, interaction or content device likely to remain identifiable after viewing comparable local-service websites.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "visual-material",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is clear, readable and functional, but it looks like minimally styled boilerplate rather than authored professional work. It communicates the core service and phone action effectively, yet lacks trust-building evidence, business-specific visual material, responsive invention and any memorable brand expression."
+    },
+    {
+      "itemId": "cc-12",
+      "meanScore": 5,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 4,
+          "note": "The warm neutral palette and mixed serif, sans and monospaced type suggest a rustic bakery direction, but the inconsistent borders, fills, corner radii and controls prevent it becoming a coherent visual thesis.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 5.5,
+          "note": "Bread varieties, fermentation details, collection timing and the physical address are specific, but the design structure itself is a generic product-card landing page that could accommodate many small retailers.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6,
+          "note": "For this small offering, the sequence from proposition to weekly products, collection and location is concise and sensible. The screenshots provide no evidence about deeper routes or whether ordering details are organized effectively beyond this page.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 5.5,
+          "note": "The business name, weekly range and ordering CTA are easy to find, but the three product cards receive inconsistent visual emphasis for no evident reason, and the lower sections flatten into similarly weighted boxes.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 4.5,
+          "note": "Text is legible, but the serif section headings, sans-serif display name and widely tracked monospaced labels do not feel fully reconciled. The mobile product text also has awkward measures and line breaks, while button typography changes between controls.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 4.5,
+          "note": "Desktop alignment is orderly but visually static, and mobile becomes a long sequence of oversized stacked rectangles. Large internal padding and irregular inter-section gaps create bulk without meaningful changes in pace.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3.5,
+          "note": "The page offers no product photography, illustration, packaging, bread texture or other material that lets visitors assess the bakery's core product. Type and flat beige panels are not developed strongly enough to compensate.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 4,
+          "note": "Captured controls are visibly inconsistent: one Add action resembles a tiny default button, another is an underlined text link and another is a large pill. Hover, focus, feedback and transition states were not provided and cannot be assessed.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5,
+          "note": "The mobile view remains readable and avoids overflow, but it is essentially the desktop layout stacked into one column. There is no visible reprioritization, regrouping or mobile-specific density strategy.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "Cream and brown tones are plausible for an artisan bakery, and the plainspoken presentation suits a small local shop. The treatment remains too generic and inconsistently crafted to feel recognizably Fold & Grain.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 7,
+          "note": "The opening sentence immediately explains the business, product availability is concise, ordering is repeatedly signposted and collection timing and location are explicit. The screenshots do not show prices, quantities, availability states or the actual ordering flow.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 6.5,
+          "note": "It avoids most familiar generated-site clichés such as gradient headlines, fake metrics, icon triplets and glowing decoration. However, the generic card stack and lightly branded minimalism still feel assembled rather than meaningfully derived from the bakery.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "No image, composition, typographic gesture or visible interaction creates a signature moment. The bakery name and bread descriptions are more memorable than the design.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "typography",
+        "composition-pacing",
+        "visual-material",
+        "interaction-craft",
+        "memorability"
+      ],
+      "holisticTier": "weak",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page communicates the bakery, products, collection terms and location clearly, but the visual execution is below professional standard. Inconsistent card treatments, mismatched button styles, weak product representation and a mobile layout that merely stacks the desktop components make it feel like unfinished styling rather than a resolved brand experience."
+    },
+    {
+      "itemId": "cc-08",
+      "meanScore": 5.346,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 4.5,
+          "note": "The restrained palette is coherent, but plain typography, rules, fields and green buttons do not establish a distinctive visual thesis.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4.5,
+          "note": "Specificity resides almost entirely in the headline and supporting copy. The structure and visual treatment could serve many unrelated professional-service businesses.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 4.5,
+          "note": "The proposition, enquiry form and pricing link are easy to find, but the visible homepage omits service detail, process, proof, credentials and reassurance. Pricing is oddly reduced to a link after appearing in the navigation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "The hero headline leads clearly, followed by the main CTA and enquiry form. Lower sections are easy to scan, though the large gap beside the desktop form weakens balance and the sequence has little modulation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "Type is readable and consistent, with sensible body measure and a suitably prominent headline. It remains mechanically conventional, and the mobile headline wraps into an awkwardly tall block.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5,
+          "note": "Rules and generous spacing create basic rhythm, but each section follows the same left-aligned pattern. The desktop form button sits awkwardly beside the textarea, while much of the right column remains unused.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 5,
+          "note": "Using type and space alone can suit an accountancy practice, but here those materials are too thinly developed to explain expertise, demonstrate process or build trust.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5.5,
+          "note": "Buttons, links and form controls appear clear and consistently styled in the static images. Hover, focus, validation, submission feedback and navigation behavior were not captured, so deeper interaction craft cannot be judged.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5.5,
+          "note": "The mobile layout remains legible and correctly stacks the form controls, but it is essentially a narrower version of the desktop page. Navigation stays crowded in one row, and the hero wrapping is not carefully composed for the phone.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 6,
+          "note": "The sober typography, white space and muted green are plausible for a dependable bookkeeping service. They communicate generic seriousness rather than a recognisable Sable & Finch character.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 6.5,
+          "note": "The audience, service category, turnover range and primary next step are stated immediately. Conversion confidence is limited by the absence of visible proof, service scope, credentials, pricing context or an explanation of what happens after enquiry.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 6.5,
+          "note": "The page avoids many conspicuous generated-design clichés such as gradients, card grids, fake metrics and glowing decoration. Nevertheless, its generic minimal-service-site structure and undifferentiated empty space feel default rather than business-derived.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "There is no distinctive composition, visual asset or interaction visible that would make this page recognisable later.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "information-architecture",
+        "composition-pacing",
+        "visual-material",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is functional, legible and commercially direct, but it looks like a minimally styled template rather than an authored identity for a specialist bookkeeping firm. The sparse homepage provides little evidence, differentiation or trust-building content, and the mobile version is essentially the same composition stacked into one column."
+    },
+    {
+      "itemId": "cc-04",
+      "meanScore": 2.077,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 1.5,
+          "note": "There is no discernible visual thesis beyond a basic centered container, bold heading, red button, table, and large gaps.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 2,
+          "note": "The tile-company name and two range names are almost the only business-specific elements; the missing product imagery removes the material most capable of expressing the business.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 2.5,
+          "note": "A proposition, CTA, product imagery, comparison table, and supporting paragraph are present in a rudimentary sequence, but navigation and meaningful content structure are not visible and placeholder copy remains.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 2.5,
+          "note": "The company name and red CTA establish basic emphasis, but the floating sale notice competes with and obscures the introduction, while the product area lacks a clear focal point.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 3,
+          "note": "The text is generally legible, but the system-like typography is unrefined, the scale is elementary, and mobile wrapping produces broken-looking price and product labels.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 2.5,
+          "note": "Large undifferentiated gaps, an overlapping promotion, and a mechanically spaced image-table-paragraph stack create a loose and accidental rhythm.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 0.5,
+          "note": "Every product image is replaced by a gray image-not-found placeholder, so the page fails to represent a highly visual product category.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 2,
+          "note": "Only a basic CTA and sale notice are visible. Hover, focus, motion, navigation behavior, and feedback states were not provided, while the notice visibly interferes with content.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 1.5,
+          "note": "Mobile is essentially a narrowed desktop layout: columns become cramped rather than thoughtfully regrouped, imagery stays in three tiny columns, table values wrap badly, and the promotion still overlays the introduction.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 2.5,
+          "note": "The plain black-and-red treatment does not convey tile quality, materiality, craftsmanship, interiors, or a distinctive showroom identity.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 1.5,
+          "note": "A browse CTA and sale message are understandable, but missing imagery, unresolved prices, undefined stock values, obscured introductory copy, and lorem ipsum make the offer unreliable and impossible to evaluate.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 4,
+          "note": "It avoids many fashionable generated-site motifs, but mostly because it is extremely bare; generic placeholder copy and an uncustomized scaffold still make it feel assembled rather than authored.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 1,
+          "note": "There is no intentional signature moment; the only memorable feature is the repeated broken-image state, which is a defect.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "information-architecture",
+        "visual-hierarchy",
+        "typography",
+        "composition-pacing",
+        "visual-material",
+        "interaction-craft",
+        "responsive-recomposition",
+        "brand-fit",
+        "commercial-clarity",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "broken",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is visibly unfinished: all product imagery is missing, template expressions and undefined values are exposed, placeholder copy remains, and the sale notice obstructs core content. The mobile layout compounds these failures with clipped text, awkward wrapping, and no meaningful recomposition."
+    },
+    {
+      "itemId": "cc-11",
+      "meanScore": 4.538,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 3.5,
+          "note": "The serif text, navy button, pale notice box, and basic table do not combine into a developed visual thesis; the result feels assembled from default components.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4.5,
+          "note": "The service taxonomy, fee notice, and pricing table are specific to legal work, but the design itself could be reused for many professional-services businesses.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 5.5,
+          "note": "The visible navigation separates major practice areas sensibly, while the homepage presents proposition, fee information, CTA, and service details in a straightforward order. The screenshots do not show destination pages or enough content to assess the wider architecture.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 5,
+          "note": "The headline establishes a clear first read and the CTA is visible, but the promotional box and pricing table feel loosely related, with limited hierarchy beyond basic changes in size and weight.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 4.5,
+          "note": "Text is legible, but the serif and sans-serif pairing feels generic and under-refined. Table text, navigation, body copy, and headings receive only rudimentary typographic treatment.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 4,
+          "note": "The page has large stretches of unproductive empty space and only one major compositional transition. The hero and table appear as separate blocks rather than a deliberately paced sequence.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3.5,
+          "note": "The only visual material is typography, space, a flat notice panel, and a conventional data table. None is crafted strongly enough to represent the firm’s expertise, location, people, or credibility.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 4.5,
+          "note": "A conventional navigation and CTA are visible, but hover, focus, active, transition, and feedback states are not captured. No interaction detail can be credited from these static screenshots.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 3.5,
+          "note": "The narrower view preserves the desktop navigation, two-column hero, and wide table with minimal adaptation. It reads as compressed desktop rather than a mobile composition.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "The restrained navy-and-serif treatment is plausible for a traditional solicitor, but it is merely category-appropriate and does not express a distinctive Calder & Rowe identity.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 6.5,
+          "note": "The firm’s location, service areas, indicative prices, timescales, fixed-fee status, and primary quote action are immediately understandable. Trust evidence, differentiation, contact reassurance, and stronger conversion support are absent from the visible page.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 6,
+          "note": "The page avoids common generated motifs such as gradients, pill overload, fake metrics, glowing decoration, and card soup. However, its generic minimalism and excess empty space still feel unconsidered rather than meaningfully business-led.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 2.5,
+          "note": "There is no distinctive visual, compositional, typographic, or content moment likely to remain recognizable after viewing.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "typography",
+        "composition-pacing",
+        "visual-material",
+        "responsive-recomposition",
+        "memorability"
+      ],
+      "holisticTier": "weak",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page communicates the firm’s services and pricing plainly, but it looks like minimally styled HTML rather than a resolved professional identity. Weak responsive adaptation, generic composition, and almost no distinctive visual material leave it below the standard a professional studio should ship."
+    },
+    {
+      "itemId": "cc-23",
+      "meanScore": 5.077,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 5,
+          "note": "The restrained blue-and-black system is coherent, but there is no substantive visual thesis beyond familiar SaaS landing-page conventions.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4.5,
+          "note": "Roofing appears in the copy and plan details, but the design itself could be transferred almost unchanged to insurance, property management or a software service.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6,
+          "note": "The page follows a defensible sequence from proposition to benefits, proof metrics, pricing and conversion, but the screenshots show little evidence of deeper routing or editorial sophistication.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "The hero, section titles, prices and calls to action are easy to scan, though repeated centred headings and similarly weighted cards make the page mechanically predictable.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "Type is readable and consistent with sensible measures, but the single heavy sans-serif treatment is ordinary and does little compositional work.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5.5,
+          "note": "The page alternates open centred sections with card rows, yet the rhythm is dominated by repeated spacing and stacking rather than deliberate tension or meaningful transitions.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3.5,
+          "note": "Almost no visual material represents roofs, inspections, workmanship, homeowners, diagnostics or project workflows; generic icons and statistics are left to carry the entire case.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5.5,
+          "note": "Buttons and navigation appear consistent, but static screenshots provide no evidence of hover, focus, transition, feedback or navigation behavior.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5.5,
+          "note": "The mobile layout is tidy and legible, but it is essentially the desktop composition stacked into one column, with navigation links removed rather than meaningfully regrouped.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5,
+          "note": "The presentation feels dependable and accessible, but more like a generic technology subscription brand than a roofing company with tangible expertise and local credibility.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 7,
+          "note": "The offer, pricing tiers and primary actions are easy to understand, though the page lacks visible testimonials, project evidence, credentials and detail explaining how the service actually works.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 2.5,
+          "note": "The page combines many characteristic generated-design motifs: gradient hero text, an announcement pill, icon-in-rounded-square feature cards, a generic KPI band, pricing-card emphasis, extensive centring and a dark closing CTA slab.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "No distinctive image, composition, interaction or business-specific device creates a recognizable signature moment.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "visual-material",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is clean, legible and commercially understandable, but it reads as a polished generic landing-page template rather than a design authored for a roofing business. Its gradient headline, icon-card trio, KPI strip, pricing cards and dark closing CTA closely follow common generated-site conventions, while the absence of roofing imagery, process evidence or distinctive brand material leaves the proposition visually unsupported."
+    },
+    {
+      "itemId": "cc-07",
+      "meanScore": 3.269,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 2.5,
+          "note": "There is no discernible visual thesis beyond a narrow column, pale grey text, and default-looking form controls; the broken image further undermines any intended direction.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 3,
+          "note": "The optometry connection exists almost entirely in the copy. The structure and styling could be reused for many local appointment businesses with minimal changes.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 4,
+          "note": "Service summary, booking form, and contact details appear in a sensible basic order, but the page lacks visible navigation, service detail, credentials, opening hours, pricing guidance, or trust information.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 4,
+          "note": "Heading sizes establish a rudimentary reading order, but uniformly faint colouring weakens emphasis and the blank broken-image region consumes disproportionate attention.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 3,
+          "note": "The sans-serif type is structurally consistent, but contrast is severely inadequate and the blunt weight-and-size hierarchy shows little typographic craft.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 3.5,
+          "note": "The sequence is understandable, but it is simply a succession of left-aligned blocks with large undifferentiated gaps. Desktop leaves most of the viewport unused without creating purposeful tension.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 1,
+          "note": "The only visible image fails to load in both screenshots, leaving a bordered empty rectangle and browser broken-image icon.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 3,
+          "note": "Only static states are shown, so hover, focus, validation, and feedback cannot be judged. What is visible consists of default-looking inputs, a date control, an underlined phone link, and a low-contrast button.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 4.5,
+          "note": "The mobile layout remains usable and allows headings and copy to wrap, but it is essentially the same desktop column expanded to the phone width rather than a separately composed mobile experience.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 3,
+          "note": "The quiet presentation could loosely suit healthcare, but the washed-out palette feels inaccessible and insubstantial rather than reassuring, precise, or clinically trustworthy.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 5,
+          "note": "The business, location, core services, and primary appointment action are immediately understandable. However, the broken image, weak contrast, limited service information, and absence of visible trust signals substantially reduce confidence.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 4.5,
+          "note": "It avoids many fashionable generated-design clichés, but mainly because almost no visual language has been developed. The generic sparse layout and empty-space minimalism are not justified by business-specific content or craft.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 1.5,
+          "note": "There is no positive signature composition, visual system, or content moment; the most memorable feature is the broken image.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "information-architecture",
+        "visual-hierarchy",
+        "typography",
+        "composition-pacing",
+        "visual-material",
+        "interaction-craft",
+        "responsive-recomposition",
+        "brand-fit",
+        "commercial-clarity",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "weak",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page communicates the basic service and appointment action, but the extremely low contrast and visibly broken image make the published result look unfinished and impair legibility. Its sparse, generic composition offers little trust, optometry-specific character, or evidence of professional visual authorship."
+    },
+    {
+      "itemId": "cc-22",
+      "meanScore": 6.269,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 7,
+          "note": "A consistent monochrome, typography-led direction is maintained with discipline, but it is a familiar independent-studio aesthetic rather than a distinctive visual thesis.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 5.5,
+          "note": "Project names and studio copy provide some specificity, but the structure and styling could be transferred almost unchanged to another design, architecture or strategy studio.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6,
+          "note": "The page follows a defensible sequence from proposition to services, work, approach and contact, but the work entries are too thin to explain capabilities or establish proof. The screenshots do not show whether project routes contain the missing detail.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7,
+          "note": "The hero dominates immediately and section titles, project names and metadata form a clear reading order. Later sections are comparatively uniform and subdued, so the page loses emphasis after the opening.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 7.5,
+          "note": "Type is the principal compositional material, with confident hero scale, controlled measures and carefully styled metadata. The tiny, pale labels approach illegibility, and the system remains fairly conventional beyond its scale contrast.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 6.5,
+          "note": "Large spatial pauses create a calm editorial rhythm, but several gaps feel excessive rather than purposeful, particularly on desktop, while the repeated ruled rows and sparse lower sections flatten the scroll.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 5,
+          "note": "Typography and space are handled adequately, but the absence of any project imagery, artifacts, outcomes or other evidence is a major weakness for a studio selling visual and experiential work.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5.5,
+          "note": "Static screenshots show orderly navigation and likely link targets, but provide no evidence of hover, focus, transition, feedback or other interaction states. Those aspects cannot be credited from the supplied evidence.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 6.5,
+          "note": "Mobile adapts type scale, stacks the approach columns and converts project metadata into vertical blocks cleanly. It is still fundamentally the desktop sequence narrowed into one column, with the service ticker clipped and desktop navigation apparently removed without a visible replacement.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 7,
+          "note": "The restraint and editorial typography plausibly suit a thoughtful independent creative studio. Nothing visible makes the language unmistakably Field rather than one of many similarly positioned studios.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 5.5,
+          "note": "The page broadly communicates a strategy, identity and digital studio, but the proposition is generic, client evidence is absent despite the 'selected clients' label, and there is no prominent next action beyond a small footer email.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 7,
+          "note": "It avoids gradients, card soup, decorative blobs, fake metrics and most common generated-interface motifs. However, the giant vague manifesto, broad agency language and premium minimalism built heavily from empty space remain generic conventions.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 5.5,
+          "note": "The oversized three-line hero is the strongest visual moment, but neither its wording nor treatment is distinctive enough to belong uniquely to Field.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "business-specificity",
+        "visual-material",
+        "commercial-clarity",
+        "memorability"
+      ],
+      "holisticTier": "competent",
+      "observations": {
+        "templateDerived": false,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is clean, coherent and competently responsive, but its austere agency-minimalist language feels transferable rather than specific to Field. Most importantly, a creative studio claiming to make meaningful experiences presents no visible work, outcomes or convincing proof, leaving both the proposition and the design underdeveloped."
+    },
+    {
+      "itemId": "cc-10",
+      "meanScore": 3.192,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 1.5,
+          "note": "There is no visible visual thesis beyond black text, horizontal rules, and a constrained content column.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 2.5,
+          "note": "Veterinary specificity exists only in the copy; the presentation could support almost any local service business without structural changes.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 4,
+          "note": "Emergency information comes first and the remaining subjects follow a defensible order, but everything is placed on one page as undifferentiated text with no visible navigation, routes, previews, or meaningful content editing.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 3.5,
+          "note": "Bold headings and separators provide basic scanning, but nearly every section has the same weight and no primary proposition or action controls the page.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 3.5,
+          "note": "The type is legible, but the scale is nearly uniform, heavy bolding substitutes for hierarchy, and the mobile measure produces awkward wrapping in contact details and longer statements.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 3,
+          "note": "The page repeats the same left alignment, rule, heading, and text rhythm throughout, with no changes in scale, density, or emphasis to shape the scroll.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 1.5,
+          "note": "No photography, illustration, identity system, staff imagery, facility evidence, or other visual material is present; type and spacing alone have not been developed into a purposeful graphic system.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 2.5,
+          "note": "The screenshots show no visible navigation, buttons, form controls, or clearly styled links. Hover, focus, feedback, and motion states were not provided and cannot be assessed.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 4,
+          "note": "The mobile view remains readable, but it is simply the same document narrowed into one column, with no mobile-specific regrouping, prioritisation, or interaction treatment.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 3,
+          "note": "The direct, practical tone is plausible for a veterinary practice, but the visuals communicate neither animal care, reassurance, clinical competence, locality, nor the character of this particular group.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 4.5,
+          "note": "The business type, services, hours, emergency number, and contact details are understandable, but there is no clear appointment action, usable registration path, location choice, or visible trust evidence.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 6.5,
+          "note": "It avoids fashionable generated-design clichés such as gradient headlines, card grids, glowing shapes, fake metrics, and generic innovation copy. Its problem is extreme under-design rather than AI-style ornament.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 1.5,
+          "note": "There is no distinctive composition, visual asset, interaction, or branded moment that would make this page recognisable later.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "information-architecture",
+        "visual-hierarchy",
+        "typography",
+        "composition-pacing",
+        "visual-material",
+        "interaction-craft",
+        "responsive-recomposition",
+        "brand-fit",
+        "commercial-clarity",
+        "memorability"
+      ],
+      "holisticTier": "weak",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "This is essentially a lightly styled document rather than a professionally designed veterinary website. The information is readable and the emergency number is prominent, but there is no meaningful brand expression, navigation, visual trust-building, interaction design, or responsive recomposition."
+    },
+    {
+      "itemId": "cc-25",
+      "meanScore": 7.423,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 7.5,
+          "note": "A disciplined editorial-accountancy direction runs consistently through the serif headings, fine rules, muted paper tones and compact tabular structures. It is clearly considered, but its visual vocabulary remains familiar.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 8,
+          "note": "The fee schedule, accounting-year calendar, client tax example, partner access and two-office presentation make the structure meaningfully specific to this practice.",
+          "whyNotHigher": "The underlying single-column editorial framework could still accommodate many other small professional-service firms with moderate content changes.",
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 7.5,
+          "note": "The page answers fit, cost, working rhythm, proof, people and contact in a persuasive order. It is still essentially one long page, and there is limited evidence of deeper routing or selective previews.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7.5,
+          "note": "The proposition leads clearly, fees and the annual calendar receive appropriate structural emphasis, and labels make scanning reliable. Later sections settle into similar visual weight, reducing momentum.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 7.5,
+          "note": "The serif and compact sans-serif pairing is appropriate, measures are controlled and small labels are handled carefully. On mobile, body copy, metadata and navigation are frequently too small for comfortable reading.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 7.5,
+          "note": "Dense tables alternate effectively with open testimonial and people sections, while background shifts provide useful chapter breaks. The repeated narrow content column and similar section spacing make the lower half somewhat predictable.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 7.5,
+          "note": "Type, rules, tables and restrained colour are sensible material for a candid accountancy practice, and the annual calendar communicates something imagery would not. The system is effective but offers little expressive range beyond editorial formatting.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 6,
+          "note": "The screenshots show straightforward navigation and contact links, but no hover, focus, transition, feedback or other interaction states are visible, so higher craft cannot be evidenced.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 6,
+          "note": "The layout remains orderly and the calendar preserves a useful two-column structure, but mobile is predominantly the desktop sequence stacked and compressed. The tiny navigation and dense small type suggest insufficient phone-specific adjustment.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 8,
+          "note": "The sober editorial tone, direct pricing and absence of glossy corporate imagery suit an established, plain-speaking owner-managed-business accountant particularly well.",
+          "whyNotHigher": "The visual language conveys trustworthy professional restraint more strongly than a uniquely identifiable Wren & Fell character.",
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 8,
+          "note": "The opening states audience, geography and scale immediately; exclusions qualify leads; prices reduce uncertainty; and partner phone numbers make contact concrete.",
+          "whyNotHigher": "There is no prominent, repeated next action at likely decision points, and mobile contact navigation is visually understated.",
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 8.5,
+          "note": "The site avoids virtually all fashionable generated-site motifs and instead builds its case from precise fees, dates, operational detail and modest editorial structures.",
+          "whyNotHigher": "Its avoidance of generic AI motifs is strong, but some of the wider minimalist editorial language remains transferable across boutique professional-service brands.",
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 7,
+          "note": "The twelve-month client-year grid, with two highlighted months requiring client input, is a modestly distinctive and useful moment. The rest of the page is deliberately quiet and unlikely to remain visually vivid.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "responsive-recomposition"
+      ],
+      "holisticTier": "professional",
+      "observations": {
+        "templateDerived": false,
+        "interchangeableBusiness": false,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": false,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": "The accounting-year grid that shows exactly when the firm works and highlights the two months when records and an accounts meeting are required from the client.",
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "This is restrained, professional work whose strongest decisions come from unusually specific content: published fees, a client-year calendar, a concrete tax case and named staff. The visual system is quiet and coherent rather than exceptional, while the mobile version is mostly a compressed stack with typography and navigation that become uncomfortably small."
+    },
+    {
+      "itemId": "cc-01",
+      "meanScore": 6.269,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 6.5,
+          "note": "The restrained serif-led presentation is coherent and suitable, but it amounts to a familiar professional-services aesthetic rather than a strong visual thesis.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 6.5,
+          "note": "The project descriptions, conservation language and testimonial are specific to structural engineering, but the visual structure could readily serve an architect, surveyor, solicitor or other consultancy.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6,
+          "note": "The single-page sequence of proposition, work, services, proof and contact is defensible and easy to follow, but the navigation suggests routes while the visible experience provides only brief section summaries.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7,
+          "note": "The hero proposition dominates appropriately, headings and CTAs are clear, and the page scans easily. Below the hero, however, most sections receive similar visual weight and the sequence becomes mechanically uniform.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 6.5,
+          "note": "Typography is readable and consistent, with sensible desktop measures, but the system is conventional and the small-screen wrapping is insufficiently controlled.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 6,
+          "note": "Desktop spacing is orderly and calm, but repeated dividers, three-column rows and similarly spaced sections create a flat rhythm. Mobile simply elongates that structure without introducing meaningful density or scale changes.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 5,
+          "note": "The page relies almost entirely on type, rules and one accent colour. For a practice working with distinctive historic buildings, the absence of photographs, drawings, survey evidence or structural details leaves the work materially unproven.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5.5,
+          "note": "Buttons and navigation links are visibly identifiable, but screenshots provide no evidence of hover, focus, transition, feedback or other interaction states. The awkward mobile wrapping suggests limited micro-level refinement.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5,
+          "note": "The mobile page is essentially the desktop content stacked into one column. Navigation wraps into two rows without a clear mobile arrangement, and the phone number and contact metadata break inelegantly.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 7,
+          "note": "The sober palette, traditional serif and restrained presentation suit a conservative engineering practice dealing with listed buildings. They communicate seriousness, though not a recognisable Fenwick & Hale identity.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 7.5,
+          "note": "The business, audience, services and next action are stated plainly, supported by concrete projects and a persuasive cost-saving testimonial. Trust would be stronger with fuller credentials, project evidence and more polished mobile contact presentation.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 7.5,
+          "note": "It avoids gradients, rounded-card grids, fake metrics, glowing decoration and vague innovation copy. Its plainness feels editorially restrained, although the generic consultancy structure and premium-minimalist sparseness remain transferable.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 5.5,
+          "note": "The testimonial about avoiding unnecessary underpinning is memorable as content, but there is no distinctive visual composition or experience that belongs uniquely to this site.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "visual-material",
+        "responsive-recomposition",
+        "memorability"
+      ],
+      "holisticTier": "competent",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site is clear, restrained and credible, but its presentation is too generic and visually underdeveloped for a professional studio to claim as distinguished work. The mobile layout is mostly a stacked desktop page and introduces conspicuous wrapping problems in the navigation, phone number and contact metadata."
+    },
+    {
+      "itemId": "cc-20",
+      "meanScore": 5,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 5,
+          "note": "The restrained purple palette is coherent, but the page appears assembled from familiar SaaS components and lacks a distinctive visual thesis.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4,
+          "note": "Neither the structure nor the imagery reveals anything particular about Nexova's workflows, customers or product mechanics; the page could be reskinned for many B2B software companies.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 5.5,
+          "note": "The visible homepage follows a comprehensible proposition-to-benefits-to-proof-to-CTA sequence, but the repeated feature sections provide little depth and the screenshots do not show enough route content to assess the broader architecture.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "The hero, section headings, cards and CTA establish a clear reading order, although nearly every section uses the same centered-heading-plus-grid hierarchy and therefore carries similar weight.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "Typography is readable and consistent with sensible headline measures, but it is visually routine; small labels are faint and type is used primarily for labelling rather than composition.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5.5,
+          "note": "Spacing is orderly, but the scroll repeats centered introductions, three-card groups and generous section padding with limited variation or tension.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4,
+          "note": "The principal product representation is an extremely abstract dashboard shell with generic boxes and an area chart, so it neither demonstrates the product nor supports its automation claim.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5.5,
+          "note": "The screenshots show consistent buttons and navigation styling, but provide no evidence of hover, focus, motion, feedback or other interaction states.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5.5,
+          "note": "The mobile layout remains tidy and preserves readable spacing, but it is essentially the desktop page stacked into one column; even the KPI row simply becomes a vertical list.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "The clean blue-purple styling is plausible for automation software, but it expresses the category rather than a recognizable Nexova identity.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 6.5,
+          "note": "The automation proposition and primary actions are immediately visible and repeated appropriately, but vague claims, invented-looking metrics and the non-informative product mockup weaken understanding and trust.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 2,
+          "note": "The page combines nearly the full generic AI-SaaS vocabulary: gradient hero text, announcement pill, glowing backdrop, fake logo wall, rounded icon cards, KPI strip, abstract dashboard, repeated centered sections and a dark closing CTA slab.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "No visual, content or compositional moment appears unique to Nexova; the gradient headline is the strongest motif, but it is common across generic SaaS landing pages.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "business-specificity",
+        "visual-material",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is clean, legible and commercially understandable, but it is dominated by generic generated-SaaS conventions rather than decisions specific to Nexova. The gradient headline, placeholder dashboard, logo wall, feature-card triplets, KPI strip and dark closing CTA make it feel like a polished template rather than professional authored work."
+    },
+    {
+      "itemId": "cc-09",
+      "meanScore": 4.731,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 4.5,
+          "note": "Navy, serif headings, rules, and generous whitespace form a coherent but extremely generic conception of financial respectability. There is no distinctive visual thesis or authored system.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4.5,
+          "note": "The statistics and testimonials mention wealth management, but the design itself could be reused for an accountancy, legal, insurance, or consulting firm with only copy changes.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 5.5,
+          "note": "The visible page presents proposition, proof points, testimonials, and accreditation in a defensible order, with simple top-level navigation. Only the homepage screenshots are available, so route depth, detailed content placement, and navigation destinations cannot be assessed.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6,
+          "note": "The headline, CTA, KPI figures, testimonials, and accreditation form a clear reading order. Beyond basic size and weight changes, however, the hierarchy remains mechanically uniform and offers little controlled modulation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 5.5,
+          "note": "The serif and sans-serif pairing is readable and conventionally appropriate, but several details feel under-resolved: the desktop body copy looks small, the mobile headline wraps awkwardly, and the brand name breaks inelegantly into three lines.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5,
+          "note": "Horizontal rules and large vertical gaps divide the page into understandable sections, but the rhythm is repetitive and sparse. Desktop leaves substantial space without creating tension, while mobile simply elongates the same sequence.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4,
+          "note": "The page relies almost entirely on plain type, rules, and a solid button. A restrained approach could suit this business, but the chosen material does not demonstrate expertise, explain services, substantiate performance, or create a persuasive visual identity.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 4.5,
+          "note": "A conventional navigation and primary button are visible, but screenshots provide no evidence of hover, focus, transition, feedback, or other interaction states. The mobile navigation visibly overruns the viewport, which weakens confidence in its implementation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 4,
+          "note": "The mobile page is essentially the desktop page stacked into one column. The KPI row becomes a long vertical list, the hero copy wraps heavily, and the unchanged horizontal navigation clips the Contact item at the right edge.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "The restrained navy palette and traditional serif typography plausibly signal conservative financial services. They communicate the category broadly, but nothing makes the visual language recognisably Meridian.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 5,
+          "note": "The advisory category and primary action are immediately understandable, and numerical proof is prominent. However, the services and customer fit remain vague, while claims of guaranteed returns and an unexplained No.1 rating risk undermining credibility rather than building it.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 4,
+          "note": "The design avoids gradients, glowing decoration, pill overload, and card soup, but still uses familiar generated-site ingredients: a vague superlative hero, oversized empty space, a generic four-column KPI row, unsubstantiated accolades, and generic testimonial proof.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "There is no distinctive composition, visual asset, or content treatment likely to remain identifiable after viewing. The strongest visible elements are common financial-site conventions.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "visual-material",
+        "responsive-recomposition",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is legible and orderly, but it looks like minimally styled template content rather than a designed identity for a wealth-management firm. Its generic KPI row, limited visual material, stacked mobile treatment, and clipped mobile navigation keep it below professional studio standard; the prominent claim of guaranteed returns also creates a serious trust concern."
+    },
+    {
+      "itemId": "cc-21",
+      "meanScore": 5.154,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 6.5,
+          "note": "The warm neutral palette, fine rules, sparse typography, and measured spacing form a coherent quiet-luxury direction, but it is a familiar aesthetic treatment rather than a distinctive visual thesis.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 3.5,
+          "note": "Nothing visible identifies the actual business, product category, craft, clientele, or differentiating evidence. The same composition could represent fashion, interiors, fragrance, hospitality, or a creative consultancy.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 5,
+          "note": "The page follows a comprehensible sequence from proposition to philosophy, principles, and enquiry, and desktop navigation exposes several routes. However, the available homepage content is too abstract to explain the offering, and no mobile navigation is visible.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "The hero statement, philosophy passage, paired content blocks, and closing enquiry create a clear reading order. Excessive uniform quietness weakens emphasis, and no product or proof point becomes a genuinely dominant moment.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 6.5,
+          "note": "Type choices, measures, line breaks, and tracking are consistent and readable, including at mobile width. The display serif and widely tracked uppercase labels are conventional luxury signals, and the typography does little expressive or business-specific compositional work.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 7,
+          "note": "Desktop alternates centred statements with offset image-and-copy pairings, producing a calm and intelligible scroll. The expanses between sparse elements become monotonous, while mobile loses most of the desktop tension and reads as a long succession of stacked blocks.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3.5,
+          "note": "The only visible non-typographic material consists of two featureless beige rectangles. Whether these are intentional fields or failed image loads cannot be determined from screenshots, but as rendered they neither represent a product nor support the brand's claims.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5,
+          "note": "Static screenshots show a restrained navigation and an underlined enquiry link, but provide no evidence of hover, focus, transition, menu, feedback, or motion quality. The absent mobile navigation also leaves a key interaction unresolved in the supplied evidence.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5.5,
+          "note": "The mobile layout remains legible, adjusts headline wrapping, and stacks the alternating desktop rows in a sensible content order. It is still essentially the desktop content placed into one column, with little evidence of phone-specific regrouping or a dedicated navigation solution.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 6,
+          "note": "The restraint plausibly fits an upscale Maison-branded business and supports an atmosphere of discretion. Because the sector and offering remain unidentified, it cannot be judged recognisably right for this particular organisation rather than generically luxurious.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 3,
+          "note": "The page offers philosophy without a concrete proposition: visitors cannot tell what Maison Élan provides, inspect its work, understand value, or assess trust. “Begin a conversation” is visible but asks for commitment before giving a reason to enquire.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 4.5,
+          "note": "It avoids gradients, card soup, pills, fake metrics, and glowing decoration, but strongly exhibits another generic pattern: vague premium statements, tiny eyebrow labels, abundant empty space, interchangeable craft copy, and a serif-led luxury veneer without supporting substance.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 4.5,
+          "note": "The alternating beige rectangles and text blocks are orderly but not signature-worthy. There is no visible image, graphic device, content reveal, or composition that would reliably identify Maison Élan later.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "business-specificity",
+        "visual-material",
+        "commercial-clarity",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is clean and controlled, but its luxury minimalism is mostly empty space, restrained serif typography, and vague brand language. It never establishes what Maison Élan makes or sells, while the blank-looking visual blocks provide no useful product evidence; the mobile version is primarily a tidy stacking of the desktop composition."
+    },
+    {
+      "itemId": "cc-06",
+      "meanScore": 5.615,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 6.5,
+          "note": "The quiet editorial minimalism is coherent, but the visual thesis amounts mainly to cream space, a serif title, tracked labels, and thin rules. It is controlled rather than meaningfully authored.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 4.5,
+          "note": "The material references and contemplative copy suggest an interiors practice, but the structure and presentation could be reused almost unchanged for an architect, furniture maker, fashion label, or photographer.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 4.5,
+          "note": "Only a broad positioning statement and three brief facts are visible. There is no shown work, service explanation, studio profile, process, location, project preview, or clear route beyond the ambiguous Enquiries label.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 7,
+          "note": "The studio name establishes an immediate first read, followed clearly by the proposition and supporting columns. The hierarchy is clean but extremely simple, with no visual evidence or commercial moment competing for attention.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 7,
+          "note": "Scale, tracking, measure, and line spacing are generally considered, and the mobile statement wraps gracefully. The familiar large-serif-plus-spaced-sans treatment remains conventional and does little distinctive compositional work.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 6.5,
+          "note": "Generous gaps and rules create a calm sequence, but nearly every element is centered and isolated by similar expanses of whitespace. The scroll lacks changes in density, alignment, or visual material that would create genuine tension and release.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4,
+          "note": "For an objects and interiors studio, showing no object, interior, material detail, drawing, or project evidence is a major omission. Typography and space alone do not adequately represent the work described.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5,
+          "note": "The screenshots show only two text navigation items and no visible controls or feedback. Hover, focus, transition, navigation behavior, and enquiry functionality cannot be judged from the supplied evidence.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 6,
+          "note": "The mobile version has sensible type sizing, margins, and readable measures, while the three supporting items stack cleanly. It is nevertheless essentially the desktop composition converted into one column, with no substantial reprioritization or regrouping.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 7,
+          "note": "The quiet, tactile, restrained mood is appropriate for a small interiors and objects atelier. It conveys taste, but not enough unique identity to feel recognizably specific to Atelier Sonde without the name.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 4,
+          "note": "The category and scarcity positioning are loosely communicated, but visitors cannot see what the studio makes, why it is credible, what commissions involve, or how to initiate one. The next action is present only as an understated Enquiries label.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 6,
+          "note": "It avoids gradients, cards, pills, fake metrics, and other common generated-interface motifs. However, premium minimalism produced chiefly through empty space, centered serif copy, vague poetic language, and spaced capitals is itself a highly interchangeable pattern.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 5,
+          "note": "The page has a consistent mood but no project image, unusual composition, distinctive graphic device, or captured interaction that could serve as a signature moment.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "business-specificity",
+        "information-architecture",
+        "visual-material",
+        "commercial-clarity"
+      ],
+      "holisticTier": "competent",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is composed cleanly and the restrained tone plausibly suits a design atelier, but it relies almost entirely on whitespace, centered serif typography, and atmospheric copy. It provides no visible work, capabilities, credentials, process, or meaningful enquiry path, leaving both the studio's distinctiveness and its commercial case seriously underdeveloped."
+    },
+    {
+      "itemId": "cc-05",
+      "meanScore": 4.615,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 5,
+          "note": "The restrained blue-and-white treatment is coherent, but there is no distinctive visual thesis beyond oversized gradient type, generous whitespace and centred content.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 3.5,
+          "note": "Nothing visible explains Northlight's sector, capabilities, work, clients or differentiating expertise. The same structure could serve almost any consultancy after changing the name and copy.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 5,
+          "note": "The visible page follows a comprehensible hero-beliefs-approach sequence and offers conventional routes, but it omits the substantive service, evidence and trust content needed to understand the business. The screenshots do not establish what exists behind the navigation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6.5,
+          "note": "The hero headline, CTA and section headings create a clear reading order. Below the hero, repeated three-column and stacked text groups have little variation in emphasis, making the experience flatten quickly.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "Type is readable and generally consistent, with sensible body measures. The headline wrapping is controlled but awkward on desktop, and the typography remains conventional rather than functioning as a developed compositional system.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5,
+          "note": "Large whitespace and section rules provide separation, but the page relies almost entirely on centred symmetry and repeated spacing. Mobile is especially elongated, with substantial empty intervals and little density or rhythm variation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3.5,
+          "note": "The only supporting graphics are three pale rounded squares that communicate no meaning and appear placeholder-like. No work, process artefacts, imagery, diagrams or other material demonstrates the business's value.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 4.5,
+          "note": "A prominent CTA and text navigation are visible, but static screenshots provide no evidence of hover, focus, transition or feedback quality. The mobile navigation visibly runs beyond the viewport, which weakens confidence in its implementation.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 4,
+          "note": "Desktop columns are simply stacked into a long centred mobile page, without meaningful reprioritisation or regrouping. The full desktop navigation remains on one line and the Contact item is clipped off-screen.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5.5,
+          "note": "The calm, orderly visual language is plausible for a design or strategy consultancy, but it is too generic to feel recognisably Northlight or to establish a particular audience and character.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 4.5,
+          "note": "The next action is obvious, but the proposition remains vague: the page never makes clear what Northlight actually sells, for whom, or why a prospect should trust it. The cropped mobile navigation also obstructs a primary contact route.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 3.5,
+          "note": "The page combines a vague giant gradient headline, generic consultancy language, excessive centring, icon-in-rounded-square triplets and premium minimalism built mainly from empty space. These choices are not visibly justified by the business.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "There is no distinctive composition, visual asset, interaction or content moment likely to remain identifiable as Northlight. The gradient headline is the strongest motif, but it is widely interchangeable.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "business-specificity",
+        "visual-material",
+        "responsive-recomposition",
+        "commercial-clarity",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is clean and functional, but it reads as a minimally customised agency template rather than an experience authored for Northlight. Generic copy, repetitive centred sections, placeholder-like icon squares, weak business evidence and a visibly clipped mobile navigation keep it below professional studio standard."
+    },
+    {
+      "itemId": "cc-03",
+      "meanScore": 4.231,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 4.5,
+          "note": "The blue corporate palette and centred card layout are coherent, but there is no visible visual thesis or authored graphic language.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 2.5,
+          "note": "The headline, service categories and descriptions could be applied to almost any consultancy, agency or B2B services company without structural changes.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 4.5,
+          "note": "The visible page has a basic hero-to-services-to-footer sequence and conventional navigation, but the screenshots provide no evidence of substantive previews, proof, case studies or intelligently differentiated routes.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6,
+          "note": "The hero headline, supporting line and CTA establish a clear first read, followed by the three services. Beyond that basic hierarchy, all service cards have identical weight and there is no deeper sequence of attention.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "typography",
+          "score": 5.5,
+          "note": "Typography is readable and consistent, with sensible headline wrapping on mobile, but the default-looking sans serif, limited scale system and undistinguished small text do no compositional work.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5,
+          "note": "Desktop spacing is orderly but consists primarily of three centred horizontal bands. Mobile simply elongates the same structure, producing repetitive card spacing without meaningful changes in rhythm or density.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "visual-material",
+          "score": 3,
+          "note": "The only graphic material is a repeated set of identical blue circles, which communicates nothing about strategy, operations, technology or the consultancy's work.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 4.5,
+          "note": "Navigation and a primary button are visibly identifiable, but static screenshots provide no evidence of hover, focus, feedback, transition or other refined interaction states.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5,
+          "note": "The mobile layout remains legible and maintains usable spacing, but it is essentially the desktop composition narrowed and stacked into one column. Even the navigation remains a single compact row rather than being meaningfully regrouped.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 5,
+          "note": "The restrained blue palette is plausible for a consultancy, but nothing about the visual language feels recognisably specific to Vantage Consulting or its audience.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 4.5,
+          "note": "A CTA and three broad service areas are clear, but the page never explains the target client, concrete offer, differentiator, outcomes, evidence or what happens after clicking.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 2.5,
+          "note": "The vague success headline, innovation phrasing, centred feature triplet, repeated cards, abstract circles and generic CTA collectively match highly interchangeable generated-site conventions.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        },
+        {
+          "criterion": "memorability",
+          "score": 2.5,
+          "note": "There is no distinctive image, typographic treatment, composition, proof point or content device likely to remain identifiable after viewing.",
+          "whyNotHigher": null,
+          "positiveEvidence": [],
+          "whyBenchmark": null
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "information-architecture",
+        "visual-material",
+        "interaction-craft",
+        "responsive-recomposition",
+        "brand-fit",
+        "commercial-clarity",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The page is functional and legible, but it reads as a minimally customised consulting template rather than professional work shaped around Vantage Consulting. Generic claims, interchangeable service cards, placeholder-like circles and a stacked mobile layout provide neither meaningful business evidence nor a distinctive visual identity."
+    },
+    {
+      "itemId": "cc-24",
+      "meanScore": 5.154,
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 4.5,
+          "note": "The pale background, white cards, dark type and green accent are coherent, but there is no discernible visual thesis beyond generic restrained corporate styling.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 5,
+          "note": "The Yorkshire locations, service descriptions, team credentials and testimonial are specific in copy, but the design and component structure could support almost any small professional-services firm.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 6,
+          "note": "The page moves defensibly from proposition to services, scale, people, testimonial and contact details. However, the screenshots show little evidence of meaningful preview-versus-detail decisions, and desktop navigation routes cannot be evaluated beyond their labels.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 6,
+          "note": "The hero headline establishes a clear first read and section headings are easy to scan, but nearly every subsequent module has the same white-card weight, flattening the sequence.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 6,
+          "note": "Type is consistently readable with sensible weight contrast and generally comfortable measures. It remains utilitarian, with limited scale modulation and no typographic detail or composition that feels distinctive.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 5,
+          "note": "Desktop alignment is tidy, but the page is paced as consecutive card rows with little tension, release or sectional contrast. On mobile this becomes a long, repetitive procession of similarly padded boxes.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 4.5,
+          "note": "A restrained accountancy site does not require photography, but the chosen material is barely developed beyond typography, cards and anonymous circular avatar placeholders. Nothing visual helps demonstrate expertise, place, people or working character.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 5,
+          "note": "The navigation and call button appear clear, but static screenshots provide no evidence of hover, focus, transition, feedback or other interaction states. The visible controls show baseline consistency rather than notable micro-craft.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 5,
+          "note": "The mobile layout is clean and readable, with secondary navigation removed, but it is essentially the desktop content stacked in one column. There is no visible regrouping, reordered priority or mobile-specific compositional idea.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 6,
+          "note": "The sober palette and direct language are plausible for a regional accountancy practice, but the identity is too generic to feel recognisably Wren & Fell with the name removed.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 7,
+          "note": "The audience, location, services, company scale, people, contact information and primary call action are all immediately understandable. The limitation is that there is little visible differentiation or persuasive proof beyond one testimonial and basic longevity figures.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 3.5,
+          "note": "The page relies heavily on rounded-card soup, a generic KPI row, identical feature cards, circular avatar placeholders and repetitive section treatment. Those motifs have little demonstrated justification tied to accountancy or this firm.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 3.5,
+          "note": "There is no distinctive visual moment, composition or content device likely to remain identifiable after viewing. The testimonial is the most human content, but its presentation is entirely conventional.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        }
+      ],
+      "failingCriteria": [
+        "art-direction",
+        "business-specificity",
+        "composition-pacing",
+        "visual-material",
+        "responsive-recomposition",
+        "ai-slop-resistance",
+        "memorability"
+      ],
+      "holisticTier": "generic",
+      "observations": {
+        "templateDerived": true,
+        "interchangeableBusiness": true,
+        "mobileIsStackedDesktop": true,
+        "noSignatureMoment": true,
+        "typographyMerelyCompetent": true,
+        "genericDesignLanguage": true
+      },
+      "signatureMoment": null,
+      "unprovenCriteria": [],
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "The site communicates the firm’s services clearly and remains legible at both widths, but its visual system is almost entirely a sequence of interchangeable rounded white cards. It feels like a clean generated template rather than professional work authored around this accountancy practice, and the mobile view is principally the desktop modules stacked into one column."
+    }
+  ]
+}

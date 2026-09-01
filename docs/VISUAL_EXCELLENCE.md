@@ -421,6 +421,44 @@ accountancy site needs none of Aman's photography, Linear's motion or Kononenko'
 excellent. Style is not quality, and a rubric that confused the two would teach the factory to produce
 Linear pastiches for plumbers.
 
+### 7b. What a real Critic did against the new scale — 2026-09-01
+
+The scale above was designed and tested structurally before any Critic saw it.
+`examples/critic-calibration/runs/` records the first run that closes that gap: eighteen CC2 fixtures
+rendered at desktop and phone, blinded under neutral names, one Codex invocation each with no shared
+context, seed `cc2-autumn-1`.
+
+| Metric | Result |
+| --- | --- |
+| False passes | 0 |
+| Strata ranked in order | yes — 3.56 / 4.88 / 5.42 / 6.85 |
+| Ordering assertions honoured | all 5 |
+| Scores of 9 or above | **0** |
+| Spread | 5.35 (2.08 → 7.42) |
+
+The two results worth the run:
+
+**`cc-25` 7.42 vs `cc-24` 5.15.** The same fictional accountancy practice, the same content, the same
+words — the only variable is composition. The Critic separated them by 2.27, set every observation true
+on the card-soup version, and on the restrained one named the signature moment unprompted: *"the
+twelve-month accounting-year grid, with two shaded months identifying when the client must supply
+records."* Nothing in the prompt mentioned it.
+
+**`cc-25` 7.42 vs `cc-20` 5.00.** The polished generic SaaS fixture — gradients, glow, product mockup,
+hover-lift cards — lost to a site with no motion, no gradients and no photography, by 2.42. The Critic
+has not learned that finish means quality.
+
+**What it does not establish.** It awarded no score of 9 or above, and the corpus contains no artifact
+asserted to deserve one — `T5` and `T6` are deliberately empty. Zero 9s over a corpus with no 9-class
+work is the correct outcome and is *not* evidence that the top of the scale functions. The ceiling is
+tested structurally by `tooling/visual-rubric.test.mjs`; whether a Critic will ever issue a 10, and
+whether it would be right to, needs work in that class to exist and a panel to adjudicate it.
+
+Two findings from the run are recorded against the corpus rather than smoothed away: `cc-01`'s
+`T4-strong-professional` label is disputed (it inherited CC1's `excellent` stratum, which CC1's own
+README says is not a quality claim), and `cc-08`'s defect is functional and cannot be shown in a still
+capture at all.
+
 ### Cross-browser visual acceptance
 
 Agency-quality claims require more than Chromium. Keep full rendered-evidence coverage on the primary browser, then add a targeted portability smoke across at least Chromium, WebKit and Firefox for representative critical routes/states.

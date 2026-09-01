@@ -100,7 +100,7 @@ function livePath(closed: PlantState, from: string): string[] {
  * convincing than one that shows a single check working properly on real plant. This is the
  * class that kills people, and it is the one the worked example turns on.
  */
-function checkEarthOnLive(closed: PlantState, step: Step): Refusal | null {
+function checkEarthOnLive(closed: PlantState): Refusal | null {
   const state = solve(closed);
   if (!state.earthOnLive.length) return null;
   const [fault] = state.earthOnLive;
@@ -135,7 +135,7 @@ export function prove(steps: Step[], from?: PlantState): { steps: ProvedStep[]; 
 
   for (const step of steps) {
     const next = apply(closed, step);
-    const refusal = refusedAt === null ? checkEarthOnLive(next, step) : null;
+    const refusal = refusedAt === null ? checkEarthOnLive(next) : null;
     if (refusal && refusedAt === null) refusedAt = step.n;
     closed = next;
     out.push({ step, state: solve(closed), exposure: contingencyExposure(closed), refusal });

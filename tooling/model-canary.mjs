@@ -57,6 +57,7 @@ import { createAnthropicModelAdapter } from './lib/model-provider-anthropic.mjs'
 import { createOpenAiCompatibleAdapter } from './lib/model-provider-openai-compatible.mjs';
 import { createModelGateway } from './lib/model-gateway.mjs';
 import { readModelKillSwitch, describeModelKillSwitch } from './lib/model-kill-switch.mjs';
+import { describeTrustedSecretSource, resolveTrustedSecret } from './lib/provider-credential.mjs';
 
 export const REPOSITORY_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const WORKER = path.join(REPOSITORY_ROOT, 'tooling/lib/model-canary-worker.mjs');
@@ -64,9 +65,56 @@ const FACTORY_PORT = 4310;
 const BOUNDARY_ATTESTATION = '/etc/app-builder/agent-boundary.json';
 const DECISION_PATH = '/etc/app-builder/model-enable-decision.json';
 
+/**
+ * Where the signed decision is read from.
+ *
+ * On the hosted path the canary unit declares
+ * `LoadCredential=model-enable-decision:...`, so systemd places it in the unit's
+ * private credentials directory and the file at rest stays root:root 0600. That
+ * matters because possessing the token is what authorises the call: a decision
+ * every appbuilder process could read is a decision every appbuilder process
+ * could carry somewhere else.
+ *
+ * `APP_BUILDER_MODEL_DECISION_FILE` still wins when set, because the authorising
+ * unit uses it to write into its staging directory before root promotes the
+ * result. The bare path is the development fallback.
+ */
+function decisionPathFor(env = process.env) {
+  if (env.APP_BUILDER_MODEL_DECISION_FILE) return env.APP_BUILDER_MODEL_DECISION_FILE;
+  const directory = env.CREDENTIALS_DIRECTORY;
+  if (directory) {
+    const credential = path.join(directory, 'model-enable-decision');
+    if (fs.existsSync(credential)) return credential;
+  }
+  return DECISION_PATH;
+}
+
 /** Where the operator's signed decision and the two signing secrets come from. */
 const GRANT_SECRET_REF = 'APP_BUILDER_AGENT_GRANT_SECRET';
 const DECISION_SECRET_REF = 'APP_BUILDER_MODEL_DECISION_SECRET';
+
+/**
+ * Read a signing key the same way the provider credential is read.
+ *
+ * Both authorise and run execute as one-shot systemd units that load these as
+ * encrypted credentials, so the value arrives in the unit's private credentials
+ * directory rather than in the environment. Going through the shared resolver
+ * means the hosted path and the development path cannot disagree, and means a
+ * signing key is no more inheritable by a child process than a provider key is.
+ *
+ * Returns `''` when nothing is configured: the preflight already reports that as
+ * a named prerequisite, which is a better error than a throw from here.
+ */
+function signingSecret(reference, env) {
+  try {
+    return resolveTrustedSecret({ secretRef: reference, env });
+  } catch {
+    // A malformed or substituted credential file is a fault, but this function
+    // is called on paths that must still be able to *report* the problem. The
+    // preflight's own check names it.
+    return '';
+  }
+}
 
 function readJson(relative) {
   return JSON.parse(fs.readFileSync(path.join(REPOSITORY_ROOT, relative), 'utf8'));
@@ -341,24 +389,47 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
     killSwitch.detail,
     `Set enabled: true in config/model-execution.json through a reviewed change, and write {"enabled": true} to ${config.hostSwitchPath} on the host.`,
   );
+  // Which lane answered is reported because "configured" alone cannot tell an
+  // operator whether the hosted systemd credential is actually being used or a
+  // leftover shell variable is standing in for it. The value is not read here
+  // and has nowhere to go if it were.
+  const credentialReference = killSwitch.providerSecret?.secretRef ?? 'no reference';
+  const credentialLane = killSwitch.credentialSource?.source ?? null;
   add(
     'provider-credential-configured',
     killSwitch.providerSecret?.configured ? 'pass' : 'fail',
-    `${killSwitch.providerSecret?.secretRef ?? 'no reference'} is ${killSwitch.providerSecret?.configured ? 'configured' : 'not configured'} for the trusted gateway process`,
-    `Export ${killSwitch.providerSecret?.secretRef ?? 'the provider credential'} in the gateway's own environment only. It must not reach the sandbox, the ledger or this repository.`,
+    killSwitch.providerSecret?.configured
+      ? `${credentialReference} is configured for the trusted gateway process via ${credentialLane === 'systemd-credential' ? 'an encrypted systemd credential' : 'the process environment (development fallback)'}`
+      : `${credentialReference} is not configured for the trusted gateway process`,
+    `Encrypt ${credentialReference} with systemd-creds and let the model-canary unit load it: sudo bash ops/hetzner/install-model-canary-unit.sh. It must not be exported, and must not reach the sandbox, the ledger or this repository.`,
   );
+  // Both signing keys come from root-owned host files that the canary unit
+  // loads, never from an operator's shell. Telling someone to export the grant
+  // key would be worse than unhelpful: the broker verifies grants this canary
+  // mints, so a freshly generated key produces grants the broker refuses.
+  const signingRemedy = {
+    [GRANT_SECRET_REF]: 'Do not export this. It belongs to the broker, which generates it in ops/hetzner/install-service-units.sh into /etc/app-builder/agent-broker.env; a different value here mints grants the broker refuses. Run the canary through app-builder-model-canary.service, which loads it.',
+    [DECISION_SECRET_REF]: 'Do not export this. sudo bash ops/hetzner/install-model-canary-unit.sh encrypts it into the credential store, and only app-builder-model-authorise.service and app-builder-model-canary.service load it.',
+  };
   for (const [id, reference] of [['grant-signing-secret', GRANT_SECRET_REF], ['decision-signing-secret', DECISION_SECRET_REF]]) {
-    const value = env[reference];
+    // Resolved rather than read from the environment: on the hosted path these
+    // arrive as systemd credentials, so a check that only looked at `env` would
+    // report the correct setup as missing.
+    const source = describeTrustedSecretSource({ secretRef: reference, env });
+    const value = source.configured ? signingSecret(reference, env) : '';
+    const usable = value.length >= 32;
     add(
       id,
-      typeof value === 'string' && value.length >= 32 ? 'pass' : 'fail',
-      `${reference} is ${typeof value === 'string' && value.length >= 32 ? 'set and long enough to be a signing key' : 'absent or shorter than 32 bytes'}`,
-      `export ${reference}="$(head -c 48 /dev/urandom | base64)"`,
+      usable ? 'pass' : 'fail',
+      usable
+        ? `${reference} is available via ${source.source === 'systemd-credential' ? 'an encrypted systemd credential' : 'the process environment (development fallback)'} and long enough to be a signing key`
+        : `${reference} is absent or shorter than 32 bytes`,
+      signingRemedy[reference],
     );
   }
 
   // --- The one-time enable decision ----------------------------------------
-  const decisionPath = env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
+  const decisionPath = decisionPathFor(env);
   if (!fs.existsSync(decisionPath)) {
     add('one-time-enable-decision', 'fail', `no enable decision at ${decisionPath}`, providerId === 'groq'
       ? 'npm run runtime:model-canary -- --provider groq --authorise --by "your name" --reason "first Groq synthetic canary"'
@@ -366,7 +437,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   } else {
     try {
       const stored = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
-      const decision = verifyModelEnableDecision(stored.token, { secret: env[DECISION_SECRET_REF] ?? '', now });
+      const decision = verifyModelEnableDecision(stored.token, { secret: signingSecret(DECISION_SECRET_REF, env), now });
       const matches = decision.providerId === definition.profile.providerId
         && decision.adapterId === definition.profile.adapterId
         && decision.model === definition.profile.modelId;
@@ -403,7 +474,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
 export function authorise({ root = REPOSITORY_ROOT, env = process.env, grantedBy, reason, canaryId, taskId, projectId, ttlSeconds = 3600, now = new Date(), providerId = null }) {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'config/model-execution.json'), 'utf8'));
   const definition = providerCanary(providerId, root);
-  const secret = env[DECISION_SECRET_REF] ?? '';
+  const secret = signingSecret(DECISION_SECRET_REF, env);
   const { decision, token } = createModelEnableDecision(
     {
       grantedBy,
@@ -615,8 +686,8 @@ export async function runModelCanary({
   const policy = policies[role.policyId];
   const projection = capabilitiesForRole({ role, policy, registry });
 
-  const grantSecret = env[GRANT_SECRET_REF] ?? '';
-  const decisionSecret = env[DECISION_SECRET_REF] ?? '';
+  const grantSecret = signingSecret(GRANT_SECRET_REF, env);
+  const decisionSecret = signingSecret(DECISION_SECRET_REF, env);
   const workRoot = root ?? fs.mkdtempSync(path.join(os.tmpdir(), 'app-builder-model-canary-'));
 
   const store = new FactoryStore({ stateRoot: path.join(workRoot, 'state') });
@@ -1037,7 +1108,7 @@ async function cli(argv) {
     return 1;
   }
 
-  const decisionPath = process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
+  const decisionPath = decisionPathFor(process.env);
   const stored = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
   const report = await runModelCanary({ decisionToken: stored.token, providerId });
   const target = path.join(REPOSITORY_ROOT, '.app-builder', `model-attempt-${report.record.recordId}.json`);

@@ -4,6 +4,8 @@
   "rules": [
     "Deny-by-default. A role is runtime-ready only when every requirement below has recorded evidence for that role; there is no partial or provisional promotion.",
     "Evidence is a reference to something that exists — a config entry, a test, a recorded acceptance run — not a claim in prose. A requirement whose evidence cannot be resolved counts as missing.",
+    "A reference is written `scheme:target#fragment` and every scheme is resolvable: `config:` a JSON pointer that must hold a value, `test:` a named test that must still exist in the named file, `schema:` a contract file, `attestation:` a hosted proof that must say it passed and still be inside its own freshness window, `record:` a durable recorded run. An unknown scheme is malformed, not lenient, and `tooling/lib/runtime-readiness-evidence.mjs` is what actually goes and looks.",
+    "Partial evidence is expected and is not a partial promotion. A role may carry seven resolved references and still be unready; recording what is earned is how the one genuinely missing requirement becomes exact rather than lost among assumptions.",
     "Promotion is never a side effect of infrastructure landing. Merging the execution lifecycle, the pinned image or the egress profile satisfies requirements; it does not promote a role.",
     "A promoted role may be demoted by any requirement ceasing to hold, and demotion needs no ceremony."
   ],
@@ -49,5 +51,18 @@
       "detail": "The last requirement on purpose. Everything above can be true with no provider credential in the system; this one cannot, and it is what makes the flag mean the role has actually worked."
     }
   ],
-  "evidence": {}
+  "evidence": {
+    "code-reviewer": {
+      "context-packet": "test:tooling/agent-architecture.test.mjs#role context packets withhold artifacts the role spec does not declare",
+      "operation-set": "test:tooling/agent-capability-boundary.test.mjs#every registry role projects a capability set its policy actually supports",
+      "environment-profile": "attestation:/etc/app-builder/agent-boundary.json#/images/task-baseline/digest",
+      "pinned-image": "config:config/task-images.json#/images/task-baseline/digest",
+      "lifecycle-support": "test:tooling/runtime-lifecycle.test.mjs#the deterministic runtime canary proves the whole attempt lifecycle",
+      "deterministic-coverage": "test:tooling/agent-architecture.test.mjs#reviewers never author what they judge and creators never approve themselves",
+      "convergence-behaviour": "test:tooling/agent-architecture.test.mjs#a stage is not promoted because an agent says it is finished"
+    }
+  },
+  "evidenceNotes": {
+    "code-reviewer": "The canary role from config/model-execution.json, and the only role carrying any evidence today. Seven requirements resolve; `model-attempt-evidence` is deliberately absent because it is the one requirement that cannot be satisfied without a real provider call, and the two keys that permit one — /etc/app-builder/model-execution.json and the gateway's credential — are the owner's, not the repository's. The role therefore remains unready, which is the honest state and is asserted by a test rather than left to inspection."
+  }
 }

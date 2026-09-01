@@ -190,6 +190,19 @@ export function providerCredentialConfigured(options) {
 }
 
 /**
+ * The same resolution, for the secrets that are not a provider's.
+ *
+ * The mechanism was never provider-specific — a systemd credential is a
+ * systemd credential — and the two signing keys need exactly this: prefer the
+ * unit's credentials directory, fall back to the environment for local
+ * development, fail closed otherwise. Naming them separately keeps call sites
+ * honest about which kind of secret they are handling, without a second
+ * implementation that could drift from this one.
+ */
+export const describeTrustedSecretSource = describeProviderCredentialSource;
+export const trustedSecretConfigured = providerCredentialConfigured;
+
+/**
  * The credential value, for the one trusted caller that makes the request.
  *
  * Returns `''` rather than throwing when nothing is configured: the model lane
@@ -208,4 +221,16 @@ export function resolveProviderCredential({ secretRef, env = process.env, creden
 
   const fromEnvironment = env?.[reference];
   return typeof fromEnvironment === 'string' && fromEnvironment.trim().length > 0 ? fromEnvironment : '';
+}
+
+/**
+ * Resolve a trusted signing secret. Same rules, same refusals, same silence.
+ *
+ * Kept as a distinct export rather than reusing the provider name so that a
+ * reader of a call site can tell what is being handled: a provider credential
+ * leaving this process reaches a third party, whereas a signing key leaving it
+ * forges authority inside this one. Both are refused entry to a sandbox by name.
+ */
+export function resolveTrustedSecret(options) {
+  return resolveProviderCredential(options);
 }

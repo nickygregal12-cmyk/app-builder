@@ -35,6 +35,11 @@ set -euo pipefail
 RUNTIME_USER="${APP_BUILDER_RUNTIME_USER:-appbuilder}"
 REPO="${APP_BUILDER_REPOSITORY:-/srv/app-builder/repository}"
 CREDSTORE="${APP_BUILDER_CREDSTORE:-/etc/credstore.encrypted/app-builder}"
+ETC_DIR=/etc/app-builder
+BROKER_ENV="${ETC_DIR}/agent-broker.env"
+DECISION_CRED="${CREDSTORE}/APP_BUILDER_MODEL_DECISION_SECRET.cred"
+DECISION="${ETC_DIR}/model-enable-decision.json"
+CLAIM=/run/app-builder-model-canary/claimed.json
 UNIT=/etc/systemd/system/app-builder-model-canary.service
 
 [[ $EUID -eq 0 ]] || { echo "Run this with sudo: it writes a systemd unit." >&2; exit 1; }
@@ -56,6 +61,78 @@ MSG
   exit 1
 fi
 
+# --- The two signing secrets ---------------------------------------------------
+#
+# These are not provider credentials and they do not have the same lifetime, so
+# they do not get the same mechanism. Both are refused entry to a sandbox by
+# name, and neither is ever exported, echoed or passed in argv.
+#
+# APP_BUILDER_AGENT_GRANT_SECRET is a long-lived *host* secret and is already
+# owned by somebody else: `install-service-units.sh` generates it into
+# ${BROKER_ENV} and the factory service loads it there, because the broker
+# verifies the grants this canary mints. Both sides must therefore hold the same
+# key, and generating a fresh one here — or exporting one, as the docs used to
+# say — would produce grants the broker rejects. So this reads the existing file
+# and never writes it.
+if [[ ! -s "$BROKER_ENV" ]]; then
+  cat >&2 <<MSG
+No agent broker configuration at ${BROKER_ENV}.
+
+The canary mints capability grants that the broker verifies, so both must hold
+the same signing key. Install the broker first, which generates it:
+
+  sudo APP_BUILDER_ENABLE_AGENT_BROKER=1 bash ops/hetzner/install-service-units.sh
+MSG
+  exit 1
+fi
+if ! grep -q '^APP_BUILDER_AGENT_GRANT_SECRET=' "$BROKER_ENV"; then
+  echo "${BROKER_ENV} exists but declares no APP_BUILDER_AGENT_GRANT_SECRET. Reinstall the broker units." >&2
+  exit 1
+fi
+
+# APP_BUILDER_MODEL_DECISION_SECRET signs the one-time enable decision. It has a
+# genuinely different lifetime from the grant key: the decision is minted by one
+# trusted process and verified by another, so the key must outlive a single
+# process — but nothing needs it once the attempt is recorded, and a decision may
+# not live longer than 24 hours anyway.
+#
+# It is an encrypted credential like the provider key, not a plaintext env file.
+# Putting both sides of the flow behind one-shot units is what makes that
+# possible: `authorise` and `run` each load it, and no ordinary appbuilder shell
+# process can read it at all.
+#
+# Generated here and never displayed. The plaintext exists only in the pipe
+# between /dev/urandom and systemd-creds; it is never a shell variable, never an
+# argument, and never written to disk unencrypted.
+# The credential store is created restrictively if absent and never widened if
+# present. `install -d -m` would have chmod'd an existing directory, which is how
+# a 0700 store silently becomes 0755 the first time somebody runs an installer.
+if [[ ! -d "$CREDSTORE" ]]; then
+  install -d -m 0700 -o root -g root "$CREDSTORE"
+  printf 'Created %s (0700 root:root).\n' "$CREDSTORE"
+else
+  # One explicit contract, checked rather than assumed: root-owned, and no
+  # access for group or other. Anything else fails closed — a store this script
+  # cannot vouch for is not one it will add a signing key to.
+  store_owner=$(stat -c '%U' "$CREDSTORE")
+  store_mode=$(stat -c '%a' "$CREDSTORE")
+  if [[ "$store_owner" != root || $(( 8#$store_mode & 8#077 )) -ne 0 ]]; then
+    printf 'Refusing to use %s: it is %s-owned with mode %s.\n' "$CREDSTORE" "$store_owner" "$store_mode" >&2
+    printf 'A credential store must be root-owned with no group or other access. Fix it deliberately:\n' >&2
+    printf '  sudo chown root:root %s && sudo chmod 0700 %s\n' "$CREDSTORE" "$CREDSTORE" >&2
+    exit 1
+  fi
+fi
+
+if [[ ! -f "$DECISION_CRED" ]]; then
+  head -c 48 /dev/urandom | base64 -w0 \
+    | systemd-creds encrypt --name=APP_BUILDER_MODEL_DECISION_SECRET - "$DECISION_CRED"
+  chmod 0600 "$DECISION_CRED"
+  printf 'Generated and encrypted a model-decision signing secret at %s.\n' "$DECISION_CRED"
+else
+  printf 'Reusing the existing encrypted model-decision signing secret at %s.\n' "$DECISION_CRED"
+fi
+
 # Only Anthropic is wired. OPENAI_API_KEY may already be encrypted on this host
 # for the independent-review lane, and it stays unloaded until that lane has an
 # actual consumer: a credential loaded for a consumer that does not exist is
@@ -66,8 +143,11 @@ Description=App Builder model canary (one bounded, authorised provider attempt)
 After=network-online.target
 Wants=network-online.target
 ConditionPathExists=${REPO}/package.json
-# The host switch is the owner's key. The unit refuses to start without it, so
-# a stray \`systemctl start\` cannot spend money.
+# Presence only. This deliberately does NOT check enabled:true — the preflight
+# re-reads both switches immediately before the call and is the single authority
+# on whether a call may happen. A second, coarser copy of that policy here could
+# disagree with it, and the failure mode of two policies is worse than the
+# failure mode of one. A stray \`systemctl start\` is stopped by the preflight.
 ConditionPathExists=/etc/app-builder/model-execution.json
 
 [Service]
@@ -78,10 +158,33 @@ WorkingDirectory=${REPO}
 Environment=HOME=/home/${RUNTIME_USER}
 Environment=PATH=/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin
 
-# The credential, decrypted by systemd into \$CREDENTIALS_DIRECTORY for this
-# invocation only. The gateway reads \$CREDENTIALS_DIRECTORY/ANTHROPIC_API_KEY.
-# No EnvironmentFile, and no Environment= line carries a key.
+# The provider credential, decrypted by systemd into \$CREDENTIALS_DIRECTORY for
+# this invocation only. The gateway reads \$CREDENTIALS_DIRECTORY/ANTHROPIC_API_KEY.
+# It is deliberately NOT in the EnvironmentFile below: an environment variable
+# is inherited by every child, and this process starts task sandboxes.
 LoadCredentialEncrypted=ANTHROPIC_API_KEY:${CREDSTORE}/ANTHROPIC_API_KEY.cred
+
+# The decision key, also encrypted. The transient authorise unit loads the same
+# credential to sign; this unit loads it to verify.
+LoadCredentialEncrypted=APP_BUILDER_MODEL_DECISION_SECRET:${DECISION_CRED}
+
+# The signed decision, as a credential rather than a readable file, and read
+# from the *claimed* path rather than the authoritative one. That is what makes
+# single use survive a restart: ops/hetzner/run-model-canary.sh renames the
+# authoritative decision into this claim before starting the unit, so the
+# authorisation is spent before any provider call and a second start has nothing
+# to load. Starting this unit directly, without a claim, fails 243/CREDENTIALS
+# rather than reusing a decision.
+LoadCredential=model-enable-decision:${CLAIM}
+
+# The grant key is the one secret that must be shared rather than owned: the
+# broker inside app-builder-factory.service verifies the grants this canary
+# mints, so a separate value here would mint grants the broker refuses. It is
+# read from the broker's own file, whose contents are bounded to exactly the
+# socket path and this key — see tooling/hetzner-ops.test.mjs. Adding an
+# unrelated variable there would widen this unit, so that file's shape is a
+# tested contract rather than a convention.
+EnvironmentFile=${BROKER_ENV}
 
 ExecStart=/home/${RUNTIME_USER}/.local/bin/npm run runtime:model-canary -- --run
 
@@ -101,6 +204,15 @@ LockPersonality=true
 EOF
 
 chmod 0644 "$UNIT"
+
+# The authorising half of the flow is app-builder-model-authorise.service, a
+# transient unit created by ops/hetzner/authorise-model-canary.sh. It is not
+# installed statically because `--by` and `--reason` differ every time, and a
+# static unit would have to read them from somewhere — which for a unit that
+# holds a signing credential means another file to get wrong. It loads the same
+# decision credential and, deliberately, no provider credential: minting a
+# decision must not be able to spend one.
+
 systemctl daemon-reload
 
 # Deliberately not enabled: this is operator-invoked, one attempt at a time,

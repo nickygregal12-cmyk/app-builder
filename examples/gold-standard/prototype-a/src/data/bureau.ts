@@ -44,7 +44,7 @@ export interface Project {
   /** What the decision cost or saved, with its basis attached. */
   measure: { figure: string; caption: string };
   frames: Frame[];
-  /** Weight in the index: how many of fifteen columns, and which row band. Authored, not derived. */
+  /** Placement in the register. Column start is authored; height is derived from area. */
   index: {
     span: number; start: number; height: number; offset: number;
     /** The crop this entry holds on a phone. One of the three permitted ratios, sequenced so

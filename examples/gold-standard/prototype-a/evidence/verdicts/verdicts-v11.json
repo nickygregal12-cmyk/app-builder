@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-01T09:35:14.544Z",
+  "reviews": [
+    {
+      "verdict": "pass",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "This is exceptional, highly authored work whose register concept, proportional imagery, editorial typography and unusually disciplined content all arise directly from the bureau's practice. A few wide-screen passages become excessively sparse and some metadata is too small, but these are refinements within a coherent, memorable and commercially clear system rather than reasons to withhold shipment.",
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 9,
+          "note": "The stated thesis—frames drawn in proportion to floor area—governs the register, image scale, whitespace and editorial rhythm rather than appearing as decoration. The restrained monochrome field and exacting architectural photography form a confident, coherent language across every route.",
+          "whyNotHigher": "Some extreme wide-screen compositions cross from purposeful spatial tension into under-populated acreage, particularly on project pages.",
+          "positiveEvidence": [
+            "Project frames visibly change scale according to building area.",
+            "The register motif persists through listings, project pages, captions and previews.",
+            "Asymmetry, image scale and empty space consistently reinforce the subject of existing structures."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 9.5,
+          "note": "The entire experience is built around conversion work: buildings are ordered and pictured by retained floor area, demolition refusal is treated as evidence, and the paid condition survey structures the commercial journey. This design would be actively inappropriate for most other sectors and even for a conventional new-build architecture practice.",
+          "whyNotHigher": "The screenshots cannot demonstrate whether the underlying project facts, register and enquiry flow remain equally specific when the portfolio expands.",
+          "positiveEvidence": [
+            "Floor-area-proportional project frames turn the bureau's existing-building portfolio into the interface.",
+            "The proposition that no empty-site building is undertaken recurs as a structural business rule.",
+            "The paid two-week partner survey is explained consistently as both qualification mechanism and CTA.",
+            "Project narratives distinguish what was found from what the bureau changed."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 9,
+          "note": "Three primary routes are enough: Work demonstrates evidence, Bureau explains doctrine and people, and Contact converts interest into a tightly qualified first step. Home edits these into a compact argument rather than merely duplicating the other pages, while project pages provide focused evidence and a next-project route.",
+          "whyNotHigher": "The screenshots show only two project-detail routes, so the scalability and discoverability of a larger register cannot be verified.",
+          "positiveEvidence": [
+            "The home page moves from identity and evidence to doctrine, process, proof and enquiry.",
+            "The contact page explicitly limits the requested input to an address and photograph.",
+            "Project pages separate original condition, intervention, quantitative evidence and onward navigation.",
+            "The Bureau route contains people, capabilities, statistics and awards without bloating the primary navigation."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 9,
+          "note": "Every route establishes a distinct first read: manifesto on Bureau, transaction on Contact, comparative register on Work, and project imagery on detail pages. Scale, isolation and alignment then guide attention through secondary evidence without flattening everything into uniform sections.",
+          "whyNotHigher": "On the widest views, several small explanatory blocks become visually remote from their headings or images, weakening immediate relational clarity.",
+          "positiveEvidence": [
+            "Large statements dominate only where the page argument calls for them.",
+            "Project imagery receives primary weight while metadata remains subordinate.",
+            "The contact price and action form a clear secondary commercial focal point.",
+            "Mobile layouts preserve priority while changing grouping and scale."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 9,
+          "note": "Typography is compositional material: the narrow display face creates architectural verticality, figures carry the register's scale logic, and restrained sans-serif labels distinguish evidence from argument. Captions, units, dates and small uppercase metadata are treated as part of the system rather than leftovers.",
+          "whyNotHigher": "Several captions and metadata lines at desktop and wide sizes are uncomfortably small, and the display face occasionally approaches fragility at tiny logo or label sizes.",
+          "positiveEvidence": [
+            "Numeric floor areas operate as both information and visual anchors.",
+            "Display and sans-serif voices have clear semantic roles.",
+            "Responsive line breaks are deliberately composed rather than merely allowed to wrap.",
+            "Labels, units, dates, captions and rules form a consistent fine-grained hierarchy."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 9,
+          "note": "The pages use changes in density, image scale and spatial tension to create a deliberate scroll sequence. The Work page is especially accomplished: proportional frames, isolated observations and alternating placement make the register feel spatial rather than tabular.",
+          "whyNotHigher": "Some long desktop and wide intervals are more vacant than charged, particularly between project facts, CTAs and next-project panels.",
+          "positiveEvidence": [
+            "The home page alternates paired images, expansive arguments, full-width material and compact commercial sections.",
+            "The Work page turns quantitative difference into changing visual rhythm.",
+            "Project pages move from monumental imagery through forensic detail to concise conversion and onward navigation.",
+            "Mobile pacing is tightened without losing the editorial pauses."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 9,
+          "note": "The photography does more than establish atmosphere: concrete surfaces, retained interiors, structural voids and spatial details directly support the practice's case for adaptation. Crops change intelligently by viewport, and image dimensions participate in the floor-area thesis.",
+          "whyNotHigher": "The very dark Frihavn imagery loses some structural detail, and the evidence does not show a broader enough project set to confirm consistently exceptional art direction throughout the portfolio.",
+          "positiveEvidence": [
+            "Existing-building photography is selected around structure, material and reuse rather than generic architectural glamour.",
+            "Mobile crops preserve decisive architectural features.",
+            "The largest building receives monumental scale while smaller projects visibly contract.",
+            "Before-condition and completed exterior imagery support the project narrative."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 8,
+          "note": "The captured states show restrained, consistent decisions: underline wipes, translating route links, darkening rules, image scaling, keyboard navigation focus and a revealed skip link. These interactions fit the editorial system without becoming ornamental spectacle.",
+          "whyNotHigher": "Only isolated hover and focus states are shown; transition timing, reduced-motion handling, touch behaviour, active navigation across routes and full keyboard traversal cannot be judged.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 9,
+          "note": "Mobile is designed as its own composition. Comparative register bars become a legible vertical scale, image crops change substantially, metadata is regrouped, project narratives reorder, and the home page converts spatial desktop relationships into a controlled editorial sequence.",
+          "whyNotHigher": "The persistent full three-link navigation is close to the available mobile width, and some long text passages could use slightly more breathing room.",
+          "positiveEvidence": [
+            "The register comparison becomes horizontal bars with right-aligned descriptions on mobile.",
+            "Project imagery receives purpose-built portrait crops rather than simple full-width desktop reductions.",
+            "Facts, CTA material and project descriptions regroup into phone-specific sequences.",
+            "Tablet layouts preserve asymmetry instead of merely stacking the desktop grid."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 9.5,
+          "note": "The sober material palette, structural imagery, exact measurements, refusal of decorative excess and emphasis on what already exists embody this particular bureau's conservation-minded position. The design would remain recognisable as Nørreværk with the wordmark removed.",
+          "whyNotHigher": "The restrained register language is exceptionally apt, but screenshots alone cannot establish whether the same identity extends coherently into proposals, correspondence or the physical client experience.",
+          "positiveEvidence": [
+            "Measured floor area becomes the principal graphic device.",
+            "Existing fabric is shown with seriousness rather than polished lifestyle staging.",
+            "The design repeatedly foregrounds retention, condition and refusal of unnecessary demolition.",
+            "The quiet editorial tone matches a specialist bureau selling judgement before design."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 9,
+          "note": "The site makes an unusually specialist service easy to understand and buy: send an address and photograph, receive a partner-written condition survey in two weeks for DKK 38,000, and accept that the advice may be not to proceed. The CTA appears at credible decision points without overwhelming the portfolio.",
+          "whyNotHigher": "The screenshots do not reveal what happens after activating the CTA, whether the enquiry mechanism is frictionless, or whether the price includes tax and other commercially relevant terms.",
+          "positiveEvidence": [
+            "Price, duration, input requirements and likely outcome are all explicit.",
+            "The contact route explains what to send and deliberately excludes premature briefing work.",
+            "Calls to action follow evidence on home, register and project pages.",
+            "The proposition is clear without generic sales language."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 9.5,
+          "note": "The work avoids nearly every common generated-site motif and replaces them with a business-derived system of proportional frames, architectural evidence, editorial rules and precise factual copy. Its restraint has a legible reason and does not depend on gradients, cards, pills, fake metrics or generic premium gestures.",
+          "whyNotHigher": "A few oversized statements plus very large blank fields could be imitated superficially as generic editorial minimalism when separated from the register system.",
+          "positiveEvidence": [
+            "No rounded-card system, decorative gradient, icon triplet, logo wall or dark closing slab is visible.",
+            "Statistics function as architectural evidence rather than invented KPI decoration.",
+            "The graphic system derives from building area and the practice's conservation argument.",
+            "Copy is concrete, specific and commercially consequential."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 9,
+          "note": "The signature is unmistakable: a portfolio register in which each photographic frame is sized by the floor area of the building it represents. The idea is memorable because it simultaneously visualises evidence, differentiates the projects and expresses the bureau's belief that retained buildings deserve to be understood on their own terms.",
+          "whyNotHigher": "The signature is strongest on the register and home pages; the Bureau and Contact routes rely more heavily on the broader typographic language.",
+          "positiveEvidence": [
+            "The floor-area-proportional register is a specific, describable experience.",
+            "The 18,600-to-334 square-metre contrast becomes both data visualisation and page composition.",
+            "The phrase and sequence around demolition as a design decision create a second memorable editorial moment."
+          ],
+          "whyBenchmark": ""
+        }
+      ],
+      "holisticTier": "exceptional",
+      "observations": {
+        "templateDerived": false,
+        "interchangeableBusiness": false,
+        "mobileIsStackedDesktop": false,
+        "noSignatureMoment": false,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": "The Work register sizes each project photograph and its comparison rule in proportion to the building's floor area, turning five reuse projects from 334 m² to 18,600 m² into both a portfolio and a spatial argument.",
+      "pairwiseComparison": {
+        "referenceId": "vb-kononenko",
+        "comparisons": [
+          {
+            "dimension": "art-direction",
+            "outcome": "roughly-comparable",
+            "note": "Both use restraint, architectural material and asymmetric editorial composition as the authorship; the candidate adds a particularly strong floor-area thesis, though some of its widest spacing is less resolved."
+          },
+          {
+            "dimension": "typography",
+            "outcome": "reference-stronger",
+            "note": "The candidate uses type expressively and handles metadata with care, but several wide-screen captions become too small; the described reference is more consistently quiet and precise."
+          },
+          {
+            "dimension": "composition",
+            "outcome": "roughly-comparable",
+            "note": "The proportional register and varied project sequences demonstrate comparable compositional thinking, while the reference appears slightly more disciplined about ensuring every empty region remains charged."
+          },
+          {
+            "dimension": "information-architecture",
+            "outcome": "candidate-stronger",
+            "note": "Beyond presenting a portfolio, the candidate gives unusually clear routes for doctrine, people, evidence and a paid diagnostic service, with concise project progression and qualification."
+          },
+          {
+            "dimension": "responsive-design",
+            "outcome": "roughly-comparable",
+            "note": "The candidate visibly recomposes comparisons, crops, metadata and sequencing for phone and tablet rather than simply stacking the desktop grid."
+          },
+          {
+            "dimension": "craft",
+            "outcome": "reference-stronger",
+            "note": "The candidate shows excellent typographic, hover and focus work, but the reference's described precision is more fully resolved; several tiny labels and sparse wide-screen relationships remain here."
+          },
+          {
+            "dimension": "memorability",
+            "outcome": "candidate-stronger",
+            "note": "The proportional floor-area register is an unusually specific signature that can be recalled and explained independently of the site's general visual style."
+          },
+          {
+            "dimension": "business-specificity",
+            "outcome": "candidate-stronger",
+            "note": "The candidate's structure is inseparable from an existing-building specialist whose entry product is a paid condition survey; even the graphic system encodes the dimensions of retained buildings."
+          }
+        ]
+      },
+      "benchmarkGap": "SMALL",
+      "benchmarkGapDetail": "The reference retains a modest advantage in refinement or craft. Close, not equal.",
+      "benchmarkComparisonCounts": {
+        "candidate-stronger": 3,
+        "roughly-comparable": 3,
+        "reference-stronger": 2,
+        "reference-substantially-stronger": 0
+      },
+      "dimensionsNotCompared": [],
+      "evidenceCeiling": {
+        "cap": 10,
+        "tier": "site-level",
+        "routes": 31,
+        "viewports": 4,
+        "detail": "Evidence covers 31 route(s) at 4 viewport(s): a benchmark claim about a website needs the website: several routes, at more than one width. This caps any overall claim at 10."
+      },
+      "failingCriteria": [],
+      "blockingConcerns": [],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": null,
+        "compositionHash": null,
+        "captureCount": 45,
+        "captureDigest": "d8997d420ad522f5f819eb654e85ab0a7e40c2c59a32d97ae2b24c6cbe39ac1c"
+      }
+    }
+  ],
+  "skipped": []
+}

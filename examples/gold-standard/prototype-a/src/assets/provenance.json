@@ -138,5 +138,85 @@
   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kilen,_frederiksberg.jpg",
   "originalPixels": "3264x2064",
   "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "nyborg-aperture",
+  "usedAs": "Nyborg — aperture",
+  "sourceTitle": "Dark side of the moon - peter zumthor - Flickr - seier-seier.jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dark_side_of_the_moon_-_peter_zumthor_-_Flickr_-_seier-seier.jpg",
+  "originalPixels": "2949x3807",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "nyborg-wall",
+  "usedAs": "Nyborg — wall",
+  "sourceTitle": "Eriko - peter zumthor - Flickr - seier-seier.jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Eriko_-_peter_zumthor_-_Flickr_-_seier-seier.jpg",
+  "originalPixels": "2592x3872",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "rodehus-hall",
+  "usedAs": "Rødehus — assembly hall",
+  "sourceTitle": "Rødovre Town Hall - interior colour scheme.jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:R%C3%B8dovre_Town_Hall_-_interior_colour_scheme.jpg",
+  "originalPixels": "2272x3224",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "rodehus-reading",
+  "usedAs": "Rødehus — reading room",
+  "sourceTitle": "Interior. hans christian hansen, architect- tagensbo kirke - church, copenhagen 1966-1970. (14664718136).jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Interior._hans_christian_hansen,_architect-_tagensbo_kirke_-_church,_copenhagen_1966-1970._(14664718136).jpg",
+  "originalPixels": "3921x4376",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "rodehus-light",
+  "usedAs": "Rødehus — light",
+  "sourceTitle": "Jean nouvel, danish radio concert hall, 2002-2009 (3547132264).jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jean_nouvel,_danish_radio_concert_hall,_2002-2009_(3547132264).jpg",
+  "originalPixels": "2592x3650",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "index-spiral",
+  "usedAs": "Work index",
+  "sourceTitle": "Carlo scarpa, architect- casa borgo, contrà del quartiere 8, block of flats, vicenza 1974-1979. detail, interior staircase. (8846963352).jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Carlo_scarpa,_architect-_casa_borgo,_contr%C3%A0_del_quartiere_8,_block_of_flats,_vicenza_1974-1979._detail,_interior_staircase._(8846963352).jpg",
+  "originalPixels": "4341x2874",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "index-stair",
+  "usedAs": "Work index",
+  "sourceTitle": "Gottfried böhm, pilgrimage church, neviges 1963-1972 (3200365865).jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gottfried_b%C3%B6hm,_pilgrimage_church,_neviges_1963-1972_(3200365865).jpg",
+  "originalPixels": "2592x3872",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
+ },
+ {
+  "slug": "studio-detail",
+  "usedAs": "Studio page",
+  "sourceTitle": "Hans chr. hansen, bremerholm transformer, copenhagen 1962-1963. detail, facade. (9661198586).jpg",
+  "photographer": "seier+seier",
+  "licence": "CC BY 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hans_chr._hansen,_bremerholm_transformer,_copenhagen_1962-1963._detail,_facade._(9661198586).jpg",
+  "originalPixels": "2848x4102",
+  "note": "Existing building by another architect. Prototype imagery; the project described on the page is fictional."
  }
 ]

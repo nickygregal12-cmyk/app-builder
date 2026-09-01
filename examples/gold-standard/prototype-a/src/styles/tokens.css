@@ -1,109 +1,131 @@
 /*
  * NØRREVÆRK — measurement system.
  *
- * The one mechanism worth taking wholesale from the reference class is how it *measures*.
- * `font-size` on the root is set in `vw`, so 1rem equals exactly one pixel at a 1600 design
- * frame and one pixel at a 390 frame. Layout can then be authored in absolute design-frame
- * units — a 540px image, a 220px section margin — and the whole page scales fluidly between
- * them with no max-width container and no intermediate breakpoints to maintain.
+ * `font-size` on the root is set in `vw`, so 1rem is exactly one pixel at a 1600 design frame
+ * and one pixel at a 390 frame. Layout is authored in absolute design-frame units and the
+ * whole page scales fluidly between them: one breakpoint, no max-width container, no
+ * intermediate sizes to maintain.
  *
- * Two consequences follow, and both are the point:
- *
- *  - There is exactly ONE breakpoint in this site (760px). Everything above it is one fluid
- *    system; everything below is a different composition, not a narrower one.
- *  - Type can be set at 200rem without that being a number anybody has to reason about,
- *    which is how a 22:1 ratio between display and body becomes usable rather than theoretical.
- *
- * The Gold Reference corpus used a twelve-column grid with a max-width and six spacing steps,
- * and every page in it came out the same shape. This is the opposite instrument.
+ * Real typefaces, self-hosted, no external request. The first version of this prototype set
+ * its display face in `Times New Roman` with a system-serif fallback, which is not a
+ * typographic decision — it is the absence of one, and it caps the typography criterion on
+ * its own.
  */
 
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/InterVariable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  /* 100 / 1600 = 0.0625vw. One rem is one design pixel at the desktop frame. */
-  font-size: 0.0625vw;
+  /*
+   * Clamped, and this is the one real fault in the fluid-root idea. `0.0625vw` alone means
+   * every size scales linearly with the viewport, so at 834px the root is 0.52px and the
+   * smallest metadata computes to 6.5px — unreadable, and measured rather than guessed. The
+   * floor holds legibility between the mobile breakpoint and the design frame; the ceiling
+   * stops a 2560px display setting body copy at 26px.
+   */
+  font-size: clamp(0.84px, 0.0625vw, 1.18px);
 
   /*
-   * Six tokens. No accent colour anywhere on the site — the reference class carries none,
-   * and every attempt in the previous corpus to make a page distinctive with an accent
-   * produced a page that looked like a template with its colours changed.
+   * Six tokens and no accent. The ground is a cool paper rather than a warm one — this is a
+   * bureau working on concrete and brick in Scandinavian light, and a cream page would make
+   * every photograph look as though it were taken somewhere else.
    */
-  --ink: #0B0B0B;
-  --paper: #F4F3F0;
-  --paper-2: #E9E7E2;
-  --grey-1: #6F6C66;
-  --grey-2: #56534E;
-  --hair: #CFCCC5;
+  --ink: #101010;
+  --paper: #EFEFED;
+  --paper-2: #E2E2DF;
+  --grey-1: #6C6C68;
+  --grey-2: #4A4A46;
+  --hair: #C9C9C4;
+
+  --display: 'Instrument Serif', 'Liberation Serif', Georgia, serif;
+  --text: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif;
 
   /*
-   * Two families, one weight each. The display face carries every heading and behaves like
-   * an image; the grotesque carries everything functional. There is no third voice and no
-   * bold — emphasis is made by size and position, which is what the reference class does.
+   * Instrument Serif is a high-contrast display face that wants to be large, and the scale is
+   * built around that: the top three steps belong to it, the bottom four to Inter, and there
+   * is deliberately nothing in between. A middle step would invite a heading that is neither
+   * display nor metadata, which is where ordinary typography comes from.
    */
-  --display: "Times New Roman", Times, "Liberation Serif", serif;
-  --text: "Helvetica Neue", Helvetica, "Inter", Arial, sans-serif;
+  --t-colossal: 300rem;
+  --t-display: 176rem;
+  --t-1: 108rem;
+  --t-2: 60rem;
+  --t-3: 34rem;
+  --t-body: 20rem;
+  --t-small: 18.5rem;
+  --t-micro: 16rem;
+
+  --lh-display: 0.86;
+  --lh-tight: 1.02;
+  --lh-body: 1.5;
+
+  --track-display: -0.028em;
+  --track-body: -0.011em;
+  --track-micro: 0.1em;
 
   /*
-   * Display scale, in design pixels. 360 is reserved: it is set here so the system has a
-   * top, and it is used on exactly one element in the whole site. The reference class does
-   * the same and never ships its largest size at all.
+   * Four band heights, not one. A single vertical rhythm applied everywhere is the specific
+   * thing the rubric names as capping composition at 5 or 6, and it is what the first version
+   * of this page did. These are used deliberately: `--band-loud` around the moments that
+   * should dominate, `--band-quiet` where the page should close up and read faster.
    */
-  --t-reserved: 360rem;
-  --t-display: 200rem;
-  --t-1: 132rem;
-  --t-2: 84rem;
-  --t-3: 46rem;
-  --t-4: 28rem;
-  --t-body: 18rem;
-  --t-small: 16rem;
-  --t-micro: 12.5rem;
+  --band-loud: 240rem;
+  --band: 150rem;
+  --band-quiet: 76rem;
+  --band-tight: 34rem;
 
-  /* Sub-1 line heights on everything display-sized. This is most of the difference. */
-  --lh-display: 0.84;
-  --lh-tight: 0.92;
-  --lh-body: 1.42;
+  --gutter: 34rem;
+  --col-gap: 22rem;
 
-  --track-display: -0.035em;
-  --track-body: -0.01em;
-  --track-micro: 0.14em;
-
-  /* Vertical rhythm authored in design pixels rather than in a spacing scale. */
-  --band: 170rem;
-  --band-half: 88rem;
-  --gutter: 30rem;
-  --col-gap: 20rem;
-
-  /* One motion token for the whole site. */
   --ease: cubic-bezier(0.16, 0.84, 0.44, 1);
   --dur: 0.9s;
 }
 
 @media (max-width: 760px) {
   :root {
-    /* 100 / 390. One rem is one design pixel at the phone frame. */
     font-size: 0.2564vw;
 
     /*
-     * Hierarchy re-weights rather than shrinking proportionally. The display face halves,
-     * but the second and third steps fall by roughly 3×, so the ratio between the loudest
-     * voice and the next one widens from 1.5:1 to 3.4:1. One thing stays enormous and
-     * everything else gets out of its way — which is why a phone page can still have a
-     * hierarchy rather than a sequence of similar-sized blocks.
+     * The display face halves; everything below it falls by three to four times. One voice
+     * stays enormous and the rest gets out of its way, so the phone still has a hierarchy
+     * rather than a sequence of similar-sized blocks.
      */
-    --t-display: 82rem;
-    --t-1: 62rem;
-    --t-2: 28rem;
-    --t-3: 22rem;
-    --t-4: 17rem;
-    --t-body: 15rem;
-    --t-small: 13rem;
-    --t-micro: 10rem;
+    --t-colossal: 116rem;
+    --t-display: 74rem;
+    --t-1: 46rem;
+    --t-2: 30rem;
+    --t-3: 21rem;
+    --t-body: 16.5rem;
+    --t-small: 15rem;
+    --t-micro: 13rem;
 
     --lh-display: 0.9;
 
-    /* 220 → 64 is a 3.4× compression, not a scale. */
-    --band: 64rem;
-    --band-half: 40rem;
-    --gutter: 16rem;
+    --band-loud: 84rem;
+    --band: 56rem;
+    --band-quiet: 34rem;
+    --band-tight: 20rem;
+
+    --gutter: 18rem;
     --col-gap: 12rem;
   }
 }

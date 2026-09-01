@@ -27,6 +27,11 @@ export function getStaticPaths() {
 
 const { project, next } = Astro.props;
 const [lead, ...rest] = project.frames;
+/* The overlap needs two photographs. A project with one — Nyborg has a single frame — was
+   rendering the composition anyway, so 86vh and 46vh of empty box consumed most of a mobile
+   panel and the reviewer read it, correctly, as discontinuity rather than as restraint. A
+   composition that cannot be made is not made. */
+const hasPair = rest.length >= 2;
 ---
 
 <Base title={`${project.left} — Nørreværk`} description={project.line}>
@@ -56,25 +61,51 @@ const [lead, ...rest] = project.frames;
     </dl>
   </section>
 
-  {/* The pair. */}
-  <section class="pair grid" style="padding-bottom: var(--band);">
-    <div class="pair-found">
-      <h3>As found</h3>
-      <p class="body">{project.asFound}</p>
+  {/* The pair, as one composition rather than two columns.
+      A bureau that only works on existing buildings can show the half of the story every
+      other portfolio omits. The first version rendered that as prose beside prose, which is
+      the most ordinary thing on the page — so the one idea nobody else could use looked like
+      a section. Here the two states overlap: the building as left runs full width, the
+      building as found sits inset over its lower corner, and the two years are set between
+      them at display scale so the interval is the thing you read first. */}
+  {hasPair ? (
+    <section class="pair-moment">
+      <div class="pair-left-frame">
+        <Frame slug={rest[1].slug} alt={rest[1].alt} fill sizes="100vw" />
+      </div>
+      <div class="pair-found-frame">
+        <Frame slug={rest[0].slug} alt={rest[0].alt} fill sizes="34vw" />
+        <p class="micro pair-tag">As found</p>
+      </div>
+      <div class="pair-years">
+        <span class="pair-year">{project.built}</span>
+        <span class="pair-arrow">to</span>
+        <span class="pair-year">{project.completed}</span>
+      </div>
+    </section>
+  ) : (
+    <section class="grid pair-interval">
       {rest[0] && (
-        <div style="margin-top: 34rem;">
-          <Frame slug={rest[0].slug} alt={rest[0].alt} ratio={rest[0].ratio} sizes="(max-width: 760px) 100vw, 38vw" credit />
+        <div class="pair-single" style="grid-column: 1 / -1;">
+          <Frame slug={rest[0].slug} alt={rest[0].alt} fill sizes="60vw" />
         </div>
       )}
+      <div class="pair-years pair-years--static" style="grid-column: 1 / span 9;">
+        <span class="pair-year">{project.built}</span>
+        <span class="pair-arrow">to</span>
+        <span class="pair-year">{project.completed}</span>
+      </div>
+    </section>
+  )}
+
+  <section class="grid" style="padding-block: var(--band-quiet) var(--band);">
+    <div style="grid-column: 1 / span 5;">
+      <h2 class="micro" style="margin-bottom: 12rem;">As found</h2>
+      <p class="body">{project.asFound}</p>
     </div>
-    <div class="pair-left">
-      <h3>As left</h3>
-      <p class="body measure">{project.decision}</p>
-      {rest[1] && (
-        <div style="margin-top: 34rem;">
-          <Frame slug={rest[1].slug} alt={rest[1].alt} ratio={rest[1].ratio} sizes="(max-width: 760px) 100vw, 52vw" credit />
-        </div>
-      )}
+    <div style="grid-column: 8 / span 6;">
+      <h2 class="micro" style="margin-bottom: 12rem;">What we did</h2>
+      <p class="body">{project.decision}</p>
     </div>
   </section>
 
@@ -97,7 +128,7 @@ const [lead, ...rest] = project.frames;
     <div style="grid-column: 8 / span 5; border-top: 1px solid var(--hair); padding-top: 16rem;">
       <p class="small measure">{bureau.survey.caveat}</p>
       <p style="margin-top: 16rem;">
-        <a class="t3" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building</a>
+        <a class="action" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building</a>
       </p>
       <p class="small" style="margin-top: 8rem;">
         {bureau.contact.copenhagen.email} · {bureau.survey.price} · {bureau.survey.duration}

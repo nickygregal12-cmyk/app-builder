@@ -1,0 +1,64 @@
+---
+/**
+ * Contact.
+ *
+ * No form. The reference class gives addresses and telephone numbers and nothing else, and
+ * for a bureau whose first step is a two-week survey written by a partner, a form asking for
+ * a project type and a budget range would be the wrong instrument.
+ */
+import Base from '../layouts/Base.astro';
+import { bureau } from '../data/bureau';
+const offices = [bureau.contact.copenhagen, bureau.contact.malmo];
+---
+<Base title="The condition survey — Nørreværk" description="A paid two-week survey, written by a partner. About a third of them end with us advising against the project.">
+  <section class="grid" style="padding-top: 200rem; padding-bottom: var(--band);">
+    <h1 class="t1" style="grid-column: 1 / span 9;">The condition survey.</h1>
+    <p class="body measure" style="grid-column: 2 / span 5; margin-top: 60rem;">
+      An address and a photograph is enough to start. If it looks like work we should take, a
+      partner will come and look at it, and you will get a condition survey a fortnight later.
+    </p>
+  </section>
+
+  {/* The three steps live on Home, where somebody is deciding whether to engage. Repeating
+      them here made two pages say the same thing twice, which a reviewer read as an
+      architecture that had not edited itself. What belongs on this page is what to put in
+      the message. */}
+  <section class="grid" style="padding-bottom: var(--band);">
+    <div style="grid-column: 1 / span 7;">
+      <h2 class="micro" style="margin-bottom: 14rem;">What to send</h2>
+      <ul class="send-list">
+        <li><b>The address.</b> Or a dropped pin. It is how we look at the roof before we answer.</li>
+        <li><b>One photograph.</b> Any photograph — the worst elevation is more useful than the best one.</li>
+        <li><b>The year, if you know it.</b> And whether it is listed, if you know that too.</li>
+      </ul>
+      <p class="small" style="margin-top: 26rem; color: var(--grey-2);">
+        Nothing else. No brief, no budget, no schedule — those come after the survey, and
+        writing them before it is usually wasted work.
+      </p>
+    </div>
+    <div style="grid-column: 9 / span 5;">
+      {/* The price, the duration and the caveat are stated on Home, where the decision is
+          made. This page answers a different question — where does it go — so it carries the
+          action and the address and does not restate the offer. */}
+      <span class="figure">{bureau.survey.price.replace('DKK ', '')}</span>
+      <span class="figure-unit">DKK · {bureau.survey.duration} · written by a partner</span>
+      <p class="small measure" style="margin-top: 18rem;">
+        One message reaches both offices. It is read by a partner, not by an account manager,
+        and you will get an answer within a week either way.
+      </p>
+      <p style="margin-top: 24rem;">
+        <a class="action" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building by email</a>
+      </p>
+    </div>
+  </section>
+  <section class="grid" style="padding-bottom: var(--band);">
+    {offices.map((office, i) => (
+      <div style={`grid-column: ${i === 0 ? 1 : 9} / span 6;`}>
+        <h2 class="t2">{office.city}</h2>
+        <p class="body" style="margin-top: 24rem;">{office.line}</p>
+        <p class="body" style="margin-top: 14rem;"><a href={`mailto:${office.email}`}>{office.email}</a></p>
+        <p class="body"><a href={`tel:${office.phone.replace(/\s/g, '')}`}>{office.phone}</a></p>
+      </div>
+    ))}
+  </section>
+</Base>

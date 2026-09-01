@@ -152,5 +152,93 @@
   "lqip": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAAAwAwCdASoUAA0APu1kqU2ppaOiMAgBMB2JZQAASEfcO8nwAP7cifp1aN3orGnf5oZ+R7YugKjm6uVPrxGktbclfGYv+Xlg6u0Ie7ECTTkK6AAA",
   "credit": "seier+seier",
   "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "nyborg-aperture",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3098
+  },
+  "ratio": 0.7747,
+  "lqip": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAACQBACdASoUABoAPu1oqU+ppiOiKA1RMB2JZQDN/EXftkTJZfc8EKHIN1JPadwA/vrnP7nqpupi63w+ceApbaK2SH+jbw/fXrKDcBlWjVmvZoOfedBeewlBrjGPjgAlEs/vn0AfKNfzJFOagpCiNcU9rzyRJb6/xeY5xOkyxEXpLsk+pkOovu/fs4FXc3DSPgAAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "nyborg-wall",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3585
+  },
+  "ratio": 0.6695,
+  "lqip": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAACwBACdASoUAB4APu1irU4ppaSiKA1RMB2JZWHgVkCjLoiwKSHbfchVwTqCjGIAAP7hb6J57C6b0UTeJb3pZYEhN2HPgIuqdScSqQoSWgUmHZUN8H1WNVef1xoGAIckWYoSOMjDfFst03lplvOp7ZLyAAAAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "rodehus-hall",
+  "intrinsic": {
+   "width": 2272,
+   "height": 3224
+  },
+  "ratio": 0.7047,
+  "lqip": "data:image/webp;base64,UklGRrwAAABXRUJQVlA4ILAAAABQBQCdASoUABwAPu1iqU2ppaQiMBgMATAdiWoAnQAutZYGylIyQYjAI1SUpPQXgO5XSOwA5kGT7dAJapI9ktlFacfY1+65wMVOl1/YKU/iDyDIgf2xyr1fCF6iRM2WmonYb5kIcQLTVBSTTjrSDooxXBlxImsE4cttCE/DSKY83hW6zj7uSz6SOweRZ9lxLHShBj697GNxEv0JrCa0HUCyGnNMIbxYu2OBtuoXM5vgAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "rodehus-reading",
+  "intrinsic": {
+   "width": 2400,
+   "height": 2679
+  },
+  "ratio": 0.8959,
+  "lqip": "data:image/webp;base64,UklGRrIAAABXRUJQVlA4IKYAAADwBACdASoUABYAPu1wsFIppiSiqAgBMB2JZQCsBagAmp/XSvDyt2Jt0j9TYbVmmrAA/s3ETsqPIpRVQ/tDDaAAf+KrScQ6EaCwqVpcOW15NJ9FRGv0HSbKoPyT1vJh+kDrZJg+HdnM28L6NDs6Pamw99ziNthkQIdGoIzqNGcrVG6sFacYNy2DA7yn4i/rozPWl24hudy6uGWqUQmjfD1nKH+7MAAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "rodehus-light",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3380
+  },
+  "ratio": 0.7101,
+  "lqip": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAABwBACdASoUABwAPu1kqU2ppaOiMAgBMB2JZACdMoR86Ckxr3QXxU/2knMTwAD+6o3uz5eTTMelGOC//Nf8cfAzZiDXU+OLE4v5OpzpZ1oFknFn1clanfRVQCD60GcSF+Otp3JoVGFwzMe5rM29PoAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "index-spiral",
+  "intrinsic": {
+   "width": 2400,
+   "height": 1589
+  },
+  "ratio": 1.5104,
+  "lqip": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAABwAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JaQAAP+JYdKe/mcAA/nHKXXL0C8B6o71M8aT3lsDullNfVxTbyCA1scQf+5OaAHMPHjs5OwJOnBWEfQNAAA==",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "index-stair",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3585
+  },
+  "ratio": 0.6695,
+  "lqip": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBQCdASoUAB4APu1mrE+ppSQiMBgIATAdiWMAAJCpyjT+QhCPdG2nT/wwXil53hmhdiAA/vNI0POW9iarECzQmaWO1h14Y5lpYxepZu3en5GJ5VenmTYau+WhTT/VjegsVXVgDNXbMUpqbqrIsNJug5A3xLrm83QgMxI/8+Y40L3BLnQyHM5rueuylMAA",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
+ },
+ {
+  "slug": "studio-detail",
+  "intrinsic": {
+   "width": 2400,
+   "height": 3457
+  },
+  "ratio": 0.6942,
+  "lqip": "data:image/webp;base64,UklGRuQAAABXRUJQVlA4INgAAACwBQCdASoUAB0APu1sqlEppaOiqAqpMB2JaQAG0o4QI2W/L104Q0uylk11djgHzmA1HGkjmyAA/uol3ibrkvrL6AA5fN2elJzdIMQxz5AmCSMh5jVSfInTISUD+MD+foPufMeNSiqQXB6QQmMIxRQorHwNH7nrAYwwmt5dmxqdXtHkH3kEhlYuzikVdzOu9b/rz/RAzD2OQi0c5wIdygWDM8qmTp0cB4/P+Om4y6vi/u4hGyv7oSkoRIfWtsYvrWGPmbHvdoWVazwNRnejxxiiRkop7LwAAAA=",
+  "credit": "seier+seier",
+  "licence": "CC BY 2.0"
  }
 ]

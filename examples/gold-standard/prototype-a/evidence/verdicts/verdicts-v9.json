@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-01T09:22:11.318Z",
+  "reviews": [
+    {
+      "verdict": "rework",
+      "reviewedBy": {
+        "role": "design-critic",
+        "vendor": "openai",
+        "model": "GPT-5"
+      },
+      "rationale": "This is clearly authored, business-specific work with an unusually coherent editorial system, excellent architectural photography, and a compelling floor-area register concept. It reaches strong professional quality overall, but the mobile Frihavn date collision and the excessive empty interval on the Nyborg project are visible responsive failures that should not ship.",
+      "criterionScores": [
+        {
+          "criterion": "art-direction",
+          "score": 9,
+          "note": "The floor-area register, restrained monochrome framework, calibrated image scales, and editorial asymmetry form a clear visual thesis rooted in preservation architecture.",
+          "whyNotHigher": "The thesis is not fully resolved at every breakpoint: some project-detail spacing becomes inert rather than purposeful, and the Frihavn mobile date composition visibly breaks.",
+          "positiveEvidence": [
+            "Project frames visibly vary in scale according to building area.",
+            "Photography, serif display type, rules, captions, and open space operate as one consistent editorial language.",
+            "The register concept continues coherently across home, index, bureau, contact, and project pages."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "business-specificity",
+          "score": 9,
+          "note": "The experience is structured around existing-building area, years retained, concrete not removed, condition surveys, and the bureau's willingness to reject work. Those are design inputs, not merely substituted copy.",
+          "whyNotHigher": "Some conventional portfolio elements remain, particularly the office footer and project-detail progression, so not every part is uniquely dependent on this bureau.",
+          "positiveEvidence": [
+            "The work index sizes project frames by floor area.",
+            "Project pages contrast original and intervention years and quantify retained structure.",
+            "The paid survey and its rejection rate are integrated repeatedly into the commercial experience."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "information-architecture",
+          "score": 8.5,
+          "note": "The four-route structure is concise and intelligible: Home states the position and previews evidence, Work provides the register, project routes explain interventions, Bureau establishes credibility, and Contact explains the paid entry product.",
+          "whyNotHigher": "The project pages shown provide no visible route to further technical depth, and the Home page repeats substantial contact and awards material already available elsewhere.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-hierarchy",
+          "score": 8.5,
+          "note": "Large propositions, dominant project images, compact evidence, and quiet metadata establish clear reading priorities appropriate to each route.",
+          "whyNotHigher": "On Nyborg, the enormous blank middle interval weakens continuity so severely that chronology becomes a hunt; some footer and metadata text is also excessively recessive.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "typography",
+          "score": 9,
+          "note": "Typography is compositional material here: display lines, numeric areas, dates, labels, captions, fine rules, and restrained sans-serif body copy establish a sophisticated editorial register.",
+          "whyNotHigher": "The smallest desktop and tablet metadata approaches illegibility, while the mobile Frihavn date treatment collides with adjacent labels.",
+          "positiveEvidence": [
+            "Oversized area figures visually encode the register concept.",
+            "Display typography changes scale and placement to structure long pages rather than simply naming sections.",
+            "Captions, uppercase metadata, dates, units, and fine rules are consistently treated as designed elements."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "composition-pacing",
+          "score": 8.5,
+          "note": "The pages use substantial variation in density, image scale, alignment, and silence, with especially strong sequences on Home and the Work register.",
+          "whyNotHigher": "The long project pages sometimes confuse compositional silence with dead space; Nyborg's mobile and desktop chronology is the clearest instance, while several lower-page transitions feel overextended.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "visual-material",
+          "score": 9,
+          "note": "The photography argues for the bureau's practice by showing accumulated material, difficult interiors, retained concrete, and transformed civic spaces at persuasive scale.",
+          "whyNotHigher": "Several very dark images surrender useful architectural detail, and the small supporting project thumbnails can become too slight relative to their surrounding space.",
+          "positiveEvidence": [
+            "Architectural images are cropped differently across breakpoints rather than indiscriminately scaled.",
+            "Material details and whole-building views are sequenced to support the preservation argument.",
+            "The floor-area-based image sizing makes representation itself express project evidence."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "interaction-craft",
+          "score": 6.5,
+          "note": "The screenshots show consistent active navigation underlines and clearly styled textual links, but they provide no evidence of hover, focus, transition, keyboard, image, or feedback behavior.",
+          "whyNotHigher": "",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "responsive-recomposition",
+          "score": 7.5,
+          "note": "Mobile receives different crops, reordered metadata, regrouped project captions, simplified contact structures, and a coherent single-column register rather than merely shrinking desktop.",
+          "whyNotHigher": "The Frihavn 1954–2024 composition visibly overlaps its labels on mobile, and Nyborg preserves an implausibly large empty interval that consumes most of a mobile panel without sufficient orientation.",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "brand-fit",
+          "score": 9,
+          "note": "The austere, materially attentive, evidence-led visual language strongly suits an architecture bureau that values existing structures, measured intervention, and the confidence to advise against construction.",
+          "whyNotHigher": "The extreme restraint occasionally makes practical information feel quieter than the bureau's commercial needs warrant.",
+          "positiveEvidence": [
+            "The design privileges existing-building photography over decorative brand devices.",
+            "Measured area, dates, retention facts, and survey terms make precision part of the identity.",
+            "The severe editorial tone reinforces the bureau's anti-demolition position."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "commercial-clarity",
+          "score": 8.5,
+          "note": "The bureau's specialism, refusal to build on empty sites, two-week paid survey, price, process, rejection rate, contact details, and next action are all explicit.",
+          "whyNotHigher": "The primary call to action is often typographically subtle and appears late; the screenshots show no direct submission mechanism or evidence of what happens after selecting 'Send us a building.'",
+          "positiveEvidence": [],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "ai-slop-resistance",
+          "score": 9.5,
+          "note": "The site avoids generic generated motifs almost completely. Its choices trace back to project area, architectural evidence, retained material, chronology, and the bureau's unusually specific commercial position.",
+          "whyNotHigher": "A few giant statements and expanses of whitespace could become mannerisms when detached from the register logic, and the weakest project spacing shows that risk.",
+          "positiveEvidence": [
+            "There are no card grids, gradient headlines, icon triplets, glowing effects, fake logo walls, or generic innovation language.",
+            "Numbers and metadata are factual architectural evidence rather than decorative KPIs.",
+            "The central graphic device directly encodes the floor areas of the bureau's projects."
+          ],
+          "whyBenchmark": ""
+        },
+        {
+          "criterion": "memorability",
+          "score": 9,
+          "note": "The memorable signature is the register of five projects whose image frames are drawn in proportion to floor area, reinforced by the 334-to-18,600 square-metre scale.",
+          "whyNotHigher": "The signature is strongest on the Work index and Home preview; the individual project pages rely more heavily on familiar large-image editorial architecture.",
+          "positiveEvidence": [
+            "The project register turns building area into the page's visible composition.",
+            "The contrast between a 334 m² reading room and 18,600 m² of dwellings is immediately legible and distinctive.",
+            "The visual system connects the bureau's measured restraint to the physical scale of its work."
+          ],
+          "whyBenchmark": ""
+        }
+      ],
+      "holisticTier": "strong-professional",
+      "observations": {
+        "templateDerived": false,
+        "interchangeableBusiness": false,
+        "mobileIsStackedDesktop": false,
+        "noSignatureMoment": false,
+        "typographyMerelyCompetent": false,
+        "genericDesignLanguage": false
+      },
+      "signatureMoment": "The Work register in which each architectural photograph is framed in proportion to the project's floor area, ranging from the 334 m² reading room to 18,600 m² of dwellings.",
+      "pairwiseComparison": {
+        "referenceId": "vb-kononenko",
+        "comparisons": [
+          {
+            "dimension": "art-direction",
+            "outcome": "roughly-comparable",
+            "note": "Both make composition and architectural material carry the identity; the candidate adds a particularly strong business-specific floor-area thesis, though its responsive execution is less consistently resolved."
+          },
+          {
+            "dimension": "typography",
+            "outcome": "reference-stronger",
+            "note": "The candidate uses type ambitiously and often beautifully, but undersized metadata and the mobile Frihavn collision show less exact control than the reference standard described."
+          },
+          {
+            "dimension": "composition",
+            "outcome": "reference-stronger",
+            "note": "The candidate produces excellent asymmetric sequences, especially on Home and Work, but some project-page emptiness loses tension and becomes discontinuity."
+          },
+          {
+            "dimension": "information-architecture",
+            "outcome": "roughly-comparable",
+            "note": "The candidate's concise route structure, edited Home preview, register index, bureau proof, and dedicated survey explanation form a disciplined architecture."
+          },
+          {
+            "dimension": "responsive-design",
+            "outcome": "reference-stronger",
+            "note": "The candidate demonstrates genuine mobile decisions, but the visible date overlap and Nyborg's excessive blank interval prevent comparable refinement."
+          },
+          {
+            "dimension": "craft",
+            "outcome": "reference-stronger",
+            "note": "Many details are highly crafted, but the screenshots reveal small-type fragility and an outright mobile collision; interaction states are not evidenced."
+          },
+          {
+            "dimension": "memorability",
+            "outcome": "roughly-comparable",
+            "note": "The proportional floor-area register is a specific, recallable device that belongs naturally to this bureau rather than functioning as decoration."
+          },
+          {
+            "dimension": "business-specificity",
+            "outcome": "candidate-stronger",
+            "note": "The candidate's layout directly encodes project area and repeatedly connects preservation evidence, retained structure, survey pricing, and refusal of unsuitable work to the experience."
+          }
+        ]
+      },
+      "benchmarkGap": "MATERIAL",
+      "benchmarkGapDetail": "Clearly good, and clearly below benchmark quality. The reference is meaningfully stronger on several dimensions.",
+      "benchmarkComparisonCounts": {
+        "candidate-stronger": 1,
+        "roughly-comparable": 3,
+        "reference-stronger": 4,
+        "reference-substantially-stronger": 0
+      },
+      "dimensionsNotCompared": [],
+      "evidenceCeiling": {
+        "cap": 10,
+        "tier": "site-level",
+        "routes": 27,
+        "viewports": 4,
+        "detail": "Evidence covers 27 route(s) at 4 viewport(s): a benchmark claim about a website needs the website: several routes, at more than one width. This caps any overall claim at 10."
+      },
+      "failingCriteria": [
+        "responsive-recomposition"
+      ],
+      "blockingConcerns": [
+        "Repair the overlapping 'As found' label and 1954–2024 date composition on the Frihavn mobile page.",
+        "Rework the Nyborg project chronology at mobile and larger widths so the long interval remains expressive without producing an effectively empty screen or obscuring reading continuity.",
+        "Increase or otherwise improve the legibility of the smallest metadata and footer text, particularly at desktop and tablet widths.",
+        "Verify hover, focus, keyboard, link, and transition behavior; static screenshots provide no evidence for these states."
+      ],
+      "addressedRules": [],
+      "addressedRuleNotes": [],
+      "unprovenCriteria": [],
+      "evidence": {
+        "candidateId": null,
+        "compositionHash": null,
+        "captureCount": 37,
+        "captureDigest": "8ad8ffbf92aac68ce078a5825c89249e01630fdbe6cb54a2ca77dc1d38617d61"
+      }
+    }
+  ],
+  "skipped": []
+}

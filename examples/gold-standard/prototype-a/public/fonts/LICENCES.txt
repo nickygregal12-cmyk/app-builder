@@ -1,0 +1,10 @@
+Instrument Serif — SIL Open Font Licence 1.1
+  Copyright 2022 The Instrument Serif Project Authors
+  https://github.com/google/fonts/tree/main/ofl/instrumentserif
+
+Inter — SIL Open Font Licence 1.1
+  Copyright 2016 The Inter Project Authors
+  https://github.com/google/fonts/tree/main/ofl/inter
+
+Both permit commercial use, modification and self-hosting with the licence retained.
+Converted from TTF to WOFF2 for delivery; no glyphs were altered.

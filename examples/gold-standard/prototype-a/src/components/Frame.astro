@@ -26,12 +26,14 @@ interface Props {
   class?: string;
   /** Full-bleed frames set their own height and ignore the ratio entirely. */
   bleed?: boolean;
+  /** The container decides the height — used by the register, where height carries the data. */
+  fill?: boolean;
   credit?: boolean;
 }
 
 const {
   slug, alt, ratio = '1.62', ratioMobile, priority = false,
-  sizes = '100vw', class: className = '', bleed = false, credit = false,
+  sizes = '100vw', class: className = '', bleed = false, credit = false, fill = false,
 } = Astro.props;
 
 type Entry = { slug: string; intrinsic: { width: number; height: number }; lqip: string; credit: string; licence: string };
@@ -39,7 +41,7 @@ const image = (images as Entry[]).find((entry) => entry.slug === slug);
 if (!image) throw new Error(`Frame: no image "${slug}" in src/assets/images.json`);
 ---
 
-<figure class={`frame ${className}`} data-ratio={bleed ? undefined : ratio} data-ratio-m={ratioMobile} style={`background-image:url("${image.lqip}");background-size:cover;background-position:center`}>
+<figure class={`frame ${className}`} data-ratio={bleed || fill ? undefined : ratio} data-ratio-m={fill ? undefined : ratioMobile} style={`background-image:url("${image.lqip}");background-size:cover;background-position:center`}>
   <picture>
     <source media="(max-width: 760px)" srcset={`/img/${slug}@sm.avif`} type="image/avif" />
     <source media="(max-width: 760px)" srcset={`/img/${slug}@sm.jpg`} type="image/jpeg" />

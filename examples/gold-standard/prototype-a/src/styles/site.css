@@ -134,6 +134,20 @@ ul, ol, dl, dd { margin: 0; padding: 0; list-style: none; }
 
 /* An action the reviewer described as resolving to "plain contact details". A link that
    carries the commercial step should be visibly a link. */
+/* The commercial step, made unmistakable. It was set as underlined editorial text, which a
+   reviewer read as an action a visitor might not recognise as one. This is still the site's
+   language — no pill, no fill, no arrow — but it is plainly a control. */
+.action {
+  display: inline-block; font-family: var(--text); font-size: var(--t-small);
+  letter-spacing: 0.01em; padding: 14rem 26rem; border: 1px solid var(--ink);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.action:hover, .action:focus-visible { background: var(--ink); color: var(--paper); }
+
+.send-list { display: grid; gap: 14rem; margin-top: 4rem; }
+.send-list li { border-top: 1px solid var(--hair); padding-top: 12rem; font-size: var(--t-small); color: var(--grey-2); }
+.send-list b { font-weight: 500; color: var(--ink); }
+
 a.t3, a.t4 { border-bottom: 1px solid var(--hair); padding-bottom: 4rem; transition: border-color var(--dur) var(--ease); }
 a.t3:hover, a.t4:hover { border-bottom-color: var(--ink); }
 
@@ -144,29 +158,151 @@ a.t3:hover, a.t4:hover { border-bottom-color: var(--ink); }
   margin-top: 10rem;
 }
 
-/* -------------------------------------------------------------- work index
+/* ----------------------------------------------------------------- opening
  *
- * The answer to "not a card grid", and the single most important composition in the site.
- *
- * Every entry declares its own span, start column, image height and vertical offset in the
- * data — six projects, three spans (4/6/7 of fifteen), two heights (540/700) and six
- * distinct offsets including a negative one. Nothing shares a baseline and there are no rows,
- * so the index cannot be read as a grid even though it is one.
- *
- * The values live in `src/data/bureau.ts` because they are an editorial judgement about which
- * projects matter, not a layout convenience.
+ * A building at full height with the practice stated beside it. The photograph holds 62% of
+ * the viewport and runs to all three edges it touches; the text column sits in the remainder
+ * with the credentials as one running line rather than a grid of cells.
  */
 
-.index { display: grid; grid-template-columns: repeat(15, 1fr); gap: var(--col-gap); padding-inline: var(--gutter); align-items: start; }
-.entry { grid-column: var(--start) / span var(--span); margin-top: var(--offset); }
-.entry .frame { height: var(--height); aspect-ratio: auto; }
-.entry img { transition: transform 1.4s var(--ease); }
-.entry:hover img { transform: scale(1.03); }
+.opening { display: grid; grid-template-columns: 62fr 38fr; min-height: 100vh; align-items: end; }
+/* `align-items: end` on the grid was shrinking the frame inside a taller row and leaving a
+   band of paper above it. The photograph has to touch the top edge — it is the first thing
+   the page says. */
+.opening-frame { grid-column: 1; grid-row: 1 / span 2; align-self: stretch; min-height: 100vh; overflow: hidden; }
+.opening-frame > .frame { height: 100%; aspect-ratio: auto !important; }
+.opening-text { grid-column: 2; grid-row: 1; align-self: end; padding: 0 var(--gutter) 0 calc(var(--gutter) * 1.4); }
+.opening-text .t3 { line-height: 1.16; }
+.opening-refusal { margin-top: 28rem; font-size: var(--t-body); line-height: var(--lh-body); color: var(--grey-2); max-width: 34ch; }
+/* One line of running prose. The previous version set the same facts in six bordered cells,
+   which is a KPI row wearing hairlines. */
+.credentials { margin-top: 34rem; padding-top: 14rem; border-top: 1px solid var(--hair); font-size: var(--t-small); color: var(--grey-1); max-width: 40ch; }
+.credentials b { font-weight: 500; color: var(--ink); }
+.opening-caption { grid-column: 2; grid-row: 2; align-self: end; padding: 0 var(--gutter) 34rem calc(var(--gutter) * 1.4); }
 
-.entry-meta { display: flex; align-items: baseline; justify-content: space-between; gap: var(--col-gap); margin-top: 14rem; }
-.entry-name { font-family: var(--display); font-size: var(--t-3); line-height: 1; letter-spacing: -0.025em; }
-.entry-found { font-size: var(--t-small); color: var(--grey-2); margin-top: 4rem; }
-.entry-area { font-size: var(--t-small); color: var(--grey-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* A statement band, given a screen to itself and nothing else. */
+.statement { padding-block: var(--band-loud); }
+
+.route { display: block; border-top: 1px solid var(--ink); padding-top: 16rem; }
+.route .t2 { display: block; transition: transform var(--dur) var(--ease); }
+.route:hover .t2 { transform: translateX(12rem); }
+
+.home-entry { grid-column: var(--start) / span var(--span); }
+.home-entry .reg-frame { height: var(--h); }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--col-gap); }
+.steps li { border-top: 1px solid var(--hair); padding-top: 14rem; }
+.step-n { display: block; font-family: var(--text); font-size: var(--t-micro); letter-spacing: var(--track-micro); color: var(--grey-1); margin-bottom: 10rem; font-variant-numeric: tabular-nums; }
+.steps h3 { margin-bottom: 8rem; }
+
+.line-item { display: flex; justify-content: space-between; align-items: baseline; gap: var(--col-gap); border-bottom: 1px solid var(--hair); padding-bottom: 8rem; font-size: var(--t-small); }
+
+/* --------------------------------------------------------------- register
+ *
+ * Frames drawn in proportion to floor area. The height arrives as a custom property computed
+ * in `src/lib/scale.ts`; the column start is authored, so entries still fall on different
+ * anchors and no two share a left edge. Nothing here is a row.
+ *
+ * The area figure is set at display scale beside its frame because it is the thing that
+ * placed the frame. Setting it as a right-aligned caption — which is what the first version
+ * of this page did — throws away the only fact in the data that could carry a composition.
+ */
+
+.register { padding-inline: var(--gutter); display: grid; grid-template-columns: repeat(15, 1fr); gap: var(--col-gap); align-items: end; }
+.reg-entry { grid-column: var(--start) / span var(--span); margin-bottom: var(--band-quiet); }
+.reg-entry > a { display: grid; grid-template-columns: 1fr; gap: 0; }
+.reg-frame { height: var(--h); overflow: hidden; }
+/* `:global()` is Astro scoped-style syntax and is inert in a plain stylesheet, so this rule
+   silently did nothing and every register frame kept its aspect-ratio instead of the height
+   the area mapping computed — the whole proportional argument was not rendering. */
+.reg-frame > .frame { height: 100%; aspect-ratio: auto !important; }
+.reg-entry img { transition: transform 1.6s var(--ease); }
+.reg-entry:hover img { transform: scale(1.028); }
+
+/* The empty half of a register row carries the project's one line. Large voids are part of
+   this composition, but a void that says nothing is the "premium minimalism made of empty
+   space" the rubric names — this one is doing editorial work. */
+.reg-aside {
+  grid-column: var(--aside-start) / span var(--aside-span);
+  align-self: end; margin-bottom: calc(var(--band-quiet) + 30rem);
+  font-family: var(--display); font-size: var(--t-3); line-height: 1.12;
+  letter-spacing: -0.02em; color: var(--grey-2);
+}
+
+.reg-meta { display: grid; grid-template-columns: auto 1fr; column-gap: 22rem; align-items: baseline; margin-top: 16rem; border-top: 1px solid var(--ink); padding-top: 12rem; }
+.reg-area {
+  grid-row: 1 / span 2;
+  font-family: var(--display); font-size: var(--t-2); line-height: 0.8;
+  letter-spacing: -0.03em; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.reg-area i { font-family: var(--text); font-style: normal; font-size: var(--t-micro); letter-spacing: 0.06em; color: var(--grey-1); margin-left: 6rem; vertical-align: super; }
+.reg-name { font-family: var(--display); font-size: var(--t-3); line-height: 1; letter-spacing: -0.02em; }
+.reg-was { font-size: var(--t-small); color: var(--grey-1); margin-top: 4rem; }
+.reg-entry[data-narrow] .reg-meta { grid-template-columns: 1fr; }
+.reg-entry[data-narrow] .reg-area { grid-row: auto; margin-bottom: 6rem; }
+
+/* The declared scale at the head of the register. */
+.figure { display: block; font-family: var(--display); font-size: var(--t-2); line-height: 0.86; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.figure-unit { display: block; font-size: var(--t-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--grey-1); margin-top: 6rem; }
+.rule { height: 1px; background: var(--ink); margin-bottom: 18rem; }
+
+/* All five proportions in one line, on the same square-root mapping as the frames below.
+   On desktop it reads as a key; on a phone, where two frames can never be in view together,
+   it carries the comparison the register is for. */
+/* Columns follow the number of projects. Hard-coding five wrapped the sixth onto its own
+   line the moment the register was complete, which broke the one-line comparison the strip
+   exists to make. */
+.scale-strip { display: grid; grid-template-columns: repeat(var(--n, 5), 1fr); gap: var(--col-gap); margin-top: 46rem; align-items: end; }
+.scale-strip li { display: block; }
+.scale-strip a { display: grid; gap: 8rem; }
+.scale-bar { display: block; width: var(--bar); height: 8rem; background: var(--ink); transition: width var(--dur) var(--ease); }
+.scale-figure { font-family: var(--display); font-size: var(--t-3); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.scale-name { font-size: var(--t-micro); color: var(--grey-1); }
+.scale-strip a:hover .scale-bar { background: var(--grey-1); }
+
+.lede { font-family: var(--display); font-size: var(--t-3); line-height: 1.1; letter-spacing: -0.02em; }
+.micro { font-size: var(--t-micro); letter-spacing: 0.04em; color: var(--grey-1); line-height: 1.5; }
+
+/* ------------------------------------------------------------- pair moment
+ *
+ * The signature. Two states of one building, overlapped rather than tabulated: the building
+ * as left runs the full width at 86vh, the building as found is inset over its lower-left
+ * corner at a third the width, and the years sit between them at display scale on the paper
+ * ground so the interval reads before either photograph does.
+ *
+ * The overlap is the argument. This bureau's work is an intervention *into* something, and a
+ * before/after slider or two side-by-side columns would say the two states are alternatives.
+ * They are not — one is inside the other.
+ */
+
+.pair-moment { position: relative; margin-bottom: var(--band); }
+.pair-left-frame { height: 86vh; overflow: hidden; }
+.pair-left-frame > .frame { height: 100%; aspect-ratio: auto !important; }
+
+.pair-found-frame {
+  position: absolute; left: var(--gutter); bottom: -90rem;
+  width: 30%; height: 46vh; overflow: hidden;
+  box-shadow: 0 0 0 10rem var(--paper);
+}
+.pair-found-frame > .frame { height: 100%; aspect-ratio: auto !important; }
+.pair-tag { position: absolute; left: 12rem; bottom: 10rem; color: #fff; mix-blend-mode: difference; }
+
+.pair-years {
+  position: absolute; right: var(--gutter); bottom: -70rem;
+  display: flex; align-items: baseline; gap: 18rem;
+}
+.pair-year { font-family: var(--display); font-size: var(--t-1); line-height: 0.86; letter-spacing: var(--track-display); font-variant-numeric: tabular-nums; }
+.pair-arrow { font-size: var(--t-small); color: var(--grey-1); }
+/* Two year figures at display scale need the measure to sit on. Squeezed into five of
+   fifteen columns they overflowed a tablet by 19px — so the frame takes the full width and
+   the interval sits beneath it, which is also the clearer reading. */
+.pair-years--static { position: static; align-self: start; flex-wrap: wrap; margin-top: 26rem; }
+.pair-interval { padding-bottom: var(--band); align-items: start; }
+.pair-single { height: 62vh; overflow: hidden; }
+.pair-single > .frame { height: 100%; aspect-ratio: auto !important; }
+
+/* Space for the two elements hanging below the frame. */
+.pair-moment { padding-bottom: 120rem; }
 
 /* ------------------------------------------------------------------- pairs
  *
@@ -213,6 +349,32 @@ a.t3:hover, a.t4:hover { border-bottom-color: var(--ink); }
   .index { gap: 34rem; }
   .grid > *, .index > *, .pair > * { grid-column: auto !important; }
 
+  .opening { grid-template-columns: 1fr; min-height: 0; }
+  /* min-height from the desktop rule has to be released, or the phone inherits 100vh. */
+  .opening-frame { grid-column: 1; grid-row: 1; height: 62vh; min-height: 0; }
+  .opening-text { grid-column: 1; grid-row: 2; padding: 30rem var(--gutter) 0; }
+  .opening-caption { grid-column: 1; grid-row: 3; padding: 18rem var(--gutter) 0; }
+  .opening-text .t3 br { display: none; }
+  .statement { padding-block: var(--band-loud) var(--band); }
+  .steps { grid-template-columns: 1fr; gap: 26rem; }
+  .home-entry { grid-column: auto !important; }
+  .home-entry .reg-frame { height: auto; aspect-ratio: 0.8; }
+
+  /* Five columns of bar at 390px is five unreadable columns; the strip becomes five lines,
+     each bar still proportional across the full measure so the comparison survives. */
+  .scale-strip { grid-template-columns: 1fr; gap: 14rem; margin-top: 30rem; }
+  .scale-strip a { grid-template-columns: 1fr auto; align-items: baseline; column-gap: 12rem; }
+  .scale-bar { grid-column: 1 / -1; }
+  .scale-figure { font-size: var(--t-2); }
+  .scale-name { text-align: right; }
+
+  .register { display: flex; flex-direction: column; gap: 34rem; }
+  .reg-entry { grid-column: auto !important; margin-bottom: 0; }
+  /* The proportional argument survives the phone: heights are still derived from area, on a
+     range chosen for a 390px frame rather than a 1600px one. */
+  .reg-frame { height: var(--mh); }
+  .reg-meta { column-gap: 14rem; }
+
   .entry { margin-top: 0 !important; }
   /* Weight on a phone is carried by width, because column span has nowhere to go in one
      column. The largest project runs past both margins; the smallest is held back from
@@ -227,13 +389,29 @@ a.t3:hover, a.t4:hover { border-bottom-color: var(--ink); }
      square. One column of identical rectangles is the thing this index exists not to be. */
   .entry .frame { height: auto; aspect-ratio: var(--m-ratio, 0.76); }
 
+  /* The overlap does not survive a 390px frame: the inset frame would cover the photograph
+     it is meant to sit against. On a phone the pair becomes a sequence — as left, then the
+     years, then as found — which is the same argument told in time rather than in space. */
+  .pair-moment { padding-bottom: 0; margin-bottom: var(--band-quiet); }
+  .pair-left-frame { height: 58vh; }
+  .pair-found-frame { position: static; width: 62%; height: 34vh; margin: 26rem 0 0 var(--gutter); box-shadow: none; }
+  /* The tag was absolutely positioned against a frame that is no longer positioned, so it
+     landed on the years. On a phone it becomes a caption in the flow. */
+  .pair-tag { position: static; mix-blend-mode: normal; color: var(--grey-1); margin: 8rem 0 0 var(--gutter); }
+  .pair-years { position: static; justify-content: flex-start; padding: 30rem var(--gutter) 0; }
+
   .pair-left { margin-top: 0; }
   .pair-found, .pair-left { width: 100%; }
 
   /* Over-crop rather than letterbox: a 1.62 landscape at 390px is a 240px strip. */
   .bleed .frame { height: 78vh; }
 
-  .nav { padding: 14rem var(--gutter); }
+  /* A fixed bar with no background and `mix-blend-mode: difference` works over photography
+     and over paper, but it cannot sit over running text — the held-touch capture caught it
+     colliding with content at 390px. On a phone it scrolls away with the page instead. Three
+     links and short routes make that an acceptable trade; a bar that overlaps what you are
+     reading is not. */
+  .nav { position: absolute; padding: 14rem var(--gutter); }
   .nav-set { gap: 16rem; }
 
   .next-name { font-size: var(--t-1); }

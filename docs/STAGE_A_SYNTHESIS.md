@@ -252,8 +252,10 @@ its head noun first.
 The real defect is exact substring matching over free text in **either** direction: four of six
 committed packets scored zero on the term weighted highest, so selection fell through to design
 anchors — the visual-similarity trap the module's own header warns against. Verified
-independently and fixed separately in **PR #266**, which is deliberately not part of the
-prototype stack.
+independently and fixed separately in **PR #266**, kept deliberately out of the prototype stack
+and since merged to `main` as `e19c88c`. The fix replaces prose matching with a declared closed
+facet vocabulary, makes business relevance a gate rather than a term — so design anchors can
+order references but never qualify one — and refuses an undefined business facet outright.
 
 ---
 
@@ -534,7 +536,7 @@ Recorded because a synthesis that only lists what it believes is not evidence.
    movement) and by A's own verdicts (pacing moved 8.5 → 9.0 → 9.5 under iteration). Replaced by
    the section-shape reading, §3.1.
 2. **"The `selectReference` containment runs the wrong way."** Reversal fixes nothing; the defect
-   is exact substring matching in either direction. §3.2, fixed in #266.
+   is exact substring matching in either direction. §3.2, fixed in #266 (merged).
 3. **"Motion does not matter."** The A-era corpus concluded this from three sites with one
    animation between them. It is now known to be an artefact of the harness: the criterion cannot
    exceed ~8.5 because the evidence is static. The old finding was true of what could be seen.

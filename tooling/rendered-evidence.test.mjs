@@ -168,15 +168,25 @@ test('the disclosed navigation is planned on every route, and only where it disc
   const opened = plan.captures.filter((capture) => capture.state.interaction === 'navigation-disclosed');
 
   assert.equal(INTERACTIONS['navigation-disclosed'].requiresSectionType, null, 'the header is on every route, not in a section');
-  assert.equal(opened.length, composition.pages.length, 'every route should photograph its own navigation panel');
+  // One still plus the three frames of its declared sequence, per route.
+  const stills = opened.filter((capture) => !capture.state.sequence);
+  assert.equal(stills.length, composition.pages.length, 'every route should photograph its own navigation panel');
+  assert.equal(opened.length, composition.pages.length * 4, 'each route also carries the three frames the disclosure declares it needs');
   assert.deepEqual([...new Set(opened.map((capture) => capture.viewport))], ['mobile'], 'the panel only exists below the disclosure width');
   assert.equal(opened.every((capture) => capture.state.risk === 'high'), true);
-  assert.match(opened[0].state.proves, /not evidence that any destination in it resolves/);
+  assert.match(stills[0].state.proves, /not evidence that any destination in it resolves/);
 });
 
 test('an evidence set validates, hashes what was captured and drops what was not', () => {
   const { composition, plan } = planFor();
-  const results = fakeResults(plan).slice(0, plan.captures.length - 2);
+  /*
+   * Dropped from the plain viewport captures on purpose. A declared interaction
+   * that produces no bytes is a refusal rather than a gap — see the test below —
+   * so this exercises the case that legitimately degrades: a page state the run
+   * simply did not reach.
+   */
+  const droppable = plan.captures.filter((capture) => !capture.state.interaction).slice(-2);
+  const results = fakeResults(plan).filter((result) => !droppable.some((capture) => capture.id === result.id));
   const evidence = buildEvidenceSet({
     plan,
     results,
@@ -190,8 +200,7 @@ test('an evidence set validates, hashes what was captured and drops what was not
   assert.equal(evidence.captures.length, results.length, 'a planned capture with no bytes is not recorded');
   assert.equal(evidence.captures.every((capture) => capture.evidenceKind === 'visual'), true);
   for (const capture of evidence.captures) assert.equal(capture.file, captureFile(capture.id));
-  const dropped = plan.captures.slice(-2);
-  for (const capture of dropped) {
+  for (const capture of droppable) {
     assert.ok(
       evidence.uncovered.some((entry) => entry.route === capture.route && entry.state === capture.state.state && entry.detail === 'Planned but not captured in this run.'),
       'a capture that did not happen is declared, not silently missing',
@@ -306,20 +315,40 @@ test('a capture that did not reach its state is dropped, not published as that s
     'the failure has to be caused deterministically; a preview whose POST succeeds cannot reach this state on its own');
 });
 
-test('capture failures leave the state uncovered rather than silently proven', () => {
+test('a declared interaction that captured nothing is refused, not filed as an unmet fixture need', () => {
+  /*
+   * This test used to assert that a failed interaction capture landed in
+   * `uncovered`, which kept it out of the proven set — the right concern, and
+   * too weak an answer.
+   *
+   * `uncovered` means "the factory cannot reach this state yet". An interaction
+   * is in a closed registry, its precondition was checked against the
+   * composition before it was planned, and it asserts on arrival. If one
+   * produces no bytes then something broke, and recording it under the same
+   * heading as work that was never done files a regression as a backlog item.
+   * Fourteen of fifteen interaction states once vanished from a packet through a
+   * single wrong manifest key with no error raised.
+   */
   const composition = composeProject({ manifest: manifest('drop', { 'lead-generation': true }) });
   const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
-  const interactionCaptures = plan.captures.filter((capture) => capture.state.interaction);
+  // Only the interaction that declares no sequence, so this exercises the
+  // general rule rather than the sequence rule that runs before it.
+  const interactionCaptures = plan.captures.filter((capture) => capture.state.interaction && !capture.state.sequence
+    && !INTERACTIONS[capture.state.interaction].temporal);
   assert.ok(interactionCaptures.length > 0);
-  // Build the set as if every interaction capture had failed.
-  const evidence = buildEvidenceSet({
-    plan,
-    results: fakeResults(plan).filter((result) => !interactionCaptures.some((capture) => capture.id === result.id)),
-    projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
-  });
-  assert.ok(!evidence.captures.some((capture) => capture.state.interaction),
-    'a capture with no bytes must not appear in the evidence set');
-  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), evidence);
+
+  assert.throws(
+    () => buildEvidenceSet({
+      plan,
+      results: fakeResults(plan).filter((result) => !interactionCaptures.some((capture) => capture.id === result.id)),
+      projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+    }),
+    /declared interaction capture\(s\) produced no bytes/,
+  );
+
+  // And the state still cannot be proven by a set that never photographed it:
+  // the reason it is unproven is now that there is no set at all.
+  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), { captures: [] });
   const failedWrite = matrix.flatMap((surface) => surface.states).find((state) => state.axis === 'write' && state.state === 'failed');
   assert.equal(failedWrite.evidence, 'none', 'the state it could not reach stays unproven');
 });
@@ -400,4 +429,123 @@ test('a state that overlays the page is photographed as a screen', () => {
   }
   const source = fs.readFileSync(new URL('./lib/rendered-evidence-capture.mjs', import.meta.url), 'utf8');
   assert.match(source, /fullPage:\s*frame\s*!==\s*'viewport'/, 'the capture must honour the declared frame rather than always photographing the document');
+});
+
+// --- Temporal evidence -----------------------------------------------------
+//
+// Five independent reviews of hand-built work capped `interaction-craft` with a
+// version of the same sentence: transition quality, touch behaviour and
+// live-update smoothness cannot be judged from stills. One said it while looking
+// at eighteen separate state captures, which is what settles that the answer is
+// not more endpoints.
+
+test('only an interaction that declares it needs temporal evidence produces a sequence', () => {
+  const composition = composeProject({ manifest: manifest('temporal', { 'lead-generation': true }) });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
+
+  const declared = Object.entries(INTERACTIONS).filter(([, entry]) => entry.temporal).map(([name]) => name);
+  const undeclared = Object.entries(INTERACTIONS).filter(([, entry]) => !entry.temporal).map(([name]) => name);
+  assert.ok(declared.length > 0 && undeclared.length > 0, 'the fixture needs one of each to be worth anything');
+
+  for (const name of undeclared) {
+    const captures = plan.captures.filter((capture) => capture.state.interaction === name);
+    assert.ok(captures.length > 0, `${name} should still be planned`);
+    assert.equal(captures.some((capture) => capture.state.sequence), false,
+      `${name} does not declare temporal evidence and must not carry the cost of it`);
+  }
+  for (const name of declared) {
+    const frames = plan.captures.filter((capture) => capture.state.interaction === name && capture.state.sequence);
+    assert.deepEqual([...new Set(frames.map((capture) => capture.state.sequence.frame))], ['before', 'during', 'after']);
+  }
+});
+
+test('a page whose composition has no declared interaction carries no motion evidence at all', () => {
+  /*
+   * The brochure case. Motion evidence exists to answer a question a reviewer
+   * actually has; a site with nothing worth showing in flight should produce
+   * zero sequences rather than a transition manufactured to satisfy a criterion.
+   */
+  const composition = composeProject({ manifest: manifest('brochure') });
+  const desktopOnly = VIEWPORTS.filter((viewport) => viewport.name === 'desktop');
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules), viewports: desktopOnly });
+
+  assert.ok(plan.captures.length > 0, 'the pages are still photographed');
+  assert.equal(plan.captures.some((capture) => capture.state.sequence), false);
+  assert.equal(plan.captures.every((capture) => capture.state.motion === 'reduced' || !capture.state.interaction), true);
+});
+
+test('a sequence is evidence as a sequence: a missing frame refuses the set', () => {
+  const composition = composeProject({ manifest: manifest('seq') });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
+  const frames = plan.captures.filter((capture) => capture.state.sequence);
+  assert.ok(frames.length >= 3);
+
+  const during = frames.find((capture) => capture.state.sequence.frame === 'during');
+  const withoutBefore = fakeResults(plan).filter((result) => {
+    const capture = plan.captures.find((entry) => entry.id === result.id);
+    return !(capture.state.sequence?.id === during.state.sequence.id && capture.state.sequence.frame === 'before');
+  });
+
+  assert.throws(
+    () => buildEvidenceSet({
+      plan, results: withoutBefore,
+      projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash,
+      capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+    }),
+    /missing its before frame/,
+  );
+});
+
+test('a sequence frame records where it was seeked to, and claims nothing about duration', () => {
+  const composition = composeProject({ manifest: manifest('seek') });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
+  const during = plan.captures.find((capture) => capture.state.sequence?.frame === 'during');
+
+  assert.ok(during.state.sequence.atProgress > 0 && during.state.sequence.atProgress < 1);
+  assert.match(during.state.proves, /not evidence of how long it takes/);
+  assert.ok(during.state.sequence.purpose.length > 20, 'the sequence says why a still cannot answer this');
+  assert.equal(during.state.motion, 'allowed');
+
+  // The still keeps motion suppressed, which is what makes it the
+  // reduced-motion counterpart rather than a second thing to capture.
+  const still = plan.captures.find((capture) => capture.state.interaction === during.state.interaction && !capture.state.sequence);
+  assert.equal(still.state.motion, 'reduced');
+  assert.match(still.state.proves, /prefers-reduced-motion/);
+});
+
+test('an evidence set that omits a declared route is refused', () => {
+  /*
+   * The per-capture identity assertion proves a picture is of the page it names.
+   * It cannot prove the set covers the site: a route dropped before the browser
+   * opened leaves no failed capture behind, and what results is internally
+   * consistent and silently partial.
+   */
+  const { composition, plan } = planFor();
+  const [firstRoute] = composition.pages.map((page) => page.path);
+  const withoutRoute = plan.captures.filter((capture) => capture.route !== firstRoute);
+  const results = fakeResults({ captures: withoutRoute });
+
+  assert.throws(
+    () => buildEvidenceSet({
+      plan: { ...plan, captures: withoutRoute }, results, composition,
+      projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash,
+      capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+    }),
+    new RegExp(`Missing: ${firstRoute.replace(/[/]/g, '\\/')}`),
+  );
+});
+
+test('a full temporal set validates against the contract', () => {
+  const composition = composeProject({ manifest: manifest('valid') });
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
+  const evidence = buildEvidenceSet({
+    plan, results: fakeResults(plan), composition,
+    projectId: 'project-temporal', buildRef: '/workspaces/temporal',
+    compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z',
+    renderingSource: BUILT_ARTIFACT,
+  });
+  assert.deepEqual(validateContract('rendered-evidence', evidence), []);
+  const frames = evidence.captures.filter((capture) => capture.state.sequence);
+  assert.equal(frames.length % 3, 0, 'sequences arrive whole');
+  assert.ok(frames.length > 0);
 });

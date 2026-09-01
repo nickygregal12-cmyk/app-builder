@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://app-builder.local/schemas/site-plan.schema.json",
+  "title": "App Builder Site Plan",
+  "description": "What pages exist, why each deserves to exist separately, and what sequence of content belongs on it \u2014 decided from approved truth before any presentation choice is made. This is the artifact `config/agent-roles.json` has called InformationArchitectureSpec since the roles were written, with schema null and status planned, while the decision it names was actually taken by a literal array keyed on project type: marketing-site meant Home, Services, About, Contact, and a page's purpose was then inferred by matching a regular expression against its own name. A plan carries no target route count, no target section count and no shape quota. Deciding on less structure is a valid outcome and `omitted` is where that decision is recorded, because a planner that can only ever add is a template with a variable in it.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "thesis",
+    "audiences",
+    "routes",
+    "omitted",
+    "planHash"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "thesis": {
+      "type": "string",
+      "minLength": 24,
+      "description": "One sentence saying what this site is for. Not a tagline: the sentence a route has to be consistent with to earn its place."
+    },
+    "audiences": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "job"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "job": {
+            "type": "string",
+            "minLength": 12,
+            "description": "What this person is trying to get done. Not who they are."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One route is a legitimate plan. So is eight. Neither is a target.",
+      "items": {
+        "$ref": "#/$defs/route"
+      }
+    },
+    "omitted": {
+      "type": "array",
+      "description": "Structure the plan considered and declined, with the reason. Required \u2014 not optional \u2014 because 'we chose less' is otherwise invisible and indistinguishable from 'we did not think of it'. A thin-truth business should produce entries here rather than routes filled with generic copy.",
+      "items": {
+        "type": "object",
+        "required": [
+          "candidate",
+          "because"
+        ],
+        "properties": {
+          "candidate": {
+            "type": "string",
+            "minLength": 3
+          },
+          "because": {
+            "type": "string",
+            "minLength": 24
+          },
+          "foldedInto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The route that carries this truth instead, or null when the truth is too thin to carry anywhere."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "planHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "route": {
+      "type": "object",
+      "required": [
+        "path",
+        "purpose",
+        "entryQuestion",
+        "audienceId",
+        "existsBecause",
+        "factRefs",
+        "narrative"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 16,
+          "description": "What this page is for, in the plan's own words."
+        },
+        "entryQuestion": {
+          "type": "string",
+          "minLength": 12,
+          "description": "What a visitor arrives at this page asking. A page whose question is answered by another page does not need to exist."
+        },
+        "audienceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "existsBecause": {
+          "type": "string",
+          "minLength": 24,
+          "description": "Why this deserves to be a page rather than a section of one. Validated against a list of justifications that say nothing \u2014 'provides useful information', 'builds trust', 'showcases services' \u2014 because those are the sentences a generator reaches for when it has no reason."
+        },
+        "factRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Approved truth this route may draw on. Every id must resolve in the KnowledgePack. The planner may reorganise approved knowledge and may not invent any."
+        },
+        "exitAction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What the visitor can do from here, or null where the honest answer is that this page only informs."
+        },
+        "narrative": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sectionJob"
+          },
+          "description": "Ordered. What must be established before what."
+        }
+      },
+      "additionalProperties": false
+    },
+    "sectionJob": {
+      "type": "object",
+      "required": [
+        "job",
+        "binds",
+        "covers",
+        "establishes",
+        "requires",
+        "factRefs"
+      ],
+      "properties": {
+        "job": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "description": "What this section does in this page's narrative. Unique within a route: two sections doing the same job are one section rendered twice."
+        },
+        "binds": {
+          "type": "string",
+          "description": "The family of approved truth this section renders \u2014 a fact about the business, never a component name. Composition maps it to a presentation; the plan does not choose one."
+        },
+        "covers": {
+          "enum": [
+            "full",
+            "preview"
+          ],
+          "description": "Whether this section carries its truth in full, or shows enough of it to send a visitor to the route that does. A semantic distinction, not a presentational one: it is the difference between a page that answers a question and a page that routes it. Without it a home page either repeats every other page or has nothing to route with, which are the two failure modes this capability was built to separate."
+        },
+        "establishes": {
+          "type": "string",
+          "minLength": 12,
+          "description": "What a reader knows after this section that they did not before."
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Jobs that must come earlier in this route. Backwards only \u2014 a narrative that depends on something later is not an order."
+        },
+        "factRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

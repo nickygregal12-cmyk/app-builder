@@ -185,6 +185,14 @@
       "boundary": "What the service says about a project over its own boundary. Written by the service and read by the Console, which used to carry a hand-written copy of it.",
       "schemaHash": "5840c31ab2185050fccdae8af441eecf266d783e3ffdb93fac010779cb639d97",
       "typesHash": "d66fe9b70d77fa2b503039480e07f58c78ba64dbdaa51553c0c4a23bcf681497"
+    },
+    {
+      "id": "site-plan",
+      "schema": "site-plan.schema.json",
+      "typeName": "AppBuilderSitePlan",
+      "boundary": "What pages exist and why, decided from approved truth before any presentation choice. Read by composition; the artifact config/agent-roles.json calls InformationArchitectureSpec.",
+      "typesHash": "7212015474197e70603780b86d6f1c1b59082af0ef1e96e1e11f5bcb038f8fff",
+      "schemaHash": "0decec657514598aa560d88396181fe0831b59063a1ad9984e19069a850977aa"
     }
   ],
   "pending": [

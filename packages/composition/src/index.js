@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+import { assertSitePlan } from './site-plan.js';
+
 const COMPOSITION_VERSION = '0.1.0';
 const VERIFICATION_RANK = { rejected: 0, candidate: 1, verified: 2, 'user-provided': 3 };
 const DEFAULT_SURFACES = {
@@ -811,6 +813,64 @@ export function surfacePurposeFor(surface) {
   return SURFACE_PURPOSES.find((purpose) => purpose.names.test(lower)) ?? null;
 }
 
+/**
+ * The family of approved truth a section job binds, mapped to the generator that renders it.
+ *
+ * Deliberately a map from a *fact about the business* to a presentation, and not the other way
+ * round. A plan says "this section establishes what they sell"; it does not get to say "use the
+ * services grid". Which presentation renders a family stays composition's decision, which is the
+ * boundary that keeps a route plan from becoming a layout in disguise.
+ */
+const BINDS_TO_SECTION = Object.freeze({
+  services: (pageId, pack, manifest, limit) => servicesSection(pageId, pack, manifest, limit),
+  projects: (pageId, pack, manifest, limit) => projectsSection(pageId, pack, limit),
+  people: (pageId, pack) => peopleSection(pageId, pack),
+  testimonials: (pageId, pack, manifest, limit) => proofSection(pageId, pack, limit),
+  serviceAreas: (pageId, pack, manifest) => locationsSection(pageId, pack, manifest),
+  contact: (pageId, pack, manifest) => enquiryFormSection(pageId, manifest),
+});
+
+/**
+ * How much of a family a previewing section shows.
+ *
+ * `covers: 'preview'` is the plan saying this section exists to send somebody to the page that
+ * carries the truth in full, not to carry it. Without the distinction a home page either repeats
+ * every other page or has nothing to route with — the two failure modes either side of the one
+ * this capability is for.
+ */
+const PREVIEW_LIMIT = 3;
+
+/**
+ * Sections for a route, in the order its narrative says.
+ *
+ * The difference from `sectionsForPage` is the whole of this capability. That one asks what the
+ * surface is *called* and pushes every generator whose regular expression matches, which is how a
+ * rich business composed thirty-one sections: nothing ever decided that a section was not needed,
+ * because nothing was ever asked.
+ *
+ * Here a section exists because the plan gave it a job, and it appears where the plan put it. A
+ * job whose family the composition cannot render is dropped and reported rather than silently
+ * skipped — a narrative missing its middle is not a shorter narrative.
+ */
+function sectionsForNarrative({ route, pageId, index, manifest, pack, heroActions, ctaActions, assetDecisions, unrenderable }) {
+  const output = [hero(pageId, route.title ?? route.purpose, index, manifest, pack, heroActions, assetDecisions)];
+
+  for (const [position, job] of list(route.narrative).entries()) {
+    // The hero already establishes identity, so a first job binding it is not a second section.
+    if (position === 0 && job.binds === 'identity') continue;
+    const make = BINDS_TO_SECTION[job.binds];
+    if (!make) {
+      if (job.binds !== 'identity') unrenderable.push(`${route.path}: ${job.job} binds ${job.binds}, which composition cannot render`);
+      continue;
+    }
+    const built = make(pageId, pack, manifest, job.covers === 'preview' ? PREVIEW_LIMIT : null);
+    if (built) output.push({ ...built, purpose: job.establishes });
+  }
+
+  if (ctaActions.length) output.push(ctaSection(pageId, pack, manifest, ctaActions, index));
+  return output.filter(Boolean);
+}
+
 function sectionsForPage({ surface, surfaces = [], pageId, index, manifest, pack, heroActions, ctaActions, assetDecisions }) {
   const lower = surface.toLowerCase();
   const output = [hero(pageId, surface, index, manifest, pack, heroActions, assetDecisions)];
@@ -859,6 +919,12 @@ function dropRepeatedHeading(sections) {
     if (typeof title?.value !== 'string' || title.value.toLowerCase() !== heroTitle.toLowerCase()) return item;
     return { ...item, bindings: item.bindings.filter((entry) => entry !== title) };
   });
+}
+
+/** A route's navigation label, from its path. The plan names pages by what they answer. */
+function titleForRoute(route) {
+  const segment = String(route?.path ?? '').replace(/^\//, '').split('/').filter(Boolean).pop() ?? '';
+  return segment ? segment.replace(/-/g, ' ').replace(/^./, (character) => character.toUpperCase()) : 'Home';
 }
 
 function surfacesFor(manifest) {
@@ -1004,9 +1070,30 @@ function notFoundPage(order) {
   };
 }
 
-export function composeProject({ manifest, knowledgePack = null, assetDecisions = [] } = {}) {
+/**
+ * Compose a project, from a site plan where one exists and from the surface defaults where one
+ * does not.
+ *
+ * The fallback is the rollback boundary and is deliberately total: no plan, no behaviour change,
+ * one code path either way. Nothing about the existing route is modified, so a build that has not
+ * been migrated composes exactly what it composed before.
+ */
+export function composeProject({ manifest, knowledgePack = null, assetDecisions = [], sitePlan = null } = {}) {
   if (!manifest?.project?.type || !manifest?.project?.name) throw new Error('A project manifest with project.name and project.type is required for composition.');
-  const surfaces = surfacesFor(manifest);
+  /*
+   * A plan is validated before it is composed, not after. Every guarantee it carries — that its
+   * fact references resolve, that no two routes are the same route, that no narrative depends on
+   * something later — is worth nothing if composition reads it first and finds out afterwards.
+   */
+  if (sitePlan) assertSitePlan(sitePlan, { knowledgePack });
+  const unrenderable = [];
+  const surfaces = sitePlan
+    ? list(sitePlan.routes).map((route, position) => ({
+      name: position === 0 ? manifest.project.name : titleForRoute(route),
+      declared: true,
+      route: { ...route, title: position === 0 ? manifest.project.name : titleForRoute(route) },
+    }))
+    : surfacesFor(manifest);
   const plan = conversionPlan(manifest, surfaces.map((surface) => surface.name), knowledgePack);
   const sections = [];
   const unfillable = [];
@@ -1016,9 +1103,11 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
   const unrecognisedPurpose = [];
   const pages = [];
   surfaces.forEach((surface, index) => {
-    const slug = index === 0 ? 'home' : slugify(surface.name);
+    const slug = index === 0 ? 'home' : slugify(surface.route?.path?.replace(/^\//, '') || surface.name);
     const pageId = `page-${slug}`;
-    const path = index === 0 ? '/' : `/${slug}`;
+    // A planned route owns its own path. Deriving one from a title would let the plan say
+    // /where-we-work and the site publish /where-we-work-1 without anything noticing.
+    const path = surface.route?.path ?? (index === 0 ? '/' : `/${slug}`);
     // A call to action that links to the page the visitor is already on is a
     // dead end, so it is dropped for that page rather than rendered.
     const available = plan.actions.filter((entry) => entry.href !== path).map(placedAction);
@@ -1028,11 +1117,16 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
     // Every other page leads with one and closes with at most two.
     const isContactSurface = /contact|quote|book/i.test(surface.name);
     const heroActions = isContactSurface ? available : available.slice(0, 1);
-    const pageSections = sectionsForPage({
-      surface: surface.name, surfaces: surfaces.map((entry) => entry.name), pageId, index, manifest, pack: knowledgePack, assetDecisions,
-      heroActions,
-      ctaActions: available.slice(0, 2),
-    });
+    const pageSections = surface.route
+      ? sectionsForNarrative({
+        route: surface.route, pageId, index, manifest, pack: knowledgePack, assetDecisions,
+        heroActions, ctaActions: available.slice(0, 2), unrenderable,
+      })
+      : sectionsForPage({
+        surface: surface.name, surfaces: surfaces.map((entry) => entry.name), pageId, index, manifest, pack: knowledgePack, assetDecisions,
+        heroActions,
+        ctaActions: available.slice(0, 2),
+      });
     // The home page always ships: dropping it would leave the site with no entry.
     if (index > 0 && !carriesContent(pageSections)) {
       if (!surface.declared) {
@@ -1072,7 +1166,11 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       title: index === 0 ? manifest.project.name : surface.name,
       // Navigation order stays the surface's own position so removing an
       // unfillable surface never reshuffles the ones that remain.
-      purpose: index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface.name} surface for ${manifest.project.name}.`,
+      // A planned route already said what it is for, in terms of the business's own truth. The
+      // fallback sentence — "Provide the X surface for Y" — is what a page says when nothing ever
+      // decided why it exists.
+      purpose: surface.route?.purpose
+        ?? (index === 0 ? `Introduce ${manifest.project.name} and its primary outcome.` : `Provide the ${surface.name} surface for ${manifest.project.name}.`),
       navigation: { label: surface.name, order: index, visible: true },
       // Still exactly one: `page.primaryAction` is what the launch audit walks a
       // journey from, and a page with several entry points is several journeys
@@ -1102,6 +1200,9 @@ export function composeProject({ manifest, knowledgePack = null, assetDecisions 
       ...unfillable.map((name) => `unfillable-surface:${name}`),
       ...emptyDeclared.map((name) => `empty-declared-surface:${name}`),
       ...duplicateSurfaces.map((name) => `duplicate-surface:${name}`),
+      // A narrative job composition could not render. Reported rather than dropped: a narrative
+      // missing its middle is not a shorter narrative, and the plan promised it.
+      ...unrenderable.map((detail) => `unrenderable-section-job:${detail}`),
       ...unrecognisedPurpose.map((name) => `unrecognised-surface-purpose:${name}`),
     ],
   };

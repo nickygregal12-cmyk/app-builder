@@ -23,6 +23,7 @@ import { resolveTaskImage } from '@app-builder/control-plane/attempts';
 
 import { createLocalExecutionDriver } from './lib/execution-driver-local.mjs';
 import { createPodmanExecutionDriver } from './lib/execution-driver-podman.mjs';
+import { createRuntimeReadinessEvidenceResolver } from './lib/runtime-readiness-evidence.mjs';
 
 const root = process.cwd();
 let failed = false;
@@ -93,10 +94,12 @@ try {
   const requirements = indexRuntimeReadinessGate(gate);
   const roles = readJson('config/agent-roles.json').roles;
 
+  const resolve = createRuntimeReadinessEvidenceResolver({ repositoryRoot: root });
+
   // The whole point of the gate.
-  const offenders = unearnedRuntimeReadyRoles({ roles, gate });
+  const offenders = unearnedRuntimeReadyRoles({ roles, gate, resolve });
   for (const offender of offenders) {
-    fail(`Role ${offender.roleId} claims runtimeReady without evidence for: ${offender.missing.map((entry) => entry.id).join(', ')}`);
+    fail(`Role ${offender.roleId} claims runtimeReady without evidence for: ${offender.missing.map((entry) => `${entry.id} (${entry.reason})`).join(', ')}`);
   }
 
   const promoted = Object.values(roles).filter((role) => role.runtimeReady === true);
@@ -104,12 +107,43 @@ try {
     console.log(`Runtime doctor: ${promoted.length} role(s) promoted with full evidence.`);
   }
 
+  // Evidence that is recorded is evidence that must still resolve. A reference
+  // to a renamed test or an expired host proof is how this gate would rot into
+  // decoration without anyone editing it, so every recorded entry is checked
+  // even for roles nobody has promoted.
+  for (const roleId of Object.keys(gate.evidence ?? {})) {
+    if (!roles[roleId]) {
+      fail(`config/runtime-readiness.json records evidence for unknown role ${roleId}.`);
+      continue;
+    }
+    const audit = evaluateRuntimeReadiness({ role: roles[roleId], gate, resolve });
+    for (const entry of audit.missing) {
+      // `absent` is the honest state of a requirement nobody has met yet.
+      // A reference that was written and no longer resolves is a fault.
+      if (entry.reason === 'absent') continue;
+      fail(`Role ${roleId} cites ${entry.id} as "${entry.reference}" but it does not resolve: ${entry.detail}`);
+    }
+    const unmet = audit.missing.filter((entry) => entry.reason === 'absent').map((entry) => entry.id);
+    console.log(
+      unmet.length === 0
+        ? `Runtime doctor: ${roleId} has resolvable evidence for every requirement.`
+        : `Runtime doctor: ${roleId} has ${audit.satisfied.length}/${requirements.size} requirement(s) evidenced; still unmet: ${unmet.join(', ')}.`,
+    );
+  }
+
   // A gate that could promote a role with no evidence at all would be
   // decoration. Prove it refuses.
   const sample = Object.values(roles)[0];
-  const decision = evaluateRuntimeReadiness({ role: sample, gate, evidence: {} });
+  const decision = evaluateRuntimeReadiness({ role: sample, gate, evidence: {}, resolve });
   if (decision.ready) fail('The runtime readiness gate promotes a role with no evidence. It must be deny-by-default.');
   if (decision.missing.length !== requirements.size) fail('The runtime readiness gate does not report every unmet requirement.');
+
+  // The refusal that matters most, asserted rather than trusted: prose is not
+  // evidence, however confident it sounds.
+  const prose = Object.fromEntries([...requirements.keys()].map((id) => [id, 'verified during review']));
+  if (evaluateRuntimeReadiness({ role: sample, gate, evidence: prose, resolve }).ready) {
+    fail('The runtime readiness gate accepts unresolvable prose as evidence.');
+  }
 
   const registered = new Set(requirements.keys());
   for (const required of ['pinned-image', 'lifecycle-support', 'environment-profile', 'deterministic-coverage', 'convergence-behaviour', 'model-attempt-evidence']) {

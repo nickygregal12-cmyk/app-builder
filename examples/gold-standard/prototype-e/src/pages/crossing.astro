@@ -1,0 +1,358 @@
+---
+/**
+ * The crossing. The page the rest of the site exists to support.
+ *
+ * Three densities of the same object in one scroll — a single day, a fortnight, then the whole
+ * season as a two-hundred-and-ten-row wall — so the reader learns to read the ribbon on a day
+ * they can check against times, then sees the same marks at a scale where only the pattern
+ * survives. The season wall is the one image on this site that could not exist for a property
+ * without a tide, and it is deliberately given the most vertical space of anything here.
+ *
+ * The disclaimer is not in the footer and is not small. It is set at the size of the table it
+ * qualifies, immediately under the table, because a fictional tide presented as a crossing
+ * timetable is the one genuinely dangerous thing this prototype could produce.
+ */
+import Base from '../layouts/Base.astro';
+import Ribbon from '../components/Ribbon.astro';
+import Photo from '../components/Photo.astro';
+import { SEASON, SEASON_FACTS, hoursLabel, money, span, toneName } from '../lib/season';
+import { CAUSEWAY_LIMIT } from '../lib/tide';
+
+const sample = SEASON[0].days[0];
+const fortnight = [...SEASON[0].days, ...SEASON[1].days];
+const wall = SEASON.flatMap((week) => week.days);
+const neap = SEASON_FACTS.atNeaps;
+const spring = SEASON_FACTS.atSprings;
+
+/* The two ends of the cycle, as weeks a guest could actually book, for the comparison band. */
+const byTone = [...SEASON].sort((a, b) => a.tone - b.tone);
+const neapWeek = byTone[0];
+const springWeek = byTone.at(-1)!;
+---
+<Base
+  title="The crossing — Hallowsand"
+  description="Every crossing of the 2026 season, computed from a two-constituent tidal model. What the model does and does not know, and why nobody should plan a real crossing from it."
+  section="The crossing"
+>
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Crossings a day</p>
+          <span class="rail__n">2</span>
+          <p class="rail__v">on all {SEASON_FACTS.days} days of the season</p>
+        </div>
+        <div>
+          <p class="rail__k">Shut, per day</p>
+          <span class="rail__n">{hoursLabel(SEASON_FACTS.meanShutPerDay)}</span>
+          <p class="rail__v">mean, in two closures around each high water</p>
+        </div>
+        <div>
+          <p class="rail__k">Road level</p>
+          <span class="rail__n">{CAUSEWAY_LIMIT.toFixed(2)} m</span>
+          <p class="rail__v">the height at which the low point goes under</p>
+        </div>
+      </div>
+      <div class="col">
+        <p class="label">The crossing</p>
+        <h1 class="display">Read one day, then a fortnight, then the season.</h1>
+        <p class="stand">
+          The same mark at three scales. Ochre is water over the road. Everything below is
+          computed from the tidal model, not drawn.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">One day</p>
+          <p class="rail__v">{sample.label} 2026. Two crossings, {hoursLabel(sample.shutHours)} of closure between them.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">A day.</h2>
+        <div class="prose">
+          <p>
+            Midnight to midnight, left to right. The road is open in the pale sections and under
+            water in the ochre ones. Two closures, one around each high water, each about five
+            hours.
+          </p>
+        </div>
+      </div>
+      <div class="full day">
+        <Ribbon days={[sample]} scale="day" labels={false} />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Drift</p>
+          <span class="rail__n">50 min</span>
+          <p class="rail__v">per day. Measured over 58 high waters, not assumed</p>
+        </div>
+        <div>
+          <p class="rail__k">Why</p>
+          <p class="rail__v">The lunar semi-diurnal period is 12h 25m, not 12h. Two of those is 24h 50m, so the pattern arrives fifty minutes late every day.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">A fortnight, and the reason there is no timetable.</h2>
+        <div class="prose">
+          <p>
+            Stack fourteen days and the closures walk to the right. That diagonal is the single
+            most important thing to understand before booking: the crossing that suits you on
+            Monday is an hour out by Tuesday and half a morning out by Friday.
+          </p>
+          <p>
+            It also means the week you choose decides <em>which hours of the day</em> you lose,
+            for the whole week. A week that starts with the road shut at breakfast keeps shutting
+            around then, drifting later, all week.
+          </p>
+        </div>
+      </div>
+      <div class="full day">
+        <Ribbon
+          days={fortnight}
+          scale="fortnight"
+          caption="Two weeks of 2026, from the first Friday of the season. The same fortnight appears on the front page; here it is next to the day above it so the marks can be checked against times."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page">
+      <div class="doc">
+        <div class="rail">
+          <div>
+            <p class="rail__k">The season</p>
+            <span class="rail__n">{SEASON_FACTS.days} days</span>
+            <p class="rail__v">{SEASON_FACTS.weeks} lettable weeks, April to October 2026</p>
+          </div>
+          <div>
+            <p class="rail__k">Reading it</p>
+            <p class="rail__v">Each row is a day, each block of seven is a lettable week, and the labels mark the Friday changeovers.</p>
+          </div>
+        </div>
+        <div class="col">
+          <h2 class="head">The whole season, five pixels to the day.</h2>
+          <div class="prose">
+            <p>
+              At this size the individual crossings stop being legible and the structure appears
+              instead: the diagonal repeating down the page, and the slow fortnightly breathing
+              of the spring–neap cycle widening and narrowing the ochre bands.
+            </p>
+            <p>
+              There is no month in which the crossing is easy and no month in which it is hard.
+              The cycle runs at 14.8 days and the calendar does not know about it, which is why
+              <a class="u" href="/weeks"> the weeks are listed with their own figures</a> instead
+              of a seasonal description.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="wall">
+        <Ribbon
+          days={wall}
+          scale="season"
+          caption={`Every day of the 2026 season. ${SEASON_FACTS.days} rows, ochre where the water is over the road. The easiest week of the season is ${SEASON_FACTS.easiest.label} (${hoursLabel(SEASON_FACTS.easiest.shutHours)} cut off); the hardest is ${SEASON_FACTS.hardest.label} (${hoursLabel(SEASON_FACTS.hardest.shutHours)}).`}
+        />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">At neaps</p>
+          <span class="rail__n">{hoursLabel(neap.mean)}</span>
+          <p class="rail__v">mean crossing, {neap.count} crossings</p>
+        </div>
+        <div>
+          <p class="rail__k">At springs</p>
+          <span class="rail__n">{hoursLabel(spring.mean)}</span>
+          <p class="rail__v">mean crossing, {spring.count} crossings</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Springs and neaps, at the size they actually are.</h2>
+        <div class="prose">
+          <p>
+            Twice a month the sun and moon line up and the tidal range is large; a week later
+            they oppose and it is small. A larger range puts more water over a road that sits
+            above mean sea level, so springs shut the causeway for longer.
+          </p>
+          <p>
+            The difference is {Math.round((neap.mean - spring.mean) * 60)} minutes per crossing at
+            the extremes of the cycle, and about {hoursLabel(SEASON_FACTS.hardest.shutHours - SEASON_FACTS.easiest.shutHours)} across
+            a whole week. Worth knowing and worth a discount. Not worth the sentence that was
+            written here before it was measured, which claimed roughly three times as much.
+          </p>
+        </div>
+      </div>
+      <div class="full">
+        <Photo
+          slug="flood"
+          width="full"
+          band
+          caption="The water coming back across the sands. From here the road has perhaps forty minutes left."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page band">
+      <div class="band__h">
+        <h2 class="head band__t">The two ends of the cycle, side by side.</h2>
+        <p class="band__n">
+          Both are real weeks you can book. Same house, same road, same hour axis — the only
+          difference is where in the fortnightly cycle they fall.
+        </p>
+      </div>
+
+      <div class="vs">
+        <div class="vs__c">
+          <p class="vs__k">Neaps · {neapWeek.label}</p>
+          <Ribbon days={neapWeek.days} scale="week" caption={`${hoursLabel(neapWeek.shutHours)} cut off across the week. Mean crossing ${hoursLabel(neapWeek.meanCrossing)}. ${money(neapWeek.price)}.`} />
+        </div>
+        <div class="vs__c">
+          <p class="vs__k">Springs · {springWeek.label}</p>
+          <Ribbon days={springWeek.days} scale="week" caption={`${hoursLabel(springWeek.shutHours)} cut off across the week. Mean crossing ${hoursLabel(springWeek.meanCrossing)}. ${money(springWeek.price)}.`} />
+        </div>
+      </div>
+
+      <p class="vs__n">
+        The ochre bands are visibly wider on the right and the pale gaps visibly narrower. That
+        is the whole of the spring–neap difference, drawn at the size it actually is:
+        {' '}{hoursLabel(springWeek.shutHours - neapWeek.shutHours)} more of the week behind
+        water, and {Math.round((neapWeek.meanCrossing - springWeek.meanCrossing) * 60)} minutes
+        off every crossing.
+      </p>
+    </div>
+  </section>
+
+  <section id="model">
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Constituents</p>
+          <span class="rail__n">2</span>
+          <p class="rail__v">M2 at 12h 25.2m, S2 at 12h exactly</p>
+        </div>
+        <div>
+          <p class="rail__k">Resolution</p>
+          <span class="rail__n">10 min</span>
+          <p class="rail__v">the step the model is walked at, and the precision quoted</p>
+        </div>
+      </div>
+      <div class="col">
+        <p class="label">The model</p>
+        <h2 class="head">What this is calculated from, and what it does not know.</h2>
+        <div class="prose">
+          <p>
+            Two harmonic constituents. M2 is the principal lunar semi-diurnal tide and produces
+            the twice-daily rise and fall and the fifty-minute drift. S2 is the solar one; its
+            beat against M2 over 14.77 days is the spring–neap cycle. Real prediction uses dozens
+            of constituents fitted to a real place. Two of them get the <em>shape</em> right — the
+            drift, the fortnightly swing, the asymmetry between one tide and the next — and the
+            absolute heights wrong.
+          </p>
+        </div>
+
+        <div class="knows">
+          <div class="knows__c">
+            <p class="knows__h">It knows</p>
+            <ul class="knows__l">
+              <li>When each crossing opens and closes, to ten minutes</li>
+              <li>How long each closure lasts, and which is the long one</li>
+              <li>How the pattern drifts through your week</li>
+              <li>Where in the spring–neap cycle your week falls</li>
+            </ul>
+          </div>
+          <div class="knows__c">
+            <p class="knows__h knows__h--no">It does not know</p>
+            <ul class="knows__l">
+              <li>Real heights at any real place — Hallowsand is invented</li>
+              <li>Surge. A north-easterly can hold water over the road through a window this model calls open</li>
+              <li>Atmospheric pressure, wind, or the state of the road surface</li>
+              <li>Anything about sand movement, which changes the low point year to year</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="warn">
+          <strong>Do not plan a crossing from this website.</strong> Hallowsand does not exist and
+          these figures describe nowhere. For a real tidal causeway, use the published safe
+          crossing times for that causeway and treat them as the outer limit rather than the
+          target. On the island, the estate's judgement overrides this table, and this table
+          overrides nothing at all.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Next</p>
+          <p class="rail__v">Every week of the season, with its own crossing figures and price.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Thirty weeks, thirty different tides.</h2>
+        <p class="prose">
+          <a class="u" href="/weeks">Weeks and prices</a> lists all {SEASON_FACTS.weeks}, each with
+          its arrival window, its departure window, the hours it is cut off and what it costs.
+          The cheapest week of the season is {SEASON_FACTS.cheapest.label} at
+          {' '}{money(SEASON_FACTS.cheapest.price)}; it is a {toneName(SEASON_FACTS.cheapest.tone)} week.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .day { margin-top: var(--s7); }
+
+  /* Two weeks on one hour axis. The comparison is the point, so they sit at equal width and the
+     reader's eye can run straight across from one to the other. */
+  .vs { display: grid; gap: var(--s7); grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); }
+  .vs__c { display: grid; gap: var(--s4); align-content: start; }
+  .vs__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .vs__n { font-size: var(--t-small); color: var(--ink-2); line-height: 1.6; max-width: 62ch;
+    border-top: 1px solid var(--rule); padding-top: var(--s4); }
+  .wall { margin-top: var(--s8); }
+
+  .knows { display: grid; gap: var(--s5) var(--s7); margin-top: var(--s7);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+  .knows__c { border-top: 1.5px solid var(--ink); padding-top: var(--s4); }
+  .knows__h { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; }
+  .knows__h--no { color: var(--shut-ink); }
+  .knows__l { list-style: none; margin-top: var(--s3); display: grid; gap: var(--s3); }
+  .knows__l li { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-2);
+    line-height: 1.45; padding-left: var(--s4); position: relative; }
+  .knows__l li::before { content: ''; position: absolute; left: 0; top: 0.62em;
+    width: 7px; height: 1.5px; background: var(--rule-2); }
+  .knows__c:last-child .knows__l li::before { background: var(--shut); }
+
+  /*
+   * Set at the size of the table it qualifies, not as small print. A fictional tide presented as
+   * a crossing timetable is the one thing on this site that could actually hurt somebody.
+   */
+  .warn { margin-top: var(--s7); border-left: 3px solid var(--shut); padding: var(--s2) 0 var(--s2) var(--s5);
+    font-family: var(--sans); font-size: var(--t-small); line-height: 1.55; color: var(--ink-2); }
+  .warn strong { display: block; color: var(--ink); font-size: var(--t-stand); font-weight: 600;
+    letter-spacing: -0.01em; margin-bottom: var(--s2); }
+</style>

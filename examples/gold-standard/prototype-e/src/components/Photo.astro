@@ -1,0 +1,60 @@
+---
+/**
+ * A photograph, with the truth about it attached.
+ *
+ * Every image on this site is a real place that is not Hallowsand, and the caption says so in
+ * the caption rather than in a footnote — `where` is printed at the same size as `usedAs`. A
+ * fictional property illustrated with real photographs is fine; a fictional property illustrated
+ * with real photographs presented as itself is a fake listing.
+ *
+ * Geograph images are CC BY-SA 2.0, so the photographer and the licence travel with every use
+ * and both are links.
+ */
+import photographs from '../data/photographs.json';
+
+interface Props {
+  slug: string;
+  /** Overrides the manifest caption where a page needs to say something more specific. */
+  caption?: string;
+  width?: 'col' | 'full';
+  /** Crops to a band. Used where the subject is the horizon and the sky is not the point. */
+  band?: boolean;
+  loading?: 'lazy' | 'eager';
+}
+const { slug, caption, width = 'col', band = false, loading = 'lazy' } = Astro.props;
+const photo = photographs.find((p) => p.slug === slug);
+if (!photo) throw new Error(`No photograph "${slug}" in the manifest — run fetch-img.mjs`);
+---
+<figure class={`ph ph--${width}${band ? ' ph--band' : ''}`}>
+  <div class="ph__f">
+    <img
+      src={`/img/${photo.slug}-1100.jpg`}
+      srcset={`/img/${photo.slug}-1100.jpg 1100w, /img/${photo.slug}-2000.jpg 2000w`}
+      sizes={width === 'full' ? '100vw' : '(max-width: 900px) 92vw, 620px'}
+      width={2000}
+      height={Math.round(2000 / photo.aspect)}
+      alt={photo.alt}
+      loading={loading}
+      decoding="async"
+    />
+  </div>
+  <figcaption class="ph__c">
+    <span class="ph__u">{caption ?? photo.usedAs}</span>
+    <span class="ph__m">
+      Photographed at {photo.where} — not Hallowsand.
+      {photo.photographer}, <a class="u" href={photo.licenceUrl}>{photo.licence}</a>,
+      via <a class="u" href={photo.source}>Wikimedia Commons</a>.
+    </span>
+  </figcaption>
+</figure>
+
+<style>
+  .ph { margin: 0; }
+  .ph__f { background: var(--paper-2); overflow: hidden; }
+  .ph--band .ph__f { aspect-ratio: 21 / 8; }
+  .ph--band img { width: 100%; height: 100%; object-fit: cover; }
+
+  .ph__c { margin-top: var(--s3); display: grid; gap: 3px; max-width: 52ch; }
+  .ph__u { font-family: var(--sans); font-size: var(--t-small); color: var(--ink); }
+  .ph__m { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-3); line-height: 1.45; }
+</style>

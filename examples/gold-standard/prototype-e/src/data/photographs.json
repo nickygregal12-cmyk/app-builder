@@ -1,0 +1,57 @@
+[
+  {
+    "slug": "causeway",
+    "where": "Holy Island, Northumberland",
+    "usedAs": "A causeway at low water, with its refuge box",
+    "alt": "A single-track causeway running dead straight to the horizon across wet tidal sand, with a timber refuge box raised on stilts standing about halfway along it.",
+    "aspect": 1.5,
+    "photographer": "Chris Heaton",
+    "licence": "CC BY-SA 2.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ARefuge_Box_on_Lindisfarne_Causeway_(1)_-_geograph.org.uk_-_4207748.jpg"
+  },
+  {
+    "slug": "flood",
+    "where": "Holy Island, Northumberland",
+    "usedAs": "The same road with the water coming back over the sands",
+    "alt": "Water lying across the sand flats either side of a causeway, reaching the edge of the road surface, with a refuge box on stilts in the middle distance.",
+    "aspect": 1.333,
+    "photographer": "Eirian Evans",
+    "licence": "CC BY-SA 2.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ARefuge_box_on_the_Lindisfarne_causeway_-_geograph.org.uk_-_7141048.jpg"
+  },
+  {
+    "slug": "kiln",
+    "where": "Holy Island, Northumberland",
+    "usedAs": "A bank of lime kilns of the kind on the island",
+    "alt": "A large squat stone structure built into a grass bank, with three tall arched openings along its face.",
+    "aspect": 1.3333,
+    "photographer": "Les Hull",
+    "licence": "CC BY-SA 2.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ALime_Kilns%2C_Lindisfarne_-_geograph.org.uk_-_6391513.jpg"
+  },
+  {
+    "slug": "chapel",
+    "where": "Caithness",
+    "usedAs": "A roofless chapel of the kind that stands above the landing",
+    "alt": "A small roofless stone chapel standing alone in rough grass, its gable ends and window openings intact.",
+    "aspect": 1.3333,
+    "photographer": "Russel Wills",
+    "licence": "CC BY-SA 2.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AMortuary_Chapel_on_south_side_of_Church_Hill_-_geograph.org.uk_-_2985136.jpg"
+  },
+  {
+    "slug": "shore",
+    "where": "Beadnell, Northumberland",
+    "usedAs": "The shore on the seaward side",
+    "alt": "A low rocky foreshore of flat weathered ledges running out to a calm grey sea under a pale sky.",
+    "aspect": 1.3333,
+    "photographer": "M J Richardson",
+    "licence": "CC BY-SA 2.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ARocky_shore_at_Beadnell_-_geograph.org.uk_-_5485072.jpg"
+  }
+]

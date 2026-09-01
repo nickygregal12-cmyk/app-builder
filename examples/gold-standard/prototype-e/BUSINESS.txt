@@ -1,0 +1,180 @@
+HALLOWSAND
+One house on a tidal island. Let by the week.
+
+FICTIONAL. The island, the house, the owners and the estate are invented. The tidal
+mechanism is real and computed; the photographs are real places, credited, and are not
+Hallowsand.
+
+--------------------------------------------------------------------------------------
+1. WHAT IS BEING SOLD
+--------------------------------------------------------------------------------------
+
+A five-bedroom house on Hallowsand, a 60-hectare tidal island off the Northumberland
+coast, reached by a mile of causeway that floods twice a day. The house sleeps nine. It
+is let whole, by the week, Friday to Friday, at £3,400–£6,900 depending on season. There
+is nothing else on the island but the house, a ruined chapel, a lime kiln and birds.
+
+The proposition is not "a beautiful house by the sea". There are ten thousand of those
+and they compete on photography, which is a competition this site cannot win and should
+not enter.
+
+The proposition is: FOR PART OF EVERY DAY YOU CANNOT LEAVE, AND NOBODY CAN ARRIVE.
+
+That is the entire product. Everything else — the house, the beds, the stove, the view —
+is ordinary and would be ordinary anywhere. The causeway is what you are paying for.
+
+--------------------------------------------------------------------------------------
+2. WHO IT IS FOR, AND WHO IT IS NOT FOR
+--------------------------------------------------------------------------------------
+
+For: two or three families or a group of friends who want the week to be one thing
+rather than a base for day trips. Writers and painters on a working retreat. People who
+have been told to stop.
+
+NOT for, and the site should say so in its own voice rather than in a caveats box:
+
+  - anybody who needs to be somewhere at a fixed time. The crossing does not negotiate.
+    Across the season the tide pushes one arrival to 20:00 and forces one departure onto
+    a crossing that ends at 05:40. Both are computed, both are stated before payment,
+    and we cannot move either.
+  - anybody with a medical condition where a two-hour delay to an ambulance is not
+    acceptable. The air ambulance can land; the road cannot always be used.
+  - families with very young children who will find five hours of enforced stillness,
+    twice a day, a punishment rather than a holiday.
+  - anybody expecting deliveries, takeaways, a shop, or a mobile signal that works
+    everywhere on the island.
+
+A luxury letting site that omits this reads as marketing. Saying it is both honest and
+— this is the commercial point, not a moral one — the strongest possible statement of
+what the product is. The disadvantages ARE the product description.
+
+--------------------------------------------------------------------------------------
+3. THE COMMERCIAL CONTRACT AROUND THE CAUSEWAY
+--------------------------------------------------------------------------------------
+
+This is the part a generic holiday-let site would never have, and it is what makes
+Hallowsand a business rather than a mood.
+
+  ARRIVAL. Guests are given a crossing window for their arrival day, computed from the
+  tide, not a check-in time. "From 15:40, and the road closes at 19:10" rather than
+  "check in after 4pm". If a guest misses the window they wait on the mainland; there is
+  a small yard at Cobb's Point where cars can stand.
+
+  DEPARTURE. Same, in reverse, and it is the harder one. The last safe crossing on the
+  Friday morning is sometimes 05:50. That is stated at the point of booking, per week,
+  before payment — not in a document afterwards.
+
+  THE WEEK YOU GET DEPENDS ON THE MOON, though by less than the first draft of this
+  document claimed. Measured from the model rather than asserted:
+
+    per crossing, at the extremes:  7h50 at neaps    6h57 at springs   (53 min)
+    per crossing, week average:     7h34 neap week   7h00 spring week  (34 min)
+    shut per day:                   9h45             10h08             (23 min)
+    across a week:                  69h              71h44             (2h44)
+
+  So the honest statement is: about half an hour more of road, twice a day, every day,
+  in a neap week — and closer to an hour at the very bottom of the cycle. That is a real
+  difference and it is not the gulf the marketing sentence wanted. Written before it was
+  measured, this section said "fourteen and a half hours a day" against "shut for over
+  ten"; the model says nothing of the kind, and the fix was to change the sentence.
+
+  THIS IS PRICED, at 8% rather than the 12% first written, because pricing a difference
+  larger than the one you are selling turns an honest trade into a gimmick. Spring weeks
+  cost less in the same season band, because more people want the easier crossing. The
+  site explains that rather than hiding a supplement, and expects a certain kind of guest
+  to book the spring week deliberately.
+
+  WHAT IS ACTUALLY LARGE is the drift: 50 minutes later every day, measured. No two days
+  of a week have the crossing in the same place, and which hours you lose depends
+  entirely on which Friday you started. That — not the spring/neap swing — is the fact
+  the site leads with, because it is the one the model states most strongly.
+
+  THE STORE. Because the road shuts, the house is provisioned rather than serviced. A
+  standing order is placed before arrival and brought over on the last open crossing.
+  This is not a hamper as an upsell; it is the logistics of the site working.
+
+  WHAT HAPPENS IN A STORM. Surge is not in the tide table. A north-easterly can hold the
+  water above the causeway through a window that the model says is open. The stated rule
+  is that the estate's judgement overrides the table, and the table on this website
+  overrides nothing at all.
+
+--------------------------------------------------------------------------------------
+4. WHAT THE MODEL CAN HONESTLY PRODUCE  (src/lib/tide.ts)
+--------------------------------------------------------------------------------------
+
+Two harmonic constituents, M2 and S2. What that legitimately gives us, and therefore
+what the site is allowed to show:
+
+  YES  - two crossings most days, about 5h20 of closure either side of each high water
+  YES  - the ~50-minute daily drift. Measured at exactly 50 min/day over 58 high waters,
+         and the strongest thing the model says
+  YES  - the spring/neap swing, at the sizes tabulated in section 3 and not larger
+  YES  - per-week totals: hours cut off, longest single closure, when it falls
+  YES  - a comparison between any two weeks in the season
+  YES  - how late the tide can push an arrival (20:00) and how early it can force a
+         departure (last crossing ending 05:40). Both stated before payment
+
+  NO   - real heights at a real place. The absolute numbers are invented.
+  NO   - surge, wind, atmospheric pressure, or the state of the road surface.
+  NO   - anything anybody should drive on. Said on the crossing page in the same size
+         type as the table itself, not in a footer.
+
+--------------------------------------------------------------------------------------
+5. ART DIRECTION — AND THE FIXTURE THIS MUST NOT BECOME
+--------------------------------------------------------------------------------------
+
+The benchmark reference file for this class carries its own warning:
+
+    "Aman's language minus Aman's imagery is the 'minimal luxury slop' fixture."
+
+That fixture exists in the calibration corpus as cc-21-luxury-slop.html: warm grey
+ground, large serif display, enormous whitespace, a wide dim photograph, the words
+"an escape from the everyday", and nothing in it that could only be said about one
+place. If this prototype is built the obvious way it becomes its own test case, and the
+critic that scored cc-21 at the bottom of its stratum would be right to do it again.
+
+So the direction is taken from the product, not from the category.
+
+  THE VISUAL MATERIAL IS THE TIDE, NOT THE HOUSE.
+  A tidal island house photographs like every other coastal house. What no competitor
+  has is a computed fortnight of the water. So the recurring graphic object across the
+  whole site is the DAY RIBBON: a single horizontal bar, one per day, dark where the
+  causeway is shut and open where it is passable, drawn from tide.ts. Stacked, a
+  fortnight of them shows the drift as a diagonal you can see. It appears at four
+  scales — a 24-hour strip in the header, a week in the booking table, a fortnight on
+  the crossing page, and a whole season as a wall. The same object, four densities.
+  This is the signature, and it is the thing that could not be lifted onto another site.
+
+  GROUND. Not beige and not warm grey. A cold pale grey with green in it (haar, the
+  sea fog off this coast), against a blue-black ink. The one signal colour is a wet
+  ochre used for exactly one thing: WATER OVER THE ROAD. Shut. It appears in the
+  ribbons, in the table, in the status line, and nowhere else — not on links, not on
+  buttons, not on headings. A colour that means one thing throughout a site is a system;
+  a colour used for emphasis is a decoration.
+
+  TYPE. The tables are the product, so the numerals are the typography. A grotesque with
+  true tabular lining figures for every time, height and duration, set at a size that
+  says these are the point — the crossing table is set LARGER than the body prose, which
+  inverts the usual hierarchy of a letting site and is the correct inversion here. Prose
+  in a text serif at a proper measure, because the honest disadvantages section is real
+  writing and needs to be read.
+
+  PHOTOGRAPHY. Real, credited, few, and chosen from a contact sheet rather than from a
+  filename (the lesson from prototype C, which put a ploughed field on a page about
+  chalk). Subjects: a causeway under water, a refuge box, a lime kiln, the coast in
+  haar. NOT: interiors, styled breakfasts, a couple on a beach, drone shots. Every
+  photograph on this site shows either the crossing or the island's fabric. If a picture
+  could be captioned "somewhere nice", it does not go on.
+
+  MOTION. The header ribbon marks now against today's windows. It does not animate a
+  tide. Nothing else moves.
+
+--------------------------------------------------------------------------------------
+6. THE TEST
+--------------------------------------------------------------------------------------
+
+Take every photograph off the site and it must still be obviously about one specific
+place with one specific problem. Take the tide off it and there is no site left.
+
+Conversely: if a paragraph of this website could be pasted onto a Cornish barn
+conversion without anybody noticing, that paragraph is slop and comes out.

@@ -1,9 +1,19 @@
 {
-  "business": "Interlock — a fourteen-person company in Sheffield selling software that proves high-voltage switching schedules against a network model before anybody operates a switch. Its users are Senior Authorised Persons at distribution network operators and at large private HV networks, who write the numbered sequence of operations that makes a work area safe. Its commercial first step is a paid four-week pilot in which it models one of the customer's own substations and proves a schedule they have already written and approved.",
+  "business": "Interlock \u2014 a fourteen-person company in Sheffield selling software that proves high-voltage switching schedules against a network model before anybody operates a switch. Its users are Senior Authorised Persons at distribution network operators and at large private HV networks, who write the numbered sequence of operations that makes a work area safe. Its commercial first step is a paid four-week pilot in which it models one of the customer's own substations and proves a schedule they have already written and approved.",
   "businessKind": "developer and operations software",
-  "benchmarkAnchors": ["product-storytelling", "interface-craft", "saas-sophistication"],
+  "benchmarkAnchors": [
+    "product-storytelling",
+    "interface-craft",
+    "saas-sophistication"
+  ],
   "projectType": "marketing-site",
   "candidateId": "interlock-drawing-sheet",
-  "directionLabel": "Drawing sheet — the site is the sheet, the product is the drawing",
-  "routeCount": 5
+  "directionLabel": "Drawing sheet \u2014 the site is the sheet, the product is the drawing",
+  "routeCount": 5,
+  "businessFacets": [
+    "software-product",
+    "developer-tooling",
+    "b2b-considered-software"
+  ],
+  "businessFacetsNote": "Sells software with a real interface, to Senior Authorised Persons who judge it on precision, bought by a business after evaluation. Declared for FUTURE re-evaluation only: every verdict already stored beside this packet was produced before #266 on the legacy prose path, and none of them has been recomputed. Historical scores stand as recorded."
 }

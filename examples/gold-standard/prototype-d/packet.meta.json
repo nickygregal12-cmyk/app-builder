@@ -1,9 +1,19 @@
 {
   "business": "The Monitoring Gap 2026, a research report published by Stell, a fictional six-person independent freshwater data unit. Its subject is storm-overflow monitoring: sewage discharges are counted by monitors, the counts are what everybody quotes, and a monitor that is offline records an absence rather than a zero. The report joins the spill counts to the monitor-availability figures across twelve catchments and sixty months and shows that published figures track how much of the estate was working rather than how much sewage reached the river. Every catchment and every figure is simulated and the report says so on its own front page. Its audience is environment reporters, catchment partnerships, regulators and the people who live on these rivers.",
   "businessKind": "research, reports and data-led publications",
-  "benchmarkAnchors": ["data-storytelling", "editorial-rhythm", "dense-information-design"],
+  "benchmarkAnchors": [
+    "data-storytelling",
+    "editorial-rhythm",
+    "dense-information-design"
+  ],
   "projectType": "content-site",
   "candidateId": "monitoring-gap-report",
-  "directionLabel": "Report — a measure, a margin, and its apparatus showing",
-  "routeCount": 7
+  "directionLabel": "Report \u2014 a measure, a margin, and its apparatus showing",
+  "routeCount": 7,
+  "businessFacets": [
+    "research-publication",
+    "evidence-proposition",
+    "long-form-editorial"
+  ],
+  "businessFacetsNote": "Publishes findings and expects citation; what it sells is that the numbers are trustworthy; and it is substantial continuous prose. Declared for FUTURE re-evaluation only: every verdict already stored beside this packet was produced before #266 on the legacy prose path, and none of them has been recomputed. Historical scores stand as recorded."
 }

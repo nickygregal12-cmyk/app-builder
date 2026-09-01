@@ -103,7 +103,7 @@ const [command] = process.argv.slice(2);
 
 if (command === 'search') {
   const results = await search(process.argv[3], Number(argument('--limit', 12)), argument('--orientation', 'landscape'));
-  console.log(JSON.stringify({ query: process.argv[3], found: results.length, results: results.map(({ thumb, regular, ...rest }) => rest) }, null, 1));
+  console.log(JSON.stringify({ query: process.argv[3], found: results.length, results: results.map(({ thumb: _thumb, regular: _regular, ...rest }) => rest) }, null, 1));
 
 } else if (command === 'sheet') {
   const terms = process.argv[3];

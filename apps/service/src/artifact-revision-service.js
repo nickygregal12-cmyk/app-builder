@@ -24,6 +24,7 @@ import {
 import {
   advanceArtifactRevision,
   createArtifactRevision,
+  disposeArtifactRevision,
 } from '@app-builder/control-plane/artifact-lifecycle';
 
 export function projectArtifactRevisions(service, projectId) {
@@ -41,16 +42,52 @@ export function liveProjectArtifactRevision(service, projectId) {
  * that anything invalid — a missing contract digest, a producer approving its
  * own work — is refused before an event describing it reaches the ledger. An
  * unreplayable event is worse than a refused operation.
+ *
+ * A project that already has a live revision is being reworked, and rework
+ * supersedes. Approving a second build plan used to open a second revision
+ * beside the first, which is the one shape `liveArtifactRevision` refuses: the
+ * next read of that project threw "2 live artifact revisions ... this stream is
+ * inconsistent", and it threw forever, because the ledger is append-only. An
+ * ordinary rebuild — approve, build, approve again — was enough to reach it.
+ *
+ * The predecessor is superseded in the same operation and named as the parent,
+ * so the lineage is one chain rather than a fork nobody can reconcile. It is
+ * superseded rather than carried forward because the new plan froze the
+ * project's inputs again: this is a different contract digest whenever anything
+ * changed, and the old revision's evidence stays perfectly valid about the old
+ * revision, which is nobody's release candidate.
  */
 export async function openArtifactRevision(service, projectId, { contractDigest, approvedBy, producedBy = 'factory-generator', basis, parentRevisionId = null, at = new Date().toISOString() }) {
+  const superseded = parentRevisionId ? null : liveProjectArtifactRevision(service, projectId);
   const revision = createArtifactRevision({
     projectId,
-    parentRevisionId,
+    parentRevisionId: parentRevisionId ?? superseded?.id ?? null,
     producedBy,
     approvedBy,
     basis,
     identity: { contractDigest },
   }, at);
+
+  // Built before either event is recorded, so a supersession the reducer would
+  // refuse never reaches the ledger ahead of the revision that replaces it.
+  if (superseded) {
+    const disposed = disposeArtifactRevision(superseded, 'superseded', {
+      actor: approvedBy,
+      basis: `Superseded by ${revision.id}: the project's inputs were approved again, freezing contract ${contractDigest.slice(0, 12)}.`,
+    }, at);
+    await service.store.recordEvent(createEvent({
+      projectId,
+      type: ARTIFACT_REVISION_EVENTS.disposed,
+      actor: 'factory-service',
+      payload: {
+        revisionId: superseded.id,
+        to: 'superseded',
+        actor: approvedBy,
+        basis: disposed.history[disposed.history.length - 1].basis,
+        at,
+      },
+    }));
+  }
 
   await service.store.recordEvent(createEvent({
     projectId,
@@ -59,7 +96,7 @@ export async function openArtifactRevision(service, projectId, { contractDigest,
     payload: {
       revisionId: revision.id,
       projectId,
-      parentRevisionId,
+      parentRevisionId: revision.parentRevisionId,
       producedBy,
       actor: approvedBy,
       basis: revision.history[0].basis,

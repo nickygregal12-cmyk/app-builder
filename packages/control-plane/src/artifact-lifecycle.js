@@ -361,6 +361,43 @@ export function forkArtifactRevision(revision, details = {}, now = new Date().to
 }
 
 /**
+ * Where a real revision stands, in the shape a project summary reports.
+ *
+ * This exists because the honest fallback was being applied to projects that
+ * had earned better. `projectLegacyProjectState` reads the *project row*, which
+ * records a workspace path and never a source digest, so it answers `null` —
+ * "there is no exact artifact to attach a lifecycle to". That is the right
+ * answer for an ungoverned build and the wrong one for a governed build, whose
+ * revision is in the event ledger, climbing, and simply was not consulted. A
+ * surface that reports `null` over a `materialized` revision is not being
+ * careful; it is contradicting its own evidence.
+ *
+ * `missing` stays the same promise it makes for legacy data: what this artifact
+ * would have to record to go one rung further. Evidence is named alongside the
+ * identity components because a state whose whole content is "something else
+ * checked this" cannot be entered by recording a digest.
+ */
+export function artifactRevisionPosition(revision, { legacyState = null } = {}) {
+  const state = requireText(revision?.lifecycleState, 'Artifact revision lifecycleState');
+  const latest = revision.history?.[revision.history.length - 1] ?? null;
+  const described = describeArtifactState(state);
+  const position = {
+    lifecycleState: state,
+    basis: latest?.basis ?? described.meaning,
+    missing: [],
+    legacyState,
+    meaning: described.meaning,
+    notMeaning: described.notMeaning,
+  };
+  if (isTerminalDisposition(state)) return position;
+  const [next] = nextArtifactStates(state).filter((candidate) => !isTerminalDisposition(candidate));
+  if (!next) return position;
+  const missing = (REQUIRED_IDENTITY[next] ?? []).filter((component) => revision.identity?.[component] === null || revision.identity?.[component] === undefined);
+  if (REQUIRES_EVIDENCE.has(next)) missing.push(`evidence:${next}`);
+  return { ...position, missing };
+}
+
+/**
  * Legacy `project.state` values, read honestly.
  *
  * The temptation is to map `verified` to `buildable`, because both are about a
@@ -376,7 +413,16 @@ export function forkArtifactRevision(revision, details = {}, now = new Date().to
  * it would have to record to go further. That is the honest report, and it is
  * also the migration instruction.
  */
-export function projectLegacyProjectState(legacy = {}, { declaredToolchain = null } = {}) {
+export function projectLegacyProjectState(legacy = {}, options = {}) {
+  const position = legacyPosition(legacy, options);
+  // Same single authority for what a state means as a real revision gets. A
+  // surface that had to carry its own copy of these sentences would be a second
+  // authority for the claim, which is the thing `notMeaning` exists to stop.
+  const described = position.lifecycleState ? describeArtifactState(position.lifecycleState) : null;
+  return { ...position, meaning: described?.meaning ?? null, notMeaning: described?.notMeaning ?? null };
+}
+
+function legacyPosition(legacy = {}, { declaredToolchain = null } = {}) {
   const state = String(legacy.state ?? '').trim();
   const known = ['draft', 'ready', 'generating', 'generated', 'verified', 'failed'];
   if (!known.includes(state)) {

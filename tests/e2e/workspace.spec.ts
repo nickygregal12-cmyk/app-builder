@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const manifest = {
@@ -85,8 +86,22 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(sourcePanel.getByText('Publishable', { exact: true })).toBeVisible();
   await expect(page.getByText('source · governance · updated')).toBeVisible();
 
+  // Before anything is built, the ladder says so plainly and names what is
+  // missing rather than showing an empty space.
+  const ladder = page.getByLabel('Readiness ladder');
+  await expect(ladder.locator('.ladder-step.current')).toHaveCount(0);
+  await expect(ladder.getByText('no revision', { exact: true })).toBeVisible();
+  await expect(ladder).toContainText('approvedBuildPlanId, contractDigest');
+
   await page.getByRole('button', { name: 'Generate project' }).click();
   await expect(page.locator('.state-pill')).toHaveText('generated', { timeout: 30_000 });
+
+  // Generating from the Console goes through the approved-plan path, so this
+  // build has an artifact revision and the operator can see where it stands.
+  // Reaching the scratch route instead produced a build with no revision, which
+  // by the ladder's own rules can never be released.
+  await expect(ladder.locator('.ladder-step.current')).toHaveText('materialized');
+  await expect(ladder).toContainText('That it installs, checks, builds, behaves correctly or is of acceptable quality.');
   await expect(page.getByRole('button', { name: 'Verify build' })).toBeVisible();
   await expect(page.getByText('composition · materialised')).toBeVisible();
   // Two declared surfaces plus the not-found route every site now composes.
@@ -108,6 +123,17 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByText('Dependency graph resolved')).toBeVisible();
   await expect(page.getByText('Installed from the lockfile')).toBeVisible();
   await expect(page.getByText(/Build identity [0-9a-f]{12} across \d+ file\(s\)/)).toBeVisible();
+
+  // And what verification earned the artifact, which is not the same question.
+  // `buildable` asserts that this exact source, with this exact lockfile, under
+  // the *declared* toolchain, produced this exact output. A host that is not on
+  // the declared pair records all four honestly and claims three, so the rung
+  // is refused and the ladder stays where it was. Asserting the host-dependent
+  // half rather than skipping it keeps this from passing vacuously either way.
+  const toolchain = JSON.parse(await readFile('config/toolchain.json', 'utf8')).declared;
+  const declaredHost = process.versions.node === toolchain.node;
+  await expect(ladder.locator('.ladder-step.current')).toHaveText(declaredHost ? 'buildable' : 'materialized');
+  if (!declaredHost) await expect(ladder).toContainText('lockDigest, toolchain, outputDigest');
 
   // Every request the preview makes, and what came back, is recorded so the
   // boundary can be proved rather than assumed: a remote operator only ever
@@ -275,10 +301,18 @@ test('Builder Console drives governed sources, generation, verification and prev
   // evidence capture. Verification contributes two of the thirteen that it did
   // not before: the lockfile it resolved, and the build identity it recorded.
   //
-  // Plus one decision for each of the eleven mutating operations that journey
+  // Plus one decision for each of the mutating operations that journey
   // performs. Every one of them was decided before it ran, and the count is
   // exact because a decision that stops being recorded is as much a defect as
   // an operation that stops being decided.
-  await expect(page.getByLabel('Project metrics').getByText('32', { exact: true })).toBeVisible();
+  //
+  // Seven of them are what generating through the product now costs, and each
+  // one is a thing that used not to be recorded at all: the approval decision
+  // and the execution decision, the approved plan and its execution claim, the
+  // executed plan, and — the reason for the rest — the artifact revision this
+  // build opened and the rung it climbed. The Console used to reach the scratch
+  // route, which records none of them and opens no revision, and so produced
+  // builds that could never be released.
+  await expect(page.getByLabel('Project metrics').getByText('39', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });

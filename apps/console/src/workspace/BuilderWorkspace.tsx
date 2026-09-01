@@ -380,6 +380,55 @@ function DesignPanel({ contract, onChoose, busy }: {
 }
 
 
+/** The one readiness ladder, in order. Position is the only ordering there is. */
+const LADDER = [
+  'contract-approved',
+  'materialized',
+  'buildable',
+  'behavior-verified',
+  'quality-accepted',
+  'release-candidate',
+  'released',
+  'production-verified',
+] as const;
+
+/**
+ * Where this exact artifact stands, and what it is not.
+ *
+ * The Console showed `state` — `ready`, `generated`, `verified` — and nothing
+ * else, and those are the legacy build-progress words the architecture is
+ * explicit are not a readiness verdict. An operator reading `verified` had no
+ * way to learn that it means a build once exited zero, not that anything is fit
+ * to publish. The claim the factory actually makes lives on the revision, and
+ * it was reaching the browser and being dropped.
+ *
+ * `notMeaning` is rendered as prominently as the position, because every one of
+ * those sentences is a claim somebody would otherwise make from the state name.
+ * Both come from the service, so there is one authority for what a state means.
+ */
+function ReadinessLadderPanel({ project }: { project: ProjectSummary }) {
+  const { lifecycle } = project;
+  const reached = lifecycle.lifecycleState ? LADDER.indexOf(lifecycle.lifecycleState as (typeof LADDER)[number]) : -1;
+
+  return <section className="builder-panel ladder-panel" aria-label="Readiness ladder">
+    <div className="panel-title-row">
+      <span className="builder-kicker">This artifact</span>
+      <span className={reached >= 0 ? 'rights-pill publishable' : 'rights-pill'}>{lifecycle.lifecycleState ?? 'no revision'}</span>
+    </div>
+    <ol className="ladder-list">{LADDER.map((state, index) => <li
+      key={state}
+      className={index < reached ? 'ladder-step earned' : index === reached ? 'ladder-step current' : 'ladder-step'}
+    >{state}</li>)}</ol>
+    <p className="builder-empty">{lifecycle.basis}</p>
+    {lifecycle.notMeaning && <p className="ladder-not-meaning"><strong>Not</strong> {lifecycle.notMeaning}</p>}
+    {lifecycle.missing.length > 0 && <p className="builder-empty">To go one rung further this artifact would have to record {lifecycle.missing.join(', ')}.</p>}
+    {/* `state` stays visible because the rest of the workspace is driven by it,
+        and because hiding it would not make it stop being what the buttons
+        respond to. It is labelled as what it is. */}
+    <small className="ladder-legacy">Build progress: {project.state}. That is where the workspace is, not what the artifact has earned.</small>
+  </section>;
+}
+
 /**
  * What this build needs next.
  *
@@ -1393,6 +1442,8 @@ export function BuilderWorkspace({ projectId, onExit }: { projectId: string; onE
           busy={operation === 'ingest'}
           onIngest={ingest}
         />
+
+        <ReadinessLadderPanel project={snapshot.project} />
 
         {snapshot.review && <ProductReviewPanel review={snapshot.review} />}
 

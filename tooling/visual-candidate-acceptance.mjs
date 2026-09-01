@@ -137,6 +137,36 @@ try {
   const { project } = await service.replayIntakeBundle(bundle, { knowledgePack });
   console.log(`Replayed ${bundle.bundleId} (${bundlePath}) as ${project.id}.`);
 
+  // Where the asset bytes are, for a replayed bundle.
+  //
+  // A knowledge pack records what an asset is — its hash, its size, its rights —
+  // and cannot carry the file, so a replay had no way to put bytes anywhere the
+  // generator could find them. The Ardwell & Roe benchmark composed a hero and a
+  // sixteen-frame gallery from a pack with seventeen approved photographs and
+  // published pages with no image on them at all; the reviewer scored
+  // imagery-suitability zero and asked for photography that had been supplied.
+  //
+  // Only files the pack already accounts for are copied. Anything else in the
+  // directory is ignored rather than published, because an asset the pack has
+  // not recorded has no hash, no rights and no reason to be on the page.
+  const assetsDir = argument('--assets');
+  if (assetsDir) {
+    const destination = service.ingestion.assetDirectory(project.id);
+    fs.mkdirSync(destination, { recursive: true });
+    const known = new Map();
+    for (const asset of knowledgePack?.assets ?? []) {
+      for (const variant of asset.variants ?? []) if (variant.uri) known.set(path.basename(variant.uri), asset.id);
+    }
+    let copied = 0;
+    for (const file of fs.readdirSync(path.resolve(assetsDir))) {
+      if (!known.has(file)) continue;
+      fs.copyFileSync(path.join(path.resolve(assetsDir), file), path.join(destination, file));
+      copied += 1;
+    }
+    console.log(`Asset bytes: ${copied} of ${known.size} recorded file(s) placed for generation.`);
+    if (copied < known.size) console.log('  Files the pack records but the directory does not hold will render as an absent image rather than a wrong one.');
+  }
+
   // What this run's candidates are made of, said before anything is generated.
   // A reviewer opening the packet has to be able to tell ingested source-backed
   // truth from owner-approved intake with gaps, and cannot tell from a

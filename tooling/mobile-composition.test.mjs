@@ -184,15 +184,24 @@ test('conversion-first keeps coverage with the offering rather than behind the a
     const lines = STYLES_CSS.split('\n');
     const at = lines.findIndex((line) => line.includes(selector));
     assert.notEqual(at, -1, `${selector} has no mobile order at all`);
-    for (let i = at; i < Math.min(at + 4, lines.length); i += 1) {
+    // Scan to the end of the rule rather than a fixed number of lines: a
+    // selector list grows when another section joins the same band, and a
+    // window that assumed three lines was measuring the list rather than the
+    // rule.
+    for (let i = at; i < lines.length; i += 1) {
       const found = lines[i].match(/order:\s*(\d+)/);
       if (found) return Number(found[1]);
+      if (lines[i].includes('}')) break;
     }
     throw new Error(`${selector} names no order`);
   };
   const offering = orderOf('.mobile-order-conversion-first .section-item-grid');
   const coverage = orderOf('.mobile-order-conversion-first .section-location-list');
+  const showcase = orderOf('.mobile-order-conversion-first .gallery-section');
   const contact = orderOf('.mobile-order-conversion-first .contact-section');
   assert.equal(coverage, offering, 'coverage belongs with the offering, not in the band that falls behind the ask');
   assert.ok(offering < contact, 'the offering must still come before the contact details');
+  // A practice whose work is what it sells must not show its portfolio after
+  // its phone number.
+  assert.equal(showcase, offering, 'the gallery belongs with the offering, not in the band that falls behind the ask');
 });

@@ -101,5 +101,33 @@ is still a perfectly good hash. An image whose orientation contradicts its slot
 is rejected as the wrong picture rather than accepted as a cropping problem,
 which is far cheaper than discovering it from a screenshot.
 
+### The first run against real bytes — 2026-08-31
+
+Seventeen frames were produced against the recipes by a governed image source and
+ingested. The pack now records them; **the bytes themselves are deliberately not
+committed**, because this directory states what the images must be and never who
+produced them, and 73MB of PNG in Git would make the corpus about its files. Rebuild
+with `--assets <dir>` to reproduce, or supply a different governed set — the pack's
+hashes will change and nothing else will.
+
+Producing them found seven defects that only the arrival of bytes could expose,
+every one of them in the factory rather than in this corpus:
+
+1. the pack builder could not register an asset source once its bytes existed, so
+   ingestion produced a pack that failed its own validation;
+2. `hasWideCrop` read only optimiser variants, so a 2048x1152 hero frame counted as
+   "0 wide enough to open a page" and the imagery-led direction was refused;
+3. an ingested asset declared no variant, so `materializeAssets` copied nothing and
+   the site published no `<img>` at all;
+4. a replayed bundle had no way to be told where the bytes were;
+5. composition placed assets role-blind — the wordmark opened the page and the
+   founders' portraits appeared under "Recent work";
+6. `itemDetail` rendered every field of a nine-field dossier, turning six projects
+   into some four thousand pixels of small print;
+7. `--color-scrim` was declared twice, so the immersive hero's gradient was invalid
+   and its white text sat unscrimmed on the photograph.
+
+None of that is visible without images. That is the argument for this corpus.
+
 What it does not do is judge photographs. Whether an image is any good is a
 question for the independent reviewer, and the floor is a floor.

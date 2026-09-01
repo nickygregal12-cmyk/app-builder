@@ -175,11 +175,29 @@ function itemTitle(value: unknown) {
 // project lifecycle." is a field name leaking onto a client's website.
 const PROSE_FIELDS = ['description', 'summary', 'detail', 'details', 'body', 'excerpt'];
 
+/**
+ * What a card says about an item, as against everything the record holds.
+ *
+ * Kept identical to the static renderer's `itemDetail`, because two renderers
+ * disagreeing about how much of a record a card shows would be two products.
+ * Rendering every field is right for a service with a sentence and wrong for
+ * anything richer: nine-field project dossiers turned six projects into some
+ * four thousand pixels of small print, and two independent reviews asked for
+ * the copy density to come down. Prose first, then a few identifying facts.
+ */
+const CARD_DETAIL_LIMIT = 4;
+
 function itemDetail(value: unknown) {
   const entries = primitiveEntries(value).filter(([key]) => !['name', 'title', 'quote', 'value', 'label'].includes(key));
-  return entries.map(([key, item]) => (PROSE_FIELDS.includes(key.toLowerCase())
-    ? String(item)
-    : `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`));
+  const rendered = entries.map(([key, item]) => ({
+    prose: PROSE_FIELDS.includes(key.toLowerCase()),
+    text: PROSE_FIELDS.includes(key.toLowerCase())
+      ? String(item)
+      : `${key.replaceAll(/([A-Z])/g, ' $1')}: ${String(item)}`,
+  }));
+  return [...rendered.filter((entry) => entry.prose), ...rendered.filter((entry) => !entry.prose)]
+    .slice(0, CARD_DETAIL_LIMIT)
+    .map((entry) => entry.text);
 }
 
 type SocialProfile = { platform?: string; url?: string; value?: string };

@@ -74,18 +74,35 @@ Confidence is stated as **strong** (four or five prototypes, no contradiction), 
 | **Smallest capability** | A declared, single-sentence direction thesis carried as an input to section composition, and quoted back in the review packet. |
 | **Proof needed** | Two builds of the same truth under different theses that differ *structurally*, not only in tokens. If they differ only in colour the thesis is decoration. |
 
-### L3 — Composition-pacing tracks the number of distinct **section shapes**, not the number of instruments
+### L3 — Pacing scores correlate with structural rhythm; the *capability* is the ability to vary it on purpose
 
 | | |
 | --- | --- |
-| **Observation** | See §3. Restated from four contradicting prototype claims. |
+| **Observation** | **In this corpus, composition-pacing scores correlate with how much a page's structural rhythm — its section shapes — varies across the sequence.** They do not correlate with how many decorative instruments are available. See §3.1. |
 | **Supports** | A 9.5 (four band heights + photographic scale), C 9.0 (six painted grounds). |
 | **Contradicts the older reading** | E 8.5 — strictly *more* instruments than D and identical score. B 8.0 across six runs on one section shape. |
-| **Confidence** | **Moderate.** Five points, one author, and the sites differ in far more than their section shapes. Consistent, not isolated. |
-| **Reusable?** | Reusable — this is a property of composition, not of a domain. |
-| **Blocking constraint** | Section presentations are selected per section without any model of the *sequence*. Nothing measures whether a page has one rhythm or four, so nothing can vary it. |
-| **Smallest capability** | A page-level composition plan that assigns section shapes from a declared set and asserts a minimum variety across the sequence. |
-| **Proof needed** | Two builds of identical content differing only in shape variety, reviewed blind. If pacing does not move, this is wrong. |
+| **Confidence** | **Moderate, and correlational only.** Five observations, one author, one reviewer, and the five sites differ in far more than their structural rhythm. **No causal claim is made and none is available from this corpus.** |
+| **Reusable?** | The **capability** is reusable: page-level composition should be *able* to vary structural rhythm deliberately, according to what the narrative and the content need. The **correlation is not a rule**, and "vary the shape more" is not a design instruction. |
+| **Blocking constraint** | Section presentations are selected per section with no model of the sequence, so a page cannot vary its rhythm on purpose even where the content plainly wants it — a long uniform register and a short argued case get the same treatment. The gap is the *absence of the control*, not the absence of a target value for it. |
+| **Smallest capability** | A page-level composition plan that can assign a different section shape where the narrative calls for one, and that **records the shape sequence it chose** so the choice is reviewable. Deliberately **no minimum-variety assertion, no diversity score and no target count** — see the warning below. |
+| **Proof needed** | The blinded identical-content experiment: two builds of the same content differing only in structural rhythm, reviewed blind. If pacing does not move, the correlation is not causal and the capability should be justified on narrative grounds alone or dropped. |
+
+> **Why no minimum-variety rule.** An earlier draft of this entry proposed that the plan "assert
+> a minimum variety across the sequence". That is a stronger claim than five correlated
+> observations by one author can carry, and it is the precise mechanism by which this programme
+> would install its next template: a floor of *N* distinct shapes per page is a quota, and a
+> generator satisfying a quota produces variation that answers the metric rather than the
+> content. It would also be indistinguishable, in the output, from the author signature §4 warns
+> about.
+>
+> A uniform rhythm is sometimes right. Prototype D's report is a document, and a document that
+> changed its shape every section would be worse, not better — the fact that it scored 8.5 rather
+> than 9.5 is a cost that may well have been correctly paid. Nothing in the corpus distinguishes
+> "uniform because unable" from "uniform because appropriate", and a quota assumes the first.
+>
+> If the blinded experiment shows shape variety itself causes the improvement, the contract can
+> be strengthened then, on evidence. Until then the capability is *deliberate control*, and the
+> only assertion is that the choice is recorded.
 
 ### L4 — Responsive means recomposed, not stacked
 
@@ -212,9 +229,14 @@ The reviewers' own language is consistent with the shape reading and was never t
 On E, across three separate runs: *"the recurring side-note-plus-main-column construction becomes
 predictable."*
 
-**Restated:** composition-pacing tracks **how many distinct section shapes a page uses**, not how
-many decorative instruments it has available. Adding instruments inside one repeated shape does
-not move it; changing the shape does. Five points, one author, observational.
+**Restated, and carefully.** In this corpus composition-pacing **correlates with how many
+distinct section shapes a page uses**, and does not correlate with how many decorative instruments
+are available: adding instruments inside one repeated shape did not move it. Five observations,
+one author, one reviewer, observational — **a correlation, not a mechanism.** The sites differ in
+far more than their structural rhythm, and nothing here distinguishes a page that is uniform
+because its composer could not vary it from one that is uniform because its content is a document
+and uniformity is right. The reusable conclusion is therefore that composition should be *able* to
+vary structural rhythm on purpose, not that it should be required to. See L3.
 
 ### 3.2 "The containment in `selectReference` runs the wrong way" — **partly wrong**
 
@@ -274,10 +296,13 @@ responsive recomposition → render/evidence → independent critique.
    business has and not what a page is for" — that sentence is the most load-bearing in
    `FACTORY-GAP.md` and Stage A does not contradict it.
 
-2. **"Per-section art direction" understates it. The unit that matters is the section
-   *shape*, and its measure is variety across the sequence** (§3.1). A per-section art direction
-   that varied tokens while every section kept the same shape would have produced prototype E,
-   which scored 8.5 on pacing with more instruments than anything else in the corpus.
+2. **"Per-section art direction" understates it. The unit that matters is the section *shape*,
+   and what is missing is the ability to choose it per section at all** (§3.1). A per-section art
+   direction that varied tokens while every section kept the same shape would have produced
+   prototype E, which scored 8.5 on pacing with more instruments than anything else in the
+   corpus. Note that this is an argument for the *control*, not for a target value of it: the
+   corpus shows structural rhythm correlating with pacing and cannot show that more rhythm causes
+   better pacing. See the warning under L3.
 
 3. **"Bounded markup/binding invention" is not evidenced as a bottleneck and should be
    deferred.** No prototype needed a novel layout mechanic. The A-era corpus records explicitly:
@@ -319,27 +344,27 @@ inventing detail.
 | **Schema change** | `RoutePlan { path, job, question, admissibleFacts[], narrativeOrder[] }`. |
 | **Owner** | A strategy role before composition. |
 | **Renderer change** | None. |
-| **Acceptance** | Every route's job is distinct; no two routes admit the same fact set; total section count is bounded by the plan rather than by the fact count. |
-| **Failure mode** | A five-route template applied to every business. Mitigate by deriving route *count* from the truth, and by asserting variety rather than a fixed shape. |
+| **Acceptance** | Every route's job is distinct; no two routes admit the same fact set; total section count is bounded by the plan rather than by the fact count. **No target route count, no target section count and no shape quota appear anywhere in this capability** — the plan's job is to make structure follow the truth, in either direction. |
+| **Failure mode** | A five-route template applied to every business — and its mirror image, a quota that makes every business produce *more* structure than it has content for. The mitigation is that route count is derived from the truth and that a plan producing **fewer** routes than the current default is a valid, expected output rather than a degenerate one. |
 | **Migration risk** | High — this sits upstream of everything and changes what gets built. |
 | **Minimum slice** | Re-run the existing rich-truth business through a route plan and compare section count and reviewer language against the recorded 31-section run. |
 
 ---
 
-#### C3 — Section-shape composition with asserted variety
+#### C3 — Deliberate control of structural rhythm
 
 | | |
 | --- | --- |
-| **Current failure** | Presentations are chosen per section with no model of the sequence. Nothing can observe that a page has one rhythm four times. |
-| **Evidence** | L3 / §3.1. B 8.0 (one shape, six attempts), D 8.5, E 8.5 (one shape, most instruments in the corpus), C 9.0 (six grounds), A 9.5 (four band heights). |
-| **General contract** | A page composition plan assigning each section a *shape* from a declared set — measure, ground, density, band height, full-bleed — with a minimum-variety assertion across the sequence. |
-| **Schema change** | `SectionShape` enum + `CompositionPlan { sections: [{ shape, ground, band }] , varietyFloor }`. |
+| **Current failure** | Presentations are chosen per section with no model of the sequence, so a page cannot vary its rhythm on purpose even where the content plainly wants it. The failure is the missing *control*, not a missing target value. |
+| **Evidence** | L3 / §3.1, **correlational**. B 8.0 (one shape, six attempts), D 8.5, E 8.5 (one shape, most instruments in the corpus), C 9.0 (six grounds), A 9.5 (four band heights). |
+| **General contract** | A page composition plan that may assign a section a *shape* — measure, ground, density, band height, full-bleed — **where the section's job calls for one**, and that records the sequence it chose. |
+| **Schema change** | `SectionShape` enum + `CompositionPlan { sections: [{ shape, ground, band, becauseSectionJobIs }] }`. **No `varietyFloor` field.** Each shape choice carries the narrative reason for it, which is what makes the plan reviewable and what a quota would let it skip. |
 | **Owner** | Composition. |
 | **Renderer change** | Renderers must accept a shape and a ground per section rather than a whole-site theme. |
-| **Acceptance** | A page of n sections uses at least *k* distinct shapes, with *k* derived from n; the review packet records the shape sequence so a human can check it against the pacing score. |
-| **Failure mode** | Variety for its own sake — alternating grounds arbitrarily is decoration and will read as such. The shape must follow the section's job. |
+| **Acceptance** | Every shape choice names the section job that motivated it; the review packet records the shape sequence so a human can check it against the pacing score. **No minimum distinct-shape count is asserted** — a uniform sequence is a valid plan when every section has the same job, which is a document, and the corpus cannot distinguish "uniform because unable" from "uniform because appropriate". |
+| **Failure mode** | Variety for its own sake. Alternating grounds arbitrarily is decoration and will read as such — and a diversity floor is the fastest way to manufacture it, because a generator satisfying a quota produces variation that answers the metric rather than the content. |
 | **Migration risk** | Medium — touches every renderer. |
-| **Minimum slice** | Two builds of identical content differing only in shape variety, reviewed blind. |
+| **Minimum slice** | The blinded identical-content experiment: two builds differing only in structural rhythm, reviewed blind. That establishes whether the correlation is causal *before* any contract is strengthened. |
 
 ---
 
@@ -422,23 +447,37 @@ thresholds, art direction, asset planning.
 narrative — enough facts to tempt the current composer into 25+ sections. Assert: every route's
 job is distinct; no two routes admit the same fact set; section count is bounded by the plan.
 
-**Negative / control fixture.** A business with *thin* truth — one Companies House line, empty
-trust signals. Assert the plan produces **few routes and says why**, and does not invent jobs to
-fill a shape. This is the fixture that stops C2 becoming a five-route template, and it must fail
-the build if route count is constant across the two fixtures.
+**Negative / control fixture — the one that matters most.** A business with *thin* truth: one
+Companies House line, empty trust signals, no client-facing proposition. The assertion is not
+merely that the plan is different — it is that **the planner can choose LESS structure as readily
+as more**. Concretely: the thin-truth plan must produce strictly fewer routes than the rich-truth
+plan; it must produce fewer sections than the current composer emits for the same input; every
+route it does produce must name the job that justifies it; and it must be able to return a
+single-route plan without that being treated as a failure.
+
+A capability that can only ever add structure is a template with a variable in it. If this
+fixture cannot be made to pass without special-casing, C2 is wrong and should be abandoned rather
+than tuned.
 
 **Deterministic tests.** Route jobs distinct; fact admissibility respected; the same truth
 produces the same plan; a fact appearing on two routes carries a reason; route count varies with
-truth volume.
+truth volume **in both directions**; a thin-truth plan is smaller than the current default output
+rather than merely differently shaped.
 
 **Visual before/after.** Re-run the recorded rich-truth business, which has a committed baseline
 at 6.644 / 31 sections / 9,217px on the old scale. Compare section count, page height and
 reviewer language. **Compare on the same scale as the baseline** — this is the one place a
 factory-to-factory comparison is legitimate.
 
-**How we stop it becoming another template.** The negative fixture, and a plan-diversity
-assertion across the six canonical acceptance apps: if all six produce the same route shape, the
+**How we stop it becoming another template.** The negative fixture above, plus a cross-build
+check across the six canonical acceptance apps: if all six produce the same route shape, the
 capability has failed even if every individual build improved.
+
+That cross-build check is an **anti-template diagnostic, not a diversity target**. It asserts that
+six materially different businesses do not converge on one shape; it does not ask any single plan
+to hit a variety score, and nothing in C2 rewards a plan for being more varied than its content
+warrants. The distinction is the same one L3 draws, for the same reason: a quota is satisfied by
+producing variation that answers the metric rather than the business.
 
 **Rollback boundary.** The route plan is an additional input. If absent or rejected, composition
 falls back to current behaviour. One flag, one code path.

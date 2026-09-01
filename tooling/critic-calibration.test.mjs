@@ -187,7 +187,7 @@ test('no measurement claims agreement with human scores that do not exist', () =
   assert.equal(measurement.humanAgreement, null);
   assert.match(measurement.humanAgreementUnavailable, /owner action|panel/);
 
-  const panel = JSON.parse(fs.readFileSync('examples/critic-calibration/panel.v1.json', 'utf8'));
+  const panel = JSON.parse(fs.readFileSync('examples/critic-calibration/panel.v2.json', 'utf8'));
   assert.equal(panel.status, 'awaiting-reviewers');
   assert.deepEqual(panel.scores, []);
   assert.deepEqual(panel.adjudicated, []);
@@ -217,5 +217,82 @@ test('every item declares a provenance and an outcome the loader accepts', () =>
     assert.ok(['synthetic-fixture', 'genuine-business-review'].includes(item.provenance));
     assert.ok(OUTCOMES.includes(item.expectedOutcome));
     if (item.expectedOutcome === 'planted-defect') assert.ok(item.plantedDefect?.description);
+  }
+});
+
+// --- The failure CC1 could not see ------------------------------------------------------------
+
+/**
+ * The inflating Critic, and the reason CC2 exists.
+ *
+ * This is the specific miscalibration the visual gate turned out to have: a
+ * Critic with a working floor and no ceiling, which scores everything that is
+ * not visibly broken somewhere between 8 and 9. It rejects the broken
+ * artifacts, so its false-pass rate is fine. It separates the damaged from the
+ * undamaged, so CC1's headline metric is fine. And it has just called a
+ * bootstrap-era theme with its colours changed strong professional work.
+ */
+const INFLATING_CRITIC = () => CORPUS.items.map((item) => ({
+  itemId: item.id,
+  meanScore: item.qualityStratum === 'T1-broken-amateur' ? 3.5 : 8.8,
+  criterionScores: [{ criterion: 'art-direction', score: item.qualityStratum === 'T1-broken-amateur' ? 3.5 : 8.8 }],
+  failingCriteria: [],
+}));
+
+test('an inflating Critic passes the separation test that was CC1\'s headline number', () => {
+  const measurement = measureCalibration({ corpus: CORPUS, verdicts: INFLATING_CRITIC() });
+  assert.ok(measurement.separation > 0, 'it separates damaged from undamaged');
+  assert.equal(measurement.discriminates, true, 'and CC1 would therefore have called it discriminating');
+});
+
+test('and CC2 catches it on the ordering the strata assert', () => {
+  const measurement = measureCalibration({ corpus: CORPUS, verdicts: INFLATING_CRITIC() });
+
+  assert.equal(measurement.honoursOrderingAssertions, false);
+  const failed = measurement.orderingFailures.map((entry) => entry.assertion);
+
+  // The headline assertion: a plain complete site that says what the business
+  // does must outrank a beautiful one that does not.
+  assert.ok(failed.includes('competent-above-generic'));
+
+  // The two diagnostic pairs. cc-25 and cc-24 are the same firm with the same
+  // content, differing only in composition; cc-25 and cc-20 are the
+  // anti-"fancy = good" pair.
+  assert.ok(failed.includes('restrained-above-cards'));
+  assert.ok(failed.includes('restrained-above-slop'));
+
+  assert.equal(measurement.ranksStrataCorrectly, false);
+});
+
+test('a Critic that calls a generic artifact exceptional is reported as inflating', () => {
+  const measurement = measureCalibration({
+    corpus: CORPUS,
+    verdicts: [{ itemId: 'cc-20', meanScore: 9.2, criterionScores: [{ criterion: 'art-direction', score: 9 }], failingCriteria: [] }],
+  });
+  assert.equal(measurement.inflatesTopEnd, true);
+  assert.equal(measurement.unearnedTopEnd[0].itemId, 'cc-20');
+});
+
+test('a Critic using the whole scale is not reported as inflating', () => {
+  const measurement = measureCalibration({
+    corpus: CORPUS,
+    verdicts: [
+      { itemId: 'cc-04', meanScore: 2, criterionScores: [{ criterion: 'art-direction', score: 2 }], failingCriteria: [] },
+      { itemId: 'cc-20', meanScore: 5, criterionScores: [{ criterion: 'art-direction', score: 5 }], failingCriteria: [] },
+      { itemId: 'cc-02', meanScore: 6.5, criterionScores: [{ criterion: 'art-direction', score: 6.5 }], failingCriteria: [] },
+      { itemId: 'cc-25', meanScore: 8, criterionScores: [{ criterion: 'art-direction', score: 8 }], failingCriteria: [] },
+    ],
+  });
+  assert.equal(measurement.inflatesTopEnd, false);
+  assert.deepEqual(measurement.orderingFailures.map((entry) => entry.assertion), []);
+  assert.ok(measurement.scoreSpread >= 5, 'a corpus spanning broken to strong should produce a wide spread');
+});
+
+test('the corpus asserts no artifact of ours is exceptional or benchmark-class', () => {
+  // Labelling our own fixture benchmark-class would make the top of the scale a
+  // measurement of our own opinion, which is the failure the whole exercise is
+  // trying to remove.
+  for (const stratum of ['T5-exceptional-agency', 'T6-benchmark-class']) {
+    assert.equal(CORPUS.items.filter((item) => item.qualityStratum === stratum).length, 0, `${stratum} must stay empty until a panel says otherwise`);
   }
 });

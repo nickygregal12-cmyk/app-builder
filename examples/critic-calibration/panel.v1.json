@@ -22,5 +22,6 @@
     "reviewers": "{ id, role, independentOfCreation: true }",
     "scores": "{ reviewerId, itemId, criterionScores: [{ criterion, score, note }], verdict }",
     "adjudicated": "{ itemId, criterionScores: [{ criterion, score }], meanScore, verdict, disagreements: [{ criterion, spread, resolution }] }"
-  }
+  },
+  "$superseded": "Superseded by panel.v2.json, which the tooling reads. Retained because it records what the panel was asked for before the scale was defined: two reviewers rather than three, no pairwise ranking, no holistic tier, and a rubric with no definition of 10."
 }

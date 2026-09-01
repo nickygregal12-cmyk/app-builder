@@ -30,6 +30,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { assessDiversity, MINIMUM_DIFFERING_PLANES } from './visual-direction.mjs';
+import {
+  applyCeilings,
+  assertPermittedScore,
+  auditVerdictAgainstScale,
+  criteriaFor,
+  overallCeiling,
+  tierForMean,
+  VISUAL_CRITERIA,
+} from './visual-rubric.mjs';
 
 const list = (value) => (Array.isArray(value) ? value : []);
 
@@ -70,37 +79,43 @@ export const VISUAL_REVIEW_VERDICTS = Object.freeze(['pass', 'rework', 'reject']
 /**
  * What a visual critic is asked, and what it is deliberately not asked.
  *
- * Every criterion here needs judgement. None of them can be settled by reading
- * the compiled design and the composition, which is the test a criterion has to
+ * Every criterion needs judgement. None of them can be settled by reading the
+ * compiled design and the composition, which is the test a criterion has to
  * pass to be here at all: contrast, reduced motion, repetition and competing
  * actions are DesignLint's, and a critic asked about them is being paid to
  * re-derive an answer that already exists.
  *
- * `appliesTo` keeps the list from being padded. A dense internal tool is not
- * judged on conversion clarity, and a build with no photographs is not judged
- * on whether its photographs suit the business.
+ * The set itself now lives in `visual-rubric.mjs`, with anchored bands and an
+ * explicit account per criterion of what separates its upper levels. The v1
+ * set that lived here asked nine questions shaped so that "yes" was the answer
+ * for anything competent — *does the eye reach the most important thing
+ * first?* — and a reviewer that has just answered yes writes 9. The questions
+ * are gradients now, and the criteria that distinguish good work from
+ * exceptional work (art direction, composition, business specificity,
+ * resistance to generic AI design language, memorability) are asked explicitly
+ * rather than folded into "distinctiveness".
+ *
+ * Re-exported under the old names because the criteria set is what a dozen
+ * callers know this module for, and moving the definition should not move the
+ * import.
  */
-export const VISUAL_REVIEW_CRITERIA = Object.freeze([
-  Object.freeze({ id: 'brand-fit', appliesTo: 'all', question: 'Does the build read as this business, given the accent and typographic voice its own material showed?' }),
-  Object.freeze({ id: 'visual-hierarchy', appliesTo: 'all', question: 'On each page, does the eye reach the most important thing first?' }),
-  Object.freeze({ id: 'coherence', appliesTo: 'all', question: 'Do the opening, the grid, the rhythm and the motion read as one decision rather than several?' }),
-  Object.freeze({ id: 'distinctiveness', appliesTo: 'public', question: 'Does this look like a considered site for this business, or like a template with its colours changed?' }),
-  Object.freeze({ id: 'credibility', appliesTo: 'public', question: 'Would the intended customer trust this business more after seeing this than before?' }),
-  Object.freeze({ id: 'conversion-clarity', appliesTo: 'public', question: 'Is the next action obvious at every point a visitor might be ready to take it?' }),
-  Object.freeze({ id: 'imagery-suitability', appliesTo: 'imagery', question: 'Do the published photographs suit the business, and are they framed well at every width?' }),
-  Object.freeze({ id: 'responsive-quality', appliesTo: 'all', question: 'Is the mobile rendering a designed composition, or the desktop one with fewer columns?' }),
-  Object.freeze({ id: 'distinctive-moment', appliesTo: 'public', question: 'Does the declared distinctive moment actually land, and does it suit this business rather than decorate it?' }),
-]);
+export const VISUAL_REVIEW_CRITERIA = VISUAL_CRITERIA;
 
-/** The criteria a particular candidate is judged on. */
+/**
+ * The criteria a particular candidate is judged on.
+ *
+ * `publishesImagery` is accepted and ignored, and the parameter is kept so
+ * existing callers keep working while the reason it is ignored stays visible.
+ * It used to add a tenth criterion for imagery-led builds only, which meant a
+ * photographic build and a typographic one were never scored on the same set —
+ * and the #255 prototypes were measured with it, on the criterion they scored
+ * highest. `visual-material` replaces it and applies to everything: "is this
+ * the right material for this subject, and is it handled well?" is a question
+ * an image-free site answers rather than skips.
+ */
 export function reviewCriteriaFor({ projectType, publishesImagery = false } = {}) {
-  const isPublic = ['marketing-site', 'content-site'].includes(projectType);
-  return VISUAL_REVIEW_CRITERIA.filter((criterion) => {
-    if (criterion.appliesTo === 'all') return true;
-    if (criterion.appliesTo === 'public') return isPublic;
-    if (criterion.appliesTo === 'imagery') return publishesImagery;
-    return false;
-  }).map((criterion) => ({ ...criterion }));
+  void publishesImagery;
+  return criteriaFor({ projectType });
 }
 
 /**
@@ -170,16 +185,19 @@ export function loadVisualQualityGate(factoryRoot = process.cwd()) {
  * opinion about something nobody looked at; skipping one hides the weakness.
  */
 export function scoreVisualReview(review, criteria = null) {
-  const scores = list(review?.criterionScores);
-  if (!scores.length) return null;
-  for (const entry of scores) {
+  const raw = list(review?.criterionScores);
+  if (!raw.length) return null;
+  for (const entry of raw) {
     const value = Number(entry?.score);
     if (!Number.isFinite(value) || value < 0 || value > 10) {
       throw new Error(`Visual review scores ${String(entry?.criterion)} as ${String(entry?.score)}. A criterion score is a number from 0 to 10.`);
     }
+    // Half points, and no finer. A reviewer writing 9.4 rather than 9.5 is
+    // performing precision rather than making a distinction it could defend.
+    assertPermittedScore(value, `Visual review criterion ${String(entry?.criterion)}`);
   }
-  const scored = new Set(scores.map((entry) => entry.criterion));
-  if (scored.size !== scores.length) throw new Error('A visual review scores each criterion once.');
+  const scored = new Set(raw.map((entry) => entry.criterion));
+  if (scored.size !== raw.length) throw new Error('A visual review scores each criterion once.');
   if (criteria) {
     const expected = criteria.map((criterion) => criterion.id);
     const missing = expected.filter((id) => !scored.has(id));
@@ -187,11 +205,86 @@ export function scoreVisualReview(review, criteria = null) {
     if (missing.length) throw new Error(`Visual review does not score every criterion it was given: ${missing.join(', ')}.`);
     if (extra.length) throw new Error(`Visual review scores criteria this candidate was not judged on: ${extra.join(', ')}.`);
   }
-  const values = scores.map((entry) => Number(entry.score));
-  const lowest = scores.reduce((worst, entry) => (Number(entry.score) < Number(worst.score) ? entry : worst));
+
+  /**
+   * The scale's own consistency rules, checked before anything is averaged.
+   *
+   * These are refusals rather than adjustments: a 9 recorded with no positive
+   * evidence, or an 8 that cannot say what is holding it back, is a score the
+   * reviewer has not actually justified, and averaging it in would launder the
+   * omission into a number.
+   */
+  const scaleProblems = auditVerdictAgainstScale({ ...review, criterionScores: raw }, { criteria: null });
+  if (scaleProblems.length) {
+    throw new Error(`This visual review does not satisfy the scale it is scored against:\n  - ${scaleProblems.map((problem) => problem.detail).join('\n  - ')}`);
+  }
+
+  /**
+   * Ceilings, applied to what the reviewer observed.
+   *
+   * Nothing here inspects the artifact. `observations` are the reviewer's own
+   * answers — is this template-derived, is mobile merely the desktop stacked,
+   * could this be another business with the logo removed — and the ceiling
+   * only refuses the arithmetic that would let a site be called exceptional on
+   * authorship while its own review calls it a template.
+   */
+  const { criterionScores: capped, applied } = applyCeilings(raw, review?.observations ?? {});
+
+  const values = capped.map((entry) => Number(entry.score));
+  const lowest = capped.reduce((worst, entry) => (Number(entry.score) < Number(worst.score) ? entry : worst));
+  const mean = Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2));
+
+  /**
+   * The holistic reading, and the disagreement it is allowed to have.
+   *
+   * `holisticTier` is the reviewer's answer to "taken as a whole, what quality
+   * tier is this?" and it is deliberately not derived from the mean. An
+   * average of thirteen numbers hides the case this whole redesign exists for:
+   * a site that scores 8 on everything because the reviewer could not find
+   * anything to complain about, whose honest overall reading is
+   * strong-professional rather than exceptional. Where the two disagree the
+   * disagreement is recorded, not resolved.
+   */
+  const impliedTier = tierForMean(mean);
+  const holisticTier = review?.holisticTier ?? null;
+  const tierDisagreement = holisticTier && impliedTier && holisticTier !== impliedTier.id
+    ? {
+      holistic: holisticTier,
+      impliedByMean: impliedTier.id,
+      mean,
+      detail: `The criterion mean of ${mean} sits in ${impliedTier.id}; the reviewer's overall reading is ${holisticTier}. Recorded rather than reconciled — an average and a reaction disagreeing is information.`,
+    }
+    : null;
+
+  /**
+   * What the scale permits this verdict's overall score to be.
+   *
+   * A 10 needs a benchmark comparison that found no material gap, a holistic
+   * reading of benchmark-class, and no scoped criterion below 8. Absence of
+   * defects caps a score; it does not maximise one.
+   */
+  const ceiling = overallCeiling({ ...review, criterionScores: capped, holisticTier });
+  const overallScore = Math.min(mean, ceiling.cap);
+
   return {
-    criterionScores: scores.map((entry) => ({ criterion: entry.criterion, score: Number(entry.score), note: entry.note ?? null })),
-    overallScore: Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2)),
+    criterionScores: capped.map((entry) => ({
+      criterion: entry.criterion,
+      score: Number(entry.score),
+      note: entry.note ?? null,
+      whyNotHigher: entry.whyNotHigher ?? null,
+      positiveEvidence: list(entry.positiveEvidence),
+      reviewerScore: entry.reviewerScore ?? null,
+      cappedBy: entry.cappedBy ?? null,
+    })),
+    meanScore: mean,
+    overallScore: Number(overallScore.toFixed(2)),
+    overallCeiling: ceiling.cap,
+    ceilingReasons: ceiling.reasons,
+    appliedCeilings: applied,
+    holisticTier,
+    impliedTier: impliedTier?.id ?? null,
+    tierDisagreement,
+    benchmarkGap: review?.benchmarkGap ?? 'UNASSESSED',
     lowestScore: Number(lowest.score),
     lowestCriterion: lowest.criterion,
   };
@@ -349,7 +442,20 @@ export function recordReview(candidate, review, { qualityGate = null, criteria =
     review: {
       ...review,
       criterionScores: score?.criterionScores ?? [],
+      // The mean and the score the gate reads are two different numbers now.
+      // `meanScore` is the diagnostic; `overallScore` is the mean after the
+      // scale's ceilings, and a reader comparing them can see what the
+      // comparison against benchmark work and the reviewer's own holistic
+      // reading actually cost.
+      meanScore: score?.meanScore ?? null,
       overallScore: score?.overallScore ?? null,
+      overallCeiling: score?.overallCeiling ?? null,
+      ceilingReasons: score?.ceilingReasons ?? [],
+      appliedCeilings: score?.appliedCeilings ?? [],
+      holisticTier: score?.holisticTier ?? null,
+      impliedTier: score?.impliedTier ?? null,
+      tierDisagreement: score?.tierDisagreement ?? null,
+      benchmarkGap: score?.benchmarkGap ?? 'UNASSESSED',
       lowestScore: score?.lowestScore ?? null,
       lowestCriterion: score?.lowestCriterion ?? null,
       blockingConcerns: list(review.blockingConcerns),

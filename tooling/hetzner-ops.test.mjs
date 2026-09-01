@@ -282,3 +282,13 @@ test('the canary documentation no longer tells an operator to export a signing k
   assert.equal(/export APP_BUILDER_MODEL_DECISION_SECRET=/.test(source), false);
   assert.equal(/export ANTHROPIC_API_KEY=/.test(source), false);
 });
+
+test('the preflight never advises exporting a signing key', () => {
+  const source = readFileSync('tooling/model-canary.mjs', 'utf8');
+  // The grant key belongs to the broker. Advising a fresh one would produce
+  // grants the broker refuses, which fails later and reads as a model problem.
+  assert.equal(/export \$\{reference\}/.test(source), false);
+  assert.equal(/export APP_BUILDER_AGENT_GRANT_SECRET=/.test(source), false);
+  assert.equal(/export APP_BUILDER_MODEL_DECISION_SECRET=/.test(source), false);
+  assert.match(source, /It belongs to the broker/);
+});

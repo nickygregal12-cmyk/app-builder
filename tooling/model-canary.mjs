@@ -355,13 +355,21 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
       : `${credentialReference} is not configured for the trusted gateway process`,
     `Encrypt ${credentialReference} with systemd-creds and let the model-canary unit load it: sudo bash ops/hetzner/install-model-canary-unit.sh. It must not be exported, and must not reach the sandbox, the ledger or this repository.`,
   );
+  // Both signing keys come from root-owned host files that the canary unit
+  // loads, never from an operator's shell. Telling someone to export the grant
+  // key would be worse than unhelpful: the broker verifies grants this canary
+  // mints, so a freshly generated key produces grants the broker refuses.
+  const signingRemedy = {
+    [GRANT_SECRET_REF]: 'Do not export this. It belongs to the broker, which generates it in ops/hetzner/install-service-units.sh into /etc/app-builder/agent-broker.env; a different value here mints grants the broker refuses. Run the canary through app-builder-model-canary.service, which loads it.',
+    [DECISION_SECRET_REF]: 'Do not export this. sudo bash ops/hetzner/install-model-canary-unit.sh generates it into /etc/app-builder/model-canary.env, which both --authorise and the canary unit read.',
+  };
   for (const [id, reference] of [['grant-signing-secret', GRANT_SECRET_REF], ['decision-signing-secret', DECISION_SECRET_REF]]) {
     const value = env[reference];
     add(
       id,
       typeof value === 'string' && value.length >= 32 ? 'pass' : 'fail',
       `${reference} is ${typeof value === 'string' && value.length >= 32 ? 'set and long enough to be a signing key' : 'absent or shorter than 32 bytes'}`,
-      `export ${reference}="$(head -c 48 /dev/urandom | base64)"`,
+      signingRemedy[reference],
     );
   }
 

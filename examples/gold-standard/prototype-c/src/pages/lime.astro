@@ -1,0 +1,163 @@
+---
+/**
+ * Why lime.
+ *
+ * The editorial route, and the one that has to be right rather than persuasive. Everything here
+ * is checkable building science, and where a claim is contested it is stated as contested.
+ * A paint company that overstated this would be doing to its customers exactly what the
+ * emulsion manufacturers did.
+ */
+import Base from '../layouts/Base.astro';
+import Painted from '../components/Painted.astro';
+import { PAINTS, EMULSION_SD } from '../data/paints';
+import { colourBySlug } from '../data/colours';
+import images from '../assets/images.json';
+
+const hex = colourBySlug.get('tallow')!.hex;
+const kilns = images.find((image) => image.slug === 'kilns')!;
+const chalk = images.find((image) => image.slug === 'chalk-face')!;
+---
+<Base
+  title="Why lime — Marlpit"
+  description="What breathability actually means, why a solid wall needs it, and where the lime comes from."
+  hex={hex}
+  chapter="The material"
+>
+  <Painted hex={hex}>
+    <div class="page">
+      <div class="head2">
+        <div>
+          <p class="label">The material</p>
+          <h1 class="display display--sm">Breathable is a real word with a number behind it.</h1>
+        </div>
+        <p class="prose small">
+          It is also a word that has been used to sell a great deal of paint that is not. The test
+          is vapour resistance, quoted as s<sub>d</sub> — the thickness of still air the coating
+          behaves like. Anyone who will not give you that figure is telling you something.
+        </p>
+      </div>
+    </div>
+  </Painted>
+
+  <Painted hex="#ede8da">
+    <div class="page">
+      <p class="label">The comparison</p>
+      <h2 class="head sd__h">Our four, against what is probably on your wall.</h2>
+      <ol class="sd">
+        {[...PAINTS].sort((a, b) => a.sd - b.sd).map((paint) => (
+          <li class="sd__row">
+            <span class="sd__name">{paint.name}</span>
+            <span class="sd__bar" style={`--w: ${(paint.sd / 2) * 100}%`}></span>
+            <span class="sd__v n">{paint.sd} m</span>
+          </li>
+        ))}
+        <li class="sd__row sd__row--bad">
+          <span class="sd__name">Vinyl emulsion</span>
+          <span class="sd__bar sd__bar--bad" style="--w: 100%"></span>
+          <span class="sd__v n">{EMULSION_SD} m</span>
+        </li>
+      </ol>
+      <p class="small sd__note">
+        Bars are drawn to the top of the emulsion range. Our limewash is roughly one hundredth as
+        resistant as the more sealing end of a vinyl emulsion; even our least open paint,
+        lime-casein at 0.08, is around five times more open than the most open emulsion. A wall
+        needs to be able to lose the water it takes in, and those two things are not close.
+      </p>
+    </div>
+  </Painted>
+
+  <Painted hex="#2f2820">
+    <div class="page two">
+      <figure class="two__fig">
+        <img src={chalk.small} width="1000" height="750" loading="lazy"
+             alt="A worked chalk face, white and stepped." />
+        <figcaption>{chalk.usedAs}. Photograph {chalk.photographer}, {chalk.licence}.</figcaption>
+      </figure>
+      <div class="prose">
+        <p class="label">Where it comes from</p>
+        <h2 class="head two__h">Chalk, burnt, slaked, and left for a year.</h2>
+        <p>
+          Calcium carbonate is dug and burnt at around 900°C, which drives off carbon dioxide and
+          leaves quicklime. Quicklime is slaked with water — violently, and it is the reason lime
+          burns are a real hazard rather than a historical one — to give calcium hydroxide, lime
+          putty.
+        </p>
+        <p>
+          That putty is matured for twelve months before we will use it. Fresh putty makes a
+          weaker, chalkier paint; the crystals continue to change shape for a long time, and the
+          only way to get the working properties is to wait.
+        </p>
+        <p>
+          On the wall it takes the carbon dioxide back out of the air and turns into calcium
+          carbonate again. The paint on a limewashed wall is, chemically, chalk. That cycle is
+          also why the carbon story is better than it first looks and worse than some people
+          claim: burning is fuel-intensive, and carbonation reabsorbs a large part but not all of
+          what the burn released.
+        </p>
+      </div>
+    </div>
+  </Painted>
+
+  <Painted hex={colourBySlug.get('kiln')!.hex}>
+    <div class="page two two--flip">
+      <div class="prose">
+        <p class="label">What it does not fix</p>
+        <h2 class="head two__h">Lime paint is not a damp treatment.</h2>
+        <p>
+          It is a coating that allows a wall to do what it was built to do. If the wall has a
+          failed gutter, a raised external ground level, a cement render trapping water or a
+          bridged cavity, a breathable paint will not solve any of those and will not be given a
+          fair chance to work.
+        </p>
+        <p>
+          We are asked roughly once a week to supply limewash for a damp problem that is a
+          drainage problem. The honest answer is to fix the drainage; the paint is the last thing
+          you do, not the first.
+        </p>
+      </div>
+      <figure class="two__fig">
+        <img src={kilns.small} width="1000" height="667" loading="lazy"
+             alt="A bank of stone lime kilns built into a hillside, each with an arched draw hole." />
+        <figcaption>{kilns.usedAs}. Photograph {kilns.photographer}, {kilns.licence}.</figcaption>
+      </figure>
+    </div>
+  </Painted>
+</Base>
+
+<style>
+  .display--sm { font-size: clamp(1.875rem, 1.2rem + 2.4vw, 3.25rem); max-width: 19ch; }
+  .label + .display--sm { margin-top: var(--s4); }
+  .head2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: end; }
+  .sd__h { margin-top: var(--s3); }
+
+  /* A bar chart drawn from the stored figures, so it cannot flatter them. */
+  .sd { margin-top: var(--s7); border-top: 1px solid var(--line-strong); }
+  .sd__row { display: grid; grid-template-columns: 12rem minmax(0, 1fr) 6rem; gap: var(--s5);
+    align-items: center; padding-block: var(--s4); border-bottom: 1px solid var(--line); }
+  .sd__name { font-family: var(--display); font-weight: 600; font-size: var(--t-small); }
+  .sd__bar { height: 14px; background: color-mix(in srgb, var(--ink) 82%, transparent);
+    width: max(3px, var(--w)); }
+  .sd__bar--bad { background: color-mix(in srgb, var(--ink) 26%, transparent); }
+  .sd__v { text-align: right; font-size: var(--t-small); }
+  .sd__row--bad { color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .sd__note { margin-top: var(--s5); max-width: 64ch; }
+
+  .two { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    gap: clamp(var(--s6), 4vw, var(--s9)); align-items: start; }
+  .two--flip { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); }
+  .two__fig { margin: 0; }
+  .two__fig img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .two__fig figcaption { margin-top: var(--s3); font-size: var(--t-label);
+    color: color-mix(in srgb, var(--ink) 62%, transparent); }
+  .two__h { margin-top: var(--s3); margin-bottom: var(--s5); }
+
+  @media (max-width: 1000px) {
+    .head2, .two, .two--flip { grid-template-columns: 1fr; gap: var(--s5); }
+    .two--flip .two__fig { order: -1; }
+  }
+  @media (max-width: 700px) {
+    .sd__row { grid-template-columns: 1fr 4.5rem; gap: var(--s3); }
+    .sd__name { grid-column: 1 / -1; }
+  }
+</style>

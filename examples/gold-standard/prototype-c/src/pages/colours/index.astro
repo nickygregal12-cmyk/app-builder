@@ -1,0 +1,250 @@
+---
+/**
+ * The index.
+ *
+ * The home page shows the range as paint — thirty-six fields, edge to edge, name only. This is
+ * the same thirty-six as a document: code, light reflectance, pigment, and which of the four
+ * paints each is made in. Two representations of one set, and the split is not decorative.
+ * Seven of these colours cannot carry small text on their own ground at 4.5:1, so the data has
+ * to live somewhere with a ground that can hold it — and the grid gets to be paint instead of a
+ * table with pictures in it.
+ */
+import Base from '../../layouts/Base.astro';
+import Painted from '../../components/Painted.astro';
+import { COLOURS, FAMILIES, coloursIn, colourBySlug } from '../../data/colours';
+import { PAINTS } from '../../data/paints';
+import { lrv, groundSafe } from '../../lib/light';
+
+const hex = colourBySlug.get('chalk')!.hex;
+const unsafe = COLOURS.filter((colour) => !groundSafe(colour.hex)).length;
+---
+<Base
+  title="The thirty-six colours — Marlpit"
+  description="Every Marlpit colour, with its pigment, light reflectance value and the paints it is made in."
+  hex={hex}
+  chapter="The range"
+>
+  <Painted hex={hex}>
+    <div class="page">
+      <div class="idx__head">
+        <div>
+          <p class="label">Thirty-six colours, six pigments</p>
+          <h1 class="display display--sm">What each one is actually made of.</h1>
+        </div>
+        <p class="prose small">
+          Light reflectance value is computed from the colour rather than quoted from a card: it is
+          the proportion of visible light a surface returns, and it is the number that decides
+          whether a colour will make a north-facing room unusable. Below about 20 you are choosing
+          a room that needs its lamps on in the afternoon.
+        </p>
+      </div>
+
+      {/* Thirty-six is small enough to scroll and large enough that scrolling is the wrong
+          answer. Filtering by pigment family and by light reflectance are the two questions
+          people actually arrive with — "show me the greens" and "I need something light for a
+          north room" — and both are answered from data already on the page. */}
+      <div class="filters">
+        <div class="filters__set" role="group" aria-label="Filter by pigment family">
+          <span class="filters__k">Pigment</span>
+          <button class="chipf" type="button" aria-pressed="true" data-filter-family="all">All</button>
+          {FAMILIES.map((family) => (
+            <button class="chipf" type="button" aria-pressed="false" data-filter-family={family.id}>
+              <span class="chipf__dot" style={`--c: ${coloursIn(family.id)[Math.floor(coloursIn(family.id).length / 2)].hex}`}></span>
+              {family.name.replace(' and ', ' & ')}
+            </button>
+          ))}
+        </div>
+        <div class="filters__set" role="group" aria-label="Filter by light reflectance">
+          <span class="filters__k">Light reflectance</span>
+          <button class="chipf" type="button" aria-pressed="true" data-filter-lrv="all">Any</button>
+          <button class="chipf" type="button" aria-pressed="false" data-filter-lrv="light">60 and over</button>
+          <button class="chipf" type="button" aria-pressed="false" data-filter-lrv="mid">20 to 60</button>
+          <button class="chipf" type="button" aria-pressed="false" data-filter-lrv="dark">under 20</button>
+        </div>
+        <p class="filters__count" role="status" aria-live="polite" data-filter-count>36 of 36 colours</p>
+      </div>
+
+      {FAMILIES.map((family) => (
+        <section class="idx__fam" data-family={family.id}>
+          <div class="idx__famhead">
+            <h2 class="idx__famname">{family.name}</h2>
+            <p class="small idx__famsrc">{family.source}</p>
+            <p class="small idx__famfast">{family.fastness}</p>
+          </div>
+          <table class="tbl idx__tbl">
+            <thead>
+              <tr>
+                <th scope="col"><span class="vh">Colour</span></th>
+                <th scope="col">Name</th>
+                <th scope="col">LRV</th>
+                <th scope="col">Pigment</th>
+                <th scope="col">Made in</th>
+                <th scope="col"><span class="vh">Sample</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {coloursIn(family.id).map((colour) => (
+                <tr data-lrv={lrv(colour.hex)}>
+                  <td class="idx__chipcell">
+                    <a class="idx__chip" href={`/colours/${colour.slug}`} style={`--c: ${colour.hex}`} aria-label={`${colour.name}, colour ${colour.code}`}></a>
+                  </td>
+                  <th scope="row" class="idx__name">
+                    <a class="u" href={`/colours/${colour.slug}`}>{colour.name}</a>
+                    <span class="idx__code">{colour.code}</span>
+                  </th>
+                  <td class="n">{lrv(colour.hex)}</td>
+                  <td class="idx__pig">{colour.pigment}</td>
+                  <td class="idx__fin">
+                    {PAINTS.map((paint) => (
+                      <span class:list={['fin', colour.finishes.includes(paint.id) && 'fin--on']} title={paint.name} aria-label={`${paint.name}: ${colour.finishes.includes(paint.id) ? 'made' : 'not made'}`}>{paint.name.slice(0, 1)}</span>
+                    ))}
+                    {colour.limit && <span class="idx__limit">{colour.limit}</span>}
+                  </td>
+                  <td class="idx__add">
+                    <button class="add" type="button" aria-pressed="false" data-add={colour.slug}
+                            aria-label={`Add ${colour.name} to the sample box`}>
+                      <span class="add__mark" aria-hidden="true">+</span>
+                      <span data-add-label>Sample</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+
+      <p class="small idx__foot">
+        {unsafe} of the thirty-six are too close in value to both our inks to carry small text on
+        their own ground at the 4.5:1 the guidance asks for. They are still paint, and they are
+        still going on the wall opposite. It is the paragraph that has to move, not the colour.
+      </p>
+    </div>
+  </Painted>
+</Base>
+
+<style>
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .display--sm { font-size: clamp(1.875rem, 1.2rem + 2.4vw, 3.25rem); max-width: 18ch; }
+  .idx__head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: end; margin-bottom: var(--s9); }
+  .label + .display--sm { margin-top: var(--s4); }
+
+  .idx__fam { padding-block: var(--s7); border-top: 1px solid var(--line-strong); }
+  .idx__famhead { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s6); align-items: start; margin-bottom: var(--s5); }
+  .idx__famname { font-size: var(--t-head); max-width: 14ch; }
+  .idx__famsrc { max-width: 44ch; }
+  .idx__famfast { max-width: 44ch; color: color-mix(in srgb, var(--ink) 62%, transparent); }
+
+  .idx__tbl th[scope='col']:first-child { width: 56px; }
+  .idx__chipcell { padding-right: var(--s4); }
+  .idx__chip { display: block; width: 40px; height: 40px; background: var(--c);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+  .idx__chip:hover { transform: scale(1.16); }
+  .idx__name { font-family: var(--display); font-weight: 600; white-space: nowrap; padding-right: var(--s5); }
+  .idx__code { display: block; font-weight: 500; font-variant-numeric: tabular-nums;
+    font-size: var(--t-label); color: color-mix(in srgb, var(--ink) 58%, transparent); margin-top: 2px; }
+  .idx__pig { max-width: 34ch; }
+  .idx__fin { white-space: nowrap; }
+  .fin { display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center;
+    font-family: var(--display); font-size: var(--t-label); font-weight: 600; margin-right: 3px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 26%, transparent);
+    color: color-mix(in srgb, var(--ink) 40%, transparent); }
+  .fin--on { background: color-mix(in srgb, var(--ink) 88%, transparent); color: var(--ground); box-shadow: none; }
+  .idx__limit { display: block; white-space: normal; max-width: 32ch; margin-top: var(--s2);
+    font-size: var(--t-label); color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .filters { display: grid; gap: var(--s4); padding: var(--s5) 0; margin-bottom: 0;
+    border-top: 1px solid var(--line-strong); }
+  .filters__set { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+  .filters__k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; width: 10rem;
+    color: color-mix(in srgb, var(--ink) 62%, transparent); }
+  .chipf { display: inline-flex; align-items: center; gap: 7px; background: none; border: 0;
+    font-family: var(--display); font-size: var(--t-small); font-weight: 500; color: inherit;
+    padding: 5px var(--s3); cursor: pointer;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+    transition: box-shadow 140ms ease, background-color 140ms ease, color 140ms ease; }
+  .chipf:hover { box-shadow: inset 0 0 0 1px var(--ink); }
+  .chipf[aria-pressed='true'] { background: var(--ink); color: var(--ground); box-shadow: none; font-weight: 600; }
+  .chipf__dot { width: 12px; height: 12px; background: var(--c);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent); }
+  .chipf[aria-pressed='true'] .chipf__dot { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ground) 40%, transparent); }
+  .filters__count { font-size: var(--t-label); font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--ink) 62%, transparent); }
+  .idx__fam[hidden], .idx__tbl tr[hidden] { display: none; }
+  .idx__add { text-align: right; white-space: nowrap; }
+
+  .idx__foot { margin-top: var(--s7); padding-top: var(--s5); border-top: 1px solid var(--line);
+    max-width: 62ch; }
+
+  @media (max-width: 1000px) {
+    .idx__head, .idx__famhead { grid-template-columns: 1fr; gap: var(--s4); }
+  }
+  @media (max-width: 760px) {
+    /* A run of records rather than five squeezed columns. At 390px the pigment — which is the
+       reason anybody is on this page — would otherwise get two words to a line. */
+    .idx__tbl, .idx__tbl tbody, .idx__tbl tr, .idx__tbl td, .idx__tbl th { display: block; width: 100%; }
+    .idx__tbl thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .idx__tbl tr { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: var(--s2) var(--s4);
+      padding-block: var(--s4); border-bottom: 1px solid var(--line); align-items: start; }
+    .idx__tbl td, .idx__tbl th { border: 0; padding: 0; }
+    .idx__chipcell { grid-row: span 5; }
+    .idx__add { text-align: left; }
+    .filters__k { width: 100%; }
+    .idx__chip { width: 48px; height: 48px; }
+    .idx__name { white-space: normal; padding-right: 0; }
+    .idx__pig { max-width: none; font-size: var(--t-label);
+      color: color-mix(in srgb, var(--ink) 72%, transparent); }
+    .idx__tbl td.n { font-size: var(--t-label); color: color-mix(in srgb, var(--ink) 64%, transparent); }
+    .idx__tbl td.n::before { content: 'LRV '; }
+  }
+</style>
+
+<script>
+  /**
+   * Filtering, in the page.
+   *
+   * Both filters read values already rendered into the markup — the family is the section, the
+   * light reflectance is on the row — so nothing is duplicated into a client-side dataset that
+   * could disagree with what is on screen.
+   */
+  type Band = 'all' | 'light' | 'mid' | 'dark';
+  const bands: Record<Band, (value: number) => boolean> = {
+    light: (v) => v >= 60, mid: (v) => v >= 20 && v < 60, dark: (v) => v < 20, all: () => true,
+  };
+  let family = 'all';
+  let band: Band = 'all';
+
+  const apply = () => {
+    let shown = 0;
+    for (const section of document.querySelectorAll<HTMLElement>('[data-family]')) {
+      const rows = [...section.querySelectorAll<HTMLElement>('tbody tr')];
+      let visible = 0;
+      for (const row of rows) {
+        const ok = (family === 'all' || section.dataset.family === family)
+          && bands[band](Number(row.dataset.lrv));
+        row.hidden = !ok;
+        if (ok) visible += 1;
+      }
+      section.hidden = visible === 0;
+      shown += visible;
+    }
+    const count = document.querySelector<HTMLElement>('[data-filter-count]');
+    if (count) count.textContent = `${shown} of 36 colours`;
+  };
+
+  const bind = (attribute: string, set: (value: string) => void) => {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>(`[${attribute}]`)];
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        set(button.getAttribute(attribute) ?? 'all');
+        for (const other of buttons) other.setAttribute('aria-pressed', String(other === button));
+        apply();
+      });
+    }
+  };
+  bind('data-filter-family', (value) => { family = value; });
+  bind('data-filter-lrv', (value) => { band = value as Band; });
+</script>

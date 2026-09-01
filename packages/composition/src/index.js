@@ -432,7 +432,7 @@ function hero(pageId, surface, index, manifest, pack, actions, assetDecisions) {
  * still shows everything — capping there would hide content rather than defer
  * it.
  */
-const HOME_PREVIEW = Object.freeze({ services: 6, projects: 3, gallery: 6, proof: 4 });
+const HOME_PREVIEW = Object.freeze({ services: 6, projects: 3, gallery: 6, proof: 3 });
 
 function previewOf(binding, limit) {
   if (!binding || !Array.isArray(binding.value) || !limit || binding.value.length <= limit) return binding;
@@ -457,9 +457,9 @@ function servicesSection(pageId, pack, manifest, limit = null) {
 //
 // The declaration still matters. It is what tells the factory that proof was
 // promised and never arrived, which `declaredProofGap` reports.
-function proofSection(pageId, pack) {
-  const testimonials = entityBinding('testimonials', pack, 'testimonials');
-  const accreditations = entityBinding('accreditations', pack, 'accreditations');
+function proofSection(pageId, pack, limit = null) {
+  const testimonials = previewOf(entityBinding('testimonials', pack, 'testimonials'), limit);
+  const accreditations = previewOf(entityBinding('accreditations', pack, 'accreditations'), limit);
   if (!testimonials && !accreditations) return null;
   return section(`${pageId}-proof`, 'proof-grid', 'Show source-backed proof and trust evidence', [
     manifestBinding('title', 'Proof and trust'),
@@ -715,9 +715,19 @@ const SURFACE_PURPOSES = Object.freeze([
     // What the business sells. `expertise`, `capabilit` and `what we do` are the
     // words professional-services firms reach for instead of "Services".
     names: /service|product|offering|expertise|capabilit|discipline|what we do/,
-    build: ({ pageId, pack, manifest, push }) => {
+    // Projects belong here only when nothing else carries them.
+    //
+    // An offering page showed the services *and* the projects, so a business
+    // with both an Expertise surface and a Work surface published the same six
+    // projects on both — the same content twice under two headings, which is
+    // the complaint two independent reviews made about pages that "present
+    // effectively the same" material. Where a showcase surface exists it owns
+    // the work; where none does, the offering page still shows it rather than
+    // leaving a portfolio nowhere to live.
+    build: ({ pageId, pack, manifest, surfaces, push }) => {
       push(servicesSection(pageId, pack, manifest));
-      push(projectsSection(pageId, pack));
+      const showcased = list(surfaces).some((name) => surfacePurposeFor(name)?.id === 'showcase');
+      if (!showcased) push(projectsSection(pageId, pack));
     },
   },
   {
@@ -817,12 +827,12 @@ function sectionsForPage({ surface, surfaces = [], pageId, index, manifest, pack
     output.push(journeysSection(pageId, manifest));
     output.push(gallerySection(pageId, pack, manifest, assetDecisions, cap('showcase', HOME_PREVIEW.gallery)));
     output.push(projectsSection(pageId, pack, cap('showcase', HOME_PREVIEW.projects)));
-    output.push(proofSection(pageId, pack));
+    output.push(proofSection(pageId, pack, cap('practice', HOME_PREVIEW.proof)));
     output.push(locationsSection(pageId, pack, manifest));
     output.push(contactSection(pageId, pack, manifest));
   } else {
     const purpose = surfacePurposeFor(surface);
-    if (purpose) purpose.build({ pageId, pack, manifest, assetDecisions, lower, push });
+    if (purpose) purpose.build({ pageId, pack, manifest, assetDecisions, lower, push, surfaces });
     else {
       // A name the vocabulary does not recognise. The application defaults are
       // the only safe guess, and on a marketing site they are empty — which is

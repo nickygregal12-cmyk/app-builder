@@ -952,6 +952,12 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
 @media (max-width: 720px) {
   h1 { max-width: none }
   .item-grid, .gallery-grid, .contact-grid, .section-location-list .item-grid, .section-entity-list .item-grid, .section-content-list .item-grid { grid-template-columns: 1fr }
+  /* Photographs stay two across on a phone.
+     A card has to be one column because it holds a heading and a sentence that
+     have to stay readable. A photograph holds neither, and one column of six
+     full-width frames made the portfolio 1,888px of a 10,363px page — a visitor
+     scrolls past the work rather than seeing it. Two across shows the set. */
+  .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .site-footer { flex-direction: column; gap: 26px }
   .legacy-status { flex-direction: column }
 
@@ -995,8 +1001,15 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      the ask, and keeping it with the offering makes the phone order the desktop
      order with contact pulled forward, instead of a third arrangement nobody
      designed. */
+  /* The work is the offer, on a business whose work is what it sells.
+     The gallery sat in the ordinary band, so on a phone the portfolio of an
+     architecture practice appeared *after* its contact details — the single
+     most important content on the page, last. A direction that opens with a
+     photograph and then orders its photographs behind the ask is making the
+     same mistake as one that orders its services behind it. */
   .mobile-order-conversion-first .section-item-grid,
-  .mobile-order-conversion-first .section-location-list { order: 1 }
+  .mobile-order-conversion-first .section-location-list,
+  .mobile-order-conversion-first .gallery-section { order: 1 }
   .mobile-order-conversion-first .contact-section,
   .mobile-order-conversion-first .section-enquiry-form { order: 2 }
   /* A mid-page ask needs a middle to be in.
@@ -1039,7 +1052,11 @@ h3 { font-size: var(--text-lg); letter-spacing: -.01em }
      holds the asymmetric grid at two columns is more specific than the plain
      `.item-grid` reset, and left alone it cramped three service cards into two
      columns at 390px. */
-  .grid-asymmetric .gallery-grid { grid-template-columns: 1fr }
+  /* Two across, like every other gallery on a phone. A card is one column
+     because its heading and sentence must stay readable; a photograph holds
+     neither, and one column of six full-width frames put 1,888px of a
+     10,363px page into a portfolio a visitor scrolls past rather than sees. */
+  .grid-asymmetric .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) { grid-column: auto; grid-row: auto }
   .grid-asymmetric .gallery-grid > :first-child:nth-last-child(n+3) img { aspect-ratio: 4 / 3; min-height: 0; height: auto }
 }

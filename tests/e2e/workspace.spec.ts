@@ -246,7 +246,13 @@ test('Builder Console drives governed sources, generation, verification and prev
   await expect(page.getByText('evidence · captured')).toBeVisible({ timeout: 90_000 });
   // Three routes plus the not-found route, at three viewports, plus the
   // disclosed navigation panel on each of those routes. The panel only exists
-  // below the disclosure width, so it is a mobile capture and nothing else:
+  // below the disclosure width, so it is a mobile capture and nothing else.
+  //
+  // Still one capture per route for the disclosure. The interaction supports temporal evidence,
+  // and temporal evidence is owed only where the build also *moves* the surface — this template
+  // discloses the panel with `display: none`, which cannot be transitioned, so it moves nothing
+  // and owes nothing beyond the still.
+  //
   // 4 x 3 + 4.
   await expect(evidencePanel.getByText('16 captures')).toBeVisible();
   await expect(evidencePanel.getByRole('img').first()).toBeVisible();

@@ -6,6 +6,7 @@ import test from 'node:test';
 import { validateContract } from '@app-builder/contracts';
 import { composeProject } from '../packages/composition/src/index.js';
 import { deriveJourneys, deriveStateMatrix } from './lib/launch-readiness.mjs';
+import { compileMotionContract } from './lib/motion-contract.mjs';
 
 const launchRules = JSON.parse(fs.readFileSync('config/launch-readiness-rules.json', 'utf8'));
 
@@ -168,15 +169,26 @@ test('the disclosed navigation is planned on every route, and only where it disc
   const opened = plan.captures.filter((capture) => capture.state.interaction === 'navigation-disclosed');
 
   assert.equal(INTERACTIONS['navigation-disclosed'].requiresSectionType, null, 'the header is on every route, not in a section');
-  assert.equal(opened.length, composition.pages.length, 'every route should photograph its own navigation panel');
+  // One still per route. No motion contract was supplied, so no presentation has declared that it
+  // moves the panel, and nothing temporal is planned.
+  const stills = opened.filter((capture) => !capture.state.sequence);
+  assert.equal(stills.length, composition.pages.length, 'every route should photograph its own navigation panel');
+  assert.equal(opened.length, stills.length, 'nothing declared movement, so nothing temporal is planned');
   assert.deepEqual([...new Set(opened.map((capture) => capture.viewport))], ['mobile'], 'the panel only exists below the disclosure width');
   assert.equal(opened.every((capture) => capture.state.risk === 'high'), true);
-  assert.match(opened[0].state.proves, /not evidence that any destination in it resolves/);
+  assert.match(stills[0].state.proves, /not evidence that any destination in it resolves/);
 });
 
 test('an evidence set validates, hashes what was captured and drops what was not', () => {
   const { composition, plan } = planFor();
-  const results = fakeResults(plan).slice(0, plan.captures.length - 2);
+  /*
+   * Dropped from the plain viewport captures on purpose. A declared interaction
+   * that produces no bytes is a refusal rather than a gap — see the test below —
+   * so this exercises the case that legitimately degrades: a page state the run
+   * simply did not reach.
+   */
+  const droppable = plan.captures.filter((capture) => !capture.state.interaction).slice(-2);
+  const results = fakeResults(plan).filter((result) => !droppable.some((capture) => capture.id === result.id));
   const evidence = buildEvidenceSet({
     plan,
     results,
@@ -190,8 +202,7 @@ test('an evidence set validates, hashes what was captured and drops what was not
   assert.equal(evidence.captures.length, results.length, 'a planned capture with no bytes is not recorded');
   assert.equal(evidence.captures.every((capture) => capture.evidenceKind === 'visual'), true);
   for (const capture of evidence.captures) assert.equal(capture.file, captureFile(capture.id));
-  const dropped = plan.captures.slice(-2);
-  for (const capture of dropped) {
+  for (const capture of droppable) {
     assert.ok(
       evidence.uncovered.some((entry) => entry.route === capture.route && entry.state === capture.state.state && entry.detail === 'Planned but not captured in this run.'),
       'a capture that did not happen is declared, not silently missing',
@@ -306,20 +317,40 @@ test('a capture that did not reach its state is dropped, not published as that s
     'the failure has to be caused deterministically; a preview whose POST succeeds cannot reach this state on its own');
 });
 
-test('capture failures leave the state uncovered rather than silently proven', () => {
+test('a declared interaction that captured nothing is refused, not filed as an unmet fixture need', () => {
+  /*
+   * This test used to assert that a failed interaction capture landed in
+   * `uncovered`, which kept it out of the proven set — the right concern, and
+   * too weak an answer.
+   *
+   * `uncovered` means "the factory cannot reach this state yet". An interaction
+   * is in a closed registry, its precondition was checked against the
+   * composition before it was planned, and it asserts on arrival. If one
+   * produces no bytes then something broke, and recording it under the same
+   * heading as work that was never done files a regression as a backlog item.
+   * Fourteen of fifteen interaction states once vanished from a packet through a
+   * single wrong manifest key with no error raised.
+   */
   const composition = composeProject({ manifest: manifest('drop', { 'lead-generation': true }) });
   const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules) });
-  const interactionCaptures = plan.captures.filter((capture) => capture.state.interaction);
+  // Only the interaction that declares no sequence, so this exercises the
+  // general rule rather than the sequence rule that runs before it.
+  const interactionCaptures = plan.captures.filter((capture) => capture.state.interaction && !capture.state.sequence
+    && !INTERACTIONS[capture.state.interaction].temporal);
   assert.ok(interactionCaptures.length > 0);
-  // Build the set as if every interaction capture had failed.
-  const evidence = buildEvidenceSet({
-    plan,
-    results: fakeResults(plan).filter((result) => !interactionCaptures.some((capture) => capture.id === result.id)),
-    projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
-  });
-  assert.ok(!evidence.captures.some((capture) => capture.state.interaction),
-    'a capture with no bytes must not appear in the evidence set');
-  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), evidence);
+
+  assert.throws(
+    () => buildEvidenceSet({
+      plan,
+      results: fakeResults(plan).filter((result) => !interactionCaptures.some((capture) => capture.id === result.id)),
+      projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash, capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+    }),
+    /declared interaction capture\(s\) produced no bytes/,
+  );
+
+  // And the state still cannot be proven by a set that never photographed it:
+  // the reason it is unproven is now that there is no set at all.
+  const matrix = applyEvidenceToStateMatrix(deriveStateMatrix(composition, launchRules), { captures: [] });
   const failedWrite = matrix.flatMap((surface) => surface.states).find((state) => state.axis === 'write' && state.state === 'failed');
   assert.equal(failedWrite.evidence, 'none', 'the state it could not reach stays unproven');
 });
@@ -400,4 +431,161 @@ test('a state that overlays the page is photographed as a screen', () => {
   }
   const source = fs.readFileSync(new URL('./lib/rendered-evidence-capture.mjs', import.meta.url), 'utf8');
   assert.match(source, /fullPage:\s*frame\s*!==\s*'viewport'/, 'the capture must honour the declared frame rather than always photographing the document');
+});
+
+// --- Temporal evidence -----------------------------------------------------
+//
+// Five independent reviews of hand-built work capped `interaction-craft` with a
+// version of the same sentence: transition quality, touch behaviour and
+// live-update smoothness cannot be judged from stills. One said it while looking
+// at eighteen separate state captures, which is what settles that the answer is
+// not more endpoints.
+
+test('temporal evidence needs BOTH the interaction and the presentation to declare it', () => {
+  /*
+   * The two halves, and the reason they are two.
+   *
+   * The interaction registry knows how to trigger the disclosure, how to tell it arrived, and what
+   * a temporal record of it would prove. It cannot know whether *this build* moves the panel: that
+   * is a fact about the presentation, and the MotionContract already owns it. Declaring the need
+   * in the registry alone made every build that contained the interaction owe three frames,
+   * including builds that disclose their navigation instantly — which is what failed the MGB lane.
+   */
+  const composition = composeProject({ manifest: manifest('temporal', { 'lead-generation': true }) });
+  const stateMatrix = deriveStateMatrix(composition, launchRules);
+  const declared = Object.entries(INTERACTIONS).filter(([, entry]) => entry.temporal);
+  assert.ok(declared.length > 0, 'the fixture needs an interaction that supports temporal evidence');
+
+  const [name, interaction] = declared[0];
+  const moving = { animates: [interaction.temporal.surface] };
+  const stillPresentation = { animates: [] };
+
+  const withMotion = deriveEvidencePlan({ composition, stateMatrix, motionContract: moving });
+  const withoutMotion = deriveEvidencePlan({ composition, stateMatrix, motionContract: stillPresentation });
+
+  assert.ok(withMotion.captures.some((capture) => capture.state.sequence), 'a presentation that moves the surface owes the sequence');
+  assert.equal(withoutMotion.captures.some((capture) => capture.state.sequence), false, 'a presentation that does not move it owes nothing temporal');
+  assert.ok(
+    withoutMotion.captures.some((capture) => capture.state.interaction === name && capture.state.motion === 'reduced'),
+    'the still is captured either way — a static presentation is a presentation, not a missing capture',
+  );
+
+  // And an interaction that supports no temporal evidence never gets a sequence, however much
+  // the presentation moves.
+  for (const [other, entry] of Object.entries(INTERACTIONS)) {
+    if (entry.temporal) continue;
+    assert.equal(
+      withMotion.captures.some((capture) => capture.state.interaction === other && capture.state.sequence),
+      false,
+      `${other} does not support temporal evidence and must not be given a sequence`,
+    );
+  }
+});
+
+test('A — animated navigation: the presentation declares movement and owes a complete sequence', () => {
+  const composition = composeProject({ manifest: manifest('animated') });
+  const stateMatrix = deriveStateMatrix(composition, launchRules);
+  const [, interaction] = Object.entries(INTERACTIONS).find(([, entry]) => entry.temporal);
+  const plan = deriveEvidencePlan({ composition, stateMatrix, motionContract: { animates: [interaction.temporal.surface] } });
+
+  const frames = plan.captures.filter((capture) => capture.state.sequence);
+  assert.deepEqual([...new Set(frames.map((capture) => capture.state.sequence.frame))], ['before', 'during', 'after']);
+
+  const during = frames.find((capture) => capture.state.sequence.frame === 'during');
+  assert.ok(during.state.sequence.atProgress > 0 && during.state.sequence.atProgress < 1, 'the during frame records where it was seeked to');
+  assert.equal(during.state.sequence.surface, interaction.temporal.surface);
+  assert.ok(during.state.sequence.subject, 'the sequence names the element whose movement is load-bearing');
+  assert.match(during.state.proves, /not evidence of how long it takes/);
+  assert.equal(during.state.motion, 'allowed');
+
+  // The still stays reduced-motion, which is what makes it the counterpart rather than a second
+  // thing to capture.
+  const still = plan.captures.find((capture) => capture.state.interaction && !capture.state.sequence);
+  assert.equal(still.state.motion, 'reduced');
+
+  // An incomplete sequence is refused, and says why the frame is missing rather than only that
+  // it is.
+  const withoutDuring = fakeResults(plan).filter((result) => result.id !== during.id);
+  assert.throws(
+    () => buildEvidenceSet({
+      plan, results: withoutDuring,
+      failures: [{ id: during.id, reason: 'no-movement', message: 'the panel animated nothing when it was triggered' }],
+      projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash,
+      capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+    }),
+    /missing its during frame.*no-movement.*animated nothing/s,
+  );
+});
+
+test('B — static navigation: the same interaction, a presentation that does not move, and no failure', () => {
+  /*
+   * The MGB case. Three directions were selected whose navigation discloses instantly — the
+   * shipped stylesheet does it with `display: none`, which cannot be transitioned — so the trigger
+   * animated nothing, the during frame failed, and the evidence set was refused for an incomplete
+   * sequence. The refusal was right. What was wrong was owing the sequence at all.
+   *
+   * The difference here comes from the motion contract, not from anything that knows which
+   * business this is.
+   */
+  const composition = composeProject({ manifest: manifest('static-nav') });
+  const stateMatrix = deriveStateMatrix(composition, launchRules);
+  const plan = deriveEvidencePlan({ composition, stateMatrix, motionContract: compileMotionContract('expressive') });
+
+  assert.equal(
+    plan.captures.some((capture) => capture.state.sequence),
+    false,
+    'the shipped template discloses its navigation instantly at every intensity, so it owes no temporal evidence',
+  );
+  const stills = plan.captures.filter((capture) => capture.state.interaction);
+  assert.ok(stills.length > 0, 'the interaction is still captured');
+  assert.equal(stills.every((capture) => capture.state.motion === 'reduced'), true);
+
+  // And the set completes rather than being refused.
+  const evidence = buildEvidenceSet({
+    plan, results: fakeResults(plan), composition,
+    projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash,
+    capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+  });
+  assert.deepEqual(validateContract('rendered-evidence', evidence), []);
+  assert.ok(evidence.captures.length > 0);
+});
+
+test('the shipped template declares that it does not move its navigation panel', () => {
+  /*
+   * Stated as a test because it is a fact about the stylesheet that evidence planning relies on,
+   * and because it should fail the day somebody animates the disclosure without saying so.
+   */
+  for (const intensity of ['none', 'subtle', 'moderate', 'expressive']) {
+    assert.equal(
+      compileMotionContract(intensity).animates.includes('navigation-disclosure'),
+      false,
+      `${intensity} claims to move the navigation panel; templates/shared/presentation/styles.css discloses it with display:none`,
+    );
+  }
+  assert.deepEqual(compileMotionContract('none').animates, [], 'nothing moves at all when the contract says none');
+});
+
+test('a page whose composition has no declared interaction carries no motion evidence at all', () => {
+  const composition = composeProject({ manifest: manifest('brochure') });
+  const desktopOnly = VIEWPORTS.filter((viewport) => viewport.name === 'desktop');
+  const plan = deriveEvidencePlan({ composition, stateMatrix: deriveStateMatrix(composition, launchRules), viewports: desktopOnly });
+
+  assert.ok(plan.captures.length > 0, 'the pages are still photographed');
+  assert.equal(plan.captures.some((capture) => capture.state.sequence), false);
+});
+
+test('an evidence set that omits a declared route is refused', () => {
+  const { composition, plan } = planFor();
+  const [firstRoute] = composition.pages.map((page) => page.path);
+  const withoutRoute = plan.captures.filter((capture) => capture.route !== firstRoute);
+  const results = fakeResults({ captures: withoutRoute });
+
+  assert.throws(
+    () => buildEvidenceSet({
+      plan: { ...plan, captures: withoutRoute }, results, composition,
+      projectId: 'p', buildRef: '/w', compositionHash: composition.compositionHash,
+      capturedAt: '2026-08-26T00:00:00.000Z', renderingSource: BUILT_ARTIFACT,
+    }),
+    new RegExp(`Missing: ${firstRoute.replace(/[/]/g, '\\/')}`),
+  );
 });

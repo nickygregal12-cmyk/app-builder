@@ -89,6 +89,25 @@ function decisionPathFor(env = process.env) {
   return DECISION_PATH;
 }
 
+/**
+ * What to tell an operator who has no decision yet.
+ *
+ * Not `--authorise` directly. On the hosted path the signing key is an
+ * encrypted systemd credential, so a bare CLI invocation cannot read it and the
+ * resulting decision would have nowhere writable to land: /etc/app-builder is
+ * root-owned. The wrapper runs the signer inside the transient unit that holds
+ * the credential and then promotes the result across the privilege boundary.
+ *
+ * The hosted Groq path is deferred, so there is nothing to point a Groq
+ * operator at; saying so is better than naming a command that cannot work.
+ */
+function AUTHORISE_REMEDY(providerId) {
+  if (providerId === 'groq') {
+    return 'The hosted Groq path is deferred: the installer wires Anthropic only, and --authorise outside the trusted unit cannot read the decision signing credential. See docs/MODEL_CANARY.md.';
+  }
+  return 'sudo bash ops/hetzner/authorise-model-canary.sh --by "your name" --reason "why". Do not call --authorise directly: the signing credential is only readable inside the transient authorise unit, and only root may publish the result.';
+}
+
 /** Where the operator's signed decision and the two signing secrets come from. */
 const GRANT_SECRET_REF = 'APP_BUILDER_AGENT_GRANT_SECRET';
 const DECISION_SECRET_REF = 'APP_BUILDER_MODEL_DECISION_SECRET';
@@ -431,9 +450,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   // --- The one-time enable decision ----------------------------------------
   const decisionPath = decisionPathFor(env);
   if (!fs.existsSync(decisionPath)) {
-    add('one-time-enable-decision', 'fail', `no enable decision at ${decisionPath}`, providerId === 'groq'
-      ? 'npm run runtime:model-canary -- --provider groq --authorise --by "your name" --reason "first Groq synthetic canary"'
-      : 'npm run runtime:model-canary -- --authorise');
+    add('one-time-enable-decision', 'fail', `no enable decision at ${decisionPath}`, AUTHORISE_REMEDY(providerId));
   } else {
     try {
       const stored = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
@@ -446,9 +463,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
         : `decision authorises ${decision.providerId}/${decision.model}, not ${definition.profile.providerId}/${definition.profile.modelId}`,
       );
     } catch (error) {
-      add('one-time-enable-decision', 'fail', error instanceof Error ? error.message : String(error), providerId === 'groq'
-        ? 'npm run runtime:model-canary -- --provider groq --authorise --by "your name" --reason "first Groq synthetic canary"'
-        : 'npm run runtime:model-canary -- --authorise');
+      add('one-time-enable-decision', 'fail', error instanceof Error ? error.message : String(error), AUTHORISE_REMEDY(providerId));
     }
   }
 

@@ -4,30 +4,103 @@
   "title": "App Builder Rendered Evidence",
   "description": "What a build actually renders, captured from a real browser against a real preview. A compiling build is not evidence that a visual change is correct, so this is a first-class artifact with its own identity rather than a folder of screenshots. It is visual evidence only: a capture can show what a state looks like and can never prove that a journey completes. States a screenshot cannot establish are recorded as uncovered, with the reason, rather than left out.",
   "type": "object",
-  "required": ["schemaVersion", "id", "projectId", "buildRef", "compositionHash", "capturedAt", "renderingSource", "viewports", "captures", "uncovered", "setHash"],
+  "required": [
+    "schemaVersion",
+    "id",
+    "projectId",
+    "buildRef",
+    "compositionHash",
+    "capturedAt",
+    "renderingSource",
+    "viewports",
+    "captures",
+    "uncovered",
+    "setHash"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "id": {"type": "string", "pattern": "^evidence-[a-f0-9]{16}$"},
-    "projectId": {"type": "string", "minLength": 1},
-    "buildRef": {"type": "string", "minLength": 1, "description": "The generated workspace this evidence was captured from."},
-    "checkpointId": {"type": ["string", "null"]},
-    "taskId": {"type": ["string", "null"]},
-    "compositionHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "capturedAt": {"type": "string", "minLength": 1},
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^evidence-[a-f0-9]{16}$"
+    },
+    "projectId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "buildRef": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The generated workspace this evidence was captured from."
+    },
+    "checkpointId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "taskId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "compositionHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "capturedAt": {
+      "type": "string",
+      "minLength": 1
+    },
     "renderingSource": {
       "type": "object",
       "description": "What was actually serving when these captures were taken. Required, because its absence is what made two separate review failures possible: a set that photographed the wrong document, and a set that photographed a development-only banner the built output does not contain. A picture cannot say which artifact produced it, so the evidence has to.",
-      "required": ["serverMode", "artifact", "artifactHash", "depictsShippingArtifact", "detail"],
+      "required": [
+        "serverMode",
+        "artifact",
+        "artifactHash",
+        "depictsShippingArtifact",
+        "detail"
+      ],
       "properties": {
         "serverMode": {
-          "enum": ["development", "built-artifact"],
+          "enum": [
+            "development",
+            "built-artifact"
+          ],
           "description": "A development server renders things no built output contains. Capturing one is legitimate for iteration and is never evidence about what ships."
         },
-        "artifact": {"type": ["string", "null"], "description": "The served directory, relative to the workspace where possible. Null for a development server, which serves no artifact."},
-        "artifactHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$", "description": "A hash over every path and byte the artifact serves, so a set can be re-checked against the build it claims and a rebuild invalidates it."},
-        "fileCount": {"type": ["integer", "null"], "minimum": 1},
-        "depictsShippingArtifact": {"type": "boolean"},
-        "detail": {"type": "string", "minLength": 1}
+        "artifact": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The served directory, relative to the workspace where possible. Null for a development server, which serves no artifact."
+        },
+        "artifactHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "A hash over every path and byte the artifact serves, so a set can be re-checked against the build it claims and a rebuild invalidates it."
+        },
+        "fileCount": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "depictsShippingArtifact": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "additionalProperties": false
     },
@@ -36,50 +109,139 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["name", "width", "height", "deviceScaleFactor"],
+        "required": [
+          "name",
+          "width",
+          "height",
+          "deviceScaleFactor"
+        ],
         "properties": {
-          "name": {"enum": ["desktop", "tablet", "mobile"]},
-          "width": {"type": "integer", "minimum": 320},
-          "height": {"type": "integer", "minimum": 320},
-          "deviceScaleFactor": {"type": "number", "minimum": 1}
+          "name": {
+            "enum": [
+              "desktop",
+              "tablet",
+              "mobile"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 320
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 320
+          },
+          "deviceScaleFactor": {
+            "type": "number",
+            "minimum": 1
+          }
         },
         "additionalProperties": false
       }
     },
-    "captures": {"type": "array", "items": {"$ref": "#/$defs/capture"}},
+    "captures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/capture"
+      }
+    },
     "uncovered": {
       "type": "array",
       "description": "Every state the deterministic state matrix names that this evidence deliberately does not claim, each with the reason. Silence here would read as complete coverage.",
       "items": {
         "type": "object",
-        "required": ["route", "axis", "state", "risk", "reason"],
+        "required": [
+          "route",
+          "axis",
+          "state",
+          "risk",
+          "reason"
+        ],
         "properties": {
-          "route": {"type": "string", "pattern": "^/"},
-          "axis": {"type": "string", "minLength": 1},
-          "state": {"type": "string", "minLength": 1},
-          "risk": {"enum": ["low", "medium", "high"]},
-          "reason": {"enum": ["not-visually-provable", "needs-a-deterministic-fixture", "capability-not-installed"]},
-          "detail": {"type": "string", "minLength": 1}
+          "route": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "axis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "risk": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "reason": {
+            "enum": [
+              "not-visually-provable",
+              "needs-a-deterministic-fixture",
+              "capability-not-installed"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "additionalProperties": false
       }
     },
     "designLint": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "The deterministic DesignLint report for the build these captures came from, so a reviewer sees what rules already settled before judging a picture. Null where the evidence was captured before any lint ran, which is not the same as clean.",
-      "required": ["schemaVersion", "authority", "findings", "counts", "clean"],
+      "required": [
+        "schemaVersion",
+        "authority",
+        "findings",
+        "counts",
+        "clean"
+      ],
       "properties": {
-        "schemaVersion": {"const": 1},
-        "authority": {"const": "design-contract"},
-        "compositionHash": {"type": ["string", "null"]},
-        "clean": {"type": "boolean", "description": "No violation. Warnings and recommendations do not make a build unclean."},
+        "schemaVersion": {
+          "const": 1
+        },
+        "authority": {
+          "const": "design-contract"
+        },
+        "compositionHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "clean": {
+          "type": "boolean",
+          "description": "No violation. Warnings and recommendations do not make a build unclean."
+        },
         "counts": {
           "type": "object",
-          "required": ["violation", "warning", "recommendation"],
+          "required": [
+            "violation",
+            "warning",
+            "recommendation"
+          ],
           "properties": {
-            "violation": {"type": "integer", "minimum": 0},
-            "warning": {"type": "integer", "minimum": 0},
-            "recommendation": {"type": "integer", "minimum": 0}
+            "violation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "warning": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "recommendation": {
+              "type": "integer",
+              "minimum": 0
+            }
           },
           "additionalProperties": false
         },
@@ -87,16 +249,45 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["rule", "severity", "detail"],
+            "required": [
+              "rule",
+              "severity",
+              "detail"
+            ],
             "properties": {
-              "rule": {"type": "string", "minLength": 1},
-              "severity": {"enum": ["violation", "warning", "recommendation"]},
-              "detail": {"type": "string", "minLength": 1},
-              "pageId": {"type": "string"},
-              "sectionIds": {"type": "array", "items": {"type": "string"}},
-              "token": {"type": "string"},
-              "ground": {"type": "string"},
-              "ratio": {"type": "number"}
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "severity": {
+                "enum": [
+                  "violation",
+                  "warning",
+                  "recommendation"
+                ]
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pageId": {
+                "type": "string"
+              },
+              "sectionIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "token": {
+                "type": "string"
+              },
+              "ground": {
+                "type": "string"
+              },
+              "ratio": {
+                "type": "number"
+              }
             },
             "additionalProperties": false
           }
@@ -106,10 +297,19 @@
           "description": "What the rules deliberately do not judge, so a visual critic spends its budget on questions that need judgement rather than re-deriving what a rule settled.",
           "items": {
             "type": "object",
-            "required": ["id", "question"],
+            "required": [
+              "id",
+              "question"
+            ],
             "properties": {
-              "id": {"type": "string", "minLength": 1},
-              "question": {"type": "string", "minLength": 1}
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "question": {
+                "type": "string",
+                "minLength": 1
+              }
             },
             "additionalProperties": false
           }
@@ -117,40 +317,150 @@
       },
       "additionalProperties": false
     },
-    "setHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+    "setHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
   },
   "additionalProperties": false,
   "$defs": {
     "capture": {
       "type": "object",
-      "required": ["id", "evidenceKind", "pageId", "route", "viewport", "state", "file", "contentHash", "byteSize", "elementRefs"],
+      "required": [
+        "id",
+        "evidenceKind",
+        "pageId",
+        "route",
+        "viewport",
+        "state",
+        "file",
+        "contentHash",
+        "byteSize",
+        "elementRefs"
+      ],
       "properties": {
-        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-{1,2}[a-z0-9]+)*$"},
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-{1,2}[a-z0-9]+)*$"
+        },
         "evidenceKind": {
           "const": "visual",
           "description": "Fixed. A rendered capture is visual evidence; journey completion is proved by executable evidence and never by a picture of a page."
         },
-        "pageId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-        "route": {"type": "string", "pattern": "^/"},
-        "viewport": {"enum": ["desktop", "tablet", "mobile"]},
+        "pageId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "route": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "viewport": {
+          "enum": [
+            "desktop",
+            "tablet",
+            "mobile"
+          ]
+        },
         "state": {
           "type": "object",
-          "required": ["axis", "state", "risk", "proves"],
+          "required": [
+            "axis",
+            "state",
+            "risk",
+            "proves"
+          ],
           "properties": {
-            "axis": {"type": "string", "minLength": 1},
-            "state": {"type": "string", "minLength": 1},
-            "risk": {"enum": ["low", "medium", "high"]},
-            "interaction": {"type": ["string", "null"], "description": "The deterministic interaction from the closed registry that produced this state, or null for the page as first rendered."},
-            "proves": {"type": "string", "minLength": 1, "description": "What this capture is evidence of, stated so it cannot be read as more."}
+            "axis": {
+              "type": "string",
+              "minLength": 1
+            },
+            "state": {
+              "type": "string",
+              "minLength": 1
+            },
+            "risk": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "interaction": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The deterministic interaction from the closed registry that produced this state, or null for the page as first rendered."
+            },
+            "proves": {
+              "type": "string",
+              "minLength": 1,
+              "description": "What this capture is evidence of, stated so it cannot be read as more."
+            },
+            "motion": {
+              "enum": [
+                "reduced",
+                "allowed"
+              ],
+              "description": "Whether the browser was told to suppress movement. Every still is captured under prefers-reduced-motion, which keeps it reproducible and makes an interaction's still its reduced-motion counterpart. Only the frames of a temporal sequence allow motion, and those are made reproducible by seeking rather than by suppression."
+            },
+            "sequence": {
+              "type": "object",
+              "description": "Present only on a frame of a temporal sequence. An interaction declares it needs one when its quality lies in the movement between its states rather than in the states \u2014 the disclosure either slides or it appears, and stills of it shut and open are identical either way. Three frames, because that is the smallest sequence that can carry a transition.",
+              "required": [
+                "id",
+                "frame",
+                "atProgress",
+                "purpose"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Groups the frames of one sequence. Every frame of a declared sequence must be present or the evidence set is refused: a during-frame without its endpoints is a still that reads as a transition."
+                },
+                "frame": {
+                  "enum": [
+                    "before",
+                    "during",
+                    "after"
+                  ]
+                },
+                "atProgress": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "exclusiveMaximum": 1,
+                  "description": "Where in the movement the during-frame was taken, as a fraction of the animation's own duration. Seeked, not slept, so the frame is reproducible; the capture therefore carries no claim about real duration."
+                },
+                "purpose": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Why a still cannot answer this. Stated by the interaction, not inferred from the presence of a transition property."
+                }
+              },
+              "additionalProperties": false
+            }
           },
           "additionalProperties": false
         },
-        "file": {"type": "string", "pattern": "^captures/[A-Za-z0-9._-]+\\.png$"},
-        "contentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "byteSize": {"type": "integer", "minimum": 1},
+        "file": {
+          "type": "string",
+          "pattern": "^captures/[A-Za-z0-9._-]+\\.png$"
+        },
+        "contentHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteSize": {
+          "type": "integer",
+          "minimum": 1
+        },
         "elementRefs": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true,
           "description": "Element identity refs this capture shows, so visual evidence and Builder Element Identity address the same things."
         }

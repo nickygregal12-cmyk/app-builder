@@ -1,0 +1,29 @@
+[
+ {
+  "file": "schedule-step-refused--before.png",
+  "route": "/",
+  "viewport": "1440x900",
+  "sequenceId": "schedule-step-refused",
+  "frame": "before",
+  "atProgress": null,
+  "purpose": "Whether the refusal arrives or is simply true. Selecting step 07 closes an earth onto a conductor that stays energised, and the conductors travelling from dead grey to live red is how the site argues that the model — not the page — found it. Two stills of the same diagram before and after are identical whether the change is animated or instant."
+ },
+ {
+  "file": "schedule-step-refused--during.png",
+  "route": "/",
+  "viewport": "1440x900",
+  "sequenceId": "schedule-step-refused",
+  "frame": "during",
+  "atProgress": 0.5,
+  "purpose": "Whether the refusal arrives or is simply true. Selecting step 07 closes an earth onto a conductor that stays energised, and the conductors travelling from dead grey to live red is how the site argues that the model — not the page — found it. Two stills of the same diagram before and after are identical whether the change is animated or instant."
+ },
+ {
+  "file": "schedule-step-refused--after.png",
+  "route": "/",
+  "viewport": "1440x900",
+  "sequenceId": "schedule-step-refused",
+  "frame": "after",
+  "atProgress": null,
+  "purpose": "Whether the refusal arrives or is simply true. Selecting step 07 closes an earth onto a conductor that stays energised, and the conductors travelling from dead grey to live red is how the site argues that the model — not the page — found it. Two stills of the same diagram before and after are identical whether the change is animated or instant."
+ }
+]

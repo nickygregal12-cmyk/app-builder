@@ -1724,12 +1724,18 @@ export class FactoryService {
           composition,
           stateMatrix: deriveStateMatrix(composition, this.launchReadinessRules()),
           elementIdentity: this.readWorkspaceElementIdentity(candidate.workspace),
+          // What this candidate's presentation actually moves. Temporal evidence is owed only
+          // where an interaction supports it *and* the build moves the surface it is about; a
+          // candidate that discloses its navigation instantly owes the still and nothing more.
+          motionContract: candidate.artDirection?.motion ?? null,
         });
         const { results, failures } = await captureEvidence({ plan, baseUrl: server.url });
         if (!results.length) throw new Error(`No evidence could be captured for ${candidate.candidateId}: ${failures[0]?.message ?? 'the browser produced nothing'}`);
         const evidence = assertContract('rendered-evidence', buildEvidenceSet({
           plan,
           results,
+          // So a refusal can say why a frame is missing and not only that it is.
+          failures,
           projectId,
           buildRef: candidate.workspace,
           compositionHash: composition.compositionHash,

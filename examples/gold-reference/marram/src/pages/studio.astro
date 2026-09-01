@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import Offer from '../components/Offer.astro';
+import { studio, people, recognition } from '../data/studio';
+---
+<Base title="Studio — Marram" description="Four people on the Suffolk coast making gardens that do not need watering.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">Studio</p>
+      <h1 class="display" style="margin-top: var(--s-2);">{studio.principle}</h1>
+      <p class="lede" style="margin-top: var(--s-4);">{studio.positioning}</p>
+    </div>
+  </section>
+  <section class="section-tight grid hair-top">
+    <div class="c-1-4"><p class="label">Who</p></div>
+    <div class="c-6-7">
+      <ul class="roster">
+        {people.map((p) => (<li><h2>{p.name}<span>{p.role}</span></h2><p>{p.note}</p></li>))}
+      </ul>
+    </div>
+  </section>
+  <section class="section-tight grid hair-top">
+    <div class="c-1-4"><p class="label">Recognition</p></div>
+    <div class="c-6-7">
+      <ul class="roster">
+        {recognition.map((r) => (<li><h2>{r.award}<span>{r.project === '—' ? String(r.year) : `${r.project} · ${r.year}`}</span></h2></li>))}
+      </ul>
+    </div>
+  </section>
+  <section class="section-tight grid hair-top">
+    <div class="c-full">
+      <Offer />
+    </div>
+  </section>
+</Base>
+<style>
+  .roster { list-style: none; margin: 0; padding: 0; }
+  .roster li { padding: var(--s-3) 0; border-top: var(--hair); }
+  .roster li:first-child { border-top: none; padding-top: 0; }
+  .roster h2 { margin: 0 0 var(--s-1); font-family: var(--font-display); font-size: var(--t-xl); font-weight: 400; display: flex; justify-content: space-between; gap: var(--s-2); flex-wrap: wrap; overflow-wrap: anywhere; }
+  .roster h2 span { flex: 0 1 auto; min-width: 0; }
+  .roster h2 span { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--bone-mute); align-self: center; }
+  .roster p { margin: 0; color: var(--bone-soft); max-width: var(--measure); }
+</style>

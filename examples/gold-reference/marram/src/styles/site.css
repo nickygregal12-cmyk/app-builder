@@ -1,0 +1,274 @@
+/*
+ * Marram — composition.
+ *
+ * The organising object is a **register**, not a page. A planting studio sells a list: which
+ * plants, where, and why each one is there. So the site is built from that list — the plant
+ * register is the hero, the gardens are read as sets drawn from it, and the plates are
+ * specimens laid out on a dark ground rather than pictures decorating sections.
+ *
+ * That is the second thing a generated page cannot do. The factory's `item-grid`, `proof-grid`,
+ * `people-grid`, `location-list`, `entity-list` and `content-list` all render through one
+ * catch-all branch of `Section.astro` into `.section-heading > h2 + p` followed by `<Items>`.
+ * Six named section types, one DOM. A register with a season bar per row is not a variant of
+ * that; it is a different object.
+ */
+
+/* ------------------------------------------------------------------ shell */
+
+.skip { position: absolute; left: -9999px; background: var(--bone); color: var(--ground); padding: var(--s-2) var(--s-3); z-index: 100; }
+.skip:focus { left: var(--gutter); top: var(--s-2); }
+
+/* Sticky, unlike the first reference, and for a reason rather than for variety: this business
+   sells a priced first visit, so the ask has to survive scrolling. The independent review of
+   Ardwell & Roe called the absence of exactly this a major defect. */
+.bar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-2) var(--gutter);
+  background: color-mix(in oklab, var(--ground) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: var(--hair);
+}
+.bar-mark { text-decoration: none; font-family: var(--font-display); font-size: var(--t-lg); letter-spacing: 0.14em; text-transform: uppercase; }
+.bar nav ul { display: flex; gap: var(--s-3); margin: 0; padding: 0; list-style: none; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.bar nav a { text-decoration: none; font-size: var(--t-sm); color: var(--bone); border-bottom: 1px solid transparent; padding-bottom: 2px; }
+.bar nav a:hover, .bar nav a[aria-current='page'] { color: var(--bone); border-bottom-color: var(--ochre); }
+/* The booking link is the commercial goal and was reading as a fourth nav item. An ochre
+   keyline separates it from navigation without turning the header into a marketing bar —
+   the studio's restraint is the brand, so this is a boxed word, not a button. */
+.bar nav a.ask-quiet {
+  border: 1px solid var(--ochre); border-bottom-width: 1px; color: var(--ochre);
+  padding: 0.5em 0.9em; margin-left: var(--s-2); white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.bar nav a.ask-quiet:hover { background: var(--ochre); color: var(--ground); border-bottom-color: var(--ochre); }
+
+/* ------------------------------------------------------------------- grid */
+
+.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--s-3); padding-inline: var(--gutter); max-width: var(--max); margin-inline: auto; }
+.c-full { grid-column: 1 / -1; }
+.c-1-4 { grid-column: 1 / span 4; }
+.c-1-5 { grid-column: 1 / span 5; }
+.c-1-6 { grid-column: 1 / span 6; }
+.c-1-7 { grid-column: 1 / span 7; }
+.c-6-7 { grid-column: 6 / span 7; }
+.c-7-6 { grid-column: 7 / span 6; }
+.c-8-5 { grid-column: 8 / span 5; }
+.c-9-4 { grid-column: 9 / span 4; }
+.end { align-self: end; }
+
+.section { padding-block: var(--s-7); }
+.section-tight { padding-block: var(--s-5); }
+.hair-top { border-top: var(--hair); }
+
+/* ------------------------------------------------------------------- type */
+
+.display { font-family: var(--font-display); font-size: var(--t-display); line-height: 0.98; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.lede { font-size: var(--t-xl); line-height: 1.4; max-width: var(--measure-tight); margin: 0; color: var(--bone); }
+.prose { max-width: var(--measure); color: var(--bone-soft); }
+.prose p { margin: 0 0 1em; }
+.label { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.16em; text-transform: uppercase; color: var(--bone-mute); margin: 0; }
+.latin { font-family: var(--font-display); font-style: italic; }
+
+/* ------------------------------------------------------------------- hero */
+
+/* A specimen, not a banner. The opening is one plate at full height beside the statement,
+   which is what a herbarium sheet looks like and what a hero never does. */
+.hero { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--s-4); padding: var(--s-6) var(--gutter) var(--s-7); max-width: var(--max); margin-inline: auto; align-items: center; }
+.hero-copy { grid-column: 1 / span 6; }
+.hero-plate { grid-column: 8 / span 5; position: relative; }
+.hero-plate img { mix-blend-mode: normal; }
+.hero-caption { margin-top: var(--s-2); display: flex; justify-content: space-between; gap: var(--s-2); border-top: var(--hair); padding-top: var(--s-1); }
+
+/* ------------------------------------------------- the register (the moment) */
+
+.register { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: var(--hair-strong); }
+@media (min-width: 1500px) { .register { grid-template-columns: repeat(6, 1fr); } }
+.specimen {
+  display: flex; flex-direction: column;
+  padding: var(--s-3) var(--s-3) var(--s-2);
+  border-bottom: var(--hair); border-right: var(--hair);
+  background: transparent;
+  transition: background 0.2s ease;
+}
+.specimen:hover { background: var(--ground-lift); }
+.specimen-plate { background: var(--paper); }
+.specimen-plate img {
+  aspect-ratio: 3 / 4; object-fit: contain; width: 100%;
+  /* Six plates from six books on six papers read as a scrapbook. Multiplied over one ground,
+     every white becomes the same paper and the collection reads as one herbarium. */
+  mix-blend-mode: multiply;
+}
+.specimen-latin { font-family: var(--font-display); font-style: italic; font-size: var(--t-lg); line-height: 1.15; margin: var(--s-2) 0 0.15em; }
+.specimen-common { font-size: var(--t-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--bone-mute); margin: 0 0 var(--s-2); }
+.specimen-role { font-size: var(--t-sm); color: var(--bone-soft); margin: 0 0 var(--s-2); flex: 1; }
+.specimen-tolerance { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--sea-holly); margin: 0 0 var(--s-2); }
+
+/* Twelve cells, one per month. The bar is the data, not an ornament: it is the one thing a
+   client actually asks — when is anything happening. */
+.season { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; align-items: end; }
+.season span { height: 7px; background: color-mix(in oklab, var(--bone) 20%, transparent); }
+.season span[data-on] { background: var(--ochre); height: 14px; }
+.season-key { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin-top: 5px; font-family: var(--font-mono); font-size: 11px; color: var(--bone-mute); text-align: center; }
+
+/* ---------------------------------------------------------------- gardens */
+
+.garden { border-top: var(--hair); padding-block: var(--s-5); display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; }
+.garden-head { grid-column: 1 / span 4; }
+.garden-body { grid-column: 6 / span 7; }
+.garden-name { font-family: var(--font-display); font-size: var(--t-xxl); line-height: 1.05; margin: var(--s-2) 0 0.2em; }
+.garden-name a { text-decoration: none; }
+.garden-name a:hover { color: var(--ochre); }
+.measure { margin-top: var(--s-3); border-top: 2px solid var(--ochre); padding-top: var(--s-2); }
+.measure-figure { font-family: var(--font-display); font-size: clamp(2rem, 3.4vw, 3.25rem); line-height: 1; display: block; }
+.measure-caption { display: block; margin-top: 0.4em; font-size: var(--t-sm); color: var(--bone-soft); max-width: 30ch; }
+
+/* A garden's plant list shown as the specimens it draws from the register. */
+.drawn { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); }
+/* The paper ground belongs to the plate, not to the caption. It used to sit behind both,
+   which put pale bone text on cream — unreadable, and a contrast failure hiding inside a
+   decorative detail. */
+.drawn a { display: block; width: 92px; text-decoration: none; }
+.drawn img { aspect-ratio: 3 / 4; object-fit: contain; width: 100%; background: var(--paper); }
+.drawn span { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--bone-soft); padding: 6px 2px 0; text-align: center; line-height: 1.3; }
+.drawn a:hover span { color: var(--ochre); }
+
+/* ---------------------------------------------------------------- actions */
+
+.ask {
+  display: inline-block; background: var(--ochre); color: var(--ground);
+  text-decoration: none; font-size: var(--t-lg); font-weight: 500;
+  padding: 0.8em 1.5em; border: 2px solid var(--ochre);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.ask:hover { background: transparent; color: var(--ochre); }
+.ask-quiet { display: inline-block; text-decoration: none; border-bottom: 2px solid var(--ochre); padding-bottom: 0.15em; }
+.ask-quiet:hover { color: var(--ochre); }
+
+/* The priced first step, stated plainly wherever a visitor might be ready. */
+.offer { border: var(--hair-strong); padding: var(--s-4); }
+.offer-price { font-family: var(--font-display); font-size: var(--t-xxl); display: block; }
+.offer p { margin: var(--s-1) 0 0; color: var(--bone-soft); max-width: 46ch; }
+
+/* A division in the register. Twelve plates in an unbroken run read as stock inventory;
+   three named passages read as a studio that specifies by season. The rule is the same
+   ochre used for every other structural mark on the site. */
+.chapter {
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-3);
+  align-items: baseline; border-top: 2px solid var(--ochre);
+  padding-top: var(--s-2); margin-top: var(--s-5);
+}
+.chapter-title { font-family: var(--font-display); font-size: var(--t-xl); margin: 0; }
+.chapter-note { margin: 0; color: var(--bone-soft); font-size: var(--t-sm); max-width: 52ch; }
+.chapter-count { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--bone-mute); letter-spacing: 0.08em; }
+.chapter + .register { border-top: none; }
+
+/* The stewardship ledger. A studio that will not show photographs owes the reader some
+   other proof, and a maintenance record is the least flattering and most convincing kind.
+   Set in the mono face used for tolerances so it reads as a kept document rather than a
+   marketing table. Scrolls inside itself; a wide table must never widen the page. */
+.ledger-wrap { overflow-x: auto; }
+.ledger { width: 100%; border-collapse: collapse; margin-top: var(--s-3); font-size: var(--t-sm); min-width: 36rem; }
+.ledger th, .ledger td { text-align: left; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: var(--hair); vertical-align: baseline; }
+.ledger thead th { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--bone-mute); font-weight: 400; }
+.ledger tbody th { font-family: var(--font-display); font-style: italic; font-size: var(--t-body); font-weight: 400; color: var(--bone); }
+.ledger tbody td { font-family: var(--font-mono); color: var(--sea-holly); }
+
+/* A quiet rule with an ask in it, for the middle of a long sequence. Not a second banner:
+   the same materials as everything else, placed where conviction actually happens. */
+.midway { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; border-top: 2px solid var(--ochre); padding-top: var(--s-2); margin-top: var(--s-4); }
+.midway p { margin: 0; font-family: var(--font-display); font-size: var(--t-lg); color: var(--bone); }
+
+/* A page's last section does not need to pay for space the footer rule already gives it.
+   Reviewed as "excessive empty vertical space" at the foot of several pages. */
+main > section:last-of-type { padding-bottom: var(--s-4); }
+
+/* ----------------------------------------------------------------- footer */
+
+.foot { border-top: var(--hair-strong); margin-top: var(--s-7); padding: var(--s-5) var(--gutter) var(--s-4); }
+.foot-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--s-4); max-width: var(--max); margin-inline: auto; }
+.foot-brand { grid-column: 1 / span 4; }
+.foot-col { grid-column: span 2; }
+.foot h3 { font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-mute); margin: 0 0 var(--s-2); font-weight: 400; }
+.foot p, .foot address { margin: 0; font-style: normal; font-size: var(--t-sm); line-height: 1.7; color: var(--bone-soft); }
+.foot address span { display: block; }
+.foot-note { max-width: var(--max); margin: var(--s-4) auto 0; padding-top: var(--s-2); border-top: var(--hair); font-size: var(--t-xs); color: var(--bone-mute); display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+
+/* --------------------------------------------------------------- responsive */
+
+@media (max-width: 900px) {
+  .c-1-4, .c-1-5, .c-1-6, .c-1-7, .c-6-7, .c-7-6, .c-8-5, .c-9-4 { grid-column: 1 / -1; }
+  .hero { display: block; padding-block: var(--s-4) var(--s-5); }
+  /* The plate leads on a phone, because a specimen is the point and a paragraph is not. */
+  .hero-plate { margin-bottom: var(--s-4); max-width: 78%; }
+  .garden, .garden-head, .garden-body { display: block; grid-column: 1 / -1; }
+  .garden-body { margin-top: var(--s-3); }
+  .offer { grid-template-columns: 1fr; }
+  .ask { width: 100%; text-align: center; }
+  .register { grid-template-columns: repeat(2, 1fr); }
+  .foot-grid { grid-template-columns: repeat(2, 1fr); }
+  .foot-brand { grid-column: 1 / -1; }
+  .foot-col { grid-column: span 1; }
+}
+
+@media (max-width: 520px) {
+  /* Three mobile register layouts were measured against the independent reviewer, and the
+     first was the best: one column, plate full width, nothing shrunk. Two columns scored
+     6.8 and a horizontal row scored 7.0, both because they answered "this is a long scroll"
+     by making everything smaller — when what was being asked for was fewer, larger specimens.
+     The scroll is shortened by showing six on the home page, not by compressing twelve. */
+  .register { grid-template-columns: 1fr; }
+  .specimen { padding: var(--s-3) var(--s-2) var(--s-4); }
+  .specimen-latin { font-size: var(--t-xl); }
+  .specimen-role { font-size: var(--t-body); }
+
+  /* Each chapter opens with its plate at full width and then continues as records: plate
+     left, identification right, evidence beneath. A reader gets one thing to look at and
+     several to read, which is the shape of the printed flora this register is drawn from —
+     and it is the answer to twelve identical tall cards that neither shrinking everything
+     (6.8) nor turning every card sideways (7.0) managed to give. */
+  .specimen:first-of-type .specimen-plate img { aspect-ratio: 4 / 5; }
+
+  .specimen:not(:first-of-type) {
+    display: grid;
+    grid-template-columns: 42% 1fr;
+    column-gap: var(--s-3);
+    align-items: start;
+  }
+  .specimen:not(:first-of-type) .specimen-plate { grid-column: 1; grid-row: 1 / span 3; }
+  .specimen:not(:first-of-type) .specimen-plate img { aspect-ratio: 3 / 4; }
+  .specimen:not(:first-of-type) .specimen-latin { grid-column: 2; grid-row: 1; margin-top: 0; }
+  .specimen:not(:first-of-type) .specimen-common { grid-column: 2; grid-row: 2; }
+  .specimen:not(:first-of-type) .specimen-role { grid-column: 2; grid-row: 3; }
+  .specimen:not(:first-of-type) .specimen-tolerance,
+  .specimen:not(:first-of-type) .season,
+  .specimen:not(:first-of-type) .season-key { grid-column: 1 / -1; }
+
+  /* Named twice by the reviewer as losing legibility at 390px. These are the smallest
+     type on the site and they carry real information, so they get bigger rather than the
+     layout getting tighter. */
+  .season-key span { font-size: 11px; }
+  .specimen-tolerance { font-size: var(--t-sm); }
+
+  /* The chapter head stacks; three columns at 390px is three unreadable columns. */
+  .chapter { grid-template-columns: 1fr; gap: var(--s-1); }
+  .chapter-count { grid-row: 1; justify-self: start; }
+  .chapter-title { font-size: var(--t-xxl); }
+
+  /* A garden's register strip was becoming five 92px thumbnails wrapped over two rows with
+     8px captions. On a phone it is one row you push sideways, at a size you can actually
+     read — the strip is a list of plants, and a list should stay a line. */
+  .drawn { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: var(--s-2); }
+  .drawn a { width: 118px; flex: 0 0 auto; scroll-snap-align: start; }
+  .drawn span { font-size: 12px; }
+
+  /* The booking link was sharing a wrapped row with three nav items and reading as a fourth.
+     Its own full-width line is the least decorative way to make it the primary action. */
+  .bar nav ul { width: 100%; }
+  .bar nav a.ask-quiet { margin-left: 0; width: 100%; text-align: center; padding: 0.7em 1em; }
+  .bar nav li:last-child { flex: 1 0 100%; margin-top: var(--s-2); }
+
+  .foot-grid { grid-template-columns: 1fr; }
+  .foot-col { grid-column: 1 / -1; }
+  .midway { flex-direction: column; align-items: stretch; }
+}

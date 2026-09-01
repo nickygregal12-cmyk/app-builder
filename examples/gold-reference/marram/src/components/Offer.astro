@@ -1,0 +1,70 @@
+---
+/**
+ * The priced first step.
+ *
+ * It was four copies of the same markup on four pages, which is how conversion panels drift
+ * apart. More importantly it was only ever a price and a button: an independent reviewer
+ * noted that every call to action repeated the same label without answering any of the
+ * questions someone actually hesitates over — whether the studio covers where they live,
+ * whether it has capacity, and what they are committing to by paying.
+ *
+ * So the panel now answers those three, in the studio's own register: plainly, in few words,
+ * and without a single exclamation mark.
+ */
+import { studio } from '../data/studio';
+
+interface Props {
+  /** The pages that already sit inside a bordered section do not need a second border. */
+  flush?: boolean;
+}
+const { flush = false } = Astro.props;
+
+const steps = [
+  { n: '1', text: 'A half-day on site. Soil, exposure, drainage, and what is already growing.' },
+  { n: '2', text: 'A written planting strategy, about a fortnight later.' },
+  { n: '3', text: 'You decide. The £450 comes off the design fee if you go on.' },
+];
+---
+
+<div class={`offer${flush ? ' offer--flush' : ''}`}>
+  <div class="offer-head">
+    <span class="offer-price">{studio.firstVisit.price}</span>
+    <p>{studio.firstVisit.includes}</p>
+    <a class="ask" href="/enquire">Book a first visit</a>
+  </div>
+  <ol class="offer-steps">
+    {steps.map((step) => (
+      <li><span class="offer-step-n">{step.n}</span><span>{step.text}</span></li>
+    ))}
+  </ol>
+  <p class="offer-fit">
+    <span>Working across {studio.regions.join(', ')}.</span>
+    <span>Taking two new gardens for next spring.</span>
+  </p>
+</div>
+
+<style>
+  .offer-head { display: grid; grid-template-columns: 1fr auto; gap: var(--s-3); align-items: center; }
+  .offer-head p { grid-column: 1; margin: var(--s-1) 0 0; color: var(--bone-soft); max-width: 46ch; }
+  .offer-head .offer-price { grid-column: 1; }
+  .offer-head .ask { grid-column: 2; grid-row: 1 / span 2; }
+
+  .offer-steps {
+    list-style: none; margin: var(--s-4) 0 0; padding: var(--s-4) 0 0;
+    border-top: var(--hair);
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4);
+  }
+  .offer-steps li { display: grid; grid-template-columns: auto 1fr; gap: var(--s-2); align-items: baseline; font-size: var(--t-sm); color: var(--bone-soft); }
+  .offer-step-n { font-family: var(--font-mono); font-size: var(--t-xs); color: var(--ochre); }
+
+  .offer-fit {
+    margin: var(--s-3) 0 0; display: flex; gap: var(--s-3); flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: var(--t-xs); color: var(--bone-mute);
+  }
+
+  @media (max-width: 900px) {
+    .offer-head { grid-template-columns: 1fr; }
+    .offer-head .ask { grid-column: 1; grid-row: auto; justify-self: start; }
+    .offer-steps { grid-template-columns: 1fr; gap: var(--s-3); }
+  }
+</style>

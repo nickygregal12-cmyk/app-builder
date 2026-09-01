@@ -1,0 +1,14 @@
+---
+import images from '../assets/images.json';
+interface Props { slug: string; alt: string; priority?: boolean; sizes?: string; class?: string; }
+const { slug, alt, priority = false, sizes = '(max-width: 900px) 50vw, 22vw', class: className = '' } = Astro.props;
+const image = (images as Array<{ slug: string; intrinsic: { width: number; height: number }; lqip: string }>).find((i) => i.slug === slug);
+if (!image) throw new Error(`Plate: no image "${slug}"`);
+---
+<picture class={className}>
+  <source srcset={`/img/${slug}.avif`} type="image/avif" sizes={sizes} />
+  <img src={`/img/${slug}.jpg`} alt={alt} width={image.intrinsic.width} height={image.intrinsic.height}
+       loading={priority ? 'eager' : 'lazy'} decoding={priority ? 'sync' : 'async'}
+       fetchpriority={priority ? 'high' : 'auto'} sizes={sizes}
+       style="background:var(--paper)" />
+</picture>

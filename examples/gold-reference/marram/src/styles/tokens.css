@@ -1,0 +1,81 @@
+/*
+ * Marram — design tokens.
+ *
+ * Deliberately the opposite of the first Gold Reference in every axis that a reviewer can
+ * see. Ardwell & Roe is warm paper, monochrome architectural photography, an orthogonal
+ * editorial grid and a brass hairline. This is near-black wet earth, hand-coloured botanical
+ * plates, a register rather than a page, and colour taken from the plates themselves.
+ *
+ * If two Gold References shared a silhouette the corpus would be proving the opposite of what
+ * it is for, so the difference is a requirement rather than a preference.
+ */
+
+:root {
+  /* Ground: wet earth at dusk. Not grey, not blue — a green-black, so the plates' warm
+     paper reads as lit rather than pasted on. */
+  --ground: #10130E;
+  --ground-lift: #191D16;
+  --ground-edge: #262B22;
+
+  /* Ink on the dark: bone, not white. Pure white on near-black is a glare, not a contrast. */
+  --bone: #EDE9DD;
+  --bone-soft: #C3BEB0;
+  --bone-mute: #A5A093;
+
+  /* Taken off the plates: the paper they are printed on, and two pigments used in them. */
+  --paper: #E8DFC6;
+  --sea-holly: #7E9AA6;
+  --poppy: #B4533A;
+  --ochre: #C2913E;
+
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  --t-display: clamp(2.5rem, 6.5vw, 6.5rem);
+  --t-xxl: clamp(1.85rem, 3.6vw, 3rem);
+  --t-xl: clamp(1.35rem, 2vw, 1.85rem);
+  --t-lg: clamp(1.1rem, 1.4vw, 1.3rem);
+  --t-body: clamp(1rem, 1.02vw, 1.0625rem);
+  --t-sm: 0.9375rem;
+  --t-xs: 0.8125rem;
+
+  --measure: 62ch;
+  --measure-tight: 42ch;
+
+  --s-1: 0.5rem; --s-2: 1rem; --s-3: 1.5rem; --s-4: 2.5rem;
+  --s-5: 4rem; --s-6: 6rem; --s-7: clamp(4.5rem, 9vw, 9rem);
+
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --max: 1600px;
+  --hair: 1px solid color-mix(in oklab, var(--bone) 18%, transparent);
+  --hair-strong: 1px solid color-mix(in oklab, var(--bone) 34%, transparent);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--bone);
+  font-family: var(--font-ui);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+
+:focus-visible { outline: 2px solid var(--ochre); outline-offset: 3px; }
+::selection { background: var(--ochre); color: var(--ground); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}

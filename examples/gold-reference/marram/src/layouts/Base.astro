@@ -1,0 +1,48 @@
+---
+import '../styles/tokens.css';
+import '../styles/site.css';
+import { studio } from '../data/studio';
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const nav = [{ href: '/planting', label: 'Planting' }, { href: '/gardens', label: 'Gardens' }, { href: '/studio', label: 'Studio' }];
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%2310130E'/><path d='M8 13V4M8 4l-3 3M8 4l3 3' stroke='%23C2913E' fill='none' stroke-width='1.2'/></svg>" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="bar">
+      <a class="bar-mark" href="/">Marram</a>
+      <nav aria-label="Primary">
+        <ul>
+          {nav.map((i) => <li><a href={i.href} aria-current={path.startsWith(i.href) ? 'page' : undefined}>{i.label}</a></li>)}
+          <li><a class="ask-quiet" href="/enquire">First visit · {studio.firstVisit.price}</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="foot">
+      <div class="foot-grid">
+        <div class="foot-brand">
+          <h3>Marram</h3>
+          <p>{studio.principle}</p>
+        </div>
+        <div class="foot-col"><h3>Studio</h3><address>{studio.contact.address.split(', ').map((l) => <span>{l}</span>)}</address></div>
+        <div class="foot-col"><h3>Enquiries</h3><p><a href={`mailto:${studio.contact.email}`}>{studio.contact.email}</a><br /><a href={`tel:${studio.contact.phone.replace(/\s/g,'')}`}>{studio.contact.phone}</a></p></div>
+        <div class="foot-col"><h3>Working across</h3><p>{studio.regions.join(' · ')}</p></div>
+      </div>
+      <p class="foot-note">
+        <span>{studio.legalName} · Founded {studio.founded}</span>
+        <span>Fictional studio. Gold Reference prototype — hand-built, not produced by App Builder.</span>
+      </p>
+    </footer>
+  </body>
+</html>

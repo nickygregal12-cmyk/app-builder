@@ -88,7 +88,8 @@
     "audit:independence": "node tooling/audit-reviewer-independence.mjs",
     "rubric:generate": "node tooling/generate-visual-rubric-doc.mjs",
     "rubric:check": "node tooling/generate-visual-rubric-doc.mjs --check",
-    "visual:reevaluate": "node tooling/visual-scale-reevaluation.mjs"
+    "visual:reevaluate": "node tooling/visual-scale-reevaluation.mjs",
+    "calibration:run": "node tooling/critic-calibration-run.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

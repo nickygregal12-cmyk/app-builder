@@ -325,3 +325,50 @@ test('an out-of-range score is refused', () => {
   );
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+// --- A route minimum cannot exceed the routes the artifact has -------------
+
+test('a single-page artifact is not held to a three-route minimum', () => {
+  // `minRoutes` exists to stop a home page standing in for pages that exist and
+  // nobody looked at. A one-page document has no other pages to stand in for,
+  // and marking it unproven asks for evidence it cannot produce — failing closed
+  // for a reason nobody can act on.
+  const criteria = [
+    { id: 'information-architecture', question: 'What belongs where?' },
+    { id: 'composition-pacing', question: 'How is it paced?' },
+  ];
+  const onePage = [capture('a', 'desktop', '/'), capture('b', 'mobile', '/')];
+
+  const unaware = criterionCoverage(criteria, onePage);
+  assert.equal(unaware[0].covered, false, 'with no declared route count the conservative minimum still applies');
+
+  const aware = criterionCoverage(criteria, onePage, { artifactRouteCount: 1 });
+  assert.equal(aware[0].covered, true);
+  assert.equal(aware[1].covered, true);
+});
+
+test('a declared route count cannot excuse pages nobody photographed', () => {
+  // The guard that keeps the relaxation honest. The count is what the ARTIFACT
+  // has, never what the capture run managed — otherwise a lazy capture is
+  // self-justifying: photograph one page, declare one page, satisfy everything.
+  const criteria = [{ id: 'information-architecture', question: 'What belongs where?' }];
+  const homeOnly = criterionCoverage(criteria, [capture('a', 'desktop', '/')], { artifactRouteCount: 6 });
+  assert.equal(homeOnly[0].covered, false);
+  assert.match(homeOnly[0].detail, /1 route/);
+});
+
+test('a fully photographed one-page artifact is complete evidence, not thin evidence', () => {
+  const onePage = [capture('a', 'desktop', '/'), capture('b', 'mobile', '/')];
+
+  assert.equal(evidenceCeiling(onePage).cap, 7, 'undeclared, one route reads as thin evidence however many widths it carries');
+
+  const declared = evidenceCeiling(onePage, { artifactRouteCount: 1 });
+  assert.equal(declared.cap, 10, 'a one-page site can be excellent; capping it for having one page judges page count');
+  assert.equal(declared.coversWholeArtifact, true);
+  assert.match(declared.detail, /covers all 1 route/);
+
+  // And a six-route site photographed once is still thin.
+  const partial = evidenceCeiling(onePage, { artifactRouteCount: 6 });
+  assert.equal(partial.coversWholeArtifact, false);
+  assert.ok(partial.cap < 10);
+});

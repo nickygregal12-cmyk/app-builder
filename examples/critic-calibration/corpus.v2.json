@@ -96,7 +96,9 @@
       "plantedDefect": null,
       "heldOut": false,
       "notes": "Specific work, named proof, a substantiated quotation, a stated next action and a real contact route. Written as the positive end of the range.",
-      "qualityStratum": "T4-strong-professional"
+      "qualityStratum": "T4-strong-professional",
+      "stratumDisputed": true,
+      "stratumDisputeNote": "cc-01 inherited CC1's `excellent` stratum, and CC1's README says in terms that a no-planted-defect item is NOT a claim the artifact is excellent. Naming that stratum T4-strong-professional in CC2 turned a statement about what was not planted into a claim about quality — an authoring error in CC2, not a finding from any run. The 2026-09-01 Codex run independently scored it 6.27 (competent), called it template-derived and found real mobile wrapping defects. The label is left in place rather than corrected, because it is being questioned after a score was seen and no ordering assertion depends on moving it. It belongs to the human panel."
     },
     {
       "id": "cc-02",
@@ -239,7 +241,9 @@
       ],
       "heldOut": true,
       "notes": "The hardest of the planted defects to see from a screenshot alone. It is held out because a Critic reviewing rendered evidence may legitimately miss it, and knowing whether it does is worth measuring.",
-      "qualityStratum": "T1-broken-amateur"
+      "qualityStratum": "T1-broken-amateur",
+      "screenshotTestable": false,
+      "screenshotTestableNote": "The planted defect is functional. A still capture cannot show a form failing to submit."
     },
     {
       "id": "cc-09",
@@ -751,5 +755,6 @@
       "distinctive-moment": "memorability",
       "content-truth": "commercial-clarity"
     }
-  }
+  },
+  "$screenshotTestability": "Some items carry defects a still screenshot cannot show. cc-08 is a functional failure — a form that does not submit — and no capture of a page demonstrates it, so a Critic scoring from images judges the page it can see and places the item higher than its stratum. That is an evidence-modality limit rather than a miscalibration, and `screenshotTestable: false` records it so a run can say so rather than a reader having to work it out from a surprising number."
 }

@@ -1,0 +1,228 @@
+---
+/**
+ * The page that loses bookings.
+ *
+ * BUSINESS.txt: "A luxury letting site that omits this reads as marketing. Saying it is both
+ * honest and — this is the commercial point, not a moral one — the strongest possible statement
+ * of what the product is. The disadvantages ARE the product description."
+ *
+ * So this is not a FAQ and not a terms page. It is written in the estate's own voice, it names
+ * the people the house is wrong for before it names anybody it is right for, and every claim on
+ * it that can be computed is computed. The worst arrival time and the earliest departure of the
+ * season are quoted as facts from the model, not as "times may vary".
+ *
+ * It is also, deliberately, the plainest page on the site: no photographs, one column, no
+ * ribbons. A page about risk that was art-directed would be doing the opposite of what it says.
+ */
+import Base from '../layouts/Base.astro';
+import { SEASON, SEASON_FACTS, ARRIVE_AFTER, hoursLabel, money, span, toneName } from '../lib/season';
+import { clock } from '../lib/tide';
+
+const latest = SEASON.reduce((a, b) =>
+  (b.arrival!.from - b.days[0].origin) > (a.arrival!.from - a.days[0].origin) ? b : a);
+const earliest = SEASON.reduce((a, b) => {
+  const hour = (w: typeof b) => w.departure!.to - Math.floor(w.departure!.to / 24) * 24;
+  return hour(b) < hour(a) ? b : a;
+});
+
+const AGAINST = [
+  {
+    who: 'Anyone who has to be somewhere at a fixed time',
+    what: `The crossing does not negotiate and we cannot move it. Across the 2026 season the tide pushes one arrival to ${clock(latest.arrival!.from)} — that is the week of ${latest.label} — and forces one departure onto a crossing that ends at ${clock(earliest.departure!.to)}, in the week of ${earliest.label}. Both are computed from the tide and both are on this site before you pay. If you are flying out of Newcastle on the Friday, check the week's departure window first and then check it again.`,
+  },
+  {
+    who: 'Anyone for whom a delay to emergency care is not acceptable',
+    what: 'The air ambulance can land on the machair south of the house in most conditions. The road cannot always be used, and when it cannot, it cannot — there is no boat kept on the island. If a condition in your party means a two-hour delay to an ambulance would be dangerous, this is the wrong house and we would rather say so now than be careful about it in a paragraph you skim.',
+  },
+  {
+    who: 'Families with children who need to be able to leave',
+    what: `Five hours of enforced stillness, twice a day, is a holiday for some people and a punishment for others, and small children are usually in the second group. There is no soft play, no swimming pool and no drive to somewhere else when it rains — for ${hoursLabel(SEASON_FACTS.meanShutPerDay)} of the average day there is no drive to anywhere at all. Older children who can be sent out tend to have a very good time.`,
+  },
+  {
+    who: 'Anyone expecting things to arrive',
+    what: 'No deliveries, no takeaways, no shop, no post while you are here. Your provisioning order comes over on the last open crossing before you arrive and that is the week\'s supplies. People do forget things. The answer is always the same and it is always tomorrow.',
+  },
+  {
+    who: 'Anyone who needs a signal everywhere',
+    what: 'One network, on the south and west of the island only. Nothing at the north ledges or in the chapel field. Fixed wireless internet to the house is adequate for work and drops in heavy rain from the north-east — which, being Northumberland, is a thing that happens.',
+  },
+  {
+    who: 'Anyone who wants a hotel',
+    what: 'Nobody comes in during the week. There is no housekeeping, no restaurant, no concierge and no staff on the island at all — the estate is at Cobb\'s Point and can only reach you when the road is up, same as everyone else. You cook, you clear up, and you deal with the stove.',
+  },
+];
+
+const FOR = [
+  'Two or three families or a group of friends who want the week to be one thing rather than a base for day trips.',
+  'People working on something — the long room has two desks and windows at both ends, and it is booked out by writers more often than by anybody else.',
+  'Anybody who has been told, by a doctor or a partner or themselves, to stop.',
+  'Walkers who would rather know one place completely than see six.',
+  'People who read the paragraph about the causeway and felt relief rather than concern. That is the reliable signal, and it is why this page is here.',
+];
+---
+<Base
+  title="Before you book — Hallowsand"
+  description="The people this house is wrong for, in the estate's own words, with the worst arrival and departure of the season computed from the tide."
+  section="Before you book"
+>
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Latest arrival</p>
+          <span class="rail__n">{clock(latest.arrival!.from)}</span>
+          <p class="rail__v">week of {latest.label}, a {toneName(latest.tone)} week</p>
+        </div>
+        <div>
+          <p class="rail__k">Earliest departure</p>
+          <span class="rail__n">off by {clock(earliest.departure!.to)}</span>
+          <p class="rail__v">week of {earliest.label}</p>
+        </div>
+        <div>
+          <p class="rail__k">Both are computed</p>
+          <p class="rail__v">from the tidal model, for the actual weeks, and shown on those weeks' pages before payment.</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <p class="label">Before you book</p>
+        <h1 class="display">This is a bad idea for a lot of people.</h1>
+        <p class="stand">
+          We would rather lose the booking than have you find out in the boot room at half past
+          six on a Friday with the road already gone.
+        </p>
+        <div class="prose">
+          <p>
+            Most letting sites put this in a terms document you agree to after you have paid. It
+            is on the main navigation here because it is not a caveat about the product — it
+            <em>is</em> the product, described accurately. A house you cannot leave for ten hours
+            a day is either exactly what you want or the worst week of your year, and there is
+            not much in between.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Six</p>
+          <p class="rail__v">In the order we would rank them, worst first.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Do not book this house if you are —</h2>
+      </div>
+      <div class="full">
+        <ol class="ag">
+          {AGAINST.map((item, index) => (
+            <li class="ag__i">
+              <span class="ag__n num">{String(index + 1).padStart(2, '0')}</span>
+              <div class="ag__b">
+                <h3 class="head3">{item.who}</h3>
+                <p class="ag__t">{item.what}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">And then</p>
+          <p class="rail__v">The shorter list, which is short on purpose.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">It is a very good week for —</h2>
+        <ul class="fo">
+          {FOR.map((item) => <li class="fo__i">{item}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">The rule</p>
+          <p class="rail__v">The estate's judgement overrides the table. The table overrides nothing.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">What happens when the tide table is wrong.</h2>
+        <div class="prose">
+          <p>
+            It will be, occasionally, and not because the arithmetic is bad. A north-easterly
+            piles water against this coast and holds it there; atmospheric pressure moves the
+            whole sea up and down by a few centimetres; and the sand at the low point of the road
+            moves from one winter to the next. None of that is in a tide table anywhere, ours or
+            anybody's.
+          </p>
+          <p>
+            So the standing rule is that if the estate says the road is not safe, the road is not
+            safe, whatever <a class="u" href="/crossing">the table</a> says, and we will find you
+            somewhere on the mainland for the night at our cost. It happens perhaps twice a
+            season. It has never once been the arithmetic.
+          </p>
+          <p>
+            And to be completely plain about it, because it is written on every page of this site
+            in one form or another: <strong>Hallowsand is invented, the tide on this website is a
+            model of a real mechanism applied to a place that does not exist, and nobody should
+            plan a crossing anywhere from it.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Still here</p>
+          <p class="rail__v">Then you are probably one of the people it is for.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">If none of that put you off.</h2>
+        <p class="prose">
+          <a class="u" href="/weeks">All {SEASON_FACTS.weeks} weeks</a> are listed with their own
+          crossing windows and prices, from {money(SEASON_FACTS.cheapest.price)}. The easiest
+          crossing of the season is the week of {SEASON_FACTS.easiest.label}
+          ({hoursLabel(SEASON_FACTS.easiest.shutHours)} cut off across the seven days); the
+          hardest is {SEASON_FACTS.hardest.label} at {hoursLabel(SEASON_FACTS.hardest.shutHours)},
+          and it is one of the cheapest weeks in its season for exactly that reason.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ag { list-style: none; margin-top: var(--s6); }
+  .ag__i { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s5); border-bottom: 1px solid var(--rule); align-items: start; }
+  .ag__i:first-child { border-top: 1.5px solid var(--ink); }
+  .ag__n { font-family: var(--sans); font-size: var(--t-time); font-weight: 600;
+    color: var(--shut-ink); letter-spacing: -0.02em; }
+  .ag__b { max-width: 62ch; }
+  .ag__t { margin-top: var(--s3); font-size: var(--t-small); color: var(--ink-2); line-height: 1.6; }
+
+  .fo { list-style: none; margin-top: var(--s5); display: grid; gap: var(--s4); max-width: var(--measure); }
+  .fo__i { padding-left: var(--s5); position: relative; font-size: var(--t-small);
+    color: var(--ink-2); line-height: 1.6; }
+  .fo__i::before { content: ''; position: absolute; left: 0; top: 0.7em; width: 12px; height: 1.5px;
+    background: var(--rule-2); }
+
+  @media (max-width: 560px) {
+    .ag__i { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+  }
+</style>

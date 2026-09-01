@@ -134,6 +134,14 @@
               "compact": "compact"
             }
           }
+        },
+        "sectionOrder": {
+          "gallery": {
+            "signal": "showcaseIntent",
+            "when": {
+              "work-led": "first"
+            }
+          }
         }
       }
     },
@@ -212,6 +220,12 @@
             "when": {
               "high": "block"
             }
+          },
+          "heroStrategy": {
+            "signal": "showcaseIntent",
+            "when": {
+              "work-led": "editorial"
+            }
           }
         },
         "design": {
@@ -220,6 +234,14 @@
             "when": {
               "compact": "compact",
               "comfortable": "comfortable"
+            }
+          }
+        },
+        "sectionOrder": {
+          "gallery": {
+            "signal": "showcaseIntent",
+            "when": {
+              "work-led": "first"
             }
           }
         }
@@ -405,6 +427,20 @@
               "work-led": "neutral",
               "work-led-unproven": "neutral"
             }
+          },
+          "heroStrategy": {
+            "signal": "showcaseIntent",
+            "when": {
+              "work-led": "split"
+            }
+          }
+        },
+        "sectionOrder": {
+          "gallery": {
+            "signal": "showcaseIntent",
+            "when": {
+              "work-led": "first"
+            }
           }
         }
       }
@@ -491,9 +527,17 @@
               "compact": "compact"
             }
           }
+        },
+        "sectionOrder": {
+          "gallery": {
+            "signal": "showcaseIntent",
+            "when": {
+              "work-led": "first"
+            }
+          }
         }
       }
     }
   },
-  "adaptsDoc": "How a business changes the direction it chose. A direction is a strategy, not a finished theme: `composition`/`design` above are what it assumes, and `adapts` names the axes it is willing to let this particular business move and the only values it may move them to. The input is the derived signal set in tooling/lib/business-visual-profile.mjs and nothing else, so a broad service list moves a grid and an industry never does. Every adapted value is validated on the same scale the registry uses, so an adaptation cannot express anything a direction could not have declared itself, and what moved is recorded on the compiled plan as `businessAdjustments`. Two businesses whose signals agree still get identical builds — this is meant to separate businesses that differ, not to add variety for its own sake. Rhythm adapts in one direction only: a business carrying a lot may tighten a direction's declared spacing, and one carrying little may not loosen it. Sparse content in a looser rhythm is the 'large areas of inert space' an independent review named, so the adaptation that would produce it is not offered — and density stays available as the axis an approved design reference moves."
+  "adaptsDoc": "How a business changes the direction it chose. A direction is a strategy, not a finished theme: `composition`/`design` above are what it assumes, and `adapts` names the axes it is willing to let this particular business move and the only values it may move them to. The input is the derived signal set in tooling/lib/business-visual-profile.mjs and nothing else, so a broad service list moves a grid and an industry never does. Every adapted value is validated on the same scale the registry uses, so an adaptation cannot express anything a direction could not have declared itself, and what moved is recorded on the compiled plan as `businessAdjustments`. Two businesses whose signals agree still get identical builds — this is meant to separate businesses that differ, not to add variety for its own sake. Rhythm adapts in one direction only: a business carrying a lot may tighten a direction's declared spacing, and one carrying little may not loosen it. Sparse content in a looser rhythm is the 'large areas of inert space' an independent review named, so the adaptation that would produce it is not offered — and density stays available as the axis an approved design reference moves. `sectionOrder` is a promotion and nothing else: a business may say which section it leads with, and the direction's order carries everything else exactly as declared. A direction paces a page; what it cannot know is that a particular business *is* its work."
 }

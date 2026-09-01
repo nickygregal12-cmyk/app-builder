@@ -108,7 +108,14 @@ export function createRuntimeReadinessEvidenceResolver({
       // not be able to write its own hosted evidence.
       const contents = readHostFile(target);
       if (contents === null) {
-        return no(`No attestation at ${target} on this host. A hosted proof cannot be assumed from a repository checkout.`);
+        // Absent is not the same as wrong, and the difference decides whether a
+        // gate may go red. A checkout — in CI, or on a developer's machine —
+        // legitimately has no hosted proof, and a repository that could fail
+        // that check could also pass it, which is the property this whole file
+        // exists to deny. So it is reported as unproven-here rather than as a
+        // broken reference. A proof that *is* present and says the wrong thing
+        // is still a hard failure below.
+        return { resolved: false, hostState: 'absent', detail: `No attestation at ${target} on this host. A hosted proof cannot be assumed from a repository checkout.` };
       }
       let document;
       try {

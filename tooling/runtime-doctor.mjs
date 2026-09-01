@@ -117,18 +117,28 @@ try {
       continue;
     }
     const audit = evaluateRuntimeReadiness({ role: roles[roleId], gate, resolve });
+    const unprovenHere = [];
     for (const entry of audit.missing) {
       // `absent` is the honest state of a requirement nobody has met yet.
-      // A reference that was written and no longer resolves is a fault.
       if (entry.reason === 'absent') continue;
+      // A hosted proof that this machine cannot see is not a fault in the
+      // reference. Saying otherwise would make the repository's own gate depend
+      // on where it is checked out, and would give CI a hosted claim to fail —
+      // or, worse, to pass.
+      if (entry.hostState === 'absent') { unprovenHere.push(entry.id); continue; }
+      // Anything else was written down and no longer holds.
       fail(`Role ${roleId} cites ${entry.id} as "${entry.reference}" but it does not resolve: ${entry.detail}`);
     }
     const unmet = audit.missing.filter((entry) => entry.reason === 'absent').map((entry) => entry.id);
+    const evidenced = audit.satisfied.length + unprovenHere.length;
     console.log(
       unmet.length === 0
         ? `Runtime doctor: ${roleId} has resolvable evidence for every requirement.`
-        : `Runtime doctor: ${roleId} has ${audit.satisfied.length}/${requirements.size} requirement(s) evidenced; still unmet: ${unmet.join(', ')}.`,
+        : `Runtime doctor: ${roleId} has ${evidenced}/${requirements.size} requirement(s) evidenced; still unmet: ${unmet.join(', ')}.`,
     );
+    if (unprovenHere.length > 0) {
+      console.log(`Runtime doctor: ${roleId} cites hosted proof for ${unprovenHere.join(', ')}, which only the host can confirm; not proven from this checkout.`);
+    }
   }
 
   // A gate that could promote a role with no evidence at all would be

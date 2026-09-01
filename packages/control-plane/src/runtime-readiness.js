@@ -126,7 +126,18 @@ export function evaluateRuntimeReadiness({ role, gate, evidence = null, resolve 
       outcome = { resolved: false, detail: error.message };
     }
     if (outcome?.resolved) satisfied.push({ id: requirement.id, reference: raw, detail: outcome.detail ?? null });
-    else missing.push({ ...entry, reason: 'unresolved', reference: raw, detail: outcome?.detail ?? 'The reference did not resolve.' });
+    else {
+      // `hostState` travels with the refusal so a caller can tell a reference
+      // that is wrong from one this machine simply cannot answer. Either way
+      // the requirement is unmet and the role is not promoted.
+      missing.push({
+        ...entry,
+        reason: 'unresolved',
+        reference: raw,
+        hostState: outcome?.hostState ?? null,
+        detail: outcome?.detail ?? 'The reference did not resolve.',
+      });
+    }
   }
 
   return { roleId, ready: missing.length === 0, satisfied, missing };

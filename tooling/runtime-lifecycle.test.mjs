@@ -479,6 +479,40 @@ test('every recorded evidence reference resolves against the repository it names
   }
 });
 
+test('a hosted proof that is absent is unproven here; one that is present and wrong is a fault', () => {
+  const reference = parseEvidenceReference('attestation:/etc/app-builder/agent-boundary.json');
+  const build = (readHostFile) => createRuntimeReadinessEvidenceResolver({ repositoryRoot: ROOT, readHostFile, now: new Date('2026-09-01T00:00:00Z') });
+
+  // A checkout with no hosted state — CI, or a laptop. Unproven, not broken:
+  // a repository that could fail this could also pass it.
+  const absent = build(() => null)(reference);
+  assert.equal(absent.resolved, false);
+  assert.equal(absent.hostState, 'absent');
+
+  // A proof that exists and says the wrong thing is a hard failure, and must
+  // never be excused by the same allowance.
+  const failed = build(() => JSON.stringify({ result: 'failed', verifiedAt: '2026-08-30T00:00:00Z', maxAgeDays: 30 }))(reference);
+  assert.equal(failed.resolved, false);
+  assert.equal(failed.hostState ?? null, null);
+
+  const expired = build(() => JSON.stringify({ result: 'passed', verifiedAt: '2026-01-01T00:00:00Z', maxAgeDays: 30 }))(reference);
+  assert.equal(expired.resolved, false);
+  assert.equal(expired.hostState ?? null, null);
+  assert.match(expired.detail, /expired/);
+
+  const passing = build(() => JSON.stringify({ result: 'passed', verifiedAt: '2026-08-30T00:00:00Z', maxAgeDays: 30, imageDigest: 'sha256:abc' }))(reference);
+  assert.equal(passing.resolved, true);
+
+  // The attestation must name the image the runtime would actually run.
+  const wrongImage = createRuntimeReadinessEvidenceResolver({
+    repositoryRoot: ROOT,
+    now: new Date('2026-09-01T00:00:00Z'),
+    readHostFile: () => JSON.stringify({ result: 'passed', verifiedAt: '2026-08-30T00:00:00Z', maxAgeDays: 30, imageDigest: 'sha256:some-other-image' }),
+  })(parseEvidenceReference('attestation:/etc/app-builder/agent-boundary.json#/images/task-baseline/digest'));
+  assert.equal(wrongImage.resolved, false);
+  assert.match(wrongImage.detail, /attests sha256:some-other-image/);
+});
+
 test('no role carries the model-attempt evidence that only a real attempt can produce', () => {
   for (const [roleId, recorded] of Object.entries(GATE.evidence ?? {})) {
     assert.equal(

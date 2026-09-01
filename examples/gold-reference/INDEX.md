@@ -80,12 +80,14 @@ sees between revisions must never happen quietly.
 
 The headline is not that three prototypes passed. It is the shape of the gap:
 
-- The factory's own benchmark output and these prototypes were scored by the same reviewer
-  against the same nine criteria and the same thresholds.
+- Both sides were scored by the same class of independent reviewer against the same scale and
+  the same thresholds — on eight criteria for the factory and nine here, adjusted above.
 - The largest single gap is **distinctiveness**, which is the criterion that measures whether
-  a site looks like it belongs to its business rather than to a component library.
-- Nothing here required a capability the factory lacks in principle. Every one of these sites
-  is static HTML and CSS from a data file. What they had that a generated build did not was
-  permission to invent a layout for one business.
+  a site looks like it belongs to its business rather than to a component library. It is the
+  criterion the factory's own record shows flat at 4.3–5.4 through every intervention tried.
+- Nothing here needed a technology the factory lacks. Every one of these sites is static HTML
+  and CSS generated from a data file at build time. What they had that a generated build does
+  not is the ability to put new markup on the page for one business — which the existing
+  bespoke lane deliberately forbids, for reasons that are good and are not about ambition.
 
 That is what `FINDINGS.md` and `FACTORY-GAP.md` are about.

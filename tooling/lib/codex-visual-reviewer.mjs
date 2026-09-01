@@ -663,7 +663,11 @@ export function reviewCandidate({ packet, packetDir, candidateId, authorised = f
   // visual similarity. A packet that declares neither is compared against
   // nothing rather than against something arbitrary, and the verdict records
   // `UNASSESSED`, which caps it below 10.
-  const benchmark = selectReference({ businessKind: packet.businessKind ?? null, anchors: list(packet.benchmarkAnchors) });
+  const benchmark = selectReference({
+    businessKind: packet.businessKind ?? null,
+    businessFacets: list(packet.businessFacets),
+    anchors: list(packet.benchmarkAnchors),
+  });
 
   const prompt = buildPrompt({ packet, candidate, coverage, benchmark: benchmark.matched ? benchmark : null });
   const output = runCodex({ prompt, images, cwd: packetDir });

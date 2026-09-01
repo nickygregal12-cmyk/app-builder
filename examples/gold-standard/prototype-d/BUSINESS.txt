@@ -1,0 +1,127 @@
+THE MONITORING GAP 2026 — prototype D, Gold Standard programme.
+
+Published by Stell, a fictional independent freshwater data unit.
+
+SYNTHETIC THROUGHOUT. Every catchment, every number and every figure in this report is
+simulated. The catchments are invented and do not correspond to real ones. The regulatory
+machinery is real and is described accurately, because a report that got it wrong would be
+worthless to the people it is written for — but nothing here is a measurement of anything.
+
+That distinction is stated on the report's own front page rather than in a footnote, because a
+document that looks like this is exactly the kind of document that gets a chart screenshotted
+and circulated without its provenance.
+
+--------------------------------------------------------------------------------------
+THE SUBJECT
+--------------------------------------------------------------------------------------
+
+Storm overflows discharge untreated sewage into rivers when the sewer network is overwhelmed.
+In England they are fitted with Event Duration Monitors — EDM — which record when a discharge
+starts and stops. Operators report the counts annually.
+
+The counts are the number everybody quotes. They are also, necessarily, counts of what the
+monitors saw.
+
+A monitor that is offline records nothing. It does not record a zero; it records an absence, and
+an absence is not distinguishable from a quiet outfall once the figures are added up. Monitor
+availability is published, and it is published separately from the spill counts, in a different
+file, by a different route, and almost nobody joins the two.
+
+This report joins them.
+
+--------------------------------------------------------------------------------------
+1. WHAT THE REPORT ARGUES
+--------------------------------------------------------------------------------------
+
+That the spill figures cannot be read without their coverage, and that reading them without it
+inverts the conclusion in the worst places.
+
+Across twelve catchments over sixty months, mean monitor coverage was 70%. Reported spills per
+overflow correlate with coverage at r = 0.66. The underlying rate does not: it correlates with
+coverage at r = -0.19, which is to say not at all.
+
+Published figures therefore track how much of the estate was working, not how much sewage went
+into the river. The clearest single case is Elverley, which has the highest underlying rate in
+the study and reports fewer spills per overflow than Cleeve Brook, which has half its rate and
+twice its coverage.
+
+--------------------------------------------------------------------------------------
+2. WHO IT IS FOR
+--------------------------------------------------------------------------------------
+
+  - environment reporters, who quote the annual counts and have no straightforward way to
+    qualify them;
+  - catchment partnerships and river trusts, who need to know whether their own numbers are
+    comparable with the catchment next door;
+  - regulators and the operators themselves, for whom this is not news but is rarely put on one
+    page;
+  - the people who live on these rivers, for whom "no spills reported" and "no spills" are two
+    very different sentences.
+
+--------------------------------------------------------------------------------------
+3. THE METHOD, AND WHY IT IS ON THE SITE
+--------------------------------------------------------------------------------------
+
+The dataset is generated, and the generator is published.
+
+Each catchment is given a latent monthly spill rate — the discharges that actually occur, which
+in the real world nobody observes directly. Monitor coverage is then simulated per month, and
+the reported figure is what the working monitors would have seen. The relationship the report
+describes therefore emerges from the simulation rather than being asserted by it: we did not
+write the finding into the numbers, we wrote the mechanism and the finding fell out.
+
+The first draft of the catchment table did not survive that claim. Every badly-monitored
+catchment had also been given a high underlying rate, correlating the two at r = -0.87 — the
+finding typed straight into the inputs. The check that caught it now runs on every build and its
+output is published on the method page. A report that cannot pass its own test does not get to
+make the argument.
+
+That is worth saying plainly because it cuts both ways. It means the pattern is a genuine
+consequence of the model. It also means the model is ours, and a reader is entitled to
+disbelieve it. The generator, its seed and its parameters are all on the method page, and the
+figures can be regenerated from them.
+
+--------------------------------------------------------------------------------------
+4. WHAT THE REPORT WILL NOT DO
+--------------------------------------------------------------------------------------
+
+  - estimate unreported spills as a headline number. The report shows the coverage and lets the
+    reader see the shape of what is missing; converting that into a single national figure would
+    be the most quotable and least defensible thing in it;
+  - rank the operators. The data does not support attribution and a league table would be read
+    as though it did;
+  - claim a trend. Sixty months is long enough to see coverage change and not long enough to
+    separate that from monitors being installed at different times;
+  - use a photograph of a pipe. Every report on this subject is illustrated with an outfall
+    discharging into a river, and it tells the reader nothing they did not already feel.
+
+--------------------------------------------------------------------------------------
+5. WHAT IS IMPRESSIVE SHOWN RATHER THAN DESCRIBED
+--------------------------------------------------------------------------------------
+
+The coverage strip.
+
+Sixty months across twelve catchments, drawn as a grid where each cell is one catchment-month
+and the mark is coverage. Read left to right it is a history; read down it is a comparison; and
+the pale patches — the months where half the monitors were dark — are immediately visible as
+holes rather than as low numbers in a column.
+
+Beside it, the same twelve catchments plotted as reported spills against coverage, with the four
+that look cleanest circled. One is a picture of the data; the other is the argument. Neither
+needs a sentence to be understood, which is the test.
+
+--------------------------------------------------------------------------------------
+6. THE STRUCTURE
+--------------------------------------------------------------------------------------
+
+A report, with the apparatus of one: numbered findings that can be cited, numbered figures with
+sources, a method section that is meant to be read, per-catchment pages so a reader can check
+their own river, and a data page that gives the whole thing away.
+
+--------------------------------------------------------------------------------------
+7. THE PUBLISHER
+--------------------------------------------------------------------------------------
+
+Stell. Six people and two part-time statisticians, funded by a research council grant and two
+foundations, all named. No operator money, which is stated because the first question anybody
+asks about a report like this is who paid for it.

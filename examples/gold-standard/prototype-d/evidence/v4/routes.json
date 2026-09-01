@@ -1,0 +1,9 @@
+{
+ "home": "/",
+ "findings": "/findings",
+ "catchments": "/catchments",
+ "catchments-elverley": "/catchments/elverley",
+ "catchments-cleeve-brook": "/catchments/cleeve-brook",
+ "method": "/method",
+ "data": "/data"
+}

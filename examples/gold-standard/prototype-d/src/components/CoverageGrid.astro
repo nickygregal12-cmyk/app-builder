@@ -1,0 +1,202 @@
+---
+/**
+ * The coverage grid. Twelve catchments, sixty months, one cell each.
+ *
+ * The report's central artefact, and the reason it exists is that a table of monthly
+ * availability percentages is unreadable and a line chart of twelve series is worse. As a value
+ * grid it is legible in one look: read across for a history, down for a comparison, and the pale
+ * patches are holes rather than low numbers in a column.
+ *
+ * ## Value, not hue
+ *
+ * The ramp runs dark-to-pale, and pale means *less was seen*. That direction is chosen and it is
+ * the opposite of the intuitive one — a chart of pollution would normally make bad things dark.
+ * Here the quantity is watchfulness, the story is absence, and a hole in the data should look
+ * like a hole. A hue scale would need a legend to say which end was which; a value ramp does
+ * not.
+ *
+ * ## The recomposition
+ *
+ * Sixty columns cannot be made to work at 390px, and panning them — the move the second
+ * prototype in this programme used for a wide diagram — would leave a reader comparing two
+ * catchments they cannot see at once, which is the one thing this artefact is for. So the phone
+ * gets a different aggregation rather than a smaller picture: five annual columns instead of
+ * sixty monthly ones, which is the resolution a year-by-year comparison actually needs. Both
+ * grids are rendered; CSS chooses.
+ */
+import { SERIES, MONTH_LABELS, pct } from '../lib/stats';
+import { MONTHS, START } from '../lib/generate';
+
+interface Props { id?: string }
+const { id = 'coverage' } = Astro.props;
+
+/** Six steps. Enough to read a gradient, few enough that two adjacent cells are distinguishable. */
+const STEPS = ['var(--d-5)', 'var(--d-4)', 'var(--d-3)', 'var(--d-2)', 'var(--d-1)', 'var(--d-0)'];
+const step = (coverage: number) => STEPS[Math.min(STEPS.length - 1, Math.floor((1 - coverage) * STEPS.length))];
+
+const years = Array.from({ length: MONTHS / 12 }, (_, i) => START.year + i);
+const annual = SERIES.map((series) => ({
+  series,
+  years: years.map((year) => {
+    const months = series.points.filter((point) => point.year === year);
+    return { year, coverage: months.reduce((total, point) => total + point.coverage, 0) / months.length };
+  }),
+}));
+const first = SERIES[0];
+---
+
+<div class="cg" id={id} data-grid>
+  <div class="cg__readout" role="status" aria-live="polite">
+    <span class="cg__k">Selected</span>
+    <span class="cg__v" data-ro="where">{first.catchment.name} · {MONTH_LABELS[0]} {START.year}</span>
+    <span class="cg__k">Monitors reporting</span>
+    <span class="cg__v cg__v--n" data-ro="cov">{pct(first.points[0].coverage)}</span>
+    <span class="cg__k">Spills reported</span>
+    <span class="cg__v cg__v--n" data-ro="rep">{first.points[0].reported}</span>
+    <span class="cg__k cg__k--sim">Discharges simulated</span>
+    <span class="cg__v cg__v--n cg__v--sim" data-ro="lat">{first.points[0].latent}</span>
+  </div>
+
+  <!-- Monthly. Desktop and tablet. -->
+  <div class="cg__monthly">
+    <table class="cg__t">
+      <caption class="vh">Monitor coverage by catchment and month, {START.year} to {years[years.length - 1]}. Darker is more of the estate reporting.</caption>
+      <thead>
+        <tr>
+          <th scope="col"><span class="vh">Catchment</span></th>
+          <td class="cg__yearrow" aria-hidden="true">
+            {years.map((year) => <span class="cg__year">{year}</span>)}
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        {SERIES.map((series) => (
+          <tr>
+            <th scope="row" class="cg__row"><a href={`/catchments/${series.catchment.slug}`}>{series.catchment.name}</a></th>
+            <td class="cg__cells">
+              {series.points.map((point) => (
+                <button
+                  class="cg__cell" type="button"
+                  style={`--c: ${step(point.coverage)}`}
+                  data-cell
+                  data-name={series.catchment.name}
+                  data-when={`${MONTH_LABELS[point.month - 1]} ${point.year}`}
+                  data-cov={pct(point.coverage)}
+                  data-rep={String(point.reported)}
+                  data-lat={String(point.latent)}
+                  aria-label={`${series.catchment.name}, ${MONTH_LABELS[point.month - 1]} ${point.year}: ${pct(point.coverage)} of monitors reporting`}
+                ></button>
+              ))}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Annual. Phone. A different aggregation, not a smaller picture. -->
+  <div class="cg__annual">
+    <table class="cg__t">
+      <caption class="vh">Mean monitor coverage by catchment and year.</caption>
+      <thead>
+        <tr><th scope="col"><span class="vh">Catchment</span></th>{years.map((year) => <th scope="col" class="cg__ay">{String(year).slice(2)}</th>)}</tr>
+      </thead>
+      <tbody>
+        {annual.map(({ series, years: rows }) => (
+          <tr>
+            <th scope="row" class="cg__row"><a href={`/catchments/${series.catchment.slug}`}>{series.catchment.name}</a></th>
+            {rows.map((row) => (
+              <td class="cg__acell" style={`--c: ${step(row.coverage)}`}>
+                <span class="cg__apct">{Math.round(row.coverage * 100)}</span>
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cg__legend" aria-hidden="true">
+    <span class="cg__lk">All monitors reporting</span>
+    <span class="cg__ramp">{STEPS.map((s) => <span style={`--c: ${s}`}></span>)}</span>
+    <span class="cg__lk">Most of the estate dark</span>
+  </div>
+</div>
+
+<style>
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .cg { display: grid; gap: var(--s4); }
+
+  .cg__readout { display: grid; grid-template-columns: auto auto auto auto auto auto auto auto;
+    gap: var(--s2) var(--s4); align-items: baseline; padding-bottom: var(--s4);
+    border-bottom: 1px solid var(--rule); }
+  .cg__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+  .cg__k--sim, .cg__v--sim { color: var(--spot); }
+  .cg__v { font-family: var(--sans); font-size: var(--t-small); font-weight: 500; }
+  .cg__v--n { font-variant-numeric: tabular-nums; }
+
+  .cg__t { width: 100%; border-collapse: collapse; }
+  .cg__row { text-align: left; font-family: var(--sans); font-size: var(--t-note); font-weight: 500;
+    white-space: nowrap; padding-right: var(--s4); width: 1%; }
+  .cg__row a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+  .cg__row a:hover { border-bottom-color: var(--ink); }
+
+  .cg__cells { display: flex; gap: 1px; padding-block: 1px; }
+  .cg__cell { flex: 1 1 0; min-width: 0; height: 22px; background: var(--c); border: 0; padding: 0;
+    cursor: pointer; transition: outline-color 120ms ease; outline: 2px solid transparent; outline-offset: -2px; }
+  .cg__cell:hover, .cg__cell[data-on] { outline-color: var(--spot); }
+
+  /* One cell per year, each the width of its twelve months, in the same table as the cells. */
+  .cg__yearrow { display: flex; gap: 1px; padding: 0 0 var(--s2); }
+  .cg__year { flex: 1 1 0; min-width: 0; font-family: var(--sans); font-size: var(--t-label);
+    font-weight: 600; letter-spacing: 0.08em; color: var(--ink-3);
+    border-left: 1px solid var(--rule); padding-left: 5px; }
+
+  .cg__annual { display: none; }
+  .cg__ay { font-family: var(--sans); font-size: var(--t-label); font-weight: 600; color: var(--ink-3);
+    text-align: center; padding-bottom: var(--s2); }
+  .cg__acell { background: var(--c); text-align: center; height: 34px; border: 1px solid var(--paper); }
+  .cg__apct { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    font-variant-numeric: tabular-nums; color: var(--paper); mix-blend-mode: luminosity; }
+
+  .cg__legend { display: flex; align-items: center; gap: var(--s3); }
+  .cg__lk { font-family: var(--sans); font-size: var(--t-label); color: var(--ink-3); }
+  .cg__ramp { display: flex; }
+  .cg__ramp span { width: 26px; height: 10px; background: var(--c); }
+
+  @media (max-width: 760px) {
+    .cg__monthly { display: none; }
+    .cg__annual { display: block; }
+    .cg__readout { grid-template-columns: auto 1fr; gap: var(--s1) var(--s3); }
+    .cg__legend { flex-wrap: wrap; }
+  }
+</style>
+
+<script>
+  /** Hover or focus a cell and the readout says what it is. Delegated, so 720 cells cost one listener. */
+  for (const root of document.querySelectorAll<HTMLElement>('[data-grid]')) {
+    const field = (name: string) => root.querySelector<HTMLElement>(`[data-ro="${name}"]`);
+    let current: HTMLElement | null = null;
+
+    const show = (cell: HTMLElement) => {
+      if (current) current.removeAttribute('data-on');
+      cell.setAttribute('data-on', '');
+      current = cell;
+      const set = (key: string, value: string) => { const node = field(key); if (node) node.textContent = value; };
+      set('where', `${cell.dataset.name} · ${cell.dataset.when}`);
+      set('cov', cell.dataset.cov!);
+      set('rep', cell.dataset.rep!);
+      set('lat', cell.dataset.lat!);
+    };
+
+    root.addEventListener('pointerover', (event) => {
+      const cell = (event.target as HTMLElement).closest<HTMLElement>('[data-cell]');
+      if (cell) show(cell);
+    });
+    root.addEventListener('focusin', (event) => {
+      const cell = (event.target as HTMLElement).closest<HTMLElement>('[data-cell]');
+      if (cell) show(cell);
+    });
+  }
+</script>

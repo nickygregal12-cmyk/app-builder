@@ -1,0 +1,183 @@
+---
+/**
+ * Method.
+ *
+ * Written to be read. The generator, the seed, the parameters, the controls, and — the section
+ * that matters most and that most reports omit — a list of the things this document is not
+ * entitled to say.
+ */
+import Base from '../layouts/Base.astro';
+import { R, OVERALL, num, pct } from '../lib/stats';
+import { SEED, MONTHS, CATCHMENTS } from '../lib/generate';
+---
+<Base
+  title="Method — The Monitoring Gap 2026"
+  description="The generator, its seed and parameters, the controls, and what this report is not entitled to claim."
+  chapter="Chapter 03"
+  chapterTitle="Method"
+>
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <p class="label">Chapter 03</p>
+        <h1 class="chapter">Method</h1>
+        <p class="stand">
+          This dataset is generated. That is not a caveat at the end of the report; it is the first
+          thing on this page, because a document with this many charts in it will be quoted by
+          people who did not read the page it came from.
+        </p>
+        <div class="prose">
+          <p>
+            Each catchment is given an underlying monthly discharge rate — the events that occur,
+            which nobody observes directly in the real world. Monitor coverage is simulated
+            separately, month by month, with drift, noise and occasional outages where a batch of
+            monitors drops out at once. The reported figure is the underlying count thinned by
+            whatever was reporting.
+          </p>
+          <p>
+            The relationship the report describes therefore emerges from the simulation rather than
+            being asserted by it. We wrote a mechanism, not a finding.
+          </p>
+        </div>
+      </div>
+      <aside class="margin">
+        <div><p class="margin__k">Seed</p><span class="margin__n">{SEED}</span><p class="margin__v">mulberry32, deterministic across builds</p></div>
+        <div><p class="margin__k">Period</p><span class="margin__n">{MONTHS}</span><p class="margin__v">months, Jan 2021 to Dec 2025</p></div>
+        <div><p class="margin__k">Rows</p><span class="margin__n">{num(OVERALL.catchments * MONTHS)}</span><p class="margin__v">catchment-months, all on the <a class="u" href="/data">data page</a></p></div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <h2 class="head2">The control, and the draft that failed it</h2>
+        <div class="prose">
+          <p>
+            The claim rests entirely on the two inputs being independent. If badly-monitored
+            catchments were also the dirtiest ones, the correlation between coverage and reported
+            spills would be a property of the inputs rather than of the observation, and the report
+            would be circular.
+          </p>
+          <p>
+            So the correlation between coverage and the underlying rate is computed on every build
+            and published here as <span class="thread">r = {R.latentVsCoverage.toFixed(2)}</span>,
+            against <span class="thread">r = {R.reportedVsCoverage.toFixed(2)}</span> for the
+            reported figure. The first is the control; it is near zero, which is what it has to be.
+          </p>
+          <p>
+            The first draft of the catchment table did not pass that check. Every badly-monitored
+            catchment had also been given a high underlying rate, correlating the two at −0.87 —
+            the finding typed straight into the inputs. It was caught by running the check rather
+            than by anybody noticing, which is the argument for having one.
+          </p>
+        </div>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Control</p>
+          <span class="margin__n">{R.latentVsCoverage.toFixed(2)}</span>
+          <p class="margin__v">coverage against underlying rate. Must be near zero</p>
+        </div>
+        <div>
+          <p class="margin__k">Result</p>
+          <span class="margin__n">{R.reportedVsCoverage.toFixed(2)}</span>
+          <p class="margin__v">coverage against reported figure</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--wide">
+      <div class="col">
+        <h2 class="head2">Parameters, in full</h2>
+        <table class="tbl params">
+          <caption class="vh">Generator parameters per catchment.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Catchment</th><th scope="col" class="n">Overflows</th>
+              <th scope="col" class="n">Rate</th><th scope="col" class="n">Coverage start</th>
+              <th scope="col" class="n">Coverage end</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CATCHMENTS.map((c) => (
+              <tr>
+                <th scope="row"><a href={`/catchments/${c.slug}`}>{c.name}</a></th>
+                <td class="n" data-k="overflows">{num(c.overflows)}</td>
+                <td class="n" data-k="rate">{c.latentRate.toFixed(2)}</td>
+                <td class="n" data-k="from">{pct(c.coverageStart)}</td>
+                <td class="n" data-k="to">{pct(c.coverageEnd)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="note m__foot">
+          Rate is discharges per overflow per month before seasonality, which is a cosine with a
+          winter peak. Coverage drifts linearly between the two figures with month-to-month noise
+          of ±4.5 points and a 6% monthly chance of an additional outage of 12 to 28 points.
+        </p>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Regenerating</p>
+          <p class="margin__v">
+            Every figure in this report is derived at build time from these parameters and the
+            seed. Nothing is stored as a rendered number.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="col">
+        <h2 class="head2">What this report is not entitled to say</h2>
+        <ol class="nots">
+          <li><span class="nots__n">01</span><div><p class="nots__t">That any real river is in this condition.</p><p class="nots__b">The catchments are invented. Attaching these figures to a real catchment would be a fabrication, which is why none of them is named after one.</p></div></li>
+          <li><span class="nots__n">02</span><div><p class="nots__t">A national estimate of unrecorded discharges.</p><p class="nots__b">It would be the most quotable line in the document and the least defensible. The report shows coverage and lets a reader see the shape of what is missing; it does not multiply up.</p></div></li>
+          <li><span class="nots__n">03</span><div><p class="nots__t">Anything about the operators.</p><p class="nots__b">Operators here are labelled A to E and the assignment is arbitrary. A league table would be read as attribution and the data does not support one.</p></div></li>
+          <li><span class="nots__n">04</span><div><p class="nots__t">A trend.</p><p class="nots__b">The simulation holds each catchment's underlying rate flat by construction, so any apparent movement over the period is coverage. That is the point of finding 4 and also its limit.</p></div></li>
+          <li><span class="nots__n">05</span><div><p class="nots__t">That the mechanism is the only one.</p><p class="nots__b">Reporting thresholds, double-counting across adjacent outfalls and the twelve-hour counting rule all affect published figures, and none of them is modelled here.</p></div></li>
+        </ol>
+      </div>
+      <aside class="margin">
+        <div>
+          <p class="margin__k">Funding</p>
+          <p class="margin__v">
+            A research council grant and two foundations. No operator money, no water-industry
+            money, and no money from any party to a live dispute about this subject.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .m__foot { margin-top: var(--s4); max-width: 68ch; }
+  .nots { border-top: 1.5px solid var(--ink); margin-top: var(--s5); }
+  .nots > li { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s4); border-bottom: 1px solid var(--rule); }
+  .nots__n { font-family: var(--sans); font-variant-numeric: tabular-nums lining-nums;
+    font-size: var(--t-small); font-weight: 600; color: var(--spot); padding-top: 4px; }
+  .nots__t { font-size: var(--t-body); font-weight: 600; }
+  .nots__b { margin-top: 4px; font-family: var(--sans); font-size: var(--t-note); line-height: 1.55;
+    color: var(--ink-2); max-width: 58ch; }
+
+  @media (max-width: 700px) {
+    /* Five numeric columns will not narrow below about 400px without the coverage figures
+       wrapping mid-percentage. Each catchment becomes a record with its parameters on one line. */
+    .params, .params tbody, .params tr, .params td, .params th { display: block; width: 100%; }
+    .params thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .params tr { padding-block: var(--s3); border-bottom: 1px solid var(--rule); }
+    .params th, .params td { border: 0; padding: 0; }
+    .params th[scope='row'] { font-size: var(--t-small); font-weight: 600; }
+    .params td.n { display: inline-block; text-align: left; margin-right: var(--s4); margin-top: 3px;
+      font-size: var(--t-label); color: var(--ink-3); }
+    .params td.n::before { content: attr(data-k) ' '; }
+    .nots > li { grid-template-columns: 2.25rem minmax(0, 1fr); gap: var(--s3); }
+  }
+</style>

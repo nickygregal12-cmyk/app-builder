@@ -32,6 +32,8 @@ import { fileURLToPath } from 'node:url';
 
 import { describeProviderSecret } from '@app-builder/control-plane/model-execution';
 
+import { describeProviderCredentialSource } from './provider-credential.mjs';
+
 export const REPOSITORY_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 export const MODEL_EXECUTION_CONFIG = 'config/model-execution.json';
 
@@ -73,16 +75,21 @@ export function readModelKillSwitch({ root = REPOSITORY_ROOT, env = process.env,
   const hostPath = hostSwitchPath ?? config?.hostSwitchPath ?? null;
   const host = hostPath ? readSwitchFile(hostPath) : { present: false, enabled: false, detail: 'no host switch path is declared', value: null };
 
-  // The credential, as presence and nothing else. This function reads the
-  // variable to answer "is it configured?" and never returns, logs or stores
-  // what it found — the same shape `FactoryService.integrationStatus()` already
-  // uses for the Factory's other providers.
+  // The credential, as presence and nothing else. This asks
+  // `describeProviderCredentialSource` whether one is there and never returns,
+  // logs or stores what it found — the same shape
+  // `FactoryService.integrationStatus()` already uses for the Factory's other
+  // providers. Which source answered is recorded because an operator needs to
+  // know whether the hosted systemd credential is actually being used or a
+  // stray environment variable is standing in for it; *what* it answered with
+  // has nowhere to go.
   const secretRef = providerProfile?.secretRef ?? config?.providerSecret?.secretRef ?? null;
+  const credential = secretRef ? describeProviderCredentialSource({ secretRef, env }) : null;
   const providerSecret = secretRef
     ? describeProviderSecret({
         providerId: providerProfile?.providerId ?? config?.providerSecret?.providerId ?? config?.provider?.providerId ?? 'unknown',
         secretRef,
-        configured: typeof env[secretRef] === 'string' && env[secretRef].trim().length > 0,
+        configured: credential.configured,
       })
     : null;
 
@@ -101,6 +108,9 @@ export function readModelKillSwitch({ root = REPOSITORY_ROOT, env = process.env,
     }),
     provider: config?.provider ?? null,
     providerSecret,
+    // Presence metadata only: which lane answered and, when none did, why not.
+    // Never the value, and there is no field here it could occupy.
+    credentialSource: credential ? Object.freeze({ source: credential.source, reason: credential.reason, detail: credential.detail }) : null,
     pricingGbpPerMillionTokens: config?.pricingGbpPerMillionTokens ?? null,
     canaryBudget: config?.canaryBudget ?? null,
     canary: config?.canary ?? null,
@@ -122,7 +132,13 @@ export function describeModelKillSwitch(state) {
     hostSwitch: { path: state.sources.host.path, present: state.sources.host.present, enabled: state.sources.host.enabled },
     provider: state.provider ? { adapterId: state.provider.adapterId, providerId: state.provider.providerId, model: state.provider.model } : null,
     providerSecret: state.providerSecret
-      ? { providerId: state.providerSecret.providerId, secretRef: state.providerSecret.secretRef, configured: state.providerSecret.configured }
+      ? {
+          providerId: state.providerSecret.providerId,
+          secretRef: state.providerSecret.secretRef,
+          configured: state.providerSecret.configured,
+          // `systemd-credential` or `environment` — the lane, not the key.
+          source: state.credentialSource?.source ?? null,
+        }
       : null,
   };
 }

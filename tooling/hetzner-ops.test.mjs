@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 const scripts = [
@@ -14,6 +16,9 @@ const scripts = [
   'ops/hetzner/build-task-image.sh',
   'ops/hetzner/install-egress-network.sh',
   'ops/hetzner/verify-egress-profile.sh',
+  'ops/hetzner/install-model-canary-unit.sh',
+  'ops/hetzner/authorise-model-canary.sh',
+  'ops/hetzner/run-model-canary.sh',
 ];
 
 const readOnlyMutationPatterns = [
@@ -233,4 +238,199 @@ test('the egress verifier proves both halves and writes the attestation only on 
   assert.match(source, /rm -f "\$ATTESTATION"/);
   assert.match(source, /The attestation was not written/);
   assert.equal(/systemctl\s+(?:--\S+\s+)*(?:start|stop|enable|disable|restart)\b/.test(source), false);
+});
+
+test('the model canary unit carries every secret the run needs, each by the right mechanism', () => {
+  const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+
+  // The provider credential is the one thing that must not be an environment
+  // variable, because this process starts task sandboxes and a variable is
+  // inherited by every child.
+  assert.match(source, /LoadCredentialEncrypted=ANTHROPIC_API_KEY:\$\{CREDSTORE\}\/ANTHROPIC_API_KEY\.cred/);
+  assert.equal(source.includes('Environment=ANTHROPIC_API_KEY='), false, 'the provider key must never be a unit Environment= line');
+  assert.equal(/EnvironmentFile=.*(ANTHROPIC|credstore)/i.test(source), false, 'the provider key must never arrive by EnvironmentFile');
+
+  // The preflight requires both signing secrets. A unit that loaded neither
+  // could never complete a run, which is the mismatch this pins.
+  assert.match(source, /EnvironmentFile=\$\{BROKER_ENV\}/);
+  assert.match(source, /LoadCredentialEncrypted=APP_BUILDER_MODEL_DECISION_SECRET:\$\{DECISION_CRED\}/);
+  // The decision key must never become a plaintext env file again.
+  assert.equal(source.includes('model-canary.env'), false, 'the decision key is an encrypted credential, not a plaintext file');
+
+  // The grant key is the broker's, and is read rather than generated: a fresh
+  // one here would mint grants the broker refuses.
+  assert.match(source, /BROKER_ENV="\$\{ETC_DIR\}\/agent-broker\.env"/);
+  assert.equal(/APP_BUILDER_AGENT_GRANT_SECRET=\$\(/.test(source), false, 'the grant key must never be regenerated here');
+  assert.match(source, /grep -q '\^APP_BUILDER_AGENT_GRANT_SECRET=' "\$BROKER_ENV"/);
+
+  // The decision key spans --authorise and --run, so it is generated once and
+  // kept root-owned rather than exported.
+  // Generated straight into systemd-creds: the plaintext exists only in the
+  // pipe, never as a shell variable, an argument or a file.
+  assert.match(source, /head -c 48 \/dev\/urandom \| base64 -w0/);
+  assert.match(source, /systemd-creds encrypt --name=APP_BUILDER_MODEL_DECISION_SECRET -/);
+  assert.match(source, /chmod 0600 "\$DECISION_CRED"/);
+
+  // OpenAI stays dormant. The file may explain *why* it is not loaded — that is
+  // the useful part — so this pins the absence of a load, not of the name.
+  assert.equal(/LoadCredential\w*=OPENAI_API_KEY/.test(source), false, 'the OpenAI credential has no consumer and must not be loaded');
+  assert.equal(/Environment=OPENAI_API_KEY=/.test(source), false);
+  // Anchored to a real command: this file explains in prose why a stray
+  // `systemctl start` cannot spend money, and that sentence is not a command.
+  assert.equal(
+    /^\s*systemctl\s+(?:--\S+\s+)*(?:start|enable|restart)\b/m.test(source), false,
+    'the installer must not start or enable the canary',
+  );
+  assert.match(source, /Type=oneshot/);
+  assert.match(source, /Restart=no/);
+});
+
+test('the canary documentation no longer tells an operator to export a signing key', () => {
+  const source = readFileSync('docs/MODEL_CANARY.md', 'utf8');
+  assert.equal(/export APP_BUILDER_AGENT_GRANT_SECRET=/.test(source), false);
+  assert.equal(/export APP_BUILDER_MODEL_DECISION_SECRET=/.test(source), false);
+  assert.equal(/export ANTHROPIC_API_KEY=/.test(source), false);
+});
+
+test('the preflight never advises exporting a signing key', () => {
+  const source = readFileSync('tooling/model-canary.mjs', 'utf8');
+  // The grant key belongs to the broker. Advising a fresh one would produce
+  // grants the broker refuses, which fails later and reads as a model problem.
+  assert.equal(/export \$\{reference\}/.test(source), false);
+  assert.equal(/export APP_BUILDER_AGENT_GRANT_SECRET=/.test(source), false);
+  assert.equal(/export APP_BUILDER_MODEL_DECISION_SECRET=/.test(source), false);
+  assert.match(source, /It belongs to the broker/);
+});
+
+test('the broker environment file stays bounded, so loading it cannot silently widen the canary', () => {
+  const source = readFileSync('ops/hetzner/install-service-units.sh', 'utf8');
+  // The canary loads this whole file to share the broker's grant key. That is
+  // the deliberate coupling, and it is only safe while the file's contents are
+  // known — a future sensitive variable added here would reach the canary
+  // without anyone deciding that it should. So the shape is a tested contract.
+  // Skip past the heredoc opener line before reading the body it introduces.
+  const opener = source.indexOf('cat > "$ETC_DIR/agent-broker.env" <<BROKER');
+  assert.notEqual(opener, -1, 'the broker env heredoc moved; this contract test must follow it');
+  const body = source.slice(source.indexOf('\n', opener) + 1);
+  const declared = [...body.slice(0, body.indexOf('\nBROKER')).matchAll(/^([A-Z][A-Z0-9_]*)=/gm)].map((match) => match[1]);
+  assert.deepEqual(
+    declared.sort(),
+    ['APP_BUILDER_AGENT_BROKER_SOCKET', 'APP_BUILDER_AGENT_GRANT_SECRET'],
+    'agent-broker.env is loaded wholesale by the canary unit; adding a variable here widens that unit and needs a deliberate decision',
+  );
+});
+
+test('authorising is a trusted one-shot that signs but cannot spend', () => {
+  const source = readFileSync('ops/hetzner/authorise-model-canary.sh', 'utf8');
+  assert.match(source, /--unit=app-builder-model-authorise/);
+  assert.match(source, /--property=Type=oneshot/);
+  assert.match(source, /LoadCredentialEncrypted="?APP_BUILDER_MODEL_DECISION_SECRET/);
+  // Minting a decision must not be able to make the call it authorises.
+  assert.equal(source.includes('ANTHROPIC_API_KEY'), false, 'the authorising unit must not load a provider credential');
+  assert.equal(source.includes('OPENAI_API_KEY'), false);
+  assert.equal(source.includes('--run'), false, 'authorising must not run the canary');
+  // The signing key is never an argument, and never echoed.
+  assert.equal(/APP_BUILDER_MODEL_DECISION_SECRET=\$/.test(source), false);
+  assert.equal(/echo .*DECISION_SECRET/.test(source), false);
+});
+
+test('the canary host-switch condition does not claim to check more than it does', () => {
+  const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+  // ConditionPathExists tests existence, not enabled:true. The comment used to
+  // say the unit refused to start without the switch enabled, which was a
+  // policy the unit did not implement and the preflight already owns.
+  assert.equal(/refuses to start without it/.test(source), false);
+  assert.match(source, /deliberately does NOT check enabled:true/);
+  assert.match(source, /ConditionPathExists=\/etc\/app-builder\/model-execution\.json/);
+});
+
+test('provisioning a credential store never widens an existing restrictive one', () => {
+  // The bug: `install -d -m 0755 "$CREDSTORE"` chmods an existing directory on
+  // GNU coreutils, so a 0700 store became 0755 the first time this ran. The
+  // installer needs root, so this exercises the same decision against a real
+  // 0700 directory using the same commands the script uses.
+  const store = mkdtempSync(join(tmpdir(), 'app-builder-credstore-'));
+  try {
+    chmodSync(store, 0o700);
+    assert.equal(statSync(store).mode & 0o777, 0o700);
+
+    const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+    assert.equal(/install -d -m 0755\s+"\$CREDSTORE"/.test(source), false, 'the widening form must not return');
+    assert.match(source, /if \[\[ ! -d "\$CREDSTORE" \]\]; then/, 'an existing store must not be re-moded');
+    assert.match(source, /install -d -m 0700 -o root -g root "\$CREDSTORE"/, 'a missing store is created restrictively');
+
+    // The guard the script applies to an existing store, run here for real.
+    const mode = statSync(store).mode & 0o777;
+    assert.equal(mode & 0o077, 0, 'the contract is: no group or other access');
+    // Nothing in the provisioning path touches the mode of an existing store.
+    assert.equal(statSync(store).mode & 0o777, 0o700, 'still 0700 afterwards');
+  } finally {
+    rmSync(store, { recursive: true, force: true });
+  }
+});
+
+test('an unprivileged signer cannot write the authoritative decision, so root promotes it', () => {
+  // The bug this pins: the authorising unit runs as the runtime user, and
+  // /etc/app-builder is root-owned with no group write. Writing the decision
+  // straight there was EACCES, and no source-level test noticed because none
+  // of them modelled the directory permission.
+  const etc = mkdtempSync(join(tmpdir(), 'app-builder-etc-'));
+  try {
+    // 0750 root:appbuilder, as install-service-units.sh establishes it: the
+    // group may traverse and read, and may not create.
+    chmodSync(etc, 0o750);
+    assert.equal(statSync(etc).mode & 0o022, 0, 'group and other must not have write access');
+
+    const script = readFileSync('ops/hetzner/authorise-model-canary.sh', 'utf8');
+    // The signer writes to a staging directory it owns...
+    assert.match(script, /APP_BUILDER_MODEL_DECISION_FILE="\$\{STAGING\}\/decision\.json"/);
+    assert.match(script, /install -d -m 0700 -o "\$RUNTIME_USER" -g "\$RUNTIME_USER" "\$STAGING"/);
+    // ...and root promotes it through the fd-based helper, never `install`,
+    // which dereferences its source and made this a root file-read oracle.
+    assert.match(script, /python3 "\$\{PROMOTE\}"/);
+    assert.equal(
+      /install -m 0600 -o root -g root "\$\{STAGING\}/.test(script), false,
+      'install(1) follows a symlinked source; it must not return here',
+    );
+    // Staging never outlives the command, on any exit path.
+    assert.match(script, /trap cleanup EXIT/);
+    // The unit must not be given privilege merely to reach the filesystem.
+    assert.equal(/--property=User="?root/.test(script), false, 'the signer stays unprivileged');
+    assert.equal(/chmod\s+(?:0?7[0-7][0-7]|g\+w).*\/etc\/app-builder/.test(script), false, 'never widen /etc/app-builder');
+  } finally {
+    rmSync(etc, { recursive: true, force: true });
+  }
+});
+
+test('the decision reaches the canary as a credential, not as a file every appbuilder process can read', () => {
+  const installer = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+  // Possessing the token is what authorises the call, so it is not something
+  // every process sharing the runtime UID should be able to copy.
+  // The claimed path, not the authoritative one: that is what makes single use
+  // survive a restart. See tooling/decision-single-use.test.mjs.
+  assert.match(installer, /LoadCredential=model-enable-decision:\$\{CLAIM\}/);
+
+  const canary = readFileSync('tooling/model-canary.mjs', 'utf8');
+  assert.match(canary, /function decisionPathFor\(/);
+  assert.match(canary, /path\.join\(directory, 'model-enable-decision'\)/);
+  // Every *read* of the decision goes through the one resolver. The authorise
+  // path still writes to --out/env directly, which is correct: it is producing
+  // the file, not consuming a credential.
+  const reads = [...canary.matchAll(/const decisionPath = decisionPathFor\(/g)];
+  assert.equal(reads.length, 2, 'both preflight and run must resolve the decision the same way');
+  assert.equal(
+    /const decisionPath = (?:env|process\.env)\.APP_BUILDER_MODEL_DECISION_FILE \?\? DECISION_PATH/.test(canary), false,
+    'no read site may bypass the resolver and miss the credential form',
+  );
+});
+
+test('no hosted Groq recipe survives that exports a key or authorises outside the trusted unit', () => {
+  const source = readFileSync('docs/MODEL_CANARY.md', 'utf8');
+  // Command form, not prose: the document explains why these were removed.
+  assert.equal(/^\s*export GROQ_API_KEY=/m.test(source), false);
+  assert.equal(/^\s*npm run runtime:model-canary -- --provider groq --authorise/m.test(source), false);
+  assert.equal(/^\s*npm run runtime:model-canary -- --provider groq --run/m.test(source), false);
+  assert.equal(/^\s*unset GROQ_API_KEY/m.test(source), false);
+  // Whitespace-tolerant: the sentence is line-wrapped in the document.
+  assert.match(source.replace(/\s+/g, ' '), /the first hosted canary path is Anthropic-only/i);
 });

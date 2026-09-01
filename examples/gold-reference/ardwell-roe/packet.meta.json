@@ -1,8 +1,19 @@
 {
-  "business": "Ardwell & Roe — an architecture and interior-architecture studio in Bristol, founded 2011, eleven people. It works on repair, extension and conversion of existing buildings across the South West, and offers a free first conversation about whether the thing a client wants is the thing they need.",
+  "business": "Ardwell & Roe \u2014 an architecture and interior-architecture studio in Bristol, founded 2011, eleven people. It works on repair, extension and conversion of existing buildings across the South West, and offers a free first conversation about whether the thing a client wants is the thing they need.",
   "businessKind": "architecture practice",
-  "benchmarkAnchors": ["portfolio", "editorial-composition", "imagery", "architectural-restraint"],
+  "benchmarkAnchors": [
+    "portfolio",
+    "editorial-composition",
+    "imagery",
+    "architectural-restraint"
+  ],
   "projectType": "marketing-site",
   "candidateId": "ardwell-roe-gen1",
-  "directionLabel": "Gold Reference generation 1 — editorial grid, alternating project index"
+  "directionLabel": "Gold Reference generation 1 \u2014 editorial grid, alternating project index",
+  "businessFacets": [
+    "architecture-practice",
+    "design-portfolio",
+    "physical-craft"
+  ],
+  "businessFacetsNote": "Designs buildings and interiors for clients, sells on a body of completed work, and the work is finished physical fabric. Declared for FUTURE re-evaluation only: every verdict already stored beside this packet was produced before #266 on the legacy prose path, and none of them has been recomputed. Historical scores stand as recorded."
 }

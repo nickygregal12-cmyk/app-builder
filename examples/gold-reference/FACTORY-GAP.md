@@ -21,12 +21,12 @@ criteria**, and the section below adjusts for that before drawing any conclusion
 
 ### Two adjustments before these rows may be compared
 
-**The criterion sets differ, and the difference favours the prototypes.**
+**The criterion sets differ for the older rows, and the difference favours the prototypes.**
 `reviewCriteriaFor` in `tooling/lib/visual-candidates.mjs:95-104` applies
-`imagery-suitability` only when the build publishes photographs, so every factory verdict on
-record is a mean over **eight** criteria. The prototypes were scored over **nine**, and
+`imagery-suitability` only when the build publishes photographs, so every *thin-truth* factory
+verdict is a mean over **eight** criteria. The prototypes were scored over **nine**, and
 imagery-suitability was their highest or near-highest criterion (9.1 / 9 / 9). Recomputing the
-prototype means over the same eight criteria the factory was scored on:
+prototype means over the same eight criteria those rows were scored on:
 
 | | 9-criterion mean (as reviewed) | **8-criterion mean (comparable)** | floor |
 |---|---|---|---|
@@ -36,7 +36,21 @@ prototype means over the same eight criteria the factory was scored on:
 
 All three still clear 8.5 and the 6.5 floor on the comparable basis, so the conclusion holds —
 but Marram clears it by exactly nothing, and the unadjusted figures should not be quoted
-against factory numbers without this correction.
+against the thin-truth rows without this correction.
+
+**The rich-truth row needs no adjustment.** #254 gave the benchmark photographs, so that run
+was scored on all nine criteria — `imagery-suitability` 7.1 among them
+(`examples/visual-excellence/ardwell-roe-visual-review.v1.verdicts.json`). It is therefore
+directly comparable to the prototypes as reviewed, with nothing recomputed on either side:
+
+| | mean (9 criteria) | floor | distinctiveness |
+|---|---|---|---|
+| Factory, rich truth, best of three directions | 6.644 | 5.8 | 6.1 |
+| Ardwell & Roe — same business, same truth, free hand | **8.711** | **7.7** | **8.8** |
+
+Same business, same approved knowledge, same nine criteria, same class of independent
+reviewer, and the same renderer family. That is the cleanest single comparison in this
+document, and it is the one to quote.
 
 **The right comparator is the static renderer, not the React one.** These prototypes are
 Astro 7.2.7 static output, which is what `astro-static-content` emits. The factory's own static

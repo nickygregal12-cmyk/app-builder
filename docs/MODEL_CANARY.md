@@ -149,7 +149,7 @@ canary.
 ## 5. The one-time enable decision
 
 ```bash
-npm run runtime:model-canary -- --authorise --by "your name" --reason "first canary"
+sudo bash ops/hetzner/authorise-model-canary.sh --by "your name" --reason "first canary"
 ```
 
 Writes a signed, single-use decision recording who authorised it, why, the role,
@@ -262,8 +262,8 @@ sudo bash ops/hetzner/install-model-canary-unit.sh
 #    Repository: set enabled: true in config/model-execution.json, reviewed.
 echo '{"enabled": true}' | sudo tee /etc/app-builder/model-execution.json
 
-# 7. The one-time decision.
-npm run runtime:model-canary -- --authorise --by "your name" --reason "first canary"
+# 7. The one-time decision, minted inside its own trusted one-shot unit.
+sudo bash ops/hetzner/authorise-model-canary.sh --by "your name" --reason "first canary"
 ```
 
 ### The provider credential
@@ -311,17 +311,34 @@ which the broker correctly refuses. If the file is missing, install the broker
 rather than inventing a key.
 
 **`APP_BUILDER_MODEL_DECISION_SECRET` — spans two commands, then is finished
-with.** It signs the one-time enable decision, which `--authorise` mints and
-`--run` verifies. Those are separate processes, so the key must outlive one of
+with.** It signs the one-time enable decision, which authorising mints and the
+canary verifies. Those are separate processes, so the key must outlive one of
 them; nothing needs it once the attempt is recorded, and a decision may not live
 longer than 24 hours regardless.
 
-The installer generates it once into `/etc/app-builder/model-canary.env`
-(root:appbuilder, 0640). Deliberately *not* an encrypted systemd credential:
-`--authorise` runs outside any unit and would have no `$CREDENTIALS_DIRECTORY`
-to read, and a mechanism only half the flow can use is worse than a simpler one
-both halves can. It is generated rather than requested because an operator never
-needs to see, choose or keep this value.
+It is an **encrypted systemd credential**, like the provider key. That is
+possible because *both* halves of the flow run under systemd:
+
+```text
+systemd-creds encrypted APP_BUILDER_MODEL_DECISION_SECRET
+   |                                    |
+app-builder-model-authorise.service   app-builder-model-canary.service
+   | signs one single-use decision      | verifies it, then makes the call
+   | loads NO provider credential       | loads ANTHROPIC_API_KEY too
+```
+
+So the raw decision key is never in a plaintext file, never exported, and cannot
+be read by an ordinary `appbuilder` shell process — only by the two one-shot
+units that need it. `sudo bash ops/hetzner/install-model-canary-unit.sh`
+generates and encrypts it in one pipe; the plaintext never becomes a shell
+variable, an argument or a file.
+
+Authorising is `sudo bash ops/hetzner/authorise-model-canary.sh --by "..."
+--reason "..."`, which runs `app-builder-model-authorise.service` as a transient
+one-shot. It is a script only because `--by` and `--reason` differ per
+invocation; neither is secret, and the decision records both. It deliberately
+loads no provider credential — authorising a call and making one are separate
+actions.
 
 Rotating either is `rm` the file and re-run the relevant installer. Both are
 refused entry to a task sandbox by name in
@@ -331,7 +348,8 @@ refused entry to a task sandbox by name in
 ### The run
 
 ```bash
-# Hosted: the credential is loaded by the unit, not by your shell.
+# Hosted. Both steps load their keys from systemd, not from your shell.
+sudo bash ops/hetzner/authorise-model-canary.sh --by "your name" --reason "first canary"
 sudo systemctl start app-builder-model-canary.service
 journalctl -u app-builder-model-canary.service -n 50 --no-pager
 

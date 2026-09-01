@@ -14,6 +14,8 @@ const scripts = [
   'ops/hetzner/build-task-image.sh',
   'ops/hetzner/install-egress-network.sh',
   'ops/hetzner/verify-egress-profile.sh',
+  'ops/hetzner/install-model-canary-unit.sh',
+  'ops/hetzner/authorise-model-canary.sh',
 ];
 
 const readOnlyMutationPatterns = [
@@ -248,7 +250,9 @@ test('the model canary unit carries every secret the run needs, each by the righ
   // The preflight requires both signing secrets. A unit that loaded neither
   // could never complete a run, which is the mismatch this pins.
   assert.match(source, /EnvironmentFile=\$\{BROKER_ENV\}/);
-  assert.match(source, /EnvironmentFile=\$\{CANARY_ENV\}/);
+  assert.match(source, /LoadCredentialEncrypted=APP_BUILDER_MODEL_DECISION_SECRET:\$\{DECISION_CRED\}/);
+  // The decision key must never become a plaintext env file again.
+  assert.equal(source.includes('model-canary.env'), false, 'the decision key is an encrypted credential, not a plaintext file');
 
   // The grant key is the broker's, and is read rather than generated: a fresh
   // one here would mint grants the broker refuses.
@@ -258,9 +262,11 @@ test('the model canary unit carries every secret the run needs, each by the righ
 
   // The decision key spans --authorise and --run, so it is generated once and
   // kept root-owned rather than exported.
-  assert.match(source, /APP_BUILDER_MODEL_DECISION_SECRET=%s/);
-  assert.match(source, /chmod 0640 "\$CANARY_ENV"/);
-  assert.match(source, /chown root:"\$RUNTIME_USER" "\$CANARY_ENV"/);
+  // Generated straight into systemd-creds: the plaintext exists only in the
+  // pipe, never as a shell variable, an argument or a file.
+  assert.match(source, /head -c 48 \/dev\/urandom \| base64 -w0/);
+  assert.match(source, /systemd-creds encrypt --name=APP_BUILDER_MODEL_DECISION_SECRET -/);
+  assert.match(source, /chmod 0600 "\$DECISION_CRED"/);
 
   // OpenAI stays dormant. The file may explain *why* it is not loaded — that is
   // the useful part — so this pins the absence of a load, not of the name.
@@ -291,4 +297,46 @@ test('the preflight never advises exporting a signing key', () => {
   assert.equal(/export APP_BUILDER_AGENT_GRANT_SECRET=/.test(source), false);
   assert.equal(/export APP_BUILDER_MODEL_DECISION_SECRET=/.test(source), false);
   assert.match(source, /It belongs to the broker/);
+});
+
+test('the broker environment file stays bounded, so loading it cannot silently widen the canary', () => {
+  const source = readFileSync('ops/hetzner/install-service-units.sh', 'utf8');
+  // The canary loads this whole file to share the broker's grant key. That is
+  // the deliberate coupling, and it is only safe while the file's contents are
+  // known — a future sensitive variable added here would reach the canary
+  // without anyone deciding that it should. So the shape is a tested contract.
+  // Skip past the heredoc opener line before reading the body it introduces.
+  const opener = source.indexOf('cat > "$ETC_DIR/agent-broker.env" <<BROKER');
+  assert.notEqual(opener, -1, 'the broker env heredoc moved; this contract test must follow it');
+  const body = source.slice(source.indexOf('\n', opener) + 1);
+  const declared = [...body.slice(0, body.indexOf('\nBROKER')).matchAll(/^([A-Z][A-Z0-9_]*)=/gm)].map((match) => match[1]);
+  assert.deepEqual(
+    declared.sort(),
+    ['APP_BUILDER_AGENT_BROKER_SOCKET', 'APP_BUILDER_AGENT_GRANT_SECRET'],
+    'agent-broker.env is loaded wholesale by the canary unit; adding a variable here widens that unit and needs a deliberate decision',
+  );
+});
+
+test('authorising is a trusted one-shot that signs but cannot spend', () => {
+  const source = readFileSync('ops/hetzner/authorise-model-canary.sh', 'utf8');
+  assert.match(source, /--unit=app-builder-model-authorise/);
+  assert.match(source, /--property=Type=oneshot/);
+  assert.match(source, /LoadCredentialEncrypted="?APP_BUILDER_MODEL_DECISION_SECRET/);
+  // Minting a decision must not be able to make the call it authorises.
+  assert.equal(source.includes('ANTHROPIC_API_KEY'), false, 'the authorising unit must not load a provider credential');
+  assert.equal(source.includes('OPENAI_API_KEY'), false);
+  assert.equal(source.includes('--run'), false, 'authorising must not run the canary');
+  // The signing key is never an argument, and never echoed.
+  assert.equal(/APP_BUILDER_MODEL_DECISION_SECRET=\$/.test(source), false);
+  assert.equal(/echo .*DECISION_SECRET/.test(source), false);
+});
+
+test('the canary host-switch condition does not claim to check more than it does', () => {
+  const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+  // ConditionPathExists tests existence, not enabled:true. The comment used to
+  // say the unit refused to start without the switch enabled, which was a
+  // policy the unit did not implement and the preflight already owns.
+  assert.equal(/refuses to start without it/.test(source), false);
+  assert.match(source, /deliberately does NOT check enabled:true/);
+  assert.match(source, /ConditionPathExists=\/etc\/app-builder\/model-execution\.json/);
 });

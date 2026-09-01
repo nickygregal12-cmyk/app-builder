@@ -1,0 +1,84 @@
+
+================ .app-builder/b1-current
+routes (excluding /404): 6
+total sections:          25
+per route:
+  /               8 sections  [hero item-grid gallery item-grid proof-grid location-list contact-panel cta]
+  /work           4 sections  [hero gallery item-grid cta]
+  /studio         5 sections  [hero rich-text people-grid proof-grid cta]
+  /expertise      3 sections  [hero item-grid cta]
+  /approach       2 sections  [hero cta]
+  /contact        3 sections  [hero contact-panel enquiry-form]
+repeated content on a page: none
+routes carrying identical content: none
+routes with a purpose that is not the fallback sentence: 1/6
+distinct route purposes: 6/6
+
+evidence sets: 3
+  evidence-47822aabc2a76cf5  captures=31  uncovered=27
+      /                5629px
+      /work            2831px
+      /studio          4065px
+      /expertise       3187px
+      /approach         910px
+      /contact         1571px
+      /404              900px
+      TOTAL           19093px  (desktop, full-page)
+  evidence-6dd6f51479adef41  captures=31  uncovered=27
+      /                5630px
+      /work            2246px
+      /studio          4299px
+      /expertise       2170px
+      /approach         900px
+      /contact         1387px
+      /404              900px
+      TOTAL           17532px  (desktop, full-page)
+  evidence-ec86c5f3ded7b449  captures=31  uncovered=27
+      /                5406px
+      /work            2716px
+      /studio          4174px
+      /expertise       2944px
+      /approach         955px
+      /contact         1571px
+      /404              900px
+      TOTAL           18666px  (desktop, full-page)
+
+================ .app-builder/b1-planned
+routes (excluding /404): 5
+total sections:          21
+per route:
+  /               8 sections  [hero gallery item-grid item-grid people-grid proof-grid enquiry-form cta]
+  /services       3 sections  [hero item-grid cta]
+  /work           4 sections  [hero item-grid gallery cta]
+  /people         3 sections  [hero people-grid cta]
+  /proof          3 sections  [hero proof-grid cta]
+repeated content on a page: none
+routes carrying identical content: none
+routes with a purpose that is not the fallback sentence: 5/5
+distinct route purposes: 5/5
+
+evidence sets: 3
+  evidence-26e1c840c513095e  captures=27  uncovered=25
+      /                5758px
+      /services        3159px
+      /work            2803px
+      /people          1929px
+      /proof           2486px
+      /404              900px
+      TOTAL           17035px  (desktop, full-page)
+  evidence-31acad9a7d374e13  captures=27  uncovered=25
+      /                5750px
+      /services        2142px
+      /work            2218px
+      /people          1577px
+      /proof           2854px
+      /404              900px
+      TOTAL           15441px  (desktop, full-page)
+  evidence-9fee34a3c94d3fd5  captures=27  uncovered=25
+      /                5631px
+      /services        2916px
+      /work            2688px
+      /people          1974px
+      /proof           2595px
+      /404              900px
+      TOTAL           16704px  (desktop, full-page)

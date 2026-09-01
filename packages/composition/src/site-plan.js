@@ -98,6 +98,9 @@ export function knownRefs(knowledgePack) {
   for (const value of Object.values(profile)) {
     for (const entity of list(value)) if (entity?.id) refs.add(entity.id);
   }
+  // Approved assets are approved truth: a plan that shows the work is referencing something the
+  // owner supplied, and the truth boundary has to be able to see it.
+  for (const asset of list(knowledgePack?.assets)) if (asset?.id) refs.add(asset.id);
   return refs;
 }
 
@@ -283,6 +286,15 @@ export function planSite({ manifest, knowledgePack = null } = {}) {
   const routes = [];
   const omitted = [];
   const earned = [];
+  /*
+   * Imagery is truth too.
+   *
+   * The first rendered run of a planned build published no photography at all, because nothing in
+   * the plan could ask for it — the families below are the things a business *lists*, and its
+   * pictures are not a list. A practice with seventeen approved assets showed none of them, and
+   * the directions whose distinctive moment needs a gallery were refused as unrenderable.
+   */
+  const assetRefs = list(knowledgePack?.assets).filter((asset) => asset?.kind === 'image').map((asset) => asset.id).filter(Boolean);
 
   /*
    * The home route always exists, because a site has somewhere a visitor arrives. What it carries
@@ -331,7 +343,7 @@ export function planSite({ manifest, knowledgePack = null } = {}) {
       existsBecause: `The approved knowledge carries ${weight} distinct items under ${family.profileKey}. Summarising them on the home page would either truncate them or make the home page the whole site; a visitor arriving with "${family.entryQuestion}" needs them in full.`,
       // Identity comes with it, because the route's opening section frames the list and a
       // section may not bind truth its route does not admit.
-      factRefs: [...new Set([...refs, ...identity.slice(0, 1)])],
+      factRefs: [...new Set([...refs, ...identity.slice(0, 1), ...(family.id === 'work' ? assetRefs : [])])],
       exitAction: contact.length ? 'Get in touch' : null,
       narrative: [
         {
@@ -350,6 +362,18 @@ export function planSite({ manifest, knowledgePack = null } = {}) {
           requires: [`${family.id}-frame`],
           factRefs: refs,
         },
+        // The work page shows the work. A list of project names on a page that could carry the
+        // photographs is the same evasion as a paint catalogue printed in grey.
+        ...(family.id === 'work' && assetRefs.length
+          ? [{
+            job: 'work-imagery',
+            binds: 'gallery',
+            covers: 'full',
+            establishes: 'what these projects look like, at the size they deserve',
+            requires: [`${family.id}-detail`],
+            factRefs: assetRefs,
+          }]
+          : []),
       ],
     });
     earned.push({ family, refs });
@@ -359,6 +383,15 @@ export function planSite({ manifest, knowledgePack = null } = {}) {
    * The home narrative. Ordered as an argument rather than as an inventory: what this is, then
    * whatever had too little truth to earn its own page, then how to make contact.
    */
+  const showsWork = assetRefs.length >= ROUTE_SUFFICIENCY;
+  if (!showsWork && assetRefs.length) {
+    omitted.push({
+      candidate: 'A gallery of the work',
+      because: `Only ${assetRefs.length} approved image, which is a picture rather than a body of work. It belongs beside something rather than as a section of its own.`,
+      foldedInto: '/',
+    });
+  }
+
   const home = {
     path: '/',
     purpose: `Say what ${name} is and route a visitor to whichever question they arrived with.`,
@@ -366,7 +399,7 @@ export function planSite({ manifest, knowledgePack = null } = {}) {
     audienceId: 'prospective-client',
     existsBecause: `A visitor arrives somewhere, and the approved identity facts answer "what is this" before any other page has to. ${routes.length ? `The ${routes.length} other route(s) each answer one question in full; this one decides which of them a visitor needs.` : 'It is the only route the approved truth supports in full.'}`,
     factRefs: [...homeFacts, ...contact, ...earned.flatMap(({ refs }) => refs)].length >= ROUTE_SUFFICIENCY
-      ? [...new Set([...homeFacts, ...contact, ...earned.flatMap(({ refs }) => refs)])]
+      ? [...new Set([...homeFacts, ...contact, ...assetRefs, ...earned.flatMap(({ refs }) => refs)])]
       : [...new Set([...homeFacts, ...contact, ...facts.slice(0, ROUTE_SUFFICIENCY).map((fact) => fact.id)])],
     exitAction: contact.length ? 'Get in touch' : null,
     narrative: [
@@ -384,6 +417,16 @@ export function planSite({ manifest, knowledgePack = null } = {}) {
        * which question a visitor needs answered; without these it makes that claim and then has
        * nothing to make good on it, which is a home page with a hero and a footer.
        */
+      ...(showsWork
+        ? [{
+          job: 'show-the-work',
+          binds: 'gallery',
+          covers: 'preview',
+          establishes: 'what the finished work actually looks like, before any description of it',
+          requires: ['establish-what-this-is'],
+          factRefs: assetRefs,
+        }]
+        : []),
       ...earned.map(({ family, refs }) => ({
         job: `preview-${family.id}`,
         binds: family.profileKey,

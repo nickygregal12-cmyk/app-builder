@@ -65,6 +65,30 @@ const FACTORY_PORT = 4310;
 const BOUNDARY_ATTESTATION = '/etc/app-builder/agent-boundary.json';
 const DECISION_PATH = '/etc/app-builder/model-enable-decision.json';
 
+/**
+ * Where the signed decision is read from.
+ *
+ * On the hosted path the canary unit declares
+ * `LoadCredential=model-enable-decision:...`, so systemd places it in the unit's
+ * private credentials directory and the file at rest stays root:root 0600. That
+ * matters because possessing the token is what authorises the call: a decision
+ * every appbuilder process could read is a decision every appbuilder process
+ * could carry somewhere else.
+ *
+ * `APP_BUILDER_MODEL_DECISION_FILE` still wins when set, because the authorising
+ * unit uses it to write into its staging directory before root promotes the
+ * result. The bare path is the development fallback.
+ */
+function decisionPathFor(env = process.env) {
+  if (env.APP_BUILDER_MODEL_DECISION_FILE) return env.APP_BUILDER_MODEL_DECISION_FILE;
+  const directory = env.CREDENTIALS_DIRECTORY;
+  if (directory) {
+    const credential = path.join(directory, 'model-enable-decision');
+    if (fs.existsSync(credential)) return credential;
+  }
+  return DECISION_PATH;
+}
+
 /** Where the operator's signed decision and the two signing secrets come from. */
 const GRANT_SECRET_REF = 'APP_BUILDER_AGENT_GRANT_SECRET';
 const DECISION_SECRET_REF = 'APP_BUILDER_MODEL_DECISION_SECRET';
@@ -405,7 +429,7 @@ export function preflight({ root = REPOSITORY_ROOT, env = process.env, now = new
   }
 
   // --- The one-time enable decision ----------------------------------------
-  const decisionPath = env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
+  const decisionPath = decisionPathFor(env);
   if (!fs.existsSync(decisionPath)) {
     add('one-time-enable-decision', 'fail', `no enable decision at ${decisionPath}`, providerId === 'groq'
       ? 'npm run runtime:model-canary -- --provider groq --authorise --by "your name" --reason "first Groq synthetic canary"'
@@ -1084,7 +1108,7 @@ async function cli(argv) {
     return 1;
   }
 
-  const decisionPath = process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
+  const decisionPath = decisionPathFor(process.env);
   const stored = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
   const report = await runModelCanary({ decisionToken: stored.token, providerId });
   const target = path.join(REPOSITORY_ROOT, '.app-builder', `model-attempt-${report.record.recordId}.json`);

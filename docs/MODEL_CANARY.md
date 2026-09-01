@@ -448,24 +448,22 @@ Reports adapter, pinned model, whether each `secretRef` resolves, permitted data
 classes, canary state and earned roles. It contacts no provider, so it costs
 nothing and works with no credentials.
 
-### Add a key — typed directly on the Hetzner shell
+### Adding a Groq key is deferred with the rest of the hosted Groq path
 
-Type this on the host yourself. Do not paste a key into Claude, Codex, ChatGPT,
-a GitHub issue, or any file in the repository.
+This section used to instruct a leading-space `export GROQ_API_KEY=...` on the
+Hetzner shell, relying on shell history and process lifetime to bound the
+credential. That was the best available answer before the systemd credential
+lane existed. It no longer is: an exported provider key is inherited by every
+child process, and the canary starts task sandboxes.
 
-```bash
-# In the shell that will run the canary, and nowhere else.
-# Note the leading space: it keeps the line out of shell history.
- export GROQ_API_KEY=<PASTE_KEY_LOCALLY_HERE>
+The Anthropic path shows the replacement — `systemd-creds encrypt` plus
+`LoadCredentialEncrypted=`, so the value is never in the environment at all.
+Applying it to Groq means teaching the installer a second provider, which is a
+larger change than the security fix this belongs to, so it is deferred rather
+than half-done.
 
-# Confirm it resolved, without printing it.
-npm run providers:doctor | grep -A1 '^  groq'
-```
-
-If the shell does not honour a leading space, `unset HISTFILE` for that session
-instead. Either way the variable dies with the shell, which is the intended
-lifetime: a provider credential that outlives the run it authorised is a
-credential nobody is watching.
+Until then there is no supported hosted Groq path, and the development fallback
+in the credential resolver is not one.
 
 ### Run the canary against the synthetic fixture
 
@@ -487,42 +485,28 @@ Groq run. There is no fallback from this measurement. A `free-only` profile
 refuses to become a billable call, so a quota or billing response fails rather
 than spends, and no retry is made.
 
-The exact operator sequence for the first Groq run is:
+**The hosted operator sequence for Groq is deferred, and the previous one has
+been removed.** It told the operator to `export GROQ_API_KEY` and to run
+`--authorise` directly, and neither survives the change in section 11:
 
-```bash
-# 1. Non-networked status. This reports presence only and prints no key.
-npm run providers:doctor
+- exporting a provider key on the host is exactly the environment exposure the
+  systemd credential lane was built to remove;
+- `--authorise` outside the trusted unit cannot read the decision signing
+  credential, so it could not mint a decision at all;
+- `install-model-canary-unit.sh` wires Anthropic specifically, and the signing
+  keys are now host state rather than shell state.
 
-# 2. In this temporary Hetzner shell only. Type the value locally.
- export GROQ_API_KEY=<PASTE_KEY_LOCALLY_HERE>
-# Both signing keys come from the host, not from this shell — see "The two
-# signing secrets". Regenerating the grant key here would mint grants the
-# broker refuses.
-sudo bash ops/hetzner/install-model-canary-unit.sh
+Leaving those instructions in place would mean shipping a recipe that cannot
+work and that undoes a security property while failing. Generalising the trusted
+lane to a second provider is a larger change than the security fix it would be
+buried inside, so it is deliberately not attempted here: **the first hosted
+canary path is Anthropic-only.**
 
-# 3. Through a reviewed change, set config/model-execution.json enabled: true.
-#    Then opt this host in independently.
-echo '{"enabled": true}' | sudo tee /etc/app-builder/model-execution.json
-
-# 4. Confirm every prerequisite. This makes no provider call.
-npm run runtime:model-canary -- --provider groq
-
-# 5. Mint one signed decision, explicitly for Groq.
-npm run runtime:model-canary -- --provider groq --authorise \
-  --by "your name" --reason "first Groq synthetic canary"
-
-# 6. Make exactly one real request against the fixed flawed-cart fixture.
-npm run runtime:model-canary -- --provider groq --run
-
-# 7. A human who did not create the artifact reviews the recorded evidence.
-npm run runtime:model-canary -- --review \
-  --record .app-builder/model-attempt-<id>.json \
-  --reviewer "your name" --verdict pass --rationale "why"
-
-# 8. Stop both halves and remove the temporary credentials.
-echo '{"enabled": false}' | sudo tee /etc/app-builder/model-execution.json
-unset GROQ_API_KEY APP_BUILDER_AGENT_GRANT_SECRET APP_BUILDER_MODEL_DECISION_SECRET
-```
+What remains true and unchanged is everything above about the fixture, the
+pre-declared criteria, the `free-only` refusal to become a billable call, and
+the no-fallback rule. Those are the measurement; only the hosted plumbing is
+deferred. The development fallback in the credential resolver still lets this
+lane be exercised off-host, and is not a hosted production path.
 
 Return `config/model-execution.json` to `enabled: false` in the reviewed change
 that follows the run. Even a passing, human-reviewed record changes no provider

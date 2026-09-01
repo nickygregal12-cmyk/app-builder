@@ -38,6 +38,7 @@ CREDSTORE="${APP_BUILDER_CREDSTORE:-/etc/credstore.encrypted/app-builder}"
 ETC_DIR=/etc/app-builder
 BROKER_ENV="${ETC_DIR}/agent-broker.env"
 DECISION_CRED="${CREDSTORE}/APP_BUILDER_MODEL_DECISION_SECRET.cred"
+DECISION="${ETC_DIR}/model-enable-decision.json"
 UNIT=/etc/systemd/system/app-builder-model-canary.service
 
 [[ $EUID -eq 0 ]] || { echo "Run this with sudo: it writes a systemd unit." >&2; exit 1; }
@@ -102,8 +103,27 @@ fi
 # Generated here and never displayed. The plaintext exists only in the pipe
 # between /dev/urandom and systemd-creds; it is never a shell variable, never an
 # argument, and never written to disk unencrypted.
+# The credential store is created restrictively if absent and never widened if
+# present. `install -d -m` would have chmod'd an existing directory, which is how
+# a 0700 store silently becomes 0755 the first time somebody runs an installer.
+if [[ ! -d "$CREDSTORE" ]]; then
+  install -d -m 0700 -o root -g root "$CREDSTORE"
+  printf 'Created %s (0700 root:root).\n' "$CREDSTORE"
+else
+  # One explicit contract, checked rather than assumed: root-owned, and no
+  # access for group or other. Anything else fails closed — a store this script
+  # cannot vouch for is not one it will add a signing key to.
+  store_owner=$(stat -c '%U' "$CREDSTORE")
+  store_mode=$(stat -c '%a' "$CREDSTORE")
+  if [[ "$store_owner" != root || $(( 8#$store_mode & 8#077 )) -ne 0 ]]; then
+    printf 'Refusing to use %s: it is %s-owned with mode %s.\n' "$CREDSTORE" "$store_owner" "$store_mode" >&2
+    printf 'A credential store must be root-owned with no group or other access. Fix it deliberately:\n' >&2
+    printf '  sudo chown root:root %s && sudo chmod 0700 %s\n' "$CREDSTORE" "$CREDSTORE" >&2
+    exit 1
+  fi
+fi
+
 if [[ ! -f "$DECISION_CRED" ]]; then
-  install -d -m 0755 "$CREDSTORE"
   head -c 48 /dev/urandom | base64 -w0 \
     | systemd-creds encrypt --name=APP_BUILDER_MODEL_DECISION_SECRET - "$DECISION_CRED"
   chmod 0600 "$DECISION_CRED"
@@ -143,9 +163,15 @@ Environment=PATH=/home/${RUNTIME_USER}/.local/bin:/usr/local/bin:/usr/bin:/bin
 # is inherited by every child, and this process starts task sandboxes.
 LoadCredentialEncrypted=ANTHROPIC_API_KEY:${CREDSTORE}/ANTHROPIC_API_KEY.cred
 
-# The decision key, also encrypted. app-builder-model-authorise.service loads
-# the same credential to sign; this unit loads it to verify.
+# The decision key, also encrypted. The transient authorise unit loads the same
+# credential to sign; this unit loads it to verify.
 LoadCredentialEncrypted=APP_BUILDER_MODEL_DECISION_SECRET:${DECISION_CRED}
+
+# The signed decision itself, as a credential rather than a readable file. It is
+# root:root 0600 at rest, so the runtime user cannot replace it and cannot read
+# it outside this unit — possessing the token is what authorises the call, so it
+# is not something every appbuilder process should be able to copy.
+LoadCredential=model-enable-decision:${DECISION}
 
 # The grant key is the one secret that must be shared rather than owned: the
 # broker inside app-builder-factory.service verifies the grants this canary

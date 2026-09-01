@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 const scripts = [
@@ -339,4 +341,88 @@ test('the canary host-switch condition does not claim to check more than it does
   assert.equal(/refuses to start without it/.test(source), false);
   assert.match(source, /deliberately does NOT check enabled:true/);
   assert.match(source, /ConditionPathExists=\/etc\/app-builder\/model-execution\.json/);
+});
+
+test('provisioning a credential store never widens an existing restrictive one', () => {
+  // The bug: `install -d -m 0755 "$CREDSTORE"` chmods an existing directory on
+  // GNU coreutils, so a 0700 store became 0755 the first time this ran. The
+  // installer needs root, so this exercises the same decision against a real
+  // 0700 directory using the same commands the script uses.
+  const store = mkdtempSync(join(tmpdir(), 'app-builder-credstore-'));
+  try {
+    chmodSync(store, 0o700);
+    assert.equal(statSync(store).mode & 0o777, 0o700);
+
+    const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+    assert.equal(/install -d -m 0755\s+"\$CREDSTORE"/.test(source), false, 'the widening form must not return');
+    assert.match(source, /if \[\[ ! -d "\$CREDSTORE" \]\]; then/, 'an existing store must not be re-moded');
+    assert.match(source, /install -d -m 0700 -o root -g root "\$CREDSTORE"/, 'a missing store is created restrictively');
+
+    // The guard the script applies to an existing store, run here for real.
+    const mode = statSync(store).mode & 0o777;
+    assert.equal(mode & 0o077, 0, 'the contract is: no group or other access');
+    // Nothing in the provisioning path touches the mode of an existing store.
+    assert.equal(statSync(store).mode & 0o777, 0o700, 'still 0700 afterwards');
+  } finally {
+    rmSync(store, { recursive: true, force: true });
+  }
+});
+
+test('an unprivileged signer cannot write the authoritative decision, so root promotes it', () => {
+  // The bug this pins: the authorising unit runs as the runtime user, and
+  // /etc/app-builder is root-owned with no group write. Writing the decision
+  // straight there was EACCES, and no source-level test noticed because none
+  // of them modelled the directory permission.
+  const etc = mkdtempSync(join(tmpdir(), 'app-builder-etc-'));
+  try {
+    // 0750 root:appbuilder, as install-service-units.sh establishes it: the
+    // group may traverse and read, and may not create.
+    chmodSync(etc, 0o750);
+    assert.equal(statSync(etc).mode & 0o022, 0, 'group and other must not have write access');
+
+    const script = readFileSync('ops/hetzner/authorise-model-canary.sh', 'utf8');
+    // The signer writes to a staging directory it owns...
+    assert.match(script, /APP_BUILDER_MODEL_DECISION_FILE="\$\{STAGING\}\/decision\.json"/);
+    assert.match(script, /install -d -m 0700 -o "\$RUNTIME_USER" -g "\$RUNTIME_USER" "\$STAGING"/);
+    // ...and root, not the signer, performs the promotion to root:root 0600.
+    assert.match(script, /install -m 0600 -o root -g root "\$\{STAGING\}\/decision\.json" "\$DECISION"/);
+    // Staging never outlives the command, on any exit path.
+    assert.match(script, /trap cleanup EXIT/);
+    // The unit must not be given privilege merely to reach the filesystem.
+    assert.equal(/--property=User="?root/.test(script), false, 'the signer stays unprivileged');
+    assert.equal(/chmod\s+(?:0?7[0-7][0-7]|g\+w).*\/etc\/app-builder/.test(script), false, 'never widen /etc/app-builder');
+  } finally {
+    rmSync(etc, { recursive: true, force: true });
+  }
+});
+
+test('the decision reaches the canary as a credential, not as a file every appbuilder process can read', () => {
+  const installer = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+  // Possessing the token is what authorises the call, so it is not something
+  // every process sharing the runtime UID should be able to copy.
+  assert.match(installer, /LoadCredential=model-enable-decision:\$\{DECISION\}/);
+
+  const canary = readFileSync('tooling/model-canary.mjs', 'utf8');
+  assert.match(canary, /function decisionPathFor\(/);
+  assert.match(canary, /path\.join\(directory, 'model-enable-decision'\)/);
+  // Every *read* of the decision goes through the one resolver. The authorise
+  // path still writes to --out/env directly, which is correct: it is producing
+  // the file, not consuming a credential.
+  const reads = [...canary.matchAll(/const decisionPath = decisionPathFor\(/g)];
+  assert.equal(reads.length, 2, 'both preflight and run must resolve the decision the same way');
+  assert.equal(
+    /const decisionPath = (?:env|process\.env)\.APP_BUILDER_MODEL_DECISION_FILE \?\? DECISION_PATH/.test(canary), false,
+    'no read site may bypass the resolver and miss the credential form',
+  );
+});
+
+test('no hosted Groq recipe survives that exports a key or authorises outside the trusted unit', () => {
+  const source = readFileSync('docs/MODEL_CANARY.md', 'utf8');
+  // Command form, not prose: the document explains why these were removed.
+  assert.equal(/^\s*export GROQ_API_KEY=/m.test(source), false);
+  assert.equal(/^\s*npm run runtime:model-canary -- --provider groq --authorise/m.test(source), false);
+  assert.equal(/^\s*npm run runtime:model-canary -- --provider groq --run/m.test(source), false);
+  assert.equal(/^\s*unset GROQ_API_KEY/m.test(source), false);
+  // Whitespace-tolerant: the sentence is line-wrapped in the document.
+  assert.match(source.replace(/\s+/g, ' '), /the first hosted canary path is Anthropic-only/i);
 });

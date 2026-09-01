@@ -1,0 +1,245 @@
+/*
+ * NØRREVÆRK — the composition.
+ *
+ * Fifteen columns, not twelve. An odd count is the mechanism rather than a preference: it
+ * makes halves and thirds impossible, so every placement has to be chosen, and nothing can
+ * fall accidentally into a symmetrical arrangement. The previous corpus used twelve columns
+ * and produced three sites with the same silhouette.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--paper); overflow-x: hidden; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--track-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 400; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+ul, ol, dl, dd { margin: 0; padding: 0; list-style: none; }
+
+::selection { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 4rem; }
+
+/* Clipped rather than thrown 9999px to the left: a far-offscreen element is real page width,
+   and it reports as horizontal overflow on every viewport the site is measured at. */
+.skip { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip:focus { width: auto; height: auto; clip-path: none; left: var(--gutter); top: var(--gutter); z-index: 100; background: var(--ink); color: var(--paper); padding: 12rem 20rem; }
+
+/* ------------------------------------------------------------------- grid */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  gap: var(--col-gap);
+  padding-inline: var(--gutter);
+}
+
+/* No max-width container anywhere. The fluid root handles scale; a container would fight it. */
+
+/* -------------------------------------------------------------------- type */
+
+/* The display face is set large enough that a long word can be wider than the measure, which
+   is a horizontal scrollbar rather than a design decision. Hyphenation keeps the scale and
+   lets the word break where a typesetter would; the wrap guard is there so it can never
+   overflow even without hyphenation dictionaries. */
+.display {
+  font-family: var(--display); font-size: var(--t-display);
+  line-height: var(--lh-display); letter-spacing: var(--track-display);
+  hyphens: auto; overflow-wrap: break-word;
+}
+.t1 { font-family: var(--display); font-size: var(--t-1); line-height: var(--lh-display); letter-spacing: var(--track-display); }
+.t2 { font-family: var(--display); font-size: var(--t-2); line-height: var(--lh-tight); letter-spacing: -0.03em; }
+.t3 { font-family: var(--display); font-size: var(--t-3); line-height: var(--lh-tight); letter-spacing: -0.025em; }
+.t4 { font-size: var(--t-4); line-height: 1.2; letter-spacing: -0.02em; }
+
+.label {
+  font-size: var(--t-micro);
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--grey-1);
+  line-height: 1.4;
+}
+.body { font-size: var(--t-body); line-height: var(--lh-body); }
+.small { font-size: var(--t-small); line-height: 1.5; color: var(--grey-2); }
+
+/* A measure held by an empty column rather than by centring, so prose sits off-axis. */
+.measure { max-width: 46ch; }
+.measure-narrow { max-width: 34ch; }
+
+/* --------------------------------------------------------------------- nav
+ *
+ * No bar, no background, no shadow. `mix-blend-mode: difference` in white inverts the mark
+ * against whatever scrolls beneath it, so the same element reads on paper and on a
+ * full-bleed photograph without a scrim, a gradient or a second colour scheme.
+ */
+
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--col-gap);
+  padding: 26rem var(--gutter);
+  mix-blend-mode: difference;
+  color: #fff;
+}
+.nav-mark { font-family: var(--display); font-size: 22rem; letter-spacing: 0.02em; }
+.nav-set { display: flex; gap: 28rem; align-items: baseline; }
+.nav-set a { font-size: var(--t-small); letter-spacing: 0.02em; }
+.nav-set a::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--dur) var(--ease);
+}
+.nav-set a:hover::after,
+.nav-set a[aria-current='page']::after { transform: scaleX(1); transform-origin: left; }
+
+/* ------------------------------------------------------------------ frames
+ *
+ * Three ratios for the whole site, and each frame declares which one it holds. Variety comes
+ * from sequencing three fixed ratios rather than from arbitrary sizing — the reference class
+ * in the hospitality reading does exactly this, and it is why its galleries read as authored.
+ */
+
+.frame { position: relative; overflow: hidden; background: var(--paper-2); }
+.frame img { width: 100%; height: 100%; object-fit: cover; }
+.frame[data-ratio='1.62'] { aspect-ratio: 1.62; }
+.frame[data-ratio='1'] { aspect-ratio: 1; }
+.frame[data-ratio='0.76'] { aspect-ratio: 0.76; }
+
+/* Full-bleed: escapes the gutter entirely and occupies the viewport. */
+/* Truly edge-to-edge. Cancelling the gutter with a negative margin depends on the parent's
+   padding box and quietly fails inside a grid item; measuring from the viewport does not. */
+/* The grid has padding rather than a max-width, so cancelling the gutter is the whole job.
+   `width: 100vw` overshoots by the scrollbar and `margin-left: 50%` resolves against the
+   parent, not the viewport — both put the frame 16px past the right edge on a tablet. */
+.bleed { grid-column: 1 / -1; margin-inline: calc(var(--gutter) * -1); }
+.bleed .frame { aspect-ratio: auto; height: 88vh; }
+
+/* An action the reviewer described as resolving to "plain contact details". A link that
+   carries the commercial step should be visibly a link. */
+a.t3, a.t4 { border-bottom: 1px solid var(--hair); padding-bottom: 4rem; transition: border-color var(--dur) var(--ease); }
+a.t3:hover, a.t4:hover { border-bottom-color: var(--ink); }
+
+.credit {
+  font-size: var(--t-small);
+  letter-spacing: 0.06em;
+  color: var(--grey-1);
+  margin-top: 10rem;
+}
+
+/* -------------------------------------------------------------- work index
+ *
+ * The answer to "not a card grid", and the single most important composition in the site.
+ *
+ * Every entry declares its own span, start column, image height and vertical offset in the
+ * data — six projects, three spans (4/6/7 of fifteen), two heights (540/700) and six
+ * distinct offsets including a negative one. Nothing shares a baseline and there are no rows,
+ * so the index cannot be read as a grid even though it is one.
+ *
+ * The values live in `src/data/bureau.ts` because they are an editorial judgement about which
+ * projects matter, not a layout convenience.
+ */
+
+.index { display: grid; grid-template-columns: repeat(15, 1fr); gap: var(--col-gap); padding-inline: var(--gutter); align-items: start; }
+.entry { grid-column: var(--start) / span var(--span); margin-top: var(--offset); }
+.entry .frame { height: var(--height); aspect-ratio: auto; }
+.entry img { transition: transform 1.4s var(--ease); }
+.entry:hover img { transform: scale(1.03); }
+
+.entry-meta { display: flex; align-items: baseline; justify-content: space-between; gap: var(--col-gap); margin-top: 14rem; }
+.entry-name { font-family: var(--display); font-size: var(--t-3); line-height: 1; letter-spacing: -0.025em; }
+.entry-found { font-size: var(--t-small); color: var(--grey-2); margin-top: 4rem; }
+.entry-area { font-size: var(--t-small); color: var(--grey-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ------------------------------------------------------------------- pairs
+ *
+ * The signature. A bureau that only works on existing buildings can show the half of the
+ * story every other portfolio omits, so a project is a *pair*: as found, as left. It is the
+ * one component in this site that no other business in either corpus could use.
+ */
+
+.pair { display: grid; grid-template-columns: repeat(15, 1fr); gap: var(--col-gap); align-items: start; }
+.pair-found { grid-column: 1 / span 6; }
+.pair-left { grid-column: 8 / span 8; margin-top: 120rem; }
+.pair h3 { font-size: var(--t-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--grey-1); margin-bottom: 14rem; }
+
+/* ------------------------------------------------------------------ figure */
+
+.figure-fig { font-family: var(--display); font-size: var(--t-2); line-height: 1; letter-spacing: -0.03em; display: block; }
+.figure-cap { font-size: var(--t-small); color: var(--grey-2); margin-top: 8rem; max-width: 26ch; }
+
+/* -------------------------------------------------------------------- foot */
+
+.foot { border-top: 1px solid var(--hair); margin-top: var(--band); padding-block: var(--band-half) 40rem; }
+.foot dt { font-size: var(--t-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--grey-1); }
+.foot dd { font-size: var(--t-small); margin-top: 8rem; }
+.foot-note { display: flex; justify-content: space-between; gap: var(--col-gap); flex-wrap: wrap; margin-top: var(--band-half); font-size: var(--t-micro); letter-spacing: 0.06em; color: var(--grey-1); }
+
+/* --------------------------------------------------------------- next work */
+
+.next { border-top: 1px solid var(--hair); margin-top: var(--band); padding-top: 30rem; }
+.next a { display: grid; grid-template-columns: repeat(15, 1fr); gap: var(--col-gap); align-items: end; }
+.next-label { grid-column: 1 / span 3; }
+.next-name { grid-column: 4 / span 8; font-family: var(--display); font-size: var(--t-1); line-height: 0.9; letter-spacing: var(--track-display); }
+.next-frame { grid-column: 13 / span 3; }
+
+/* -------------------------------------------------------------- responsive
+ *
+ * One breakpoint. Below it the fifteen-column grid is ABANDONED rather than collapsed —
+ * `display: grid` becomes `display: flex`, every authored placement is nulled, and the page
+ * becomes a different composition rather than a narrow version of this one.
+ */
+
+@media (max-width: 760px) {
+  .grid, .index, .pair, .next a { display: flex; flex-direction: column; }
+  /* Entries sit closer on a phone so the scale contrast between them stays readable. */
+  .index { gap: 34rem; }
+  .grid > *, .index > *, .pair > * { grid-column: auto !important; }
+
+  .entry { margin-top: 0 !important; }
+  /* Weight on a phone is carried by width, because column span has nowhere to go in one
+     column. The largest project runs past both margins; the smallest is held back from
+     them; the rest sit in the measure. */
+  .entry[data-weight='bleed'] { margin-inline: calc(var(--gutter) * -1); }
+  .entry[data-weight='bleed'] .entry-meta,
+  .entry[data-weight='bleed'] > a > p { margin-inline: var(--gutter); }
+  .entry[data-weight='inset'] { padding-inline: 30rem; }
+  /* The desktop index carries its rhythm in offsets and spans, which a single column cannot
+     hold. So the phone carries it in the crop instead: each entry declares one of the three
+     permitted ratios and the sequence runs portrait, square, portrait, landscape, portrait,
+     square. One column of identical rectangles is the thing this index exists not to be. */
+  .entry .frame { height: auto; aspect-ratio: var(--m-ratio, 0.76); }
+
+  .pair-left { margin-top: 0; }
+  .pair-found, .pair-left { width: 100%; }
+
+  /* Over-crop rather than letterbox: a 1.62 landscape at 390px is a 240px strip. */
+  .bleed .frame { height: 78vh; }
+
+  .nav { padding: 14rem var(--gutter); }
+  .nav-set { gap: 16rem; }
+
+  .next-name { font-size: var(--t-1); }
+  .next-frame { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry img, .nav-set a::after { transition: none; }
+}

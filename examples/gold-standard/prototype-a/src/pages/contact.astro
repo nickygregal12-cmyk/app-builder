@@ -1,0 +1,51 @@
+---
+/**
+ * Contact.
+ *
+ * No form. The reference class gives addresses and telephone numbers and nothing else, and
+ * for a bureau whose first step is a two-week survey written by a partner, a form asking for
+ * a project type and a budget range would be the wrong instrument.
+ */
+import Base from '../layouts/Base.astro';
+import { bureau } from '../data/bureau';
+const offices = [bureau.contact.copenhagen, bureau.contact.malmo];
+---
+<Base title="Contact — Nørreværk" description="Two offices. No form.">
+  <section class="grid" style="padding-top: 200rem; padding-bottom: var(--band);">
+    <h1 class="t1" style="grid-column: 1 / span 9;">Send us a building.</h1>
+    <p class="body measure" style="grid-column: 2 / span 5; margin-top: 60rem;">
+      An address and a photograph is enough to start. If it looks like work we should take, a
+      partner will come and look at it, and you will get a condition survey a fortnight later.
+    </p>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <ol style="grid-column: 1 / span 9; display: grid; gap: 30rem;">
+      {bureau.survey.steps.map((step) => (
+        <li style="display: grid; grid-template-columns: 3rem 1fr; gap: 24rem; border-top: 1px solid var(--hair); padding-top: 14rem;">
+          <span class="label" style="font-variant-numeric: tabular-nums;">{step.n}</span>
+          <div>
+            <h2 class="t4">{step.title}</h2>
+            <p class="small measure" style="margin-top: 8rem;">{step.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <div style="grid-column: 11 / span 5;">
+      <p class="label">The survey</p>
+      <p class="t2" style="margin-top: 8rem;">{bureau.survey.price}</p>
+      <p class="small measure" style="margin-top: 10rem;">{bureau.survey.caveat}</p>
+    </div>
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    {offices.map((office, i) => (
+      <div style={`grid-column: ${i === 0 ? 1 : 9} / span 6;`}>
+        <h2 class="t2">{office.city}</h2>
+        <p class="body" style="margin-top: 24rem;">{office.line}</p>
+        <p class="body" style="margin-top: 14rem;"><a href={`mailto:${office.email}`}>{office.email}</a></p>
+        <p class="body"><a href={`tel:${office.phone.replace(/\s/g, '')}`}>{office.phone}</a></p>
+      </div>
+    ))}
+  </section>
+</Base>

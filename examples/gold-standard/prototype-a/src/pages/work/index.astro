@@ -1,0 +1,76 @@
+---
+/**
+ * The work index.
+ *
+ * Every entry declares its own span, start column, image height and vertical offset, and the
+ * values live in the data because they are an editorial judgement about which projects matter
+ * — not a layout convenience. Six projects, three spans, two heights, six offsets including a
+ * negative one. Nothing shares a baseline, so there are no rows to read.
+ *
+ * This is the component the previous corpus got wrong three times: it rendered its collection
+ * as N equal cells and then wondered why distinctiveness would not move.
+ */
+import Base from '../../layouts/Base.astro';
+import Frame from '../../components/Frame.astro';
+import { bureau } from '../../data/bureau';
+import { shownProjects as projects, declaredCount } from '../../lib/frames';
+---
+<Base title="Work — Nørreværk" description="Conversions from 334 to 18,600 square metres.">
+  <section class="grid" style="padding-top: 200rem; padding-bottom: var(--band-half);">
+    <h1 class="t1" style="grid-column: 1 / span 9;">{declaredCount} buildings we did not design.</h1>
+    <p class="small measure" style="grid-column: 11 / span 5; margin-top: 20rem;">
+      Ordered as they were completed. Areas run from 334 to 18,600 square metres, which is the
+      range the bureau works across and the reason no two of these look alike.
+    </p>
+    {/* Stated at reading size rather than in the footer. A reviewer noted that photographs
+        this authoritative can imply authorship of the buildings, and small print is not the
+        answer to a first-glance ambiguity. */}
+    <p class="small" style="grid-column: 11 / span 5; margin-top: 20rem; border-top: 1px solid var(--hair); padding-top: 12rem; color: var(--grey-1);">
+      Photographs are of existing buildings by other architects, used under CC BY 2.0 and
+      credited on each project. Nørreværk is a fictional bureau built as a design prototype;
+      the interventions described here are invented.
+    </p>
+  </section>
+
+  <section class="index" style="padding-bottom: var(--band);">
+    {projects.map((project) => (
+      <article class="entry" data-weight={project.index.mobileWeight} style={`--span:${project.index.span};--start:${project.index.start};--height:${project.index.height}rem;--offset:${project.index.offset}rem;--m-ratio:${project.index.mobileRatio}`}>
+        <a href={`/work/${project.slug}`}>
+          <Frame
+            {/* The index leads on a different frame from the one home showed, where the
+                project has one. Seeing the same photograph twice in two clicks reads as a
+                shortage of work rather than as a selection. */}
+            slug={(project.frames[1] ?? project.frames[0]).slug}
+            alt={(project.frames[1] ?? project.frames[0]).alt}
+            ratio={(project.frames[1] ?? project.frames[0]).ratio}
+            ratioMobile={(project.frames[1] ?? project.frames[0]).ratioMobile}
+            sizes="(max-width: 760px) 100vw, 45vw"
+          />
+          <div class="entry-meta">
+            <div>
+              <h2 class="entry-name">{project.left}</h2>
+              <p class="entry-found">{project.found} · {project.built} → {project.completed}</p>
+            </div>
+            <span class="entry-area">{project.area.toLocaleString('en-GB')} m²</span>
+          </div>
+          <p class="small measure" style="margin-top: 10rem;">{project.line}</p>
+        </a>
+      </article>
+    ))}
+  </section>
+
+  <section class="grid" style="padding-bottom: var(--band);">
+    <div style="grid-column: 1 / span 7; border-top: 1px solid var(--hair); padding-top: 16rem;">
+      <h2 class="t2">Every one of these was somebody else's problem first.</h2>
+    </div>
+    <div style="grid-column: 9 / span 5; border-top: 1px solid var(--hair); padding-top: 16rem;">
+      <p class="small measure">{bureau.survey.send}</p>
+      <p style="margin-top: 16rem;">
+        <a class="t3" href={`mailto:${bureau.contact.copenhagen.email}?subject=A%20building`}>Send us a building</a>
+      </p>
+      <p class="small" style="margin-top: 8rem;">
+        {bureau.contact.copenhagen.email} · {bureau.survey.price} · {bureau.survey.duration}
+      </p>
+    </div>
+  </section>
+</Base>

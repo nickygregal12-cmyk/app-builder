@@ -1,0 +1,109 @@
+/*
+ * NØRREVÆRK — measurement system.
+ *
+ * The one mechanism worth taking wholesale from the reference class is how it *measures*.
+ * `font-size` on the root is set in `vw`, so 1rem equals exactly one pixel at a 1600 design
+ * frame and one pixel at a 390 frame. Layout can then be authored in absolute design-frame
+ * units — a 540px image, a 220px section margin — and the whole page scales fluidly between
+ * them with no max-width container and no intermediate breakpoints to maintain.
+ *
+ * Two consequences follow, and both are the point:
+ *
+ *  - There is exactly ONE breakpoint in this site (760px). Everything above it is one fluid
+ *    system; everything below is a different composition, not a narrower one.
+ *  - Type can be set at 200rem without that being a number anybody has to reason about,
+ *    which is how a 22:1 ratio between display and body becomes usable rather than theoretical.
+ *
+ * The Gold Reference corpus used a twelve-column grid with a max-width and six spacing steps,
+ * and every page in it came out the same shape. This is the opposite instrument.
+ */
+
+:root {
+  /* 100 / 1600 = 0.0625vw. One rem is one design pixel at the desktop frame. */
+  font-size: 0.0625vw;
+
+  /*
+   * Six tokens. No accent colour anywhere on the site — the reference class carries none,
+   * and every attempt in the previous corpus to make a page distinctive with an accent
+   * produced a page that looked like a template with its colours changed.
+   */
+  --ink: #0B0B0B;
+  --paper: #F4F3F0;
+  --paper-2: #E9E7E2;
+  --grey-1: #6F6C66;
+  --grey-2: #56534E;
+  --hair: #CFCCC5;
+
+  /*
+   * Two families, one weight each. The display face carries every heading and behaves like
+   * an image; the grotesque carries everything functional. There is no third voice and no
+   * bold — emphasis is made by size and position, which is what the reference class does.
+   */
+  --display: "Times New Roman", Times, "Liberation Serif", serif;
+  --text: "Helvetica Neue", Helvetica, "Inter", Arial, sans-serif;
+
+  /*
+   * Display scale, in design pixels. 360 is reserved: it is set here so the system has a
+   * top, and it is used on exactly one element in the whole site. The reference class does
+   * the same and never ships its largest size at all.
+   */
+  --t-reserved: 360rem;
+  --t-display: 200rem;
+  --t-1: 132rem;
+  --t-2: 84rem;
+  --t-3: 46rem;
+  --t-4: 28rem;
+  --t-body: 18rem;
+  --t-small: 16rem;
+  --t-micro: 12.5rem;
+
+  /* Sub-1 line heights on everything display-sized. This is most of the difference. */
+  --lh-display: 0.84;
+  --lh-tight: 0.92;
+  --lh-body: 1.42;
+
+  --track-display: -0.035em;
+  --track-body: -0.01em;
+  --track-micro: 0.14em;
+
+  /* Vertical rhythm authored in design pixels rather than in a spacing scale. */
+  --band: 170rem;
+  --band-half: 88rem;
+  --gutter: 30rem;
+  --col-gap: 20rem;
+
+  /* One motion token for the whole site. */
+  --ease: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --dur: 0.9s;
+}
+
+@media (max-width: 760px) {
+  :root {
+    /* 100 / 390. One rem is one design pixel at the phone frame. */
+    font-size: 0.2564vw;
+
+    /*
+     * Hierarchy re-weights rather than shrinking proportionally. The display face halves,
+     * but the second and third steps fall by roughly 3×, so the ratio between the loudest
+     * voice and the next one widens from 1.5:1 to 3.4:1. One thing stays enormous and
+     * everything else gets out of its way — which is why a phone page can still have a
+     * hierarchy rather than a sequence of similar-sized blocks.
+     */
+    --t-display: 82rem;
+    --t-1: 62rem;
+    --t-2: 28rem;
+    --t-3: 22rem;
+    --t-4: 17rem;
+    --t-body: 15rem;
+    --t-small: 13rem;
+    --t-micro: 10rem;
+
+    --lh-display: 0.9;
+
+    /* 220 → 64 is a 3.4× compression, not a scale. */
+    --band: 64rem;
+    --band-half: 40rem;
+    --gutter: 16rem;
+    --col-gap: 12rem;
+  }
+}

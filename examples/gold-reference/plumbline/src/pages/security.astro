@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import { company } from '../data/product';
+const grants = [
+  { grant: 'CONNECT', on: 'the database', why: 'To plan at all.' },
+  { grant: 'USAGE', on: 'each schema in scope', why: 'To read the shape of the tables the migration touches.' },
+  { grant: 'SELECT', on: 'pg_catalog, pg_stat_user_tables', why: 'Row counts and table statistics, which is where lock estimates come from.' },
+  { grant: 'SELECT', on: 'pg_stat_statements', why: 'PL002 only. It is how we know old code still reads the column you are dropping.' },
+];
+const facts = [
+  ['Row data read', 'None. Plumbline reads catalogue and statistics tables, never the contents of your tables.'],
+  ['Write access', 'None. The role we ask for cannot write, and Plumbline executes no statement from your migration.'],
+  ['Where plans are stored', 'eu-west-2. Self-hosted keeps them inside your network and never contacts us.'],
+  ['Retention', '90 days on Team, 3 years on Organisation, yours to configure on Self-hosted.'],
+  ['Sub-processors', 'Two: our cloud provider and our error tracker. Both are listed with what they see.'],
+];
+---
+<Base title="Security — Plumbline" description="What Plumbline connects to, what it can read, and what it cannot do.">
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">Security</p>
+      <h1 class="display" style="margin-top: var(--s-3);">The exact grant, not a trust badge.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">Your security team is going to ask what this thing can read. Here is the role, statement by statement, with the reason each line exists.</p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="c-full">
+      <div class="plan">
+        <div class="plan-head"><span><b>The role Plumbline asks for</b></span><span>PostgreSQL</span></div>
+        {grants.map((row) => (
+          <div class="plan-row" style="grid-template-columns: 6rem 1fr;">
+            <span class="plan-verdict" data-v="clear">{row.grant}</span>
+            <div>
+              <p class="plan-sql">GRANT {row.grant} ON {row.on} TO plumbline;</p>
+              <p class="plan-note">{row.why}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p class="label" style="margin-top: var(--s-2);">There is no fifth line.</p>
+    </div>
+  </section>
+
+  <section class="section grid rule-top">
+    <div class="c-1-6">
+      <h2 class="h2">The rest of the answers.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">
+        Questions from a security review, answered at the length they deserve. If yours is
+        not here, {company.contact.security} goes to the person who would have to fix it.
+      </p>
+    </div>
+    <div class="c-7-6">
+      <dl style="margin: 0; border-top: var(--hair-strong);">
+        {facts.map(([term, detail]) => (
+          <div style="padding: var(--s-3) 0; border-bottom: var(--hair); display: grid; grid-template-columns: 12rem 1fr; gap: var(--s-3);">
+            <dt class="label" style="text-transform: none; letter-spacing: 0;">{term}</dt>
+            <dd style="margin: 0; color: var(--ink-soft); font-size: var(--t-sm);">{detail}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-8">
+      <h2 class="h2">If it may not leave your network.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">Self-hosted runs entirely inside your VPC and makes no connection to us at run time, including for licensing.</p>
+      <div class="actions" style="margin-top: var(--s-4);"><a class="ask" href="/enterprise">Talk to us</a><a class="ask-quiet" href="/pricing">See pricing</a></div>
+    </div>
+  </section>
+</Base>

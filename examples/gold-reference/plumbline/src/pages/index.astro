@@ -1,0 +1,129 @@
+---
+import Base from '../layouts/Base.astro';
+import Plan from '../components/Plan.astro';
+import { company, checks, plan, proof, numbers } from '../data/product';
+
+const lead = proof[0];
+const blocking = checks.filter((check) => check.severity === 'block');
+---
+
+<Base title="Plumbline — the review step in front of your migrations" description={company.positioning}>
+  <section class="section-tight grid">
+    <div class="c-1-7">
+      <p class="label">Database change management</p>
+      <h1 class="display" style="margin-top: var(--s-3);">Your migration tool will run anything you give it.</h1>
+      <p class="lede" style="margin-top: var(--s-4);">{company.positioning}</p>
+      <div class="actions" style="margin-top: var(--s-4);">
+        <a class="ask" href="/start">Start a {company.trial.days}-day trial</a>
+        <a class="ask-quiet" href="/checks">See what it refuses</a>
+      </div>
+      <p class="actions-note" style="margin-top: var(--s-2);">
+        {company.trial.scope} · no card · {company.people} people in Manchester
+      </p>
+    </div>
+    <div class="c-9-4 end">
+      {/* Reviewed as too quiet for what it carries. It is the caption to the figure that
+          makes the whole argument, so it is set as one: a rule, a number, and a sentence
+          at reading size rather than at footnote size. */}
+      <div class="figure-lead">
+        <p class="label">The figure below</p>
+        <p class="figure-lead-count"><span>3</span> of 6</p>
+        <p class="figure-lead-text">
+          statements in this migration plan would have reached production. It is Plumbline's
+          own output, rendered as live HTML rather than photographed as a screenshot.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* The signature moment, and it is placed before anything else has been claimed: the
+      product's own output, at full width, in the first screen and a half. A category full
+      of tools promising to catch problems is a category where showing beats telling. */}
+  <section class="grid">
+    <div class="c-full">
+      <Plan />
+      <p class="label" style="margin-top: var(--s-2);">
+        Bars are drawn against this team's stated {plan.budgetMs}ms lock budget — the vertical rule — not against the worst statement in the plan.
+      </p>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="c-full">
+      <div class="numbers">
+        {numbers.map((entry) => (
+          <div>
+            <span class="number-figure">{entry.figure}</span>
+            <span class="number-caption">{entry.caption}</span>
+          </div>
+        ))}
+      </div>
+      <p class="label" style="margin-top: var(--s-3);">
+        Plumbline is a fictional company built as a design prototype. These figures and the
+        quotation below are invented, and are here to show how such evidence would be set —
+        not to be believed.
+      </p>
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-6">
+      <h2 class="h2">It is the third one that gets you.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">
+        Every statement in that plan is one a competent engineer wrote and a competent
+        reviewer approved. None of them is wrong. Three of them are wrong <em>against twelve
+        million rows, during a rolling deploy, at half past four on a Friday</em> — and that
+        context is not in the diff, which is why review misses it.
+      </p>
+      <p class="prose">
+        Plumbline has the context. It reads the target's live table statistics, the query
+        logs for the last seven days, and the set of migrations the deploy will apply
+        together. Then it says no, with the arithmetic attached.
+      </p>
+      <p style="margin-top: var(--s-4);"><a class="ask-text" href="/checks">All eight checks, and how each one is detected</a></p>
+    </div>
+    <div class="c-8-5">
+      <p class="label">The five it blocks outright</p>
+      <ul style="list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: var(--s-2);">
+        {blocking.map((check) => (
+          <li style="display: grid; grid-template-columns: 4rem 1fr; gap: var(--s-3); padding-bottom: var(--s-2); border-bottom: var(--hair);">
+            <span class="check-id">{check.id}</span>
+            <span style="font-size: var(--t-sm);">{check.title}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section grid rule-top">
+    <div class="c-1-7">
+      <blockquote class="quote">
+        <p>“{lead.quote}”</p>
+        <footer class="label">{lead.who} · {lead.org}</footer>
+      </blockquote>
+    </div>
+    <div class="c-9-4">
+      <p class="label">What it does not do</p>
+      <p class="prose" style="margin-top: var(--s-2); font-size: var(--t-sm);">
+        Plumbline never connects to your database to change it, and it never runs a
+        statement. It reads, it plans, and it returns an exit code. Your existing migration
+        tool does the work, or does not.
+      </p>
+      <p><a class="ask-text" href="/security">How the connection works</a></p>
+    </div>
+  </section>
+
+  <section class="section-tight grid rule-top">
+    <div class="c-1-8">
+      <h2 class="h2">Put it in front of one database and see what it says.</h2>
+      <p class="prose" style="margin-top: var(--s-3);">
+        The trial runs against a single database for {company.trial.days} days. It is read-only,
+        it needs no card, and if it never refuses anything you will have lost an afternoon.
+      </p>
+      <div class="actions" style="margin-top: var(--s-4);">
+        <a class="ask" href="/start">Start a {company.trial.days}-day trial</a>
+        <a class="ask-quiet" href="/pricing">See pricing</a>
+      </div>
+    </div>
+  </section>
+</Base>

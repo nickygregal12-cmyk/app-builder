@@ -1,0 +1,85 @@
+---
+import '../styles/tokens.css';
+import '../styles/site.css';
+import { company } from '../data/product';
+
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const nav = [
+  { href: '/checks', label: 'Checks' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/changelog', label: 'Changelog' },
+  { href: '/security', label: 'Security' },
+];
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 1v9' stroke='%2314181A' stroke-width='1.5'/><path d='M8 10l2.2 2.6L8 15l-2.2-2.4z' fill='%23B3261E'/></svg>" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="bar">
+      <a class="bar-mark" href="/" aria-label={`${company.name} — home`}>
+        {/* The mark: a line and a bob. Drawn rather than lettered, and the bob is the one
+            place the refusal red appears without meaning a refusal — it is the plumb. */}
+        <svg width="14" height="26" viewBox="0 0 14 26" aria-hidden="true">
+          <path d="M7 0v15" stroke="currentColor" stroke-width="1.5" />
+          <path d="M7 15l4 5-4 6-4-6z" fill="var(--blocked)" />
+        </svg>
+        <span>{company.name}</span>
+      </a>
+      <nav aria-label="Primary">
+        <ul>
+          {nav.map((item) => (
+            <li><a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a></li>
+          ))}
+          <li><a class="ask" href="/start">Start free</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main"><slot /></main>
+
+    <footer class="foot">
+      <div class="foot-grid">
+        <div>
+          <h3>{company.name}</h3>
+          <p>{company.principle}</p>
+        </div>
+        <div>
+          <h3>Product</h3>
+          <ul>
+            <li><a href="/checks">The eight checks</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/changelog">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Company</h3>
+          <ul>
+            <li><a href="/security">Security</a></li>
+            <li><a href={`mailto:${company.contact.email}`}>{company.contact.email}</a></li>
+            <li><a href={`mailto:${company.contact.security}`}>{company.contact.security}</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Office</h3>
+          <address>{company.contact.address.split(', ').map((line) => <span>{line}<br /></span>)}</address>
+        </div>
+      </div>
+      <p class="foot-note">
+        <span>{company.legalName} · Founded {company.founded}</span>
+        <span>Fictional company. Gold Reference prototype — hand-built, not produced by App Builder.</span>
+      </p>
+    </footer>
+  </body>
+</html>

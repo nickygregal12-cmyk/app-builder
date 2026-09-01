@@ -1,0 +1,85 @@
+---
+/**
+ * A Plumbline plan, rendered as a document rather than photographed as one.
+ *
+ * This is the argument the whole site rests on, so it is real markup: it reflows to the
+ * measure it is given, the SQL is selectable, the lock figures are tabular and can be
+ * checked against the stated budget, and a screen reader can read the verdicts. A screenshot
+ * of a terminal would have been faster and would have failed at exactly the moment a
+ * sceptical engineer tried to read it on a phone.
+ *
+ * The lock bar is scaled against the team's stated budget rather than against the largest
+ * value in the set. Scaling to the maximum would make the worst statement look like a full
+ * bar in every plan, which flatters the product by making every plan look equally alarming.
+ */
+import { plan } from '../data/product';
+
+interface Props {
+  /** Show a subset — the home page shows all six, a check page shows the one that fired. */
+  only?: string[];
+  /** The header carries the repo, branch and target. Off when the plan sits inside prose. */
+  head?: boolean;
+}
+const { only, head = true } = Astro.props;
+
+const rows = only ? plan.statements.filter((row) => only.includes(row.check ?? '')) : plan.statements;
+const blocked = plan.statements.filter((row) => row.verdict === 'blocked').length;
+
+/*
+ * The scale. The budget sits at 30% of the track so an over-budget statement is visibly over
+ * rather than merely full, and anything past the end is clamped and marked.
+ */
+const BUDGET_AT = 0.3;
+const scale = (ms: number) => Math.min(100, (ms / plan.budgetMs) * BUDGET_AT * 100);
+const format = (ms: number) => {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
+  const m = Math.floor(ms / 60_000);
+  return `${m}m ${Math.round((ms - m * 60_000) / 1000)}s`;
+};
+---
+
+<div class="plan">
+  {head && (
+    <div class="plan-head">
+      <span><b>{plan.repo}</b> · {plan.branch}</span>
+      <span>target <b>{plan.target}</b> · {(plan.rows / 1_000_000).toFixed(1)}M rows</span>
+      <span>lock budget <b>{plan.budgetMs}ms</b></span>
+      <span class="plan-head-verdict">{blocked} refused</span>
+    </div>
+  )}
+
+  {rows.map((row) => (
+    <div class="plan-row">
+      <div class="plan-row-meta">
+        <span class="plan-verdict" data-v={row.verdict}>{row.verdict}</span>
+        <div class="lock lock--inline">
+          <span class="lock-figure">{format(row.lockMs)}</span>
+          <span class="lock-track" data-over={scale(row.lockMs) >= 100 ? '' : undefined} data-v={row.verdict}>
+            <span class="lock-fill" data-v={row.verdict} style={`width:${scale(row.lockMs)}%`}></span>
+            <span class="lock-budget" style={`left:${BUDGET_AT * 100}%`}></span>
+          </span>
+        </div>
+      </div>
+      <div class="plan-body">
+        <p class="plan-sql">{row.statement}</p>
+        <p class="plan-note">{row.check && <b>{row.check} · </b>}{row.note}</p>
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  /*
+   * On desktop the wrapper dissolves so verdict, statement and lock sit in the row's three
+   * columns. Every one of them is placed explicitly: auto-placement puts the cursor *after*
+   * the last explicitly-placed item, so naming only the lock sent the statement into an
+   * implicit fourth column and squeezed the SQL to about eight characters.
+   */
+  @media (min-width: 621px) {
+    .plan-row-meta { display: contents; }
+    .plan-verdict { grid-column: 1; grid-row: 1; }
+    .plan-body { grid-column: 2; grid-row: 1; }
+    .lock--inline { grid-column: 3; grid-row: 1; }
+  }
+</style>

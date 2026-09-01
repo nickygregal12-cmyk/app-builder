@@ -1,0 +1,9 @@
+{
+  "name": "plumbline-gold-reference",
+  "private": true,
+  "type": "module",
+  "description": "Gold Reference prototype 3. Hand-built, not produced by App Builder.",
+  "scripts": { "dev": "astro dev", "build": "astro build", "preview": "astro preview", "typecheck": "astro check --minimumSeverity error" },
+  "dependencies": { "astro": "7.2.7" },
+  "devDependencies": { "@astrojs/check": "0.9.10", "typescript": "5.9.3" }
+}

@@ -178,18 +178,42 @@ async function stretchMotion(page, milliseconds) {
  * to photograph and a `during` frame would be a duplicate of `after` wearing a
  * label that says otherwise.
  */
-async function seekMotion(page, progress) {
-  return page.evaluate((fraction) => {
+async function seekMotion(page, progress, subject) {
+  return page.evaluate(({ fraction, selector }) => {
+    const root = selector ? document.querySelector(selector) : null;
+    if (selector && !root) return { held: 0, subjectFound: false };
     const running = document.getAnimations().filter((animation) => {
       const duration = animation.effect?.getTiming?.()?.duration;
-      return typeof duration === 'number' && duration > 0;
+      if (typeof duration !== 'number' || duration <= 0) return false;
+      if (!root) return true;
+      // Scoped to the element the interaction is about, and its descendants. An animation
+      // somewhere else on the page is not this interaction moving.
+      const target = animation.effect?.target ?? null;
+      return target instanceof Element && (root === target || root.contains(target));
     });
     for (const animation of running) {
       animation.pause();
       animation.currentTime = animation.effect.getTiming().duration * fraction;
     }
-    return running.length;
-  }, progress);
+    return { held: running.length, subjectFound: true };
+  }, { fraction: progress, selector: subject ?? null });
+}
+
+/**
+ * A capture failure that says which kind it is.
+ *
+ * "Temporal sequence X is missing its during frame" is true at the evidence-set layer and tells an
+ * engineer nothing about what to do. Whether the trigger animated nothing, the panel was never
+ * found, the click did not land or the page never loaded are four different problems with four
+ * different fixes, and the first is not even necessarily a defect — it can mean a presentation
+ * declared movement it does not implement, which is a contract error rather than a harness one.
+ */
+class CaptureFailure extends Error {
+  constructor(reason, message) {
+    super(message);
+    this.name = 'CaptureFailure';
+    this.reason = reason;
+  }
 }
 
 export async function captureEvidence({ plan, baseUrl, launch = null, onCapture = null, env = process.env } = {}) {
@@ -245,10 +269,18 @@ export async function captureEvidence({ plan, baseUrl, launch = null, onCapture 
               await perform(page, capture.state.interaction);
             }
             if (temporal.frame === 'during') {
-              const held = await seekMotion(page, temporal.atProgress);
+              const { held, subjectFound } = await seekMotion(page, temporal.atProgress, temporal.subject);
+              if (!subjectFound) {
+                throw new CaptureFailure(
+                  'subject-not-found',
+                  `Interaction ${capture.state.interaction} declares its movement is carried by ${temporal.subject}, and no such element is on ${capture.route} at ${capture.viewport}.`,
+                );
+              }
               if (!held) {
-                throw new Error(
-                  `Interaction ${capture.state.interaction} declares temporal evidence and animated nothing when triggered at ${capture.viewport}. `
+                throw new CaptureFailure(
+                  'no-movement',
+                  `Interaction ${capture.state.interaction} declares that this presentation moves ${temporal.surface}, and ${temporal.subject} animated nothing when it was triggered at ${capture.viewport}. `
+                  + 'Either the presentation does not implement the movement its motion contract claims, or the movement is not on that element. '
                   + 'A during-frame with no movement behind it is the after-frame with a different label.',
                 );
               }
@@ -276,7 +308,13 @@ export async function captureEvidence({ plan, baseUrl, launch = null, onCapture 
         results.push({ id: capture.id, bytes });
         if (onCapture) onCapture(capture);
       } catch (error) {
-        failures.push({ id: capture.id, message: error instanceof Error ? error.message : String(error) });
+        failures.push({
+          id: capture.id,
+          // Classified where the classification is known. Anything unrecognised stays
+          // `capture-failed` rather than being guessed at from its message.
+          reason: error instanceof CaptureFailure ? error.reason : 'capture-failed',
+          message: error instanceof Error ? error.message : String(error),
+        });
       } finally {
         await context.close();
       }

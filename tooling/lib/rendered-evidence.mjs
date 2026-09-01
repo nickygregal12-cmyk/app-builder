@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+import { movesSurface } from './motion-contract.mjs';
+
 /**
  * Rendered evidence.
  *
@@ -107,8 +109,72 @@ export const INTERACTIONS = Object.freeze({
       // taken after a click that did nothing asserts a state it never reached.
       reached: 'true',
     }),
+    /**
+     * The one interaction here whose quality is not in its endpoints.
+     *
+     * Five independent reviews of hand-built work capped `interaction-craft`
+     * with a version of the same sentence — that transition quality, touch
+     * behaviour and live-update smoothness could not be judged from stills —
+     * and one of them said it while looking at eighteen separate state
+     * captures. More endpoints do not answer it: the disclosure either slides
+     * or it appears, and a picture of it shut followed by a picture of it open
+     * is identical in both cases.
+     *
+     * So this declares that it needs temporal evidence, and nothing else does.
+     * `requiresSectionType` already decides whether an interaction exists at
+     * all from the composition; this decides whether the interaction's *worth*
+     * lies in the movement between its states. Both are declarations. Neither
+     * is inferred from a stylesheet, because "there is a transition property
+     * here" is not the same claim as "a reviewer cannot judge this without
+     * seeing it move", and only the second is a reason to spend three frames.
+     */
+    temporal: Object.freeze({
+      purpose: 'Whether the panel arrives or is simply present — the disclosure carries the navigation on a phone, and how it enters is most of what makes it feel like a panel rather than a jump.',
+      // Where in the movement to look, as a fraction of its own duration.
+      // Halfway is the frame that distinguishes a slide from a cut; the
+      // endpoints are identical either way.
+      atProgress: 0.5,
+      /*
+       * The presentation surface whose movement this would be evidence of.
+       *
+       * This is the half that decides whether the sequence is captured, and it is deliberately
+       * not decided here. The registry knows the interaction — how to trigger it, how to tell it
+       * arrived, and what a temporal record of it would prove. Whether *this build* moves the
+       * panel is a fact about the presentation, and the MotionContract already owns it.
+       *
+       * Both halves are required. An interaction that supports temporal evidence, in a build that
+       * discloses its navigation instantly, gets the still and nothing else — a static
+       * presentation is a legitimate presentation, not a missing capture.
+       */
+      surface: 'navigation-disclosure',
+      /*
+       * The element whose movement is load-bearing.
+       *
+       * Scoped, because "something on the page animated" is not evidence that the disclosure did.
+       * The first version of this counted every running animation on the document, and one lane
+       * passed on a during-frame that had caught an unrelated hover transition — a false positive
+       * strictly worse than the failure it was hiding, because it publishes a frame labelled as a
+       * transition of something that never moved.
+       */
+      subject: '#primary-navigation',
+    }),
   }),
 });
+
+/**
+ * The three frames a temporal interaction produces, in order.
+ *
+ * Three because that is the smallest sequence that can carry a transition: the
+ * state it left, the shape of the movement, and the state it reached. Two is a
+ * pair of stills, which is what the harness already produced and what reviewers
+ * said they could not judge from. More than three is a film, and nothing in the
+ * record asks for one — the reviewers' complaint was never "not enough frames",
+ * it was that the movement itself was absent.
+ *
+ * If an interaction ever genuinely needs a different representation, it should
+ * say so and say why, rather than this becoming a frame count somebody tunes.
+ */
+export const SEQUENCE_FRAMES = Object.freeze(['before', 'during', 'after']);
 
 const VIEWPORT_NAMES = new Set(VIEWPORTS.map((viewport) => viewport.name));
 const list = (value) => (Array.isArray(value) ? value : []);
@@ -121,8 +187,8 @@ function slug(value) {
   return String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-export function captureId({ pageId, viewport, axis, state }) {
-  return [pageId, viewport, slug(axis), slug(state)].filter(Boolean).join('--');
+export function captureId({ pageId, viewport, axis, state, frame = null }) {
+  return [pageId, viewport, slug(axis), slug(state), frame ? slug(frame) : null].filter(Boolean).join('--');
 }
 
 export function captureFile(id) {
@@ -157,7 +223,15 @@ function uncoveredReason(axis, state) {
  * only which of its states a browser can be pointed at, and says why for the
  * rest.
  */
-export function deriveEvidencePlan({ composition, stateMatrix, viewports = VIEWPORTS, elementIdentity = null } = {}) {
+/**
+ * Plan the evidence a build's states need.
+ *
+ * `motionContract` is what decides whether an interaction's movement is worth three frames. It is
+ * the build's compiled MotionContract — production's existing owner of what moves — and its
+ * absence means nothing has declared movement, so nothing temporal is planned. Failing safe in
+ * that direction is the point: evidence nobody declared a need for cannot be missing.
+ */
+export function deriveEvidencePlan({ composition, stateMatrix, viewports = VIEWPORTS, elementIdentity = null, motionContract = null } = {}) {
   if (!composition?.pages?.length) throw new Error('A composition with pages is required to plan rendered evidence.');
   const names = viewports.map((viewport) => viewport.name);
   for (const name of names) if (!VIEWPORT_NAMES.has(name)) throw new Error(`Unknown evidence viewport: ${name}`);
@@ -197,14 +271,61 @@ export function deriveEvidencePlan({ composition, stateMatrix, viewports = VIEWP
         ? viewports.filter((viewport) => interaction.viewports.includes(viewport.name))
         : viewports;
       for (const viewport of scoped) {
+        /*
+         * The still. Captured with motion suppressed, as everything here always
+         * has been, which makes it the reduced-motion counterpart rather than a
+         * second thing to capture: `prefers-reduced-motion: reduce` is exactly
+         * the condition under which a visitor sees this interaction arrive with
+         * no movement, and that is what this picture is.
+         */
         captures.push({
           id: captureId({ pageId: page.id, viewport: viewport.name, axis: interaction.axis, state: interaction.state }),
           pageId: page.id,
           route: page.path,
           viewport: viewport.name,
-          state: { axis: interaction.axis, state: interaction.state, risk: interaction.risk, interaction: name, proves: interaction.proves },
+          state: {
+            axis: interaction.axis,
+            state: interaction.state,
+            risk: interaction.risk,
+            interaction: name,
+            motion: 'reduced',
+            proves: interaction.temporal
+              ? `${interaction.proves} Captured under prefers-reduced-motion, so it is also evidence of what this interaction does for a visitor who has asked for no movement.`
+              : interaction.proves,
+          },
           elementRefs: refs,
         });
+
+        // Two declarations, both required: the interaction supports temporal evidence, and this
+        // build's presentation actually moves the surface it is about.
+        if (!interaction.temporal || !movesSurface(motionContract, interaction.temporal.surface)) continue;
+        for (const frame of SEQUENCE_FRAMES) {
+          captures.push({
+            id: captureId({ pageId: page.id, viewport: viewport.name, axis: interaction.axis, state: interaction.state, frame }),
+            pageId: page.id,
+            route: page.path,
+            viewport: viewport.name,
+            state: {
+              axis: interaction.axis,
+              state: interaction.state,
+              risk: interaction.risk,
+              interaction: name,
+              motion: 'allowed',
+              sequence: {
+                id: `${page.id}--${viewport.name}--${slug(interaction.axis)}--${slug(interaction.state)}`,
+                frame,
+                atProgress: interaction.temporal.atProgress,
+                purpose: interaction.temporal.purpose,
+                surface: interaction.temporal.surface,
+                subject: interaction.temporal.subject,
+              },
+              proves: frame === 'during'
+                ? `The shape of the movement ${interaction.axis} ${interaction.state} makes, seeked to ${Math.round(interaction.temporal.atProgress * 100)}% of its own duration. It is not evidence of how long it takes.`
+                : `The ${frame === 'before' ? 'state this interaction leaves' : 'state it reaches'}, with motion allowed, so the middle frame has two endpoints to be read between.`,
+            },
+            elementRefs: refs,
+          });
+        }
       }
     }
 
@@ -275,7 +396,7 @@ export function findDegenerateRouteCaptures({ composition, captures } = {}) {
   return findings;
 }
 
-export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, renderingSource, checkpointId = null, taskId = null, designLint = null, composition = null } = {}) {
+export function buildEvidenceSet({ plan, results, projectId, buildRef, compositionHash, capturedAt, renderingSource, checkpointId = null, taskId = null, designLint = null, composition = null, failures = [] } = {}) {
   if (!projectId || !buildRef || !compositionHash || !capturedAt) throw new Error('Rendered evidence needs a project, a build, a composition hash and a capture time.');
   // What was serving is not optional and has no default. A default would be a
   // guess, and the only two guesses available are "development" — which would
@@ -305,6 +426,80 @@ export function buildEvidenceSet({ plan, results, projectId, buildRef, compositi
     });
 
   const missed = plan.captures.filter((capture) => !captured.has(capture.id));
+
+  /*
+   * A declared interaction that did not capture is a failure, not a gap.
+   *
+   * Everything the plan derives from the state matrix may legitimately end up
+   * uncovered: those are states the factory cannot reach yet, and saying so is
+   * the honest answer. An interaction is different. It is in a closed registry,
+   * its precondition was checked against the composition before it was planned,
+   * and it reaches its state through a scripted route that asserts it arrived.
+   * If one of those does not produce bytes, something broke — the control moved,
+   * the selector went stale, the build stopped shipping the behaviour — and
+   * recording it as "needs a deterministic fixture" files a regression under the
+   * same heading as work that was never done.
+   *
+   * That is not hypothetical. Fourteen of fifteen interaction states went
+   * missing from one hand-built packet through a single wrong manifest key, no
+   * error was raised, and the reviewer scored interaction-craft on what was
+   * left. Silence is the failure mode this whole module was built to remove, and
+   * it had survived here.
+   *
+   * A temporal sequence is stricter again: it is only evidence as a sequence. A
+   * during-frame with no before is not a weaker version of a transition, it is a
+   * still that reads as one.
+   */
+  /*
+   * Why each planned capture produced nothing, where the capture said so.
+   *
+   * The evidence-set layer knows a frame is missing and cannot know why. Both halves belong in the
+   * same sentence: "the during frame is missing" sends an engineer to the wrong place, and
+   * "the panel animated nothing" is the thing that tells them whether the defect is in the
+   * presentation, the selector or the harness.
+   */
+  const causeOf = new Map(list(failures).map((failure) => [failure.id, failure]));
+  const explain = (capture) => {
+    const cause = causeOf.get(capture.id);
+    return cause ? ` Capture failed (${cause.reason}): ${cause.message}` : ' The capture produced no bytes and recorded no reason.';
+  };
+
+  /*
+   * Checked before the general interaction rule below, because every sequence
+   * frame is also an interaction capture and the general rule would otherwise
+   * answer first with the less useful sentence. Which frames are missing, and
+   * why a partial sequence is worse than none, is the thing worth saying.
+   */
+  const bySequence = new Map();
+  for (const capture of plan.captures) {
+    const id = capture.state.sequence?.id;
+    if (!id) continue;
+    if (!bySequence.has(id)) bySequence.set(id, []);
+    bySequence.get(id).push(capture);
+  }
+  for (const [id, frames] of bySequence) {
+    const present = frames.filter((capture) => captured.has(capture.id));
+    if (present.length === frames.length) continue;
+    const missingFrames = frames.filter((capture) => !captured.has(capture.id));
+    const absent = missingFrames.map((capture) => capture.state.sequence.frame);
+    throw new Error(
+      `Temporal sequence ${id} is missing its ${absent.join(' and ')} frame(s). A sequence is evidence as a sequence: `
+      + 'a during-frame without its endpoints is a still that reads as a transition, which is worse than no temporal evidence at all.'
+      + missingFrames.map((capture) => `\n  ${capture.state.sequence.frame}:${explain(capture)}`).join(''),
+    );
+  }
+
+  const missedInteractions = missed.filter((capture) => capture.state.interaction);
+  if (missedInteractions.length) {
+    const first = missedInteractions[0];
+    throw new Error(
+      `Rendered evidence is incomplete: ${missedInteractions.length} declared interaction capture(s) produced no bytes. `
+      + `${first.id} (${first.state.interaction} on ${first.route} at ${first.viewport}) was planned because the composition contains what it needs, and did not capture.`
+      + `${explain(first)} `
+      + 'A declared interaction that silently becomes uncovered files a regression as an unmet fixture need.',
+    );
+  }
+
   const uncovered = [
     ...plan.uncovered,
     ...missed.map((capture) => ({
@@ -316,6 +511,26 @@ export function buildEvidenceSet({ plan, results, projectId, buildRef, compositi
       detail: 'Planned but not captured in this run.',
     })),
   ];
+
+  /*
+   * Every route the composition declares was photographed at least once.
+   *
+   * The per-capture identity assertion already proves a picture is of the page
+   * it names. It cannot prove the set covers the site: a route dropped before
+   * the browser opened leaves no failed capture to notice, and the set that
+   * results is internally consistent and silently partial.
+   */
+  if (composition) {
+    const declaredRoutes = list(composition.pages).map((page) => page.path);
+    const capturedRoutes = new Set(captures.map((capture) => capture.route));
+    const absent = declaredRoutes.filter((route) => !capturedRoutes.has(route));
+    if (absent.length) {
+      throw new Error(
+        `Rendered evidence covers ${capturedRoutes.size} of ${declaredRoutes.length} declared routes. Missing: ${absent.join(', ')}. `
+        + 'A set that omits a route reads as complete evidence for a smaller site.',
+      );
+    }
+  }
 
   // Fail closed before the record exists. Evidence that silently collapses six
   // routes into one picture is worse than a failed capture, because a failed

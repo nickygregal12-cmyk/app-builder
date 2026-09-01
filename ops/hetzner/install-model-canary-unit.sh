@@ -33,6 +33,8 @@
 set -euo pipefail
 
 RUNTIME_USER="${APP_BUILDER_RUNTIME_USER:-appbuilder}"
+RUNTIME_UID="$(id -u "${APP_BUILDER_RUNTIME_USER:-appbuilder}" 2>/dev/null || echo "")"
+RUNTIME_HOME="$(getent passwd "${APP_BUILDER_RUNTIME_USER:-appbuilder}" 2>/dev/null | cut -d: -f6)"
 REPO="${APP_BUILDER_REPOSITORY:-/srv/app-builder/repository}"
 CREDSTORE="${APP_BUILDER_CREDSTORE:-/etc/credstore.encrypted/app-builder}"
 ETC_DIR=/etc/app-builder
@@ -44,8 +46,16 @@ DECISION="${ETC_DIR}/model-enable-decision.json"
 CLAIM="${ETC_DIR}/model-enable-decision.claimed.json"
 UNIT=/etc/systemd/system/app-builder-model-canary.service
 
+# Rootless Podman writes exactly two trees, and ProtectHome=read-only covers
+# both: the image/layer store under the runtime user's home, and its per-user
+# runtime directory. Derived from the account rather than hardcoded so a host
+# with a different runtime user or uid stays correct.
+PODMAN_GRAPH_ROOT="${RUNTIME_HOME}/.local/share/containers"
+PODMAN_RUNTIME_ROOT="/run/user/${RUNTIME_UID}"
+
 [[ $EUID -eq 0 ]] || { echo "Run this with sudo: it writes a systemd unit." >&2; exit 1; }
 id -u "$RUNTIME_USER" >/dev/null 2>&1 || { echo "Runtime user ${RUNTIME_USER} does not exist." >&2; exit 1; }
+[[ -n "$RUNTIME_UID" && -n "$RUNTIME_HOME" ]] || { echo "Could not derive uid/home for ${RUNTIME_USER}; refusing to write a unit with guessed Podman paths." >&2; exit 1; }
 [[ -r "${REPO}/package.json" ]] || { echo "No repository at ${REPO}." >&2; exit 1; }
 
 # The credential must already exist. Its presence is checked; its value is not
@@ -142,8 +152,12 @@ fi
 cat > "$UNIT" <<EOF
 [Unit]
 Description=App Builder model canary (one bounded, authorised provider attempt)
-After=network-online.target
+After=network-online.target user-runtime-dir@${RUNTIME_UID}.service
 Wants=network-online.target
+# Rootless Podman needs /run/user/${RUNTIME_UID} to exist. Depending on it
+# explicitly rather than inheriting it from whatever last logged in — the egress
+# anchor already takes this dependency for the same reason.
+Requires=user-runtime-dir@${RUNTIME_UID}.service
 ConditionPathExists=${REPO}/package.json
 # Presence only. This deliberately does NOT check enabled:true — the preflight
 # re-reads both switches immediately before the call and is the single authority
@@ -197,7 +211,25 @@ Slice=app-builder-runtime.slice
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
+# Kept. It is the reason the sandbox host process cannot wander through home
+# directories, and the earlier failure was not a reason to drop it.
 ProtectHome=read-only
+
+# The two exceptions ProtectHome makes necessary, and nothing wider.
+#
+# ProtectHome=read-only remounts /home *and* /run/user read-only, and rootless
+# Podman must write both: its image store lives under the runtime user's home,
+# and it chmods ${PODMAN_RUNTIME_ROOT}/libpod on startup. Without these the unit
+# fails before any provider call with
+# "set sticky bit on: chmod .../libpod: read-only file system", which is exactly
+# what the hosted preflight hit.
+#
+# This restores the write access this user already has outside the unit. It does
+# not widen /home, /run or /run/user, and it grants the *host canary process*
+# nothing the child task container can see: the task's mounts are the driver's
+# to decide and remain workspace, scratch and the broker socket.
+ReadWritePaths=${PODMAN_GRAPH_ROOT}
+ReadWritePaths=${PODMAN_RUNTIME_ROOT}
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true

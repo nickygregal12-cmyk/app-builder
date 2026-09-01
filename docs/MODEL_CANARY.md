@@ -245,9 +245,10 @@ sudo -u appbuilder podman image inspect localhost/app-builder-task:baseline-1 \
 # 3. Re-run the hosted boundary proof with that image present.
 sudo bash ops/hetzner/verify-agent-boundary.sh
 
-# 4. Signing keys, in the gateway's environment only.
-export APP_BUILDER_AGENT_GRANT_SECRET="$(head -c 48 /dev/urandom | base64)"
-export APP_BUILDER_MODEL_DECISION_SECRET="$(head -c 48 /dev/urandom | base64)"
+# 4. Signing keys. Do NOT export these; the installer in step 5 wires both.
+#    The grant key already exists on the host and must not be regenerated —
+#    see "The two signing secrets" below for why exporting a fresh one breaks
+#    the run rather than enabling it.
 
 # 5. The provider credential, as an encrypted systemd credential.
 #    Never exported, never in a file the repository can read, never in shell
@@ -290,6 +291,42 @@ landing.
 
 `OPENAI_API_KEY` may also be encrypted on the host. It stays unloaded until the
 independent-review lane has an actual consumer.
+
+### The two signing secrets
+
+Neither is a provider credential, and they do not share a lifetime — so they do
+not share a mechanism. `sudo bash ops/hetzner/install-model-canary-unit.sh`
+wires both; neither should ever be exported.
+
+**`APP_BUILDER_AGENT_GRANT_SECRET` — long-lived, host-owned, already exists.**
+The canary mints capability grants and the broker inside
+`app-builder-factory.service` verifies them, so both sides must hold the *same*
+key. `install-service-units.sh` generates it into
+`/etc/app-builder/agent-broker.env` (root:appbuilder, 0640) and the factory
+service loads it from there; the canary unit now loads the same file.
+
+Exporting a fresh random value — as this document previously advised — does not
+enable the run. It produces grants signed with a key the broker has never seen,
+which the broker correctly refuses. If the file is missing, install the broker
+rather than inventing a key.
+
+**`APP_BUILDER_MODEL_DECISION_SECRET` — spans two commands, then is finished
+with.** It signs the one-time enable decision, which `--authorise` mints and
+`--run` verifies. Those are separate processes, so the key must outlive one of
+them; nothing needs it once the attempt is recorded, and a decision may not live
+longer than 24 hours regardless.
+
+The installer generates it once into `/etc/app-builder/model-canary.env`
+(root:appbuilder, 0640). Deliberately *not* an encrypted systemd credential:
+`--authorise` runs outside any unit and would have no `$CREDENTIALS_DIRECTORY`
+to read, and a mechanism only half the flow can use is worse than a simpler one
+both halves can. It is generated rather than requested because an operator never
+needs to see, choose or keep this value.
+
+Rotating either is `rm` the file and re-run the relevant installer. Both are
+refused entry to a task sandbox by name in
+`packages/control-plane/src/execution-environment.js`, and
+`APP_BUILDER_AGENT_GRANT_SECRET` additionally has its own explicit check there.
 
 ### The run
 
@@ -440,8 +477,10 @@ npm run providers:doctor
 
 # 2. In this temporary Hetzner shell only. Type the value locally.
  export GROQ_API_KEY=<PASTE_KEY_LOCALLY_HERE>
-export APP_BUILDER_AGENT_GRANT_SECRET="$(head -c 48 /dev/urandom | base64)"
-export APP_BUILDER_MODEL_DECISION_SECRET="$(head -c 48 /dev/urandom | base64)"
+# Both signing keys come from the host, not from this shell — see "The two
+# signing secrets". Regenerating the grant key here would mint grants the
+# broker refuses.
+sudo bash ops/hetzner/install-model-canary-unit.sh
 
 # 3. Through a reviewed change, set config/model-execution.json enabled: true.
 #    Then opt this host in independently.

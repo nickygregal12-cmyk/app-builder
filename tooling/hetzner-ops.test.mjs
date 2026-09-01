@@ -234,3 +234,51 @@ test('the egress verifier proves both halves and writes the attestation only on 
   assert.match(source, /The attestation was not written/);
   assert.equal(/systemctl\s+(?:--\S+\s+)*(?:start|stop|enable|disable|restart)\b/.test(source), false);
 });
+
+test('the model canary unit carries every secret the run needs, each by the right mechanism', () => {
+  const source = readFileSync('ops/hetzner/install-model-canary-unit.sh', 'utf8');
+
+  // The provider credential is the one thing that must not be an environment
+  // variable, because this process starts task sandboxes and a variable is
+  // inherited by every child.
+  assert.match(source, /LoadCredentialEncrypted=ANTHROPIC_API_KEY:\$\{CREDSTORE\}\/ANTHROPIC_API_KEY\.cred/);
+  assert.equal(source.includes('Environment=ANTHROPIC_API_KEY='), false, 'the provider key must never be a unit Environment= line');
+  assert.equal(/EnvironmentFile=.*(ANTHROPIC|credstore)/i.test(source), false, 'the provider key must never arrive by EnvironmentFile');
+
+  // The preflight requires both signing secrets. A unit that loaded neither
+  // could never complete a run, which is the mismatch this pins.
+  assert.match(source, /EnvironmentFile=\$\{BROKER_ENV\}/);
+  assert.match(source, /EnvironmentFile=\$\{CANARY_ENV\}/);
+
+  // The grant key is the broker's, and is read rather than generated: a fresh
+  // one here would mint grants the broker refuses.
+  assert.match(source, /BROKER_ENV="\$\{ETC_DIR\}\/agent-broker\.env"/);
+  assert.equal(/APP_BUILDER_AGENT_GRANT_SECRET=\$\(/.test(source), false, 'the grant key must never be regenerated here');
+  assert.match(source, /grep -q '\^APP_BUILDER_AGENT_GRANT_SECRET=' "\$BROKER_ENV"/);
+
+  // The decision key spans --authorise and --run, so it is generated once and
+  // kept root-owned rather than exported.
+  assert.match(source, /APP_BUILDER_MODEL_DECISION_SECRET=%s/);
+  assert.match(source, /chmod 0640 "\$CANARY_ENV"/);
+  assert.match(source, /chown root:"\$RUNTIME_USER" "\$CANARY_ENV"/);
+
+  // OpenAI stays dormant. The file may explain *why* it is not loaded — that is
+  // the useful part — so this pins the absence of a load, not of the name.
+  assert.equal(/LoadCredential\w*=OPENAI_API_KEY/.test(source), false, 'the OpenAI credential has no consumer and must not be loaded');
+  assert.equal(/Environment=OPENAI_API_KEY=/.test(source), false);
+  // Anchored to a real command: this file explains in prose why a stray
+  // `systemctl start` cannot spend money, and that sentence is not a command.
+  assert.equal(
+    /^\s*systemctl\s+(?:--\S+\s+)*(?:start|enable|restart)\b/m.test(source), false,
+    'the installer must not start or enable the canary',
+  );
+  assert.match(source, /Type=oneshot/);
+  assert.match(source, /Restart=no/);
+});
+
+test('the canary documentation no longer tells an operator to export a signing key', () => {
+  const source = readFileSync('docs/MODEL_CANARY.md', 'utf8');
+  assert.equal(/export APP_BUILDER_AGENT_GRANT_SECRET=/.test(source), false);
+  assert.equal(/export APP_BUILDER_MODEL_DECISION_SECRET=/.test(source), false);
+  assert.equal(/export ANTHROPIC_API_KEY=/.test(source), false);
+});

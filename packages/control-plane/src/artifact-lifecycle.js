@@ -380,15 +380,21 @@ export function forkArtifactRevision(revision, details = {}, now = new Date().to
 export function artifactRevisionPosition(revision, { legacyState = null } = {}) {
   const state = requireText(revision?.lifecycleState, 'Artifact revision lifecycleState');
   const latest = revision.history?.[revision.history.length - 1] ?? null;
-  const basis = latest?.basis ?? describeArtifactState(state).meaning;
-  if (isTerminalDisposition(state)) {
-    return { lifecycleState: state, basis, missing: [], legacyState };
-  }
+  const described = describeArtifactState(state);
+  const position = {
+    lifecycleState: state,
+    basis: latest?.basis ?? described.meaning,
+    missing: [],
+    legacyState,
+    meaning: described.meaning,
+    notMeaning: described.notMeaning,
+  };
+  if (isTerminalDisposition(state)) return position;
   const [next] = nextArtifactStates(state).filter((candidate) => !isTerminalDisposition(candidate));
-  if (!next) return { lifecycleState: state, basis, missing: [], legacyState };
+  if (!next) return position;
   const missing = (REQUIRED_IDENTITY[next] ?? []).filter((component) => revision.identity?.[component] === null || revision.identity?.[component] === undefined);
   if (REQUIRES_EVIDENCE.has(next)) missing.push(`evidence:${next}`);
-  return { lifecycleState: state, basis, missing, legacyState };
+  return { ...position, missing };
 }
 
 /**
@@ -407,7 +413,16 @@ export function artifactRevisionPosition(revision, { legacyState = null } = {}) 
  * it would have to record to go further. That is the honest report, and it is
  * also the migration instruction.
  */
-export function projectLegacyProjectState(legacy = {}, { declaredToolchain = null } = {}) {
+export function projectLegacyProjectState(legacy = {}, options = {}) {
+  const position = legacyPosition(legacy, options);
+  // Same single authority for what a state means as a real revision gets. A
+  // surface that had to carry its own copy of these sentences would be a second
+  // authority for the claim, which is the thing `notMeaning` exists to stop.
+  const described = position.lifecycleState ? describeArtifactState(position.lifecycleState) : null;
+  return { ...position, meaning: described?.meaning ?? null, notMeaning: described?.notMeaning ?? null };
+}
+
+function legacyPosition(legacy = {}, { declaredToolchain = null } = {}) {
   const state = String(legacy.state ?? '').trim();
   const known = ['draft', 'ready', 'generating', 'generated', 'verified', 'failed'];
   if (!known.includes(state)) {

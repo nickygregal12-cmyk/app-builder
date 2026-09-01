@@ -1,4 +1,4 @@
-import type { AppBuilderApprovedIntakeBundle, AppBuilderProjectManifest, AppBuilderProjectSummary } from '@app-builder/contracts';
+import type { AppBuilderApprovedIntakeBundle, AppBuilderProjectManifest, AppBuilderProjectSummary, ApprovedBuildPlan } from '@app-builder/contracts';
 import type { SourceReference } from '@app-builder/factory-core';
 
 export type { SourceReference };
@@ -782,8 +782,43 @@ export async function loadIntakeBundle(projectId: string) {
   return (await request<{ bundle: ApprovedIntakeBundle | null }>(`/projects/${encodeURIComponent(projectId)}/intake-bundle`)).bundle;
 }
 
+/**
+ * Build the project the way the factory's own rules require it to be built.
+ *
+ * `POST /generate` is the operator's scratch route, and it stops working the
+ * moment a project has an approved build plan: `project.generate` is
+ * `required-after-contract-approval`, so from then on the approved plan is the
+ * only way in and every other route is refused. The Console only ever used the
+ * scratch route, which meant two things at once — an operator's build never
+ * opened an ArtifactRevision and so could never be released, and the first
+ * approved project would have met a 403 with nothing on screen to do about it.
+ *
+ * So generating from the Console is: freeze exactly the inputs the operator is
+ * looking at into a single-use plan, then spend it. The plan id and the frozen
+ * state hash come back so the workspace can show what was approved rather than
+ * asking anyone to take the freeze on trust.
+ *
+ * The approval id is minted per attempt because a plan is spent once. Reusing
+ * one would return the already-approved plan and then fail to execute it, which
+ * reads as a broken button rather than as the correct refusal it is.
+ */
 export async function generateProject(projectId: string) {
-  return (await request<{ project: ProjectSummary }>(`/projects/${encodeURIComponent(projectId)}/generate`, { method: 'POST' })).project;
+  const id = encodeURIComponent(projectId);
+  const { plan } = await request<{ plan: ApprovedBuildPlan }>(`/projects/${id}/approved-build-plans`, {
+    method: 'POST',
+    body: JSON.stringify({ approvalId: `console-${crypto.randomUUID()}`, confirmed: true }),
+  });
+  await request<unknown>(`/projects/${id}/approved-build-plans/execute`, {
+    method: 'POST',
+    body: JSON.stringify({ planId: plan.planId, expectedPlanHash: plan.planHash, requestId: `console-${crypto.randomUUID()}` }),
+  });
+  // The execution response describes the build; the project is read back so the
+  // Console applies one authoritative summary, lifecycle included.
+  return (await request<{ project: ProjectSummary }>(`/projects/${id}`)).project;
+}
+
+export async function listApprovedBuildPlans(projectId: string) {
+  return (await request<{ plans: ApprovedBuildPlan[] }>(`/projects/${encodeURIComponent(projectId)}/approved-build-plans`)).plans;
 }
 
 export async function verifyProject(projectId: string) {

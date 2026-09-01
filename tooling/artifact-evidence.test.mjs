@@ -291,6 +291,41 @@ test('a real governed build is traceable by digest, and rebuilds identically fro
     assert.equal(service.liveArtifactRevision('project-2'), null);
     assert.equal(service.getProject('project-2').lifecycle.legacyState, 'ready');
 
+    // Building the same project again is rework, and rework supersedes.
+    //
+    // Approving a second plan used to open a second revision beside the first,
+    // which is the one shape the projection refuses — and because the ledger is
+    // append-only, every later read of that project threw for good. An ordinary
+    // rebuild was enough to reach it.
+    const second = await approveProjectBuildPlan(service, 'project-1', {
+      approvalId: 'approval-2', approvalMode: 'explicit-local-operator', confirmed: true,
+    });
+    const reworked = service.liveArtifactRevision('project-1');
+    assert.equal(reworked.lifecycleState, 'contract-approved');
+    assert.notEqual(reworked.id, verified.id, 'a second approval opens a new revision');
+    assert.equal(reworked.parentRevisionId, verified.id, 'and names the one it replaces');
+    assert.equal(reworked.identity.contractDigest, second.source.projectStateHash);
+
+    const lineage = service.artifactRevisions('project-1');
+    assert.equal(lineage.length, 2);
+    assert.equal(lineage.find((entry) => entry.id === verified.id).lifecycleState, 'superseded');
+
+    // The parent keeps its own evidence. It is perfectly valid, about a revision
+    // nobody is releasing.
+    if (supported) {
+      assert.equal(lineage.find((entry) => entry.id === verified.id).identity.outputDigest, verified.identity.outputDigest);
+    }
+
+    // And the whole thing still replays from the ledger file, supersession
+    // included, because that is the only place any of it lives.
+    const afterRework = fs.readFileSync(store.ledgerPath, 'utf8').trim().split(/\r?\n/).map((line) => JSON.parse(line));
+    assert.equal(liveArtifactRevision(reduceArtifactRevisions(afterRework)).id, reworked.id);
+
+    await executeApprovedProjectBuildPlan(service, 'project-1', {
+      planId: second.planId, expectedPlanHash: second.planHash, requestId: 'request-2',
+    });
+    assert.equal(service.liveArtifactRevision('project-1').lifecycleState, 'materialized');
+
     assert.deepEqual(verified.history.map((entry) => entry.to), supported
       ? ['contract-approved', 'materialized', 'buildable']
       : ['contract-approved', 'materialized']);

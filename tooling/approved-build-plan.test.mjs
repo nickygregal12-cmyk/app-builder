@@ -56,6 +56,11 @@ function serviceFixture({ generate = null } = {}) {
     // these tests pass against a service the approved-plan path could no longer
     // drive — which is the whole failure route parity is about.
     decideMutation: (operationId, id, options) => decideMutation(service, operationId, id, options),
+    // Same reason the decision is real: approving a plan reads the project's
+    // own revisions so a rebuild supersedes rather than opening a second live
+    // one. A double that could not be asked would let the supersession go
+    // untested against every path these tests drive.
+    listEvents: (id, options) => store.listEvents(id, options),
     hasApprovedBuildPlan: (id) => listApprovedBuildPlans(store, id).length > 0,
     async generateProject(id, options = {}) {
       await this.decideMutation('project.generate', id, options);

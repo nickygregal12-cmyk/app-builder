@@ -132,7 +132,7 @@ test('a field the service adds and the schema does not know is refused at the bo
 
   const valid = {
     id: 'p', name: 'n', type: 'marketing-site', slug: 's', state: 'ready',
-    lifecycle: { lifecycleState: null, basis: 'Nothing has been approved.', missing: [], legacyState: 'ready' },
+    lifecycle: { lifecycleState: null, basis: 'Nothing has been approved.', missing: [], legacyState: 'ready', meaning: null, notMeaning: null },
     buildIdentity: null, workspacePath: null, manifestVersion: 1, knowledgePackHash: null,
     approvedIntakeBundleId: null, createdAt: 'now', updatedAt: 'now',
   };
@@ -159,7 +159,7 @@ test('a toolchain nobody could read is null rather than assumed', () => {
   // difference between a reproducibility claim and an honest gap.
   const withUnknownNpm = {
     id: 'p', name: 'n', type: 'marketing-site', slug: 's', state: 'verified',
-    lifecycle: { lifecycleState: 'materialized', basis: 'Recorded but not reproducible.', missing: ['toolchain'], legacyState: 'verified' },
+    lifecycle: { lifecycleState: 'materialized', basis: 'Recorded but not reproducible.', missing: ['toolchain'], legacyState: 'verified', meaning: 'A portable source tree exists.', notMeaning: 'That it builds.' },
     buildIdentity: {
       sourceDigest: 'a'.repeat(64), lockDigest: 'b'.repeat(64), toolchain: { node: '22.23.2', npm: null },
       outputDigest: 'c'.repeat(64), outputFiles: 12, reproducible: false, toolchainSummary: 'npm unknown', recordedAt: 'now',

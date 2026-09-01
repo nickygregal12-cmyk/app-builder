@@ -32,7 +32,7 @@
     "lifecycle": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["lifecycleState", "basis", "missing", "legacyState"],
+      "required": ["lifecycleState", "basis", "missing", "legacyState", "meaning", "notMeaning"],
       "description": "Where this project stands on the one readiness ladder, and why. Null for a project carrying no exact artifact identity for a lifecycle to be about — which is most of them, and is the honest answer rather than a gap.",
       "properties": {
         "lifecycleState": {
@@ -51,7 +51,17 @@
           "items": {"type": "string", "minLength": 1},
           "description": "What this project would have to record to go further."
         },
-        "legacyState": {"type": ["string", "null"]}
+        "legacyState": {"type": ["string", "null"]},
+        "meaning": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "What this state asserts, in the terms the factory can check. Carried over the boundary rather than restated by each surface, because a second copy of these sentences is a second authority for the claim."
+        },
+        "notMeaning": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "The claim somebody could otherwise make from the state name alone. A surface that shows the position without this is the overclaim the ladder exists to prevent. Null exactly when there is no state."
+        }
       }
     },
     "buildIdentity": {

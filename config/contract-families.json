@@ -183,8 +183,8 @@
       "schema": "project-summary.schema.json",
       "typeName": "AppBuilderProjectSummary",
       "boundary": "What the service says about a project over its own boundary. Written by the service and read by the Console, which used to carry a hand-written copy of it.",
-      "schemaHash": "5840c31ab2185050fccdae8af441eecf266d783e3ffdb93fac010779cb639d97",
-      "typesHash": "d66fe9b70d77fa2b503039480e07f58c78ba64dbdaa51553c0c4a23bcf681497"
+      "schemaHash": "ddd03e27fd31f773d0545a284a9545f479d8d8a69076caff502facf212d1820c",
+      "typesHash": "a9894ea8446172a2e5f9b040b361ad4d651395cdff640363a77deb93d29307de"
     },
     {
       "id": "site-plan",

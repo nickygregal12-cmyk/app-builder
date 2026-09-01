@@ -1,0 +1,283 @@
+---
+/**
+ * One week. Thirty of these.
+ *
+ * The page a guest actually decides on, so it answers the two questions that decide it — when
+ * can I get on, when must I be off — before anything else, and it answers them with the times
+ * rather than with a policy.
+ *
+ * The crossing table here is the reason the type scale on this site puts times above body copy.
+ * It is the content. Prose describes it; it does not describe prose.
+ */
+import Base from '../../layouts/Base.astro';
+import Ribbon from '../../components/Ribbon.astro';
+import {
+  SEASON, BAND_LABEL, ARRIVE_AFTER, DEPART_BEFORE,
+  hoursLabel, money, span, toneName, toneSentence, type Week,
+} from '../../lib/season';
+import { clock } from '../../lib/tide';
+import { availabilityOf, AVAILABILITY_LABEL, AVAILABILITY_NOTE } from '../../data/availability';
+
+export function getStaticPaths() {
+  return SEASON.map((week) => ({ params: { slug: week.slug }, props: { week } }));
+}
+const { week } = Astro.props as { week: Week };
+
+const previous = SEASON[(week.index - 1 + SEASON.length) % SEASON.length];
+const next = SEASON[(week.index + 1) % SEASON.length];
+const base = Math.round(week.price / (1 - 0.08 * week.tone));
+const saving = base - week.price;
+
+/** The arrival Friday and the departure Friday, for the two windows quoted at the top. */
+const arriveDay = week.days[0];
+const departDay = week.days[0]; // label only; the departure is the following Friday
+const longest = week.days.reduce((a, b) => (b.longestShut > a.longestShut ? b : a));
+const state = availabilityOf(week.slug);
+---
+<Base
+  title={`${week.label} 2026 — ${money(week.price)} — Hallowsand`}
+  description={`Hallowsand for the week of ${week.label} 2026. Arrive ${span(week.arrival!)}, leave by ${span(week.departure!)}, cut off for ${hoursLabel(week.shutHours)}. ${money(week.price)} for the whole house.`}
+  section={`Week of ${week.label}`}
+>
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">The week</p>
+          <span class="rail__n">{money(week.price)}</span>
+          <p class="rail__v">
+            whole house, seven nights, provisioning included
+            {saving > 0 && <>. {BAND_LABEL[week.band]} rate {money(base)}, less {money(saving)} because the crossings this week are short</>}
+          </p>
+        </div>
+        <div>
+          <p class="rail__k">Status</p>
+          <span class={`chip chip--av chip--${state}`}>{AVAILABILITY_LABEL[state]}</span>
+          <p class="rail__v">{AVAILABILITY_NOTE[state]}</p>
+        </div>
+        <div>
+          <p class="rail__k">Tide</p>
+          <span class="rail__n">{toneName(week.tone)}</span>
+          <p class="rail__v">{week.crossings.length} crossings across the week, {hoursLabel(week.meanCrossing)} each on average</p>
+        </div>
+        <div>
+          <p class="rail__k">Cut off</p>
+          <span class="rail__n">{hoursLabel(week.shutHours)}</span>
+          <p class="rail__v">of {24 * 7} hours. Longest single closure {hoursLabel(week.longestShut)}, on {longest.dayName}</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <p class="label">{BAND_LABEL[week.band]} season · 2026</p>
+        <h1 class="display">{week.label}</h1>
+        <p class="stand">{toneSentence(week)}</p>
+      </div>
+
+      <div class="full">
+        <div class="gates">
+          <div class="gate">
+            <p class="gate__k">You can drive on</p>
+            <p class="gate__t time">{span(week.arrival!)}</p>
+            <p class="gate__n">
+              {arriveDay.dayName} {week.start.getUTCDate()} — the house is ready from
+              {' '}{String(ARRIVE_AFTER).padStart(2, '0')}:00 and the road closes at
+              {' '}{clock(week.arrival!.to)}. Miss it and the next crossing is the following
+              morning; there is a yard at Cobb's Point where cars can stand overnight.
+            </p>
+          </div>
+          <div class="gate gate--out">
+            <p class="gate__k">You must be off by</p>
+            <p class="gate__t time">{clock(week.departure!.to)}</p>
+            <p class="gate__n">
+              The last crossing that clears the {String(DEPART_BEFORE).padStart(2, '0')}:00
+              changeover opens at {clock(week.departure!.from)}. It is
+              {' '}{hoursLabel(week.departure!.to - week.departure!.from)} wide and there is not
+              another one before we need the house.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Reading it</p>
+          <p class="rail__v">Midnight to midnight, left to right. Ochre is water over the road. The crossings walk right by about fifty minutes a day.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">The seven days.</h2>
+      </div>
+      <div class="full wkrib">
+        <Ribbon days={week.days} scale="day" axis={true} labels={true} />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Precision</p>
+          <p class="rail__v">Ten minutes, which is the step the model is walked at. Do not treat the last ten as spare.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Every crossing this week.</h2>
+      </div>
+      <div class="full">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <caption>Crossings for the week of {week.label} 2026, computed. Times are the whole crossing; a crossing that runs past midnight is listed once, on the day it opens.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Day</th>
+                <th scope="col">Crossing</th>
+                <th scope="col" class="n">Open for</th>
+                <th scope="col" class="n">Then shut for</th>
+                <th scope="col">Tide</th>
+              </tr>
+            </thead>
+            <tbody>
+              {week.crossings.map((crossing, index) => {
+                const day = week.days.find((d) => crossing.from >= d.origin && crossing.from < d.origin + 24)!;
+                const following = week.crossings[index + 1];
+                return (
+                  <tr>
+                    <th scope="row">{day.label}</th>
+                    <td class="t">{span(crossing)}</td>
+                    <td class="n">{hoursLabel(crossing.length)}</td>
+                    <td class="n shut">{following ? hoursLabel(following.from - crossing.to) : '—'}</td>
+                    <td>{day.springNeap > 0.72 ? 'springs' : day.springNeap < 0.28 ? 'neaps' : 'between'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p class="tblnote">
+          <strong>This is a fictional tide for an invented island.</strong> It is not a crossing
+          timetable for anywhere and must not be used as one.
+          <a class="u" href="/crossing#model"> What the model knows and does not know</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Enquiries</p>
+          <p class="rail__v">The estate answers within a day. Weeks are held for 48 hours without payment.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Booking this week.</h2>
+        <div class="prose">
+          <p>
+            Everything above is stated before you pay, not after: the crossing you will arrive
+            on, the crossing you must leave on, and the hours in between when the road is not
+            there. If either window does not work,
+            {' '}<a class="u" href={`/weeks/${next.slug}`}>{next.label}</a> has its crossings
+            about {Math.abs(Math.round(((next.arrival!.from - next.days[0].origin) - (week.arrival!.from - week.days[0].origin)) * 60))} minutes
+            {(next.arrival!.from - next.days[0].origin) > (week.arrival!.from - week.days[0].origin) ? ' later' : ' earlier'}.
+          </p>
+          <p>
+            Please read <a class="u" href="/before-you-book">before you book</a> first. It is the
+            list of people this house is a bad idea for, and it is not short.
+          </p>
+        </div>
+        <p class="act">
+          {state === 'taken'
+            ? <a class="act__b act__b--quiet" href="/enquire">Ask about cancellations for this week</a>
+            : <a class="act__b" href="/enquire">Enquire about {week.label}</a>}
+          <span class="act__n">
+            {state === 'taken'
+              ? 'This week has gone. The estate keeps a list.'
+              : 'Held for 48 hours, unpaid, while you decide. Both crossings in writing before any money moves.'}
+          </span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page">
+      <nav class="pager" aria-label="Other weeks">
+        <a class="pager__a" href={`/weeks/${previous.slug}`}>
+          <span class="pager__k">Previous week</span>
+          <span class="pager__t">{previous.label}</span>
+          <span class="pager__v">{money(previous.price)} · {toneName(previous.tone)}</span>
+        </a>
+        <a class="u pager__c" href="/weeks">All {SEASON.length} weeks</a>
+        <a class="pager__a pager__a--r" href={`/weeks/${next.slug}`}>
+          <span class="pager__k">Next week</span>
+          <span class="pager__t">{next.label}</span>
+          <span class="pager__v">{money(next.price)} · {toneName(next.tone)}</span>
+        </a>
+      </nav>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /*
+   * The two gates. These are the whole page: when you can get on and when you must be off. They
+   * are set at display scale because on a normal letting site they would be a line of small print
+   * under a photograph, and here they are the product.
+   */
+  .gates { display: grid; gap: var(--s5); margin-top: var(--s7);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); }
+  .gate { border-top: 1.5px solid var(--ink); padding-top: var(--s4); }
+  .gate--out { border-top-color: var(--shut); }
+  .gate__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .gate--out .gate__k { color: var(--shut-ink); }
+  .gate__t { font-family: var(--sans); font-size: clamp(2rem, 1.2rem + 2.6vw, 3.25rem);
+    font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; margin-top: var(--s2); }
+  .gate__n { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-2);
+    line-height: 1.5; margin-top: var(--s3); max-width: 40ch; }
+
+  .wkrib { margin-top: var(--s6); }
+
+  .chip--av { margin-top: var(--s2); }
+  .chip--free { background: var(--paper-2); }
+  .chip--held { background: var(--shut-wash); border-color: var(--shut); color: var(--shut-ink); }
+  .chip--taken { background: transparent; color: var(--ink-3); }
+
+  .act { margin-top: var(--s6); display: grid; gap: var(--s3); justify-items: start; }
+  .act__b { display: inline-block; font-family: var(--sans); font-size: var(--t-stand);
+    font-weight: 600; letter-spacing: -0.01em; text-decoration: none;
+    background: var(--ink); color: var(--paper); padding: var(--s3) var(--s5);
+    transition: background-color 130ms ease; }
+  .act__b:hover { background: var(--ink-2); }
+  .act__b--quiet { background: transparent; color: var(--ink); border: 1.5px solid var(--rule-2); }
+  .act__b--quiet:hover { background: var(--paper-2); border-color: var(--ink); }
+  .act__n { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-3); max-width: 44ch;
+    line-height: 1.5; }
+
+  .tblnote { margin-top: var(--s4); font-family: var(--sans); font-size: var(--t-small);
+    color: var(--ink-2); max-width: 62ch; line-height: 1.5; }
+  .tblnote strong { color: var(--shut-ink); font-weight: 600; }
+
+  .pager { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s5);
+    border-top: 1.5px solid var(--ink); padding-top: var(--s4); }
+  .pager__a { text-decoration: none; display: grid; gap: 2px; }
+  .pager__a--r { text-align: right; }
+  .pager__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .pager__t { font-family: var(--sans); font-size: var(--t-stand); font-weight: 600; }
+  .pager__v { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-3);
+    font-variant-numeric: tabular-nums lining-nums; }
+  .pager__a:hover .pager__t { color: var(--shut-ink); }
+  .pager__c { font-family: var(--sans); font-size: var(--t-note); }
+
+  @media (max-width: 620px) {
+    .pager { flex-wrap: wrap; gap: var(--s4); }
+    .pager__c { order: 3; width: 100%; text-align: center; }
+  }
+</style>

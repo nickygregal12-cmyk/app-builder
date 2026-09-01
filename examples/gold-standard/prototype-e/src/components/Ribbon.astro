@@ -1,0 +1,220 @@
+---
+/**
+ * The day ribbon. The signature object of this website.
+ *
+ * One horizontal bar per day, midnight to midnight, ochre where the water is over the causeway
+ * and paper where the road is open. Everything is drawn from src/lib/tide.ts; nothing here is
+ * positioned by hand.
+ *
+ * ## Why it is the signature
+ *
+ * Stack a fortnight of these, aligned on midnight, and the fifty-minute daily drift becomes a
+ * diagonal running down the page. That diagonal is the most important fact about staying on
+ * Hallowsand — that no two days of your week have the crossing in the same place — and it is not
+ * illustrated by the graphic, it *is* the graphic. A competitor could copy the styling; they
+ * could not copy the shape, because the shape is a function of their own tide, and almost none of
+ * them have one.
+ *
+ * ## Four densities, one object
+ *
+ *   day        one bar, an hour axis, the crossings written underneath as times
+ *   week       seven bars with day names, the working size, used on every week page
+ *   fortnight  fourteen bars, tight, where the diagonal is unmistakable
+ *   season     two hundred and ten bars at five pixels each — a wall, read as texture
+ *
+ * The same component at four scales rather than four charts, because they are four views of one
+ * quantity and reading one teaches you to read the others.
+ *
+ * ## The bars are day-clipped and that is correct here
+ *
+ * `Day.bars` is cut at midnight, which makes it wrong for every statistic and right for exactly
+ * this: a row that represents one day has to stop at the end of it. A crossing running 22:10 to
+ * 03:40 is drawn as the end of one row and the start of the next, which is also how it is
+ * experienced. Counts and durations come from `Week.crossings`, never from here.
+ */
+import type { Day } from '../lib/season';
+import { clock } from '../lib/tide';
+import { hoursLabel } from '../lib/season';
+
+interface Props {
+  days: Day[];
+  scale?: 'day' | 'week' | 'fortnight' | 'season';
+  /** Show the 00–24 hour axis above the first row. */
+  axis?: boolean;
+  /** Label every row. At season scale only the first day of each week is labelled. */
+  labels?: boolean;
+  caption?: string;
+  /** Two swatches naming the states. On by default wherever a caption is shown. */
+  key?: boolean;
+}
+
+const { days, scale = 'week', axis = true, labels = true, caption, key = Boolean(caption) } = Astro.props;
+
+const HEIGHTS = { day: 34, week: 20, fortnight: 15, season: 5 };
+const height = HEIGHTS[scale];
+
+/** Minutes from the day's midnight, which is what the SVG x-axis is. */
+const minutes = (hours: number, origin: number) => Math.round((hours - origin) * 60);
+
+const rows = days.map((day) => ({
+  day,
+  open: day.bars.map((bar) => ({
+    x: minutes(bar.from, day.origin),
+    w: Math.max(1, minutes(bar.to, day.origin) - minutes(bar.from, day.origin)),
+    label: `${clock(bar.from)}–${clock(bar.to)}`,
+    length: bar.length,
+  })),
+}));
+
+const showLabel = (index: number) => (scale === 'season' ? index % 7 === 0 : labels);
+---
+<figure class={`rib rib--${scale}${labels ? '' : ' rib--nolabel'}`} data-scale={scale}>
+  {axis && (
+    <div class="rib__axis" aria-hidden="true">
+      {labels && <span class="rib__d rib__d--head" />}
+      <div class="rib__track">
+        {[0, 6, 12, 18].map((hour) => (
+          <span class="rib__hour" style={`left:${(hour / 24) * 100}%`}>{String(hour).padStart(2, '0')}</span>
+        ))}
+        <span class="rib__hour rib__hour--end">24</span>
+      </div>
+    </div>
+  )}
+
+  <ol class="rib__rows">
+    {rows.map((row, index) => (
+      <li class="rib__row">
+        {labels && (
+          <span class={`rib__d${showLabel(index) ? '' : ' rib__d--quiet'}`}>
+            {showLabel(index) ? row.day.label : ''}
+          </span>
+        )}
+        <svg
+          class="rib__b"
+          viewBox={`0 0 1440 ${height}`}
+          preserveAspectRatio="none"
+          style={`height:${height}px`}
+          role="img"
+          aria-label={`${row.day.label}: causeway shut for ${hoursLabel(row.day.shutHours)}. Open ${row.open.map((o) => o.label).join(', ')}.`}
+        >
+          <rect class="rib__shut" x="0" y="0" width="1440" height={height} />
+          {row.open.map((open) => (
+            <rect class="rib__open" x={open.x} y="0" width={open.w} height={height}>
+              <title>{`${row.day.label}  ${open.label}  (${hoursLabel(open.length)} open)`}</title>
+            </rect>
+          ))}
+          {[6, 12, 18].map((hour) => (
+            <line class="rib__tick" x1={hour * 60} x2={hour * 60} y1="0" y2={height} />
+          ))}
+        </svg>
+      </li>
+    ))}
+  </ol>
+
+  {/* Only when there is one day. The week page borrows the tall `day` row height for seven rows,
+      which printed Friday's two crossings under all seven and read as though the week had two. */}
+  {scale === 'day' && days.length === 1 && (
+    <ol class="rib__times num">
+      {rows[0].open.map((open) => (
+        <li class="rib__t">
+          <span class="rib__tv time">{open.label}</span>
+          <span class="rib__tl">{hoursLabel(open.length)} open</span>
+        </li>
+      ))}
+    </ol>
+  )}
+
+  {(key || caption) && (
+    <figcaption class="rib__cap">
+      {key && (
+        <span class="rib__key">
+          <span class="rib__ki rib__ki--open">Road open</span>
+          <span class="rib__ki rib__ki--shut">Water over the road</span>
+        </span>
+      )}
+      {caption}
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .rib { margin: 0; }
+
+  /* The axis and the rows share one grid so the label column cannot drift out of register. */
+  .rib__axis, .rib__row { display: grid; grid-template-columns: var(--rib-label, 6.5rem) minmax(0, 1fr); gap: var(--s3); align-items: center; }
+  /*
+   * Without labels there is no cell to fill the label column, so the bar fell into it and every
+   * ribbon on the site that was not labelled rendered as a 6.5rem smudge — the whole weeks list,
+   * the three cards on the front page and the single-day ribbon on the crossing page. Visible
+   * instantly in a capture and invisible in the markup, which is the argument for capturing.
+   */
+  .rib--nolabel .rib__axis, .rib--nolabel .rib__row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rib--season .rib__axis, .rib--season .rib__row { --rib-label: 5.5rem; }
+
+  .rib__track { position: relative; height: 1.1em; grid-column: -2 / -1; }
+  .rib__hour, .rib__d {
+    font-family: var(--sans); font-size: var(--t-label); font-weight: 500;
+    letter-spacing: 0.09em; color: var(--ink-3);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .rib__hour { position: absolute; top: 0; transform: translateX(-50%); }
+  .rib__hour:first-child { transform: none; }
+  .rib__hour--end { right: 0; left: auto; transform: none; }
+
+  .rib__rows { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+  .rib--season .rib__rows { gap: 1px; }
+  .rib--fortnight .rib__rows { gap: 2px; }
+
+  .rib__d { text-align: right; white-space: nowrap; text-transform: uppercase; }
+  .rib__d--quiet { visibility: hidden; }
+
+  /*
+   * The bar is placed in the LAST column explicitly, always.
+   *
+   * Twice now the bar has silently fallen into the label column and rendered as a smudge or as
+   * nothing at all: once when `labels` was false so no label element existed, and once when the
+   * season scale hid the label with `display: none` at mobile width, which removes the grid item
+   * just as effectively. The second one put twelve hundred pixels of blank page in the middle of
+   * the crossing route and collapsed the hour axis into the string "2000".
+   *
+   * Patching each case as it appears is how the second one happened. `-2 / -1` is the last
+   * column whether the grid has one or two, so the bar cannot be displaced by anything the label
+   * does or fails to do.
+   */
+  .rib__b { width: 100%; display: block; grid-column: -2 / -1; }
+  .rib__track { grid-column: -2 / -1; }
+  /* The one meaning the ochre carries anywhere on this site: water over the road. */
+  .rib__shut { fill: var(--shut); }
+  .rib__open { fill: var(--paper-2); }
+  .rib__tick { stroke: var(--paper); stroke-width: 1.5; opacity: 0.35; }
+
+  .rib__times { list-style: none; padding: 0; margin: var(--s4) 0 0; display: flex; flex-wrap: wrap; gap: var(--s6); }
+  .rib__t { display: grid; gap: 1px; }
+  .rib__tv { font-family: var(--sans); font-size: var(--t-time); font-weight: 600; letter-spacing: -0.01em; }
+  .rib__tl { font-family: var(--sans); font-size: var(--t-note); color: var(--ink-3); }
+
+  .rib__cap {
+    font-family: var(--sans); font-size: var(--t-note); color: var(--ink-2);
+    margin-top: var(--s4); max-width: 46em; line-height: 1.5;
+  }
+  /*
+   * The ochre blocks read as the subject — as though they were the crossings — until something
+   * says otherwise, because a filled bar on a pale ground looks like a Gantt chart. The caption
+   * said it in prose; two swatches say it before the sentence is read.
+   */
+  .rib__key { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); margin-bottom: var(--s3); }
+  .rib__ki { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); }
+  .rib__ki::before { content: ''; width: 16px; height: 10px; border: 1px solid var(--rule-2); }
+  .rib__ki--open::before { background: var(--paper-2); }
+  .rib__ki--shut::before { background: var(--shut); border-color: var(--shut); }
+
+  /* A ribbon narrower than about 260px stops being readable as a timeline, so the label column
+     goes rather than the bar. The day names are repeated in the row's aria-label. */
+  @media (max-width: 560px) {
+    .rib__axis, .rib__row { grid-template-columns: 4.25rem minmax(0, 1fr); gap: var(--s2); }
+    /* Two columns still, the first at zero. The label cell has to stay in the grid — see
+       .rib__b — so the bar keeps a second column to be placed in. */
+    .rib--season .rib__axis, .rib--season .rib__row { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
+    .rib--season .rib__d { font-size: 0; width: 0; overflow: hidden; }
+  }
+</style>

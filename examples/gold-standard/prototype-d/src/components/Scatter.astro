@@ -1,0 +1,119 @@
+---
+/**
+ * The argument, in one chart.
+ *
+ * Reported spills per overflow against monitor coverage, twelve points. The grid on the previous
+ * figure is a picture of the data; this is the claim. It exists because the sentence "published
+ * figures track monitoring rather than pollution" is unfalsifiable prose until the points are on
+ * an axis and the slope is visible.
+ *
+ * Two things are drawn that a default scatter would not be:
+ *
+ * **The control is on the same axes.** The report's whole method rests on the two inputs being
+ * independent, so the underlying rate is plotted against the same coverage axis in outline. If
+ * that cloud had a slope, the finding would be an artefact of the inputs. It does not, and the
+ * reader can see that rather than being told it.
+ *
+ * **The inversion pair is named.** One pair, computed rather than chosen, where the catchment
+ * with the higher underlying rate reports fewer spills. A trend line makes an argument about
+ * twelve points; a named pair makes it about two rivers.
+ */
+import { SERIES, HEADLINE_INVERSION, R, pct } from '../lib/stats';
+
+interface Props { showControl?: boolean }
+const { showControl = true } = Astro.props;
+
+const W = 760;
+const H = 460;
+const PAD = { l: 62, r: 18, t: 18, b: 52 };
+
+const covs = SERIES.map((s) => s.totals.coverage);
+const reps = SERIES.map((s) => s.totals.perOverflow);
+const lats = SERIES.map((s) => s.totals.latentPerOverflow);
+const yMax = Math.ceil(Math.max(...reps, ...lats) / 2) * 2;
+
+const x = (coverage: number) => PAD.l + ((coverage - 0.35) / (1.0 - 0.35)) * (W - PAD.l - PAD.r);
+const y = (value: number) => H - PAD.b - (value / yMax) * (H - PAD.t - PAD.b);
+
+/** Least squares through the reported points, so the line is the data's and not a gesture. */
+const n = SERIES.length;
+const mx = covs.reduce((a, b) => a + b, 0) / n;
+const my = reps.reduce((a, b) => a + b, 0) / n;
+const slope = covs.reduce((t, c, i) => t + (c - mx) * (reps[i] - my), 0) / covs.reduce((t, c) => t + (c - mx) ** 2, 0);
+const at = (coverage: number) => my + slope * (coverage - mx);
+
+const xTicks = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+const yTicks = Array.from({ length: yMax / 4 + 1 }, (_, i) => i * 4);
+const pair = new Set([HEADLINE_INVERSION.dirtier.catchment.slug, HEADLINE_INVERSION.cleaner.catchment.slug]);
+---
+
+<svg class="sc" viewBox={`0 0 ${W} ${H}`} role="img"
+     aria-label={`Reported spills per overflow against monitor coverage for twelve catchments. The relationship is positive, r equals ${R.reportedVsCoverage.toFixed(2)}. The simulated underlying rate, plotted on the same axes, shows no such relationship at r equals ${R.latentVsCoverage.toFixed(2)}.`}>
+  {yTicks.map((tick) => (
+    <g>
+      <line class="sc__grid" x1={PAD.l} y1={y(tick)} x2={W - PAD.r} y2={y(tick)} />
+      <text class="sc__tick" x={PAD.l - 10} y={y(tick) + 4} text-anchor="end">{tick}</text>
+    </g>
+  ))}
+  {xTicks.map((tick) => (
+    <text class="sc__tick" x={x(tick)} y={H - PAD.b + 20} text-anchor="middle">{Math.round(tick * 100)}%</text>
+  ))}
+  <line class="sc__axis" x1={PAD.l} y1={H - PAD.b} x2={W - PAD.r} y2={H - PAD.b} />
+  <line class="sc__axis" x1={PAD.l} y1={PAD.t} x2={PAD.l} y2={H - PAD.b} />
+  <text class="sc__ax" x={PAD.l} y={H - 10}>Monitor coverage, mean over 60 months</text>
+  <text class="sc__ax" transform={`translate(16 ${PAD.t + 6}) rotate(-90) translate(-${H - PAD.b - PAD.t} 0)`}>Spills per overflow per year</text>
+
+  {showControl && (
+    <g class="sc__control">
+      {SERIES.map((series) => (
+        <circle cx={x(series.totals.coverage)} cy={y(series.totals.latentPerOverflow)} r={5} />
+      ))}
+    </g>
+  )}
+
+  <line class="sc__fit" x1={x(0.38)} y1={y(at(0.38))} x2={x(0.97)} y2={y(at(0.97))} />
+
+  {SERIES.map((series) => {
+    const marked = pair.has(series.catchment.slug);
+    return (
+      <g class:list={['sc__pt', marked && 'sc__pt--mark']}>
+        <circle cx={x(series.totals.coverage)} cy={y(series.totals.perOverflow)} r={marked ? 7 : 5} />
+        <text
+          x={x(series.totals.coverage) + (marked ? 13 : 10)}
+          y={y(series.totals.perOverflow) + 4}
+        >{series.catchment.name}</text>
+      </g>
+    );
+  })}
+
+  <text class="sc__r" x={W - PAD.r} y={PAD.t + 14} text-anchor="end">
+    reported r = {R.reportedVsCoverage.toFixed(2)}
+  </text>
+  {showControl && (
+    <text class="sc__r sc__r--c" x={W - PAD.r} y={PAD.t + 32} text-anchor="end">
+      simulated underlying rate r = {R.latentVsCoverage.toFixed(2)}
+    </text>
+  )}
+</svg>
+
+<style>
+  .sc { width: 100%; height: auto; display: block; }
+  .sc__grid { stroke: var(--rule); stroke-width: 1; }
+  .sc__axis { stroke: var(--ink); stroke-width: 1.5; }
+  .sc__tick { font-family: var(--sans); font-size: 12px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .sc__ax { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; fill: var(--ink-3); }
+
+  /* The control, in outline. Present so the reader can see there is no slope in it. */
+  .sc__control circle { fill: none; stroke: var(--rule-2); stroke-width: 1.5; }
+
+  .sc__fit { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; }
+
+  .sc__pt circle { fill: var(--ink); }
+  .sc__pt text { font-family: var(--sans); font-size: 12.5px; fill: var(--ink-2); }
+  .sc__pt--mark circle { fill: var(--spot); }
+  .sc__pt--mark text { fill: var(--spot); font-weight: 600; }
+
+  .sc__r { font-family: var(--sans); font-size: 13px; font-weight: 600; fill: var(--ink); }
+  .sc__r--c { fill: var(--ink-3); font-weight: 500; }
+</style>

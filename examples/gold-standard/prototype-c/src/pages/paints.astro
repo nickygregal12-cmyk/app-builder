@@ -1,0 +1,108 @@
+---
+/**
+ * The four paints.
+ *
+ * One section each, and each is painted in a colour that colour is actually made in — so the
+ * page demonstrates its own subject four times over. The drawback is given the same weight as
+ * the specification, because a range of four products where the differences are all advantages
+ * is a range of one product with four names.
+ */
+import Base from '../layouts/Base.astro';
+import Painted from '../components/Painted.astro';
+import { PAINTS, EMULSION_SD, SUBSTRATES } from '../data/paints';
+import { COLOURS, colourBySlug, type FinishId } from '../data/colours';
+
+const hex = colourBySlug.get('smoke')!.hex;
+const grounds = ['bone', 'verdigris-pale', 'blush-earth', 'flax'];
+const madeIn = (id: FinishId) => COLOURS.filter((colour) => colour.finishes.includes(id)).length;
+const canTake = (id: FinishId) => SUBSTRATES.filter((substrate) => substrate.on[id].verdict !== 'no').length;
+---
+<Base
+  title="The four paints — Marlpit"
+  description="Limewash, silicate, clay distemper and lime-casein: what each is, what it resists, what it costs and what is wrong with it."
+  hex={hex}
+  chapter="The paints"
+>
+  <Painted hex={hex}>
+    <div class="page">
+      <div class="head2">
+        <div>
+          <p class="label">Four paints</p>
+          <h1 class="display display--sm">Every one of these has something wrong with it.</h1>
+        </div>
+        <p class="prose small">
+          A breathable paint that could also be scrubbed, applied with a roller and put over
+          anything would be an emulsion. Choosing one of these is choosing which compromise suits
+          the wall, so the compromise is on the page at the same size as the specification.
+          Vinyl emulsion sits at {EMULSION_SD} metres s<sub>d</sub> for comparison.
+        </p>
+      </div>
+    </div>
+  </Painted>
+
+  {PAINTS.map((paint, index) => (
+    <Painted hex={colourBySlug.get(grounds[index])!.hex} id={paint.id}>
+      <div class="page paint">
+        <div class="paint__l">
+          <p class="label">{String(index + 1).padStart(2, '0')} · {paint.interiorOnly ? 'Interior' : 'Interior and exterior'}</p>
+          <h2 class="paint__name">{paint.name}</h2>
+          <p class="paint__what">{paint.what}</p>
+        </div>
+        <div class="paint__r">
+          <dl class="spec">
+            <div><dt>Vapour resistance</dt><dd><span class="n">{paint.sd}</span> m s<sub>d</sub><span class="spec__note">{paint.sdNote}</span></dd></div>
+            <div><dt>Coverage</dt><dd><span class="n">{paint.coverage}</span> m²/litre per coat, on lime plaster</dd></div>
+            <div><dt>Coats</dt><dd><span class="n">{paint.coats}</span></dd></div>
+            <div><dt>Five litres</dt><dd><span class="n">£{paint.price}</span> — about <span class="n">£{(paint.price / (5 * paint.coverage / paint.coats)).toFixed(2)}</span> per m² finished</dd></div>
+            <div><dt>Colours</dt><dd><span class="n">{madeIn(paint.id)}</span> of 36</dd></div>
+            <div><dt>Substrates</dt><dd><span class="n">{canTake(paint.id)}</span> of 8 — <a class="u" href="/walls">the matrix</a></dd></div>
+          </dl>
+          <div class="draw">
+            <p class="draw__k">The drawback</p>
+            <p class="draw__v">{paint.drawback}</p>
+          </div>
+          <p class="paint__use">{paint.use}</p>
+        </div>
+      </div>
+    </Painted>
+  ))}
+</Base>
+
+<style>
+  .display--sm { font-size: clamp(1.875rem, 1.2rem + 2.4vw, 3.25rem); max-width: 19ch; }
+  .label + .display--sm { margin-top: var(--s4); }
+  .head2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(var(--s5), 4vw, var(--s8)); align-items: end; }
+
+  .paint { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(var(--s6), 4vw, var(--s9)); align-items: start; }
+  .paint__name { font-size: clamp(2.25rem, 1.3rem + 3.2vw, 4rem); margin-top: var(--s3); max-width: 11ch; }
+  .paint__what { margin-top: var(--s5); font-size: var(--t-sub); line-height: 1.45; max-width: 40ch; }
+
+  .spec { margin: 0; border-top: 1px solid var(--line-strong); }
+  .spec > div { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: var(--s4);
+    padding-block: var(--s3); border-bottom: 1px solid var(--line); }
+  .spec dt { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 62%, transparent); padding-top: 3px; }
+  .spec dd { margin: 0; font-size: var(--t-small); }
+  .spec__note { display: block; margin-top: 2px; font-size: var(--t-label);
+    color: color-mix(in srgb, var(--ink) 62%, transparent); }
+
+  /* The drawback gets the weight the specification gets. A range of four products whose
+     differences are all advantages is one product with four names. */
+  .draw { margin-top: var(--s6); padding: var(--s5); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .draw__k { font-family: var(--display); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.13em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 66%, transparent); }
+  .draw__v { margin-top: var(--s3); font-size: var(--t-body); line-height: 1.55; max-width: 52ch; }
+  .paint__use { margin-top: var(--s5); font-size: var(--t-small);
+    color: color-mix(in srgb, var(--ink) 80%, transparent); max-width: 56ch; }
+
+  @media (max-width: 1000px) {
+    .head2, .paint { grid-template-columns: 1fr; gap: var(--s5); }
+  }
+  @media (max-width: 700px) {
+    .spec > div { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>

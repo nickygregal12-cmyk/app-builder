@@ -1,0 +1,50 @@
+[
+ {
+  "slug": "chalk-face",
+  "usedAs": "A worked chalk face",
+  "width": 2000,
+  "height": 1500,
+  "src": "/img/chalk-face.jpg",
+  "small": "/img/chalk-face-sm.jpg",
+  "photographer": "Colin Smith",
+  "licence": "CC BY-SA 2.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File%3AChalk%20Face%2C%20Betchworth%20Quarry%2C%20Box%20Hill%2C%20Surrey.jpg",
+  "originalPixels": "4288x3216"
+ },
+ {
+  "slug": "kilns",
+  "usedAs": "A bank of lime kilns",
+  "width": 2000,
+  "height": 1333,
+  "src": "/img/kilns.jpg",
+  "small": "/img/kilns-sm.jpg",
+  "photographer": "Martinvl",
+  "licence": "CC BY-SA 4.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File%3ALimestoneKilnsTalybont.jpg",
+  "originalPixels": "5184x3456"
+ },
+ {
+  "slug": "limewashed",
+  "usedAs": "Limewash on a rubble-stone wall",
+  "width": 1800,
+  "height": 1200,
+  "src": "/img/limewashed.jpg",
+  "small": "/img/limewashed-sm.jpg",
+  "photographer": "Barrie Price",
+  "licence": "CC BY-SA 4.0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File%3ASLATED%20MANSION%2C%20THE%20BROW%2C%20INGLETON.jpg",
+  "originalPixels": "1800x1200"
+ },
+ {
+  "slug": "pigment",
+  "usedAs": "Burnt sienna and natural sienna, side by side",
+  "width": 2000,
+  "height": 1333,
+  "src": "/img/pigment.jpg",
+  "small": "/img/pigment-sm.jpg",
+  "photographer": "User:A,Ocram",
+  "licence": "CC0",
+  "sourceUrl": "https://commons.wikimedia.org/wiki/File%3ALinks%20gebrannte%20Siena%2C%20rechts%20nat%C3%BCrliche.JPG",
+  "originalPixels": "3888x2592"
+ }
+]

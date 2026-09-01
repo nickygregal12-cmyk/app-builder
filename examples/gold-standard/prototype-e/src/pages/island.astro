@@ -1,0 +1,117 @@
+---
+/**
+ * The island: five things, a walking time, and what is wrong with each of them.
+ *
+ * Sixty hectares with one house, a ruin, some kilns and a lot of birds. A letting site would
+ * call this "wild beauty on your doorstep". The useful version is a list with distances and the
+ * reason each place is a bad idea at the wrong point of the tide, because on an island where the
+ * road disappears the walking times and the state of the water are the same question.
+ */
+import Base from '../layouts/Base.astro';
+import Photo from '../components/Photo.astro';
+import { ISLAND, FACTS } from '../data/house';
+import { SEASON_FACTS, hoursLabel } from '../lib/season';
+---
+<Base
+  title="The island — Hallowsand"
+  description="Sixty hectares, one house, a roofless chapel, three lime kilns and the north ledges. Walking times from the door and what each place is like at the wrong point of the tide."
+  section="The island"
+>
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Size</p>
+          <span class="rail__n">{FACTS.hectares} ha</span>
+          <p class="rail__v">about forty minutes end to end, at a walk</p>
+        </div>
+        <div>
+          <p class="rail__k">Buildings</p>
+          <span class="rail__n">1</span>
+          <p class="rail__v">plus a roofless chapel and three abandoned kilns</p>
+        </div>
+        <div>
+          <p class="rail__k">Roads</p>
+          <span class="rail__n">0</span>
+          <p class="rail__v">a track from the landing to the house, and nothing else</p>
+        </div>
+      </div>
+      <div class="col">
+        <p class="label">The island</p>
+        <h1 class="display">Sixty hectares, and you will have walked all of it by Wednesday.</h1>
+        <p class="stand">
+          That is not a complaint. Knowing a place completely is a different holiday from seeing
+          a lot of one, and it is the one on offer here.
+        </p>
+        <div class="prose">
+          <p>
+            Five things worth walking to, with how long they take from the door. Each has
+            something wrong with it, and the wrong things are more useful than the right ones:
+            the ledges cut you off from above, the chapel field is full of birds that will make
+            their feelings clear, and the kilns are a drop with no fence.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {ISLAND.map((feature, index) => (
+    <section>
+      <div class="page doc">
+        <div class="rail">
+          <div>
+            <p class="rail__k">Walk</p>
+            <span class="rail__n">{feature.walk.split(' —')[0]}</span>
+            {feature.walk.includes('—') && <p class="rail__v">{feature.walk.split('— ')[1]}</p>}
+          </div>
+          <div>
+            <p class="rail__k">No.</p>
+            <span class="rail__n">{String(index + 1).padStart(2, '0')}</span>
+            <p class="rail__v">of {ISLAND.length}</p>
+          </div>
+        </div>
+        <div class="col">
+          <h2 class="head">{feature.name}</h2>
+          <p class="prose">{feature.note}</p>
+        </div>
+        {feature.photo && (
+          <div class="full isl__p">
+            <Photo slug={feature.photo} width="full" band loading={index < 2 ? 'eager' : 'lazy'} />
+          </div>
+        )}
+      </div>
+    </section>
+  ))}
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Shut, per day</p>
+          <span class="rail__n">{hoursLabel(SEASON_FACTS.meanShutPerDay)}</span>
+          <p class="rail__v">which is the walking budget, not the daylight</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">Walking and the tide are the same question.</h2>
+        <div class="prose">
+          <p>
+            Everything on this page is on the island, so none of it depends on the causeway. What
+            does depend on the tide is the ledges — walk them at the start of a closure, not the
+            end — and anything involving the mainland, which is most things.
+          </p>
+          <p>
+            The practical rule guests arrive at by about day three is to do the long walk while
+            the road is shut, because there is nothing else you could have been doing with those
+            hours anyway. <a class="u" href="/crossing">The crossing table</a> is on the kitchen
+            wall for the same reason.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .isl__p { margin-top: var(--s6); }
+</style>

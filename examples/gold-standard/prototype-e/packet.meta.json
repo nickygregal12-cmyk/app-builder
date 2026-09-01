@@ -1,0 +1,20 @@
+{
+  "business": "Hallowsand, a fictional five-bedroom house on a 60-hectare tidal island off the Northumberland coast, let whole by the week from April to October at \u00a33,150\u2013\u00a36,750. The island is reached by a mile of causeway that floods twice a day, and the proposition is the constraint rather than the house: for roughly ten hours of every day nobody can drive on or off. Every crossing window, closure, arrival time, departure deadline and price on the site is computed from a two-constituent harmonic tidal model (M2 and S2) rather than written by hand, and the site says on every page that the island is invented and that nobody should plan a real crossing from it. Its audience is people choosing a week \u2014 families, groups of friends, and writers on working retreats \u2014 who need to know before paying which hours of which days they will lose.",
+  "businessKind": "hospitality lettings and places to stay",
+  "benchmarkAnchors": [
+    "place-and-atmosphere",
+    "restraint",
+    "editorial-rhythm"
+  ],
+  "projectType": "marketing-site",
+  "candidateId": "hallowsand-letting",
+  "directionLabel": "The tide as the visual material \u2014 a computed day ribbon at four densities",
+  "routeCount": 8,
+  "businessFacets": [
+    "hospitality",
+    "destination-travel",
+    "considered-purchase",
+    "atmosphere-led"
+  ],
+  "businessFacetsNote": "Somebody stays; the island is the product and reaching it is a decision; a week costs thousands and is booked once; and what is bought is how the place feels. Declared for FUTURE re-evaluation only: every verdict already stored beside this packet was produced before #266 on the legacy prose path, and none of them has been recomputed. Historical scores stand as recorded."
+}

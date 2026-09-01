@@ -1,0 +1,23 @@
+Newsreader — SIL Open Font Licence 1.1
+  Copyright 2019 The Newsreader Project Authors. https://github.com/productiontype/Newsreader
+  Variable: optical size 6–72 and weight 300–700.
+
+Barlow Semi Condensed — SIL Open Font Licence 1.1
+  Copyright 2017 The Barlow Project Authors. https://github.com/jpt/barlow
+
+The fourth distinct pairing in this programme, chosen against the previous three as much as for
+this one: Nørreværk set Instrument Serif over Inter, Interlock set IBM Plex throughout, Marlpit
+set Archivo over Source Serif.
+
+Newsreader is a reading face with an optical-size axis and a slightly editorial voice — it was
+drawn for screen news, and this is a report that expects to be read at length rather than
+skimmed. The optical axis matters more here than on any previous prototype: the same face runs
+from a 64px chapter opening to an 11px figure source note, and a display cut at 11px is a
+different and worse typeface.
+
+Barlow Semi Condensed carries the apparatus — figure numbers, axis labels, table headers,
+marginal notes and running heads. Condensed because a chart axis has a fixed amount of room and
+a report has a great many small labels, and semi- rather than fully condensed because these are
+read rather than scanned.
+
+Self-hosted, latin subset, no external request at runtime.

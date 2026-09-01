@@ -39,7 +39,9 @@ ETC_DIR=/etc/app-builder
 BROKER_ENV="${ETC_DIR}/agent-broker.env"
 DECISION_CRED="${CREDSTORE}/APP_BUILDER_MODEL_DECISION_SECRET.cred"
 DECISION="${ETC_DIR}/model-enable-decision.json"
-CLAIM=/run/app-builder-model-canary/claimed.json
+# Beside the authority, on the same filesystem: rename(2) is only atomic
+# within one, and a claim in /run would not survive a reboot.
+CLAIM="${ETC_DIR}/model-enable-decision.claimed.json"
 UNIT=/etc/systemd/system/app-builder-model-canary.service
 
 [[ $EUID -eq 0 ]] || { echo "Run this with sudo: it writes a systemd unit." >&2; exit 1; }

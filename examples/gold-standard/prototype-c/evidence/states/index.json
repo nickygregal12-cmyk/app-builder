@@ -1,0 +1,116 @@
+[
+ {
+  "file": "skip-link-focus.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the skip link, revealed by the first Tab press"
+ },
+ {
+  "file": "nav-hover.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a navigation link under the cursor, its rule drawn in — on a painted masthead, so the rule takes the ground’s computed ink"
+ },
+ {
+  "file": "nav-focus-keyboard.png",
+  "route": "/paints",
+  "viewport": "desktop",
+  "state": "the navigation reached by keyboard: the focus ring is the ink plus a ground-coloured gap, so it reads on all thirty-six grounds"
+ },
+ {
+  "file": "lightbox-choice.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the light box after choosing Venetian: all four panels repainted by the same transform that rendered them on the server"
+ },
+ {
+  "file": "lightbox-keyboard.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "the same control driven by the arrow keys — a radiogroup with roving tabindex, focus ring on the chosen swatch"
+ },
+ {
+  "file": "lightbox-mid-transition.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a frame taken 120ms into the 420ms repaint between two colours — the panels caught between states rather than settled"
+ },
+ {
+  "file": "reduced-motion-same-choice.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "prefers-reduced-motion: reduce — the same choice, arriving at the identical state with the repaint suppressed"
+ },
+ {
+  "file": "swatch-hover.png",
+  "route": "/",
+  "viewport": "desktop",
+  "state": "a swatch under the cursor: an inset rule in the swatch’s own computed ink, so the affordance works on a lime white and on a lamp black"
+ },
+ {
+  "file": "index-chip-hover.png",
+  "route": "/colours",
+  "viewport": "desktop",
+  "state": "a colour chip in the index scaling under the cursor"
+ },
+ {
+  "file": "calculator-focus.png",
+  "route": "/samples",
+  "viewport": "desktop",
+  "state": "the coverage calculator with a field focused and a value changed: the results recompute from the stored coverage figures"
+ },
+ {
+  "file": "pager-hover.png",
+  "route": "/colours/oxblood",
+  "viewport": "desktop",
+  "state": "the next-colour link, its chip scaling to preview where it goes"
+ },
+ {
+  "file": "mobile-lightbox-2x2.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the light box stays two by two rather than stacking, because the artefact exists to be compared and a single column would be the same failure as the printed card"
+ },
+ {
+  "file": "mobile-swatch-grid.png",
+  "route": "/",
+  "viewport": "mobile",
+  "state": "phone: the catalogue holds three across and squares up, so neighbouring colours can still be judged against each other"
+ },
+ {
+  "file": "mobile-matrix-records.png",
+  "route": "/walls",
+  "viewport": "mobile",
+  "state": "phone: the substrate matrix becomes eight records each listing its four verdicts, rather than four columns of two-word lines"
+ },
+ {
+  "file": "filter-greens.png",
+  "route": "/colours",
+  "viewport": "desktop",
+  "state": "the catalogue filtered to green earths — six of thirty-six, with the count announced and the other five families withdrawn rather than greyed"
+ },
+ {
+  "file": "filter-two-axes.png",
+  "route": "/colours",
+  "viewport": "desktop",
+  "state": "both filters at once: earth reds under 20 light reflectance. The two questions people arrive with, answered together"
+ },
+ {
+  "file": "sample-added.png",
+  "route": "/colours",
+  "viewport": "desktop",
+  "state": "two colours added to the sample box: the control flips to a checked state and the masthead count follows, from a different part of the page"
+ },
+ {
+  "file": "sample-box-full.png",
+  "route": "/samples",
+  "viewport": "desktop",
+  "state": "the box holding its four, each with its pigment, and the total. Server-rendered empty and filled from storage, so the empty state is real rather than hypothetical"
+ },
+ {
+  "file": "sample-box-blocked.png",
+  "route": "/colours",
+  "viewport": "desktop",
+  "state": "the box already full: every unchosen control is dimmed and refuses, and the live region says why rather than the click doing nothing"
+ }
+]

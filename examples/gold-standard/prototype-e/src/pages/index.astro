@@ -1,0 +1,291 @@
+---
+/**
+ * The opening.
+ *
+ * The hero is a chart, not a photograph, and that is the whole argument of this prototype. A
+ * fortnight of day ribbons shows the fifty-minute drift as a diagonal running down the page:
+ * the crossing moves an hour later every day, so no two days of your week are the same. That is
+ * the product, it is computed, and no competitor's site has it.
+ *
+ * A photograph at the top would have been easier and would have made this the luxury-letting
+ * page the brief was trying to avoid. The photographs are here — three of them — but they arrive
+ * after the reader knows what the place is, which is the correct order for a property whose
+ * selling point is a constraint rather than a view.
+ */
+import Base from '../layouts/Base.astro';
+import Ribbon from '../components/Ribbon.astro';
+import Photo from '../components/Photo.astro';
+import { SEASON, SEASON_FACTS, hoursLabel, money, span, toneName, toneSentence } from '../lib/season';
+import { clock } from '../lib/tide';
+import { FACTS } from '../data/house';
+
+const fortnight = [...SEASON[0].days, ...SEASON[1].days];
+const neap = SEASON_FACTS.atNeaps;
+const spring = SEASON_FACTS.atSprings;
+
+/** Three weeks chosen to be different from one another, not to be the cheapest. */
+const showcase = [
+  [...SEASON].sort((a, b) => a.tone - b.tone)[0],
+  [...SEASON].sort((a, b) => b.tone - a.tone)[0],
+  SEASON.find((w) => w.band === 'peak')!,
+];
+---
+<Base
+  title="Hallowsand — one house on a tidal island, let by the week"
+  description="A five-bedroom house on a tidal island off Northumberland. The causeway floods twice a day and being cut off is the point. Every crossing on this site is computed from the tide."
+>
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Where</p>
+          <p class="rail__v">A {FACTS.hectares}-hectare island off Northumberland, {FACTS.causewayMiles} mile of causeway from Cobb's Point.</p>
+        </div>
+        <div>
+          <p class="rail__k">The let</p>
+          <span class="rail__n">Sleeps {FACTS.sleeps}</span>
+          <p class="rail__v">{FACTS.bedrooms} bedrooms, whole house, {FACTS.changeover}</p>
+        </div>
+        <div>
+          <p class="rail__k">2026 season</p>
+          <span class="rail__n">{money(SEASON_FACTS.cheapest.price)}–{money(Math.max(...SEASON.map((w) => w.price)))}</span>
+          <p class="rail__v">{SEASON_FACTS.weeks} weeks, April to October</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <p class="label">Hallowsand · Northumberland</p>
+        <h1 class="display">For about ten hours of every day, nobody can reach you.</h1>
+        <p class="stand">
+          One house on a tidal island. A mile of causeway, under water twice a day, and no way
+          off it while the water is there. That is not a caveat at the bottom of this page. It is
+          what is being let.
+        </p>
+      </div>
+
+      <div class="full open">
+        <Ribbon
+          days={fortnight}
+          scale="fortnight"
+          caption={`A fortnight of the causeway, computed. Ochre is water over the road. The crossing falls fifty minutes later each day, which is why the pattern runs diagonally down the page and why the week you book decides which hours of the day you lose. Days shown: ${fortnight[0].label} to ${fortnight.at(-1)!.label}, 2026.`}
+        />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Shut, per day</p>
+          <span class="rail__n">{hoursLabel(SEASON_FACTS.meanShutPerDay)}</span>
+          <p class="rail__v">mean across the {SEASON_FACTS.days} days of the season</p>
+        </div>
+        <div>
+          <p class="rail__k">Longest single closure</p>
+          <span class="rail__n">{hoursLabel(SEASON_FACTS.longestClosure)}</span>
+        </div>
+        <div>
+          <p class="rail__k">Daily drift</p>
+          <span class="rail__n">50 min</span>
+          <p class="rail__v">later each day, measured over the season</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <h2 class="head">What that actually costs you.</h2>
+        <div class="prose">
+          <p>
+            Twice a day the road goes under and stays under for about five hours. You cannot
+            drive off, a taxi cannot come on, and neither can a delivery, a plumber or a friend
+            who said they might look in. If you have forgotten something you have not forgotten
+            it until this evening — you have forgotten it until tomorrow, because by this evening
+            the window has moved.
+          </p>
+          <p>
+            The moving is the part people underestimate. High water is about fifty minutes later
+            each day, so a crossing that suited you on Monday is an hour out by Tuesday and most
+            of a morning out by Friday. There is no timetable to learn. There is a table, it is
+            different every week, and <a class="u" href="/crossing">it is on this site in full</a>.
+          </p>
+          <p>
+            Everything people like about staying here follows from that one fact, and so does
+            everything they find hard. We would rather you read both before booking than after.
+          </p>
+        </div>
+      </div>
+
+      <div class="full">
+        <Photo
+          slug="causeway"
+          width="full"
+          band
+          loading="eager"
+          caption="The road at low water. One mile, single track, passing places, and a refuge box on stilts at the low point for people who misjudged it."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">At neaps</p>
+          <span class="rail__n">{hoursLabel(neap.mean)}</span>
+          <p class="rail__v">mean crossing, across {neap.count} crossings</p>
+        </div>
+        <div>
+          <p class="rail__k">At springs</p>
+          <span class="rail__n">{hoursLabel(spring.mean)}</span>
+          <p class="rail__v">mean crossing, across {spring.count} crossings</p>
+        </div>
+        <div>
+          <p class="rail__k">The difference</p>
+          <span class="rail__n">{Math.round((neap.mean - spring.mean) * 60)} min</span>
+          <p class="rail__v">per crossing, twice a day</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <p class="label">The second variable</p>
+        <h2 class="head">Two weeks in the same August are not the same week.</h2>
+        <div class="prose">
+          <p>
+            Season decides the price on most letting sites and that is the end of it. Here the
+            moon decides something too. Around neap tides the range is small and each crossing
+            runs to nearly eight hours; around springs it is closer to seven. About
+            {' '}{Math.round((neap.mean - spring.mean) * 60)} minutes, twice a day, every day of
+            the week.
+          </p>
+          <p>
+            That is a real difference and it is smaller than this page could have implied.
+            Across a whole week a spring booking is cut off for about
+            {' '}{hoursLabel(SEASON_FACTS.hardest.shutHours - SEASON_FACTS.easiest.shutHours)} longer than
+            a neap one — noticeable, not transformative. Spring weeks cost eight per cent less
+            for it, and <a class="u" href="/weeks">every week in the season is listed with its own
+            figures</a> rather than a description.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page">
+      <div class="doc">
+        <div class="rail">
+          <div>
+            <p class="rail__k">Three of thirty</p>
+            <p class="rail__v">The easiest crossing of the season, the hardest, and one in peak. Each week's figures are computed from its own tide.</p>
+          </div>
+        </div>
+        <div class="col">
+          <h2 class="head">Pick the week by its tide, not by its month.</h2>
+        </div>
+      </div>
+
+      <ul class="cards">
+        {showcase.map((week) => (
+          <li class="card">
+            <a class="card__a" href={`/weeks/${week.slug}`}>
+              <p class="card__k">{week.label} · {toneName(week.tone)}</p>
+              <Ribbon days={week.days} scale="week" axis={false} labels={false} />
+              <p class="card__s">{toneSentence(week)}</p>
+              <dl class="card__d num">
+                <div><dt>Cut off</dt><dd>{hoursLabel(week.shutHours)}</dd></div>
+                <div><dt>Arrive</dt><dd>{span(week.arrival!)}</dd></div>
+                <div><dt>Off by</dt><dd>{clock(week.departure!.to)}</dd></div>
+                <div><dt>Week</dt><dd>{money(week.price)}</dd></div>
+              </dl>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc">
+      <div class="rail">
+        <div>
+          <p class="rail__k">The house</p>
+          <p class="rail__v">{FACTS.bedrooms} bedrooms, {FACTS.bathrooms} bathrooms, a walled yard. Mains power, spring water, one mobile network on half the island.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">The house is ordinary. We think that is the right way round.</h2>
+        <div class="prose">
+          <p>
+            It is a plain stone house built for the man who ran the lime kilns, extended twice,
+            comfortable and not remarkable. There is a range, a stove, a long table, five
+            bedrooms and a bad piano. If it were four miles inland nobody would write about it.
+          </p>
+          <p>
+            We have not photographed it at golden hour with the lamps on, because the reason to
+            come is not the house. <a class="u" href="/house">Every room is listed with its
+            measurements and which way it faces</a>, and the two facts that actually matter —
+            which rooms see the causeway, and which one you can work in — are stated rather than
+            implied.
+          </p>
+        </div>
+      </div>
+      <div class="full">
+        <div class="pair">
+          <Photo slug="kiln" caption="The kilns the house was built for. Three draw kilns, worked 1847 to about 1877." />
+          <Photo slug="chapel" caption="The roofless chapel, twelve minutes' walk. No path and no interpretation board." />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="page doc doc--text">
+      <div class="rail">
+        <div>
+          <p class="rail__k">Read this first</p>
+          <p class="rail__v">The list of people this house is wrong for, in our own words.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="head">It is a bad idea for some people, and we would rather say so.</h2>
+        <div class="prose">
+          <p>
+            Anyone who has to be somewhere at a fixed time. Anyone for whom a two-hour delay to
+            an ambulance is not acceptable. Families with very young children who will find five
+            hours of enforced stillness, twice a day, a punishment. Anyone expecting deliveries,
+            a shop, or a signal that works everywhere.
+          </p>
+          <p>
+            <a class="u" href="/before-you-book">The full list, and what we do about each of
+            them</a>. It is the most useful page on this site and it is the one that loses us
+            bookings, which is roughly how we know it is honest.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .open { margin-top: var(--s8); }
+
+  .cards { list-style: none; display: grid; gap: var(--s5);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); margin-top: var(--s7); }
+  .card { display: grid; }
+  .card__a { display: grid; gap: var(--s4); align-content: start; text-decoration: none;
+    border: 1px solid var(--rule); padding: var(--s5); background: var(--paper);
+    transition: border-color 140ms ease, background-color 140ms ease; }
+  .card__a:hover { border-color: var(--ink); background: var(--paper-2); }
+  .card__k { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .card__a:hover .card__k { color: var(--ink); }
+  .card__s { font-size: var(--t-small); color: var(--ink-2); line-height: 1.5; }
+  .card__d { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3) var(--s4);
+    font-family: var(--sans); border-top: 1px solid var(--rule); padding-top: var(--s4); }
+  .card__d dt { font-size: var(--t-label); letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); }
+  .card__d dd { margin: 0; font-size: var(--t-time); font-weight: 600; letter-spacing: -0.015em; }
+
+  .pair { display: grid; gap: var(--s5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+</style>

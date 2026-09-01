@@ -1,0 +1,9 @@
+Instrument Sans — SIL Open Font License 1.1. Copyright Rodrigo Fuenzalida & Jordan Egstad.
+  https://github.com/google/fonts/tree/main/ofl/instrumentsans
+  Variable axes: wdth, wght. Subset: none — shipped as downloaded.
+
+Literata — SIL Open Font License 1.1. Copyright Type Together.
+  https://github.com/google/fonts/tree/main/ofl/literata
+  Variable axes: opsz, wght.
+
+Both are OFL and may be embedded and served. Neither has been modified.

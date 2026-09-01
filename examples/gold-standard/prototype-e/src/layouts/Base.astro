@@ -1,0 +1,201 @@
+---
+/**
+ * The frame.
+ *
+ * The header carries the one piece of genuinely live information on the site: whether the
+ * causeway is passable at this moment, and when that changes. It is computed in the browser from
+ * the same model the rest of the site is built from, because a build-time answer would be stale
+ * the moment it shipped and a stale tide is worse than no tide.
+ *
+ * Without JavaScript the strip renders the honest fallback — that the state is computed in the
+ * reader's browser, with a link to the fortnight table which is static and complete. Nothing on
+ * this site depends on the script; it adds a fact that could not be static.
+ */
+import '../styles/tokens.css';
+import '../styles/base.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Shown in the header rule, above the nav. */
+  section?: string;
+}
+const { title, description, section } = Astro.props;
+const path = Astro.url.pathname;
+const NAV = [
+  { href: '/crossing', label: 'The crossing' },
+  { href: '/weeks', label: 'Weeks & prices' },
+  { href: '/house', label: 'The house' },
+  { href: '/island', label: 'The island' },
+  { href: '/before-you-book', label: 'Before you book' },
+  { href: '/enquire', label: 'Enquire', action: true },
+];
+const active = (href: string) => path === href || path.startsWith(`${href}/`);
+---
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preload" href="/fonts/InstrumentSans-var.woff2" as="font" type="font/woff2" crossorigin />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="hd">
+      <div class="page hd__in">
+        <a class="hd__mark" href="/" aria-label="Hallowsand, home">
+          <svg class="hd__glyph" viewBox="0 0 96 12" aria-hidden="true" preserveAspectRatio="none">
+            <rect x="0" y="0" width="96" height="12" fill="var(--shut)" />
+            <rect x="6" y="0" width="27" height="12" fill="var(--paper-2)" />
+            <rect x="56" y="0" width="29" height="12" fill="var(--paper-2)" />
+          </svg>
+          <span class="hd__word">Hallowsand</span>
+        </a>
+
+        <p class="hd__state" id="state" data-state="unknown">
+          <span class="hd__dot" aria-hidden="true"></span>
+          <span id="state-text">The causeway state is worked out in your browser.
+            <a class="u" href="/crossing">The full table is here</a>.</span>
+        </p>
+      </div>
+
+      <nav class="hd__nav" aria-label="Main">
+        <div class="page hd__navin">
+          <ul class="hd__list">
+            {NAV.map((item) => (
+              <li>
+                <a
+                  class={`hd__a${active(item.href) ? ' hd__a--on' : ''}${item.action ? ' hd__a--act' : ''}`}
+                  href={item.href}
+                  aria-current={active(item.href) ? 'page' : undefined}
+                >{item.label}</a>
+              </li>
+            ))}
+          </ul>
+          {section && <span class="hd__sec">{section}</span>}
+        </div>
+      </nav>
+    </header>
+
+    <main id="main"><slot /></main>
+
+    <footer class="ft">
+      <div class="page doc">
+        <div class="rail">
+          <div>
+            <p class="rail__k">Hallowsand</p>
+            <p class="rail__v">Cobb's Point, Northumberland. Let by the estate, Friday to Friday, April to October.</p>
+          </div>
+        </div>
+        <div class="col">
+          <p class="ft__warn">
+            <strong>Hallowsand is invented.</strong> The island, the house, the estate and the
+            prices do not exist. The tide is a real two-constituent model of a real mechanism
+            applied to a fictional place, so its shape is right and its heights are not.
+            <strong>Nobody should plan a crossing anywhere from this website.</strong>
+          </p>
+          <p class="ft__warn ft__warn--2">
+            This is a hand-built prototype in the App Builder Gold Standard programme. It was not
+            produced by the factory. Photographs are of real places — Holy Island, Beadnell,
+            Caithness — credited where they appear, and are not Hallowsand.
+          </p>
+          <ul class="ft__nav">
+            {NAV.map((item) => <li><a class="u" href={item.href}>{item.label}</a></li>)}
+          </ul>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      import { CAUSEWAY_LIMIT, clock, height, hoursSince, isOpen } from '../lib/tide';
+
+      /*
+       * Walk forward in ten-minute steps until the state flips. The same step the rest of the
+       * site quotes to, so the header cannot promise a precision the tables do not.
+       */
+      function nextChange(from: number): number {
+        const state = isOpen(from);
+        for (let t = from; t < from + 24; t += 1 / 6) if (isOpen(t) !== state) return t;
+        return from + 24;
+      }
+
+      const box = document.getElementById('state');
+      const text = document.getElementById('state-text');
+      if (box && text) {
+        const paint = () => {
+          const now = hoursSince(new Date());
+          const open = isOpen(now);
+          const change = nextChange(now);
+          const mins = Math.round((change - now) * 60);
+          const left = mins >= 60 ? `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m` : `${mins} min`;
+          box.dataset.state = open ? 'open' : 'shut';
+          text.innerHTML = open
+            ? `<b>The causeway is open.</b> The water is back over it at <span class="time">${clock(change)}</span>, in ${left}.`
+            // The depth *over the road*, not the tide height. The first version printed the
+            // raw level — "3.43m over the road" — when the road floods at 3.35m and the water
+            // was eight centimetres deep. Forty times the real figure, and alarming with it.
+            : `<b>The causeway is shut.</b> ${Math.max(0, height(now) - CAUSEWAY_LIMIT).toFixed(2)}m of water over it. It opens at <span class="time">${clock(change)}</span>, in ${left}.`;
+        };
+        paint();
+        setInterval(paint, 30_000);
+      }
+    </script>
+
+    <style>
+      .skip { position: absolute; left: -9999px; }
+      .skip:focus { left: var(--pad); top: var(--s3); z-index: 10; background: var(--ink);
+        color: var(--paper); padding: var(--s2) var(--s4); font-family: var(--sans); }
+
+      .hd { border-bottom: 1px solid var(--rule); position: relative; z-index: 2; background: var(--paper); }
+      .hd__in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+        gap: var(--s4) var(--s6); padding-block: var(--s4); }
+
+      .hd__mark { display: flex; align-items: center; gap: var(--s3); text-decoration: none; }
+      .hd__glyph { width: 48px; height: 10px; display: block; }
+      .hd__word { font-family: var(--sans); font-size: var(--t-stand); font-weight: 600;
+        letter-spacing: 0.02em; }
+
+      /* The status strip. The dot takes the ochre only when the road is actually under water —
+         it is the same signal as the ribbons, at the smallest scale it is used. */
+      .hd__state { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-2);
+        display: flex; align-items: baseline; gap: var(--s3); max-width: 46ch; }
+      .hd__state b { color: var(--ink); font-weight: 600; }
+      .hd__dot { width: 9px; height: 9px; flex: none; border: 1px solid var(--rule-2);
+        background: transparent; transform: translateY(-1px); }
+      .hd__state[data-state='shut'] .hd__dot { background: var(--shut); border-color: var(--shut); }
+      .hd__state[data-state='open'] .hd__dot { background: var(--paper-2); }
+
+      .hd__nav { border-top: 1px solid var(--rule); }
+      .hd__navin { display: flex; align-items: center; justify-content: space-between; gap: var(--s5); }
+      .hd__list { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s5); margin: 0; }
+      .hd__a { display: inline-block; padding-block: var(--s3); text-decoration: none;
+        font-family: var(--sans); font-size: var(--t-small); font-weight: 500; color: var(--ink-2);
+        border-bottom: 2px solid transparent; transition: color 120ms ease, border-color 120ms ease; }
+      .hd__a:hover { color: var(--ink); border-bottom-color: var(--rule-2); }
+      .hd__a--on { color: var(--ink); border-bottom-color: var(--ink); }
+      /* The one commercial action in a navigation of topics. Marked by weight and a rule rather
+         than by the ochre, which on this site only ever means water over the road. */
+      .hd__a--act { color: var(--ink); font-weight: 600; border-bottom-color: var(--rule-2); }
+      .hd__a--act.hd__a--on { border-bottom-color: var(--ink); }
+      .hd__sec { font-family: var(--sans); font-size: var(--t-label); font-weight: 600;
+        letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+
+      .ft { border-top: 1.5px solid var(--ink); padding-block: var(--s8) var(--s9); margin-top: var(--s7); }
+      .ft__warn { font-family: var(--sans); font-size: var(--t-small); color: var(--ink-2);
+        max-width: 60ch; line-height: 1.55; }
+      .ft__warn strong { color: var(--ink); font-weight: 600; }
+      .ft__warn--2 { margin-top: var(--s4); font-size: var(--t-note); color: var(--ink-3); }
+      .ft__nav { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s5);
+        margin-top: var(--s6); font-family: var(--sans); font-size: var(--t-small); }
+
+      @media (max-width: 700px) {
+        .hd__sec { display: none; }
+        .hd__list { gap: var(--s4); }
+      }
+    </style>
+  </body>
+</html>

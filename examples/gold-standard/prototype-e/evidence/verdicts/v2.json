@@ -1,0 +1,238 @@
+{
+ "candidateId": "hallowsand-letting",
+ "verdict": "pass",
+ "reviewedBy": {
+  "role": "design-critic",
+  "vendor": "openai",
+  "model": "GPT-5"
+ },
+ "rationale": "This is exceptional, highly authored work whose structure, graphics and language emerge directly from the tidal-island proposition. The computed ribbon becomes explanation, comparison tool, navigation aid and visual identity across the entire site; the main reservation is that the commercial route from choosing a week to making an enquiry is less explicit than the informational journey.",
+ "criterionScores": [
+  {
+   "criterion": "art-direction",
+   "score": 9,
+   "note": "The tide is treated as the site's visual substance rather than decoration: ochre has one semantic meaning, the ribbons recur at four densities, and the severe editorial restraint supports the proposition.",
+   "whyNotHigher": "The extremely sparse wide layouts occasionally feel under-composed rather than purposefully expansive, and the repeated pale sectional fields become predictable over very long pages.",
+   "positiveEvidence": [
+    "The same computed mark operates coherently as day, fortnight, season and bookable-week imagery.",
+    "Ochre is reserved exclusively for water over the road, including the live status marker.",
+    "Typography, rules, photography and charts share a disciplined editorial voice."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "business-specificity",
+   "score": 9.5,
+   "note": "The architecture and principal components could not be transferred intact to another sector: availability is expressed through tidal windows, weeks are compared by closure patterns, and even pricing is explained through the tide.",
+   "whyNotHigher": "The enquiry or booking mechanism itself is not shown, so the uniquely tailored experience stops just before the transaction.",
+   "positiveEvidence": [
+    "Thirty weeks are represented by thirty distinct computed tidal ribbons.",
+    "Arrival windows, departure deadlines, closure totals and prices are integrated into every week representation.",
+    "The crossing model is exposed at day, fortnight, season and individual-crossing levels."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "information-architecture",
+   "score": 9,
+   "note": "The routes answer distinct buyer questions: what the constraint is, which week fits, exact weekly crossings, what the house contains, what is on the island, and who should not book. Home previews those decisions without duplicating the full detail.",
+   "whyNotHigher": "The catalogue is modest compared with the reference, and the evidence does not show a complete enquiry, availability or reservation flow.",
+   "positiveEvidence": [
+    "The prominent 'Before you book' route treats disqualifying information as primary product information.",
+    "The season overview leads cleanly into detailed week pages with adjacent-week navigation.",
+    "House specifications and island material are separated from the central crossing explanation."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "visual-hierarchy",
+   "score": 8.5,
+   "note": "Each route has an unmistakable first read, while metadata, editorial explanation and charts occupy clearly different levels. Week pages correctly elevate dates, arrival and departure constraints above the detailed crossing table.",
+   "whyNotHigher": "Long runs of similarly styled sections and rows flatten the middle of the crossing and weeks pages, and the tiny supporting copy at wide widths can recede too far.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "typography",
+   "score": 9,
+   "note": "Type is compositional material: blunt grotesque headlines establish the proposition, serif prose slows the explanatory passages, and carefully tracked labels, captions and numeric treatments make dense data readable.",
+   "whyNotHigher": "Some wide-view metadata and credits are extremely small, and a few mobile tables create awkwardly fragmented date and duration columns.",
+   "positiveEvidence": [
+    "Display line breaks are deliberately shaped across desktop, tablet and mobile.",
+    "Tabular figures, dates, measurements, labels and captions have distinct but related treatments.",
+    "The serif and sans-serif roles reflect editorial explanation versus operational information."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "composition-pacing",
+   "score": 8.5,
+   "note": "The pages move between declarative type, dense data, photographs, compact lists and quieter explanatory sections. The crossing page particularly succeeds as a sequence from one day to a fortnight to a season and then back to practical choice.",
+   "whyNotHigher": "Several wide screenshots devote very large fields to relatively small content islands, while the season list and mobile crossing table inevitably become monotonous through repetition.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "visual-material",
+   "score": 9.5,
+   "note": "The computed ribbons are exactly the material this proposition needs: they expose lost hours, daily drift, seasonal rhythm and differences between weeks more convincingly than conventional holiday imagery could.",
+   "whyNotHigher": "The documentary photographs are appropriate but less distinctive and consistently art-directed than the data system, and the freshwater-pool section has no corresponding image.",
+   "positiveEvidence": [
+    "The day ribbon preserves its hour axis even at 390px.",
+    "The season rendering turns 210 days into a legible large-scale tidal pattern.",
+    "Side-by-side spring and neap weeks make the commercial difference visible rather than merely asserted.",
+    "Photography is used as geographic evidence and is captioned with provenance."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "interaction-craft",
+   "score": 8.5,
+   "note": "The captured states show unusually disciplined details: distinguishable current, hover and keyboard-focus navigation; visible skip-link behavior; whole-row targets; semantic pressed states; client-side sorting; and interrogable ribbon bars.",
+   "whyNotHigher": "The evidence is limited to still states, so transition quality, tooltip behavior at touch widths, sorting announcements and the complete keyboard sequence cannot be judged.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "responsive-recomposition",
+   "score": 9,
+   "note": "Mobile is treated as its own information design: metadata is regrouped, dense ribbons take full width, tables reformat, card grids become deliberate sequences, and the charts retain their axes and meaning.",
+   "whyNotHigher": "The detailed crossing tables remain demanding on a phone, with dates and durations broken across many lines, and some long pages still impose considerable scrolling fatigue.",
+   "positiveEvidence": [
+    "Season rows move the ribbon beneath the identifying and pricing information rather than shrinking it into an unusable column.",
+    "Desktop sidebars become ordered metadata blocks before the main proposition.",
+    "House room specifications change from table-like rows into readable mobile records.",
+    "Chart labels and hour axes are preserved rather than removed for visual convenience."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "brand-fit",
+   "score": 9,
+   "note": "The restrained, factual and slightly austere language feels native to a remote house sold through candour rather than fantasy. Documentary photography, tidal ochre and blunt headlines make the identity recognisable without relying on a conventional hospitality aesthetic.",
+   "whyNotHigher": "The severity may undersell warmth and conviviality for families or groups, and the visual evidence provides little emotional sense of inhabiting the house.",
+   "positiveEvidence": [
+    "The visual system communicates isolation, constraint and candour rather than generic luxury.",
+    "The house is deliberately presented as ordinary while the tidal proposition receives the expressive emphasis.",
+    "Warnings and disclaimers are integrated into the brand voice rather than treated as legal residue."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "commercial-clarity",
+   "score": 8,
+   "note": "The proposition, prices, capacity, weekly dates, arrival window, departure deadline and suitability exclusions are exceptionally clear before payment. Visitors can compare the practical cost of each week without decoding vague seasonal language.",
+   "whyNotHigher": "No visible enquiry or booking control completes the path, availability status is not shown, and the navigation offers information routes rather than an unmistakable next commercial action.",
+   "positiveEvidence": [],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "ai-slop-resistance",
+   "score": 9.5,
+   "note": "The work rejects nearly every generic generated-site convention. Its cards, metrics and large headlines are justified by specific comparison and explanation tasks rather than applied as a house style.",
+   "whyNotHigher": "A few large headline-plus-eyebrow compositions and generous empty fields resemble contemporary editorial conventions in isolation, even though the system as a whole strongly justifies them.",
+   "positiveEvidence": [
+    "There are no gradients, glowing decoration, generic icon triplets, fake logos or interchangeable closing CTA slabs.",
+    "Every recurring numerical block reports a real property or computed tidal quantity.",
+    "The primary graphic language is generated by the business model itself."
+   ],
+   "whyBenchmark": null
+  },
+  {
+   "criterion": "memorability",
+   "score": 9.5,
+   "note": "The signature experience is the ochre causeway ribbon changing density from a single day to a fortnight, a season and an individual bookable week. It is both immediately recognisable and inseparable from the product.",
+   "whyNotHigher": "The surrounding editorial shell is excellent but less singular than the ribbon system itself, so not every screenshot would be unmistakable without the charts or copy.",
+   "positiveEvidence": [
+    "The 210-row season chart produces a distinctive tidal field rather than a conventional availability calendar.",
+    "The live header marker uses the same semantic ochre as every flooded interval.",
+    "Week comparison turns an invisible constraint into a recognisable commercial browsing experience."
+   ],
+   "whyBenchmark": null
+  }
+ ],
+ "holisticTier": "exceptional",
+ "observations": {
+  "templateDerived": false,
+  "interchangeableBusiness": false,
+  "mobileIsStackedDesktop": false,
+  "noSignatureMoment": false,
+  "typographyMerelyCompetent": false,
+  "genericDesignLanguage": false
+ },
+ "signatureMoment": "The computed ochre causeway ribbon recurring at four densities—one day, a fortnight, the whole season and each bookable week—so the tide becomes both the interface and the identity.",
+ "pairwiseComparison": {
+  "referenceId": "vb-aesop",
+  "comparisons": [
+   {
+    "dimension": "art-direction",
+    "outcome": "roughly-comparable",
+    "note": "Both sustain a severe editorial thesis with disciplined colour and language; Hallowsand's computed tidal material is more singular, while Aesop has a broader and more mature image system."
+   },
+   {
+    "dimension": "typography",
+    "outcome": "reference-stronger",
+    "note": "Hallowsand is highly crafted, but Aesop sustains comparable typographic control across a much larger catalogue and more varied commercial contexts."
+   },
+   {
+    "dimension": "composition",
+    "outcome": "reference-stronger",
+    "note": "Hallowsand has excellent sequences, especially on the crossing page, but its wide layouts sometimes become excessively sparse and its longest data pages flatten through repetition."
+   },
+   {
+    "dimension": "information-architecture",
+    "outcome": "reference-substantially-stronger",
+    "note": "Hallowsand edits a small, difficult proposition extremely well; Aesop resolves the categorisation and discovery demands of a far larger catalogue, editorial library and store network."
+   },
+   {
+    "dimension": "responsive-design",
+    "outcome": "roughly-comparable",
+    "note": "Hallowsand demonstrates genuine regrouping and chart recomposition at mobile widths, although its longest tables remain demanding."
+   },
+   {
+    "dimension": "craft",
+    "outcome": "roughly-comparable",
+    "note": "The semantic colour discipline, focus treatments, sort states, hover targets, charts and metadata show practitioner-level care comparable to the reference, within a smaller system."
+   },
+   {
+    "dimension": "memorability",
+    "outcome": "candidate-stronger",
+    "note": "The four-density tidal ribbon is a more immediately nameable signature experience than any single Aesop interaction, while remaining functional rather than decorative."
+   },
+   {
+    "dimension": "business-specificity",
+    "outcome": "candidate-stronger",
+    "note": "Hallowsand's principal component, ordering logic, page structure and live status all derive directly from one unusual operating constraint and would be wrong for another business."
+   }
+  ]
+ },
+ "benchmarkGap": "MATERIAL",
+ "benchmarkGapDetail": "Clearly good, and clearly below benchmark quality. The reference is meaningfully stronger on several dimensions.",
+ "benchmarkComparisonCounts": {
+  "candidate-stronger": 2,
+  "roughly-comparable": 3,
+  "reference-stronger": 2,
+  "reference-substantially-stronger": 1
+ },
+ "dimensionsNotCompared": [],
+ "evidenceCeiling": {
+  "cap": 10,
+  "tier": "site-level",
+  "routes": 75,
+  "artifactRoutes": 7,
+  "coversWholeArtifact": true,
+  "viewports": 4,
+  "detail": "Evidence covers all 7 route(s) of this artifact at 4 viewport(s). Nothing is unphotographed, so evidence caps the claim at 10."
+ },
+ "failingCriteria": [],
+ "blockingConcerns": [],
+ "addressedRules": [],
+ "addressedRuleNotes": [],
+ "unprovenCriteria": [],
+ "evidence": {
+  "candidateId": "hallowsand-letting",
+  "compositionHash": null,
+  "captureCount": 99,
+  "captureDigest": "2855e054a8d5f79475bcd4ec5ead2249e4efa31e427cc8e4f9c6014aa069ff10"
+ }
+}

@@ -1,0 +1,148 @@
+MARLPIT — prototype C, Gold Standard programme.
+
+FICTIONAL. The company, its people, its mill and its stockists are invented. The building
+science, the pigments and the paint chemistry are real, and are described accurately, because a
+customer who has been sold the wrong paint for a solid wall has usually been sold it by
+somebody who was vague about exactly this.
+
+--------------------------------------------------------------------------------------
+THE PRODUCT
+--------------------------------------------------------------------------------------
+
+Marlpit makes mineral paint: lime-based, breathable, for buildings whose walls were never
+designed to be sealed.
+
+A solid brick or stone wall with no cavity manages moisture by letting it move — in when it
+rains, out when it dries. It has done this for two hundred years. Modern paint is a plastic
+film: acrylic or vinyl, formulated to be washable and to stay put, and formulated therefore not
+to let water vapour through. Put it on a solid wall and the wall stops drying outward. The
+moisture goes somewhere else — into the plaster, the timber, the mortar.
+
+That is not a marketing claim. It is the reason a Victorian terrace that was fine for a century
+starts showing damp two years after somebody repainted it.
+
+Marlpit sells four mineral paints — limewash, silicate, clay distemper and a lime-casein — in
+thirty-six colours, all of them made with pigments that survive an alkaline binder. That last
+constraint is the whole reason the palette looks the way it does, and the site says so.
+
+--------------------------------------------------------------------------------------
+1. WHAT PROBLEM IT SOLVES
+--------------------------------------------------------------------------------------
+
+Two problems, and they are usually the same customer six months apart.
+
+The technical one: getting a breathable coating onto a wall that needs one, at a specification
+that will actually hold, on a substrate that has probably been painted with something else
+already.
+
+The one people actually arrive with: choosing a colour. Lime paint is not flat colour. It is
+pigment suspended in lime, applied thin, and it moves under light in a way a plastic paint
+does not — the same wall is a different colour at nine in the morning and at four in the
+afternoon, and different again under a lamp. People choose from a printed card in a shop, paint
+a room, and hate it.
+
+--------------------------------------------------------------------------------------
+2. WHO USES IT
+--------------------------------------------------------------------------------------
+
+  - owners of solid-wall houses — pre-1919 terraces, cottages, farm buildings — who have been
+    told the wall needs to breathe and do not yet know what that means for the tin;
+  - conservation officers and heritage architects specifying for listed work;
+  - builders and decorators who have been asked for lime and have not applied it before, and
+    who need the substrate and coverage answers before they quote;
+  - a small number of interior designers, who are the least of the three commercially and the
+    loudest.
+
+--------------------------------------------------------------------------------------
+3. WHAT IT REPLACES
+--------------------------------------------------------------------------------------
+
+  - trade emulsion on a wall that should not have it;
+  - a printed colour card, which cannot show a colour moving under light and is the direct
+    cause of most returned orders in this trade;
+  - a phone call to a technical line to ask whether it can go over what is already there;
+  - the assumption, held by nearly everybody, that "breathable" is a marketing word.
+
+--------------------------------------------------------------------------------------
+4. THE BEHAVIOUR THAT DIFFERENTIATES IT
+--------------------------------------------------------------------------------------
+
+It shows the colour moving, and it tells you the shown colour is not good enough.
+
+Every colour on this site is rendered under four named light conditions, computed from a
+stated chromatic transform rather than picked by eye. It is an approximation and the site says
+so on the same screen — which is not a disclaimer but the argument: if a computed rendering on
+a calibrated screen is still not the answer, a printed card in a shop under fluorescent light
+certainly is not, and the only honest way to choose is a sample pot on your own wall.
+
+The second thing: it will tell you a colour is wrong for your substrate, and which of the four
+paints is not available in it, before you have chosen anything.
+
+--------------------------------------------------------------------------------------
+5. WHAT IS IMPRESSIVE SHOWN RATHER THAN DESCRIBED
+--------------------------------------------------------------------------------------
+
+The same colour, four times, visibly different.
+
+Everything a paint company says about light is unfalsifiable prose until you put the four
+renderings next to each other at a size where the difference is undeniable. Then the sentence
+"north light is cooler and takes the warmth out of an earth pigment" stops being copy and
+becomes a thing on the screen you are looking at.
+
+The second is the pigment itself. Thirty-six colours from six pigment families, and the
+families are visible: the palette has no bright greens and no clean violets, because the
+pigments that survive lime do not produce them. A constraint you can see is worth more than a
+paragraph about authenticity.
+
+--------------------------------------------------------------------------------------
+6. OBJECTIONS THE SITE MUST ANSWER
+--------------------------------------------------------------------------------------
+
+"Is 'breathable' actually a real thing or is it a marketing word."
+  Real, measurable, and stated as a number: vapour resistance, in MNs/g, for each paint,
+  against the figure a solid wall needs.
+
+"Can it go over what is already on my wall."
+  Usually not, and the site says so before it takes an order. There is a substrate matrix, and
+  the honest answer for a wall in modern emulsion is that it must come off first.
+
+"It will look chalky and it will rub off on my clothes."
+  Limewash does, to a degree, for the first weeks and in some finishes permanently. Which of
+  the four does and which does not is stated per paint rather than glossed.
+
+"It costs more."
+  It does. Per litre, and less per square metre than it looks, because coverage differs. The
+  calculator uses the real coverage figures rather than the flattering ones.
+
+"Colour on a screen is meaningless."
+  Correct. That is why the whole conversion is a sample pot rather than a basket.
+
+--------------------------------------------------------------------------------------
+7. EVIDENCE AVAILABLE HONESTLY FROM THE MODEL
+--------------------------------------------------------------------------------------
+
+  - thirty-six colours with real pigment provenance, light reflectance values and lime-fastness;
+  - four paints with real vapour resistance figures, coverage rates and substrate limits;
+  - a computed rendering of every colour under four illuminants, with the transform stated;
+  - a substrate compatibility matrix that refuses combinations rather than upselling them;
+  - coverage and cost per square metre, computed from the real figures.
+
+No invented awards. No press quotes. No interiors influencer.
+
+--------------------------------------------------------------------------------------
+8. THE CONVERSION
+--------------------------------------------------------------------------------------
+
+Sample pots. Four for £22, delivered, and the site says plainly that this is the only way to
+choose and that the screen you are reading is not.
+
+The secondary conversion, for the trade, is a specification: send the building, get a written
+substrate and product recommendation from somebody who has stood in front of one.
+
+--------------------------------------------------------------------------------------
+THE COMPANY
+--------------------------------------------------------------------------------------
+
+Marlpit. A mill on the Nadder, in Wiltshire, in chalk country — which is why it is there, since
+the lime comes from four miles away. Founded 2009 by a building conservator who could not buy
+a limewash she was willing to specify. Nineteen people. They make everything they sell.

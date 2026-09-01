@@ -389,8 +389,32 @@ function assertOneOf(scale, value, field, directionId) {
  */
 function applyBusinessAdaptations(entry, profile, directionId) {
   const adjustments = [];
-  const adapted = { composition: {}, design: {} };
+  const adapted = { composition: {}, design: {}, promoted: [] };
   if (!profile?.values || !entry?.adapts) return { adapted, adjustments };
+
+  /**
+   * A section a business leads with, whatever pace the direction sets.
+   *
+   * A direction's `sectionOrder` is how it paces a page, and that is its
+   * decision. What it cannot know is that this particular business *is* its
+   * work: `schedule-register` reads the register first and the pictures fifth,
+   * which is right for a practice whose credibility is in checkable detail and
+   * wrong for one whose product is visual. Ardwell & Roe scored
+   * imagery-suitability 7.8 under the direction that opens with a photograph
+   * and 3.5 under the two that bury it — on identical content.
+   *
+   * Deliberately only a promotion to the front, and only of a section type the
+   * direction names. A business may say "lead with this"; it may not rewrite
+   * the order, because then the direction's pacing would be a suggestion.
+   */
+  for (const [type, rule] of Object.entries(entry.adapts.sectionOrder ?? {})) {
+    const signalValue = profile.values[rule?.signal];
+    if (signalValue === undefined || rule?.when?.[signalValue] !== 'first') continue;
+    const declared = list(entry.composition?.sectionOrder);
+    if (!declared.includes(type) || declared[0] === type) continue;
+    adapted.promoted.push(type);
+    adjustments.push({ axis: 'sectionOrder', group: 'composition', signal: rule.signal, signalValue, from: declared[0] ?? null, to: type, directionId });
+  }
 
   for (const group of ['composition', 'design']) {
     for (const [axis, rule] of Object.entries(entry.adapts[group] ?? {})) {
@@ -430,7 +454,12 @@ export function compileVisualDirection(directionId, registry, { referenceInfluen
   for (const [field, scale] of Object.entries(RESPONSIVE_ORDER)) assertOneOf(scale, responsive[field], field, directionId);
   assertOneOf(ASSET_APPETITES, entry.assetAppetite ?? 'imagery-optional', 'assetAppetite', directionId);
 
-  const sectionOrder = Array.isArray(entry.composition?.sectionOrder) ? [...entry.composition.sectionOrder] : [];
+  const declaredOrder = Array.isArray(entry.composition?.sectionOrder) ? [...entry.composition.sectionOrder] : [];
+  // What the business leads with comes first; the direction's order carries the
+  // rest exactly as it declared it.
+  const sectionOrder = adapted.promoted.length
+    ? [...adapted.promoted, ...declaredOrder.filter((type) => !adapted.promoted.includes(type))]
+    : declaredOrder;
   if (sectionOrder.includes('hero')) throw new Error(`Visual direction ${directionId} orders the hero. A page opens with its hero in every direction.`);
 
   // Reference influence lands here — on the intent, before the plan compiles —

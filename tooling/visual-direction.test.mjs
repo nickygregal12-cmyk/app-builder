@@ -726,6 +726,7 @@ test('every adaptation a direction offers is a value that direction could have d
       ctaComposition: ['panel', 'editorial', 'banner', 'register'],
       navigationFamily: ['utility', 'editorial', 'register', 'centred'],
       heroComposition: ['stacked', 'columns', 'statement', 'centred'],
+      heroStrategy: ['split', 'editorial', 'immersive', 'utility'],
       headingTreatment: ['plain', 'ruled', 'numbered'],
       ctaPlacement: ['closing', 'mid-page'],
     },
@@ -734,6 +735,20 @@ test('every adaptation a direction offers is a value that direction could have d
   const knownSignals = ['conversionEmphasis', 'serviceBreadth', 'evidenceDepth', 'showcaseIntent', 'contentDensity', 'serviceReach', 'assetMode'];
 
   for (const [directionId, direction] of Object.entries(registry.directions)) {
+    // A section-order adaptation is a promotion and nothing else: it may only
+    // name a section type the direction already orders, and the only thing it
+    // may say is that the business leads with it. Anything else would let a
+    // business rewrite the pacing the direction exists to set.
+    for (const [type, rule] of Object.entries(direction.adapts?.sectionOrder ?? {})) {
+      assert.ok(knownSignals.includes(rule.signal), `${directionId} promotes ${type} on "${rule.signal}", which deriveBusinessVisualProfile does not produce`);
+      assert.ok(
+        (direction.composition.sectionOrder ?? []).includes(type),
+        `${directionId} promotes ${type}, which it does not order at all`,
+      );
+      for (const value of Object.values(rule.when ?? {})) {
+        assert.equal(value, 'first', `${directionId} would move ${type} to "${value}"; a promotion may only lead`);
+      }
+    }
     for (const group of ['composition', 'design']) {
       for (const [axis, rule] of Object.entries(direction.adapts?.[group] ?? {})) {
         assert.ok(scales[group][axis], `${directionId} adapts ${group}.${axis}, which is not an axis with a scale`);

@@ -79,7 +79,7 @@ const DECISION_PATH = '/etc/app-builder/model-enable-decision.json';
  * unit uses it to write into its staging directory before root promotes the
  * result. The bare path is the development fallback.
  */
-function decisionPathFor(env = process.env) {
+export function decisionPathFor(env = process.env) {
   if (env.APP_BUILDER_MODEL_DECISION_FILE) return env.APP_BUILDER_MODEL_DECISION_FILE;
   const directory = env.CREDENTIALS_DIRECTORY;
   if (directory) {
@@ -87,6 +87,46 @@ function decisionPathFor(env = process.env) {
     if (fs.existsSync(credential)) return credential;
   }
   return DECISION_PATH;
+}
+
+/**
+ * Read the signed decision, from wherever this context is entitled to it.
+ *
+ * Exported because the alternative is what actually happened: the hosted
+ * wrapper could not import `decisionPathFor`, so it reimplemented the lookup as
+ * `process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH` — and thereby
+ * skipped the credentials directory. The hosted preflight resolved the decision
+ * from the systemd credential and passed; the very next line of the run path
+ * reopened the authoritative file, which the single-use claim had by then
+ * correctly renamed away. The result was a deterministic ENOENT after the
+ * authorisation had been spent.
+ *
+ * So the resolution and the read live together, and both entry points call
+ * this. A second copy of this rule is the bug, not the duplication of a few
+ * lines.
+ *
+ * Fails closed and never logs the token: a decision that cannot be read is a
+ * refusal to run, and the value is authority rather than diagnostics.
+ */
+export function readStoredDecision(env = process.env) {
+  const file = decisionPathFor(env);
+  let raw;
+  try {
+    raw = fs.readFileSync(file, 'utf8');
+  } catch (error) {
+    const reason = error?.code === 'ENOENT' ? 'no decision is present there' : `it could not be read (${error?.code ?? 'unknown'})`;
+    throw new Error(`No usable enable decision at ${file}: ${reason}. Authorise one with ops/hetzner/authorise-model-canary.sh, and remember a claimed decision is spent.`);
+  }
+  let stored;
+  try {
+    stored = JSON.parse(raw);
+  } catch {
+    throw new Error(`The enable decision at ${file} is not readable JSON.`);
+  }
+  if (!stored || typeof stored.token !== 'string' || stored.token.trim().length === 0) {
+    throw new Error(`The enable decision at ${file} carries no token.`);
+  }
+  return Object.freeze({ file, token: stored.token, decision: stored.decision ?? null });
 }
 
 /**

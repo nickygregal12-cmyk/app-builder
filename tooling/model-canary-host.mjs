@@ -21,11 +21,11 @@ import process from 'node:process';
 import {
   REPOSITORY_ROOT,
   preflight,
+  readStoredDecision,
   runModelCanary,
 } from './model-canary.mjs';
 
 const PORTABLE_CANARY = path.join(REPOSITORY_ROOT, 'tooling/model-canary.mjs');
-const DECISION_PATH = '/etc/app-builder/model-enable-decision.json';
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -136,6 +136,25 @@ function delegatePortableCli(argv) {
   return delegated.status ?? 1;
 }
 
+/**
+ * The decision the hosted run will use.
+ *
+ * Exported and separate from `cli` so the seam can be exercised without a
+ * provider call. That matters: the incident this guards against was invisible
+ * to every test of `readStoredDecision` on its own, because the defect was not
+ * in the resolver — it was that this entry point did not call it. A behavioural
+ * test needs something here to hold on to.
+ *
+ * On the hosted path the run wrapper has already claimed the authority, renaming
+ * /etc/app-builder/model-enable-decision.json away deliberately, and systemd
+ * exposes the claimed decision as a credential. Reopening the authoritative path
+ * is how a fully-green preflight was followed by ENOENT with the authorisation
+ * already spent.
+ */
+export function hostedDecision(env = process.env) {
+  return readStoredDecision(env);
+}
+
 async function cli(argv) {
   if (argv.includes('--authorise') || argv.includes('--authorize') || argv.includes('--review')) {
     return delegatePortableCli(argv);
@@ -155,8 +174,7 @@ async function cli(argv) {
     return 1;
   }
 
-  const decisionPath = process.env.APP_BUILDER_MODEL_DECISION_FILE ?? DECISION_PATH;
-  const stored = readJson(decisionPath);
+  const stored = hostedDecision(process.env);
   const report = await runModelCanary({ decisionToken: stored.token, providerId });
   const target = path.join(REPOSITORY_ROOT, '.app-builder', `model-attempt-${report.record.recordId}.json`);
   fs.mkdirSync(path.dirname(target), { recursive: true });
